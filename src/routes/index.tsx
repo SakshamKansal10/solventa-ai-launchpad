@@ -2,7 +2,18 @@ import { createFileRoute } from "@tanstack/react-router";
 import { Header } from "@/components/solventia/Header";
 import { Hero } from "@/components/solventia/Hero";
 import { Steps } from "@/components/solventia/Steps";
+import { AIDiscoveryFlow } from "@/components/solventia/AIDiscoveryFlow";
 import { Features } from "@/components/solventia/Features";
+import { FeaturedIdeas } from "@/components/solventia/FeaturedIdeas";
+import { WhySolventia } from "@/components/solventia/WhySolventia";
+import { RoadmapsPreview } from "@/components/solventia/RoadmapsPreview";
+import { RoadmapTimeline } from "@/components/solventia/RoadmapTimeline";
+import { MissionVision } from "@/components/solventia/MissionVision";
+import { FoundersStory } from "@/components/solventia/FoundersStory";
+import { ForNGOs } from "@/components/solventia/ForNGOs";
+import { Resources } from "@/components/solventia/Resources";
+import { Testimonials } from "@/components/solventia/Testimonials";
+import { FAQ } from "@/components/solventia/FAQ";
 import { Footer } from "@/components/solventia/Footer";
 
 export const Route = createFileRoute("/")({
@@ -34,7 +45,18 @@ function Index() {
       <main>
         <Hero />
         <Steps />
+        <AIDiscoveryFlow />
         <Features />
+        <FeaturedIdeas />
+        <WhySolventia />
+        <RoadmapsPreview />
+        <RoadmapTimeline />
+        <MissionVision />
+        <FoundersStory />
+        <ForNGOs />
+        <Resources />
+        <Testimonials />
+        <FAQ />
       </main>
       <Footer />
     </div>

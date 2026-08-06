@@ -23,19 +23,19 @@ Follow these rules exactly.
 
 DO NOT change:
 
- overall layout
+overall layout
 
- color palette
+color palette
 
- spacing philosophy
+spacing philosophy
 
- typography hierarchy
+typography hierarchy
 
- visual mood
+visual mood
 
- section order
+section order
 
- design language
+design language
 
 The attached design is the source of truth.
 
@@ -59,37 +59,37 @@ DESIGN LANGUAGE
 
 The website should feel
 
- Premium
+Premium
 
- Minimal
+Minimal
 
- Calm
+Calm
 
- Luxurious
+Luxurious
 
- Editorial
+Editorial
 
- Sophisticated
+Sophisticated
 
- Future-forward
+Future-forward
 
- Human-centered
+Human-centered
 
 Avoid
 
- Generic SaaS look
+Generic SaaS look
 
- Bright gradients everywhere
+Bright gradients everywhere
 
- Glassmorphism overload
+Glassmorphism overload
 
- Cartoon illustrations
+Cartoon illustrations
 
- Flat corporate UI
+Flat corporate UI
 
- Heavy borders
+Heavy borders
 
- Loud colors
+Loud colors
 
 Think
 

@@ -42,14 +42,14 @@ export function Features() {
             key={f.title.join(" ")}
             initial={{ opacity: 0, y: 28 }}
             whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: "-60px" }}
+            viewport={{ once: true, margin: "200px" }}
             transition={{ duration: 0.6, delay: i * 0.09, ease: [0.22, 1, 0.36, 1] }}
-            whileHover={{ y: -8 }}
-            className="group flex flex-col rounded-2xl border border-border/70 bg-card p-7 shadow-[0_10px_30px_-26px_oklch(0.245_0.055_268_/_0.6)] transition-shadow duration-500 hover:shadow-[0_34px_60px_-38px_oklch(0.245_0.055_268_/_0.55)]"
+            whileHover={{ y: -5, transition: { duration: 0.3, ease: [0.22, 1, 0.36, 1] } }}
+            className="group flex flex-col rounded-2xl border border-border/70 bg-card p-7 shadow-[0_10px_30px_-26px_oklch(0.245_0.055_268_/_0.6)] transition-shadow duration-300 hover:shadow-[0_34px_60px_-38px_oklch(0.245_0.055_268_/_0.55)]"
           >
             <div className="flex items-start gap-4">
-              <span className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-[oklch(0.62_0.19_300_/_0.09)]">
-                <f.icon className="size-5 stroke-[1.6] text-[oklch(0.52_0.16_300)]" aria-hidden="true" />
+              <span className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-accent/12 transition-transform duration-300 group-hover:scale-110">
+                <f.icon className="size-5 stroke-[1.6] text-accent" aria-hidden="true" />
               </span>
               <h3 className="font-sans text-[0.98rem] font-bold leading-[1.5] text-primary">
                 {f.title[0]}
@@ -63,7 +63,7 @@ export function Features() {
             <div className="mt-8 flex items-end justify-between">
               <svg
                 viewBox="0 0 140 60"
-                className="h-14 w-28 text-[oklch(0.62_0.19_300_/_0.35)]"
+                className="h-14 w-28 text-primary/20"
                 fill="none"
                 aria-hidden="true"
               >

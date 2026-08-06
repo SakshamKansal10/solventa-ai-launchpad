@@ -71,15 +71,16 @@
 
 :root {
   --radius: 0.875rem;
-  --ivory: oklch(0.982 0.004 264);
+  /* Pearl White #FCFCFB — exact hex, converted to oklch (no cream/grey tint). */
+  --ivory: oklch(0.9908 0.0013 106.4);
   --navy: oklch(0.245 0.055 268);
   --gold: oklch(0.745 0.132 72);
   --gold-soft: oklch(0.86 0.085 80);
-  --background: oklch(0.982 0.004 264);
+  --background: oklch(0.9908 0.0013 106.4);
   --foreground: oklch(0.245 0.055 268);
-  --card: oklch(0.995 0.002 264);
+  --card: oklch(0.9967 0.0013 106.4);
   --card-foreground: oklch(0.245 0.055 268);
-  --popover: oklch(0.995 0.002 264);
+  --popover: oklch(0.9967 0.0013 106.4);
   --popover-foreground: oklch(0.245 0.055 268);
   --primary: oklch(0.245 0.055 268);
   --primary-foreground: oklch(0.985 0.004 264);
@@ -150,7 +151,16 @@
     border-color: var(--color-border);
   }
 
+  html {
+    width: 100%;
+    overflow-x: hidden;
+  }
+
   body {
+    width: 100%;
+    max-width: 100vw;
+    overflow-x: hidden;
+    margin: 0;
     background-color: var(--color-background);
     color: var(--color-foreground);
     font-family: var(--font-sans);
@@ -164,23 +174,114 @@
   }
 }
 
-/* Ambient purple studio light: enters off-canvas from the top-left,
-   washes the logo area, fades out long before the headline. */
+/* Ambient purple studio light: the ONLY purple on the page. Its
+   mathematical center sits just outside the viewport (negative
+   position) so only the falloff is ever visible on-screen — the
+   brightest point is implied, off-canvas, like light entering from
+   outside the page rather than a shape placed on it. Heavily blurred
+   with no hard edges, tightly contained to the logo/upper-left corner,
+   and fully faded out well before the headline. Breathes gently so
+   the page subconsciously feels alive. */
 @utility ambient-purple {
   position: absolute;
-  top: -34rem;
-  left: -30rem;
-  width: 62rem;
-  height: 52rem;
+  inset: 0;
   pointer-events: none;
-  border-radius: 9999px;
-  filter: blur(120px);
+  filter: blur(36px);
+  animation: ambient-glow-breathe 9s ease-in-out infinite;
   background: radial-gradient(
-    closest-side,
-    oklch(0.62 0.19 300 / 0.3),
-    oklch(0.62 0.19 300 / 0.13) 45%,
+    ellipse 560px 380px at -8% -10%,
+    oklch(0.66 0.23 292.7 / 1),
+    oklch(0.6 0.25 292.7 / 0.72) 38%,
+    oklch(0.6 0.25 292.7 / 0.32) 60%,
     transparent 78%
   );
+}
+
+@keyframes ambient-drift {
+  0%,
+  100% {
+    transform: translate(0, 0) scale(1);
+    opacity: 0.7;
+  }
+  50% {
+    transform: translate(1rem, 0.75rem) scale(1.06);
+    opacity: 0.92;
+  }
+}
+
+@keyframes ambient-glow-breathe {
+  0%,
+  100% {
+    opacity: 0.75;
+  }
+  50% {
+    opacity: 0.95;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ambient-purple {
+    animation: none;
+  }
+}
+
+/* Ambient gold studio light: pairs with ambient-purple as a second, warmer
+   accent on dark (bg-primary) surfaces so they never read as flat navy.
+   Sits in the opposite corner and stays quieter — a glow, not a second
+   focal point. Runs the same drift keyframe in reverse, on a different
+   duration, so the two never breathe in visible lockstep. */
+@utility ambient-gold {
+  position: absolute;
+  bottom: -12rem;
+  right: -12rem;
+  width: 32rem;
+  height: 30rem;
+  pointer-events: none;
+  border-radius: 9999px;
+  filter: blur(130px);
+  animation: ambient-drift 11s ease-in-out infinite reverse;
+  background: radial-gradient(
+    closest-side,
+    oklch(0.745 0.132 72 / 0.24),
+    oklch(0.745 0.132 72 / 0.09) 45%,
+    transparent 70%
+  );
+}
+
+/* Faint dot-grid texture for premium depth — dots pick up `color`, so
+   pair with a text-* class (dark dots on light surfaces, light dots on
+   dark) and a low opacity (~0.05-0.08); texture, not pattern. */
+@utility surface-grid {
+  background-image: radial-gradient(currentColor 1px, transparent 1px);
+  background-size: 28px 28px;
+}
+
+/* Gentle shadow breathing for the question card — reinforces "alive"
+   without motion that would distract from reading/typing. */
+@utility card-breathe {
+  animation: card-breathe 6s ease-in-out infinite;
+}
+
+@keyframes card-breathe {
+  0%,
+  100% {
+    box-shadow: 0 30px 80px -45px oklch(0.245 0.055 268 / 0.22);
+  }
+  50% {
+    box-shadow: 0 40px 100px -40px oklch(0.245 0.055 268 / 0.32);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .card-breathe {
+    animation: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ambient-gold {
+    animation: none;
+  }
 }
 
 @utility eyebrow {
@@ -190,3 +291,119 @@
   font-weight: 700;
 }
 
+/* "Real Impact" — slow luxury shimmer sweep + gentle opacity breathing.
+   Never bounces or scales; two independent slow loops so the sweep and
+   the breathe never repeat in lockstep. */
+@utility text-shimmer-gold {
+  background-image: linear-gradient(
+    100deg,
+    var(--gold) 20%,
+    var(--gold-soft) 40%,
+    oklch(0.97 0.028 95) 50%,
+    var(--gold-soft) 60%,
+    var(--gold) 80%
+  );
+  background-size: 220% 100%;
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+  animation:
+    gold-shimmer 5s ease-in-out infinite,
+    gold-breathe 9s ease-in-out infinite;
+}
+
+@keyframes gold-shimmer {
+  0%,
+  100% {
+    background-position: 160% 0;
+  }
+  50% {
+    background-position: -60% 0;
+  }
+}
+
+@keyframes gold-breathe {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.9;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .text-shimmer-gold {
+    animation: none;
+  }
+}
+
+/* Hero cinematic layer: slow parallax drift on the background photo,
+   floating glass cards, light rays, and tiny ambient particles. All
+   independently timed so nothing repeats in visible lockstep. */
+@utility hero-photo-drift {
+  animation: hero-photo-drift 12s ease-in-out infinite;
+}
+
+@keyframes hero-photo-drift {
+  0%,
+  100% {
+    transform: scale(1.06) translateY(0);
+  }
+  50% {
+    transform: scale(1.06) translateY(-10px);
+  }
+}
+
+@utility float-card {
+  animation: float-card 7s ease-in-out infinite;
+}
+
+@keyframes float-card {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-14px);
+  }
+}
+
+@utility ray-pulse {
+  animation: ray-pulse 6s ease-in-out infinite;
+}
+
+@keyframes ray-pulse {
+  0%,
+  100% {
+    opacity: 0.18;
+  }
+  50% {
+    opacity: 0.42;
+  }
+}
+
+@utility particle-drift {
+  animation: particle-drift 8s ease-in-out infinite;
+}
+
+@keyframes particle-drift {
+  0%,
+  100% {
+    transform: translate(0, 0);
+    opacity: 0.2;
+  }
+  50% {
+    transform: translate(5px, -14px);
+    opacity: 0.65;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-photo-drift,
+  .float-card,
+  .ray-pulse,
+  .particle-drift {
+    animation: none;
+  }
+}
