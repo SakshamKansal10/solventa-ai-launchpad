@@ -4,6 +4,8 @@ import { Link } from "@tanstack/react-router";
 import { PremiumButton } from "@/components/solventia/PremiumButton";
 import { useOnboarding } from "@/lib/onboarding-store";
 import type { SectionIntroStep } from "@/lib/onboarding-steps";
+import { getStageTheme } from "@/lib/onboarding-themes";
+import { StageIllustration } from "@/components/onboarding/StageIllustration";
 
 const fadeUp = {
   hidden: { opacity: 0, y: 20 },
@@ -147,6 +149,8 @@ export function AIIntroScreen() {
 
 export function SectionIntroScreen({ step }: { step: SectionIntroStep }) {
   const { goNext } = useOnboarding();
+  const theme = getStageTheme(step.section);
+  const Icon = theme.icon;
   return (
     <motion.div
       initial="hidden"
@@ -154,18 +158,27 @@ export function SectionIntroScreen({ step }: { step: SectionIntroStep }) {
       transition={{ staggerChildren: 0.1 }}
       className="mx-auto flex max-w-[520px] flex-col items-center text-center"
     >
-      <motion.p variants={fadeUp} className="eyebrow text-accent">
-        Section {step.section} of 7
-      </motion.p>
+      <motion.div variants={fadeUp}>
+        <StageIllustration section={step.section} color={theme.color} />
+      </motion.div>
+      <motion.div variants={fadeUp} className="mt-6 flex items-center gap-2">
+        <Icon className="size-4" style={{ color: theme.color }} aria-hidden="true" />
+        <p className="eyebrow" style={{ color: theme.color }}>
+          {theme.feeling}
+        </p>
+      </motion.div>
       <motion.h2
         variants={fadeUp}
         className="mt-4 font-display text-[clamp(1.8rem,3.5vw,2.4rem)] font-semibold text-primary"
       >
         {step.title}
       </motion.h2>
+      <motion.p variants={fadeUp} className="mt-5 text-[1.05rem] font-semibold text-primary">
+        {theme.opener}
+      </motion.p>
       <motion.p
         variants={fadeUp}
-        className="mt-5 text-[1.02rem] leading-[1.9] text-muted-foreground"
+        className="mt-3 text-[1.02rem] leading-[1.9] text-muted-foreground"
       >
         {step.body}
       </motion.p>
@@ -175,6 +188,9 @@ export function SectionIntroScreen({ step }: { step: SectionIntroStep }) {
           <ArrowRight className="size-4 text-accent" aria-hidden="true" />
         </PremiumButton>
       </motion.div>
+      <motion.p variants={fadeUp} className="mt-8 text-[0.72rem] text-muted-foreground/50">
+        Section {step.section} of 7
+      </motion.p>
     </motion.div>
   );
 }

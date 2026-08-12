@@ -5,10 +5,12 @@ import { useOnboarding } from "@/lib/onboarding-store";
 import { getPersonalizedInsight, getProcessingLine } from "@/lib/onboarding-insights";
 import type { ThinkingStep } from "@/lib/onboarding-steps";
 import { PremiumButton } from "@/components/solventia/PremiumButton";
+import { getStageTheme } from "@/lib/onboarding-themes";
 
 export function ThinkingScreen({ step }: { step: ThinkingStep }) {
   const { answers, goNext } = useOnboarding();
   const [phase, setPhase] = useState<"processing" | "insight">("processing");
+  const theme = getStageTheme(step.afterSection);
 
   useEffect(() => {
     setPhase("processing");
@@ -21,9 +23,10 @@ export function ThinkingScreen({ step }: { step: ThinkingStep }) {
       <motion.div
         animate={{ rotate: 360 }}
         transition={{ duration: 2.4, repeat: Infinity, ease: "linear" }}
-        className="flex size-16 items-center justify-center rounded-full border-2 border-dashed border-accent/50"
+        style={{ borderColor: theme.color, transition: "border-color 700ms" }}
+        className="flex size-16 items-center justify-center rounded-full border-2 border-dashed"
       >
-        <Sparkles className="size-6 text-accent" aria-hidden="true" />
+        <Sparkles className="size-6" style={{ color: theme.color }} aria-hidden="true" />
       </motion.div>
 
       <div className="mt-8 min-h-[6rem]">

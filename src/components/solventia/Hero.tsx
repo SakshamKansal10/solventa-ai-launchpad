@@ -16,7 +16,7 @@ import {
   Sparkles,
   TrendingUp,
 } from "lucide-react";
-import heroPortal from "@/assets/hero-portal.png";
+import heroHorizon from "@/assets/hero-horizon.png";
 import avatars from "@/assets/avatars.jpg";
 import { scrollToSection } from "@/hooks/use-active-section";
 import { PremiumButton } from "./PremiumButton";
@@ -83,6 +83,44 @@ function GlassCard({
   );
 }
 
+/** Extremely faint flowing "neural network" lines within the purple
+ * corner glow — hand-placed curves and points (never random, for SSR
+ * safety), sized to roughly match the ambient-purple footprint. Meant
+ * to be almost subliminal: felt more than consciously seen. */
+function NetworkGlowLines() {
+  return (
+    <svg
+      aria-hidden="true"
+      viewBox="0 0 560 380"
+      preserveAspectRatio="none"
+      className="pointer-events-none absolute left-0 top-0 z-10 h-[clamp(320px,40vh,500px)] w-[clamp(420px,45vw,650px)] opacity-80 blur-[0.4px]"
+    >
+      <g stroke="#F5EAFB" strokeWidth="1" fill="none" opacity="0.16" strokeLinecap="round">
+        <path d="M -20,40 Q 120,10 240,70 T 480,60" />
+        <path d="M -10,120 Q 100,90 220,140 T 460,150" />
+        <path d="M 20,220 Q 140,180 260,230 T 500,210" />
+        <path d="M -30,180 Q 90,240 200,190 T 420,260" />
+        <path d="M 60,300 Q 160,260 280,310 T 520,290" />
+        <path d="M -20,260 Q 110,320 230,280 T 440,340" />
+        <path d="M 100,20 Q 200,80 320,40 T 540,100" />
+        <path d="M 10,340 Q 130,300 250,350" />
+      </g>
+      <g fill="#F5EAFB" opacity="0.24">
+        <circle cx="120" cy="10" r="2" />
+        <circle cx="240" cy="70" r="1.6" />
+        <circle cx="220" cy="140" r="2.2" />
+        <circle cx="260" cy="230" r="1.8" />
+        <circle cx="200" cy="190" r="1.6" />
+        <circle cx="280" cy="310" r="2" />
+        <circle cx="230" cy="280" r="1.8" />
+        <circle cx="320" cy="40" r="1.6" />
+        <circle cx="130" cy="300" r="2" />
+        <circle cx="460" cy="150" r="1.6" />
+      </g>
+    </svg>
+  );
+}
+
 export function Hero() {
   const navigate = useNavigate();
 
@@ -91,28 +129,18 @@ export function Hero() {
       {/* Full-bleed cinematic background photo */}
       <div className="absolute inset-0" aria-hidden="true">
         <img
-          src={heroPortal}
+          src={heroHorizon}
           alt=""
           fetchPriority="high"
-          className="hero-photo-drift absolute inset-0 h-full w-full object-cover object-[52%_center] sm:object-[70%_center]"
+          className="hero-photo-drift absolute inset-0 h-full w-full object-cover object-[68%_58%] sm:object-[64%_44%] lg:object-[76%_46%]"
         />
-        {/* Legibility scrim: solid near the text column, fading away over the archway/sunrise.
-            Kept lean — the photo's own left side is already pale, so a lighter touch here
-            reads as clarity instead of haze. */}
-        <div className="absolute inset-0 bg-gradient-to-r from-background via-background/48 to-transparent md:from-background md:via-background/36 md:to-transparent/0" />
+        {/* Legibility scrim: the photo already fades to pale white on its own
+            left side, so this only needs to be a very light assist behind
+            the text column, not a second wash on top of it. */}
+        <div className="absolute inset-0 bg-gradient-to-r from-background/55 via-background/16 to-transparent md:from-background/45 md:via-background/10 md:to-transparent/0" />
         <div className="absolute inset-0 bg-gradient-to-t from-background/80 via-transparent to-background/10 md:from-background/40" />
         {/* Full-width top scrim so nav text stays legible no matter what's behind it */}
         <div className="absolute inset-x-0 top-0 h-32 bg-gradient-to-b from-background/55 to-transparent" />
-
-        {/* Soft light rays fanning from the archway */}
-        <div
-          className="ray-pulse absolute left-[64%] top-[10%] h-[70%] w-24 -rotate-6 bg-gradient-to-b from-[oklch(0.97_0.03_95/0.35)] to-transparent blur-2xl"
-          style={{ animationDelay: "0s" }}
-        />
-        <div
-          className="ray-pulse absolute left-[74%] top-[6%] h-[65%] w-16 rotate-3 bg-gradient-to-b from-[oklch(0.97_0.03_95/0.3)] to-transparent blur-2xl"
-          style={{ animationDelay: "2s" }}
-        />
 
         {/* Ambient particles */}
         {PARTICLES.map((p, i) => (
@@ -131,6 +159,7 @@ export function Hero() {
       </div>
 
       <div className="ambient-purple z-10" aria-hidden="true" />
+      <NetworkGlowLines />
 
       {/* Floating AI cards — desktop only, over the photo's quieter right side */}
       <div className="pointer-events-none absolute inset-0 z-10 hidden xl:block">

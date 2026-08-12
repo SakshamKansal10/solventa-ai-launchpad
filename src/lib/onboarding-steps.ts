@@ -1,5 +1,6 @@
 import type { OnboardingAnswers } from "./onboarding-types";
 import {
+  COUNTRIES,
   INCOME_BRACKETS,
   INDIAN_STATES,
   INVESTMENT_BRACKETS,
@@ -11,11 +12,13 @@ export type InputKind =
   | "text"
   | "number"
   | "select"
+  | "searchable-select"
   | "choice"
   | "multi-choice"
   | "searchable-multi"
   | "skills"
   | "slider"
+  | "currency"
   | "textarea";
 
 export interface QuestionStep {
@@ -28,6 +31,9 @@ export interface QuestionStep {
   options?: string[];
   optional?: boolean;
   placeholder?: string;
+  /** Simple questions (few options, no follow-up implications) can
+   * auto-advance a beat after selection instead of waiting for Continue. */
+  autoContinue?: boolean;
   condition?: (a: OnboardingAnswers) => boolean;
 }
 
@@ -62,21 +68,39 @@ export const STEPS: Step[] = [
   { kind: "welcome" },
   { kind: "ai-intro" },
 
-  // ===== Section 1 — Getting to Know You =====
+  // ===== Section 1 — Foundation =====
   {
     kind: "section-intro",
     section: 1,
-    title: "Getting to Know You",
+    title: "Foundation",
     body: "Let's start with the basics — who you are, where you're based, and where you stand today.",
   },
   { kind: "question", id: "age", section: 1, input: "number", label: "How old are you?" },
   {
     kind: "question",
+    id: "country",
+    section: 1,
+    input: "searchable-select",
+    label: "Which country are you based in?",
+    options: COUNTRIES,
+  },
+  {
+    kind: "question",
     id: "state",
     section: 1,
-    input: "select",
+    input: "searchable-select",
     label: "Which state are you based in?",
     options: INDIAN_STATES,
+    condition: (a) => a.country === "India",
+  },
+  {
+    kind: "question",
+    id: "state",
+    section: 1,
+    input: "text",
+    label: "Which state, province, or region?",
+    placeholder: "e.g. California",
+    condition: (a) => a.country !== undefined && a.country !== "India",
   },
   {
     kind: "question",
@@ -108,7 +132,7 @@ export const STEPS: Step[] = [
     id: "currentStatus",
     section: 1,
     input: "choice",
-    label: "Which of these best describes you right now?",
+    label: "Which of these best describes where you are right now?",
     options: STATUS_OPTIONS,
   },
   {
@@ -233,25 +257,64 @@ export const STEPS: Step[] = [
 
   { kind: "thinking", afterSection: 1 },
 
-  // ===== Section 2 — Your Starting Point =====
+  // ===== Section 2 — Your Edge =====
   {
     kind: "section-intro",
     section: 2,
-    title: "Your Starting Point",
+    title: "Your Edge",
+    body: "Don't worry if you don't have professional experience yet — curiosity and willingness to learn matter just as much.",
+  },
+  {
+    kind: "question",
+    id: "skills",
+    section: 2,
+    input: "skills",
+    label: "What are you good at?",
+    helper: "Search, select, and rate your comfort level. Add your own if it's missing.",
+  },
+  {
+    kind: "question",
+    id: "hasEarnedFromSkill",
+    section: 2,
+    input: "choice",
+    label: "Have you ever earned money using one of these skills?",
+    options: ["Yes, regularly", "Yes, occasionally", "Not yet"],
+    optional: true,
+    autoContinue: true,
+    condition: isProfessional,
+  },
+
+  { kind: "thinking", afterSection: 2 },
+
+  // ===== Section 3 — Your Resources =====
+  {
+    kind: "section-intro",
+    section: 3,
+    title: "Your Resources",
     body: "Money is only one resource. Many successful founders started with little capital — we'll design a journey around your current situation.",
   },
   {
     kind: "question",
     id: "investmentBudget",
-    section: 2,
+    section: 3,
     input: "choice",
-    label: "How much could you invest to get started, if needed?",
+    label: "How much could you realistically invest to get started?",
     options: INVESTMENT_BRACKETS,
   },
   {
     kind: "question",
+    id: "preciseCapital",
+    section: 3,
+    input: "currency",
+    label: "Roughly how much could you realistically invest?",
+    helper: "An approximate amount is perfectly fine.",
+    placeholder: "e.g. 25 lakh, or 2 crore",
+    condition: (a) => a.investmentBudget === "More than ₹2,00,000",
+  },
+  {
+    kind: "question",
     id: "assets",
-    section: 2,
+    section: 3,
     input: "multi-choice",
     label: "Do you have access to any of these?",
     options: [
@@ -267,63 +330,40 @@ export const STEPS: Step[] = [
   {
     kind: "question",
     id: "internetQuality",
-    section: 2,
+    section: 3,
     input: "choice",
     label: "How reliable is your internet access?",
     options: ["Excellent, always on", "Good, mostly reliable", "Patchy", "Very limited"],
+    autoContinue: true,
   },
   {
     kind: "question",
     id: "transportation",
-    section: 2,
+    section: 3,
     input: "choice",
     label: "How easily can you travel to meet people or run errands?",
     options: ["Very easily", "With some planning", "Difficult", "Not able to travel much"],
+    autoContinue: true,
   },
   {
     kind: "question",
     id: "familySupport",
-    section: 2,
+    section: 3,
     input: "choice",
     label: "How supportive is your family of you starting something?",
     options: ["Very supportive", "Cautiously supportive", "Neutral", "Not supportive yet"],
     optional: true,
-  },
-
-  // ===== Section 3 — Skills & Strengths =====
-  {
-    kind: "section-intro",
-    section: 3,
-    title: "Your Skills & Strengths",
-    body: "Don't worry if you don't have professional experience yet — curiosity and willingness to learn matter just as much.",
-  },
-  {
-    kind: "question",
-    id: "skills",
-    section: 3,
-    input: "skills",
-    label: "What are you good at?",
-    helper: "Search, select, and rate your comfort level. Add your own if it's missing.",
-  },
-  {
-    kind: "question",
-    id: "hasEarnedFromSkill",
-    section: 3,
-    input: "choice",
-    label: "Have you ever earned money using one of these skills?",
-    options: ["Yes, regularly", "Yes, occasionally", "Not yet"],
-    optional: true,
-    condition: isProfessional,
+    autoContinue: true,
   },
 
   { kind: "thinking", afterSection: 3 },
 
-  // ===== Section 4 — How You Like to Work =====
+  // ===== Section 4 — Your Risk =====
   {
     kind: "section-intro",
     section: 4,
-    title: "How You Like to Work",
-    body: "There's no wrong answer here — this just shapes what kind of venture will actually feel right to run.",
+    title: "Your Risk",
+    body: "There's no wrong answer here — how you handle exposure and uncertainty shapes what kind of venture will actually feel right to run.",
   },
   {
     kind: "question",
@@ -332,6 +372,7 @@ export const STEPS: Step[] = [
     input: "choice",
     label: "Would you rather work remotely or in person?",
     options: ["Remote", "In person", "A mix of both", "No strong preference"],
+    autoContinue: true,
   },
   {
     kind: "question",
@@ -340,6 +381,7 @@ export const STEPS: Step[] = [
     input: "choice",
     label: "What kind of venture excites you most?",
     options: ["Making content", "Building a product", "Offering a service", "Not sure yet"],
+    autoContinue: true,
   },
   {
     kind: "question",
@@ -348,6 +390,7 @@ export const STEPS: Step[] = [
     input: "choice",
     label: "How comfortable are you leading others?",
     options: ["Very comfortable", "Somewhat comfortable", "Prefer not to", "Untested"],
+    autoContinue: true,
   },
   {
     kind: "question",
@@ -356,6 +399,7 @@ export const STEPS: Step[] = [
     input: "choice",
     label: "How do you feel about selling or pitching?",
     options: ["I enjoy it", "I can do it if needed", "It makes me uneasy", "Never tried"],
+    autoContinue: true,
   },
   {
     kind: "question",
@@ -372,80 +416,61 @@ export const STEPS: Step[] = [
     input: "choice",
     label: "Do you see yourself building this alone or with others?",
     options: ["Solo", "With a small team", "With a co-founder", "Not sure yet"],
+    autoContinue: true,
   },
 
-  // ===== Section 5 — Your Vision =====
+  // ===== Section 5 — Your Motivation =====
   {
     kind: "section-intro",
     section: 5,
-    title: "Your Vision",
-    body: "What does success actually look like for you? Be honest — there's no prize for the most ambitious answer.",
+    title: "Your Motivation",
+    body: "This is the part most tools skip. There's no scoring here — we just want to understand what's actually driving you.",
   },
   {
     kind: "question",
-    id: "goals",
+    id: "biggestFear",
     section: 5,
-    input: "multi-choice",
-    label: "What are you hoping this leads to?",
-    options: ["Pocket money", "Learning entrepreneurship", "A future startup", "Social impact"],
-    condition: isStudent,
+    input: "textarea",
+    label: "What's your biggest fear about starting something?",
   },
   {
     kind: "question",
-    id: "goals",
+    id: "whyNotStarted",
     section: 5,
-    input: "multi-choice",
-    label: "What are you hoping this leads to?",
-    options: [
-      "Replacing my salary",
-      "A second income stream",
-      "Eventually quitting my job",
-      "Scaling an existing venture",
-    ],
-    condition: isProfessional,
+    input: "textarea",
+    label: "What's stopped you from starting until now?",
   },
   {
     kind: "question",
-    id: "goals",
+    id: "biggestMotivation",
     section: 5,
-    input: "multi-choice",
-    label: "What are you hoping this leads to?",
-    options: ["A steady income", "Learning entrepreneurship", "A future startup", "Social impact"],
-    condition: (a) => !isStudent(a) && !isProfessional(a),
+    input: "textarea",
+    label: "What's your biggest motivation for doing this?",
   },
   {
     kind: "question",
-    id: "monthlyIncomeGoal",
+    id: "dailyFrustration",
     section: 5,
-    input: "select",
-    label: "What monthly income would feel like a real win, a year from now?",
-    options: [
-      "Under ₹5,000",
-      "₹5,000 – ₹20,000",
-      "₹20,000 – ₹50,000",
-      "₹50,000 – ₹1,50,000",
-      "₹1,50,000+",
-      "Not about income for me",
-    ],
+    input: "textarea",
+    label: "What real-life problem frustrates you every day?",
+  },
+  {
+    kind: "question",
+    id: "mentorshipVision",
+    section: 5,
+    input: "textarea",
+    label: "If someone mentored you for one year, what would you build?",
     optional: true,
-  },
-  {
-    kind: "question",
-    id: "timeline",
-    section: 5,
-    input: "choice",
-    label: "What timeline feels realistic to you?",
-    options: ["Within 3 months", "3–6 months", "6–12 months", "1–2 years", "No fixed timeline"],
   },
 
   { kind: "thinking", afterSection: 5 },
 
-  // ===== Section 6 — Your Constraints =====
+  // ===== Section 6 — Your Capacity =====
   {
     kind: "section-intro",
     section: 6,
-    title: "Your Constraints",
-    body: "Real plans account for real limits. Nothing here disqualifies you — it just sharpens what we recommend.",
+    title: "Your Capacity",
+    body: "Real plans account for real limits. Nothing here disqualifies you — it just shows exactly how much room you have to maneuver.",
   },
   {
     kind: "question",
@@ -463,6 +488,7 @@ export const STEPS: Step[] = [
     label: "Could you relocate if a real opportunity required it?",
     options: ["Yes, easily", "Possibly, for the right reason", "Unlikely", "No"],
     optional: true,
+    autoContinue: true,
   },
   {
     kind: "question",
@@ -481,48 +507,69 @@ export const STEPS: Step[] = [
     optional: true,
   },
 
-  // ===== Section 7 — Founder Mindset =====
+  // ===== Section 7 — Your Direction =====
   {
     kind: "section-intro",
     section: 7,
-    title: "Founder Mindset",
-    body: "This is the most important section. There's no scoring here — we just want to understand what's actually driving you.",
+    title: "Your Direction",
+    body: "What does success actually look like for you? Be honest — there's no prize for the most ambitious answer. This is where everything starts converging.",
   },
   {
     kind: "question",
-    id: "biggestFear",
+    id: "goals",
     section: 7,
-    input: "textarea",
-    label: "What's your biggest fear about starting something?",
+    input: "multi-choice",
+    label: "What are you hoping this leads to?",
+    options: ["Pocket money", "Learning entrepreneurship", "A future startup", "Social impact"],
+    condition: isStudent,
   },
   {
     kind: "question",
-    id: "whyNotStarted",
+    id: "goals",
     section: 7,
-    input: "textarea",
-    label: "What's stopped you from starting until now?",
+    input: "multi-choice",
+    label: "What are you hoping this leads to?",
+    options: [
+      "Replacing my salary",
+      "A second income stream",
+      "Eventually quitting my job",
+      "Scaling an existing venture",
+    ],
+    condition: isProfessional,
   },
   {
     kind: "question",
-    id: "biggestMotivation",
+    id: "goals",
     section: 7,
-    input: "textarea",
-    label: "What's your biggest motivation for doing this?",
+    input: "multi-choice",
+    label: "What are you hoping this leads to?",
+    options: ["A steady income", "Learning entrepreneurship", "A future startup", "Social impact"],
+    condition: (a) => !isStudent(a) && !isProfessional(a),
   },
   {
     kind: "question",
-    id: "dailyFrustration",
+    id: "monthlyIncomeGoal",
     section: 7,
-    input: "textarea",
-    label: "What real-life problem frustrates you every day?",
-  },
-  {
-    kind: "question",
-    id: "mentorshipVision",
-    section: 7,
-    input: "textarea",
-    label: "If someone mentored you for one year, what would you build?",
+    input: "select",
+    label: "What monthly income would feel like a real win, a year from now?",
+    options: [
+      "Under ₹5,000",
+      "₹5,000 – ₹20,000",
+      "₹20,000 – ₹50,000",
+      "₹50,000 – ₹1,50,000",
+      "₹1,50,000+",
+      "Not about income for me",
+    ],
     optional: true,
+  },
+  {
+    kind: "question",
+    id: "timeline",
+    section: 7,
+    input: "choice",
+    label: "What timeline feels realistic to you?",
+    options: ["Within 3 months", "3–6 months", "6–12 months", "1–2 years", "No fixed timeline"],
+    autoContinue: true,
   },
 
   { kind: "thinking", afterSection: 7 },
@@ -534,6 +581,7 @@ export const STEPS: Step[] = [
  * a prior condition) are filtered out entirely. */
 export function resolveSteps(answers: OnboardingAnswers): Step[] {
   const seenGoalStep = new Set<number>();
+  const seenStateStep = new Set<number>();
   return STEPS.filter((step, index) => {
     if (step.kind !== "question") return true;
     if (step.condition && !step.condition(answers)) return false;
@@ -541,6 +589,11 @@ export function resolveSteps(answers: OnboardingAnswers): Step[] {
     if (step.id === "goals") {
       if (seenGoalStep.size > 0) return false;
       seenGoalStep.add(index);
+    }
+    // The two "state" variants (India dropdown vs. free-text region) share an id.
+    if (step.id === "state") {
+      if (seenStateStep.size > 0) return false;
+      seenStateStep.add(index);
     }
     return true;
   });

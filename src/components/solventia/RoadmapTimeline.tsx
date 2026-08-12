@@ -26,7 +26,7 @@ const MILESTONES = [
 
 export function RoadmapTimeline() {
   return (
-    <section className="w-full px-6 py-16 lg:px-10">
+    <section id="roadmaps" className="w-full scroll-mt-24 px-6 py-16 lg:px-10">
       <div className="mx-auto max-w-[1320px]">
         <div className="flex items-center gap-6">
           <CalendarDays className="size-5 text-accent" aria-hidden="true" />

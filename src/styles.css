@@ -174,48 +174,47 @@
   }
 }
 
-/* Ambient purple studio light: the ONLY purple on the page. Its
-   mathematical center sits just outside the viewport (negative
-   position) so only the falloff is ever visible on-screen — the
-   brightest point is implied, off-canvas, like light entering from
-   outside the page rather than a shape placed on it. Heavily blurred
-   with no hard edges, tightly contained to the logo/upper-left corner,
-   and fully faded out well before the headline. Breathes gently so
-   the page subconsciously feels alive. */
+/* Ambient purple studio light — homepage hero only. Color stops are
+   calibrated against pixel samples from the reference swatch (not a
+   generic purple), core anchored exactly at the corner (0% 0%) and
+   fading to near-white by ~400-450px, matching the reference's own
+   falloff curve rather than staying strong across the hero. Ellipse
+   size scales with the viewport (clamp) instead of a fixed desktop
+   px value. Breathes gently so the page feels alive. */
 @utility ambient-purple {
   position: absolute;
-  inset: 0;
+  /* Overhangs 48px past the top/left edge (clipped by the hero's own
+     overflow-hidden) so the blur filter has real gradient pixels to draw
+     from right at the visible corner — without this, blur(22px) mixes in
+     transparency from outside the box and washes the corner out toward
+     white. The "at" position below is offset by the same 48px so the
+     gradient's actual peak still lands exactly on the visible corner. */
+  top: -48px;
+  left: -48px;
+  right: 0;
+  bottom: 0;
   pointer-events: none;
-  filter: blur(36px);
+  filter: blur(22px);
   animation: ambient-glow-breathe 9s ease-in-out infinite;
   background: radial-gradient(
-    ellipse 560px 380px at -8% -10%,
-    oklch(0.66 0.23 292.7 / 1),
-    oklch(0.6 0.25 292.7 / 0.72) 38%,
-    oklch(0.6 0.25 292.7 / 0.32) 60%,
-    transparent 78%
+    ellipse clamp(340px, 36vw, 520px) clamp(255px, 32vh, 400px) at 48px 48px,
+    #9361c3 0%,
+    #a86cd4 13%,
+    #b179dc 26%,
+    #caa1e6 40%,
+    #e9d8f0 56%,
+    #f9f5f8 70%,
+    transparent 84%
   );
-}
-
-@keyframes ambient-drift {
-  0%,
-  100% {
-    transform: translate(0, 0) scale(1);
-    opacity: 0.7;
-  }
-  50% {
-    transform: translate(1rem, 0.75rem) scale(1.06);
-    opacity: 0.92;
-  }
 }
 
 @keyframes ambient-glow-breathe {
   0%,
   100% {
-    opacity: 0.75;
+    opacity: 0.4;
   }
   50% {
-    opacity: 0.95;
+    opacity: 0.55;
   }
 }
 
@@ -225,27 +224,23 @@
   }
 }
 
-/* Ambient gold studio light: pairs with ambient-purple as a second, warmer
-   accent on dark (bg-primary) surfaces so they never read as flat navy.
-   Sits in the opposite corner and stays quieter — a glow, not a second
-   focal point. Runs the same drift keyframe in reverse, on a different
-   duration, so the two never breathe in visible lockstep. */
-@utility ambient-gold {
+/* Stage atmosphere layer: the shared shell for the consultation's seven
+   chapter atmospheres (see onboarding-themes.ts). Each stage supplies its
+   own gradient via inline style; this utility only owns position, blur,
+   the breathing loop, and the crossfade between stages. */
+@utility stage-atmosphere-layer {
   position: absolute;
-  bottom: -12rem;
-  right: -12rem;
-  width: 32rem;
-  height: 30rem;
+  inset: 0;
   pointer-events: none;
-  border-radius: 9999px;
-  filter: blur(130px);
-  animation: ambient-drift 11s ease-in-out infinite reverse;
-  background: radial-gradient(
-    closest-side,
-    oklch(0.745 0.132 72 / 0.24),
-    oklch(0.745 0.132 72 / 0.09) 45%,
-    transparent 70%
-  );
+  filter: blur(40px);
+  transition: opacity 700ms cubic-bezier(0.22, 1, 0.36, 1);
+  animation: ambient-glow-breathe 9s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .stage-atmosphere-layer {
+    animation: none;
+  }
 }
 
 /* Faint dot-grid texture for premium depth — dots pick up `color`, so
@@ -369,20 +364,6 @@
   }
 }
 
-@utility ray-pulse {
-  animation: ray-pulse 6s ease-in-out infinite;
-}
-
-@keyframes ray-pulse {
-  0%,
-  100% {
-    opacity: 0.18;
-  }
-  50% {
-    opacity: 0.42;
-  }
-}
-
 @utility particle-drift {
   animation: particle-drift 8s ease-in-out infinite;
 }
@@ -402,7 +383,6 @@
 @media (prefers-reduced-motion: reduce) {
   .hero-photo-drift,
   .float-card,
-  .ray-pulse,
   .particle-drift {
     animation: none;
   }

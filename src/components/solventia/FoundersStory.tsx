@@ -60,8 +60,8 @@ export function FoundersStory() {
           <span className="flex size-28 items-center justify-center rounded-full border-2 border-dashed border-accent/40 bg-secondary/60 text-muted-foreground">
             <User className="size-10 stroke-[1.4]" aria-hidden="true" />
           </span>
-          <p className="mt-4 text-[0.9rem] font-semibold text-primary">[Draft — Founder Name]</p>
-          <p className="mt-1 text-[0.8rem] text-muted-foreground">[Draft — Title, Solventia]</p>
+          <p className="mt-4 text-[0.9rem] font-semibold text-primary">Saksham Kansal</p>
+          <p className="mt-1 text-[0.8rem] text-muted-foreground">Founder, Solventia</p>
         </motion.div>
 
         <ol className="relative flex-1 border-l border-border/70 pl-8">

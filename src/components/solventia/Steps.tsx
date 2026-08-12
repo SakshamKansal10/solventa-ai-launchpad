@@ -1,30 +1,37 @@
 import { motion } from "motion/react";
-import { BrainCircuit, ClipboardCheck, Map, UserRound } from "lucide-react";
+import { STAGE_THEMES } from "@/lib/onboarding-themes";
 
+/** Mirrors the consultation's own seven chapters (see onboarding-themes.ts)
+ * so the homepage promise and the actual flow always agree on the count —
+ * and so each step can borrow that chapter's real color, not one flat accent. */
 const STEPS = [
   {
-    n: "01",
-    icon: UserRound,
-    title: "Understand You",
-    body: ["We learn your skills, resources,", "and constraints — deeply."],
+    stage: STAGE_THEMES[1],
+    body: ["We learn your background,", "skills, and starting point."],
   },
   {
-    n: "02",
-    icon: BrainCircuit,
-    title: "AI Generates Opportunities",
-    body: ["Our AI surfaces ideas matched", "to your real profile."],
+    stage: STAGE_THEMES[2],
+    body: ["We uncover your strengths", "and unique advantage."],
   },
   {
-    n: "03",
-    icon: ClipboardCheck,
-    title: "Validate Ideas",
-    body: ["Test demand with real market", "data before you commit."],
+    stage: STAGE_THEMES[3],
+    body: ["We map your budget, time,", "and what you can work with."],
   },
   {
-    n: "04",
-    icon: Map,
-    title: "Create Roadmap",
-    body: ["Get a step-by-step plan with", "milestones, tools & resources."],
+    stage: STAGE_THEMES[4],
+    body: ["We understand how you", "make decisions under risk."],
+  },
+  {
+    stage: STAGE_THEMES[5],
+    body: ["We learn what's really", "driving you to build this."],
+  },
+  {
+    stage: STAGE_THEMES[6],
+    body: ["We get practical about the", "time and effort you can give."],
+  },
+  {
+    stage: STAGE_THEMES[7],
+    body: ["We define your vision and", "generate your roadmap."],
   },
 ];
 
@@ -49,23 +56,27 @@ export function Steps() {
         <h2 className="mt-4 text-center text-[clamp(1.7rem,3vw,2.4rem)] font-semibold tracking-[-0.01em] text-primary">
           How Solventia <span className="text-accent">Works</span>
         </h2>
+        <p className="mx-auto mt-3 max-w-[52ch] text-center text-[0.9rem] leading-[1.8] text-muted-foreground">
+          Seven chapters, one consultation — each with its own focus.
+        </p>
 
-        <ol className="relative mt-14 grid gap-12 sm:grid-cols-2 lg:grid-cols-4 lg:gap-6">
-          <span
-            aria-hidden="true"
-            className="pointer-events-none absolute inset-x-[10%] top-10 hidden h-px border-t-[2.5px] border-dotted border-accent/60 lg:block"
-          />
+        <ol className="relative mt-14 grid gap-x-6 gap-y-12 sm:grid-cols-2 lg:grid-cols-4">
           {STEPS.map((step, i) => (
             <motion.li
-              key={step.n}
+              key={step.stage.name}
               initial={{ opacity: 0, y: 24 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              transition={{ duration: 0.6, delay: i * 0.12, ease: [0.22, 1, 0.36, 1] }}
+              transition={{ duration: 0.6, delay: i * 0.1, ease: [0.22, 1, 0.36, 1] }}
               className="group relative flex flex-col items-center text-center"
             >
-              <div className="flex items-center gap-4">
-                <span className="font-sans text-2xl font-extrabold text-accent">{step.n}</span>
+              <div className="flex items-center gap-3">
+                <span
+                  className="font-sans text-xl font-extrabold"
+                  style={{ color: step.stage.color }}
+                >
+                  {String(step.stage.section).padStart(2, "0")}
+                </span>
                 <motion.span
                   whileHover={{
                     scale: 1.06,
@@ -73,13 +84,28 @@ export function Steps() {
                     boxShadow: "0 20px 40px -18px oklch(0.245 0.055 268 / 0.8)",
                   }}
                   transition={{ type: "spring", stiffness: 300, damping: 18 }}
-                  className="relative z-10 flex size-20 items-center justify-center rounded-full border border-accent/25 bg-card shadow-[0_14px_34px_-22px_oklch(0.245_0.055_268_/_0.7)]"
+                  className="relative z-10 flex size-16 items-center justify-center rounded-full border bg-card shadow-[0_14px_34px_-22px_oklch(0.245_0.055_268_/_0.7)]"
+                  style={{
+                    borderColor: `color-mix(in oklch, ${step.stage.color} 30%, transparent)`,
+                  }}
                 >
-                  <step.icon className="size-9 stroke-[1.4] text-accent" aria-hidden="true" />
+                  <step.stage.icon
+                    className="size-7 stroke-[1.4]"
+                    style={{ color: step.stage.color }}
+                    aria-hidden="true"
+                  />
                 </motion.span>
               </div>
 
-              <h3 className="mt-7 font-sans text-[0.95rem] font-bold text-primary">{step.title}</h3>
+              <h3 className="mt-6 font-sans text-[0.95rem] font-bold text-primary">
+                {step.stage.name}
+              </h3>
+              <p
+                className="mt-1 text-[0.72rem] font-semibold uppercase tracking-[0.14em]"
+                style={{ color: step.stage.color }}
+              >
+                {step.stage.feeling}
+              </p>
               <p className="mt-3 text-[0.86rem] leading-[1.9] text-muted-foreground">
                 {step.body[0]}
                 <br />

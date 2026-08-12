@@ -15,6 +15,26 @@ import {
 import { ThinkingScreen } from "@/components/onboarding/ThinkingScreen";
 import { QuestionRenderer } from "@/components/onboarding/QuestionRenderer";
 import { FounderProfilePanel } from "@/components/onboarding/FounderProfilePanel";
+import { StageAtmosphere } from "@/components/onboarding/StageAtmosphere";
+import type { InputKind, Step } from "@/lib/onboarding-steps";
+import { getStageTheme } from "@/lib/onboarding-themes";
+
+/** Simple, single-focus questions get an open canvas (question, input,
+ * button, and generous whitespace — no card boundary). Everything with
+ * more moving parts (grids, pickers, multi-select) keeps the card, which
+ * gives those controls a defined edge to sit inside. */
+const OPEN_CANVAS_INPUTS = new Set<InputKind>(["choice", "number", "currency", "text"]);
+
+/** Which of the seven chapter atmospheres is "current" — question and
+ * section-intro screens use their own section; a thinking pause keeps
+ * showing the chapter it's reflecting on; the welcome/intro screens open
+ * on chapter one; completion settles into the final, gold chapter. */
+function getActiveSection(step: Step): number {
+  if (step.kind === "question" || step.kind === "section-intro") return step.section;
+  if (step.kind === "thinking") return step.afterSection;
+  if (step.kind === "complete") return 7;
+  return 1;
+}
 
 export const Route = createFileRoute("/consultation")({
   component: ConsultationPage,
@@ -56,17 +76,18 @@ function ConsultationShell() {
     currentStep.kind === "complete";
   const showProfile = !isIntroLike;
   const showBack = !isIntroLike && stepIndex > 0;
+  const activeSection = getActiveSection(currentStep);
+  const theme = getStageTheme(activeSection);
 
   return (
     <div className="relative min-h-screen w-full bg-background text-foreground">
       {/* Fixed ambient backdrop — anchored to the viewport, not the page, so
-          the glow, texture, and particles stay present behind every question,
-          not just the landing screen. Same light, pearl-white treatment as
-          the homepage. */}
+          the atmosphere, texture, and particles stay present behind every
+          question, not just the landing screen. Same light, pearl-white
+          foundation as the homepage; the color is the current chapter's. */}
       <div className="fixed inset-0 z-0 overflow-hidden" aria-hidden="true">
         <div className="surface-grid absolute inset-0 text-primary opacity-[0.05]" />
-        <div className="ambient-purple" />
-        <div className="ambient-gold opacity-70" />
+        <StageAtmosphere activeSection={activeSection} />
         {BACKDROP_PARTICLES.map((p, i) => (
           <span
             key={i}
@@ -84,12 +105,18 @@ function ConsultationShell() {
 
       <header className="sticky top-0 z-30 flex items-center justify-between gap-4 border-b border-border/60 bg-background/80 px-6 py-6 backdrop-blur-xl lg:px-10">
         <Link to="/" className="flex items-center gap-3" aria-label="Solventia home">
-          <img src={mark} alt="" width={298} height={436} className="h-11 w-auto" />
+          <img
+            src={mark}
+            alt=""
+            width={298}
+            height={436}
+            className="h-11 w-auto drop-shadow-[0_1px_2px_rgba(10,25,47,0.18)]"
+          />
           <span className="hidden leading-none sm:block">
-            <span className="block font-display text-[1.35rem] font-semibold tracking-[0.2em] text-primary">
+            <span className="block font-display text-[1.3rem] font-semibold tracking-[0.22em] text-primary">
               SOLVENTIA
             </span>
-            <span className="mt-1 block text-[0.56rem] font-semibold tracking-[0.32em] text-accent">
+            <span className="mt-1.5 block text-[0.55rem] font-medium tracking-[0.34em] text-accent/80">
               VALIDATE • BUILD • ELEVATE
             </span>
           </span>
@@ -97,9 +124,24 @@ function ConsultationShell() {
 
         {!isIntroLike && (
           <div className="mx-6 hidden max-w-md flex-1 items-center gap-3 sm:flex">
-            <Progress value={progress} className="h-1.5 bg-secondary" />
-            <span className="shrink-0 text-[0.78rem] font-semibold text-muted-foreground">
-              {progress}%
+            <Progress
+              value={progress}
+              className="h-1.5 bg-secondary"
+              indicatorColor={theme.color}
+            />
+            <span className="relative w-9 shrink-0 text-[0.78rem] font-semibold text-muted-foreground">
+              <AnimatePresence mode="popLayout">
+                <motion.span
+                  key={progress}
+                  initial={{ opacity: 0, y: -4 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: 4 }}
+                  transition={{ duration: 0.3 }}
+                  className="absolute inset-0"
+                >
+                  {progress}%
+                </motion.span>
+              </AnimatePresence>
             </span>
           </div>
         )}
@@ -122,7 +164,7 @@ function ConsultationShell() {
               >
                 <SheetTitle className="text-primary">Your Founder Profile</SheetTitle>
                 <div className="mt-6">
-                  <FounderProfilePanel />
+                  <FounderProfilePanel activeSection={activeSection} />
                 </div>
               </SheetContent>
             </Sheet>
@@ -163,11 +205,16 @@ function ConsultationShell() {
               {currentStep.kind === "ai-intro" && <AIIntroScreen />}
               {currentStep.kind === "section-intro" && <SectionIntroScreen step={currentStep} />}
               {currentStep.kind === "thinking" && <ThinkingScreen step={currentStep} />}
-              {currentStep.kind === "question" && (
-                <div className="card-breathe w-full rounded-[2rem] border border-border/70 bg-card/90 px-6 py-10 shadow-[0_30px_80px_-45px_oklch(0.245_0.055_268_/_0.22)] backdrop-blur-xl sm:px-12 sm:py-14">
-                  <QuestionRenderer step={currentStep} />
-                </div>
-              )}
+              {currentStep.kind === "question" &&
+                (OPEN_CANVAS_INPUTS.has(currentStep.input) ? (
+                  <div className="w-full px-2 py-6">
+                    <QuestionRenderer step={currentStep} />
+                  </div>
+                ) : (
+                  <div className="card-breathe w-full rounded-[2rem] border border-border/70 bg-card/90 px-6 py-10 shadow-[0_30px_80px_-45px_oklch(0.245_0.055_268_/_0.22)] backdrop-blur-xl sm:px-12 sm:py-14">
+                    <QuestionRenderer step={currentStep} />
+                  </div>
+                ))}
               {currentStep.kind === "complete" && <CompletionScreen />}
             </motion.div>
           </AnimatePresence>
@@ -180,7 +227,10 @@ function ConsultationShell() {
             transition={{ duration: 0.5, delay: 0.2, ease: [0.22, 1, 0.36, 1] }}
             className="hidden 2xl:fixed 2xl:right-10 2xl:top-32 2xl:block 2xl:w-[300px]"
           >
-            <FounderProfilePanel className="max-h-[75vh] overflow-y-auto" />
+            <FounderProfilePanel
+              activeSection={activeSection}
+              className="max-h-[75vh] overflow-y-auto"
+            />
           </motion.div>
         )}
       </main>

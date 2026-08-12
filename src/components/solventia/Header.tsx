@@ -13,7 +13,6 @@ const NAV: { label: string; id: string }[] = [
   { label: "Explore Ideas", id: "explore-ideas" },
   { label: "Roadmaps", id: "roadmaps" },
   { label: "For NGOs", id: "for-ngos" },
-  { label: "Resources", id: "resources" },
   { label: "About Us", id: "about-us" },
 ];
 
@@ -35,8 +34,8 @@ function NavLink({
         event.preventDefault();
         onNavigate(item.id);
       }}
-      className={`group relative text-[0.82rem] font-medium transition-colors ${
-        active ? "text-primary" : "text-muted-foreground hover:text-primary"
+      className={`group relative text-[0.82rem] font-semibold tracking-[0.01em] transition-colors duration-300 ${
+        active ? "text-primary" : "text-primary/85 hover:text-primary"
       }`}
     >
       {item.label}
@@ -75,7 +74,7 @@ export function Header() {
           : "border-b border-transparent"
       }`}
     >
-      <div className="mx-auto grid h-24 max-w-[1920px] grid-cols-[auto_1fr_auto] items-center gap-8 px-6">
+      <div className="mx-auto grid h-24 max-w-[1920px] grid-cols-[auto_1fr_auto] items-center gap-8 px-6 lg:px-10">
         <a
           href="#"
           onClick={(event) => {
@@ -93,13 +92,13 @@ export function Header() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.9, ease: [0.22, 1, 0.36, 1] }}
-            className="h-12 w-auto drop-shadow-[0_2px_6px_oklch(0.245_0.055_268_/_0.25)]"
+            className="h-12 w-auto drop-shadow-[0_1px_2px_rgba(10,25,47,0.18)]"
           />
           <span className="hidden leading-none sm:block">
-            <span className="block font-display text-[1.6rem] font-semibold tracking-[0.22em] text-accent">
+            <span className="block font-display text-[1.5rem] font-semibold tracking-[0.24em] text-primary">
               SOLVENTIA
             </span>
-            <span className="mt-1 block text-[0.58rem] font-semibold tracking-[0.34em] text-accent">
+            <span className="mt-1.5 block text-[0.56rem] font-medium tracking-[0.36em] text-accent/80">
               VALIDATE • BUILD • ELEVATE
             </span>
           </span>

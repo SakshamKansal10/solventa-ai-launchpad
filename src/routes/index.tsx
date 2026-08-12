@@ -6,12 +6,10 @@ import { AIDiscoveryFlow } from "@/components/solventia/AIDiscoveryFlow";
 import { Features } from "@/components/solventia/Features";
 import { FeaturedIdeas } from "@/components/solventia/FeaturedIdeas";
 import { WhySolventia } from "@/components/solventia/WhySolventia";
-import { RoadmapsPreview } from "@/components/solventia/RoadmapsPreview";
 import { RoadmapTimeline } from "@/components/solventia/RoadmapTimeline";
 import { MissionVision } from "@/components/solventia/MissionVision";
 import { FoundersStory } from "@/components/solventia/FoundersStory";
 import { ForNGOs } from "@/components/solventia/ForNGOs";
-import { Resources } from "@/components/solventia/Resources";
 import { Testimonials } from "@/components/solventia/Testimonials";
 import { FAQ } from "@/components/solventia/FAQ";
 import { Footer } from "@/components/solventia/Footer";
@@ -49,12 +47,10 @@ function Index() {
         <Features />
         <FeaturedIdeas />
         <WhySolventia />
-        <RoadmapsPreview />
         <RoadmapTimeline />
         <MissionVision />
         <FoundersStory />
         <ForNGOs />
-        <Resources />
         <Testimonials />
         <FAQ />
       </main>

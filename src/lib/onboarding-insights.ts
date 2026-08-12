@@ -1,13 +1,11 @@
 import type { OnboardingAnswers } from "./onboarding-types";
 
 const PROCESSING_LINES: Record<number, string[]> = {
-  1: ["Analyzing your entrepreneurial profile…", "Mapping your starting point…"],
-  3: ["Understanding your strengths…", "Cross-referencing your skills against real opportunities…"],
-  5: [
-    "Eliminating unsuitable business models…",
-    "Identifying opportunities unique to your location…",
-  ],
-  7: ["Bringing your founder profile together…", "Weighing what actually drives you…"],
+  1: ["Analyzing your entrepreneurial profile…", "Placing you in context…"],
+  2: ["Understanding your strengths…", "Cross-referencing your skills against real opportunities…"],
+  3: ["Mapping your starting point…", "Weighing what's realistically reachable…"],
+  5: ["Bringing your founder profile together…", "Weighing what actually drives you…"],
+  7: ["Reading what you're actually building toward…", "Aligning the timeline with the ambition…"],
 };
 
 export function getProcessingLine(afterSection: number): string {
@@ -17,7 +15,8 @@ export function getProcessingLine(afterSection: number): string {
 
 /** A genuine, template-based reflection of the user's own answers so far —
  * never a fabricated business recommendation. Only reflects what they
- * actually told us. */
+ * actually told us. Fires after sections 1, 2, 3, 5, and 7 — strategic
+ * pauses, not one after every section. */
 export function getPersonalizedInsight(afterSection: number, a: OnboardingAnswers): string {
   if (afterSection === 1) {
     const statusPhrase =
@@ -40,15 +39,15 @@ export function getPersonalizedInsight(afterSection: number, a: OnboardingAnswer
     return `Interesting. Since you're ${statusPhrase}${timePhrase ? `, ${timePhrase}` : ""}, I'm already narrowing toward opportunities that fit that reality — not generic advice.`;
   }
 
-  if (afterSection === 3) {
+  if (afterSection === 2) {
     const topSkills = (a.skills ?? []).slice(0, 2).map((s) => s.name);
     if (topSkills.length > 0) {
-      return `Noted — ${topSkills.join(" and ")} stand out. I'll weight opportunities that put those to work early, rather than ones that need skills you'd have to build from zero.`;
+      return `Noted — ${topSkills.join(" and ")} stand out. That means I can prioritize opportunities where your existing skills create an immediate advantage, rather than ones that need skills you'd have to build from zero.`;
     }
     return "No strong skills listed yet, and that's genuinely fine — plenty of successful founders started by learning on the job. I'll prioritize ideas with a shallow learning curve.";
   }
 
-  if (afterSection === 5) {
+  if (afterSection === 3) {
     const budgetPhrase = a.investmentBudget?.startsWith("₹0")
       ? "with little to no starting capital"
       : a.investmentBudget
@@ -57,8 +56,13 @@ export function getPersonalizedInsight(afterSection: number, a: OnboardingAnswer
     return `Got it. ${budgetPhrase ? `Working ${budgetPhrase}, ` : ""}I'm filtering out anything that needs capital or connections you don't have — and keeping what's actually reachable from where you stand today.`;
   }
 
-  if (afterSection === 7) {
+  if (afterSection === 5) {
     return "This is the part most tools skip. Understanding what's actually holding you back — and what's pulling you forward — is what turns a generic idea into one you'll actually follow through on.";
+  }
+
+  if (afterSection === 7) {
+    const timelinePhrase = a.timeline ? ` on a ${a.timeline.toLowerCase()} timeline` : "";
+    return `I'm building toward what you actually said you want${timelinePhrase} — not the most impressive-sounding idea, the one that fits the outcome you described.`;
   }
 
   return "Thanks — that helps a lot.";

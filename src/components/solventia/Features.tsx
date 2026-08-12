@@ -1,5 +1,5 @@
 import { motion } from "motion/react";
-import { ArrowRight, Lightbulb, BarChart3, Map, Users, Sparkles } from "lucide-react";
+import { Lightbulb, BarChart3, Map, Users, Sparkles } from "lucide-react";
 
 const FEATURES = [
   {
@@ -60,7 +60,7 @@ export function Features() {
 
             <p className="mt-6 text-[0.88rem] leading-[1.9] text-muted-foreground">{f.body}</p>
 
-            <div className="mt-8 flex items-end justify-between">
+            <div className="mt-8">
               <svg
                 viewBox="0 0 140 60"
                 className="h-14 w-28 text-primary/20"
@@ -77,9 +77,6 @@ export function Features() {
                 <circle cx="70" cy="22" r="3.5" className="fill-accent" />
                 <circle cx="112" cy="30" r="3.5" fill="currentColor" />
               </svg>
-              <span className="flex size-9 items-center justify-center rounded-full border border-border text-primary transition-colors duration-300 group-hover:border-primary/30 group-hover:bg-primary group-hover:text-primary-foreground">
-                <ArrowRight className="size-4" aria-hidden="true" />
-              </span>
             </div>
           </motion.article>
         ))}
