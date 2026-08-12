@@ -1,14 +1,7 @@
 import { Link } from "@tanstack/react-router";
 import { toast } from "sonner";
-import { Github, Instagram, Linkedin, Mail, Sparkles, X } from "lucide-react";
+import { Mail, Sparkles } from "lucide-react";
 import mark from "@/assets/solventia-mark.png";
-
-const SOCIALS = [
-  { Icon: Linkedin, label: "LinkedIn", href: "#" },
-  { Icon: Instagram, label: "Instagram", href: "#" },
-  { Icon: X, label: "X (Twitter)", href: "#" },
-  { Icon: Github, label: "GitHub", href: "#" },
-];
 
 export function Footer() {
   return (
@@ -48,16 +41,6 @@ export function Footer() {
         </div>
 
         <div className="relative flex items-center gap-6">
-          {SOCIALS.map(({ Icon, label, href }) => (
-            <a
-              key={label}
-              href={href}
-              aria-label={label}
-              className="text-primary transition-all duration-300 hover:-translate-y-0.5 hover:text-accent"
-            >
-              <Icon className="size-5" aria-hidden="true" />
-            </a>
-          ))}
           <button
             type="button"
             aria-label="Email"

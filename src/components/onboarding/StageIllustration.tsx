@@ -218,27 +218,49 @@ function MotivationMark({ color }: { color: string }) {
   );
 }
 
-function CapacityMark({ color }: { color: string }) {
-  const rows = [0, 1, 2];
+function RealityMark({ color }: { color: string }) {
+  const corners = [
+    { path: "M30 30 L30 50 M30 30 L50 30", delay: 0 },
+    { path: "M170 30 L170 50 M170 30 L150 30", delay: 0.15 },
+    { path: "M30 110 L30 90 M30 110 L50 110", delay: 0.3 },
+    { path: "M170 110 L170 90 M170 110 L150 110", delay: 0.45 },
+  ];
   return (
     <svg viewBox="0 0 200 140" className="h-28 w-full" fill="none" aria-hidden="true">
-      {rows.map((i) => {
-        const y = 50 + i * 16;
-        const up = `M20 ${y} Q60 ${y - 20} 100 ${y} T180 ${y}`;
-        const down = `M20 ${y} Q60 ${y + 20} 100 ${y} T180 ${y}`;
-        return (
-          <motion.path
-            key={i}
-            stroke={color}
-            strokeWidth="2"
-            strokeOpacity={0.5 - i * 0.13}
-            strokeLinecap="round"
-            initial={false}
-            animate={{ d: [up, down, up] }}
-            transition={{ duration: 5 + i, repeat: Infinity, ease: "easeInOut", delay: i * 0.3 }}
-          />
-        );
-      })}
+      {corners.map((c) => (
+        <motion.path
+          key={c.path}
+          d={c.path}
+          stroke={color}
+          strokeWidth="2.5"
+          strokeLinecap="round"
+          initial={{ pathLength: 0 }}
+          animate={{ pathLength: 1 }}
+          transition={{ duration: 0.7, delay: c.delay, ease: "easeInOut" }}
+        />
+      ))}
+      <motion.circle
+        cx="100"
+        cy="70"
+        r="20"
+        stroke={color}
+        strokeWidth="1.2"
+        strokeOpacity="0.3"
+        animate={{ scale: [1, 1.1, 1], opacity: [0.3, 0.1, 0.3] }}
+        transition={{ duration: 3.5, repeat: Infinity, ease: "easeInOut", delay: 1.4 }}
+        style={{ transformOrigin: "100px 70px" }}
+      />
+      <motion.circle
+        cx="100"
+        cy="70"
+        r="8"
+        fill={color}
+        fillOpacity="0.75"
+        initial={{ scale: 0 }}
+        animate={{ scale: 1 }}
+        transition={{ duration: 0.7, delay: 0.7, ease: [0.22, 1, 0.36, 1] }}
+        style={{ transformOrigin: "100px 70px" }}
+      />
     </svg>
   );
 }
@@ -297,7 +319,7 @@ const MARKS: Record<number, typeof FoundationMark> = {
   3: ResourcesMark,
   4: RiskMark,
   5: MotivationMark,
-  6: CapacityMark,
+  6: RealityMark,
   7: DirectionMark,
 };
 

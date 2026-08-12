@@ -10,7 +10,6 @@ import { RoadmapTimeline } from "@/components/solventia/RoadmapTimeline";
 import { MissionVision } from "@/components/solventia/MissionVision";
 import { FoundersStory } from "@/components/solventia/FoundersStory";
 import { ForNGOs } from "@/components/solventia/ForNGOs";
-import { Testimonials } from "@/components/solventia/Testimonials";
 import { FAQ } from "@/components/solventia/FAQ";
 import { Footer } from "@/components/solventia/Footer";
 
@@ -51,7 +50,6 @@ function Index() {
         <MissionVision />
         <FoundersStory />
         <ForNGOs />
-        <Testimonials />
         <FAQ />
       </main>
       <Footer />

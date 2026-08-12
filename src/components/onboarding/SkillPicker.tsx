@@ -11,6 +11,7 @@ import {
   CommandList,
 } from "@/components/ui/command";
 import {
+  SKILL_CATEGORIES,
   SKILL_LEVELS,
   SKILL_LIBRARY,
   type SkillEntry,
@@ -28,7 +29,6 @@ export function SkillPicker({
   const [query, setQuery] = useState("");
 
   const selectedNames = new Set(value.map((s) => s.name));
-  const available = SKILL_LIBRARY.filter((s) => !selectedNames.has(s));
 
   function addSkill(name: string) {
     if (!name.trim() || selectedNames.has(name)) return;
@@ -78,14 +78,20 @@ export function SkillPicker({
                   "No matches."
                 )}
               </CommandEmpty>
-              <CommandGroup>
-                {available.map((skill) => (
-                  <CommandItem key={skill} value={skill} onSelect={() => addSkill(skill)}>
-                    <Plus className="size-3.5 text-muted-foreground" aria-hidden="true" />
-                    {skill}
-                  </CommandItem>
-                ))}
-              </CommandGroup>
+              {SKILL_CATEGORIES.map((category) => {
+                const availableInCategory = category.skills.filter((s) => !selectedNames.has(s));
+                if (availableInCategory.length === 0) return null;
+                return (
+                  <CommandGroup key={category.label} heading={category.label}>
+                    {availableInCategory.map((skill) => (
+                      <CommandItem key={skill} value={skill} onSelect={() => addSkill(skill)}>
+                        <Plus className="size-3.5 text-muted-foreground" aria-hidden="true" />
+                        {skill}
+                      </CommandItem>
+                    ))}
+                  </CommandGroup>
+                );
+              })}
             </CommandList>
           </Command>
         </PopoverContent>

@@ -135,7 +135,7 @@ export function Header() {
             onClick={() => navigate({ to: "/consultation" })}
             className="hidden sm:inline-flex"
           >
-            Get Started
+            Find Your Business Idea
             <ArrowRight className="size-4 text-accent transition-transform duration-300 group-hover:translate-x-1" />
           </PremiumButton>
 
@@ -188,7 +188,7 @@ export function Header() {
                     navigate({ to: "/consultation" });
                   }}
                 >
-                  Get Started
+                  Find Your Business Idea
                   <ArrowRight className="size-4 text-accent" aria-hidden="true" />
                 </PremiumButton>
               </div>

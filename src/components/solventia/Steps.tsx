@@ -27,7 +27,7 @@ const STEPS = [
   },
   {
     stage: STAGE_THEMES[6],
-    body: ["We get practical about the", "time and effort you can give."],
+    body: ["We map the real-world limits", "we should plan around."],
   },
   {
     stage: STAGE_THEMES[7],

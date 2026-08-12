@@ -18,19 +18,19 @@ const FAQS = [
   },
   {
     q: "How does the AI actually find ideas for me?",
-    a: "You share your background, skills, budget, and interests. Solventia's AI analyzes that profile against real market signals to surface opportunities suited to you specifically, not generic suggestions.",
+    a: "You share your background, skills, budget, and interests through a guided consultation. Solventia's AI analyzes that full profile — not just a few keywords — to surface opportunities suited to you specifically, instead of a generic list everyone sees.",
   },
   {
-    q: "What does “validated with real data” mean?",
-    a: "Instead of guessing, Solventia checks each idea against real market and demand signals, so you can see the reasoning behind a recommendation before you commit time or money to it.",
+    q: "What does “validated” mean?",
+    a: "Solventia reasons through each idea against your own constraints — skills, capital, time, and risk appetite — and shows you why it fits before you commit time or money to it. It's a structured matching framework, not a guarantee of market success.",
   },
   {
     q: "What do I actually get at the end of the process?",
-    a: "A step-by-step roadmap broken into clear milestones — the concrete actions to take, in order, to move from idea to a validated, launch-ready venture.",
+    a: "A step-by-step roadmap broken into clear milestones — the concrete actions to take, in order, to move from idea to a launch-ready venture.",
   },
   {
     q: "Can NGOs or mentors get involved?",
-    a: "Yes — Solventia partners with NGOs and mentor networks so the young dreamers they support can move through the same structured process with added guidance.",
+    a: "That's the direction we're building toward — letting NGOs and mentor networks bring the young dreamers they support through the same structured process with added guidance. Reach out through the NGO section below and we'll follow up as that opens up.",
   },
   {
     q: "Is my information kept private?",
@@ -38,11 +38,7 @@ const FAQS = [
   },
   {
     q: "Do I need business experience to start?",
-    a: "No — Solventia is designed for first-time founders. The process starts by understanding where you are today, not where an “ideal” founder would be.",
-  },
-  {
-    q: "Is this only for experienced founders?",
-    a: "Not at all. Most people who start a Solventia consultation have never run a business before — the questions are designed to work with wherever you're starting from, not against it.",
+    a: "No. Most people who start a Solventia consultation have never run a business before — the process begins by understanding where you are today, not where an “ideal” founder would be, and the questions are designed to work with that starting point rather than against it.",
   },
   {
     q: "Can students use Solventia?",
@@ -50,7 +46,7 @@ const FAQS = [
   },
   {
     q: "How personalized are the recommendations?",
-    a: "Every recommendation is generated from your own answers — your skills, location, budget, risk appetite, and goals — not a generic list. Two people with different profiles will get different ideas.",
+    a: "Every recommendation is generated from your own answers — your skills, location, budget, risk appetite, and goals — not a generic list. Two people with different profiles get different ideas.",
   },
 ];
 

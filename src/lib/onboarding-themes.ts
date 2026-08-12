@@ -100,8 +100,8 @@ export const STAGE_THEMES: Record<number, StageTheme> = {
   },
   6: {
     section: 6,
-    name: "Your Capacity",
-    opener: "Let's get practical about your capacity.",
+    name: "Your Reality",
+    opener: "Let's get practical about your limits.",
     feeling: "Clarity",
     hue: 197,
     color: "oklch(0.5 0.13 197)",

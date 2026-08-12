@@ -20,7 +20,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Slider } from "@/components/ui/slider";
 import { PremiumButton } from "@/components/solventia/PremiumButton";
 import { SearchableMultiSelect } from "./SearchableMultiSelect";
 import { SearchableSelect } from "./SearchableSelect";
@@ -32,6 +31,17 @@ const OPTION_LISTS: Record<string, string[]> = {
   state: INDIAN_STATES,
 };
 
+/** One short, grounded reflection per spectrum position — helps the user
+ * recognize themselves in the choice rather than just picking a label. */
+const SPECTRUM_INTERPRETATIONS: Record<string, string> = {
+  "Very cautious":
+    "You'd rather move slowly and protect what you have than risk it on a long shot. I'll prioritize low-risk, low-capital paths.",
+  Balanced:
+    "You want meaningful upside, but you're not interested in risking everything to chase it.",
+  "Comfortable experimenting":
+    "You're willing to take real risks for a real shot at something bigger.",
+};
+
 export function QuestionRenderer({ step }: { step: QuestionStep }) {
   const { answers, setAnswer, goNext, skip } = useOnboarding();
   const theme = getStageTheme(step.section);
@@ -41,7 +51,6 @@ export function QuestionRenderer({ step }: { step: QuestionStep }) {
 
   const canContinueDefault =
     step.optional ||
-    step.input === "slider" ||
     (Array.isArray(value) ? value.length > 0 : value !== undefined && value !== "");
 
   function commitAndContinue(next?: unknown) {
@@ -251,21 +260,67 @@ export function QuestionRenderer({ step }: { step: QuestionStep }) {
         />
       )}
 
-      {step.input === "slider" && (
-        <div className="pt-2">
-          <Slider
-            value={[typeof value === "string" && value ? Number(value) : 50]}
-            max={100}
-            step={5}
-            onValueChange={([v]) => setAnswer(step.id, String(v) as never)}
-          />
-          <div className="mt-3 flex justify-between text-[0.78rem] text-muted-foreground">
-            <span>Play it safe</span>
-            <span className="font-semibold" style={{ color: theme.color }}>
-              {typeof value === "string" && value ? value : 50}
-            </span>
-            <span>Go all in</span>
+      {step.input === "spectrum" && step.options && (
+        <div className="flex flex-col gap-6">
+          <div className="relative flex items-start justify-between gap-2">
+            <div className="absolute inset-x-6 top-[10px] h-px bg-border" aria-hidden="true" />
+            {step.options.map((option) => {
+              const selected = value === option;
+              return (
+                <button
+                  key={option}
+                  type="button"
+                  onClick={() => setAnswer(step.id, option as never)}
+                  className="relative z-10 flex flex-1 flex-col items-center gap-3 outline-none"
+                >
+                  <motion.span
+                    animate={selected ? { scale: 1.2 } : { scale: 1 }}
+                    transition={{ type: "spring", stiffness: 300, damping: 20 }}
+                    className={cn(
+                      "flex size-5 items-center justify-center rounded-full border-2 bg-card",
+                      !selected && "border-border",
+                    )}
+                    style={
+                      selected
+                        ? { borderColor: theme.color, backgroundColor: theme.color }
+                        : undefined
+                    }
+                  />
+                  <span
+                    className={cn(
+                      "max-w-[10ch] text-center text-[0.82rem] leading-tight",
+                      selected ? "font-semibold text-primary" : "font-medium text-muted-foreground",
+                    )}
+                  >
+                    {option}
+                  </span>
+                </button>
+              );
+            })}
           </div>
+          <AnimatePresence mode="wait">
+            {typeof value === "string" && SPECTRUM_INTERPRETATIONS[value] && (
+              <motion.div
+                key={value}
+                initial={{ opacity: 0, y: 6 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -6 }}
+                transition={{ duration: 0.3 }}
+                className="rounded-xl border px-5 py-4"
+                style={{ borderColor: theme.colorSoft, backgroundColor: theme.colorSoft }}
+              >
+                <p
+                  className="text-[0.72rem] font-bold uppercase tracking-[0.1em]"
+                  style={{ color: theme.color }}
+                >
+                  {value}
+                </p>
+                <p className="mt-1.5 text-[0.9rem] leading-[1.7] text-foreground">
+                  {SPECTRUM_INTERPRETATIONS[value]}
+                </p>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
       )}
 
@@ -282,7 +337,7 @@ export function QuestionRenderer({ step }: { step: QuestionStep }) {
               step.input === "searchable-select" ||
               step.input === "searchable-multi" ||
               step.input === "skills" ||
-              step.input === "slider") && (
+              step.input === "spectrum") && (
               <PremiumButton
                 type="button"
                 tone="solid"
@@ -304,8 +359,6 @@ export function QuestionRenderer({ step }: { step: QuestionStep }) {
                     step.input === "textarea"
                   ) {
                     commitAndContinue(localText.trim() || undefined);
-                  } else if (step.input === "slider" && value === undefined) {
-                    commitAndContinue("50");
                   } else {
                     goNext();
                   }

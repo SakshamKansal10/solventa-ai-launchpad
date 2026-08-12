@@ -13,8 +13,8 @@ export default defineConfig({
   },
 
   vite: {
-  server: {
-    allowedHosts: ["lagged-catching-prayer.ngrok-free.dev"],
+    server: {
+      allowedHosts: ["lagged-catching-prayer.ngrok-free.dev"],
+    },
   },
-},
 });

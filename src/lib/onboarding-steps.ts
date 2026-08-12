@@ -17,7 +17,7 @@ export type InputKind =
   | "multi-choice"
   | "searchable-multi"
   | "skills"
-  | "slider"
+  | "spectrum"
   | "currency"
   | "textarea";
 
@@ -243,7 +243,8 @@ export const STEPS: Step[] = [
     input: "select",
     label: "What's your approximate annual income?",
     options: INCOME_BRACKETS,
-    condition: (a) => a.currentStatus === "Working Professional",
+    condition: (a) =>
+      a.currentStatus === "Working Professional" || a.currentStatus === "Business Owner",
   },
 
   {
@@ -405,9 +406,9 @@ export const STEPS: Step[] = [
     kind: "question",
     id: "riskAppetite",
     section: 4,
-    input: "slider",
-    label: "How much risk are you comfortable taking on right now?",
-    helper: "0 = play it very safe, 100 = go all in",
+    input: "spectrum",
+    label: "How comfortable are you with uncertainty?",
+    options: ["Very cautious", "Balanced", "Comfortable experimenting"],
   },
   {
     kind: "question",
@@ -428,24 +429,11 @@ export const STEPS: Step[] = [
   },
   {
     kind: "question",
-    id: "biggestFear",
-    section: 5,
-    input: "textarea",
-    label: "What's your biggest fear about starting something?",
-  },
-  {
-    kind: "question",
-    id: "whyNotStarted",
-    section: 5,
-    input: "textarea",
-    label: "What's stopped you from starting until now?",
-  },
-  {
-    kind: "question",
     id: "biggestMotivation",
     section: 5,
     input: "textarea",
-    label: "What's your biggest motivation for doing this?",
+    label: "What would you love to build, improve, or change if you had the right opportunity?",
+    helper: "There are no wrong answers. Tell Sol what genuinely matters to you.",
   },
   {
     kind: "question",
@@ -453,6 +441,23 @@ export const STEPS: Step[] = [
     section: 5,
     input: "textarea",
     label: "What real-life problem frustrates you every day?",
+    optional: true,
+  },
+  {
+    kind: "question",
+    id: "biggestFear",
+    section: 5,
+    input: "textarea",
+    label: "What's your biggest fear about starting something?",
+    optional: true,
+  },
+  {
+    kind: "question",
+    id: "whyNotStarted",
+    section: 5,
+    input: "textarea",
+    label: "What's stopped you from starting until now?",
+    optional: true,
   },
   {
     kind: "question",
@@ -465,11 +470,11 @@ export const STEPS: Step[] = [
 
   { kind: "thinking", afterSection: 5 },
 
-  // ===== Section 6 — Your Capacity =====
+  // ===== Section 6 — Your Reality =====
   {
     kind: "section-intro",
     section: 6,
-    title: "Your Capacity",
+    title: "Your Reality",
     body: "Real plans account for real limits. Nothing here disqualifies you — it just shows exactly how much room you have to maneuver.",
   },
   {

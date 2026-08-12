@@ -13,6 +13,21 @@ export function getProcessingLine(afterSection: number): string {
   return options[0];
 }
 
+/** Cumulative list of what Sol has learned so far, as of each thinking
+ * pause — grows section over section so the pause feels like a real
+ * synthesis moment rather than a generic spinner. */
+const KNOWN_SIGNALS: Record<number, string[]> = {
+  1: ["Starting point"],
+  2: ["Starting point", "Skills"],
+  3: ["Starting point", "Skills", "Resources"],
+  5: ["Starting point", "Skills", "Resources", "Work style", "Motivation"],
+  7: ["Starting point", "Skills", "Resources", "Work style", "Motivation", "Reality", "Direction"],
+};
+
+export function getKnownSignals(afterSection: number): string[] {
+  return KNOWN_SIGNALS[afterSection] ?? [];
+}
+
 /** A genuine, template-based reflection of the user's own answers so far —
  * never a fabricated business recommendation. Only reflects what they
  * actually told us. Fires after sections 1, 2, 3, 5, and 7 — strategic

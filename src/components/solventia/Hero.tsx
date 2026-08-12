@@ -354,7 +354,7 @@ export function Hero() {
               <Avatar index={2} alt="Solventia community member" />
             </div>
             <p className="max-w-[28ch] text-[0.88rem] leading-[1.5] text-muted-foreground">
-              Trusted by 10,000+ young dreamers, mentors &amp; NGOs across India{" "}
+              Built for young dreamers, mentors &amp; NGOs across India{" "}
               <Heart
                 className="inline size-4 -translate-y-px fill-accent text-accent"
                 aria-hidden="true"
