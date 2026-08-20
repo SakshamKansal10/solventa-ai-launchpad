@@ -12,6 +12,15 @@ export default defineConfig({
     server: { entry: "server" },
   },
 
+  // Production is deployed on Vercel, not Cloudflare. Nitro's own
+  // zero-config auto-detection normally targets whatever platform it's
+  // actually building on, but this shared config's default fallback is
+  // cloudflare-module, and its docs note that fallback can still win in
+  // some build contexts — hard-pinning removes that ambiguity entirely.
+  // Does not affect `vite dev` (localhost/ngrok): this preset only
+  // applies to `vite build`.
+  nitro: { preset: "vercel" },
+
   vite: {
     server: {
       allowedHosts: ["lagged-catching-prayer.ngrok-free.dev"],
