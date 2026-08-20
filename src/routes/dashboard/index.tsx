@@ -4,7 +4,11 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { ArrowRight, Compass, Loader2, Sparkles } from "lucide-react";
 import { DashboardShell, useOpenMentor } from "@/components/dashboard/DashboardShell";
-import { FitRing, FitScoreBreakdownList, fitQualitativeLabel } from "@/components/dashboard/FitScore";
+import {
+  FitRing,
+  FitScoreBreakdownList,
+  fitQualitativeLabel,
+} from "@/components/dashboard/FitScore";
 import { RoadmapStageTimeline } from "@/components/dashboard/RoadmapStageTimeline";
 import { BusinessDnaPanel } from "@/components/dashboard/BusinessDnaPanel";
 import { PremiumButton } from "@/components/solventia/PremiumButton";

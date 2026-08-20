@@ -150,12 +150,20 @@ export const RoadmapPhaseSchema = z.object({
     .describe("Only include phases that genuinely apply to this opportunity."),
   title: z.string(),
   description: z.string(),
-  tasks: z.array(RoadmapTaskSchema).min(1).max(8),
+  // Capped at 2-3 (not the originally-allowed 8): three full roadmaps
+  // nested inside one intelligence-package response empirically hit
+  // Gemini's structured-output complexity ceiling twice — first at 1-8
+  // tasks/phase (fixed by capping to 2-4), then again at the FULL nested
+  // package with 2-4 (a live 400 INVALID_ARGUMENT each time, on the real
+  // combined schema, not just this array in isolation). Cut further here
+  // rather than guessed at — this is the second empirical reduction.
+  tasks: z.array(RoadmapTaskSchema).min(2).max(3),
 });
 export type RoadmapPhasePlan = z.infer<typeof RoadmapPhaseSchema>;
 
 export const RoadmapPlanSchema = z.object({
-  phases: z.array(RoadmapPhaseSchema).min(2).max(6),
+  // Capped at 3-4 (not the originally-allowed 6) for the same reason.
+  phases: z.array(RoadmapPhaseSchema).min(3).max(4),
 });
 export type RoadmapPlan = z.infer<typeof RoadmapPlanSchema>;
 
