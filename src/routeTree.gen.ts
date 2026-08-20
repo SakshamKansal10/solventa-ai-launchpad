@@ -12,7 +12,13 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ConsultationRouteImport } from './routes/consultation'
 import { Route as PrivacyRouteImport } from './routes/privacy'
+import { Route as ReviewRouteImport } from './routes/review'
+import { Route as ReviewPublicRouteImport } from './routes/review-public'
 import { Route as TermsRouteImport } from './routes/terms'
+import { Route as AuthCallbackRouteImport } from './routes/auth/callback'
+import { Route as DashboardIndexRouteImport } from './routes/dashboard/index'
+import { Route as DashboardRoadmapRouteImport } from './routes/dashboard/roadmap'
+import { Route as DashboardOpportunitiesIdRouteImport } from './routes/dashboard/opportunities/$id'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -29,44 +35,130 @@ const PrivacyRoute = PrivacyRouteImport.update({
   path: '/privacy',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ReviewRoute = ReviewRouteImport.update({
+  id: '/review',
+  path: '/review',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ReviewPublicRoute = ReviewPublicRouteImport.update({
+  id: '/review-public',
+  path: '/review-public',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const TermsRoute = TermsRouteImport.update({
   id: '/terms',
   path: '/terms',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthCallbackRoute = AuthCallbackRouteImport.update({
+  id: '/auth/callback',
+  path: '/auth/callback',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DashboardIndexRoute = DashboardIndexRouteImport.update({
+  id: '/dashboard/',
+  path: '/dashboard/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DashboardRoadmapRoute = DashboardRoadmapRouteImport.update({
+  id: '/dashboard/roadmap',
+  path: '/dashboard/roadmap',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DashboardOpportunitiesIdRoute =
+  DashboardOpportunitiesIdRouteImport.update({
+    id: '/dashboard/opportunities/$id',
+    path: '/dashboard/opportunities/$id',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/consultation': typeof ConsultationRoute
   '/privacy': typeof PrivacyRoute
+  '/review': typeof ReviewRoute
+  '/review-public': typeof ReviewPublicRoute
   '/terms': typeof TermsRoute
+  '/auth/callback': typeof AuthCallbackRoute
+  '/dashboard/roadmap': typeof DashboardRoadmapRoute
+  '/dashboard/': typeof DashboardIndexRoute
+  '/dashboard/opportunities/$id': typeof DashboardOpportunitiesIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/consultation': typeof ConsultationRoute
   '/privacy': typeof PrivacyRoute
+  '/review': typeof ReviewRoute
+  '/review-public': typeof ReviewPublicRoute
   '/terms': typeof TermsRoute
+  '/auth/callback': typeof AuthCallbackRoute
+  '/dashboard/roadmap': typeof DashboardRoadmapRoute
+  '/dashboard': typeof DashboardIndexRoute
+  '/dashboard/opportunities/$id': typeof DashboardOpportunitiesIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/consultation': typeof ConsultationRoute
   '/privacy': typeof PrivacyRoute
+  '/review': typeof ReviewRoute
+  '/review-public': typeof ReviewPublicRoute
   '/terms': typeof TermsRoute
+  '/auth/callback': typeof AuthCallbackRoute
+  '/dashboard/roadmap': typeof DashboardRoadmapRoute
+  '/dashboard/': typeof DashboardIndexRoute
+  '/dashboard/opportunities/$id': typeof DashboardOpportunitiesIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/consultation' | '/privacy' | '/terms'
+  fullPaths:
+    | '/'
+    | '/consultation'
+    | '/privacy'
+    | '/review'
+    | '/review-public'
+    | '/terms'
+    | '/auth/callback'
+    | '/dashboard/roadmap'
+    | '/dashboard/'
+    | '/dashboard/opportunities/$id'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/consultation' | '/privacy' | '/terms'
-  id: '__root__' | '/' | '/consultation' | '/privacy' | '/terms'
+  to:
+    | '/'
+    | '/consultation'
+    | '/privacy'
+    | '/review'
+    | '/review-public'
+    | '/terms'
+    | '/auth/callback'
+    | '/dashboard/roadmap'
+    | '/dashboard'
+    | '/dashboard/opportunities/$id'
+  id:
+    | '__root__'
+    | '/'
+    | '/consultation'
+    | '/privacy'
+    | '/review'
+    | '/review-public'
+    | '/terms'
+    | '/auth/callback'
+    | '/dashboard/roadmap'
+    | '/dashboard/'
+    | '/dashboard/opportunities/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   ConsultationRoute: typeof ConsultationRoute
   PrivacyRoute: typeof PrivacyRoute
+  ReviewRoute: typeof ReviewRoute
+  ReviewPublicRoute: typeof ReviewPublicRoute
   TermsRoute: typeof TermsRoute
+  AuthCallbackRoute: typeof AuthCallbackRoute
+  DashboardRoadmapRoute: typeof DashboardRoadmapRoute
+  DashboardIndexRoute: typeof DashboardIndexRoute
+  DashboardOpportunitiesIdRoute: typeof DashboardOpportunitiesIdRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -92,11 +184,53 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PrivacyRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/review': {
+      id: '/review'
+      path: '/review'
+      fullPath: '/review'
+      preLoaderRoute: typeof ReviewRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/review-public': {
+      id: '/review-public'
+      path: '/review-public'
+      fullPath: '/review-public'
+      preLoaderRoute: typeof ReviewPublicRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/terms': {
       id: '/terms'
       path: '/terms'
       fullPath: '/terms'
       preLoaderRoute: typeof TermsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/auth/callback': {
+      id: '/auth/callback'
+      path: '/auth/callback'
+      fullPath: '/auth/callback'
+      preLoaderRoute: typeof AuthCallbackRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/dashboard/': {
+      id: '/dashboard/'
+      path: '/dashboard'
+      fullPath: '/dashboard/'
+      preLoaderRoute: typeof DashboardIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/dashboard/roadmap': {
+      id: '/dashboard/roadmap'
+      path: '/dashboard/roadmap'
+      fullPath: '/dashboard/roadmap'
+      preLoaderRoute: typeof DashboardRoadmapRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/dashboard/opportunities/$id': {
+      id: '/dashboard/opportunities/$id'
+      path: '/dashboard/opportunities/$id'
+      fullPath: '/dashboard/opportunities/$id'
+      preLoaderRoute: typeof DashboardOpportunitiesIdRouteImport
       parentRoute: typeof rootRouteImport
     }
   }
@@ -106,7 +240,13 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   ConsultationRoute: ConsultationRoute,
   PrivacyRoute: PrivacyRoute,
+  ReviewRoute: ReviewRoute,
+  ReviewPublicRoute: ReviewPublicRoute,
   TermsRoute: TermsRoute,
+  AuthCallbackRoute: AuthCallbackRoute,
+  DashboardRoadmapRoute: DashboardRoadmapRoute,
+  DashboardIndexRoute: DashboardIndexRoute,
+  DashboardOpportunitiesIdRoute: DashboardOpportunitiesIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

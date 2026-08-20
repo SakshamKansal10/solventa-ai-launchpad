@@ -1,12 +1,11 @@
 import type { OnboardingAnswers } from "./onboarding-types";
 import {
-  COUNTRIES,
   INCOME_BRACKETS,
-  INDIAN_STATES,
   INVESTMENT_BRACKETS,
   STATUS_OPTIONS,
   WEEKLY_HOURS,
 } from "./onboarding-types";
+import { COUNTRY_NAMES } from "./location-data";
 
 export type InputKind =
   | "text"
@@ -19,7 +18,11 @@ export type InputKind =
   | "skills"
   | "spectrum"
   | "currency"
-  | "textarea";
+  | "textarea"
+  /** Country → postal/PIN lookup → confirm/change → (fallback) region +
+   * searchable city. Manages state/city/postalCode itself; see
+   * LocationPicker.tsx. */
+  | "location";
 
 export interface QuestionStep {
   kind: "question";
@@ -82,33 +85,15 @@ export const STEPS: Step[] = [
     section: 1,
     input: "searchable-select",
     label: "Which country are you based in?",
-    options: COUNTRIES,
-  },
-  {
-    kind: "question",
-    id: "state",
-    section: 1,
-    input: "searchable-select",
-    label: "Which state are you based in?",
-    options: INDIAN_STATES,
-    condition: (a) => a.country === "India",
-  },
-  {
-    kind: "question",
-    id: "state",
-    section: 1,
-    input: "text",
-    label: "Which state, province, or region?",
-    placeholder: "e.g. California",
-    condition: (a) => a.country !== undefined && a.country !== "India",
+    options: COUNTRY_NAMES,
   },
   {
     kind: "question",
     id: "city",
     section: 1,
-    input: "text",
-    label: "Which city or town?",
-    placeholder: "e.g. Pune",
+    input: "location",
+    label: "Where are you based?",
+    condition: (a) => a.country !== undefined,
   },
   {
     kind: "question",
@@ -147,15 +132,6 @@ export const STEPS: Step[] = [
   // School student branch
   {
     kind: "question",
-    id: "currentGrade",
-    section: 1,
-    input: "select",
-    label: "What grade are you currently in?",
-    options: ["Grade 8", "Grade 9", "Grade 10", "Grade 11", "Grade 12"],
-    condition: (a) => a.currentStatus === "School Student",
-  },
-  {
-    kind: "question",
     id: "subjects",
     section: 1,
     input: "multi-choice",
@@ -191,34 +167,8 @@ export const STEPS: Step[] = [
     label: "What's your major or specialization?",
     condition: (a) => a.currentStatus === "College Student",
   },
-  {
-    kind: "question",
-    id: "graduationYear",
-    section: 1,
-    input: "text",
-    label: "What year do you expect to graduate?",
-    placeholder: "e.g. 2027",
-    condition: (a) => a.currentStatus === "College Student",
-  },
-  {
-    kind: "question",
-    id: "internships",
-    section: 1,
-    input: "textarea",
-    label: "Any internships or work experience so far?",
-    optional: true,
-    condition: (a) => a.currentStatus === "College Student",
-  },
 
   // Working professional / business owner / freelancer branch
-  {
-    kind: "question",
-    id: "jobTitle",
-    section: 1,
-    input: "text",
-    label: "What's your current job title or business focus?",
-    condition: isProfessional,
-  },
   {
     kind: "question",
     id: "industry",
@@ -243,8 +193,11 @@ export const STEPS: Step[] = [
     input: "select",
     label: "What's your approximate annual income?",
     options: INCOME_BRACKETS,
+    optional: true,
     condition: (a) =>
-      a.currentStatus === "Working Professional" || a.currentStatus === "Business Owner",
+      a.currentStatus === "Working Professional" ||
+      a.currentStatus === "Business Owner" ||
+      a.currentStatus === "Freelancer",
   },
 
   {
@@ -272,6 +225,10 @@ export const STEPS: Step[] = [
     input: "skills",
     label: "What are you good at?",
     helper: "Search, select, and rate your comfort level. Add your own if it's missing.",
+    // Not having a listed skill yet is a legitimate, common answer — Sol
+    // adapts (roadmaps teach missing skills first) rather than blocking
+    // the founder from continuing at all.
+    optional: true,
   },
   {
     kind: "question",
@@ -344,16 +301,6 @@ export const STEPS: Step[] = [
     input: "choice",
     label: "How easily can you travel to meet people or run errands?",
     options: ["Very easily", "With some planning", "Difficult", "Not able to travel much"],
-    autoContinue: true,
-  },
-  {
-    kind: "question",
-    id: "familySupport",
-    section: 3,
-    input: "choice",
-    label: "How supportive is your family of you starting something?",
-    options: ["Very supportive", "Cautiously supportive", "Neutral", "Not supportive yet"],
-    optional: true,
     autoContinue: true,
   },
 
@@ -440,31 +387,7 @@ export const STEPS: Step[] = [
     id: "dailyFrustration",
     section: 5,
     input: "textarea",
-    label: "What real-life problem frustrates you every day?",
-    optional: true,
-  },
-  {
-    kind: "question",
-    id: "biggestFear",
-    section: 5,
-    input: "textarea",
-    label: "What's your biggest fear about starting something?",
-    optional: true,
-  },
-  {
-    kind: "question",
-    id: "whyNotStarted",
-    section: 5,
-    input: "textarea",
-    label: "What's stopped you from starting until now?",
-    optional: true,
-  },
-  {
-    kind: "question",
-    id: "mentorshipVision",
-    section: 5,
-    input: "textarea",
-    label: "If someone mentored you for one year, what would you build?",
+    label: "What real-world problem bothers you enough that you'd like to see it solved?",
     optional: true,
   },
 

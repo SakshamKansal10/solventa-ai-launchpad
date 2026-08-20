@@ -3,12 +3,7 @@ import { motion, AnimatePresence } from "motion/react";
 import { ArrowRight, Check } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { QuestionStep } from "@/lib/onboarding-steps";
-import {
-  COUNTRIES,
-  INDIAN_STATES,
-  LANGUAGE_LIBRARY,
-  type SkillEntry,
-} from "@/lib/onboarding-types";
+import { LANGUAGE_LIBRARY, type SkillEntry } from "@/lib/onboarding-types";
 import { useOnboarding } from "@/lib/onboarding-store";
 import { getStageTheme } from "@/lib/onboarding-themes";
 import { Input } from "@/components/ui/input";
@@ -25,11 +20,7 @@ import { SearchableMultiSelect } from "./SearchableMultiSelect";
 import { SearchableSelect } from "./SearchableSelect";
 import { CurrencyInput } from "./CurrencyInput";
 import { SkillPicker } from "./SkillPicker";
-
-const OPTION_LISTS: Record<string, string[]> = {
-  country: COUNTRIES,
-  state: INDIAN_STATES,
-};
+import { LocationPicker } from "./LocationPicker";
 
 /** One short, grounded reflection per spectrum position — helps the user
  * recognize themselves in the choice rather than just picking a label. */
@@ -237,11 +228,15 @@ export function QuestionRenderer({ step }: { step: QuestionStep }) {
 
       {step.input === "searchable-select" && (
         <SearchableSelect
-          options={step.options ?? OPTION_LISTS[step.id] ?? []}
+          options={step.options ?? []}
           value={typeof value === "string" ? value : undefined}
           onChange={(next) => setAnswer(step.id, next as never)}
           placeholder="Search…"
         />
+      )}
+
+      {step.input === "location" && typeof answers.country === "string" && (
+        <LocationPicker country={answers.country} />
       )}
 
       {step.input === "searchable-multi" && (

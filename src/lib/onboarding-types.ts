@@ -20,31 +20,39 @@ export interface SkillEntry {
 }
 
 /** Every field is optional — the flow is adaptive and skippable, and
- * there is no backend to enforce required fields against. */
+ * there is no backend to enforce required fields against.
+ *
+ * Every field here earns its place by materially changing the
+ * recommendation engine's output (fit score, candidate generation, or
+ * roadmap design) — not just by being interesting to know. A field that
+ * only ever became flavor text in an AI prompt, never a scoring input or
+ * a decision branch, was cut. */
 export interface OnboardingAnswers {
   // Section 1 — Getting to Know You
   age?: string;
   country?: string;
   state?: string;
   city?: string;
+  /** Only set when a postal/PIN lookup was actually used to resolve
+   * state+city (see LocationPicker) — absent for the manual-entry path. */
+  postalCode?: string;
   education?: string;
   currentStatus?: CurrentStatus;
   languages?: string[];
 
-  currentGrade?: string;
   subjects?: string[];
   futureCareerInterests?: string;
 
   degree?: string;
   major?: string;
-  graduationYear?: string;
-  internships?: string;
 
-  jobTitle?: string;
   industry?: string;
   yearsExperience?: string;
+  /** Asked for Working Professional, Business Owner, and Freelancer — it's
+   * a distinct signal from investmentBudget (income vs. investable
+   * capital aren't the same thing), and directly useful for judging
+   * realistic side-income goals against their existing earnings. */
   annualIncome?: string;
-  investmentCapacity?: string;
 
   timeAvailableWeekly?: string;
 
@@ -56,7 +64,6 @@ export interface OnboardingAnswers {
   assets?: string[];
   internetQuality?: string;
   transportation?: string;
-  familySupport?: string;
 
   // Section 3 — Skills & Strengths
   skills?: SkillEntry[];
@@ -78,16 +85,12 @@ export interface OnboardingAnswers {
   // Section 6 — Your Constraints
   industryRestrictions?: string[];
   relocation?: string;
-  constraintTransport?: string;
   healthLimitations?: string;
   otherConstraints?: string;
 
   // Section 7 — Founder Mindset
-  biggestFear?: string;
-  whyNotStarted?: string;
   biggestMotivation?: string;
   dailyFrustration?: string;
-  mentorshipVision?: string;
 }
 
 export type AnswerKey = keyof OnboardingAnswers;
@@ -192,115 +195,6 @@ export const LANGUAGE_LIBRARY = [
   "Malayalam",
   "Punjabi",
   "Assamese",
-];
-
-export const INDIAN_STATES = [
-  "Andhra Pradesh",
-  "Arunachal Pradesh",
-  "Assam",
-  "Bihar",
-  "Chhattisgarh",
-  "Goa",
-  "Gujarat",
-  "Haryana",
-  "Himachal Pradesh",
-  "Jharkhand",
-  "Karnataka",
-  "Kerala",
-  "Madhya Pradesh",
-  "Maharashtra",
-  "Manipur",
-  "Meghalaya",
-  "Mizoram",
-  "Nagaland",
-  "Odisha",
-  "Punjab",
-  "Rajasthan",
-  "Sikkim",
-  "Tamil Nadu",
-  "Telangana",
-  "Tripura",
-  "Uttar Pradesh",
-  "Uttarakhand",
-  "West Bengal",
-  // Union Territories
-  "Andaman and Nicobar Islands",
-  "Chandigarh",
-  "Dadra and Nagar Haveli and Daman and Diu",
-  "Delhi",
-  "Jammu and Kashmir",
-  "Ladakh",
-  "Lakshadweep",
-  "Puducherry",
-];
-
-/** ISO-ish common-name list, India first since it's the primary market —
- * used by the searchable country selector. */
-export const COUNTRIES = [
-  "India",
-  "United States",
-  "United Kingdom",
-  "United Arab Emirates",
-  "Canada",
-  "Australia",
-  "Singapore",
-  "Germany",
-  "France",
-  "Netherlands",
-  "Ireland",
-  "New Zealand",
-  "Saudi Arabia",
-  "Qatar",
-  "Kuwait",
-  "Bahrain",
-  "Oman",
-  "Nepal",
-  "Bangladesh",
-  "Sri Lanka",
-  "Pakistan",
-  "Afghanistan",
-  "Bhutan",
-  "Myanmar",
-  "China",
-  "Japan",
-  "South Korea",
-  "Indonesia",
-  "Malaysia",
-  "Thailand",
-  "Vietnam",
-  "Philippines",
-  "Hong Kong",
-  "Taiwan",
-  "Israel",
-  "Turkey",
-  "Egypt",
-  "South Africa",
-  "Nigeria",
-  "Kenya",
-  "Ghana",
-  "Brazil",
-  "Mexico",
-  "Argentina",
-  "Chile",
-  "Colombia",
-  "Peru",
-  "Spain",
-  "Italy",
-  "Portugal",
-  "Switzerland",
-  "Austria",
-  "Belgium",
-  "Sweden",
-  "Norway",
-  "Denmark",
-  "Finland",
-  "Poland",
-  "Russia",
-  "Ukraine",
-  "Greece",
-  "Czech Republic",
-  "Romania",
-  "Other",
 ];
 
 export const INCOME_BRACKETS = [

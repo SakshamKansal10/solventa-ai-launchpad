@@ -97,6 +97,14 @@ export function SkillPicker({
         </PopoverContent>
       </Popover>
 
+      {value.length === 0 && (
+        <p className="text-center text-[0.85rem] text-muted-foreground">
+          Don&rsquo;t have anything specific yet? That&rsquo;s a completely normal place to start —
+          Sol will build learning into your roadmap instead of assuming skills you don&rsquo;t have
+          yet. Just hit Continue.
+        </p>
+      )}
+
       {value.length > 0 && (
         <ul className="flex flex-col gap-2.5">
           {value.map((skill) => (

@@ -36,7 +36,7 @@ export function getPersonalizedInsight(afterSection: number, a: OnboardingAnswer
   if (afterSection === 1) {
     const statusPhrase =
       a.currentStatus === "School Student"
-        ? `a ${a.currentGrade ?? "school"} student`
+        ? "a school student"
         : a.currentStatus === "College Student"
           ? `a college student${a.major ? ` studying ${a.major}` : ""}`
           : a.currentStatus === "Working Professional"
