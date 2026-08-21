@@ -46,17 +46,23 @@ export function GoogleSignInButton({ redirectPath, className }: GoogleSignInButt
   async function handleClick() {
     setLoading(true);
     setError(null);
-    const supabase = createSupabaseBrowserClient();
-    const { error: oauthError } = await supabase.auth.signInWithOAuth({
-      provider: "google",
-      options: { redirectTo: `${window.location.origin}${redirectPath}` },
-    });
-    if (oauthError) {
-      console.error("[google-signin] failed:", oauthError);
+    try {
+      const supabase = createSupabaseBrowserClient();
+      const { error: oauthError } = await supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: { redirectTo: `${window.location.origin}${redirectPath}` },
+      });
+      if (oauthError) {
+        console.error("[google-signin] failed:", oauthError);
+        setError("Couldn't start Google sign-in — try again.");
+        setLoading(false);
+      }
+      // On success the browser is already navigating to Google; nothing left to do here.
+    } catch (err) {
+      console.error("[google-signin] failed:", err);
       setError("Couldn't start Google sign-in — try again.");
       setLoading(false);
     }
-    // On success the browser is already navigating to Google; nothing left to do here.
   }
 
   return (

@@ -42,7 +42,16 @@ export const completeConsultation = createServerFn({ method: "POST" })
     const profileHash = hashProfile(normalized);
 
     const overallStart = Date.now();
-    const pkg = await generateIntelligencePackage(normalized);
+    let pkg: Awaited<ReturnType<typeof generateIntelligencePackage>>;
+    try {
+      pkg = await generateIntelligencePackage(normalized);
+    } catch (err) {
+      console.error(
+        `[intelligence-package] generation failed model=${MODEL} user=${user.id}:`,
+        err,
+      );
+      throw err;
+    }
     const durationMs = Date.now() - overallStart;
 
     // generateStructured's own validation retry is internal and opaque
