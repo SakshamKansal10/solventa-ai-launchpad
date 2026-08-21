@@ -26,11 +26,25 @@ function getClient(): GoogleGenAI {
   return client;
 }
 
+// Gemini's responseSchema only accepts a restricted OpenAPI-3 subset — it
+// rejects "additionalProperties" outright (400 INVALID_ARGUMENT), which
+// zod-to-json-schema emits by default on every z.object() node.
+function stripAdditionalProperties(node: unknown): unknown {
+  if (Array.isArray(node)) return node.map(stripAdditionalProperties);
+  if (node && typeof node === "object") {
+    const { additionalProperties, ...rest } = node as Record<string, unknown>;
+    return Object.fromEntries(
+      Object.entries(rest).map(([key, value]) => [key, stripAdditionalProperties(value)]),
+    );
+  }
+  return node;
+}
+
 function toGeminiSchema(schema: z.ZodTypeAny): unknown {
   const json = zodToJsonSchema(schema, { target: "openApi3", $refStrategy: "none" });
   // zodToJsonSchema can leave a top-level $schema key Gemini's backend rejects.
   const { $schema, ...rest } = json as Record<string, unknown>;
-  return rest;
+  return stripAdditionalProperties(rest);
 }
 
 export class AIGenerationError extends Error {
