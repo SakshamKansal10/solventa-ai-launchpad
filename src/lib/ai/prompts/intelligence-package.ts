@@ -154,24 +154,95 @@ const FlatRoadmapTaskSchema = z.object({
 });
 type FlatRoadmapTask = z.infer<typeof FlatRoadmapTaskSchema>;
 
-/** 3-4 phases per opportunity, 2-3 tasks per phase — enforced by refine
- * below, not by nested array bounds, since there IS no nesting here. */
-function validateRoadmapCoverage(
+// ============================================================
+// SCHEMA VALIDATION vs. PRODUCT-QUALITY VALIDATION — kept deliberately
+// separate. Zod (below) only ever rejects genuinely broken output:
+// missing/empty roadmaps, orphaned cross-references, or a runaway
+// generation past all reasonable bounds. It never rejects for landing
+// outside the PREFERRED count range — that's a quality signal, checked
+// separately by checkRoadmapQuality() AFTER a package already passed
+// validation, and it only ever warns, never throws. A roadmap with 5
+// phases instead of 4, or one phase with 4 tasks instead of 3, is a good
+// response and must be kept, not discarded.
+// ============================================================
+
+/** Hard ceiling only — not a quality target. Content between the
+ * acceptable range and this ceiling is trimmed deterministically by
+ * normalizeOpportunityRoadmap() below, never rejected; only emptiness or
+ * something past this ceiling (a genuinely broken/runaway generation)
+ * fails validation. */
+const MAX_PHASES_PER_OPPORTUNITY_HARD = 8;
+const MAX_TASKS_PER_PHASE_HARD = 6;
+
+/** What the app actually keeps after normalization — generous enough to
+ * never need a second Gemini call to "fix" a count, since excess within
+ * this range (and up to the hard ceiling above) is simply trimmed. */
+const ACCEPTABLE_MAX_PHASES_PER_OPPORTUNITY = 5;
+const ACCEPTABLE_MAX_TASKS_PER_PHASE = 4;
+
+/** The range this app was actually designed around — used only for
+ * checkRoadmapQuality()'s non-fatal warnings, never for rejection. */
+const PREFERRED_PHASES_PER_OPPORTUNITY: readonly [number, number] = [3, 4];
+const PREFERRED_TASKS_PER_PHASE: readonly [number, number] = [2, 3];
+
+/** Structural correctness only: every phase belongs to a real opportunity,
+ * every task belongs to a real phase, no opportunity or phase is empty,
+ * and nothing is absurdly oversized. Returns a list of specific problem
+ * descriptions (empty = structurally valid) rather than a bare boolean,
+ * so a rejected response tells the model exactly what to fix. */
+function findRoadmapStructureIssues(
   opportunityIndexes: number[],
   phases: FlatRoadmapPhase[],
   tasks: FlatRoadmapTask[],
-): boolean {
+): string[] {
+  const issues: string[] = [];
+
+  for (const phase of phases) {
+    if (!opportunityIndexes.includes(phase.opportunityIndex)) {
+      issues.push(
+        `roadmapPhases has an entry with opportunityIndex=${phase.opportunityIndex}, which doesn't match any real opportunity.`,
+      );
+    }
+  }
+  for (const task of tasks) {
+    const hasPhase = phases.some(
+      (p) => p.opportunityIndex === task.opportunityIndex && p.phaseIndex === task.phaseIndex,
+    );
+    if (!hasPhase) {
+      issues.push(
+        `roadmapTasks has an entry for opportunityIndex=${task.opportunityIndex} phaseIndex=${task.phaseIndex}, but no matching roadmapPhases entry exists.`,
+      );
+    }
+  }
+
   for (const oi of opportunityIndexes) {
     const ownPhases = phases.filter((p) => p.opportunityIndex === oi);
-    if (ownPhases.length < 3 || ownPhases.length > 4) return false;
+    if (ownPhases.length === 0) {
+      issues.push(`Opportunity ${oi} has no roadmap phases — every opportunity needs a roadmap.`);
+      continue;
+    }
+    if (ownPhases.length > MAX_PHASES_PER_OPPORTUNITY_HARD) {
+      issues.push(
+        `Opportunity ${oi} has ${ownPhases.length} roadmap phases, which is unreasonably many (max ${MAX_PHASES_PER_OPPORTUNITY_HARD}).`,
+      );
+    }
     for (const phase of ownPhases) {
       const ownTasks = tasks.filter(
         (t) => t.opportunityIndex === oi && t.phaseIndex === phase.phaseIndex,
       );
-      if (ownTasks.length < 2 || ownTasks.length > 3) return false;
+      if (ownTasks.length === 0) {
+        issues.push(
+          `Opportunity ${oi} phase ${phase.phaseIndex} ("${phase.title}") has no tasks — every phase needs at least one.`,
+        );
+      } else if (ownTasks.length > MAX_TASKS_PER_PHASE_HARD) {
+        issues.push(
+          `Opportunity ${oi} phase ${phase.phaseIndex} ("${phase.title}") has ${ownTasks.length} tasks, which is unreasonably many (max ${MAX_TASKS_PER_PHASE_HARD}).`,
+        );
+      }
     }
   }
-  return true;
+
+  return issues;
 }
 
 /** Exported only so a test can assert on the exact request shape sent to
@@ -185,34 +256,56 @@ export const FlatIntelligencePackageSchema = z
       .describe(
         "Exactly 3 genuinely different strategic options — never near-duplicates of the same idea.",
       ),
+    // Generous sanity bounds only — real per-opportunity/per-phase
+    // correctness is enforced by the structural superRefine below, not by
+    // these flat totals (3 opportunities x up to 8 phases each, x up to 6
+    // tasks each, is the absolute ceiling; normal output lands far inside it).
     roadmapPhases: z
       .array(FlatRoadmapPhaseSchema)
-      .min(9)
-      .max(12)
-      .describe(
-        "3-4 phases per opportunity (9-12 total across all 3), tagged with opportunityIndex.",
-      ),
+      .min(3)
+      .max(24)
+      .describe("Every phase tagged with opportunityIndex; aim for 3-4 phases per opportunity."),
     roadmapTasks: z
       .array(FlatRoadmapTaskSchema)
-      .min(18)
-      .max(36)
-      .describe("2-3 tasks per phase, tagged with opportunityIndex + phaseIndex."),
+      .min(3)
+      .max(144)
+      .describe(
+        "Every task tagged with opportunityIndex + phaseIndex; aim for 2-3 tasks per phase.",
+      ),
   })
-  .refine((pkg) => validateRoadmapCoverage([0, 1, 2], pkg.roadmapPhases, pkg.roadmapTasks), {
-    message:
-      "Every opportunityIndex (0, 1, 2) must have exactly 3-4 roadmapPhases entries, and every (opportunityIndex, phaseIndex) pair must have exactly 2-3 roadmapTasks entries.",
+  .superRefine((pkg, ctx) => {
+    const opportunityIndexes = pkg.opportunities.map((o) => o.opportunityIndex);
+    const uniqueIndexes = new Set(opportunityIndexes);
+    if (uniqueIndexes.size !== 3 || ![0, 1, 2].every((i) => uniqueIndexes.has(i))) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: `opportunities must have exactly the indexes 0, 1, 2 (each once) — got [${opportunityIndexes.join(", ")}].`,
+      });
+      return;
+    }
+    for (const issue of findRoadmapStructureIssues(
+      [0, 1, 2],
+      pkg.roadmapPhases,
+      pkg.roadmapTasks,
+    )) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, message: issue });
+    }
   });
 type FlatIntelligencePackage = z.infer<typeof FlatIntelligencePackageSchema>;
 
-function reconstructOpportunity(
-  flatOpp: FlatOpportunity,
+/** Runs on already-schema-valid data. Trims harmless excess deterministically
+ * (never a reason to reject the package, never a reason to call Gemini
+ * again) so the app never has to persist an oversized roadmap just because
+ * the model produced 5 phases or 4 tasks somewhere. */
+function normalizeOpportunityRoadmap(
+  opportunityIndex: number,
   phases: FlatRoadmapPhase[],
   tasks: FlatRoadmapTask[],
-): OpportunityPackage {
-  const { opportunityIndex, ...rest } = flatOpp;
-  const ownPhases = phases
+): OpportunityPackage["roadmap"]["phases"] {
+  return phases
     .filter((p) => p.opportunityIndex === opportunityIndex)
     .sort((a, b) => a.phaseIndex - b.phaseIndex)
+    .slice(0, ACCEPTABLE_MAX_PHASES_PER_OPPORTUNITY)
     .map((phase) => ({
       key: phase.key,
       title: phase.title,
@@ -220,6 +313,7 @@ function reconstructOpportunity(
       tasks: tasks
         .filter((t) => t.opportunityIndex === opportunityIndex && t.phaseIndex === phase.phaseIndex)
         .sort((a, b) => a.taskIndex - b.taskIndex)
+        .slice(0, ACCEPTABLE_MAX_TASKS_PER_PHASE)
         .map((t) => ({
           what: t.what,
           why: t.why,
@@ -232,8 +326,18 @@ function reconstructOpportunity(
           dependsOn: t.dependsOn,
         })),
     }));
+}
 
-  return { ...rest, roadmap: { phases: ownPhases } };
+function reconstructOpportunity(
+  flatOpp: FlatOpportunity,
+  phases: FlatRoadmapPhase[],
+  tasks: FlatRoadmapTask[],
+): OpportunityPackage {
+  const { opportunityIndex, ...rest } = flatOpp;
+  return {
+    ...rest,
+    roadmap: { phases: normalizeOpportunityRoadmap(opportunityIndex, phases, tasks) },
+  };
 }
 
 function reconstructPackage(flat: FlatIntelligencePackage): SolventiaIntelligencePackage {
@@ -244,6 +348,49 @@ function reconstructPackage(flat: FlatIntelligencePackage): SolventiaIntelligenc
       .sort((a, b) => a.opportunityIndex - b.opportunityIndex)
       .map((opp) => reconstructOpportunity(opp, flat.roadmapPhases, flat.roadmapTasks)),
   };
+}
+
+/** Non-fatal quality signal, checked AFTER a package has already passed
+ * schema validation — never thrown, never blocks persistence. Purely for
+ * logging/telemetry so a founder can still be served a roadmap that's
+ * outside the preferred count range but perfectly usable. */
+export interface RoadmapQualityWarning {
+  opportunityIndex: number;
+  opportunityTitle: string;
+  phaseIndex?: number;
+  phaseTitle?: string;
+  message: string;
+}
+
+export function checkRoadmapQuality(pkg: {
+  opportunities: OpportunityPackage[];
+}): RoadmapQualityWarning[] {
+  const warnings: RoadmapQualityWarning[] = [];
+  pkg.opportunities.forEach((opp, opportunityIndex) => {
+    const phaseCount = opp.roadmap.phases.length;
+    const [minPhases, maxPhases] = PREFERRED_PHASES_PER_OPPORTUNITY;
+    if (phaseCount < minPhases || phaseCount > maxPhases) {
+      warnings.push({
+        opportunityIndex,
+        opportunityTitle: opp.title,
+        message: `${phaseCount} roadmap phases (preferred ${minPhases}-${maxPhases}).`,
+      });
+    }
+    opp.roadmap.phases.forEach((phase, phaseIndex) => {
+      const taskCount = phase.tasks.length;
+      const [minTasks, maxTasks] = PREFERRED_TASKS_PER_PHASE;
+      if (taskCount < minTasks || taskCount > maxTasks) {
+        warnings.push({
+          opportunityIndex,
+          opportunityTitle: opp.title,
+          phaseIndex,
+          phaseTitle: phase.title,
+          message: `${taskCount} tasks in phase "${phase.title}" (preferred ${minTasks}-${maxTasks}).`,
+        });
+      }
+    });
+  });
+  return warnings;
 }
 
 const ROADMAP_RULE = `Every opportunity's roadmap must be genuinely useful to someone who may know NOTHING about entrepreneurship — never generic advice like "research the market" or "build an MVP" or "launch your business". Use only the phases that genuinely apply (from: understand, explore, validate, build, launch, improve) — a tutoring service and a manufacturing business should not get identical roadmaps. If the founder lacks a skill a task needs, insert a short learning task BEFORE it — never assume competence not in their profile. Every task needs what/why/how/resource/timeEstimate/deadlineDaysFromStart/doneWhen/required/dependsOn. deadlineDaysFromStart must reflect this founder's real weekly hours — never compress a 40-hour task load into one week for someone with 5 hours/week. Never use unexplained startup vocabulary (MVP, GTM, B2B, CAC, LTV, TAM, ICP, funnel, churn, PMF) — if a term is genuinely needed, explain it in plain words the same sentence.`;
@@ -324,7 +471,21 @@ ${INTELLIGENCE_PACKAGE_JSON_CONTRACT}`;
     callSite: "generateIntelligencePackage",
   });
 
-  return reconstructPackage(flat);
+  const pkg = reconstructPackage(flat);
+
+  // Non-fatal — a package outside the preferred count range is still a
+  // good, complete response and must still be persisted; this is
+  // diagnostic signal only, never a reason to discard the package or spend
+  // a second Gemini call "fixing" it.
+  const qualityWarnings = checkRoadmapQuality(pkg);
+  if (qualityWarnings.length > 0) {
+    console.warn(
+      `[intelligence-package] roadmap quality warnings (non-fatal, package still used):`,
+      qualityWarnings,
+    );
+  }
+
+  return pkg;
 }
 
 // ============================================================
@@ -342,18 +503,25 @@ function makeFlatExploreSchema(count: number) {
   return z
     .object({
       opportunities: z.array(FlatExploreOpportunitySchema).length(count),
+      // Generous sanity bounds only — see FlatIntelligencePackageSchema's
+      // comment. Real correctness is the structural superRefine below.
       roadmapPhases: z
         .array(FlatRoadmapPhaseSchema)
-        .min(count * 3)
-        .max(count * 4),
+        .min(count)
+        .max(count * MAX_PHASES_PER_OPPORTUNITY_HARD),
       roadmapTasks: z
         .array(FlatRoadmapTaskSchema)
-        .min(count * 6)
-        .max(count * 12),
+        .min(count)
+        .max(count * MAX_PHASES_PER_OPPORTUNITY_HARD * MAX_TASKS_PER_PHASE_HARD),
     })
-    .refine((pkg) => validateRoadmapCoverage(indexes, pkg.roadmapPhases, pkg.roadmapTasks), {
-      message:
-        "Every opportunityIndex must have exactly 3-4 roadmapPhases entries, and every (opportunityIndex, phaseIndex) pair must have exactly 2-3 roadmapTasks entries.",
+    .superRefine((pkg, ctx) => {
+      for (const issue of findRoadmapStructureIssues(
+        indexes,
+        pkg.roadmapPhases,
+        pkg.roadmapTasks,
+      )) {
+        ctx.addIssue({ code: z.ZodIssueCode.custom, message: issue });
+      }
     });
 }
 
@@ -418,6 +586,14 @@ ${jsonContract}`;
 
   if (opportunities.length === 0) {
     throw new AIGenerationError("Explore More returned zero opportunities after reconstruction.");
+  }
+
+  const qualityWarnings = checkRoadmapQuality({ opportunities });
+  if (qualityWarnings.length > 0) {
+    console.warn(
+      `[intelligence-package] Explore More roadmap quality warnings (non-fatal):`,
+      qualityWarnings,
+    );
   }
 
   return { opportunities };

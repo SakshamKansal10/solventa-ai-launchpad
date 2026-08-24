@@ -160,4 +160,112 @@ describe("Stage 7 generation call path (mocked Gemini, no live network call)", (
 
     expect(generateContentMock).toHaveBeenCalledTimes(2);
   });
+
+  it("normalizes (caps) a valid but oversized roadmap instead of rejecting it — a good response is never discarded for count variance", async () => {
+    const founderDNA = {
+      narrativeSummary: "x",
+      strengths: ["a", "b"],
+      resources: ["a"],
+      constraints: ["a"],
+      workStyle: "x",
+      riskProfile: "x",
+      direction: "x",
+      strategicSignals: ["x"],
+    };
+    const opportunity = (i: number) => ({
+      opportunityIndex: i,
+      title: `Opp ${i}`,
+      category: "digital service",
+      plainEnglishSummary: "x",
+      customer: "x",
+      problem: "x",
+      solution: "x",
+      whyThisFounder: ["a", "b", "c"],
+      businessModelPlainEnglish: "x",
+      startingCapital: "x",
+      weeklyTime: "x",
+      difficulty: "Beginner-friendly",
+      skillsAlreadyOwned: [],
+      skillsToLearn: [],
+      resourceRequirements: [],
+      advantages: ["a", "b"],
+      tradeoffs: ["a"],
+      risks: ["a"],
+      unknowns: [],
+      validationNeeded: [],
+      revenuePath: "x",
+      firstExperiment: "x",
+      fitSignals: {
+        requiredSkills: [],
+        startupCapitalINR: 1000,
+        weeklyHoursNeeded: 5,
+        riskLevel: "cautious",
+        motivationAlignment: "high",
+        requiresLeadership: false,
+        requiresSales: false,
+        soloFriendly: true,
+        relevantExperienceYears: 0,
+        requiresDigitalAssets: false,
+        locationFlexible: true,
+      },
+    });
+    const phase = (oi: number, pi: number) => ({
+      opportunityIndex: oi,
+      phaseIndex: pi,
+      key: "understand",
+      title: `Phase ${pi}`,
+      description: "x",
+    });
+    const task = (oi: number, pi: number, ti: number) => ({
+      opportunityIndex: oi,
+      phaseIndex: pi,
+      taskIndex: ti,
+      what: "x",
+      why: "x",
+      how: "x",
+      resource: null,
+      timeEstimate: "1 hour",
+      deadlineDaysFromStart: 1,
+      doneWhen: "x",
+      required: true,
+      dependsOn: null,
+    });
+
+    // Opportunity 0: 7 phases (above the acceptable-5 cap, within the
+    // hard-8 ceiling). Every phase: 5 tasks (above the acceptable-4 cap,
+    // within the hard-6 ceiling). Opportunities 1/2: a normal 3x2.
+    const roadmapPhases: unknown[] = [];
+    const roadmapTasks: unknown[] = [];
+    for (let pi = 0; pi < 7; pi++) {
+      roadmapPhases.push(phase(0, pi));
+      for (let ti = 0; ti < 5; ti++) roadmapTasks.push(task(0, pi, ti));
+    }
+    for (const oi of [1, 2]) {
+      for (let pi = 0; pi < 3; pi++) {
+        roadmapPhases.push(phase(oi, pi));
+        for (let ti = 0; ti < 2; ti++) roadmapTasks.push(task(oi, pi, ti));
+      }
+    }
+
+    generateContentMock.mockImplementation(() => ({
+      text: JSON.stringify({
+        founderDNA,
+        opportunities: [0, 1, 2].map(opportunity),
+        roadmapPhases,
+        roadmapTasks,
+      }),
+    }));
+
+    const profile = normalizeProfile(FIXTURE_PROFILE_ANSWERS as unknown as OnboardingAnswers);
+    const pkg = await generateIntelligencePackage(profile);
+
+    expect(generateContentMock).toHaveBeenCalledTimes(1);
+    expect(pkg.opportunities).toHaveLength(3);
+    // Capped to the acceptable maximum, not rejected and not left oversized.
+    expect(pkg.opportunities[0].roadmap.phases).toHaveLength(5);
+    for (const p of pkg.opportunities[0].roadmap.phases) {
+      expect(p.tasks.length).toBeLessThanOrEqual(4);
+    }
+    expect(pkg.opportunities[1].roadmap.phases).toHaveLength(3);
+  });
 });
