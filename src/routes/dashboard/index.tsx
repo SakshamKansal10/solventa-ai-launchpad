@@ -4,7 +4,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { ArrowRight, Compass, Loader2, Sparkles } from "lucide-react";
 import { DashboardShell, useOpenMentor } from "@/components/dashboard/DashboardShell";
-import { FitScoreBreakdownList, fitQualitativeLabel } from "@/components/dashboard/FitScore";
+import { FitScoreMatrix, fitQualitativeLabel } from "@/components/dashboard/FitScore";
 import { RoadmapStageTimeline } from "@/components/dashboard/RoadmapStageTimeline";
 import { BusinessDnaPanel } from "@/components/dashboard/BusinessDnaPanel";
 import { PremiumButton } from "@/components/solventia/PremiumButton";
@@ -227,8 +227,9 @@ function DashboardHome() {
 
                 {showBreakdown && (
                   <div className="mt-4 max-w-sm rounded-xl border border-workspace-border bg-white/[0.03] p-4">
-                    <FitScoreBreakdownList
+                    <FitScoreMatrix
                       breakdown={(primary.score_breakdown as unknown as FitScoreResult).breakdown}
+                      variant="dark"
                     />
                   </div>
                 )}

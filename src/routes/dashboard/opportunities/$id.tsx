@@ -4,7 +4,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
 import { DashboardShell } from "@/components/dashboard/DashboardShell";
-import { FitScoreBreakdownList } from "@/components/dashboard/FitScore";
+import { FitScoreMatrix, fitQualitativeLabel } from "@/components/dashboard/FitScore";
 import { PremiumButton } from "@/components/solventia/PremiumButton";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -213,12 +213,17 @@ function OpportunityDetailPage() {
         </div>
       )}
 
-      <div className="mt-8 rounded-2xl border border-border/70 bg-card/70 p-6">
-        <p className="text-[0.82rem] font-semibold uppercase tracking-wide text-muted-foreground">
-          Solventia Fit Score — {opportunity.fit_score}/100
-        </p>
-        <div className="mt-3">
-          <FitScoreBreakdownList breakdown={score.breakdown} />
+      <div className="mt-8 flex flex-col gap-6 rounded-2xl border border-border/70 bg-card/70 p-6 sm:flex-row sm:items-start sm:gap-10">
+        <div className="flex shrink-0 flex-col items-center sm:items-start">
+          <span className="font-display text-[2.75rem] font-semibold leading-none text-primary">
+            {opportunity.fit_score}
+          </span>
+          <span className="mt-1.5 text-[0.68rem] font-semibold uppercase tracking-[0.14em] text-econ-green-active">
+            {fitQualitativeLabel(opportunity.fit_score)}
+          </span>
+        </div>
+        <div className="w-full sm:border-l sm:border-border/60 sm:pl-10">
+          <FitScoreMatrix breakdown={score.breakdown} />
         </div>
       </div>
 

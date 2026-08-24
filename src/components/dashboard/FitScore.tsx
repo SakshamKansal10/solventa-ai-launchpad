@@ -89,6 +89,66 @@ export function FitScoreBadge({ score, size = "lg" }: { score: number; size?: "s
   );
 }
 
+function qualitativeFactorLabel(value: number, max: number): string {
+  const ratio = max > 0 ? value / max : 1;
+  if (ratio >= 0.85) return "Excellent";
+  if (ratio >= 0.65) return "Strong";
+  if (ratio >= 0.4) return "Moderate";
+  return "Low";
+}
+
+const FACTOR_TONE_CLASS: Record<"light" | "dark", Record<string, string>> = {
+  light: {
+    Excellent: "text-econ-green-active",
+    Strong: "text-econ-green-deep",
+    Moderate: "text-muted-foreground",
+    Low: "text-muted-foreground/70",
+  },
+  dark: {
+    Excellent: "text-econ-green-active",
+    Strong: "text-workspace-foreground/85",
+    Moderate: "text-workspace-muted",
+    Low: "text-workspace-muted/70",
+  },
+};
+
+/** Compact replacement for seven identical progress bars — a founder
+ * scans this in under two seconds instead of decoding relative bar
+ * lengths. A conspicuously low factor (e.g. skills) next to a still-solid
+ * overall score gets an explicit one-line reframe instead of reading as a
+ * contradiction — the score already accounts for how learnable the gap is. */
+export function FitScoreMatrix({
+  breakdown,
+  variant = "light",
+}: {
+  breakdown: FitScoreBreakdown;
+  variant?: "light" | "dark";
+}) {
+  const skillsLabel = qualitativeFactorLabel(breakdown.skills, FIT_SCORE_MAXIMA.skills);
+  const labelClass = variant === "dark" ? "text-workspace-muted" : "text-muted-foreground";
+  return (
+    <div>
+      <dl className="grid grid-cols-2 gap-x-6 gap-y-2.5">
+        {(Object.keys(FIT_SCORE_MAXIMA) as (keyof FitScoreBreakdown)[]).map((key) => {
+          const label = qualitativeFactorLabel(breakdown[key], FIT_SCORE_MAXIMA[key]);
+          return (
+            <div key={key} className="flex items-center justify-between gap-3 text-[0.85rem]">
+              <dt className={labelClass}>{LABELS[key]}</dt>
+              <dd className={cn("font-medium", FACTOR_TONE_CLASS[variant][label])}>{label}</dd>
+            </div>
+          );
+        })}
+      </dl>
+      {skillsLabel === "Low" && (
+        <p className={cn("mt-3 text-[0.78rem] leading-relaxed", labelClass)}>
+          Skill gap — learnable. The score already accounts for this being something you can pick
+          up, not a disqualifier.
+        </p>
+      )}
+    </div>
+  );
+}
+
 export function FitScoreBreakdownList({ breakdown }: { breakdown: FitScoreBreakdown }) {
   return (
     <dl className="flex flex-col gap-2">
