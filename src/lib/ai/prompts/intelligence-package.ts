@@ -307,6 +307,7 @@ ${INTELLIGENCE_PACKAGE_JSON_CONTRACT}`;
     // immediately and surface a retry to the FOUNDER, not silently spend a
     // second request against the shared daily quota on their behalf.
     allowRetry: false,
+    callSite: "generateIntelligencePackage",
   });
 
   return reconstructPackage(flat);
@@ -384,6 +385,7 @@ ${jsonContract}`;
   const flat = await generateJSON(flatSchema, {
     systemInstruction: EXPLORE_SYSTEM_INSTRUCTION,
     prompt,
+    callSite: "generateOpportunityPackageBatch",
   });
 
   const opportunities: OpportunityPackage[] = (flat.opportunities as FlatExploreOpportunity[])

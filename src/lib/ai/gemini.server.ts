@@ -107,6 +107,10 @@ interface GenerateStructuredParams {
    * not a guarantee the app makes to the user.
    */
   allowRetry?: boolean;
+  /** Diagnostic label only (e.g. "generateIntelligencePackage") — never
+   * used for logic, only for the STAGE7_PIPELINE_ENTRY log line so the
+   * real runtime call path can be confirmed from server logs. */
+  callSite?: string;
 }
 
 /** Shared by generateStructured and generateJSON — the only difference
@@ -121,6 +125,13 @@ async function runGenerationLoop<T>(
   const ai = getClient();
   const model = MODEL;
   const maxAttempts = params.allowRetry === false ? 1 : 2;
+
+  // Proves, from real server logs, exactly which function/generator/
+  // attempt-budget the current request actually runs with — never logs the
+  // prompt (which carries the founder's profile answers) or any secret.
+  console.info(
+    `STAGE7_PIPELINE_ENTRY function=${params.callSite ?? "unknown"} generator=${responseSchema ? "generateStructured" : "generateJSON"} allowRetry=${params.allowRetry !== false} maxAttempts=${maxAttempts} responseSchemaAttached=${responseSchema !== null} model=${model}`,
+  );
 
   let lastError: string | null = null;
   let lastCategory: GeminiFailureCategory = "GEMINI_REQUEST_FAILED";
