@@ -158,6 +158,12 @@ async function runGenerationLoop<T>(
           ...(responseSchema ? { responseSchema } : {}),
         },
       });
+      const usage = response.usageMetadata;
+      if (usage) {
+        console.info(
+          `[gemini] model=${model} usage inputTokens=${usage.promptTokenCount ?? "?"} outputTokens=${usage.candidatesTokenCount ?? "?"} thinkingTokens=${usage.thoughtsTokenCount ?? 0} totalTokens=${usage.totalTokenCount ?? "?"}`,
+        );
+      }
       const responseText = response.text;
       if (!responseText) {
         lastError = "Empty response from model.";
