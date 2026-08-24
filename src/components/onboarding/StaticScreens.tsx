@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
-import { ArrowRight, Check, Clock, Loader2, RotateCcw, Sparkles } from "lucide-react";
+import { ArrowRight, Check, Clock, RotateCcw, Sparkles } from "lucide-react";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { PremiumButton } from "@/components/solventia/PremiumButton";
@@ -201,8 +201,7 @@ export function SectionIntroScreen({ step }: { step: SectionIntroStep }) {
   );
 }
 
-type SubmitPhase =
-  "idle" | "converging" | "building" | "matching" | "roadmapping" | "done" | "error";
+type SubmitPhase = "idle" | "converging" | "generating" | "done" | "error";
 
 const STAGE_ORDER = [1, 2, 3, 4, 5, 6, 7];
 
@@ -250,17 +249,83 @@ function SignalConvergence() {
   );
 }
 
-/** Purely cosmetic phase labels cycled while the ONE real request is in
- * flight (see runSubmission) — Solventia makes exactly one Gemini call
- * here, never three. The cycle never blocks or pads completion: it's
- * cancelled and jumps straight to "done" the instant the real request
- * resolves, whether that's in 6 seconds or 40. */
-const SYNTHESIS_STEPS: { phase: SubmitPhase; label: string }[] = [
-  { phase: "building", label: "Understanding your profile" },
-  { phase: "matching", label: "Finding opportunities that fit" },
-  { phase: "roadmapping", label: "Building your execution roadmap" },
+/** Purely ambient captions rotated while the ONE real request is in flight
+ * (see runSubmission) — never tied to an actual completion event, since
+ * there's nothing to report progress on until the single response comes
+ * back. Deliberately NOT a checklist: a real generation takes anywhere
+ * from ~10s to ~70s, so a fixed set of steps on a fixed timer would either
+ * finish long before the request does (implying false completion) or need
+ * to loop back to the start (implying an already-done step un-completed —
+ * exactly the "fake progress reset" this replaces). Looping plain
+ * captions with no done/pending state carries no such claim. */
+const AMBIENT_CAPTIONS = [
+  "Understanding your strengths",
+  "Respecting your constraints",
+  "Comparing viable paths",
+  "Building practical roadmaps",
 ];
-const SYNTHESIS_CYCLE: SubmitPhase[] = ["building", "matching", "roadmapping"];
+
+function SolWorkingVisual() {
+  const [captionIndex, setCaptionIndex] = useState(0);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCaptionIndex((i) => (i + 1) % AMBIENT_CAPTIONS.length);
+    }, 3200);
+    return () => clearInterval(interval);
+  }, []);
+
+  return (
+    <motion.div
+      key="generating"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="mt-8 flex flex-col items-center gap-6"
+    >
+      <div className="relative flex items-center justify-center">
+        <AIOrb />
+        {/* Three faint paths gently emerging around the orb — a quiet nod
+         * to the three opportunities taking shape, never claiming any one
+         * of them is actually finished yet. */}
+        {[0, 1, 2].map((i) => (
+          <motion.span
+            key={i}
+            aria-hidden="true"
+            className="absolute size-1.5 rounded-full bg-accent/70"
+            style={{
+              transform: `rotate(${i * 120}deg) translateY(-58px)`,
+            }}
+            animate={{ opacity: [0.15, 0.75, 0.15] }}
+            transition={{
+              duration: 2.6,
+              repeat: Infinity,
+              ease: "easeInOut",
+              delay: i * 0.5,
+            }}
+          />
+        ))}
+      </div>
+      <p className="eyebrow text-accent">Sol is building your strategy</p>
+      <AnimatePresence mode="wait">
+        <motion.p
+          key={captionIndex}
+          initial={{ opacity: 0, y: 6 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -6 }}
+          transition={{ duration: 0.4 }}
+          className="text-[0.92rem] text-muted-foreground"
+        >
+          {AMBIENT_CAPTIONS[captionIndex]}
+        </motion.p>
+      </AnimatePresence>
+      <p className="max-w-xs text-[0.78rem] leading-relaxed text-muted-foreground/70">
+        This usually takes under a minute. Your answers are already saved — safe even if you leave
+        this page.
+      </p>
+    </motion.div>
+  );
+}
 
 export function CompletionScreen() {
   const { answers, restart } = useOnboarding();
@@ -290,23 +355,13 @@ export function CompletionScreen() {
       });
       await new Promise((resolve) => setTimeout(resolve, 1300));
 
-      setPhase("building");
-      let cycleIndex = 0;
-      const interval = setInterval(() => {
-        cycleIndex = (cycleIndex + 1) % SYNTHESIS_CYCLE.length;
-        setPhase(SYNTHESIS_CYCLE[cycleIndex]);
-      }, 4000);
-
-      try {
-        await resultPromise;
-      } finally {
-        clearInterval(interval);
-      }
+      setPhase("generating");
+      await resultPromise;
 
       setPhase("done");
       // Let the checkmarks register before leaving — the work is genuinely
       // finished at this point, this is just giving the user a beat to see it.
-      setTimeout(() => navigate({ to: "/dashboard" }), 700);
+      setTimeout(() => navigate({ to: "/dashboard" }), 900);
     } catch (err) {
       console.error("[consultation] submission failed:", err);
       setErrorMessage(
@@ -316,13 +371,9 @@ export function CompletionScreen() {
     }
   }
 
-  const isSubmitting =
-    phase === "converging" ||
-    phase === "building" ||
-    phase === "matching" ||
-    phase === "roadmapping" ||
-    phase === "done";
+  const isSubmitting = phase === "converging" || phase === "generating" || phase === "done";
   const isConverging = phase === "converging";
+  const isGenerating = phase === "generating";
 
   return (
     <motion.div
@@ -331,9 +382,11 @@ export function CompletionScreen() {
       transition={{ staggerChildren: 0.1 }}
       className="mx-auto flex max-w-[560px] flex-col items-center text-center"
     >
-      <motion.div variants={fadeUp}>
-        <AIOrb />
-      </motion.div>
+      {!isGenerating && (
+        <motion.div variants={fadeUp}>
+          <AIOrb />
+        </motion.div>
+      )}
       <motion.h2
         variants={fadeUp}
         className="mt-8 font-display text-[clamp(1.8rem,3.5vw,2.4rem)] font-semibold text-primary"
@@ -354,49 +407,26 @@ export function CompletionScreen() {
       <AnimatePresence mode="wait">
         {isConverging ? (
           <SignalConvergence />
-        ) : isSubmitting ? (
+        ) : isGenerating ? (
+          <SolWorkingVisual />
+        ) : phase === "done" ? (
           <motion.div
-            key="submitting"
+            key="done"
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0 }}
             className="mt-8 flex w-full flex-col gap-3 rounded-2xl border border-border/70 bg-card/80 px-6 py-6 text-left"
           >
-            {SYNTHESIS_STEPS.map((step) => {
-              const currentIndex = SYNTHESIS_CYCLE.indexOf(phase as SubmitPhase);
-              const thisIndex = SYNTHESIS_CYCLE.indexOf(step.phase);
-              const state =
-                phase === "done" || thisIndex < currentIndex
-                  ? "done"
-                  : thisIndex === currentIndex
-                    ? "active"
-                    : "pending";
-              return (
-                <div key={step.phase} className="flex items-center gap-3">
-                  {state === "done" ? (
-                    <span className="flex size-5 shrink-0 items-center justify-center rounded-full bg-accent text-primary">
-                      <Check className="size-3" aria-hidden="true" />
-                    </span>
-                  ) : state === "active" ? (
-                    <Loader2
-                      className="size-5 shrink-0 animate-spin text-accent"
-                      aria-hidden="true"
-                    />
-                  ) : (
-                    <span className="size-5 shrink-0 rounded-full border border-border" />
-                  )}
-                  <span
-                    className={
-                      state === "pending"
-                        ? "text-[0.92rem] text-muted-foreground/60"
-                        : "text-[0.92rem] text-foreground"
-                    }
-                  >
-                    {step.label}
-                  </span>
-                </div>
-              );
-            })}
+            {/* Only ever shown once the response has actually resolved —
+             * these are true statements about what just happened, not a
+             * progress list ticked ahead of the real event. */}
+            {["3 opportunities identified", "Execution paths prepared"].map((label) => (
+              <div key={label} className="flex items-center gap-3">
+                <span className="flex size-5 shrink-0 items-center justify-center rounded-full bg-accent text-primary">
+                  <Check className="size-3" aria-hidden="true" />
+                </span>
+                <span className="text-[0.92rem] text-foreground">{label}</span>
+              </div>
+            ))}
           </motion.div>
         ) : phase === "error" ? (
           <motion.div
