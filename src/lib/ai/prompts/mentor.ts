@@ -1,4 +1,5 @@
 import { generateStructured } from "@/lib/ai/gemini.server";
+import { env } from "@/lib/env.server";
 import { MentorResponseSchema, type MentorResponse } from "@/lib/ai/schemas";
 import { formatProfileForPrompt, PLAIN_LANGUAGE_RULE } from "@/lib/ai/prompts/shared";
 import type { NormalizedProfile } from "@/lib/profile/normalize";
@@ -43,5 +44,9 @@ Reply as Sol. Be specific to their actual situation — never generic. If useful
   return generateStructured(MentorResponseSchema, {
     systemInstruction: SYSTEM_INSTRUCTION,
     prompt,
+    callSite: "generateMentorReply",
+    purpose: "SOL_MESSAGE",
+    route: "mentor/send",
+    thinkingLevel: env.MENTOR_AI_THINKING_LEVEL,
   });
 }

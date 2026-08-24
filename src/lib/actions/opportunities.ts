@@ -170,11 +170,13 @@ export const exploreMoreOpportunities = createServerFn({ method: "POST" }).handl
 
 export const getOpportunities = createServerFn({ method: "GET" }).handler(async () => {
   const { supabase, user } = await requireUser();
+  // Same deterministic tie-break as getDashboard — see its comment.
   const { data, error } = await supabase
     .from("opportunities")
     .select("*")
     .eq("user_id", user.id)
-    .order("fit_score", { ascending: false });
+    .order("fit_score", { ascending: false })
+    .order("created_at", { ascending: true });
   if (error) throw new Error(error.message);
   return data;
 });
@@ -230,45 +232,57 @@ export const getOpportunity = createServerFn({ method: "GET" })
       detailRow = inserted.data;
     }
 
-    let { data: evidence } = await supabase
+    // Market evidence is READ-ONLY here — no Gemini call on navigation.
+    // Fetching/refreshing it is a separate, explicit action (see
+    // refreshMarketEvidence below), matching every other page in the
+    // workspace: viewing already-persisted data never costs an AI call.
+    const { data: evidence } = await supabase
       .from("opportunity_evidence")
       .select("*")
       .eq("opportunity_id", opportunity.id);
 
-    if (!evidence || evidence.length === 0) {
-      // Market evidence is supplementary — if the search/grounding call
-      // fails (network hiccup, quota, etc.) the founder should still see
-      // the opportunity detail they came for. Leave evidence empty rather
-      // than failing the whole page; the next view retries naturally since
-      // nothing gets persisted on failure.
-      try {
-        const items = await getOrFetchMarketEvidence(
-          supabase,
-          opportunity.title,
-          opportunity.one_liner,
-          (opportunity.candidate as unknown as OpportunityCandidate).category,
-        );
-        const rows = items.map((item) => ({
-          opportunity_id: opportunity.id,
-          user_id: user.id,
-          claim: item.claim,
-          label: item.label,
-          source_title: item.sourceTitle,
-          source_url: item.sourceUrl,
-        }));
-        const insertedEvidence = await supabase
-          .from("opportunity_evidence")
-          .insert(rows)
-          .select("*");
-        if (insertedEvidence.error) throw new Error(insertedEvidence.error.message);
-        evidence = insertedEvidence.data;
-      } catch (err) {
-        console.error("[opportunity] market evidence generation failed:", err);
-        evidence = [];
-      }
-    }
+    return { opportunity, detail: detailRow.detail, evidence: evidence ?? [] };
+  });
 
-    return { opportunity, detail: detailRow.detail, evidence };
+/** The ONLY way opportunity_evidence ever gets a live Gemini call — an
+ * explicit "Refresh Market Evidence" click, never navigation. Cached
+ * globally per category+title for 30 days (see getOrFetchMarketEvidence),
+ * so most calls of this across different founders are cache hits anyway. */
+export const refreshMarketEvidence = createServerFn({ method: "POST" })
+  .validator(z.object({ opportunityId: z.string().uuid() }))
+  .handler(async ({ data }) => {
+    const { supabase, user } = await requireUser();
+
+    const { data: opportunity, error } = await supabase
+      .from("opportunities")
+      .select("id, title, one_liner, candidate")
+      .eq("id", data.opportunityId)
+      .eq("user_id", user.id)
+      .single();
+    if (error || !opportunity) throw new Error(error?.message ?? "Opportunity not found");
+
+    const items = await getOrFetchMarketEvidence(
+      supabase,
+      opportunity.title,
+      opportunity.one_liner,
+      (opportunity.candidate as unknown as OpportunityCandidate).category,
+    );
+
+    // Replace rather than accumulate — a refresh should reflect the latest
+    // research, not pile duplicate claims on top of stale ones.
+    await supabase.from("opportunity_evidence").delete().eq("opportunity_id", opportunity.id);
+    const rows = items.map((item) => ({
+      opportunity_id: opportunity.id,
+      user_id: user.id,
+      claim: item.claim,
+      label: item.label,
+      source_title: item.sourceTitle,
+      source_url: item.sourceUrl,
+    }));
+    const inserted = await supabase.from("opportunity_evidence").insert(rows).select("*");
+    if (inserted.error) throw new Error(inserted.error.message);
+
+    return { evidence: inserted.data };
   });
 
 export const submitIdeaFeedback = createServerFn({ method: "POST" })

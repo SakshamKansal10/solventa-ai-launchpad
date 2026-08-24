@@ -9,6 +9,16 @@ const fieldSchemas = {
    * model name in a prompt file. Defaults to a stable Flash-class model
    * confirmed available on this project's free tier. */
   GEMINI_MODEL: z.string().min(1).default("gemini-3.6-flash"),
+  /** Gemini's thinkingConfig.thinkingLevel for the two call sites big
+   * enough to matter: the one-call initial founder-intelligence generation
+   * (heaviest reasoning load) and Sol mentor replies (narrower, contextual
+   * questions that don't need the same budget). "minimal" | "low" |
+   * "medium" | "high". Unset means the model's own default (currently
+   * medium) — never silently downgrade quality by defaulting either of
+   * these to "low" without first measuring the tradeoff against the medium
+   * baseline. */
+  INITIAL_AI_THINKING_LEVEL: z.enum(["minimal", "low", "medium", "high"]).optional(),
+  MENTOR_AI_THINKING_LEVEL: z.enum(["minimal", "low", "medium", "high"]).optional(),
   SUPABASE_URL: z.string().url("SUPABASE_URL must be a valid URL"),
   SUPABASE_ANON_KEY: z.string().min(1, "SUPABASE_ANON_KEY is required"),
   RESEND_API_KEY: z.string().min(1).optional(),
@@ -32,9 +42,7 @@ type FieldSchemas = typeof fieldSchemas;
 
 const cache = new Map<keyof FieldSchemas, unknown>();
 
-function readField<K extends keyof FieldSchemas>(
-  key: K,
-): z.infer<FieldSchemas[K]> {
+function readField<K extends keyof FieldSchemas>(key: K): z.infer<FieldSchemas[K]> {
   if (cache.has(key)) return cache.get(key) as z.infer<FieldSchemas[K]>;
   const parsed = fieldSchemas[key].safeParse(process.env[key]);
   if (!parsed.success) {
@@ -54,6 +62,12 @@ export const env = {
   },
   get GEMINI_MODEL() {
     return readField("GEMINI_MODEL");
+  },
+  get INITIAL_AI_THINKING_LEVEL() {
+    return readField("INITIAL_AI_THINKING_LEVEL");
+  },
+  get MENTOR_AI_THINKING_LEVEL() {
+    return readField("MENTOR_AI_THINKING_LEVEL");
   },
   get SUPABASE_URL() {
     return readField("SUPABASE_URL");

@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Check, Loader2, MapPin } from "lucide-react";
 import { DashboardShell } from "@/components/dashboard/DashboardShell";
@@ -46,14 +46,29 @@ interface Task {
   status: "pending" | "in_progress" | "done" | "blocked";
 }
 
+/** dependsOn is supposed to be a prior task's exact human-readable "what"
+ * text (see the roadmap contract in intelligence-package.ts) — but a
+ * response can still slip through with something index-shaped instead
+ * (e.g. "0-0-1"). Never render that to a founder; fail closed to "no
+ * visible dependency" rather than leak an internal reference. */
+function isDisplayableDependency(value: string): boolean {
+  return !/^\d+([.\-_]\d+)*$/.test(value.trim());
+}
+
 function TaskRow({
   task,
   roadmapId,
-  onChanged,
+  onToggle,
+  onReplanNeeded,
 }: {
   task: Task;
   roadmapId: string;
-  onChanged: () => Promise<void>;
+  /** Fires immediately on click — the caller applies an optimistic cache
+   * update synchronously and persists in the background (see RoadmapPage's
+   * toggleTaskMutation). Never awaited here: waiting is exactly the "feels
+   * like 5 seconds" problem this replaces. */
+  onToggle: (taskId: string, nextStatus: "pending" | "done") => void;
+  onReplanNeeded: () => Promise<void>;
 }) {
   const [expanded, setExpanded] = useState(false);
   const [showBlocker, setShowBlocker] = useState(false);
@@ -63,19 +78,8 @@ function TaskRow({
   const [blockerNote, setBlockerNote] = useState("");
   const [busy, setBusy] = useState(false);
 
-  async function markDone() {
-    setBusy(true);
-    try {
-      await updateTaskStatus({
-        data: { taskId: task.id, status: task.status === "done" ? "pending" : "done" },
-      });
-      await onChanged();
-    } catch (err) {
-      console.error("[roadmap] update task failed:", err);
-      toast.error("Couldn't update that task — try again.");
-    } finally {
-      setBusy(false);
-    }
+  function markDone() {
+    onToggle(task.id, task.status === "done" ? "pending" : "done");
   }
 
   async function submitBlocked() {
@@ -87,7 +91,7 @@ function TaskRow({
       });
       await replanRoadmap({ data: { roadmapId, blockerReason, blockerNote } });
       setShowBlocker(false);
-      await onChanged();
+      await onReplanNeeded();
     } catch (err) {
       console.error("[roadmap] replan failed:", err);
       toast.error("Sol couldn't replan your roadmap right now — try again.");
@@ -138,9 +142,9 @@ function TaskRow({
               Blocked — Sol has replanned what's ahead.
             </p>
           )}
-          {task.depends_on && (
+          {task.depends_on && isDisplayableDependency(task.depends_on) && (
             <p className="mt-1 text-[0.76rem] text-muted-foreground">
-              Needs: <span className="text-foreground">{task.depends_on}</span> first
+              Depends on: <span className="text-foreground">{task.depends_on}</span>
             </p>
           )}
           {expanded && (
@@ -243,6 +247,65 @@ function RoadmapPage() {
   const queryClient = useQueryClient();
   const query = useQuery({ queryKey: ["roadmap"], queryFn: () => getRoadmap({ data: {} }) });
   const [focusedIndex, setFocusedIndex] = useState<number | null>(null);
+
+  // Optimistic task completion — P7: the checkbox, progress bar, and Next
+  // Move must all update the instant the founder clicks, not after a round
+  // trip. The mutation still persists and still gets rolled back on a real
+  // failure; the founder just never has to wait to see it happen.
+  type RoadmapQueryData = NonNullable<typeof query.data>;
+  const toggleTaskMutation = useMutation({
+    mutationFn: (vars: { taskId: string; status: "pending" | "done" }) =>
+      updateTaskStatus({ data: { taskId: vars.taskId, status: vars.status } }),
+    onMutate: async (vars) => {
+      await queryClient.cancelQueries({ queryKey: ["roadmap"] });
+      const previous = queryClient.getQueryData<RoadmapQueryData>(["roadmap"]);
+      queryClient.setQueryData<RoadmapQueryData>(["roadmap"], (old) => {
+        if (!old) return old;
+        return {
+          ...old,
+          phases: old.phases.map((phase) => ({
+            ...phase,
+            roadmap_tasks: phase.roadmap_tasks.map((t) =>
+              t.id === vars.taskId ? { ...t, status: vars.status } : t,
+            ),
+          })),
+        };
+      });
+      return { previous };
+    },
+    onError: (err, _vars, context) => {
+      console.error("[roadmap] update task failed:", err);
+      if (context?.previous) queryClient.setQueryData(["roadmap"], context.previous);
+      toast.error("Couldn't update that task — try again.");
+    },
+    onSettled: () => {
+      // Reconciles with the server in the background regardless of outcome
+      // — a no-op visually on success (the optimistic state already
+      // matches), a correction on failure (already rolled back above, this
+      // just re-syncs anything else that drifted). Also refreshes the
+      // dashboard's Next Move/progress so it's not stale on next visit.
+      queryClient.invalidateQueries({ queryKey: ["roadmap"] });
+      queryClient.invalidateQueries({ queryKey: ["dashboard"] });
+    },
+  });
+
+  // A phase the founder manually focused on (clicked in the stage rail)
+  // can become fully done while still focused — without this, "Current
+  // stage" in the header would keep naming a phase that's actually
+  // finished, since `activeIndex` prefers `focusedIndex` over the real
+  // computed current stage. Snap the view forward the moment that happens,
+  // so completing a stage's last task visibly advances the roadmap instead
+  // of leaving it looking stuck.
+  const phasesForEffect = query.data?.phases;
+  useEffect(() => {
+    if (focusedIndex === null || !phasesForEffect) return;
+    const sorted = [...phasesForEffect].sort((a, b) => a.order_index - b.order_index);
+    const focused = sorted[focusedIndex];
+    if (!focused) return;
+    const isFocusedPhaseDone =
+      focused.roadmap_tasks.length > 0 && focused.roadmap_tasks.every((t) => t.status === "done");
+    if (isFocusedPhaseDone) setFocusedIndex(null);
+  }, [phasesForEffect, focusedIndex]);
 
   async function refresh() {
     await queryClient.invalidateQueries({ queryKey: ["roadmap"] });
@@ -398,7 +461,13 @@ function RoadmapPage() {
             )}
             <div className="mt-4 flex flex-col gap-2.5">
               {activePhase.tasks.map((task) => (
-                <TaskRow key={task.id} task={task} roadmapId={roadmap.id} onChanged={refresh} />
+                <TaskRow
+                  key={task.id}
+                  task={task}
+                  roadmapId={roadmap.id}
+                  onToggle={(taskId, status) => toggleTaskMutation.mutate({ taskId, status })}
+                  onReplanNeeded={refresh}
+                />
               ))}
             </div>
           </section>
@@ -448,7 +517,13 @@ function RoadmapPage() {
                 )}
                 <div className="mt-3 flex flex-col gap-2.5 pl-0 sm:pl-[1.125rem]">
                   {phase.tasks.map((task) => (
-                    <TaskRow key={task.id} task={task} roadmapId={roadmap.id} onChanged={refresh} />
+                    <TaskRow
+                      key={task.id}
+                      task={task}
+                      roadmapId={roadmap.id}
+                      onToggle={(taskId, status) => toggleTaskMutation.mutate({ taskId, status })}
+                      onReplanNeeded={refresh}
+                    />
                   ))}
                 </div>
               </section>

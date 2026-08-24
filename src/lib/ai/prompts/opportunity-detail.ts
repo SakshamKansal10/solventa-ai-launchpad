@@ -32,5 +32,8 @@ Write the full detail view. "whyThisFitsYou" must reference this founder's real 
   return generateStructured(OpportunityDetailSchema, {
     systemInstruction: SYSTEM_INSTRUCTION,
     prompt,
+    callSite: "generateOpportunityDetail",
+    purpose: "LEGACY_FALLBACK",
+    route: "opportunity/legacy-detail",
   });
 }

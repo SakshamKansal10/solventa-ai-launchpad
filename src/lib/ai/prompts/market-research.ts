@@ -30,7 +30,11 @@ export async function researchMarketEvidence(
 ): Promise<MarketEvidenceItem[]> {
   const searchPrompt = `Search for current, real information about this business idea: "${opportunityTitle}" — ${oneLiner} (category: ${category}). Look for: whether people already do something similar, whether there's visible demand or discussion of this need, and any relevant trends. Summarize what you actually find, plainly.`;
 
-  const grounded = await generateGrounded(searchPrompt);
+  const grounded = await generateGrounded(
+    searchPrompt,
+    "MARKET_REFRESH",
+    "opportunity/refresh-evidence",
+  );
 
   if (grounded.sources.length === 0) {
     return [
@@ -49,6 +53,9 @@ export async function researchMarketEvidence(
   const extraction = await generateStructured(ExtractionResultSchema, {
     systemInstruction: SYSTEM_INSTRUCTION,
     prompt: `Search findings:\n${grounded.text}\n\nNumbered sources actually used:\n${numberedSources}\n\nExtract up to 6 distinct, honest evidence claims from these findings. Label each: "strong_signal" (clear, current, well-supported demand), "early_signal" (some real but limited support), "emerging" (new/growing trend), "competitive" (evidence others already do this), "needs_validation" (plausible but unconfirmed), or "limited_evidence" (little to go on). Reference the source by its index number, or null if it's a general synthesis across multiple sources.`,
+    callSite: "researchMarketEvidence",
+    purpose: "MARKET_REFRESH",
+    route: "opportunity/refresh-evidence",
   });
 
   return extraction.claims.map((c) => {

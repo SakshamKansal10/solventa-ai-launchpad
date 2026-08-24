@@ -1,4 +1,4 @@
-import { GoogleGenAI, ApiError } from "@google/genai";
+import { GoogleGenAI, ApiError, ThinkingLevel as SdkThinkingLevel } from "@google/genai";
 import { zodToJsonSchema } from "zod-to-json-schema";
 import type { z } from "zod";
 
@@ -93,6 +93,32 @@ export class AIGenerationError extends Error {
   }
 }
 
+/** Explicit, closed set of reasons the app ever calls Gemini — every call
+ * site must declare one. This is what turns "a session apparently cost
+ * ₹6" into an answerable question instead of a guess: every request in
+ * the logs carries exactly why it happened. */
+export type GeminiCallPurpose =
+  | "INITIAL_INTELLIGENCE"
+  | "EXPLORE_MORE"
+  | "SOL_MESSAGE"
+  | "MARKET_REFRESH"
+  | "ROADMAP_REPLAN"
+  | "REANALYZE"
+  | "LEGACY_FALLBACK";
+
+type ThinkingLevel = "minimal" | "low" | "medium" | "high";
+
+// This app's config/env surface uses lowercase strings (matches
+// INITIAL_AI_THINKING_LEVEL/MENTOR_AI_THINKING_LEVEL's Zod enum) — the SDK's
+// ThinkingConfig.thinkingLevel field is typed against its own uppercase
+// enum, not the lowercase string-literal alias it also happens to export.
+const SDK_THINKING_LEVEL: Record<ThinkingLevel, SdkThinkingLevel> = {
+  minimal: SdkThinkingLevel.MINIMAL,
+  low: SdkThinkingLevel.LOW,
+  medium: SdkThinkingLevel.MEDIUM,
+  high: SdkThinkingLevel.HIGH,
+};
+
 interface GenerateStructuredParams {
   systemInstruction: string;
   prompt: string;
@@ -111,6 +137,56 @@ interface GenerateStructuredParams {
    * used for logic, only for the STAGE7_PIPELINE_ENTRY log line so the
    * real runtime call path can be confirmed from server logs. */
   callSite?: string;
+  /** Why this call happens — required, logged on every request. */
+  purpose: GeminiCallPurpose;
+  /** Caller-supplied context for the cost log (never the founder's raw
+   * profile/message text) — e.g. an opportunity id or route name. */
+  route?: string;
+  /** Gemini's thinkingConfig.thinkingLevel. Omit to use the model's own
+   * default. */
+  thinkingLevel?: ThinkingLevel;
+}
+
+/** One structured line per Gemini request — this is what turns "a session
+ * apparently cost ₹6" into an answerable question. Never includes the
+ * prompt/systemInstruction text (carries the founder's profile/messages)
+ * or any secret — only counts, ids, and labels. */
+function logCallCost(fields: {
+  requestId: string;
+  purpose: GeminiCallPurpose;
+  route: string;
+  model: string;
+  thinkingLevel: ThinkingLevel | "default";
+  attempt: number;
+  durationMs: number;
+  success: boolean;
+  usage?: {
+    promptTokenCount?: number;
+    candidatesTokenCount?: number;
+    thoughtsTokenCount?: number;
+    totalTokenCount?: number;
+  };
+  errorCategory?: GeminiFailureCategory;
+}) {
+  console.info(
+    "GEMINI_CALL",
+    JSON.stringify({
+      requestId: fields.requestId,
+      purpose: fields.purpose,
+      route: fields.route,
+      model: fields.model,
+      thinkingLevel: fields.thinkingLevel,
+      attempt: fields.attempt,
+      promptTokenCount: fields.usage?.promptTokenCount ?? null,
+      candidatesTokenCount: fields.usage?.candidatesTokenCount ?? null,
+      thoughtsTokenCount: fields.usage?.thoughtsTokenCount ?? null,
+      totalTokenCount: fields.usage?.totalTokenCount ?? null,
+      durationMs: fields.durationMs,
+      success: fields.success,
+      errorCategory: fields.errorCategory ?? null,
+      timestamp: new Date().toISOString(),
+    }),
+  );
 }
 
 /** Shared by generateStructured and generateJSON — the only difference
@@ -125,6 +201,7 @@ async function runGenerationLoop<T>(
   const ai = getClient();
   const model = MODEL;
   const maxAttempts = params.allowRetry === false ? 1 : 2;
+  const route = params.route ?? params.callSite ?? "unknown";
 
   // Proves, from real server logs, exactly which function/generator/
   // attempt-budget the current request actually runs with — never logs the
@@ -143,6 +220,8 @@ async function runGenerationLoop<T>(
   // and throw on the first attempt, which is exactly what a request-level
   // hiccup shouldn't do when a second attempt might just succeed.
   for (let attempt = 0; attempt < maxAttempts; attempt++) {
+    const requestId = crypto.randomUUID();
+    const startedAt = Date.now();
     const prompt =
       attempt === 0
         ? params.prompt
@@ -156,29 +235,77 @@ async function runGenerationLoop<T>(
           systemInstruction: params.systemInstruction,
           responseMimeType: "application/json",
           ...(responseSchema ? { responseSchema } : {}),
+          ...(params.thinkingLevel
+            ? { thinkingConfig: { thinkingLevel: SDK_THINKING_LEVEL[params.thinkingLevel] } }
+            : {}),
         },
       });
       const usage = response.usageMetadata;
-      if (usage) {
-        console.info(
-          `[gemini] model=${model} usage inputTokens=${usage.promptTokenCount ?? "?"} outputTokens=${usage.candidatesTokenCount ?? "?"} thinkingTokens=${usage.thoughtsTokenCount ?? 0} totalTokens=${usage.totalTokenCount ?? "?"}`,
-        );
-      }
+      const durationMs = Date.now() - startedAt;
+
       const responseText = response.text;
       if (!responseText) {
         lastError = "Empty response from model.";
         lastCategory = "GEMINI_EMPTY_RESPONSE";
+        logCallCost({
+          requestId,
+          purpose: params.purpose,
+          route,
+          model,
+          thinkingLevel: params.thinkingLevel ?? "default",
+          attempt,
+          durationMs,
+          success: false,
+          usage,
+          errorCategory: lastCategory,
+        });
         continue;
       }
       const parsed = JSON.parse(responseText);
       const result = schema.safeParse(parsed);
-      if (result.success) return result.data;
+      if (result.success) {
+        logCallCost({
+          requestId,
+          purpose: params.purpose,
+          route,
+          model,
+          thinkingLevel: params.thinkingLevel ?? "default",
+          attempt,
+          durationMs,
+          success: true,
+          usage,
+        });
+        return result.data;
+      }
       lastError = result.error.message;
       lastCategory = "GEMINI_SCHEMA_MISMATCH";
+      logCallCost({
+        requestId,
+        purpose: params.purpose,
+        route,
+        model,
+        thinkingLevel: params.thinkingLevel ?? "default",
+        attempt,
+        durationMs,
+        success: false,
+        usage,
+        errorCategory: lastCategory,
+      });
     } catch (err) {
       lastError = err instanceof Error ? err.message : "Gemini request failed.";
       lastCategory = classifyGeminiFailure(err);
       lastCause = err;
+      logCallCost({
+        requestId,
+        purpose: params.purpose,
+        route,
+        model,
+        thinkingLevel: params.thinkingLevel ?? "default",
+        attempt,
+        durationMs: Date.now() - startedAt,
+        success: false,
+        errorCategory: lastCategory,
+      });
     }
   }
 
@@ -251,8 +378,14 @@ export interface GroundedResult {
  * always returns free text + a real source list — pair with a second
  * generateStructured call to shape that text into the app's evidence format.
  */
-export async function generateGrounded(prompt: string): Promise<GroundedResult> {
+export async function generateGrounded(
+  prompt: string,
+  purpose: GeminiCallPurpose,
+  route: string,
+): Promise<GroundedResult> {
   const ai = getClient();
+  const requestId = crypto.randomUUID();
+  const startedAt = Date.now();
 
   let response;
   try {
@@ -262,12 +395,35 @@ export async function generateGrounded(prompt: string): Promise<GroundedResult> 
       config: { tools: [{ googleSearch: {} }] },
     });
   } catch (err) {
+    logCallCost({
+      requestId,
+      purpose,
+      route,
+      model: MODEL,
+      thinkingLevel: "default",
+      attempt: 0,
+      durationMs: Date.now() - startedAt,
+      success: false,
+      errorCategory: classifyGeminiFailure(err),
+    });
     throw new AIGenerationError(
       "Gemini grounded search request failed",
       classifyGeminiFailure(err),
       err,
     );
   }
+
+  logCallCost({
+    requestId,
+    purpose,
+    route,
+    model: MODEL,
+    thinkingLevel: "default",
+    attempt: 0,
+    durationMs: Date.now() - startedAt,
+    success: true,
+    usage: response.usageMetadata,
+  });
 
   const text = response.text ?? "";
   const chunks = response.candidates?.[0]?.groundingMetadata?.groundingChunks ?? [];

@@ -194,9 +194,16 @@ export function DashboardShell({ children, opportunityId = null }: DashboardShel
 
   return (
     <OpenMentorContext.Provider value={() => setMentorOpen(true)}>
-      <div className="min-h-screen w-full bg-background text-foreground lg:flex">
-        {/* ===== DESKTOP SIDEBAR ===== */}
-        <aside className="sticky top-0 hidden h-screen w-[248px] shrink-0 border-r border-workspace-border bg-workspace lg:block">
+      {/* True app shell, not a scrolling page with a sticky sidebar —
+       * `position: sticky` is fragile here (html/body already set
+       * overflow-x: hidden, which forces an implicit overflow-y on body
+       * per the CSS overflow spec, an easy way for "sticky" to silently
+       * stop sticking). The outer shell never scrolls at all; only the
+       * main workspace column does, so the sidebar is simply never in a
+       * scrolling context to begin with. */}
+      <div className="flex h-dvh w-full overflow-hidden bg-background text-foreground">
+        {/* ===== DESKTOP SIDEBAR — fixed, never scrolls with content ===== */}
+        <aside className="hidden h-dvh w-[248px] shrink-0 overflow-y-auto border-r border-workspace-border bg-workspace lg:block">
           <SidebarContent
             opportunityId={opportunityId}
             onNavigate={() => {}}
@@ -205,23 +212,30 @@ export function DashboardShell({ children, opportunityId = null }: DashboardShel
           />
         </aside>
 
-        {/* ===== MOBILE TOP BAR ===== */}
-        <header className="sticky top-0 z-30 flex items-center justify-between gap-4 border-b border-border/60 bg-background/90 px-5 py-4 backdrop-blur-xl lg:hidden">
-          <Link to="/" className="flex items-center gap-2.5" aria-label="Solventia home">
-            <img src={mark} alt="" width={298} height={436} className="h-8 w-auto" />
-            <span className="font-display text-[1rem] font-semibold tracking-[0.18em] text-primary">
-              SOLVENTIA
-            </span>
-          </Link>
-          <button
-            type="button"
-            onClick={() => setMobileNavOpen(true)}
-            className="flex size-9 items-center justify-center rounded-lg border border-border/70 text-foreground"
-            aria-label="Open menu"
-          >
-            <Menu className="size-[1.125rem]" aria-hidden="true" />
-          </button>
-        </header>
+        {/* ===== MAIN WORKSPACE COLUMN — the only scrolling region ===== */}
+        <div className="flex h-dvh min-w-0 flex-1 flex-col overflow-y-auto">
+          {/* ===== MOBILE TOP BAR ===== */}
+          <header className="sticky top-0 z-30 flex shrink-0 items-center justify-between gap-4 border-b border-border/60 bg-background/90 px-5 py-4 backdrop-blur-xl lg:hidden">
+            <Link to="/" className="flex items-center gap-2.5" aria-label="Solventia home">
+              <img src={mark} alt="" width={298} height={436} className="h-8 w-auto" />
+              <span className="font-display text-[1rem] font-semibold tracking-[0.18em] text-primary">
+                SOLVENTIA
+              </span>
+            </Link>
+            <button
+              type="button"
+              onClick={() => setMobileNavOpen(true)}
+              className="flex size-9 items-center justify-center rounded-lg border border-border/70 text-foreground"
+              aria-label="Open menu"
+            >
+              <Menu className="size-[1.125rem]" aria-hidden="true" />
+            </button>
+          </header>
+
+          <main className="mx-auto flex w-full max-w-[1180px] flex-1 flex-col gap-0 px-5 py-9 sm:px-8 lg:px-12 lg:py-14">
+            {children}
+          </main>
+        </div>
 
         <Sheet open={mobileNavOpen} onOpenChange={setMobileNavOpen}>
           <SheetContent
@@ -237,13 +251,6 @@ export function DashboardShell({ children, opportunityId = null }: DashboardShel
             />
           </SheetContent>
         </Sheet>
-
-        {/* ===== MAIN CONTENT ===== */}
-        <div className="min-w-0 flex-1">
-          <main className="mx-auto flex w-full max-w-[1100px] flex-col gap-0 px-5 py-9 sm:px-8 lg:px-12 lg:py-14">
-            {children}
-          </main>
-        </div>
 
         <MentorPanel open={mentorOpen} onOpenChange={setMentorOpen} opportunityId={opportunityId} />
       </div>

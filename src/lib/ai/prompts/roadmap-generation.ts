@@ -22,5 +22,8 @@ Design a staged roadmap using only the phases that genuinely apply (choose from:
   return generateStructured(RoadmapPlanSchema, {
     systemInstruction: SYSTEM_INSTRUCTION,
     prompt,
+    callSite: "generateRoadmapPlan",
+    purpose: "LEGACY_FALLBACK",
+    route: "opportunity/switch-legacy",
   });
 }

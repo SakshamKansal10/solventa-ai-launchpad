@@ -32,5 +32,8 @@ Replan ONLY the remaining path forward, adjusted for what actually happened. If 
   return generateStructured(RoadmapPlanSchema, {
     systemInstruction: SYSTEM_INSTRUCTION,
     prompt,
+    callSite: "replanRoadmap",
+    purpose: "ROADMAP_REPLAN",
+    route: "roadmap/replan",
   });
 }

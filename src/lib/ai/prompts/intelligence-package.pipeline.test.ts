@@ -34,7 +34,8 @@ vi.mock("@google/genai", () => {
     models = { generateContent: generateContentMock };
     constructor(_opts: unknown) {}
   }
-  return { GoogleGenAI, ApiError };
+  const ThinkingLevel = { MINIMAL: "MINIMAL", LOW: "LOW", MEDIUM: "MEDIUM", HIGH: "HIGH" };
+  return { GoogleGenAI, ApiError, ThinkingLevel };
 });
 
 import { ApiError } from "@google/genai";
@@ -156,6 +157,7 @@ describe("Stage 7 generation call path (mocked Gemini, no live network call)", (
     await generateStructured(z.object({ x: z.string() }), {
       systemInstruction: "test",
       prompt: "test",
+      purpose: "REANALYZE",
     }).catch(() => {});
 
     expect(generateContentMock).toHaveBeenCalledTimes(2);

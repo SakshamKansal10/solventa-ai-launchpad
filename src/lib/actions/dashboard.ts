@@ -26,11 +26,20 @@ export const getDashboard = createServerFn({ method: "GET" }).handler(async () =
 
   const [profileRes, opportunitiesRes, dnaRes] = await Promise.all([
     supabase.from("profiles").select("full_name, email").eq("id", user.id).maybeSingle(),
+    // Tie-break by created_at ascending: completeConsultation inserts
+    // opportunities in the same stable-sorted order it used to decide
+    // which one's roadmap became "active" (see profile.ts), so the
+    // earliest-created among equal fit scores is the one whose roadmap
+    // actually exists as active — without this second key, Postgres's
+    // ORDER BY has no guaranteed tie order, and a fit-score tie could
+    // make `primary` (active[0], below) disagree with which roadmap the
+    // roadmap page finds, even though nothing about the data is wrong.
     supabase
       .from("opportunities")
       .select("*")
       .eq("user_id", user.id)
-      .order("fit_score", { ascending: false }),
+      .order("fit_score", { ascending: false })
+      .order("created_at", { ascending: true }),
     supabase
       .from("business_dna")
       .select("founder_analysis, normalized_signals")

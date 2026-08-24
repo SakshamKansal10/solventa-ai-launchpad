@@ -1,6 +1,7 @@
 import { z } from "zod";
 
 import { generateStructured, generateJSON, AIGenerationError } from "@/lib/ai/gemini.server";
+import { env } from "@/lib/env.server";
 import {
   FounderDNASchema,
   FitFactorsSchema,
@@ -436,7 +437,7 @@ const OPPORTUNITY_CONTRACT = `{
   }`;
 
 const ROADMAP_CONTRACT = `"roadmapPhases": [ 3-4 objects per opportunity, each: { "opportunityIndex": integer, "phaseIndex": integer starting at 0 within that opportunity, "key": "understand"|"explore"|"validate"|"build"|"launch"|"improve", "title": string, "description": string } ],
-  "roadmapTasks": [ 2-3 objects per phase, each: { "opportunityIndex": integer, "phaseIndex": matching a roadmapPhases entry, "taskIndex": integer starting at 0 within that phase, "what": string, "why": string, "how": string, "resource": string|null, "timeEstimate": string, "deadlineDaysFromStart": number, "doneWhen": string, "required": boolean, "dependsOn": string|null } ]`;
+  "roadmapTasks": [ 2-3 objects per phase, each: { "opportunityIndex": integer, "phaseIndex": matching a roadmapPhases entry, "taskIndex": integer starting at 0 within that phase, "what": string, "why": string, "how": string, "resource": string|null, "timeEstimate": string, "deadlineDaysFromStart": number, "doneWhen": string, "required": boolean, "dependsOn": the exact "what" text of a prior task in this same phase written in plain English (e.g. "Create your first menu package"), or null if it can start independently — NEVER an index, number, or ID like "0-0-1" } ]`;
 
 const INTELLIGENCE_PACKAGE_JSON_CONTRACT = `{
   "founderDNA": { "narrativeSummary": string, "strengths": string[2-5], "resources": string[1-5], "constraints": string[1-5], "workStyle": string, "riskProfile": string, "direction": string, "strategicSignals": string[1-4] },
@@ -469,6 +470,9 @@ ${INTELLIGENCE_PACKAGE_JSON_CONTRACT}`;
     // second request against the shared daily quota on their behalf.
     allowRetry: false,
     callSite: "generateIntelligencePackage",
+    purpose: "INITIAL_INTELLIGENCE",
+    route: "consultation/complete",
+    thinkingLevel: env.INITIAL_AI_THINKING_LEVEL,
   });
 
   const pkg = reconstructPackage(flat);
@@ -571,6 +575,8 @@ ${jsonContract}`;
     systemInstruction: EXPLORE_SYSTEM_INSTRUCTION,
     prompt,
     callSite: "generateOpportunityPackageBatch",
+    purpose: "EXPLORE_MORE",
+    route: "dashboard/explore-more",
   });
 
   const opportunities: OpportunityPackage[] = (flat.opportunities as FlatExploreOpportunity[])
