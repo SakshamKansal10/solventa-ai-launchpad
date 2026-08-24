@@ -90,7 +90,8 @@ describe("Stage 7 generation call path (mocked Gemini, no live network call)", (
     expect(requestArg.model.length).toBeGreaterThan(0);
     // The JSON contract has to actually be IN the prompt, since nothing
     // else enforces the response shape without a provider-side schema.
-    expect(requestArg.contents).toContain("JSON Schema");
+    expect(requestArg.contents).toContain("roadmapPhases");
+    expect(requestArg.contents).toContain("EXACT COUNTS MATTER");
   });
 
   it("inspects the full locally-constructed request shape — no personal data logged, only types/lengths/keys", async () => {

@@ -250,7 +250,9 @@ const ROADMAP_RULE = `Every opportunity's roadmap must be genuinely useful to so
 
 const FLAT_FORMAT_RULE = `Return roadmapPhases and roadmapTasks as FLAT arrays (not nested), using the opportunityIndex/phaseIndex/taskIndex fields described in the schema to tie each phase and task back to its opportunity.`;
 
-const SYSTEM_INSTRUCTION = `You are Sol, Solventia's business strategist. You turn ONE founder's real, complete profile into their complete initial workspace in a single response: an honest synthesis of who they are, and exactly three genuinely different, personalized business opportunities — each with its full detail AND its full execution roadmap already built. ${PLAIN_LANGUAGE_RULE} ${ROADMAP_RULE} ${FLAT_FORMAT_RULE} Two founders with different profiles must never receive the same opportunities for the same reasons. Provide fitSignals as your honest, realistic estimate of what each opportunity actually requires — these drive a deterministic fit score computed by the application, so be realistic, never optimistic, and never invent a numeric score yourself.`;
+/** Exported only for diagnostic scripts to reuse the exact real string
+ * without transcription risk — see scripts/_step4-diagnostic.ts. */
+export const SYSTEM_INSTRUCTION = `You are Sol, Solventia's business strategist. You turn ONE founder's real, complete profile into their complete initial workspace in a single response: an honest synthesis of who they are, and exactly three genuinely different, personalized business opportunities — each with its full detail AND its full execution roadmap already built. ${PLAIN_LANGUAGE_RULE} ${ROADMAP_RULE} ${FLAT_FORMAT_RULE} Two founders with different profiles must never receive the same opportunities for the same reasons. Provide fitSignals as your honest, realistic estimate of what each opportunity actually requires — these drive a deterministic fit score computed by the application, so be realistic, never optimistic, and never invent a numeric score yourself.`;
 
 /**
  * The ONE automatic Gemini request that fires after Stage 7 — replaces the
@@ -306,9 +308,9 @@ Produce this founder's complete initial Solventia workspace in one response:
 
 2. Exactly 3 opportunities (opportunityIndex 0, 1, 2) — genuinely different strategic options (never the same idea worded three ways), each grounded in this founder's real skills, resources, time, risk tolerance, motivation, and constraints. Never suggest anything that conflicts with a stated constraint. Each "whyThisFounder" reason must cite a specific real signal from their profile, not a generic trait.
 
-3. roadmapPhases and roadmapTasks — a complete roadmap per opportunity, per the flat array format.
+3. A complete roadmap per opportunity, as flat roadmapPhases/roadmapTasks arrays tagged with opportunityIndex/phaseIndex/taskIndex. EXACT COUNTS MATTER — this is checked programmatically after you respond: give EACH of the 3 opportunities EXACTLY 3 or 4 roadmapPhases (never fewer than 3, never more than 4), and give EACH phase EXACTLY 2 or 3 roadmapTasks (never fewer than 2, never more than 3). Before finishing, count your own phases and tasks per opportunity and correct any that fall outside these bounds.
 
-Respond with ONLY a single JSON object — no markdown fences, no commentary before or after — that validates against this exact JSON Schema:
+Respond with ONLY a single JSON object — no markdown fences, no commentary before or after — matching this exact shape:
 ${INTELLIGENCE_PACKAGE_JSON_CONTRACT}`;
 
   const flat = await generateJSON(FlatIntelligencePackageSchema, {
@@ -392,7 +394,9 @@ export async function generateOpportunityPackageBatch(
 
 Generate ${options.count} new, distinct business opportunity candidates (opportunityIndex 0${options.count > 1 ? `-${options.count - 1}` : ""}) for THIS founder, each with complete detail and a complete roadmap already built as flat roadmapPhases/roadmapTasks arrays.
 
-Respond with ONLY a single JSON object — no markdown fences, no commentary before or after — that validates against this exact JSON Schema:
+EXACT COUNTS MATTER — this is checked programmatically after you respond: give EACH opportunity EXACTLY 3 or 4 roadmapPhases (never fewer than 3, never more than 4), and give EACH phase EXACTLY 2 or 3 roadmapTasks (never fewer than 2, never more than 3). Before finishing, count your own phases and tasks per opportunity and correct any that fall outside these bounds.
+
+Respond with ONLY a single JSON object — no markdown fences, no commentary before or after — matching this exact shape:
 ${jsonContract}`;
 
   const flat = await generateJSON(flatSchema, {
