@@ -55,6 +55,7 @@ function AuthCallback() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [error, setError] = useState<string | null>(error_description ?? null);
+  const [analysisFailed, setAnalysisFailed] = useState(false);
   const [statusText, setStatusText] = useState("Confirming your account…");
   const ranRef = useRef(false);
 
@@ -79,10 +80,14 @@ function AuthCallback() {
       try {
         await resumePendingConsultation(setStatusText);
       } catch (err) {
-        // Session is real either way — don't strand the user on an error
-        // screen over the enrichment step. They land on the dashboard;
-        // if candidates are missing they'll see the "no match yet" state.
+        // The session is real, but the analysis isn't — routing to
+        // /dashboard here would strand the user on the empty "no match
+        // yet" state with no way back to a retry. Their answers are still
+        // in localStorage (never cleared on failure), so resuming the
+        // consultation from /consultation will pick up right here.
         console.error("[auth-callback] resuming consultation failed:", err);
+        setAnalysisFailed(true);
+        return;
       }
 
       navigate({ to: "/dashboard" });
@@ -98,6 +103,23 @@ function AuthCallback() {
         <p className="max-w-sm text-[0.9rem] text-muted-foreground">{error}</p>
         <PremiumButton tone="solid" shape="rounded" size="sm" href="/">
           Back to Homepage
+        </PremiumButton>
+      </div>
+    );
+  }
+
+  if (analysisFailed) {
+    return (
+      <div className="flex min-h-screen flex-col items-center justify-center gap-4 bg-background px-6 text-center">
+        <p className="font-display text-xl font-semibold text-primary">
+          Sol couldn&rsquo;t complete your analysis.
+        </p>
+        <p className="max-w-sm text-[0.9rem] text-muted-foreground">
+          Your account is set up and your consultation answers are safely saved. Retry the
+          analysis to get your opportunities and roadmap.
+        </p>
+        <PremiumButton tone="solid" shape="rounded" size="sm" href="/consultation">
+          Retry Analysis
         </PremiumButton>
       </div>
     );

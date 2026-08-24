@@ -41,12 +41,19 @@ export const getRoadmap = createServerFn({ method: "GET" })
   .handler(async ({ data }) => {
     const { supabase, user } = await requireUser();
 
+    // With no opportunityId, "the roadmap" means the current active one.
+    // With a specific opportunityId, the caller wants THAT opportunity's
+    // roadmap regardless of status — alternatives' roadmaps are
+    // "available", not "active", and filtering to active-only here would
+    // make an alternative's own roadmap unreachable even though it's
+    // already fully built and sitting in the database.
     let query = supabase
       .from("roadmaps")
       .select("*, opportunities(title, one_liner)")
-      .eq("user_id", user.id)
-      .eq("status", "active");
-    if (data.opportunityId) query = query.eq("opportunity_id", data.opportunityId);
+      .eq("user_id", user.id);
+    query = data.opportunityId
+      ? query.eq("opportunity_id", data.opportunityId)
+      : query.eq("status", "active");
     const { data: roadmapRow, error } = await query
       .order("created_at", { ascending: false })
       .limit(1)

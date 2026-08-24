@@ -60,15 +60,26 @@ export class AIGenerationError extends Error {
 interface GenerateStructuredParams {
   systemInstruction: string;
   prompt: string;
+  /**
+   * Defaults to true. The one-call initial-consultation generation
+   * (generateIntelligencePackage) passes false: that call site must cost
+   * exactly one automatic Gemini request, so an invalid first response has
+   * to surface as an immediate failure — recoverable only by an explicit
+   * user-triggered retry — never a silent second HTTP call charged against
+   * the same daily quota. Every other caller (mentor replies, roadmap
+   * adjustment, etc.) keeps the retry since it's a minor UX nicety there,
+   * not a guarantee the app makes to the user.
+   */
+  allowRetry?: boolean;
 }
 
 /**
  * Calls Gemini with a schema-constrained JSON response and validates the
- * result with the same Zod schema used to build that schema. Retries once,
- * feeding the validation error back to the model, before giving up — the
- * caller must treat a thrown AIGenerationError as a real failure, never
- * fall back to fabricated data. Always uses the single configured MODEL —
- * callers never choose a model themselves.
+ * result with the same Zod schema used to build that schema. By default,
+ * retries once, feeding the validation error back to the model, before
+ * giving up — the caller must treat a thrown AIGenerationError as a real
+ * failure, never fall back to fabricated data. Always uses the single
+ * configured MODEL — callers never choose a model themselves.
  */
 export async function generateStructured<T>(
   schema: z.ZodType<T>,
@@ -77,6 +88,7 @@ export async function generateStructured<T>(
   const ai = getClient();
   const responseSchema = toGeminiSchema(schema);
   const model = MODEL;
+  const maxAttempts = params.allowRetry === false ? 1 : 2;
 
   let lastError: string | null = null;
 
@@ -85,7 +97,7 @@ export async function generateStructured<T>(
   // loop retry once — a transient API error used to skip the retry entirely
   // and throw on the first attempt, which is exactly what a request-level
   // hiccup shouldn't do when a second attempt might just succeed.
-  for (let attempt = 0; attempt < 2; attempt++) {
+  for (let attempt = 0; attempt < maxAttempts; attempt++) {
     const prompt =
       attempt === 0
         ? params.prompt
@@ -115,7 +127,11 @@ export async function generateStructured<T>(
     }
   }
 
-  throw new AIGenerationError(`Gemini request failed after retry: ${lastError}`);
+  throw new AIGenerationError(
+    maxAttempts > 1
+      ? `Gemini request failed after retry: ${lastError}`
+      : `Gemini request failed: ${lastError}`,
+  );
 }
 
 export interface GroundedSource {

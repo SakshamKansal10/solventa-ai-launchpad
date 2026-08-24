@@ -84,47 +84,61 @@ export const completeConsultation = createServerFn({ method: "POST" })
       .map((opp) => ({ opp, score: computeFitScore(normalized, opp.fitSignals) }))
       .sort((a, b) => b.score.total - a.score.total);
 
-    for (let i = 0; i < scored.length; i++) {
-      const { opp, score } = scored[i];
-      const { data: oppRow, error: oppError } = await supabase
-        .from("opportunities")
-        .insert({
+    // Supabase's REST API gives each insert below its own transaction —
+    // there's no ambient transaction spanning this loop. If opportunity #2
+    // or #3 fails to persist, #1 (and business_dna) would otherwise stay
+    // committed as an orphaned partial analysis, which is exactly the kind
+    // of "half a dashboard" state the app must never show. On any failure
+    // past this point, delete business_dna — FK cascades remove every
+    // opportunity/detail/roadmap/phase/task written so far — and rethrow,
+    // so the user always sees either a complete analysis or none at all.
+    try {
+      for (let i = 0; i < scored.length; i++) {
+        const { opp, score } = scored[i];
+        const { data: oppRow, error: oppError } = await supabase
+          .from("opportunities")
+          .insert({
+            user_id: user.id,
+            business_dna_id: dnaRow.id,
+            title: opp.title,
+            one_liner: opp.plainEnglishSummary,
+            who_for: opp.customer,
+            fit_score: score.total,
+            score_breakdown: score as unknown as Json,
+            candidate: opp as unknown as Json,
+            status: "active",
+            batch_number: 1,
+            ai_model: MODEL,
+          })
+          .select("id")
+          .single();
+        if (oppError || !oppRow)
+          throw new Error(oppError?.message ?? "Failed to save opportunity");
+
+        // Detail is folded directly into `candidate` now, but also mirrored
+        // here so getOpportunity's existing "read opportunity_details, fall
+        // back to lazy generation" path finds it immediately for every new
+        // opportunity — the lazy-generation branch only ever fires for
+        // pre-migration rows now.
+        const { error: detailError } = await supabase.from("opportunity_details").insert({
+          opportunity_id: oppRow.id,
           user_id: user.id,
-          business_dna_id: dnaRow.id,
-          title: opp.title,
-          one_liner: opp.plainEnglishSummary,
-          who_for: opp.customer,
-          fit_score: score.total,
-          score_breakdown: score as unknown as Json,
-          candidate: opp as unknown as Json,
-          status: "active",
-          batch_number: 1,
+          detail: opp as unknown as Json,
           ai_model: MODEL,
-        })
-        .select("id")
-        .single();
-      if (oppError || !oppRow) throw new Error(oppError?.message ?? "Failed to save opportunity");
+        });
+        if (detailError) throw new Error(detailError.message);
 
-      // Detail is folded directly into `candidate` now, but also mirrored
-      // here so getOpportunity's existing "read opportunity_details, fall
-      // back to lazy generation" path finds it immediately for every new
-      // opportunity — the lazy-generation branch only ever fires for
-      // pre-migration rows now.
-      const { error: detailError } = await supabase.from("opportunity_details").insert({
-        opportunity_id: oppRow.id,
-        user_id: user.id,
-        detail: opp as unknown as Json,
-        ai_model: MODEL,
-      });
-      if (detailError) throw new Error(detailError.message);
-
-      await createRoadmap(
-        supabase,
-        user.id,
-        oppRow.id,
-        opp.roadmap,
-        i === 0 ? "active" : "available",
-      );
+        await createRoadmap(
+          supabase,
+          user.id,
+          oppRow.id,
+          opp.roadmap,
+          i === 0 ? "active" : "available",
+        );
+      }
+    } catch (err) {
+      await supabase.from("business_dna").delete().eq("id", dnaRow.id);
+      throw err;
     }
 
     if (user.email) void sendRoadmapReadyEmail(user.email, scored[0].opp.title);

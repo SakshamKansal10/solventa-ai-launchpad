@@ -277,6 +277,11 @@ Produce this founder's complete initial Solventia workspace in one response:
   const flat = await generateStructured(FlatIntelligencePackageSchema, {
     systemInstruction: SYSTEM_INSTRUCTION,
     prompt,
+    // The one-call architecture guarantees exactly one automatic Gemini
+    // request per initial analysis — an invalid response here must fail
+    // immediately and surface a retry to the FOUNDER, not silently spend a
+    // second request against the shared daily quota on their behalf.
+    allowRetry: false,
   });
 
   return reconstructPackage(flat);

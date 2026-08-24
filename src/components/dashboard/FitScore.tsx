@@ -11,11 +11,15 @@ const LABELS: Record<keyof FitScoreBreakdown, string> = {
   context: "Context",
 };
 
+// A fit score never hides an opportunity — even the best of 3 low scores is
+// still shown as PRIMARY, with the label attached here as an honest
+// confidence signal rather than a gate on visibility.
 export function fitQualitativeLabel(score: number): string {
-  if (score >= 85) return "Excellent personal fit";
-  if (score >= 70) return "Strong personal fit";
-  if (score >= 50) return "Reasonable fit — worth a look";
-  return "A stretch given your current profile";
+  if (score >= 90) return "Exceptional fit";
+  if (score >= 80) return "Strong fit";
+  if (score >= 70) return "Promising fit";
+  if (score >= 60) return "Exploratory fit";
+  return "Needs validation";
 }
 
 /** The dashboard hero's fit visual — a radial gauge, not a bordered
