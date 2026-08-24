@@ -26,6 +26,16 @@
   --color-gold-soft: var(--gold-soft);
   --color-navy: var(--navy);
   --color-ivory: var(--ivory);
+  --color-econ-green: var(--econ-green);
+  --color-econ-green-active: var(--econ-green-active);
+  --color-econ-green-deep: var(--econ-green-deep);
+  --color-econ-green-soft: var(--econ-green-soft);
+  --color-workspace: var(--workspace);
+  --color-workspace-raised: var(--workspace-raised);
+  --color-workspace-elevated: var(--workspace-elevated);
+  --color-workspace-foreground: var(--workspace-foreground);
+  --color-workspace-muted: var(--workspace-muted);
+  --color-workspace-border: var(--workspace-border);
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
@@ -76,6 +86,27 @@
   --navy: oklch(0.245 0.055 268);
   --gold: oklch(0.745 0.132 72);
   --gold-soft: oklch(0.86 0.085 80);
+
+  /* Economy green — a NEW functional accent for progress, validation, and
+     business/economic intelligence in the authenticated workspace. Not a
+     replacement for the navy/ivory/gold brand palette above; it sits
+     alongside it at roughly 8-12% visual weight (see workspace surfaces
+     below for the navy/near-black structural share). */
+  --econ-green: oklch(0.5 0.1 155.5); /* ~#0F7A57 */
+  --econ-green-active: oklch(0.575 0.112 155.5); /* ~#1A9668 */
+  --econ-green-deep: oklch(0.455 0.09 155.5); /* ~#0B6B4F */
+  --econ-green-soft: oklch(0.955 0.018 155.5); /* ~#EAF4EF */
+
+  /* Workspace surfaces — the near-black structural share of the
+     authenticated app (sidebar, dashboard hero panel). Deliberately close
+     in lightness/hue to --navy above rather than a neutral true-black, so
+     the workspace still reads as the same brand, just deeper. */
+  --workspace: oklch(0.16 0.02 260); /* ~#0B0E10, navy-black */
+  --workspace-raised: oklch(0.2 0.022 260); /* ~#131720 */
+  --workspace-elevated: oklch(0.245 0.026 260); /* ~#1B212C */
+  --workspace-foreground: oklch(0.97 0.004 264); /* near-white text on dark surfaces */
+  --workspace-muted: oklch(0.62 0.014 260); /* secondary text on dark surfaces */
+  --workspace-border: oklch(1 0 0 / 8%);
   --background: oklch(0.9908 0.0013 106.4);
   --foreground: oklch(0.245 0.055 268);
   --card: oklch(0.9967 0.0013 106.4);

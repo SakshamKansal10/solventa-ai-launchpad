@@ -115,8 +115,8 @@ function AuthCallback() {
           Sol couldn&rsquo;t complete your analysis.
         </p>
         <p className="max-w-sm text-[0.9rem] text-muted-foreground">
-          Your account is set up and your consultation answers are safely saved. Retry the
-          analysis to get your opportunities and roadmap.
+          Your account is set up and your consultation answers are safely saved. Retry the analysis
+          to get your opportunities and roadmap.
         </p>
         <PremiumButton tone="solid" shape="rounded" size="sm" href="/consultation">
           Retry Analysis

@@ -36,7 +36,7 @@ export function BusinessDnaPanel({ analysis, signals }: BusinessDnaPanelProps) {
   return (
     <section className="rounded-[1.5rem] border border-border/70 bg-card/70 p-6 sm:p-7">
       <div className="flex items-center justify-between">
-        <p className="eyebrow text-accent">Your Business DNA</p>
+        <p className="eyebrow text-econ-green-active">Your Business DNA</p>
         <Link
           to="/consultation"
           className="text-[0.78rem] font-medium text-muted-foreground hover:text-primary"
@@ -72,7 +72,7 @@ export function BusinessDnaPanel({ analysis, signals }: BusinessDnaPanelProps) {
               <ul className="mt-2 flex flex-col gap-1.5">
                 {dna.strengths.slice(0, 3).map((s) => (
                   <li key={s} className="flex gap-2 text-[0.85rem] text-foreground">
-                    <span className="mt-1.5 size-1 shrink-0 rounded-full bg-accent" />
+                    <span className="mt-1.5 size-1 shrink-0 rounded-full bg-econ-green-active" />
                     {s}
                   </li>
                 ))}

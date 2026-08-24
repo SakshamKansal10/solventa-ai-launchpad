@@ -43,9 +43,20 @@ const DISMISS_REASONS = [
   "Other",
 ];
 
-function Section({ title, children }: { title: string; children: React.ReactNode }) {
+function Section({
+  title,
+  id,
+  children,
+}: {
+  title: string;
+  id?: string;
+  children: React.ReactNode;
+}) {
   return (
-    <section className="border-t border-border/60 py-6 first:border-t-0 first:pt-0">
+    <section
+      id={id}
+      className="scroll-mt-24 border-t border-border/60 py-6 first:border-t-0 first:pt-0"
+    >
       <h2 className="text-[0.82rem] font-semibold uppercase tracking-wide text-accent">{title}</h2>
       <div className="mt-2.5 text-[0.95rem] leading-relaxed text-foreground">{children}</div>
     </section>
@@ -253,7 +264,7 @@ function OpportunityDetailPage() {
             </div>
           </Section>
         )}
-        <Section title="Market Signals">
+        <Section title="Market Signals" id="market-signals">
           <div className="flex flex-col gap-3">
             {evidence.length === 0 && (
               <p className="text-[0.85rem] text-muted-foreground">
@@ -290,8 +301,8 @@ function OpportunityDetailPage() {
         </Section>
       </div>
 
-      <div className="mt-6 rounded-[1.5rem] border border-accent/30 bg-[oklch(0.745_0.132_72_/_0.06)] p-6 sm:p-7">
-        <p className="text-[0.78rem] font-semibold uppercase tracking-wide text-accent">
+      <div className="mt-6 rounded-[1.5rem] border border-econ-green/25 bg-econ-green-soft/50 p-6 sm:p-7">
+        <p className="text-[0.78rem] font-semibold uppercase tracking-wide text-econ-green-deep">
           Your First Experiment
         </p>
         <p className="mt-2 text-[0.95rem] leading-relaxed text-foreground">

@@ -4,11 +4,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { ArrowRight, Compass, Loader2, Sparkles } from "lucide-react";
 import { DashboardShell, useOpenMentor } from "@/components/dashboard/DashboardShell";
-import {
-  FitRing,
-  FitScoreBreakdownList,
-  fitQualitativeLabel,
-} from "@/components/dashboard/FitScore";
+import { FitScoreBreakdownList, fitQualitativeLabel } from "@/components/dashboard/FitScore";
 import { RoadmapStageTimeline } from "@/components/dashboard/RoadmapStageTimeline";
 import { BusinessDnaPanel } from "@/components/dashboard/BusinessDnaPanel";
 import { PremiumButton } from "@/components/solventia/PremiumButton";
@@ -34,6 +30,20 @@ function greeting(): string {
   if (hour < 12) return "Good morning";
   if (hour < 18) return "Good afternoon";
   return "Good evening";
+}
+
+/** Economic snapshot fields only exist on the current one-call
+ * OpportunityPackage shape — pre-migration OpportunityCandidate rows don't
+ * carry them, so the strip simply doesn't render for those few legacy rows. */
+function getEconomicSnapshot(candidate: OpportunityPackage | OpportunityCandidate | null) {
+  if (!candidate || !("startingCapital" in candidate)) return null;
+  return [
+    { label: "Starting Capital", value: candidate.startingCapital },
+    { label: "Weekly Time", value: candidate.weeklyTime },
+    { label: "Difficulty", value: candidate.difficulty },
+    { label: "First Move", value: candidate.firstExperiment },
+    { label: "Revenue Path", value: candidate.revenuePath },
+  ];
 }
 
 function DashboardHome() {
@@ -105,6 +115,7 @@ function DashboardHome() {
     primaryCandidate && data.businessDna
       ? getConstraintWarnings(data.businessDna.signals, getFitFactors(primaryCandidate))
       : [];
+  const econSnapshot = getEconomicSnapshot(primaryCandidate);
 
   return (
     <DashboardShell opportunityId={data.selected?.id ?? primary?.id ?? null}>
@@ -144,78 +155,107 @@ function DashboardHome() {
         </section>
       ) : (
         <>
-          {/* ===== PRIMARY OPPORTUNITY HERO ===== */}
+          {/* ===== PRIMARY OPPORTUNITY HERO — near-black workspace panel ===== */}
           {primary && (
-            <section className="mt-8 rounded-[1.75rem] border border-border/70 bg-card/90 p-7 shadow-[0_30px_80px_-45px_oklch(0.245_0.055_268_/_0.18)] sm:p-10">
-              <p className="eyebrow text-accent">Your Strongest Opportunity</p>
-              <div className="mt-5 flex flex-col items-start gap-8 sm:flex-row sm:items-center">
-                <div className="flex flex-col items-center gap-2">
-                  <FitRing score={primary.fit_score} />
-                  <span className="text-[0.72rem] font-medium text-muted-foreground">
-                    {fitQualitativeLabel(primary.fit_score)}
-                  </span>
+            <section className="mt-8 overflow-hidden rounded-[1.75rem] bg-workspace shadow-[0_40px_90px_-50px_oklch(0.16_0.02_260/_0.55)]">
+              <div className="p-7 sm:p-10">
+                <p className="eyebrow text-econ-green-active">Your Strongest Match</p>
+
+                <div className="mt-6 flex flex-col gap-8 lg:flex-row lg:items-start lg:justify-between">
+                  <div className="max-w-xl">
+                    <h2 className="font-display text-[clamp(1.9rem,3.6vw,2.6rem)] font-semibold leading-[1.08] text-workspace-foreground">
+                      {primary.title}
+                    </h2>
+                    <p className="mt-3 text-[1rem] leading-relaxed text-workspace-muted">
+                      {primary.one_liner}
+                    </p>
+                  </div>
+                  <div className="flex shrink-0 flex-row items-end gap-3 lg:flex-col lg:items-end lg:gap-1">
+                    <span className="font-display text-[3.1rem] font-semibold leading-none text-workspace-foreground sm:text-[3.6rem]">
+                      {primary.fit_score}
+                    </span>
+                    <span className="pb-1.5 text-[0.7rem] font-semibold uppercase tracking-[0.14em] text-econ-green-active lg:pb-0">
+                      {fitQualitativeLabel(primary.fit_score)}
+                    </span>
+                  </div>
                 </div>
-                <div className="flex-1">
-                  <h2 className="font-display text-[1.7rem] font-semibold leading-tight text-primary sm:text-[2rem]">
-                    {primary.title}
-                  </h2>
-                  <p className="mt-2.5 max-w-xl text-[0.98rem] leading-relaxed text-muted-foreground">
-                    {primary.one_liner}
+
+                {constraintWarnings.length > 0 && (
+                  <div className="mt-6 rounded-xl border border-gold/25 bg-gold/[0.08] px-4 py-3">
+                    <p className="text-[0.82rem] text-workspace-foreground">
+                      {constraintWarnings[0]}
+                    </p>
+                  </div>
+                )}
+
+                <div className="mt-7 border-t border-workspace-border pt-6">
+                  <p className="text-[0.72rem] font-semibold uppercase tracking-[0.12em] text-workspace-muted">
+                    Why this fits you
                   </p>
+                  <ul className="mt-3 grid gap-2.5 sm:grid-cols-3 sm:gap-5">
+                    {primaryCandidate &&
+                      getWhyReasons(primaryCandidate).map((reason) => (
+                        <li
+                          key={reason}
+                          className="flex gap-2.5 text-[0.87rem] leading-relaxed text-workspace-foreground/90"
+                        >
+                          <span className="mt-1.5 size-1 shrink-0 rounded-full bg-econ-green-active" />
+                          {reason}
+                        </li>
+                      ))}
+                  </ul>
                 </div>
+
+                <div className="mt-8 flex flex-wrap items-center gap-4">
+                  <Button
+                    asChild
+                    className="bg-econ-green-active text-white hover:bg-econ-green-deep"
+                  >
+                    <Link to="/dashboard/opportunities/$id" params={{ id: primary.id }}>
+                      View Opportunity
+                      <ArrowRight className="size-4" aria-hidden="true" />
+                    </Link>
+                  </Button>
+                  <button
+                    type="button"
+                    onClick={() => setShowBreakdown((v) => !v)}
+                    className="text-[0.8rem] font-medium text-workspace-muted hover:text-workspace-foreground"
+                  >
+                    {showBreakdown ? "Hide the breakdown" : "Why this score?"}
+                  </button>
+                </div>
+
+                {showBreakdown && (
+                  <div className="mt-4 max-w-sm rounded-xl border border-workspace-border bg-white/[0.03] p-4">
+                    <FitScoreBreakdownList
+                      breakdown={(primary.score_breakdown as unknown as FitScoreResult).breakdown}
+                    />
+                  </div>
+                )}
               </div>
 
-              {constraintWarnings.length > 0 && (
-                <div className="mt-6 rounded-xl border border-accent/40 bg-[oklch(0.745_0.132_72_/_0.07)] px-4 py-3">
-                  <p className="text-[0.82rem] text-foreground">{constraintWarnings[0]}</p>
+              {/* ===== ECONOMIC SNAPSHOT — one strip, not five cards ===== */}
+              {econSnapshot && (
+                <div className="grid grid-cols-2 gap-px border-t border-workspace-border bg-workspace-border sm:grid-cols-5">
+                  {econSnapshot.map((item) => (
+                    <div key={item.label} className="bg-workspace px-5 py-4">
+                      <p className="text-[0.62rem] font-semibold uppercase tracking-[0.1em] text-workspace-muted">
+                        {item.label}
+                      </p>
+                      <p className="mt-1.5 line-clamp-2 text-[0.8rem] leading-snug text-workspace-foreground">
+                        {item.value}
+                      </p>
+                    </div>
+                  ))}
                 </div>
               )}
-
-              <div className="mt-7 border-t border-border/60 pt-6">
-                <p className="text-[0.78rem] font-semibold uppercase tracking-wide text-muted-foreground">
-                  Why this fits you
-                </p>
-                <ul className="mt-2.5 flex flex-col gap-2">
-                  {primaryCandidate &&
-                    getWhyReasons(primaryCandidate).map((reason) => (
-                      <li key={reason} className="flex gap-2.5 text-[0.92rem] text-foreground">
-                        <span className="mt-1.5 size-1 shrink-0 rounded-full bg-accent" />
-                        {reason}
-                      </li>
-                    ))}
-                </ul>
-              </div>
-
-              <button
-                type="button"
-                onClick={() => setShowBreakdown((v) => !v)}
-                className="mt-5 text-[0.82rem] font-medium text-accent hover:underline"
-              >
-                {showBreakdown ? "Hide the breakdown" : `Why ${primary.fit_score}?`}
-              </button>
-              {showBreakdown && (
-                <div className="mt-3 max-w-sm rounded-xl border border-border/60 bg-secondary/30 p-4">
-                  <FitScoreBreakdownList
-                    breakdown={(primary.score_breakdown as unknown as FitScoreResult).breakdown}
-                  />
-                </div>
-              )}
-
-              <div className="mt-7 flex flex-wrap items-center gap-3">
-                <Button asChild>
-                  <Link to="/dashboard/opportunities/$id" params={{ id: primary.id }}>
-                    Explore Opportunity
-                    <ArrowRight className="size-4" aria-hidden="true" />
-                  </Link>
-                </Button>
-              </div>
             </section>
           )}
 
           {/* ===== NEXT MOVE ===== */}
           {data.roadmap?.nextTask && (
-            <section className="mt-6 rounded-[1.5rem] border border-accent/30 bg-[oklch(0.745_0.132_72_/_0.06)] p-6 sm:p-7">
-              <p className="eyebrow text-accent">Your Next Move</p>
+            <section className="mt-6 rounded-[1.5rem] border border-econ-green/25 bg-econ-green-soft/50 p-6 sm:p-7">
+              <p className="eyebrow text-econ-green-deep">Your Next Move</p>
               <h3 className="mt-2 font-display text-[1.2rem] font-semibold text-primary">
                 {data.roadmap.nextTask.what}
               </h3>
@@ -231,7 +271,11 @@ function DashboardHome() {
                   <span>Due {data.roadmap.nextTask.deadline}</span>
                 )}
               </div>
-              <Button asChild size="sm" className="mt-4">
+              <Button
+                asChild
+                size="sm"
+                className="mt-4 bg-econ-green-active text-white hover:bg-econ-green-deep"
+              >
                 <Link to="/dashboard/roadmap">
                   Start this task
                   <ArrowRight className="size-4" aria-hidden="true" />
@@ -244,7 +288,7 @@ function DashboardHome() {
           {data.roadmap && data.roadmap.phases.length > 0 && (
             <section className="mt-6 rounded-[1.5rem] border border-border/70 bg-card/70 p-6 sm:p-7">
               <div className="flex items-center justify-between">
-                <p className="eyebrow text-accent">Your Path</p>
+                <p className="eyebrow text-muted-foreground">Your Path</p>
                 <Link
                   to="/dashboard/roadmap"
                   className="text-[0.78rem] font-medium text-muted-foreground hover:text-primary"
@@ -252,7 +296,7 @@ function DashboardHome() {
                   Continue Roadmap →
                 </Link>
               </div>
-              <div className="mt-5 overflow-x-auto">
+              <div className="mt-6 overflow-x-auto">
                 <RoadmapStageTimeline
                   phases={data.roadmap.phases.map((p) => ({
                     key: p.key,
@@ -284,7 +328,7 @@ function DashboardHome() {
                           <h3 className="font-display text-[1.05rem] font-semibold text-primary">
                             {opp.title}
                           </h3>
-                          <span className="text-[0.8rem] font-medium text-accent">
+                          <span className="text-[0.8rem] font-medium text-econ-green-active">
                             {opp.fit_score}/100
                           </span>
                         </div>
@@ -336,7 +380,7 @@ function DashboardHome() {
 
           {/* ===== YOUR BUSINESS DNA ===== */}
           {data.businessDna && (
-            <div className="mt-9">
+            <div id="business-dna" className="mt-9 scroll-mt-24">
               <BusinessDnaPanel
                 analysis={data.businessDna.analysis}
                 signals={data.businessDna.signals}

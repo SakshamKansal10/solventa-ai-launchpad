@@ -105,9 +105,11 @@ function TaskRow({
           disabled={busy}
           className={cn(
             "mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full border transition-colors",
-            task.status === "done" ? "border-accent bg-accent text-primary" : "border-border",
+            task.status === "done"
+              ? "border-econ-green-active bg-econ-green-active text-white"
+              : "border-border",
           )}
-          aria-label={task.status === "done" ? "Mark as not done" : "Mark as done"}
+          aria-label={task.status === "done" ? "Mark as not done" : "Mark complete"}
         >
           {task.status === "done" && <Check className="size-3" aria-hidden="true" />}
         </button>
@@ -165,15 +167,33 @@ function TaskRow({
                 {task.time_estimate && <span>{task.time_estimate}</span>}
                 {task.deadline && <span>Due {task.deadline}</span>}
               </div>
-              {task.status !== "done" && (
+              <div className="mt-2 flex items-center gap-4">
                 <button
                   type="button"
-                  onClick={() => setShowBlocker((v) => !v)}
-                  className="mt-1 self-start text-[0.8rem] font-medium text-accent hover:underline"
+                  onClick={markDone}
+                  disabled={busy}
+                  className={cn(
+                    "self-start rounded-full px-3.5 py-1.5 text-[0.72rem] font-semibold uppercase tracking-[0.06em] transition-colors",
+                    task.status === "done"
+                      ? "bg-secondary text-muted-foreground"
+                      : "bg-econ-green-active text-white hover:bg-econ-green-deep",
+                  )}
                 >
-                  I'm stuck on this
+                  {busy && (
+                    <Loader2 className="mr-1 inline size-3 animate-spin" aria-hidden="true" />
+                  )}
+                  {task.status === "done" ? "Mark Not Done" : "Mark Complete"}
                 </button>
-              )}
+                {task.status !== "done" && (
+                  <button
+                    type="button"
+                    onClick={() => setShowBlocker((v) => !v)}
+                    className="self-start text-[0.8rem] font-medium text-econ-green-active hover:underline"
+                  >
+                    I'm stuck on this
+                  </button>
+                )}
+              </div>
             </div>
           )}
           {showBlocker && (
@@ -188,7 +208,7 @@ function TaskRow({
                     className={cn(
                       "rounded-full border px-2.5 py-1 text-[0.76rem]",
                       blockerReason === r.value
-                        ? "border-accent bg-accent/15 text-primary"
+                        ? "border-econ-green-active bg-econ-green-active/10 text-econ-green-deep"
                         : "border-border text-muted-foreground",
                     )}
                   >
@@ -282,7 +302,9 @@ function RoadmapPage() {
 
   return (
     <DashboardShell opportunityId={roadmap.opportunity_id}>
-      <p className="eyebrow text-accent">Your Path to {opportunity?.title ?? "Your Business"}</p>
+      <p className="eyebrow text-econ-green-active">
+        Your Path to {opportunity?.title ?? "Your Business"}
+      </p>
       <h1 className="mt-2 font-display text-[clamp(1.9rem,3.4vw,2.5rem)] font-semibold text-primary">
         {opportunity?.title ?? "Your Roadmap"}
       </h1>
@@ -296,7 +318,7 @@ function RoadmapPage() {
         <div className="flex items-center gap-3">
           <div className="h-1.5 w-40 rounded-full bg-secondary">
             <div
-              className="h-full rounded-full bg-accent transition-[width] duration-700 ease-out"
+              className="h-full rounded-full bg-econ-green-active transition-[width] duration-700 ease-out"
               style={{ width: `${overallProgress}%` }}
             />
           </div>
@@ -324,26 +346,23 @@ function RoadmapPage() {
                 type="button"
                 onClick={() => setFocusedIndex(i)}
                 className={cn(
-                  "flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-left transition-colors",
-                  isFocused ? "bg-secondary" : "hover:bg-secondary/50",
+                  "flex items-center gap-3 rounded-lg border-l-2 px-3 py-2.5 text-left transition-colors",
+                  isFocused
+                    ? "border-econ-green-active bg-econ-green-soft/40"
+                    : "border-transparent hover:bg-secondary/50",
                 )}
               >
                 <span
                   className={cn(
-                    "flex size-6 shrink-0 items-center justify-center rounded-full text-[0.7rem] font-semibold",
+                    "block size-1.5 shrink-0 rounded-full",
                     isDone
-                      ? "bg-accent text-primary"
+                      ? "bg-econ-green-active"
                       : isFocused
-                        ? "bg-primary text-primary-foreground"
-                        : "bg-secondary text-muted-foreground",
+                        ? "bg-econ-green-active ring-4 ring-econ-green-active/15"
+                        : "bg-border",
                   )}
-                >
-                  {isDone ? (
-                    <Check className="size-3" aria-hidden="true" />
-                  ) : (
-                    String(i + 1).padStart(2, "0")
-                  )}
-                </span>
+                  aria-hidden="true"
+                />
                 <span
                   className={cn(
                     "text-[0.85rem] font-medium",
@@ -352,6 +371,9 @@ function RoadmapPage() {
                 >
                   {phase.title}
                 </span>
+                {isDone && (
+                  <Check className="ml-auto size-3.5 text-econ-green-active" aria-hidden="true" />
+                )}
               </button>
             );
           })}
@@ -394,7 +416,7 @@ function RoadmapPage() {
                 className={cn(
                   "rounded-2xl p-5 transition-colors",
                   isCurrent
-                    ? "border border-accent/40 bg-[oklch(0.745_0.132_72_/_0.05)]"
+                    ? "border border-econ-green-active/30 bg-econ-green-soft/40"
                     : "border border-transparent",
                   !isCurrent && !isDone && "opacity-70",
                 )}
@@ -402,31 +424,29 @@ function RoadmapPage() {
                 <div className="flex items-center gap-3">
                   <span
                     className={cn(
-                      "flex size-7 shrink-0 items-center justify-center rounded-full text-[0.75rem] font-semibold",
+                      "block size-1.5 shrink-0 rounded-full",
                       isDone
-                        ? "bg-accent text-primary"
+                        ? "bg-econ-green-active"
                         : isCurrent
-                          ? "bg-primary text-primary-foreground"
-                          : "bg-secondary text-muted-foreground",
+                          ? "bg-econ-green-active ring-4 ring-econ-green-active/15"
+                          : "bg-border",
                     )}
-                  >
-                    {isDone ? (
-                      <Check className="size-3.5" aria-hidden="true" />
-                    ) : (
-                      String(i + 1).padStart(2, "0")
-                    )}
-                  </span>
+                    aria-hidden="true"
+                  />
                   <h2 className="font-display text-lg font-semibold text-primary">{phase.title}</h2>
+                  {isDone && (
+                    <Check className="size-3.5 text-econ-green-active" aria-hidden="true" />
+                  )}
                   <span className="text-[0.78rem] text-muted-foreground">
                     {done}/{phase.tasks.length} done
                   </span>
                 </div>
                 {phase.description && (
-                  <p className="mt-1.5 pl-10 text-[0.85rem] text-muted-foreground">
+                  <p className="mt-1.5 pl-[1.125rem] text-[0.85rem] text-muted-foreground">
                     {phase.description}
                   </p>
                 )}
-                <div className="mt-3 flex flex-col gap-2.5 pl-0 sm:pl-10">
+                <div className="mt-3 flex flex-col gap-2.5 pl-0 sm:pl-[1.125rem]">
                   {phase.tasks.map((task) => (
                     <TaskRow key={task.id} task={task} roadmapId={roadmap.id} onChanged={refresh} />
                   ))}

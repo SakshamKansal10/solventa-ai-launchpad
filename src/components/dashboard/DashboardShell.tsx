@@ -1,11 +1,12 @@
 import { createContext, useContext, useState, type ReactNode } from "react";
-import { Link, useNavigate } from "@tanstack/react-router";
+import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
-import { Sparkles } from "lucide-react";
+import { Compass, Fingerprint, LineChart, LogOut, Map, Menu, Sparkles, Target } from "lucide-react";
 import mark from "@/assets/solventia-mark.png";
-import { Button } from "@/components/ui/button";
+import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 import { MentorPanel } from "@/components/dashboard/MentorPanel";
 import { signOut } from "@/lib/actions/auth";
+import { cn } from "@/lib/utils";
 
 /** Lets any page rendered inside DashboardShell trigger the mentor panel
  * (e.g. a page-level "Ask Sol" section), without lifting mentorOpen state
@@ -21,12 +22,156 @@ export function useOpenMentor(): () => void {
 interface DashboardShellProps {
   children: ReactNode;
   /** Scopes Sol's mentor context to the opportunity currently being viewed —
-   * null on the dashboard home, set on an opportunity/roadmap page. */
+   * null on the dashboard home, set on an opportunity/roadmap page. Also
+   * doubles as the target for the Opportunity/Market Validation nav items,
+   * which have nowhere to go without a currently-relevant opportunity. */
   opportunityId?: string | null;
+}
+
+interface NavItem {
+  label: string;
+  icon: typeof Compass;
+  to?: string;
+  hash?: string;
+  action?: "ask-sol";
+  /** Whether this item currently points at a real, distinct destination —
+   * Opportunity/Market Validation fall back to /dashboard when there's no
+   * opportunityId yet, and shouldn't compete with Overview for the active
+   * highlight while they're just placeholders. */
+  isRealDestination: boolean;
+}
+
+function useNavItems(opportunityId: string | null): NavItem[] {
+  return [
+    { label: "Overview", icon: Compass, to: "/dashboard", isRealDestination: true },
+    {
+      label: "Opportunity",
+      icon: Target,
+      to: opportunityId ? `/dashboard/opportunities/${opportunityId}` : "/dashboard",
+      isRealDestination: opportunityId !== null,
+    },
+    { label: "Roadmap", icon: Map, to: "/dashboard/roadmap", isRealDestination: true },
+    {
+      label: "Market Validation",
+      icon: LineChart,
+      to: opportunityId ? `/dashboard/opportunities/${opportunityId}` : "/dashboard",
+      hash: opportunityId ? "market-signals" : undefined,
+      isRealDestination: opportunityId !== null,
+    },
+    {
+      label: "Business DNA",
+      icon: Fingerprint,
+      to: "/dashboard",
+      hash: "business-dna",
+      isRealDestination: true,
+    },
+    { label: "Ask Sol", icon: Sparkles, action: "ask-sol", isRealDestination: true },
+  ];
+}
+
+function NavLink({
+  item,
+  currentPath,
+  onNavigate,
+  onAskSol,
+}: {
+  item: NavItem;
+  currentPath: string;
+  onNavigate: () => void;
+  onAskSol: () => void;
+}) {
+  const Icon = item.icon;
+  const isActive =
+    item.isRealDestination && item.to !== undefined && !item.hash && currentPath === item.to;
+
+  const className = cn(
+    "flex items-center gap-3 rounded-lg px-3.5 py-2.5 text-[0.85rem] font-medium transition-colors",
+    isActive
+      ? "bg-econ-green-soft/10 text-econ-green-active"
+      : "text-workspace-muted hover:bg-white/5 hover:text-workspace-foreground",
+  );
+
+  if (item.action === "ask-sol") {
+    return (
+      <button
+        type="button"
+        onClick={() => {
+          onAskSol();
+          onNavigate();
+        }}
+        className={className}
+      >
+        <Icon className="size-4 shrink-0" aria-hidden="true" strokeWidth={1.75} />
+        <span className="uppercase tracking-[0.06em]">{item.label}</span>
+      </button>
+    );
+  }
+
+  return (
+    <Link to={item.to} hash={item.hash} onClick={onNavigate} className={className}>
+      <Icon className="size-4 shrink-0" aria-hidden="true" strokeWidth={1.75} />
+      <span className="uppercase tracking-[0.06em]">{item.label}</span>
+    </Link>
+  );
+}
+
+function SidebarContent({
+  opportunityId,
+  onNavigate,
+  onAskSol,
+  onSignOut,
+}: {
+  opportunityId: string | null;
+  onNavigate: () => void;
+  onAskSol: () => void;
+  onSignOut: () => void;
+}) {
+  const navItems = useNavItems(opportunityId);
+  const currentPath = useRouterState({ select: (s) => s.location.pathname });
+
+  return (
+    <div className="flex h-full flex-col">
+      <div className="flex items-center gap-2.5 px-5 pb-8 pt-7">
+        <img src={mark} alt="" width={298} height={436} className="h-7 w-auto" />
+        <div className="flex flex-col leading-none">
+          <span className="font-display text-[0.95rem] font-semibold tracking-[0.16em] text-workspace-foreground">
+            SOLVENTIA
+          </span>
+          <span className="mt-1 text-[0.62rem] uppercase tracking-[0.14em] text-workspace-muted">
+            Your Workspace
+          </span>
+        </div>
+      </div>
+
+      <nav className="flex flex-1 flex-col gap-1 px-3">
+        {navItems.map((item) => (
+          <NavLink
+            key={item.label}
+            item={item}
+            currentPath={currentPath}
+            onNavigate={onNavigate}
+            onAskSol={onAskSol}
+          />
+        ))}
+      </nav>
+
+      <div className="border-t border-workspace-border px-3 py-4">
+        <button
+          type="button"
+          onClick={onSignOut}
+          className="flex w-full items-center gap-3 rounded-lg px-3.5 py-2.5 text-[0.85rem] font-medium text-workspace-muted transition-colors hover:bg-white/5 hover:text-workspace-foreground"
+        >
+          <LogOut className="size-4 shrink-0" aria-hidden="true" strokeWidth={1.75} />
+          Sign Out
+        </button>
+      </div>
+    </div>
+  );
 }
 
 export function DashboardShell({ children, opportunityId = null }: DashboardShellProps) {
   const [mentorOpen, setMentorOpen] = useState(false);
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
@@ -49,43 +194,56 @@ export function DashboardShell({ children, opportunityId = null }: DashboardShel
 
   return (
     <OpenMentorContext.Provider value={() => setMentorOpen(true)}>
-      <div className="min-h-screen w-full bg-background text-foreground">
-        <header className="sticky top-0 z-30 flex items-center justify-between gap-4 border-b border-border/60 bg-background/80 px-6 py-5 backdrop-blur-xl lg:px-10">
-          <Link to="/" className="flex items-center gap-3" aria-label="Solventia home">
-            <img src={mark} alt="" width={298} height={436} className="h-9 w-auto" />
-            <span className="hidden font-display text-[1.1rem] font-semibold tracking-[0.2em] text-primary sm:block">
+      <div className="min-h-screen w-full bg-background text-foreground lg:flex">
+        {/* ===== DESKTOP SIDEBAR ===== */}
+        <aside className="sticky top-0 hidden h-screen w-[248px] shrink-0 border-r border-workspace-border bg-workspace lg:block">
+          <SidebarContent
+            opportunityId={opportunityId}
+            onNavigate={() => {}}
+            onAskSol={() => setMentorOpen(true)}
+            onSignOut={handleSignOut}
+          />
+        </aside>
+
+        {/* ===== MOBILE TOP BAR ===== */}
+        <header className="sticky top-0 z-30 flex items-center justify-between gap-4 border-b border-border/60 bg-background/90 px-5 py-4 backdrop-blur-xl lg:hidden">
+          <Link to="/" className="flex items-center gap-2.5" aria-label="Solventia home">
+            <img src={mark} alt="" width={298} height={436} className="h-8 w-auto" />
+            <span className="font-display text-[1rem] font-semibold tracking-[0.18em] text-primary">
               SOLVENTIA
             </span>
           </Link>
-
-          <nav className="hidden items-center gap-6 text-[0.85rem] font-medium text-muted-foreground sm:flex">
-            <Link to="/dashboard" className="hover:text-primary [&.active]:text-primary">
-              Dashboard
-            </Link>
-            <Link to="/dashboard/roadmap" className="hover:text-primary [&.active]:text-primary">
-              My Path
-            </Link>
-          </nav>
-
-          <div className="flex items-center gap-2.5">
-            <Button
-              variant="outline"
-              size="sm"
-              className="gap-1.5 border-accent/40 text-primary"
-              onClick={() => setMentorOpen(true)}
-            >
-              <Sparkles className="size-3.5 text-accent" aria-hidden="true" />
-              Ask Sol
-            </Button>
-            <Button variant="ghost" size="sm" onClick={handleSignOut}>
-              Sign out
-            </Button>
-          </div>
+          <button
+            type="button"
+            onClick={() => setMobileNavOpen(true)}
+            className="flex size-9 items-center justify-center rounded-lg border border-border/70 text-foreground"
+            aria-label="Open menu"
+          >
+            <Menu className="size-[1.125rem]" aria-hidden="true" />
+          </button>
         </header>
 
-        <main className="mx-auto w-full max-w-[1100px] px-6 py-10 lg:px-10 lg:py-14">
-          {children}
-        </main>
+        <Sheet open={mobileNavOpen} onOpenChange={setMobileNavOpen}>
+          <SheetContent
+            side="left"
+            className="w-[280px] border-workspace-border bg-workspace p-0 text-workspace-foreground [&_button]:text-workspace-foreground"
+          >
+            <SheetTitle className="sr-only">Navigation</SheetTitle>
+            <SidebarContent
+              opportunityId={opportunityId}
+              onNavigate={() => setMobileNavOpen(false)}
+              onAskSol={() => setMentorOpen(true)}
+              onSignOut={handleSignOut}
+            />
+          </SheetContent>
+        </Sheet>
+
+        {/* ===== MAIN CONTENT ===== */}
+        <div className="min-w-0 flex-1">
+          <main className="mx-auto flex w-full max-w-[1100px] flex-col gap-0 px-5 py-9 sm:px-8 lg:px-12 lg:py-14">
+            {children}
+          </main>
+        </div>
 
         <MentorPanel open={mentorOpen} onOpenChange={setMentorOpen} opportunityId={opportunityId} />
       </div>

@@ -112,8 +112,7 @@ export const completeConsultation = createServerFn({ method: "POST" })
           })
           .select("id")
           .single();
-        if (oppError || !oppRow)
-          throw new Error(oppError?.message ?? "Failed to save opportunity");
+        if (oppError || !oppRow) throw new Error(oppError?.message ?? "Failed to save opportunity");
 
         // Detail is folded directly into `candidate` now, but also mirrored
         // here so getOpportunity's existing "read opportunity_details, fall
