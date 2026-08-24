@@ -1,11 +1,6 @@
 import { z } from "zod";
 
-import {
-  generateStructured,
-  generateJSON,
-  toGeminiSchema,
-  AIGenerationError,
-} from "@/lib/ai/gemini.server";
+import { generateStructured, generateJSON, AIGenerationError } from "@/lib/ai/gemini.server";
 import {
   FounderDNASchema,
   FitFactorsSchema,
@@ -268,20 +263,37 @@ const SYSTEM_INSTRUCTION = `You are Sol, Solventia's business strategist. You tu
  * constraint warnings, persistence — is deterministic application code,
  * never a second model call.
  */
-// The JSON contract Gemini must follow, derived straight from the same
-// Zod schema (via toGeminiSchema) that validates the response — never
-// hand-duplicated, so the prompt can never drift out of sync with what
-// reconstructPackage()/Zod actually require. This travels in the PROMPT
-// TEXT, not as a provider-side responseSchema: a schema this size (3
-// opportunities × ~20 fields, plus 9-12 phases and 18-36 tasks) reliably
-// trips Gemini's undocumented responseSchema complexity ceiling with a
-// bare 400 INVALID_ARGUMENT — confirmed both by this project's own prior
-// live 400s on an even smaller nested version, and independently by
-// Google's own developer forum reporting the identical unresolved
-// behavior as of January 2026. See generateJSON's doc comment.
-const INTELLIGENCE_PACKAGE_JSON_CONTRACT = JSON.stringify(
-  toGeminiSchema(FlatIntelligencePackageSchema),
-);
+// The JSON contract Gemini must follow, hand-authored and compact —
+// NOT the full toGeminiSchema()/OpenAPI-style dump (that was ~8,150
+// characters of machine-generated schema prose per call; this fragment
+// plus its wrappers below total well under 2,000). Zod is still the
+// strict validator on the way back (see FlatIntelligencePackageSchema/
+// reconstructPackage) — this text only has to be clear enough for the
+// model to follow, not exhaustive. Keep it in sync with
+// FlatOpportunitySchema/FlatRoadmapPhaseSchema/FlatRoadmapTaskSchema/
+// FounderDNASchema/FitFactorsSchema by hand; Zod will reject anything
+// that drifts, so an out-of-sync contract fails loudly (as a validation
+// error) rather than silently. Shared between generateIntelligencePackage
+// (fixed 3 opportunities) and generateOpportunityPackageBatch/Explore
+// More (1-4 opportunities) since the per-opportunity shape is identical.
+const OPPORTUNITY_CONTRACT = `{
+    "opportunityIndex": integer (unique within this response), "title": string, "category": string, "plainEnglishSummary": string, "customer": string, "problem": string, "solution": string,
+    "whyThisFounder": string[exactly 3], "businessModelPlainEnglish": string, "startingCapital": string, "weeklyTime": string,
+    "difficulty": "Beginner-friendly"|"Moderate"|"Challenging", "skillsAlreadyOwned": string[0-5], "skillsToLearn": string[0-5], "resourceRequirements": string[0-4],
+    "advantages": string[2-4], "tradeoffs": string[1-4], "risks": string[1-4], "unknowns": string[0-3], "validationNeeded": string[0-3], "revenuePath": string, "firstExperiment": string,
+    "fitSignals": { "requiredSkills": [{"name": string, "minLevel": "never_tried"|"beginner"|"intermediate"|"advanced"|"professional"}], "startupCapitalINR": number, "weeklyHoursNeeded": number,
+      "riskLevel": "cautious"|"balanced"|"experimental", "motivationAlignment": "high"|"medium"|"low", "requiresLeadership": boolean, "requiresSales": boolean, "soloFriendly": boolean,
+      "relevantExperienceYears": number, "requiresDigitalAssets": boolean, "locationFlexible": boolean }
+  }`;
+
+const ROADMAP_CONTRACT = `"roadmapPhases": [ 3-4 objects per opportunity, each: { "opportunityIndex": integer, "phaseIndex": integer starting at 0 within that opportunity, "key": "understand"|"explore"|"validate"|"build"|"launch"|"improve", "title": string, "description": string } ],
+  "roadmapTasks": [ 2-3 objects per phase, each: { "opportunityIndex": integer, "phaseIndex": matching a roadmapPhases entry, "taskIndex": integer starting at 0 within that phase, "what": string, "why": string, "how": string, "resource": string|null, "timeEstimate": string, "deadlineDaysFromStart": number, "doneWhen": string, "required": boolean, "dependsOn": string|null } ]`;
+
+const INTELLIGENCE_PACKAGE_JSON_CONTRACT = `{
+  "founderDNA": { "narrativeSummary": string, "strengths": string[2-5], "resources": string[1-5], "constraints": string[1-5], "workStyle": string, "riskProfile": string, "direction": string, "strategicSignals": string[1-4] },
+  "opportunities": [ exactly 3 objects, opportunityIndex 0|1|2, each: ${OPPORTUNITY_CONTRACT} ],
+  ${ROADMAP_CONTRACT}
+}`;
 
 export async function generateIntelligencePackage(
   profile: NormalizedProfile,
@@ -369,12 +381,13 @@ export async function generateOpportunityPackageBatch(
       : "";
 
   const flatSchema = makeFlatExploreSchema(options.count);
-  // Same reasoning as generateIntelligencePackage: this per-opportunity
-  // schema is large enough (roughly the same ~20-field opportunity shape,
-  // ×1-4) to risk the same undocumented responseSchema complexity ceiling,
-  // so the contract travels in the prompt instead of as a provider-side
-  // responseSchema.
-  const jsonContract = JSON.stringify(toGeminiSchema(flatSchema));
+  // Same reasoning as generateIntelligencePackage: the contract travels in
+  // the prompt as compact hand-authored text, not a provider-side
+  // responseSchema or a machine-generated OpenAPI dump.
+  const jsonContract = `{
+  "opportunities": [ exactly ${options.count} objects, opportunityIndex 0${options.count > 1 ? `-${options.count - 1}` : ""}, each: ${OPPORTUNITY_CONTRACT} ],
+  ${ROADMAP_CONTRACT}
+}`;
   const prompt = `Founder profile:\n${formatProfileForPrompt(profile)}${exclusion}${feedback}
 
 Generate ${options.count} new, distinct business opportunity candidates (opportunityIndex 0${options.count > 1 ? `-${options.count - 1}` : ""}) for THIS founder, each with complete detail and a complete roadmap already built as flat roadmapPhases/roadmapTasks arrays.
