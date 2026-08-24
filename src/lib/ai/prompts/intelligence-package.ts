@@ -1,6 +1,11 @@
 import { z } from "zod";
 
-import { generateStructured, AIGenerationError } from "@/lib/ai/gemini.server";
+import {
+  generateStructured,
+  generateJSON,
+  toGeminiSchema,
+  AIGenerationError,
+} from "@/lib/ai/gemini.server";
 import {
   FounderDNASchema,
   FitFactorsSchema,
@@ -174,7 +179,9 @@ function validateRoadmapCoverage(
   return true;
 }
 
-const FlatIntelligencePackageSchema = z
+/** Exported only so a test can assert on the exact request shape sent to
+ * Gemini without spending a live API call — see gemini-schema.test.ts. */
+export const FlatIntelligencePackageSchema = z
   .object({
     founderDNA: FounderDNASchema,
     opportunities: z
@@ -261,6 +268,21 @@ const SYSTEM_INSTRUCTION = `You are Sol, Solventia's business strategist. You tu
  * constraint warnings, persistence — is deterministic application code,
  * never a second model call.
  */
+// The JSON contract Gemini must follow, derived straight from the same
+// Zod schema (via toGeminiSchema) that validates the response — never
+// hand-duplicated, so the prompt can never drift out of sync with what
+// reconstructPackage()/Zod actually require. This travels in the PROMPT
+// TEXT, not as a provider-side responseSchema: a schema this size (3
+// opportunities × ~20 fields, plus 9-12 phases and 18-36 tasks) reliably
+// trips Gemini's undocumented responseSchema complexity ceiling with a
+// bare 400 INVALID_ARGUMENT — confirmed both by this project's own prior
+// live 400s on an even smaller nested version, and independently by
+// Google's own developer forum reporting the identical unresolved
+// behavior as of January 2026. See generateJSON's doc comment.
+const INTELLIGENCE_PACKAGE_JSON_CONTRACT = JSON.stringify(
+  toGeminiSchema(FlatIntelligencePackageSchema),
+);
+
 export async function generateIntelligencePackage(
   profile: NormalizedProfile,
 ): Promise<SolventiaIntelligencePackage> {
@@ -272,9 +294,12 @@ Produce this founder's complete initial Solventia workspace in one response:
 
 2. Exactly 3 opportunities (opportunityIndex 0, 1, 2) — genuinely different strategic options (never the same idea worded three ways), each grounded in this founder's real skills, resources, time, risk tolerance, motivation, and constraints. Never suggest anything that conflicts with a stated constraint. Each "whyThisFounder" reason must cite a specific real signal from their profile, not a generic trait.
 
-3. roadmapPhases and roadmapTasks — a complete roadmap per opportunity, per the flat array format.`;
+3. roadmapPhases and roadmapTasks — a complete roadmap per opportunity, per the flat array format.
 
-  const flat = await generateStructured(FlatIntelligencePackageSchema, {
+Respond with ONLY a single JSON object — no markdown fences, no commentary before or after — that validates against this exact JSON Schema:
+${INTELLIGENCE_PACKAGE_JSON_CONTRACT}`;
+
+  const flat = await generateJSON(FlatIntelligencePackageSchema, {
     systemInstruction: SYSTEM_INSTRUCTION,
     prompt,
     // The one-call architecture guarantees exactly one automatic Gemini
@@ -342,12 +367,21 @@ export async function generateOpportunityPackageBatch(
       ? `\n\nThe founder gave this feedback on past ideas — steer away from what it implies: ${options.dismissedNotes.join("; ")}.`
       : "";
 
+  const flatSchema = makeFlatExploreSchema(options.count);
+  // Same reasoning as generateIntelligencePackage: this per-opportunity
+  // schema is large enough (roughly the same ~20-field opportunity shape,
+  // ×1-4) to risk the same undocumented responseSchema complexity ceiling,
+  // so the contract travels in the prompt instead of as a provider-side
+  // responseSchema.
+  const jsonContract = JSON.stringify(toGeminiSchema(flatSchema));
   const prompt = `Founder profile:\n${formatProfileForPrompt(profile)}${exclusion}${feedback}
 
-Generate ${options.count} new, distinct business opportunity candidates (opportunityIndex 0${options.count > 1 ? `-${options.count - 1}` : ""}) for THIS founder, each with complete detail and a complete roadmap already built as flat roadmapPhases/roadmapTasks arrays.`;
+Generate ${options.count} new, distinct business opportunity candidates (opportunityIndex 0${options.count > 1 ? `-${options.count - 1}` : ""}) for THIS founder, each with complete detail and a complete roadmap already built as flat roadmapPhases/roadmapTasks arrays.
 
-  const flatSchema = makeFlatExploreSchema(options.count);
-  const flat = await generateStructured(flatSchema, {
+Respond with ONLY a single JSON object — no markdown fences, no commentary before or after — that validates against this exact JSON Schema:
+${jsonContract}`;
+
+  const flat = await generateJSON(flatSchema, {
     systemInstruction: EXPLORE_SYSTEM_INSTRUCTION,
     prompt,
   });

@@ -78,16 +78,19 @@ function maybeInjectGeminiFailure(mode: FailureInjection): void {
   if (mode === "gemini_timeout") {
     throw new AIGenerationError(
       "Simulated timeout: Gemini request exceeded 30000ms (injected by /review)",
+      "GEMINI_REQUEST_FAILED",
     );
   }
   if (mode === "gemini_429") {
     throw new AIGenerationError(
       "Simulated 429 RESOURCE_EXHAUSTED: quota exceeded (injected by /review)",
+      "GEMINI_QUOTA_EXCEEDED",
     );
   }
   if (mode === "gemini_malformed") {
     throw new AIGenerationError(
       'Gemini output failed schema validation after retry (injected by /review): Expected string, received number at "title"',
+      "GEMINI_SCHEMA_MISMATCH",
     );
   }
 }

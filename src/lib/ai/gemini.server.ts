@@ -1,4 +1,4 @@
-import { GoogleGenAI } from "@google/genai";
+import { GoogleGenAI, ApiError } from "@google/genai";
 import { zodToJsonSchema } from "zod-to-json-schema";
 import type { z } from "zod";
 
@@ -40,16 +40,52 @@ function stripAdditionalProperties(node: unknown): unknown {
   return node;
 }
 
-function toGeminiSchema(schema: z.ZodTypeAny): unknown {
+/** Exported only so a test can assert on the exact request shape sent to
+ * Gemini without spending a live API call — see gemini-schema.test.ts.
+ *
+ * IMPORTANT: `bun run <file>.ts` and Vite/Vitest resolve the bare `"zod"`
+ * specifier to genuinely different builds in this project (confirmed by
+ * inspecting schema._def directly under each) — Vite/Vitest resolve to the
+ * classic zod v3 internals zod-to-json-schema expects; Bun's own resolver
+ * picked a newer build with restructured internals that zod-to-json-schema
+ * can't introspect, producing an empty `{}` schema. Since the actual
+ * production server is built by Vite/Nitro, Vitest is the trustworthy
+ * proxy — NOT a standalone `bun run` script — for what ships. Always
+ * verify zod/schema behavior via a real `*.test.ts` file, never via a
+ * standalone script run directly with `bun run`.
+ */
+export function toGeminiSchema(schema: z.ZodTypeAny): unknown {
   const json = zodToJsonSchema(schema, { target: "openApi3", $refStrategy: "none" });
   // zodToJsonSchema can leave a top-level $schema key Gemini's backend rejects.
   const { $schema, ...rest } = json as Record<string, unknown>;
   return stripAdditionalProperties(rest);
 }
 
+/**
+ * Coarse, stable categories for what actually went wrong — logged/shown in
+ * dev diagnostics only; ordinary users always see the same calm recovery
+ * screen regardless of category. Derived from the real HTTP status the
+ * @google/genai SDK's ApiError carries, not string-matched from prose.
+ */
+export type GeminiFailureCategory =
+  | "GEMINI_INVALID_REQUEST" // 400 — the request itself was malformed/rejected
+  | "GEMINI_QUOTA_EXCEEDED" // 429 — rate limit or daily quota
+  | "GEMINI_EMPTY_RESPONSE" // 2xx but no text came back
+  | "GEMINI_SCHEMA_MISMATCH" // response parsed but failed Zod validation
+  | "GEMINI_REQUEST_FAILED"; // anything else (network, 5xx, unknown)
+
+function classifyGeminiFailure(err: unknown): GeminiFailureCategory {
+  if (err instanceof ApiError) {
+    if (err.status === 400) return "GEMINI_INVALID_REQUEST";
+    if (err.status === 429) return "GEMINI_QUOTA_EXCEEDED";
+  }
+  return "GEMINI_REQUEST_FAILED";
+}
+
 export class AIGenerationError extends Error {
   constructor(
     message: string,
+    public readonly category: GeminiFailureCategory = "GEMINI_REQUEST_FAILED",
     public readonly cause?: unknown,
   ) {
     super(message);
@@ -73,6 +109,74 @@ interface GenerateStructuredParams {
   allowRetry?: boolean;
 }
 
+/** Shared by generateStructured and generateJSON — the only difference
+ * between them is whether a provider-side responseSchema is attached to
+ * the request; the retry loop, JSON parsing, and Zod validation are
+ * identical either way. */
+async function runGenerationLoop<T>(
+  schema: z.ZodType<T>,
+  params: GenerateStructuredParams,
+  responseSchema: unknown,
+): Promise<T> {
+  const ai = getClient();
+  const model = MODEL;
+  const maxAttempts = params.allowRetry === false ? 1 : 2;
+
+  let lastError: string | null = null;
+  let lastCategory: GeminiFailureCategory = "GEMINI_REQUEST_FAILED";
+  let lastCause: unknown;
+
+  // Every failure mode (the request itself throwing, an empty response, a
+  // JSON parse failure, or a schema mismatch) records lastError and lets the
+  // loop retry once — a transient API error used to skip the retry entirely
+  // and throw on the first attempt, which is exactly what a request-level
+  // hiccup shouldn't do when a second attempt might just succeed.
+  for (let attempt = 0; attempt < maxAttempts; attempt++) {
+    const prompt =
+      attempt === 0
+        ? params.prompt
+        : `${params.prompt}\n\nYour previous response failed validation with this error, fix it and respond again with ONLY valid JSON matching the required shape:\n${lastError}`;
+
+    try {
+      const response = await ai.models.generateContent({
+        model,
+        contents: prompt,
+        config: {
+          systemInstruction: params.systemInstruction,
+          responseMimeType: "application/json",
+          ...(responseSchema ? { responseSchema } : {}),
+        },
+      });
+      const responseText = response.text;
+      if (!responseText) {
+        lastError = "Empty response from model.";
+        lastCategory = "GEMINI_EMPTY_RESPONSE";
+        continue;
+      }
+      const parsed = JSON.parse(responseText);
+      const result = schema.safeParse(parsed);
+      if (result.success) return result.data;
+      lastError = result.error.message;
+      lastCategory = "GEMINI_SCHEMA_MISMATCH";
+    } catch (err) {
+      lastError = err instanceof Error ? err.message : "Gemini request failed.";
+      lastCategory = classifyGeminiFailure(err);
+      lastCause = err;
+    }
+  }
+
+  console.error(
+    `[gemini] model=${model} category=${lastCategory} attempts=${maxAttempts}: ${lastError}`,
+  );
+  throw new AIGenerationError(
+    maxAttempts > 1
+      ? `Gemini request failed after retry: ${lastError}`
+      : `Gemini request failed: ${lastError}`,
+    lastCategory,
+    lastCause,
+  );
+}
+
 /**
  * Calls Gemini with a schema-constrained JSON response and validates the
  * result with the same Zod schema used to build that schema. By default,
@@ -85,53 +189,32 @@ export async function generateStructured<T>(
   schema: z.ZodType<T>,
   params: GenerateStructuredParams,
 ): Promise<T> {
-  const ai = getClient();
-  const responseSchema = toGeminiSchema(schema);
-  const model = MODEL;
-  const maxAttempts = params.allowRetry === false ? 1 : 2;
+  return runGenerationLoop(schema, params, toGeminiSchema(schema));
+}
 
-  let lastError: string | null = null;
-
-  // Every failure mode (the request itself throwing, an empty response, a
-  // JSON parse failure, or a schema mismatch) records lastError and lets the
-  // loop retry once — a transient API error used to skip the retry entirely
-  // and throw on the first attempt, which is exactly what a request-level
-  // hiccup shouldn't do when a second attempt might just succeed.
-  for (let attempt = 0; attempt < maxAttempts; attempt++) {
-    const prompt =
-      attempt === 0
-        ? params.prompt
-        : `${params.prompt}\n\nYour previous response failed validation with this error, fix it and respond again with ONLY valid JSON matching the schema:\n${lastError}`;
-
-    try {
-      const response = await ai.models.generateContent({
-        model,
-        contents: prompt,
-        config: {
-          systemInstruction: params.systemInstruction,
-          responseMimeType: "application/json",
-          responseSchema,
-        },
-      });
-      const responseText = response.text;
-      if (!responseText) {
-        lastError = "Empty response from model.";
-        continue;
-      }
-      const parsed = JSON.parse(responseText);
-      const result = schema.safeParse(parsed);
-      if (result.success) return result.data;
-      lastError = result.error.message;
-    } catch (err) {
-      lastError = err instanceof Error ? err.message : "Gemini request failed.";
-    }
-  }
-
-  throw new AIGenerationError(
-    maxAttempts > 1
-      ? `Gemini request failed after retry: ${lastError}`
-      : `Gemini request failed: ${lastError}`,
-  );
+/**
+ * Calls Gemini for JSON output WITHOUT a provider-side responseSchema —
+ * `params.prompt` must already contain a precise, explicit JSON-shape
+ * contract, since Gemini enforces nothing structural here. Zod is the sole
+ * authority validating what comes back.
+ *
+ * Exists because Gemini's responseSchema has a real, undocumented
+ * complexity ceiling — a schema that is fully OpenAPI-3-valid (no $ref,
+ * no oneOf/anyOf, no additionalProperties; confirmed locally, see
+ * gemini-schema.test.ts) can still get a bare 400 INVALID_ARGUMENT with no
+ * explanatory detail once it's "big enough" (property count × name
+ * length × constraint count). This project hit that ceiling twice before
+ * with a smaller, nested schema; independently, Google's own developer
+ * forum has open, unresolved reports of the identical bare-400 behavior
+ * as of January 2026. There is no documented threshold to design around —
+ * the only lever that reliably avoids it is not sending a responseSchema
+ * for a payload this size at all.
+ */
+export async function generateJSON<T>(
+  schema: z.ZodType<T>,
+  params: GenerateStructuredParams,
+): Promise<T> {
+  return runGenerationLoop(schema, params, null);
 }
 
 export interface GroundedSource {
@@ -162,7 +245,11 @@ export async function generateGrounded(prompt: string): Promise<GroundedResult> 
       config: { tools: [{ googleSearch: {} }] },
     });
   } catch (err) {
-    throw new AIGenerationError("Gemini grounded search request failed", err);
+    throw new AIGenerationError(
+      "Gemini grounded search request failed",
+      classifyGeminiFailure(err),
+      err,
+    );
   }
 
   const text = response.text ?? "";

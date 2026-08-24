@@ -6,7 +6,7 @@ import { requireUser } from "@/lib/supabase/server";
 import { normalizeProfile, type NormalizedProfile } from "@/lib/profile/normalize";
 import { computeFitScore } from "@/lib/profile/scoring";
 import { generateIntelligencePackage } from "@/lib/ai/prompts/intelligence-package";
-import { MODEL } from "@/lib/ai/gemini.server";
+import { MODEL, AIGenerationError } from "@/lib/ai/gemini.server";
 import { createRoadmap } from "@/lib/actions/roadmap-persistence.server";
 import { sendRoadmapReadyEmail } from "@/lib/actions/email.server";
 import type { Json } from "@/lib/supabase/types";
@@ -46,8 +46,12 @@ export const completeConsultation = createServerFn({ method: "POST" })
     try {
       pkg = await generateIntelligencePackage(normalized);
     } catch (err) {
+      // Dev-diagnostic detail only — the category never reaches the user,
+      // who always sees the same calm "couldn't complete your analysis"
+      // recovery screen regardless of which of these fired.
+      const category = err instanceof AIGenerationError ? err.category : "GEMINI_REQUEST_FAILED";
       console.error(
-        `[intelligence-package] generation failed model=${MODEL} user=${user.id}:`,
+        `[intelligence-package] generation failed model=${MODEL} category=${category} user=${user.id}:`,
         err,
       );
       throw err;
