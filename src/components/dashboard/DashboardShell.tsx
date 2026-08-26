@@ -26,6 +26,10 @@ interface DashboardShellProps {
    * doubles as the target for the Opportunity/Market Validation nav items,
    * which have nowhere to go without a currently-relevant opportunity. */
   opportunityId?: string | null;
+  /** Title of that same opportunity, purely for Sol's opening state
+   * ("Working with you on X") — never fetched, just threaded down from
+   * whatever the page already loaded. */
+  opportunityTitle?: string | null;
 }
 
 interface NavItem {
@@ -169,7 +173,11 @@ function SidebarContent({
   );
 }
 
-export function DashboardShell({ children, opportunityId = null }: DashboardShellProps) {
+export function DashboardShell({
+  children,
+  opportunityId = null,
+  opportunityTitle = null,
+}: DashboardShellProps) {
   const [mentorOpen, setMentorOpen] = useState(false);
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const navigate = useNavigate();
@@ -252,7 +260,12 @@ export function DashboardShell({ children, opportunityId = null }: DashboardShel
           </SheetContent>
         </Sheet>
 
-        <MentorPanel open={mentorOpen} onOpenChange={setMentorOpen} opportunityId={opportunityId} />
+        <MentorPanel
+          open={mentorOpen}
+          onOpenChange={setMentorOpen}
+          opportunityId={opportunityId}
+          opportunityTitle={opportunityTitle}
+        />
       </div>
     </OpenMentorContext.Provider>
   );

@@ -1,22 +1,23 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "sonner";
-import { Loader2 } from "lucide-react";
+import { ArrowRight, Loader2, RefreshCw } from "lucide-react";
 import { DashboardShell } from "@/components/dashboard/DashboardShell";
 import { FitScoreMatrix, fitQualitativeLabel } from "@/components/dashboard/FitScore";
 import { PremiumButton } from "@/components/solventia/PremiumButton";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { requireAuthLoader } from "@/lib/route-guards";
 import {
   getOpportunity,
+  refreshMarketEvidence,
   submitIdeaFeedback,
   switchSelectedOpportunity,
 } from "@/lib/actions/opportunities";
-import { toDisplayDetail } from "@/lib/opportunity-display";
+import { toDisplayDetail, getFitFactors } from "@/lib/opportunity-display";
 import type { OpportunityPackage, OpportunityDetail, MarketEvidenceItem } from "@/lib/ai/schemas";
 import type { FitScoreResult } from "@/lib/profile/scoring";
+import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/dashboard/opportunities/$id")({
   beforeLoad: requireAuthLoader,
@@ -24,13 +25,13 @@ export const Route = createFileRoute("/dashboard/opportunities/$id")({
   head: () => ({ meta: [{ name: "robots", content: "noindex" }] }),
 });
 
-const EVIDENCE_LABELS: Record<MarketEvidenceItem["label"], string> = {
-  strong_signal: "Strong signal",
-  early_signal: "Early signal",
-  emerging: "Emerging",
-  competitive: "Competitive",
-  needs_validation: "Needs validation",
-  limited_evidence: "Limited evidence",
+const EVIDENCE_TONE: Record<MarketEvidenceItem["label"], { label: string; dot: string }> = {
+  strong_signal: { label: "Strong", dot: "bg-econ-green-active" },
+  early_signal: { label: "Early signal", dot: "bg-econ-green" },
+  emerging: { label: "Emerging", dot: "bg-gold" },
+  competitive: { label: "Competitive", dot: "bg-[oklch(0.606_0.19_292.7)]" },
+  needs_validation: { label: "Needs validation", dot: "bg-muted-foreground" },
+  limited_evidence: { label: "Limited evidence", dot: "bg-muted-foreground/50" },
 };
 
 const DISMISS_REASONS = [
@@ -43,23 +44,40 @@ const DISMISS_REASONS = [
   "Other",
 ];
 
-function Section({
-  title,
-  id,
-  children,
-}: {
-  title: string;
-  id?: string;
-  children: React.ReactNode;
-}) {
+const SECTION_NAV = [
+  { id: "overview", label: "Overview" },
+  { id: "why-you", label: "Why You" },
+  { id: "economics", label: "Economics" },
+  { id: "market-signals", label: "Evidence" },
+  { id: "risks", label: "Risks" },
+  { id: "first-experiment", label: "First Experiment" },
+];
+
+function formatINR(n: number): string {
+  if (n <= 0) return "₹0";
+  if (n >= 100_000) return `₹${(n / 100_000).toFixed(n % 100_000 === 0 ? 0 : 1)}L`;
+  if (n >= 1_000) return `₹${Math.round(n / 1000)}K`;
+  return `₹${n}`;
+}
+
+function FlowStep({ label, value, isLast }: { label: string; value: string; isLast?: boolean }) {
   return (
-    <section
-      id={id}
-      className="scroll-mt-24 border-t border-border/60 py-6 first:border-t-0 first:pt-0"
-    >
-      <h2 className="text-[0.82rem] font-semibold uppercase tracking-wide text-accent">{title}</h2>
-      <div className="mt-2.5 text-[0.95rem] leading-relaxed text-foreground">{children}</div>
-    </section>
+    <div className="flex flex-1 flex-col items-center gap-2 sm:flex-row sm:items-stretch">
+      <div className="flex w-full flex-col items-center rounded-xl border border-border/70 bg-card/70 px-4 py-4 text-center">
+        <p className="text-[0.65rem] font-semibold uppercase tracking-wide text-muted-foreground">
+          {label}
+        </p>
+        <p className="mt-1.5 text-[0.88rem] font-medium leading-snug text-foreground">{value}</p>
+      </div>
+      {!isLast && (
+        <div className="flex items-center justify-center py-1 sm:py-0">
+          <ArrowRight
+            className="size-4 rotate-90 text-econ-green-active sm:rotate-0"
+            aria-hidden="true"
+          />
+        </div>
+      )}
+    </div>
   );
 }
 
@@ -68,8 +86,8 @@ function BulletList({ items }: { items: string[] }) {
   return (
     <ul className="flex flex-col gap-1.5">
       {items.map((item) => (
-        <li key={item} className="flex gap-2">
-          <span className="mt-1.5 size-1 shrink-0 rounded-full bg-accent" />
+        <li key={item} className="flex gap-2 text-[0.9rem] leading-relaxed text-foreground">
+          <span className="mt-1.5 size-1 shrink-0 rounded-full bg-econ-green-active" />
           {item}
         </li>
       ))}
@@ -88,6 +106,18 @@ function OpportunityDetailPage() {
 
   const [showReasons, setShowReasons] = useState(false);
   const [busy, setBusy] = useState<string | null>(null);
+
+  const refreshEvidenceMutation = useMutation({
+    mutationFn: () => refreshMarketEvidence({ data: { opportunityId: id } }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["opportunity", id] });
+      toast.success("Market evidence refreshed.");
+    },
+    onError: (err) => {
+      console.error("[opportunity] refresh evidence failed:", err);
+      toast.error("Couldn't refresh market evidence — try again.");
+    },
+  });
 
   async function giveFeedback(
     feedback: "interested" | "maybe_later" | "not_for_me" | "saved",
@@ -143,20 +173,67 @@ function OpportunityDetailPage() {
     );
   }
 
-  const { opportunity, detail: detailJson, evidence } = query.data;
+  const { opportunity, detail: detailJson, evidence, founderSummary } = query.data;
   const detail = toDisplayDetail(detailJson as unknown as OpportunityPackage | OpportunityDetail);
+  const candidate = opportunity.candidate as unknown as OpportunityPackage;
   const score = opportunity.score_breakdown as unknown as FitScoreResult;
   const isSelected = opportunity.status === "selected";
+  const fitFactors = getFitFactors(candidate);
+
+  // "Why You" match rows — every value is real, already-stored data, never
+  // fabricated: the founder's own signals against this opportunity's real
+  // fitSignals (the same numbers the deterministic fit score is computed
+  // from — see profile/scoring.ts).
+  const matchRows: { you: string; match: "yes" | "gap"; needs: string }[] = [];
+  if (founderSummary) {
+    matchRows.push({
+      you: `${founderSummary.weeklyHours || "0"} hrs/week available`,
+      match: founderSummary.weeklyHours >= fitFactors.weeklyHoursNeeded ? "yes" : "gap",
+      needs: `Needs ~${fitFactors.weeklyHoursNeeded} hrs/week`,
+    });
+    matchRows.push({
+      you: `${formatINR(founderSummary.capitalINR)} available`,
+      match: founderSummary.capitalINR >= fitFactors.startupCapitalINR ? "yes" : "gap",
+      needs: `Needs ~${formatINR(fitFactors.startupCapitalINR)}`,
+    });
+    for (const req of fitFactors.requiredSkills.slice(0, 3)) {
+      const owned = founderSummary.skills.some(
+        (s) => s.toLowerCase().trim() === req.name.toLowerCase().trim(),
+      );
+      matchRows.push({
+        you: owned ? req.name : `${req.name} — not yet listed`,
+        match: owned ? "yes" : "gap",
+        needs: `Needs ${req.name}`,
+      });
+    }
+  }
 
   return (
-    <DashboardShell opportunityId={id}>
-      <p className="eyebrow text-accent">
-        {(opportunity.candidate as unknown as OpportunityPackage).category}
-      </p>
-      <h1 className="mt-2 font-display text-[clamp(1.8rem,3vw,2.4rem)] font-semibold text-primary">
+    <DashboardShell opportunityId={id} opportunityTitle={candidate.title}>
+      {/* ===== TOP ===== */}
+      <p className="eyebrow text-accent">{candidate.category}</p>
+      <h1 className="mt-2 font-display text-[clamp(1.9rem,3.4vw,2.5rem)] font-semibold leading-tight text-primary">
         {opportunity.title}
       </h1>
-      <p className="mt-2 text-[1.02rem] text-muted-foreground">{opportunity.one_liner}</p>
+      <p className="mt-2.5 max-w-2xl text-[1.02rem] leading-relaxed text-muted-foreground">
+        {opportunity.one_liner}
+      </p>
+
+      <div className="mt-6 grid grid-cols-2 gap-px overflow-hidden rounded-2xl border border-border/70 bg-border/70 sm:grid-cols-4">
+        {[
+          { label: "Fit", value: `${opportunity.fit_score}/100` },
+          { label: "Capital", value: detail.startingCapital },
+          { label: "Time", value: detail.weeklyTime },
+          { label: "Difficulty", value: detail.difficulty },
+        ].map((cell) => (
+          <div key={cell.label} className="bg-card px-4 py-3.5">
+            <p className="text-[0.6rem] font-semibold uppercase tracking-[0.1em] text-muted-foreground">
+              {cell.label}
+            </p>
+            <p className="mt-1 truncate text-[0.9rem] font-semibold text-primary">{cell.value}</p>
+          </div>
+        ))}
+      </div>
 
       <div className="mt-6 flex flex-wrap items-center gap-3">
         <PremiumButton
@@ -176,14 +253,6 @@ function OpportunityDetailPage() {
           onClick={() => giveFeedback("interested")}
         >
           Interested
-        </Button>
-        <Button
-          variant="outline"
-          size="sm"
-          disabled={busy === "maybe_later"}
-          onClick={() => giveFeedback("maybe_later")}
-        >
-          Maybe later
         </Button>
         <Button
           variant="outline"
@@ -213,107 +282,218 @@ function OpportunityDetailPage() {
         </div>
       )}
 
-      <div className="mt-8 flex flex-col gap-6 rounded-2xl border border-border/70 bg-card/70 p-6 sm:flex-row sm:items-start sm:gap-10">
-        <div className="flex shrink-0 flex-col items-center sm:items-start">
-          <span className="font-display text-[2.75rem] font-semibold leading-none text-primary">
-            {opportunity.fit_score}
-          </span>
-          <span className="mt-1.5 text-[0.68rem] font-semibold uppercase tracking-[0.14em] text-econ-green-active">
-            {fitQualitativeLabel(opportunity.fit_score)}
-          </span>
-        </div>
-        <div className="w-full sm:border-l sm:border-border/60 sm:pl-10">
-          <FitScoreMatrix breakdown={score.breakdown} />
-        </div>
-      </div>
+      {/* ===== LOCAL SECTION NAV ===== */}
+      <nav className="sticky top-[69px] z-10 -mx-5 mt-8 flex gap-1 overflow-x-auto border-b border-border/60 bg-background/95 px-5 py-2 backdrop-blur-xl sm:-mx-8 sm:px-8 lg:sticky lg:top-0 lg:-mx-12 lg:px-12">
+        {SECTION_NAV.map((s) => (
+          <a
+            key={s.id}
+            href={`#${s.id}`}
+            className="shrink-0 rounded-full px-3 py-1.5 text-[0.8rem] font-medium text-muted-foreground transition-colors hover:bg-secondary hover:text-primary"
+          >
+            {s.label}
+          </a>
+        ))}
+      </nav>
 
-      <div className="mt-8 rounded-[1.5rem] border border-border/70 bg-card/60 p-6">
-        <Section title="The Opportunity">{detail.summary}</Section>
-        <Section title="The Problem">{detail.problem}</Section>
-        <Section title="Who It Is For">{detail.customer}</Section>
-        <Section title="Why This Fits You">
-          <BulletList items={detail.whyThisFounder} />
-        </Section>
-        <Section title="What You Already Have">
-          <BulletList items={detail.skillsAlreadyOwned} />
-        </Section>
-        <Section title="What You Still Need">
-          <BulletList items={detail.skillsToLearn} />
-        </Section>
-        <Section title="Starting Requirements">
-          <dl className="grid grid-cols-2 gap-3 text-[0.9rem] sm:grid-cols-4">
-            <div>
-              <dt className="text-muted-foreground">Capital</dt>
-              <dd className="font-medium">{detail.startingCapital}</dd>
+      {/* ===== OVERVIEW ===== */}
+      <section id="overview" className="scroll-mt-24 pt-8">
+        <h2 className="font-display text-[1.2rem] font-semibold text-primary">Overview</h2>
+        <div className="mt-4 flex flex-col gap-2 sm:flex-row sm:gap-3">
+          <FlowStep label="Problem" value={detail.problem} />
+          <FlowStep label="Your Service" value={detail.solution} />
+          <FlowStep label="Customer" value={detail.customer} />
+          <FlowStep label="Revenue" value={detail.revenuePath} isLast />
+        </div>
+      </section>
+
+      {/* ===== WHY YOU ===== */}
+      <section id="why-you" className="scroll-mt-24 border-t border-border/60 pt-8 mt-8">
+        <h2 className="font-display text-[1.2rem] font-semibold text-primary">Why You</h2>
+        {matchRows.length > 0 && (
+          <div className="mt-4 overflow-hidden rounded-2xl border border-border/70">
+            <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-2 bg-secondary/40 px-4 py-2 text-[0.65rem] font-semibold uppercase tracking-wide text-muted-foreground sm:gap-4">
+              <span>You</span>
+              <span />
+              <span className="text-right">This Business</span>
             </div>
-            <div>
-              <dt className="text-muted-foreground">Time</dt>
-              <dd className="font-medium">{detail.weeklyTime}</dd>
-            </div>
-            <div>
-              <dt className="text-muted-foreground">Difficulty</dt>
-              <dd className="font-medium">{detail.difficulty}</dd>
-            </div>
-            <div>
-              <dt className="text-muted-foreground">Equipment</dt>
-              <dd className="font-medium">{detail.resourceRequirements.join(", ") || "—"}</dd>
-            </div>
-          </dl>
-        </Section>
-        <Section title="How It Can Make Money">{detail.businessModel}</Section>
-        {(detail.advantages.length > 0 || detail.tradeoffs.length > 0) && (
-          <Section title="Advantages & Trade-offs">
-            <div className="grid gap-4 sm:grid-cols-2">
-              <BulletList items={detail.advantages} />
-              <BulletList items={detail.tradeoffs} />
-            </div>
-          </Section>
-        )}
-        <Section title="Market Signals" id="market-signals">
-          <div className="flex flex-col gap-3">
-            {evidence.length === 0 && (
-              <p className="text-[0.85rem] text-muted-foreground">
-                Current external evidence has not been fetched yet.
-              </p>
-            )}
-            {evidence.map((item) => (
-              <div key={item.id} className="rounded-xl border border-border/60 p-3.5">
-                <div className="flex items-start justify-between gap-3">
-                  <p className="text-[0.9rem] text-foreground">{item.claim}</p>
-                  <Badge variant="secondary" className="shrink-0">
-                    {EVIDENCE_LABELS[item.label]}
-                  </Badge>
-                </div>
-                {item.source_url && (
-                  <a
-                    href={item.source_url}
-                    target="_blank"
-                    rel="noreferrer noopener"
-                    className="mt-1.5 inline-block text-[0.78rem] text-accent hover:underline"
-                  >
-                    {item.source_title ?? item.source_url}
-                  </a>
-                )}
+            {matchRows.map((row, i) => (
+              <div
+                key={i}
+                className="grid grid-cols-[1fr_auto_1fr] items-center gap-2 border-t border-border/50 px-4 py-3 text-[0.85rem] sm:gap-4"
+              >
+                <span className="text-foreground">{row.you}</span>
+                <span
+                  className={cn(
+                    "flex size-5 shrink-0 items-center justify-center rounded-full text-[0.7rem] font-bold",
+                    row.match === "yes"
+                      ? "bg-econ-green-active/15 text-econ-green-active"
+                      : "bg-gold/15 text-gold",
+                  )}
+                >
+                  {row.match === "yes" ? "✓" : "△"}
+                </span>
+                <span className="text-right text-muted-foreground">{row.needs}</span>
               </div>
             ))}
           </div>
-        </Section>
-        <Section title="Risks">
-          <BulletList items={detail.risks} />
-        </Section>
-        <Section title="What Still Needs Validation">
-          <BulletList items={detail.validationNeeded} />
-        </Section>
-      </div>
+        )}
+        <div className="mt-4">
+          <BulletList items={detail.whyThisFounder} />
+        </div>
+      </section>
 
-      <div className="mt-6 rounded-[1.5rem] border border-econ-green/25 bg-econ-green-soft/50 p-6 sm:p-7">
+      {/* ===== ECONOMICS ===== */}
+      <section id="economics" className="scroll-mt-24 border-t border-border/60 pt-8 mt-8">
+        <h2 className="font-display text-[1.2rem] font-semibold text-primary">Economics</h2>
+        <p className="mt-3 text-[0.92rem] leading-relaxed text-foreground">
+          {detail.businessModel}
+        </p>
+        <div className="mt-4 flex flex-col gap-2 sm:flex-row sm:gap-3">
+          <FlowStep label="Start" value={detail.startingCapital} />
+          <FlowStep label="First Move" value={detail.firstExperiment} />
+          <FlowStep label="Revenue" value={detail.revenuePath} isLast />
+        </div>
+        {(detail.advantages.length > 0 || detail.tradeoffs.length > 0) && (
+          <div className="mt-5 grid gap-5 sm:grid-cols-2">
+            {detail.advantages.length > 0 && (
+              <div>
+                <p className="text-[0.7rem] font-semibold uppercase tracking-wide text-muted-foreground">
+                  Advantages
+                </p>
+                <div className="mt-2">
+                  <BulletList items={detail.advantages} />
+                </div>
+              </div>
+            )}
+            {detail.tradeoffs.length > 0 && (
+              <div>
+                <p className="text-[0.7rem] font-semibold uppercase tracking-wide text-muted-foreground">
+                  Trade-offs
+                </p>
+                <div className="mt-2">
+                  <BulletList items={detail.tradeoffs} />
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+      </section>
+
+      {/* ===== FIT SCORE ===== */}
+      <section className="border-t border-border/60 pt-8 mt-8">
+        <div className="flex flex-col gap-6 rounded-2xl border border-border/70 bg-card/70 p-6 sm:flex-row sm:items-start sm:gap-10">
+          <div className="flex shrink-0 flex-col items-center sm:items-start">
+            <span className="font-display text-[2.75rem] font-semibold leading-none text-primary">
+              {opportunity.fit_score}
+            </span>
+            <span className="mt-1.5 text-[0.68rem] font-semibold uppercase tracking-[0.14em] text-econ-green-active">
+              {fitQualitativeLabel(opportunity.fit_score)}
+            </span>
+          </div>
+          <div className="w-full sm:border-l sm:border-border/60 sm:pl-10">
+            <FitScoreMatrix breakdown={score.breakdown} />
+          </div>
+        </div>
+      </section>
+
+      {/* ===== EVIDENCE ===== */}
+      <section id="market-signals" className="scroll-mt-24 border-t border-border/60 pt-8 mt-8">
+        <div className="flex items-center justify-between">
+          <h2 className="font-display text-[1.2rem] font-semibold text-primary">Market Signals</h2>
+          <button
+            type="button"
+            onClick={() => refreshEvidenceMutation.mutate()}
+            disabled={refreshEvidenceMutation.isPending}
+            className="flex items-center gap-1.5 text-[0.78rem] font-medium text-econ-green-active hover:underline disabled:opacity-50"
+          >
+            {refreshEvidenceMutation.isPending ? (
+              <Loader2 className="size-3.5 animate-spin" aria-hidden="true" />
+            ) : (
+              <RefreshCw className="size-3.5" aria-hidden="true" />
+            )}
+            Refresh Market Evidence
+          </button>
+        </div>
+        <div className="mt-4 flex flex-col gap-2.5">
+          {evidence.length === 0 && (
+            <p className="text-[0.85rem] text-muted-foreground">
+              No external evidence yet — click "Refresh Market Evidence" to have Sol search for real
+              signals.
+            </p>
+          )}
+          {evidence.map((item) => {
+            const tone = EVIDENCE_TONE[item.label];
+            return (
+              <div key={item.id} className="rounded-xl border border-border/60 p-3.5">
+                <div className="flex items-start gap-2.5">
+                  <span
+                    className={cn("mt-1.5 size-1.5 shrink-0 rounded-full", tone.dot)}
+                    aria-hidden="true"
+                  />
+                  <div className="min-w-0 flex-1">
+                    <p className="text-[0.68rem] font-semibold uppercase tracking-wide text-muted-foreground">
+                      {tone.label}
+                    </p>
+                    <p className="mt-0.5 text-[0.88rem] text-foreground">{item.claim}</p>
+                    {item.source_url && (
+                      <a
+                        href={item.source_url}
+                        target="_blank"
+                        rel="noreferrer noopener"
+                        className="mt-1 inline-block text-[0.76rem] text-econ-green-active hover:underline"
+                      >
+                        {item.source_title ?? item.source_url}
+                      </a>
+                    )}
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </section>
+
+      {/* ===== RISKS ===== */}
+      <section id="risks" className="scroll-mt-24 border-t border-border/60 pt-8 mt-8">
+        <h2 className="font-display text-[1.2rem] font-semibold text-primary">
+          Risks &amp; What Still Needs Validation
+        </h2>
+        <div className="mt-4 grid gap-5 sm:grid-cols-2">
+          {detail.risks.length > 0 && (
+            <div>
+              <p className="text-[0.7rem] font-semibold uppercase tracking-wide text-muted-foreground">
+                Risks
+              </p>
+              <div className="mt-2">
+                <BulletList items={detail.risks} />
+              </div>
+            </div>
+          )}
+          {detail.validationNeeded.length > 0 && (
+            <div>
+              <p className="text-[0.7rem] font-semibold uppercase tracking-wide text-muted-foreground">
+                Needs Validation
+              </p>
+              <div className="mt-2">
+                <BulletList items={detail.validationNeeded} />
+              </div>
+            </div>
+          )}
+        </div>
+      </section>
+
+      {/* ===== FIRST EXPERIMENT ===== */}
+      <section
+        id="first-experiment"
+        className="scroll-mt-24 mt-8 rounded-[1.5rem] border border-econ-green/25 bg-econ-green-soft/50 p-6 sm:p-7"
+      >
         <p className="text-[0.78rem] font-semibold uppercase tracking-wide text-econ-green-deep">
           Your First Experiment
         </p>
         <p className="mt-2 text-[0.95rem] leading-relaxed text-foreground">
           {detail.firstExperiment}
         </p>
-      </div>
+      </section>
 
       <div className="mt-8 flex flex-col items-center gap-3 text-center">
         <p className="text-[0.85rem] text-muted-foreground">

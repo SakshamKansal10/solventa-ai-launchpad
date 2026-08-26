@@ -74,10 +74,27 @@ export const getRoadmap = createServerFn({ method: "GET" })
       .order("order_index");
     if (phasesError) throw new Error(phasesError.message);
 
+    // Read-only — a compact founder summary for the roadmap header's "built
+    // around your Xh/week and ₹Y capital" line. Never used to generate or
+    // recompute anything, just to display real, already-stored numbers
+    // instead of a generic subtitle.
+    const dnaRow = await supabase
+      .from("business_dna")
+      .select("normalized_signals")
+      .eq("user_id", user.id)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    const signals = dnaRow.data?.normalized_signals as unknown as NormalizedProfile | undefined;
+    const founderSummary = signals
+      ? { weeklyHours: signals.time.weeklyHours, capitalINR: signals.resources.capitalINR }
+      : null;
+
     return {
       roadmap,
       opportunity,
       phases: phases as unknown as RoadmapPhaseWithTasks[],
+      founderSummary,
     };
   });
 

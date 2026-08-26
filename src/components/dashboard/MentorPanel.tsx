@@ -11,19 +11,26 @@ interface MentorPanelProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   opportunityId: string | null;
+  opportunityTitle: string | null;
 }
 
-const SUGGESTED_PROMPTS_GENERAL = ["What should I do today?", "Can I switch opportunities?"];
+const SUGGESTED_PROMPTS_GENERAL = [
+  "What should I do today?",
+  "Help me pick a direction",
+  "Can we explore more opportunities?",
+];
 const SUGGESTED_PROMPTS_WITH_OPPORTUNITY = [
   "What should I do today?",
   "Explain my next task",
-  "I'm stuck",
-  "I don't think this idea is right anymore",
-  "Can you simplify this?",
-  "Can I switch opportunities?",
+  "I'm stuck — help me think this through",
 ];
 
-export function MentorPanel({ open, onOpenChange, opportunityId }: MentorPanelProps) {
+export function MentorPanel({
+  open,
+  onOpenChange,
+  opportunityId,
+  opportunityTitle,
+}: MentorPanelProps) {
   const queryClient = useQueryClient();
   const conversationQuery = useQuery({
     queryKey: ["mentor-conversation", opportunityId],
@@ -88,26 +95,40 @@ export function MentorPanel({ open, onOpenChange, opportunityId }: MentorPanelPr
           {conversationQuery.isLoading ? (
             <p className="text-sm text-muted-foreground">Loading your conversation…</p>
           ) : localMessages.length === 0 ? (
-            <div className="flex flex-col gap-4">
-              <p className="text-sm text-muted-foreground">
-                Ask Sol anything — about this opportunity, your roadmap, or what to do next. Sol
-                knows your profile and progress.
-              </p>
-              <div className="flex flex-wrap gap-2">
-                {(opportunityId
-                  ? SUGGESTED_PROMPTS_WITH_OPPORTUNITY
-                  : SUGGESTED_PROMPTS_GENERAL
-                ).map((prompt) => (
-                  <button
-                    key={prompt}
-                    type="button"
-                    onClick={() => handleSend(prompt)}
-                    disabled={sending}
-                    className="rounded-full border border-border px-3 py-1.5 text-left text-[0.8rem] text-muted-foreground transition-colors hover:border-[oklch(0.606_0.19_292.7_/_0.4)] hover:text-primary disabled:opacity-50"
-                  >
-                    {prompt}
-                  </button>
-                ))}
+            <div className="flex flex-col gap-6">
+              <div>
+                <p className="text-[0.95rem] font-medium leading-snug text-primary">
+                  {opportunityTitle
+                    ? `Working with you on ${opportunityTitle}.`
+                    : "Working with you on your business search."}
+                </p>
+                <p className="mt-1.5 text-[0.82rem] leading-relaxed text-muted-foreground">
+                  {opportunityTitle
+                    ? "Sol knows your profile, this opportunity, and your roadmap progress."
+                    : "Sol knows your full profile and progress so far."}
+                </p>
+              </div>
+
+              <div>
+                <p className="text-[0.68rem] font-semibold uppercase tracking-[0.1em] text-muted-foreground">
+                  What can I help with?
+                </p>
+                <div className="mt-2.5 flex flex-col gap-2">
+                  {(opportunityId
+                    ? SUGGESTED_PROMPTS_WITH_OPPORTUNITY
+                    : SUGGESTED_PROMPTS_GENERAL
+                  ).map((prompt) => (
+                    <button
+                      key={prompt}
+                      type="button"
+                      onClick={() => handleSend(prompt)}
+                      disabled={sending}
+                      className="rounded-xl border border-border px-4 py-2.5 text-left text-[0.85rem] font-medium text-foreground transition-colors hover:border-[oklch(0.606_0.19_292.7_/_0.4)] hover:bg-[oklch(0.606_0.19_292.7_/_0.04)] disabled:opacity-50"
+                    >
+                      {prompt}
+                    </button>
+                  ))}
+                </div>
               </div>
             </div>
           ) : (

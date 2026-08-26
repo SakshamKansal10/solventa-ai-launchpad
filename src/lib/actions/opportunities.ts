@@ -241,7 +241,17 @@ export const getOpportunity = createServerFn({ method: "GET" })
       .select("*")
       .eq("opportunity_id", opportunity.id);
 
-    return { opportunity, detail: detailRow.detail, evidence: evidence ?? [] };
+    // Read-only, compact — powers the "Why You" founder<->business match
+    // visualization with real stored signals instead of re-deriving
+    // anything or fabricating a comparison.
+    const founderSummary = {
+      weeklyHours: profile.time.weeklyHours,
+      capitalINR: profile.resources.capitalINR,
+      skills: profile.skills.map((s) => s.name),
+      riskAppetite: profile.risk.appetite,
+    };
+
+    return { opportunity, detail: detailRow.detail, evidence: evidence ?? [], founderSummary };
   });
 
 /** The ONLY way opportunity_evidence ever gets a live Gemini call — an

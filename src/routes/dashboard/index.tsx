@@ -118,7 +118,10 @@ function DashboardHome() {
   const econSnapshot = getEconomicSnapshot(primaryCandidate);
 
   return (
-    <DashboardShell opportunityId={data.selected?.id ?? primary?.id ?? null}>
+    <DashboardShell
+      opportunityId={data.selected?.id ?? primary?.id ?? null}
+      opportunityTitle={primary?.title ?? null}
+    >
       <div className="flex flex-col gap-1">
         <h1 className="font-display text-[clamp(1.7rem,3vw,2.2rem)] font-semibold leading-tight text-primary">
           {greeting()}, {displayName}.
@@ -157,8 +160,14 @@ function DashboardHome() {
         <>
           {/* ===== PRIMARY OPPORTUNITY HERO — near-black workspace panel ===== */}
           {primary && (
-            <section className="mt-8 overflow-hidden rounded-[1.75rem] bg-workspace shadow-[0_40px_90px_-50px_oklch(0.16_0.02_260/_0.55)]">
-              <div className="p-7 sm:p-10">
+            <section
+              className="relative mt-8 overflow-hidden rounded-[1.75rem] bg-workspace shadow-[0_40px_90px_-50px_oklch(0.16_0.02_260/_0.55)]"
+              style={{
+                backgroundImage:
+                  "radial-gradient(ellipse 60% 50% at 12% -10%, var(--workspace-green-glow), transparent 70%), radial-gradient(ellipse 50% 45% at 100% 110%, var(--workspace-violet-glow), transparent 70%)",
+              }}
+            >
+              <div className="relative p-7 sm:p-10">
                 <p className="eyebrow text-econ-green-active">Your Strongest Match</p>
 
                 <div className="mt-6 flex flex-col gap-8 lg:flex-row lg:items-start lg:justify-between">
@@ -253,61 +262,64 @@ function DashboardHome() {
             </section>
           )}
 
-          {/* ===== NEXT MOVE ===== */}
-          {data.roadmap?.nextTask && (
-            <section className="mt-6 rounded-[1.5rem] border border-econ-green/25 bg-econ-green-soft/50 p-6 sm:p-7">
-              <p className="eyebrow text-econ-green-deep">Your Next Move</p>
-              <h3 className="mt-2 font-display text-[1.2rem] font-semibold text-primary">
-                {data.roadmap.nextTask.what}
-              </h3>
-              <p className="mt-1.5 max-w-xl text-[0.88rem] leading-relaxed text-muted-foreground">
-                <span className="font-medium text-foreground">Why: </span>
-                {data.roadmap.nextTask.why}
-              </p>
-              <div className="mt-3 flex flex-wrap items-center gap-3 text-[0.78rem] text-muted-foreground">
-                {data.roadmap.nextTask.timeEstimate && (
-                  <span>{data.roadmap.nextTask.timeEstimate}</span>
-                )}
-                {data.roadmap.nextTask.deadline && (
-                  <span>Due {data.roadmap.nextTask.deadline}</span>
-                )}
-              </div>
-              <Button
-                asChild
-                size="sm"
-                className="mt-4 bg-econ-green-active text-white hover:bg-econ-green-deep"
-              >
-                <Link to="/dashboard/roadmap">
-                  Start this task
-                  <ArrowRight className="size-4" aria-hidden="true" />
-                </Link>
-              </Button>
-            </section>
-          )}
+          {/* ===== NEXT MOVE + ROADMAP — side by side on desktop ===== */}
+          {(data.roadmap?.nextTask || (data.roadmap && data.roadmap.phases.length > 0)) && (
+            <div className="mt-6 grid gap-6 lg:grid-cols-2 lg:items-start">
+              {data.roadmap?.nextTask && (
+                <section className="rounded-[1.5rem] border border-econ-green/25 bg-econ-green-soft/50 p-6 sm:p-7">
+                  <p className="eyebrow text-econ-green-deep">Your Next Move</p>
+                  <h3 className="mt-2 font-display text-[1.2rem] font-semibold text-primary">
+                    {data.roadmap.nextTask.what}
+                  </h3>
+                  <p className="mt-1.5 text-[0.88rem] leading-relaxed text-muted-foreground">
+                    <span className="font-medium text-foreground">Why: </span>
+                    {data.roadmap.nextTask.why}
+                  </p>
+                  <div className="mt-3 flex flex-wrap items-center gap-3 text-[0.78rem] text-muted-foreground">
+                    {data.roadmap.nextTask.timeEstimate && (
+                      <span>{data.roadmap.nextTask.timeEstimate}</span>
+                    )}
+                    {data.roadmap.nextTask.deadline && (
+                      <span>Due {data.roadmap.nextTask.deadline}</span>
+                    )}
+                  </div>
+                  <Button
+                    asChild
+                    size="sm"
+                    className="mt-4 bg-econ-green-active text-white hover:bg-econ-green-deep"
+                  >
+                    <Link to="/dashboard/roadmap">
+                      Start this task
+                      <ArrowRight className="size-4" aria-hidden="true" />
+                    </Link>
+                  </Button>
+                </section>
+              )}
 
-          {/* ===== ROADMAP PREVIEW ===== */}
-          {data.roadmap && data.roadmap.phases.length > 0 && (
-            <section className="mt-6 rounded-[1.5rem] border border-border/70 bg-card/70 p-6 sm:p-7">
-              <div className="flex items-center justify-between">
-                <p className="eyebrow text-muted-foreground">Your Path</p>
-                <Link
-                  to="/dashboard/roadmap"
-                  className="text-[0.78rem] font-medium text-muted-foreground hover:text-primary"
-                >
-                  Continue Roadmap →
-                </Link>
-              </div>
-              <div className="mt-6 overflow-x-auto">
-                <RoadmapStageTimeline
-                  phases={data.roadmap.phases.map((p) => ({
-                    key: p.key,
-                    title: p.title,
-                    isCurrent: p.isCurrent,
-                    isDone: p.isDone,
-                  }))}
-                />
-              </div>
-            </section>
+              {data.roadmap && data.roadmap.phases.length > 0 && (
+                <section className="rounded-[1.5rem] border border-border/70 bg-card/70 p-6 sm:p-7">
+                  <div className="flex items-center justify-between">
+                    <p className="eyebrow text-muted-foreground">Your Path</p>
+                    <Link
+                      to="/dashboard/roadmap"
+                      className="text-[0.78rem] font-medium text-muted-foreground hover:text-primary"
+                    >
+                      Continue Roadmap →
+                    </Link>
+                  </div>
+                  <div className="mt-6 overflow-x-auto">
+                    <RoadmapStageTimeline
+                      phases={data.roadmap.phases.map((p) => ({
+                        key: p.key,
+                        title: p.title,
+                        isCurrent: p.isCurrent,
+                        isDone: p.isDone,
+                      }))}
+                    />
+                  </div>
+                </section>
+              )}
+            </div>
           )}
 
           {/* ===== OTHER STRONG MATCHES ===== */}
@@ -381,7 +393,7 @@ function DashboardHome() {
 
           {/* ===== YOUR BUSINESS DNA ===== */}
           {data.businessDna && (
-            <div id="business-dna" className="mt-9 scroll-mt-24">
+            <div className="mt-9">
               <BusinessDnaPanel
                 analysis={data.businessDna.analysis}
                 signals={data.businessDna.signals}

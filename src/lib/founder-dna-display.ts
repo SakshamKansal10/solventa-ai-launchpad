@@ -6,6 +6,7 @@ import type { FounderDNA, FounderAnalysis } from "@/lib/ai/schemas";
 export interface FounderDisplayDNA {
   narrativeSummary: string;
   strengths: string[];
+  resources: string[];
   constraints: string[];
   workStyle: string | null;
   riskProfile: string | null;
@@ -26,6 +27,7 @@ export function toDisplayFounderDNA(
     return {
       narrativeSummary: analysis.narrativeSummary,
       strengths: analysis.strengths,
+      resources: analysis.resources,
       constraints: analysis.constraints,
       workStyle: analysis.workStyle,
       riskProfile: analysis.riskProfile,
@@ -38,6 +40,7 @@ export function toDisplayFounderDNA(
   return {
     narrativeSummary: analysis.summary,
     strengths: analysis.strengths,
+    resources: [],
     constraints: analysis.constraints,
     workStyle: null,
     riskProfile: null,

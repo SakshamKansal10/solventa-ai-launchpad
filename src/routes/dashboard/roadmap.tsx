@@ -2,8 +2,8 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { Check, Loader2, MapPin } from "lucide-react";
-import { DashboardShell } from "@/components/dashboard/DashboardShell";
+import { Check, ChevronRight, Loader2, MapPin, Sparkles } from "lucide-react";
+import { DashboardShell, useOpenMentor } from "@/components/dashboard/DashboardShell";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { requireAuthLoader } from "@/lib/route-guards";
@@ -55,6 +55,22 @@ function isDisplayableDependency(value: string): boolean {
   return !/^\d+([.\-_]\d+)*$/.test(value.trim());
 }
 
+/** Splits "1. Do X 2. Do Y" / "Do X. Then do Y." style free text into a
+ * short numbered list where possible, falling back to the original text
+ * as a single line — the model returns `how` as prose, but a founder
+ * scans a 2-4 step list far faster than a paragraph. */
+function splitHowSteps(how: string): string[] {
+  const numbered = how.match(/\d+[.)]\s*[^0-9]+/g);
+  if (numbered && numbered.length > 1) {
+    return numbered.map((s) => s.replace(/^\d+[.)]\s*/, "").trim()).filter(Boolean);
+  }
+  const sentences = how
+    .split(/(?<=[.!?])\s+/)
+    .map((s) => s.trim())
+    .filter(Boolean);
+  return sentences.length > 1 ? sentences.slice(0, 4) : [how];
+}
+
 function TaskRow({
   task,
   roadmapId,
@@ -77,9 +93,10 @@ function TaskRow({
   >(null);
   const [blockerNote, setBlockerNote] = useState("");
   const [busy, setBusy] = useState(false);
+  const isDone = task.status === "done";
 
   function markDone() {
-    onToggle(task.id, task.status === "done" ? "pending" : "done");
+    onToggle(task.id, isDone ? "pending" : "done");
   }
 
   async function submitBlocked() {
@@ -100,6 +117,29 @@ function TaskRow({
     }
   }
 
+  // Completed tasks collapse to a single quiet line — no strikethrough
+  // paragraph — and only expand into the full detail if the founder
+  // deliberately wants to review it.
+  if (isDone && !expanded) {
+    return (
+      <button
+        type="button"
+        onClick={() => setExpanded(true)}
+        className="flex w-full items-center gap-3 rounded-xl border border-transparent px-4 py-3 text-left transition-colors hover:border-border/60 hover:bg-card/60"
+      >
+        <span className="flex size-5 shrink-0 items-center justify-center rounded-full bg-econ-green-active text-white">
+          <Check className="size-3" aria-hidden="true" />
+        </span>
+        <span className="min-w-0 flex-1">
+          <span className="block truncate text-[0.88rem] font-medium text-foreground">
+            {task.what}
+          </span>
+          <span className="text-[0.72rem] text-muted-foreground">Completed</span>
+        </span>
+      </button>
+    );
+  }
+
   return (
     <div className="rounded-xl border border-border/60 bg-card/60 p-4">
       <div className="flex items-start gap-3">
@@ -109,13 +149,11 @@ function TaskRow({
           disabled={busy}
           className={cn(
             "mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full border transition-colors",
-            task.status === "done"
-              ? "border-econ-green-active bg-econ-green-active text-white"
-              : "border-border",
+            isDone ? "border-econ-green-active bg-econ-green-active text-white" : "border-border",
           )}
-          aria-label={task.status === "done" ? "Mark as not done" : "Mark complete"}
+          aria-label={isDone ? "Mark as not done" : "Mark complete"}
         >
-          {task.status === "done" && <Check className="size-3" aria-hidden="true" />}
+          {isDone && <Check className="size-3" aria-hidden="true" />}
         </button>
         <div className="flex-1">
           <button
@@ -123,20 +161,20 @@ function TaskRow({
             onClick={() => setExpanded((v) => !v)}
             className="flex flex-wrap items-center gap-2 text-left"
           >
-            <p
-              className={cn(
-                "text-[0.92rem] font-medium",
-                task.status === "done" ? "text-muted-foreground line-through" : "text-foreground",
-              )}
-            >
-              {task.what}
-            </p>
+            <p className="text-[0.92rem] font-medium text-foreground">{task.what}</p>
             {!task.required && (
               <span className="rounded-full bg-secondary px-2 py-0.5 text-[0.68rem] font-medium text-muted-foreground">
                 Optional
               </span>
             )}
           </button>
+          {!expanded && (
+            <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-[0.76rem] text-muted-foreground">
+              {task.time_estimate && <span>{task.time_estimate}</span>}
+              {task.required && <span>Required</span>}
+              {task.deadline && <span>Due {task.deadline}</span>}
+            </div>
+          )}
           {task.status === "blocked" && (
             <p className="mt-1 text-[0.78rem] text-destructive">
               Blocked — Sol has replanned what's ahead.
@@ -148,37 +186,52 @@ function TaskRow({
             </p>
           )}
           {expanded && (
-            <div className="mt-2.5 flex flex-col gap-1.5 text-[0.85rem] text-muted-foreground">
-              <p>
-                <span className="font-medium text-foreground">Why: </span>
-                {task.why}
-              </p>
-              <p>
-                <span className="font-medium text-foreground">How: </span>
-                {task.how}
-              </p>
-              {task.resource && (
-                <p>
-                  <span className="font-medium text-foreground">Resource: </span>
-                  {task.resource}
+            <div className="mt-3 flex flex-col gap-3 text-[0.85rem] text-muted-foreground">
+              <div>
+                <p className="text-[0.7rem] font-semibold uppercase tracking-wide text-muted-foreground/80">
+                  Why this matters
                 </p>
+                <p className="mt-1 leading-relaxed text-foreground">{task.why}</p>
+              </div>
+              <div>
+                <p className="text-[0.7rem] font-semibold uppercase tracking-wide text-muted-foreground/80">
+                  How
+                </p>
+                <ol className="mt-1.5 flex flex-col gap-1">
+                  {splitHowSteps(task.how).map((step, i) => (
+                    <li key={i} className="flex gap-2 leading-relaxed text-foreground">
+                      <span className="shrink-0 text-econ-green-active">{i + 1}.</span>
+                      {step}
+                    </li>
+                  ))}
+                </ol>
+              </div>
+              {task.resource && (
+                <div>
+                  <p className="text-[0.7rem] font-semibold uppercase tracking-wide text-muted-foreground/80">
+                    Resource
+                  </p>
+                  <p className="mt-1 text-foreground">{task.resource}</p>
+                </div>
               )}
-              <p>
-                <span className="font-medium text-foreground">Done when: </span>
-                {task.done_when}
-              </p>
-              <div className="mt-1 flex items-center gap-3 text-[0.78rem]">
+              <div>
+                <p className="text-[0.7rem] font-semibold uppercase tracking-wide text-muted-foreground/80">
+                  Done when
+                </p>
+                <p className="mt-1 text-foreground">{task.done_when}</p>
+              </div>
+              <div className="flex items-center gap-3 text-[0.78rem]">
                 {task.time_estimate && <span>{task.time_estimate}</span>}
                 {task.deadline && <span>Due {task.deadline}</span>}
               </div>
-              <div className="mt-2 flex items-center gap-4">
+              <div className="flex items-center gap-4 pt-1">
                 <button
                   type="button"
                   onClick={markDone}
                   disabled={busy}
                   className={cn(
                     "self-start rounded-full px-3.5 py-1.5 text-[0.72rem] font-semibold uppercase tracking-[0.06em] transition-colors",
-                    task.status === "done"
+                    isDone
                       ? "bg-secondary text-muted-foreground"
                       : "bg-econ-green-active text-white hover:bg-econ-green-deep",
                   )}
@@ -186,9 +239,9 @@ function TaskRow({
                   {busy && (
                     <Loader2 className="mr-1 inline size-3 animate-spin" aria-hidden="true" />
                   )}
-                  {task.status === "done" ? "Mark Not Done" : "Mark Complete"}
+                  {isDone ? "Mark Not Done" : "Mark Complete"}
                 </button>
-                {task.status !== "done" && (
+                {!isDone && (
                   <button
                     type="button"
                     onClick={() => setShowBlocker((v) => !v)}
@@ -243,15 +296,40 @@ function TaskRow({
   );
 }
 
+function formatINR(n: number): string {
+  if (n <= 0) return "₹0";
+  if (n >= 100_000) return `₹${(n / 100_000).toFixed(n % 100_000 === 0 ? 0 : 1)}L`;
+  if (n >= 1_000) return `₹${Math.round(n / 1000)}K`;
+  return `₹${n}`;
+}
+
+/** useOpenMentor() reads a context that only exists inside <DashboardShell>'s
+ * own subtree — it must be called from a component rendered as DashboardShell's
+ * child, never from RoadmapPage itself (RoadmapPage is what creates
+ * DashboardShell, so it renders one level above that provider). */
+function AskSolStageButton() {
+  const openMentor = useOpenMentor();
+  return (
+    <button
+      type="button"
+      onClick={openMentor}
+      className="flex items-center justify-center gap-2 rounded-xl border border-[oklch(0.606_0.19_292.7_/_0.25)] bg-[oklch(0.606_0.19_292.7_/_0.05)] px-4 py-3 text-[0.82rem] font-medium text-primary transition-colors hover:bg-[oklch(0.606_0.19_292.7_/_0.09)]"
+    >
+      <Sparkles className="size-4 text-[oklch(0.55_0.16_292.7)]" aria-hidden="true" />
+      Ask Sol about this stage
+    </button>
+  );
+}
+
 function RoadmapPage() {
   const queryClient = useQueryClient();
   const query = useQuery({ queryKey: ["roadmap"], queryFn: () => getRoadmap({ data: {} }) });
   const [focusedIndex, setFocusedIndex] = useState<number | null>(null);
 
-  // Optimistic task completion — P7: the checkbox, progress bar, and Next
-  // Move must all update the instant the founder clicks, not after a round
-  // trip. The mutation still persists and still gets rolled back on a real
-  // failure; the founder just never has to wait to see it happen.
+  // Optimistic task completion — the checkbox, progress bar, and stage
+  // status must all update the instant the founder clicks, not after a
+  // round trip. The mutation still persists and still rolls back on a
+  // real failure; the founder just never has to wait to see it happen.
   type RoadmapQueryData = NonNullable<typeof query.data>;
   const toggleTaskMutation = useMutation({
     mutationFn: (vars: { taskId: string; status: "pending" | "done" }) =>
@@ -279,23 +357,18 @@ function RoadmapPage() {
       toast.error("Couldn't update that task — try again.");
     },
     onSettled: () => {
-      // Reconciles with the server in the background regardless of outcome
-      // — a no-op visually on success (the optimistic state already
-      // matches), a correction on failure (already rolled back above, this
-      // just re-syncs anything else that drifted). Also refreshes the
-      // dashboard's Next Move/progress so it's not stale on next visit.
       queryClient.invalidateQueries({ queryKey: ["roadmap"] });
       queryClient.invalidateQueries({ queryKey: ["dashboard"] });
     },
   });
 
-  // A phase the founder manually focused on (clicked in the stage rail)
-  // can become fully done while still focused — without this, "Current
-  // stage" in the header would keep naming a phase that's actually
-  // finished, since `activeIndex` prefers `focusedIndex` over the real
-  // computed current stage. Snap the view forward the moment that happens,
-  // so completing a stage's last task visibly advances the roadmap instead
-  // of leaving it looking stuck.
+  // A phase the founder is deliberately REVIEWING (clicked in the stage
+  // rail) is distinct from the TRUE active phase — section 24. Viewing an
+  // old completed phase must never force the founder back to "current";
+  // it only auto-releases the view if the phase they were reviewing
+  // becomes newly completed while they're looking at it, so finishing a
+  // stage visibly advances rather than leaving the view stuck on a done
+  // stage forever.
   const phasesForEffect = query.data?.phases;
   useEffect(() => {
     if (focusedIndex === null || !phasesForEffect) return;
@@ -340,7 +413,7 @@ function RoadmapPage() {
     );
   }
 
-  const { roadmap, opportunity, phases } = query.data;
+  const { roadmap, opportunity, phases, founderSummary } = query.data;
   const sortedPhases = [...phases].sort((a, b) => a.order_index - b.order_index);
 
   const phasesWithTasks = sortedPhases.map((phase) => ({
@@ -353,6 +426,7 @@ function RoadmapPage() {
   const effectiveCurrentIndex =
     currentPhaseIndex === -1 ? phasesWithTasks.length - 1 : currentPhaseIndex;
   const activeIndex = focusedIndex ?? effectiveCurrentIndex;
+  const isViewingNonCurrent = activeIndex !== effectiveCurrentIndex;
 
   const allTasks = phasesWithTasks.flatMap((p) => p.tasks);
   const totalDone = allTasks.filter((t) => t.status === "done").length;
@@ -362,82 +436,112 @@ function RoadmapPage() {
     Math.ceil(Math.max(0, ...allTasks.map((t) => t.deadline_days_from_start)) / 7),
   );
   const activePhase = phasesWithTasks[activeIndex];
+  const dueThisWeek = allTasks.filter(
+    (t) => t.status !== "done" && t.deadline_days_from_start <= 7,
+  ).length;
+  const nextTask = phasesWithTasks
+    .flatMap((p) => p.tasks)
+    .find((t) => t.status !== "done" && t.required);
 
   return (
-    <DashboardShell opportunityId={roadmap.opportunity_id}>
-      <p className="eyebrow text-econ-green-active">
-        Your Path to {opportunity?.title ?? "Your Business"}
-      </p>
+    <DashboardShell
+      opportunityId={roadmap.opportunity_id}
+      opportunityTitle={opportunity?.title ?? null}
+    >
+      {/* ===== TOP: EXECUTION ROADMAP HEADER ===== */}
+      <p className="eyebrow text-econ-green-active">Execution Roadmap</p>
       <h1 className="mt-2 font-display text-[clamp(1.9rem,3.4vw,2.5rem)] font-semibold text-primary">
         {opportunity?.title ?? "Your Roadmap"}
       </h1>
-      {opportunity?.one_liner && (
-        <p className="mt-2 max-w-xl text-[0.95rem] text-muted-foreground">
-          {opportunity.one_liner}
-        </p>
-      )}
+      <p className="mt-2 max-w-xl text-[0.95rem] text-muted-foreground">
+        {founderSummary
+          ? `Built around your ${founderSummary.weeklyHours || "available"} hrs/week and ${formatINR(founderSummary.capitalINR)} starting capital.`
+          : (opportunity?.one_liner ?? "Your personalized execution plan.")}
+      </p>
 
-      <div className="mt-5 flex flex-wrap items-center gap-x-8 gap-y-3">
-        <div className="flex items-center gap-3">
-          <div className="h-1.5 w-40 rounded-full bg-secondary">
-            <div
-              className="h-full rounded-full bg-econ-green-active transition-[width] duration-700 ease-out"
-              style={{ width: `${overallProgress}%` }}
-            />
+      <div className="mt-6 grid grid-cols-2 gap-px overflow-hidden rounded-2xl border border-border/70 bg-border/70 sm:grid-cols-4">
+        {[
+          { label: "Phase", value: `${effectiveCurrentIndex + 1} / ${phasesWithTasks.length}` },
+          { label: "Progress", value: `${overallProgress}%` },
+          { label: "This Week", value: `${dueThisWeek} task${dueThisWeek === 1 ? "" : "s"}` },
+          { label: "Estimated Path", value: `~${estimatedWeeks} wks` },
+        ].map((cell) => (
+          <div key={cell.label} className="bg-card px-5 py-4">
+            <p className="text-[0.62rem] font-semibold uppercase tracking-[0.1em] text-muted-foreground">
+              {cell.label}
+            </p>
+            <p className="mt-1 font-display text-[1.35rem] font-semibold text-primary">
+              {cell.value}
+            </p>
           </div>
-          <span className="text-[0.8rem] font-medium text-foreground">{overallProgress}%</span>
-        </div>
-        <span className="text-[0.8rem] text-muted-foreground">
-          Current stage: <span className="font-medium text-foreground">{activePhase?.title}</span>
-        </span>
-        <span className="text-[0.8rem] text-muted-foreground">
-          Estimated path:{" "}
-          <span className="font-medium text-foreground">~{estimatedWeeks} weeks</span>
-        </span>
+        ))}
       </div>
 
-      <div className="mt-9 grid gap-8 lg:grid-cols-[220px_1fr]">
-        {/* ===== DESKTOP: STAGE RAIL ===== */}
-        <nav className="hidden flex-col gap-1 lg:flex">
+      {nextTask && (
+        <div className="mt-4 flex items-center gap-2 text-[0.82rem] text-muted-foreground">
+          <span className="size-1.5 shrink-0 rounded-full bg-econ-green-active" />
+          Next milestone: <span className="font-medium text-foreground">{nextTask.what}</span>
+        </div>
+      )}
+
+      {/* ===== MAIN GRID: STAGE RAIL / CURRENT PHASE / CONTEXT ===== */}
+      <div className="mt-9 grid gap-8 lg:grid-cols-[200px_1fr_220px]">
+        {/* ===== DESKTOP: STAGE RAIL — the visual journey ===== */}
+        <nav className="hidden flex-col lg:flex">
           {phasesWithTasks.map((phase, i) => {
             const done = phase.tasks.filter((t) => t.status === "done").length;
             const isDone = phase.tasks.length > 0 && done === phase.tasks.length;
+            const isTrueCurrent = i === effectiveCurrentIndex;
             const isFocused = i === activeIndex;
+            const isLast = i === phasesWithTasks.length - 1;
             return (
-              <button
-                key={phase.id}
-                type="button"
-                onClick={() => setFocusedIndex(i)}
-                className={cn(
-                  "flex items-center gap-3 rounded-lg border-l-2 px-3 py-2.5 text-left transition-colors",
-                  isFocused
-                    ? "border-econ-green-active bg-econ-green-soft/40"
-                    : "border-transparent hover:bg-secondary/50",
-                )}
-              >
-                <span
+              <div key={phase.id} className="flex flex-col">
+                <button
+                  type="button"
+                  onClick={() => setFocusedIndex(i)}
                   className={cn(
-                    "block size-1.5 shrink-0 rounded-full",
-                    isDone
-                      ? "bg-econ-green-active"
-                      : isFocused
-                        ? "bg-econ-green-active ring-4 ring-econ-green-active/15"
-                        : "bg-border",
-                  )}
-                  aria-hidden="true"
-                />
-                <span
-                  className={cn(
-                    "text-[0.85rem] font-medium",
-                    isFocused ? "text-primary" : "text-muted-foreground",
+                    "flex items-center gap-3 rounded-lg px-2.5 py-2.5 text-left transition-colors",
+                    isFocused ? "bg-econ-green-soft/40" : "hover:bg-secondary/50",
                   )}
                 >
-                  {phase.title}
-                </span>
-                {isDone && (
-                  <Check className="ml-auto size-3.5 text-econ-green-active" aria-hidden="true" />
+                  <span
+                    className={cn(
+                      "flex size-5 shrink-0 items-center justify-center rounded-full border text-[0.65rem] font-semibold",
+                      isDone
+                        ? "border-econ-green-active bg-econ-green-active text-white"
+                        : isTrueCurrent
+                          ? "border-econ-green-active text-econ-green-active ring-4 ring-econ-green-active/15"
+                          : "border-border text-muted-foreground/60",
+                    )}
+                  >
+                    {isDone ? <Check className="size-3" aria-hidden="true" /> : i + 1}
+                  </span>
+                  <span className="flex flex-col">
+                    <span
+                      className={cn(
+                        "text-[0.85rem] font-medium leading-tight",
+                        isFocused || isTrueCurrent ? "text-primary" : "text-muted-foreground",
+                      )}
+                    >
+                      {phase.title}
+                    </span>
+                    {isTrueCurrent && (
+                      <span className="text-[0.65rem] font-semibold uppercase tracking-wide text-econ-green-active">
+                        Current
+                      </span>
+                    )}
+                  </span>
+                </button>
+                {!isLast && (
+                  <div
+                    className={cn(
+                      "ml-[1.55rem] h-4 w-px",
+                      isDone ? "bg-econ-green-active/50" : "bg-border",
+                    )}
+                    aria-hidden="true"
+                  />
                 )}
-              </button>
+              </div>
             );
           })}
         </nav>
@@ -445,6 +549,13 @@ function RoadmapPage() {
         {/* ===== DESKTOP: FOCUSED STAGE ===== */}
         {activePhase && (
           <section className="hidden lg:block">
+            {isViewingNonCurrent && (
+              <div className="mb-3 flex items-center gap-2 rounded-lg bg-secondary/60 px-3 py-2 text-[0.78rem] text-muted-foreground">
+                <ChevronRight className="size-3.5 shrink-0" aria-hidden="true" />
+                Reviewing a {activeIndex < effectiveCurrentIndex ? "completed" : "upcoming"} stage —
+                your current stage stays marked in the rail.
+              </div>
+            )}
             <div className="flex items-center gap-3">
               <h2 className="font-display text-xl font-semibold text-primary">
                 {activePhase.title}
@@ -473,6 +584,29 @@ function RoadmapPage() {
           </section>
         )}
 
+        {/* ===== DESKTOP: CONTEXT PANEL ===== */}
+        <aside className="hidden flex-col gap-4 lg:flex">
+          {nextTask && (
+            <div className="rounded-xl border border-border/70 bg-card/60 p-4">
+              <p className="text-[0.68rem] font-semibold uppercase tracking-wide text-muted-foreground">
+                Next Milestone
+              </p>
+              <p className="mt-1.5 text-[0.85rem] leading-relaxed text-foreground">
+                {nextTask.what}
+              </p>
+            </div>
+          )}
+          <div className="rounded-xl border border-border/70 bg-card/60 p-4">
+            <p className="text-[0.68rem] font-semibold uppercase tracking-wide text-muted-foreground">
+              This Week
+            </p>
+            <p className="mt-1.5 text-[0.85rem] text-foreground">
+              {dueThisWeek} task{dueThisWeek === 1 ? "" : "s"} due
+            </p>
+          </div>
+          <AskSolStageButton />
+        </aside>
+
         {/* ===== MOBILE: FULL VERTICAL TIMELINE ===== */}
         <div className="flex flex-col gap-8 lg:hidden">
           {phasesWithTasks.map((phase, i) => {
@@ -493,29 +627,27 @@ function RoadmapPage() {
                 <div className="flex items-center gap-3">
                   <span
                     className={cn(
-                      "block size-1.5 shrink-0 rounded-full",
+                      "flex size-6 shrink-0 items-center justify-center rounded-full border text-[0.65rem] font-semibold",
                       isDone
-                        ? "bg-econ-green-active"
+                        ? "border-econ-green-active bg-econ-green-active text-white"
                         : isCurrent
-                          ? "bg-econ-green-active ring-4 ring-econ-green-active/15"
-                          : "bg-border",
+                          ? "border-econ-green-active text-econ-green-active ring-4 ring-econ-green-active/15"
+                          : "border-border text-muted-foreground/60",
                     )}
-                    aria-hidden="true"
-                  />
+                  >
+                    {isDone ? <Check className="size-3.5" aria-hidden="true" /> : i + 1}
+                  </span>
                   <h2 className="font-display text-lg font-semibold text-primary">{phase.title}</h2>
-                  {isDone && (
-                    <Check className="size-3.5 text-econ-green-active" aria-hidden="true" />
-                  )}
                   <span className="text-[0.78rem] text-muted-foreground">
                     {done}/{phase.tasks.length} done
                   </span>
                 </div>
                 {phase.description && (
-                  <p className="mt-1.5 pl-[1.125rem] text-[0.85rem] text-muted-foreground">
+                  <p className="mt-1.5 pl-9 text-[0.85rem] text-muted-foreground">
                     {phase.description}
                   </p>
                 )}
-                <div className="mt-3 flex flex-col gap-2.5 pl-0 sm:pl-[1.125rem]">
+                <div className="mt-3 flex flex-col gap-2.5 pl-0 sm:pl-9">
                   {phase.tasks.map((task) => (
                     <TaskRow
                       key={task.id}
