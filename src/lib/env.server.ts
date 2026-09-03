@@ -50,6 +50,17 @@ const fieldSchemas = {
    * bypass signs unauthenticated requests in as. Never a real user. */
   REVIEW_USER_EMAIL: z.string().optional(),
   REVIEW_USER_PASSWORD: z.string().optional(),
+  /** TEMPORARY — see src/lib/auth-connectivity-diagnostic.server.ts. Must be
+   * the literal string "true" to activate. When active, sendOtp ALSO fires
+   * two raw fetch() probes straight at Supabase's REST endpoints (bypassing
+   * supabase-js entirely) to isolate whether a reported "fetch failed" is
+   * Vercel-to-Supabase networking, a bad anon key, a Supabase-side error, or
+   * something specific to supabase-js's own fetch handling — and returns
+   * that detail in the response body for one manual reproduction. Off by
+   * default: the probe POSTs to the real /auth/v1/otp endpoint, which would
+   * send every real signing-in user a second OTP email if left enabled.
+   * Turn this off again once the root cause is found. */
+  AUTH_CONNECTIVITY_DIAGNOSTIC: z.string().optional(),
 } as const;
 
 type FieldSchemas = typeof fieldSchemas;
@@ -112,5 +123,8 @@ export const env = {
   },
   get REVIEW_USER_PASSWORD() {
     return readField("REVIEW_USER_PASSWORD");
+  },
+  get AUTH_CONNECTIVITY_DIAGNOSTIC() {
+    return readField("AUTH_CONNECTIVITY_DIAGNOSTIC") === "true";
   },
 };

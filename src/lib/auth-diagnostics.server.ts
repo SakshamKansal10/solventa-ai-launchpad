@@ -22,9 +22,9 @@
  * subdomain segment of the Supabase project URL, visible to anyone who
  * sees a request to it). Used only to confirm SUPABASE_URL wasn't quietly
  * pointed at a different (e.g. stale/wrong-environment) project. */
-const EXPECTED_SUPABASE_PROJECT_REF = "dcnurhuxgdzxruqsgjgx";
+export const EXPECTED_SUPABASE_PROJECT_REF = "dcnurhuxgdzxruqsgjgx";
 
-function currentEnvironment(): string {
+export function currentEnvironment(): string {
   return process.env.VERCEL_ENV ?? process.env.NODE_ENV ?? "unknown";
 }
 
@@ -82,7 +82,7 @@ interface ClassifiedAuthError {
 /** Supabase AuthError shape (both the thrown-exception form and the
  * `{ data, error }` returned form use the same class) — typed loosely
  * since we only ever read metadata fields off it, never assume presence. */
-interface AuthErrorLike {
+export interface AuthErrorLike {
   name?: string;
   message?: string;
   status?: number;
@@ -91,7 +91,7 @@ interface AuthErrorLike {
   stack?: string;
 }
 
-function classify(error: AuthErrorLike): ClassifiedAuthError {
+export function classify(error: AuthErrorLike): ClassifiedAuthError {
   const message = (error.message ?? "").toLowerCase();
   const code = (error.code ?? "").toLowerCase();
 

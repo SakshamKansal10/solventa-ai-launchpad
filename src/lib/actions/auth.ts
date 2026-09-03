@@ -3,7 +3,41 @@ import { z } from "zod";
 
 import { createSupabaseServerClient, getOptionalUser } from "@/lib/supabase/server";
 import { sendWelcomeEmail } from "@/lib/actions/email.server";
-import { logAuthActionStart, classifyAndLogAuthError } from "@/lib/auth-diagnostics.server";
+import {
+  logAuthActionStart,
+  classifyAndLogAuthError,
+  classify,
+  type AuthErrorLike,
+} from "@/lib/auth-diagnostics.server";
+import {
+  runNativeConnectivityProbe,
+  type ConnectivityDiagnosticResult,
+} from "@/lib/auth-connectivity-diagnostic.server";
+import { env } from "@/lib/env.server";
+
+/** Shapes the one diagnostic payload requested for the temporary
+ * sendOtp connectivity investigation — used on both the success and
+ * failure path so the native-probe results are visible either way. */
+function buildDiagnostic(
+  connectivity: ConnectivityDiagnosticResult,
+  supabaseJsError: AuthErrorLike | null,
+) {
+  return {
+    action: "sendOtp",
+    urlHost: connectivity.urlHost,
+    urlValid: connectivity.urlValid,
+    anonKeyExists: connectivity.anonKeyExists,
+    anonKeyLooksLikeJwt: connectivity.anonKeyLooksLikeJwt,
+    anonKeyProjectRefMatches: connectivity.anonKeyProjectRefMatches,
+    nativeSettingsStatus: connectivity.nativeSettingsStatus,
+    nativeSettingsError: connectivity.nativeSettingsError,
+    nativeOtpStatus: connectivity.nativeOtpStatus,
+    nativeOtpError: connectivity.nativeOtpError,
+    supabaseJsErrorName: supabaseJsError?.name ?? null,
+    supabaseJsErrorMessage: supabaseJsError?.message ?? null,
+    category: supabaseJsError ? classify(supabaseJsError).category : "AUTH_OK",
+  };
+}
 
 const credentialsSchema = z.object({
   email: z.string().email(),
@@ -61,6 +95,21 @@ export const sendOtp = createServerFn({ method: "POST" })
   )
   .handler(async ({ data }) => {
     logAuthActionStart("sendOtp", { email: data.email });
+
+    // TEMPORARY — see auth-connectivity-diagnostic.server.ts. Off unless
+    // AUTH_CONNECTIVITY_DIAGNOSTIC=true; a no-op otherwise, so real traffic
+    // is completely unaffected. Runs BEFORE the real call so the native
+    // probes reflect the same connectivity conditions signInWithOtp is
+    // about to hit, not a later/different moment.
+    const diagnosticsEnabled = env.AUTH_CONNECTIVITY_DIAGNOSTIC;
+    const connectivity = diagnosticsEnabled
+      ? await runNativeConnectivityProbe(
+          process.env.SUPABASE_URL,
+          process.env.SUPABASE_ANON_KEY,
+          data.email,
+        )
+      : null;
+
     try {
       const supabase = createSupabaseServerClient();
       const { error } = await supabase.auth.signInWithOtp({
@@ -70,10 +119,27 @@ export const sendOtp = createServerFn({ method: "POST" })
           ...(data.fullName ? { data: { full_name: data.fullName } } : {}),
         },
       });
-      if (error) return { ok: false as const, error: classifyAndLogAuthError("sendOtp", error) };
-      return { ok: true as const };
+
+      if (error) {
+        const userMessage = classifyAndLogAuthError("sendOtp", error);
+        if (!connectivity) return { ok: false as const, error: userMessage };
+        return {
+          ok: false as const,
+          error: userMessage,
+          diagnostic: buildDiagnostic(connectivity, error as unknown as AuthErrorLike),
+        };
+      }
+
+      if (!connectivity) return { ok: true as const };
+      return { ok: true as const, diagnostic: buildDiagnostic(connectivity, null) };
     } catch (err) {
-      return { ok: false as const, error: classifyAndLogAuthError("sendOtp", err) };
+      const userMessage = classifyAndLogAuthError("sendOtp", err);
+      if (!connectivity) return { ok: false as const, error: userMessage };
+      return {
+        ok: false as const,
+        error: userMessage,
+        diagnostic: buildDiagnostic(connectivity, err as unknown as AuthErrorLike),
+      };
     }
   });
 
