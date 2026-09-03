@@ -12,6 +12,7 @@ import {
   getOtpVerifyErrorMessage,
   getPasswordSignInErrorMessage,
 } from "@/lib/auth-error-messages";
+import { OTP_MAX_LENGTH, sanitizeOtpInput, isOtpLengthPlausible } from "@/lib/otp";
 
 interface AccountGateProps {
   onAuthenticated: (email: string) => void;
@@ -29,8 +30,8 @@ const RESEND_COOLDOWN_SECONDS = 30;
  * Signup is fully passwordless (a code, never a password) — Supabase's
  * password-signup email-confirmation is a clickable link with no natural
  * "you're almost done" UI state, which is exactly what produced the old
- * bug here (a success message rendered as a red error). A 6-digit code
- * the founder types on THIS page has no such awkward middle state, and
+ * bug here (a success message rendered as a red error). A short code the
+ * founder types on THIS page has no such awkward middle state, and
  * doubles as the answer to "I forgot my password": request a code
  * instead — no separate reset flow to build or explain.
  *
@@ -176,23 +177,23 @@ export function AccountGate({ onAuthenticated }: AccountGateProps) {
           Check your email for a code
         </p>
         <p className="mt-1.5 text-[0.85rem] leading-relaxed text-muted-foreground">
-          We sent a 6-digit code to{" "}
+          We sent a verification code to{" "}
           <span className="font-medium text-foreground">{otpContext.email}</span>. Enter it below to
           continue.
         </p>
 
         <form onSubmit={handleVerify} className="mt-5 flex flex-col gap-3.5">
           <div className="flex flex-col gap-1.5">
-            <Label htmlFor="gate-otp">6-digit code</Label>
+            <Label htmlFor="gate-otp">Verification code</Label>
             <Input
               id="gate-otp"
-              inputMode="numeric"
+              autoFocus
               autoComplete="one-time-code"
-              maxLength={6}
+              maxLength={OTP_MAX_LENGTH}
               required
               value={code}
-              onChange={(e) => setCode(e.target.value.replace(/\s/g, ""))}
-              placeholder="123456"
+              onChange={(e) => setCode(sanitizeOtpInput(e.target.value))}
+              placeholder="Enter your code"
               className="text-center text-[1.3rem] font-semibold tracking-[0.4em]"
             />
           </div>
@@ -205,7 +206,7 @@ export function AccountGate({ onAuthenticated }: AccountGateProps) {
             shape="rounded"
             size="lg"
             className="mt-1 w-full"
-            disabled={loading || code.length < 6}
+            disabled={loading || !isOtpLengthPlausible(code)}
           >
             {loading && <Loader2 className="size-4 animate-spin" aria-hidden="true" />}
             Verify & see my results

@@ -20,6 +20,7 @@ import {
   getOtpVerifyErrorMessage,
   getPasswordSignInErrorMessage,
 } from "@/lib/auth-error-messages";
+import { OTP_MAX_LENGTH, sanitizeOtpInput, isOtpLengthPlausible } from "@/lib/otp";
 
 const RESEND_COOLDOWN_SECONDS = 30;
 
@@ -147,21 +148,21 @@ export function SignInDialog({ trigger }: { trigger: ReactNode }) {
                 Check your email for a code
               </DialogTitle>
               <DialogDescription>
-                We sent a 6-digit code to <span className="text-foreground">{email}</span>.
+                We sent a verification code to <span className="text-foreground">{email}</span>.
               </DialogDescription>
             </DialogHeader>
             <form onSubmit={handleVerify} className="mt-2 flex flex-col gap-4">
               <div className="flex flex-col gap-1.5">
-                <Label htmlFor="signin-otp">6-digit code</Label>
+                <Label htmlFor="signin-otp">Verification code</Label>
                 <Input
                   id="signin-otp"
-                  inputMode="numeric"
+                  autoFocus
                   autoComplete="one-time-code"
-                  maxLength={6}
+                  maxLength={OTP_MAX_LENGTH}
                   required
                   value={code}
-                  onChange={(e) => setCode(e.target.value.replace(/\s/g, ""))}
-                  placeholder="123456"
+                  onChange={(e) => setCode(sanitizeOtpInput(e.target.value))}
+                  placeholder="Enter your code"
                   className="text-center text-[1.2rem] font-semibold tracking-[0.4em]"
                 />
               </div>
@@ -172,7 +173,7 @@ export function SignInDialog({ trigger }: { trigger: ReactNode }) {
                 shape="rounded"
                 size="sm"
                 className="mt-2 w-full"
-                disabled={loading || code.length < 6}
+                disabled={loading || !isOtpLengthPlausible(code)}
               >
                 {loading && <Loader2 className="size-4 animate-spin" aria-hidden="true" />}
                 Verify & sign in
