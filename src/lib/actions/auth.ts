@@ -26,13 +26,24 @@ export const signIn = createServerFn({ method: "POST" })
  * (a code you can always request beats a link you might not remember
  * setting up). shouldCreateUser distinguishes the two: true only from the
  * signup surface, false from sign-in/"use a code instead" so a mistyped
- * email on that surface can't silently create a new account. */
+ * email on that surface can't silently create a new account.
+ *
+ * emailRedirectTo is a safety net, not the primary path: Supabase's STOCK
+ * "Confirm signup"/"Magic Link" templates render {{ .ConfirmationURL }} (a
+ * clickable link) and do NOT show {{ .Token }} (the code) unless the
+ * template is edited in the Supabase dashboard to include it — a code-only
+ * request can still arrive as a link-only email until that template is
+ * updated there (not something this app's code can control). Setting this
+ * means that if someone clicks the link instead of typing a code, it still
+ * lands on /auth/callback and signs them in correctly, rather than on
+ * whatever the bare Site URL happens to be. */
 export const sendOtp = createServerFn({ method: "POST" })
   .validator(
     z.object({
       email: z.string().email(),
       shouldCreateUser: z.boolean(),
       fullName: z.string().min(1).optional(),
+      emailRedirectTo: z.string().url().optional(),
     }),
   )
   .handler(async ({ data }) => {
@@ -42,6 +53,7 @@ export const sendOtp = createServerFn({ method: "POST" })
       options: {
         shouldCreateUser: data.shouldCreateUser,
         ...(data.fullName ? { data: { full_name: data.fullName } } : {}),
+        ...(data.emailRedirectTo ? { emailRedirectTo: data.emailRedirectTo } : {}),
       },
     });
     if (error) return { ok: false as const, error: error.message };

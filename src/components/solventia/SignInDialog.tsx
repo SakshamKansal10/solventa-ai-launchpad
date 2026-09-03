@@ -74,7 +74,13 @@ export function SignInDialog({ trigger }: { trigger: ReactNode }) {
     setLoading(true);
     setError(null);
     try {
-      const result = await sendOtp({ data: { email, shouldCreateUser: false } });
+      const result = await sendOtp({
+        data: {
+          email,
+          shouldCreateUser: false,
+          emailRedirectTo: `${window.location.origin}/auth/callback`,
+        },
+      });
       if (!result.ok) {
         setError(result.error);
         return;

@@ -24,7 +24,7 @@ interface NextTask {
 export const getDashboard = createServerFn({ method: "GET" }).handler(async () => {
   const { supabase, user } = await requireUser();
 
-  const [profileRes, opportunitiesRes, dnaRes] = await Promise.all([
+  const [profileRes, opportunitiesRes, dnaRes, activeRoadmapRes] = await Promise.all([
     supabase.from("profiles").select("full_name, email").eq("id", user.id).maybeSingle(),
     // Tie-break by created_at ascending: completeConsultation inserts
     // opportunities in the same stable-sorted order it used to decide
@@ -32,8 +32,8 @@ export const getDashboard = createServerFn({ method: "GET" }).handler(async () =
     // earliest-created among equal fit scores is the one whose roadmap
     // actually exists as active — without this second key, Postgres's
     // ORDER BY has no guaranteed tie order, and a fit-score tie could
-    // make `primary` (active[0], below) disagree with which roadmap the
-    // roadmap page finds, even though nothing about the data is wrong.
+    // make `primary` (below) disagree with which roadmap the roadmap page
+    // finds, even though nothing about the data is wrong.
     supabase
       .from("opportunities")
       .select("*")
@@ -47,6 +47,19 @@ export const getDashboard = createServerFn({ method: "GET" }).handler(async () =
       .order("created_at", { ascending: false })
       .limit(1)
       .maybeSingle(),
+    // The single source of truth for "the founder's current path" — NOT
+    // "whichever active opportunity has the highest fit_score". Explore
+    // More Opportunities can add a new opportunity that outscores the
+    // current one without activating its roadmap (deliberately — exploring
+    // more must never silently switch what the founder is already on), so
+    // picking primary by score alone would show that new idea on the
+    // dashboard while the roadmap page kept showing the real current one.
+    supabase
+      .from("roadmaps")
+      .select("opportunity_id")
+      .eq("user_id", user.id)
+      .eq("status", "active")
+      .maybeSingle(),
   ]);
 
   if (opportunitiesRes.error) throw new Error(opportunitiesRes.error.message);
@@ -56,12 +69,10 @@ export const getDashboard = createServerFn({ method: "GET" }).handler(async () =
   const selected = opportunities.find((o) => o.status === "selected") ?? null;
   const saved = opportunities.filter((o) => o.status === "saved");
 
-  // The one-call architecture pre-builds a roadmap for every initial
-  // opportunity, marking only the deterministic top scorer's roadmap
-  // 'active' — so there's a live roadmap to show even before the founder
-  // has explicitly selected anything, not only after.
-  const primary = selected ?? active[0] ?? null;
-  const alternatives = selected ? active.slice(0, 2) : active.slice(1, 3);
+  const activeRoadmapOpportunityId = activeRoadmapRes.data?.opportunity_id ?? null;
+  const primary =
+    selected ?? active.find((o) => o.id === activeRoadmapOpportunityId) ?? active[0] ?? null;
+  const alternatives = active.filter((o) => o.id !== primary?.id).slice(0, 2);
 
   let roadmap: { phases: RoadmapPhaseSummary[]; nextTask: NextTask | null } | null = null;
 
