@@ -9,7 +9,7 @@ function getClient(): Resend | null {
   return client;
 }
 
-const FROM = "Solventia <sol@solventia.app>";
+const FROM = "Solventia <sol@solventia.in>";
 
 /** Every email send is best-effort. Resend being unconfigured or failing
  * must never break the core product flow it's attached to. */
@@ -31,7 +31,7 @@ export async function sendWelcomeEmail(email: string, fullName: string | null): 
   await sendSafely({
     to: email,
     subject: "Welcome to Solventia",
-    html: `<p>Hi ${name},</p><p>Welcome to Solventia. Head back to the app and finish your consultation with Sol whenever you're ready — everything you share stays saved to your account.</p>`,
+    html: `<p>Hi ${name},</p><p>Welcome to Solventia. Head back to <a href="${env.SITE_URL}/consultation">your consultation</a> with Sol whenever you're ready — everything you share stays saved to your account.</p>`,
   });
 }
 
@@ -42,6 +42,6 @@ export async function sendRoadmapReadyEmail(
   await sendSafely({
     to: email,
     subject: "Your roadmap is ready",
-    html: `<p>Sol has built your roadmap for "${opportunityTitle}". Open your dashboard to see the first steps.</p>`,
+    html: `<p>Sol has built your roadmap for "${opportunityTitle}". <a href="${env.SITE_URL}/dashboard/roadmap">Open your dashboard</a> to see the first steps.</p>`,
   });
 }

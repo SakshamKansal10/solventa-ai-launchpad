@@ -1,4 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { createServerFn } from "@tanstack/react-start";
+import { env } from "@/lib/env.server";
 import { Header } from "@/components/solventia/Header";
 import { Hero } from "@/components/solventia/Hero";
 import { Steps } from "@/components/solventia/Steps";
@@ -13,9 +15,16 @@ import { ForNGOs } from "@/components/solventia/ForNGOs";
 import { FAQ } from "@/components/solventia/FAQ";
 import { Footer } from "@/components/solventia/Footer";
 
+/** og:url/canonical must be absolute per spec — "/" alone is invalid there,
+ * unlike every auth redirect in this app, which correctly derives from the
+ * request's own origin and needs no server-side site URL at all. This is
+ * the one place that genuinely needs it, read server-side only. */
+const getSiteUrl = createServerFn({ method: "GET" }).handler(() => env.SITE_URL);
+
 export const Route = createFileRoute("/")({
   component: Index,
-  head: () => ({
+  loader: () => getSiteUrl(),
+  head: ({ loaderData: siteUrl }) => ({
     meta: [
       { title: "Solventia — Validate, Build & Elevate Your Business Idea" },
       {
@@ -29,9 +38,9 @@ export const Route = createFileRoute("/")({
         content:
           "AI-powered idea discovery, data-backed validation, and step-by-step roadmaps for young entrepreneurs.",
       },
-      { property: "og:url", content: "/" },
+      { property: "og:url", content: siteUrl ?? "/" },
     ],
-    links: [{ rel: "canonical", href: "/" }],
+    links: [{ rel: "canonical", href: siteUrl ?? "/" }],
   }),
 });
 

@@ -114,11 +114,29 @@ export const STEPS: Step[] = [
   },
   {
     kind: "question",
+    id: "educationOther",
+    section: 1,
+    input: "text",
+    label: "What's your highest completed education?",
+    placeholder: "e.g. Vocational certification, trade school",
+    condition: (a) => a.education === "Other",
+  },
+  {
+    kind: "question",
     id: "currentStatus",
     section: 1,
     input: "choice",
     label: "Which of these best describes where you are right now?",
     options: STATUS_OPTIONS,
+  },
+  {
+    kind: "question",
+    id: "currentStatusOther",
+    section: 1,
+    input: "text",
+    label: "What best describes where you are right now?",
+    placeholder: "e.g. Full-time caregiver, between opportunities",
+    condition: (a) => a.currentStatus === "Other",
   },
   {
     kind: "question",
@@ -129,36 +147,7 @@ export const STEPS: Step[] = [
     helper: "Search, select, or add your own.",
   },
 
-  // School student branch
-  {
-    kind: "question",
-    id: "subjects",
-    section: 1,
-    input: "multi-choice",
-    label: "Which subjects are you studying?",
-    options: ["Science", "Commerce", "Arts / Humanities", "Vocational", "Other"],
-    condition: (a) => a.currentStatus === "School Student",
-  },
-  {
-    kind: "question",
-    id: "futureCareerInterests",
-    section: 1,
-    input: "textarea",
-    label: "Any career paths you're curious about?",
-    optional: true,
-    condition: (a) => a.currentStatus === "School Student",
-  },
-
   // College student branch
-  {
-    kind: "question",
-    id: "degree",
-    section: 1,
-    input: "text",
-    label: "What degree are you pursuing?",
-    placeholder: "e.g. B.Tech, B.Com, BA",
-    condition: (a) => a.currentStatus === "College Student",
-  },
   {
     kind: "question",
     id: "major",
@@ -229,17 +218,6 @@ export const STEPS: Step[] = [
     // adapts (roadmaps teach missing skills first) rather than blocking
     // the founder from continuing at all.
     optional: true,
-  },
-  {
-    kind: "question",
-    id: "hasEarnedFromSkill",
-    section: 2,
-    input: "choice",
-    label: "Have you ever earned money using one of these skills?",
-    options: ["Yes, regularly", "Yes, occasionally", "Not yet"],
-    optional: true,
-    autoContinue: true,
-    condition: isProfessional,
   },
 
   { kind: "thinking", afterSection: 2 },
@@ -404,9 +382,28 @@ export const STEPS: Step[] = [
     kind: "question",
     id: "industryRestrictions",
     section: 6,
-    input: "textarea",
+    input: "multi-choice",
     label: "Any industries or types of business you'd rather avoid?",
+    options: [
+      "Alcohol",
+      "Tobacco",
+      "Gambling",
+      "Adult content",
+      "Weapons / firearms",
+      "Animal products / testing",
+      "Religion or politics",
+      "Other",
+    ],
     optional: true,
+  },
+  {
+    kind: "question",
+    id: "industryRestrictionsOther",
+    section: 6,
+    input: "text",
+    label: "What other industries or business types would you rather avoid?",
+    optional: true,
+    condition: (a) => (a.industryRestrictions ?? []).includes("Other"),
   },
   {
     kind: "question",

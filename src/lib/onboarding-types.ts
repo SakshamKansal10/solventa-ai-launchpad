@@ -37,13 +37,14 @@ export interface OnboardingAnswers {
    * state+city (see LocationPicker) — absent for the manual-entry path. */
   postalCode?: string;
   education?: string;
+  /** Only asked when education === "Other" — without this, picking "Other"
+   * left the founder's education completely unelaborated to Sol. */
+  educationOther?: string;
   currentStatus?: CurrentStatus;
+  /** Only asked when currentStatus === "Other" — same reasoning. */
+  currentStatusOther?: string;
   languages?: string[];
 
-  subjects?: string[];
-  futureCareerInterests?: string;
-
-  degree?: string;
   major?: string;
 
   industry?: string;
@@ -67,7 +68,6 @@ export interface OnboardingAnswers {
 
   // Section 3 — Skills & Strengths
   skills?: SkillEntry[];
-  hasEarnedFromSkill?: string;
 
   // Section 4 — How You Like to Work
   workLocation?: string;
@@ -84,6 +84,9 @@ export interface OnboardingAnswers {
 
   // Section 6 — Your Constraints
   industryRestrictions?: string[];
+  /** Only asked when industryRestrictions includes "Other" — the chip set
+   * covers common cases but can't enumerate everything. */
+  industryRestrictionsOther?: string;
   relocation?: string;
   healthLimitations?: string;
   otherConstraints?: string;

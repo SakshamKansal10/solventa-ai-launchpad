@@ -17,6 +17,10 @@ export interface NormalizedProfile {
     city: string | null;
     education: string | null;
     currentStatus: OnboardingAnswers["currentStatus"] | null;
+    /** The elaborated text when currentStatus === "Other" — without this,
+     * picking "Other" reached the AI as the bare word "Other" with zero
+     * elaboration. Null whenever currentStatus isn't "Other". */
+    currentStatusDetail: string | null;
     languages: string[];
   };
   skills: NormalizedSkill[];
@@ -171,8 +175,13 @@ export function normalizeProfile(answers: OnboardingAnswers): NormalizedProfile 
       country: answers.country ?? null,
       state: answers.state ?? null,
       city: answers.city ?? null,
-      education: answers.education ?? null,
+      education:
+        answers.education === "Other" && answers.educationOther
+          ? answers.educationOther
+          : (answers.education ?? null),
       currentStatus: answers.currentStatus ?? null,
+      currentStatusDetail:
+        answers.currentStatus === "Other" ? (answers.currentStatusOther ?? null) : null,
       languages: answers.languages ?? [],
     },
     skills: (answers.skills ?? []).map((s) => ({
@@ -208,11 +217,16 @@ export function normalizeProfile(answers: OnboardingAnswers): NormalizedProfile 
       dailyFrustration: answers.dailyFrustration ?? null,
     },
     constraints: {
-      // industryRestrictions is typed as string[] but collected via a free-text
-      // textarea in the current question graph — normalize defensively either way.
+      // Collected as multi-choice chips today; toArray() stays defensive
+      // for any older persisted answers still shaped as a single free-text
+      // string from before that change. "Other" is replaced by its
+      // elaborated detail when present — the literal word "Other" is not
+      // useful to send to the AI on its own.
       industryRestrictions: toArray(
         answers.industryRestrictions as unknown as string | string[] | undefined,
-      ),
+      )
+        .filter((v) => v !== "Other")
+        .concat(answers.industryRestrictionsOther ? [answers.industryRestrictionsOther] : []),
       relocation: answers.relocation ?? null,
       health: answers.healthLimitations ?? null,
       other: answers.otherConstraints ?? null,

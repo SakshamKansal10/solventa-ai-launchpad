@@ -9,34 +9,6 @@ const credentialsSchema = z.object({
   password: z.string().min(8, "Password must be at least 8 characters"),
 });
 
-export const signUp = createServerFn({ method: "POST" })
-  .validator(
-    credentialsSchema.extend({
-      fullName: z.string().min(1).optional(),
-      emailRedirectTo: z.string().url().optional(),
-    }),
-  )
-  .handler(async ({ data }) => {
-    const supabase = createSupabaseServerClient();
-    const { data: authData, error } = await supabase.auth.signUp({
-      email: data.email,
-      password: data.password,
-      options: {
-        ...(data.fullName ? { data: { full_name: data.fullName } } : {}),
-        ...(data.emailRedirectTo ? { emailRedirectTo: data.emailRedirectTo } : {}),
-      },
-    });
-    if (error) return { ok: false as const, error: error.message };
-
-    // Fire-and-forget — matches sendRoadmapReadyEmail's pattern elsewhere;
-    // email delivery must never add latency to (or block) sign-up itself.
-    if (authData.user?.email) {
-      void sendWelcomeEmail(authData.user.email, data.fullName ?? null);
-    }
-
-    return { ok: true as const, needsEmailConfirmation: !authData.session };
-  });
-
 export const signIn = createServerFn({ method: "POST" })
   .validator(credentialsSchema)
   .handler(async ({ data }) => {
@@ -46,6 +18,62 @@ export const signIn = createServerFn({ method: "POST" })
       password: data.password,
     });
     if (error) return { ok: false as const, error: error.message };
+    return { ok: true as const };
+  });
+
+/** Requests a 6-digit email OTP code — the sole signup path (no password
+ * ever collected there) and the "forgot your password" answer for sign-in
+ * (a code you can always request beats a link you might not remember
+ * setting up). shouldCreateUser distinguishes the two: true only from the
+ * signup surface, false from sign-in/"use a code instead" so a mistyped
+ * email on that surface can't silently create a new account. */
+export const sendOtp = createServerFn({ method: "POST" })
+  .validator(
+    z.object({
+      email: z.string().email(),
+      shouldCreateUser: z.boolean(),
+      fullName: z.string().min(1).optional(),
+    }),
+  )
+  .handler(async ({ data }) => {
+    const supabase = createSupabaseServerClient();
+    const { error } = await supabase.auth.signInWithOtp({
+      email: data.email,
+      options: {
+        shouldCreateUser: data.shouldCreateUser,
+        ...(data.fullName ? { data: { full_name: data.fullName } } : {}),
+      },
+    });
+    if (error) return { ok: false as const, error: error.message };
+    return { ok: true as const };
+  });
+
+export const verifyOtpCode = createServerFn({ method: "POST" })
+  .validator(z.object({ email: z.string().email(), token: z.string().min(6).max(8) }))
+  .handler(async ({ data }) => {
+    const supabase = createSupabaseServerClient();
+    const { data: verifyData, error } = await supabase.auth.verifyOtp({
+      email: data.email,
+      token: data.token,
+      type: "email",
+    });
+    if (error) return { ok: false as const, error: error.message };
+
+    // A brand-new account's very first sign-in lands within the same
+    // instant it was created — an existing account returning via "sign in
+    // with a code" was created long before this moment. Good enough to
+    // decide "send the welcome email" without threading an extra flag
+    // through the client for it.
+    const user = verifyData.user;
+    if (user?.email && user.created_at && user.last_sign_in_at) {
+      const justCreated =
+        Math.abs(new Date(user.last_sign_in_at).getTime() - new Date(user.created_at).getTime()) <
+        10_000;
+      if (justCreated) {
+        void sendWelcomeEmail(user.email, (user.user_metadata?.full_name as string) ?? null);
+      }
+    }
+
     return { ok: true as const };
   });
 
@@ -61,21 +89,9 @@ export const getCurrentUser = createServerFn({ method: "GET" }).handler(async ()
   return { id: user.id, email: user.email ?? null };
 });
 
-export const requestPasswordReset = createServerFn({ method: "POST" })
-  .validator(z.object({ email: z.string().email(), redirectTo: z.string().url() }))
-  .handler(async ({ data }) => {
-    const supabase = createSupabaseServerClient();
-    const { error } = await supabase.auth.resetPasswordForEmail(data.email, {
-      redirectTo: data.redirectTo,
-    });
-    if (error) return { ok: false as const, error: error.message };
-    return { ok: true as const };
-  });
-
-/** Completes Supabase's PKCE flow for email confirmation, password
- * recovery, and magic links alike — every one of those emails links here
- * with a `code` param that must be exchanged for a real session before
- * the user is actually signed in. */
+/** Completes Supabase's PKCE flow for magic links and Google OAuth — the
+ * only two flows left that redirect back here with a `code` param. Email
+ * signup/sign-in is a typed code (verifyOtpCode above), not a link. */
 export const exchangeCodeForSession = createServerFn({ method: "POST" })
   .validator(z.object({ code: z.string().min(1) }))
   .handler(async ({ data }) => {

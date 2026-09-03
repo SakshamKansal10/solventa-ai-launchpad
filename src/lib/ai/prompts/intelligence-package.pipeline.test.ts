@@ -71,6 +71,29 @@ describe("Stage 7 generation call path (mocked Gemini, no live network call)", (
     expect((caught as { category?: string }).category).toBe("GEMINI_INVALID_REQUEST");
   });
 
+  it("503 (model overload) with no fallback model configured -> fails without 'after fallback', category GEMINI_UNAVAILABLE, no raw provider text required to identify it", async () => {
+    generateContentMock.mockImplementation(() => {
+      throw new ApiError({
+        message: "This model is currently experiencing high demand.",
+        status: 503,
+      });
+    });
+
+    const profile = normalizeProfile(FIXTURE_PROFILE_ANSWERS as unknown as OnboardingAnswers);
+
+    let caught: unknown;
+    try {
+      await generateIntelligencePackage(profile);
+    } catch (err) {
+      caught = err;
+    }
+
+    expect(generateContentMock).toHaveBeenCalledTimes(1);
+    expect(caught).toBeInstanceOf(Error);
+    expect((caught as Error).message).not.toContain("after fallback");
+    expect((caught as { category?: string }).category).toBe("GEMINI_UNAVAILABLE");
+  });
+
   it("sends the request WITHOUT a provider-side responseSchema (JSON-contract-in-prompt mode)", async () => {
     generateContentMock.mockImplementation(() => {
       throw new ApiError({ message: "Request contains an invalid argument.", status: 400 });

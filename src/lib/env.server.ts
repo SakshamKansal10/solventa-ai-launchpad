@@ -9,6 +9,12 @@ const fieldSchemas = {
    * model name in a prompt file. Defaults to a stable Flash-class model
    * confirmed available on this project's free tier. */
   GEMINI_MODEL: z.string().min(1).default("gemini-3.6-flash"),
+  /** Optional secondary model tried exactly once, only when the primary
+   * model fails with a transient/provider-side error (503 overload, 429
+   * quota, network/timeout) — never for a 400 (bad request) or 401/403
+   * (auth/permission), which would fail identically on any model under the
+   * same key. Unset = fallback disabled, primary-only (today's behavior). */
+  GEMINI_FALLBACK_MODEL: z.string().min(1).optional(),
   /** Gemini's thinkingConfig.thinkingLevel for the two call sites big
    * enough to matter: the one-call initial founder-intelligence generation
    * (heaviest reasoning load) and Sol mentor replies (narrower, contextual
@@ -21,6 +27,14 @@ const fieldSchemas = {
   MENTOR_AI_THINKING_LEVEL: z.enum(["minimal", "low", "medium", "high"]).optional(),
   SUPABASE_URL: z.string().url("SUPABASE_URL must be a valid URL"),
   SUPABASE_ANON_KEY: z.string().min(1, "SUPABASE_ANON_KEY is required"),
+  /** The single canonical origin for links that must be absolute and can't
+   * derive from `window.location.origin` (email bodies, SSR meta tags like
+   * og:url/canonical). Every user-facing redirect (OAuth, email
+   * confirmation) already derives from the request's own origin and does
+   * NOT read this — changing domains never requires a code change there.
+   * Defaults to the canonical local dev port so email links still resolve
+   * somewhere sane when unset locally. */
+  SITE_URL: z.string().url().default("http://localhost:8080"),
   RESEND_API_KEY: z.string().min(1).optional(),
   /** Comma-separated allowlist gating /review — a real, signed-in Supabase
    * account whose email is NOT in this list gets bounced away exactly like
@@ -63,6 +77,9 @@ export const env = {
   get GEMINI_MODEL() {
     return readField("GEMINI_MODEL");
   },
+  get GEMINI_FALLBACK_MODEL() {
+    return readField("GEMINI_FALLBACK_MODEL");
+  },
   get INITIAL_AI_THINKING_LEVEL() {
     return readField("INITIAL_AI_THINKING_LEVEL");
   },
@@ -74,6 +91,9 @@ export const env = {
   },
   get SUPABASE_ANON_KEY() {
     return readField("SUPABASE_ANON_KEY");
+  },
+  get SITE_URL() {
+    return readField("SITE_URL");
   },
   get RESEND_API_KEY() {
     return readField("RESEND_API_KEY");

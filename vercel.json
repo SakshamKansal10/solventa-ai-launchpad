@@ -1,0 +1,16 @@
+{
+  "redirects": [
+    {
+      "source": "/:path*",
+      "has": [{ "type": "host", "value": "solventa-ai-launchpad11.vercel.app" }],
+      "destination": "https://solventia.in/:path*",
+      "permanent": true
+    },
+    {
+      "source": "/:path*",
+      "has": [{ "type": "host", "value": "solventa-ai-launchpad.vercel.app" }],
+      "destination": "https://solventia.in/:path*",
+      "permanent": true
+    }
+  ]
+}

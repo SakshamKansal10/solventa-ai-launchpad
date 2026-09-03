@@ -5,8 +5,12 @@ export const PLAIN_LANGUAGE_RULE = `Never use unexplained jargon (SaaS, B2B, B2C
 export function formatProfileForPrompt(profile: NormalizedProfile): string {
   const lines: string[] = [];
 
+  const status =
+    profile.identity.currentStatus === "Other" && profile.identity.currentStatusDetail
+      ? profile.identity.currentStatusDetail
+      : (profile.identity.currentStatus ?? "status unknown");
   lines.push(
-    `Identity: ${profile.identity.age ?? "unknown"} years old, ${profile.identity.currentStatus ?? "status unknown"}, based in ${[profile.identity.city, profile.identity.state, profile.identity.country].filter(Boolean).join(", ") || "unknown location"}. Education: ${profile.identity.education ?? "unknown"}. Languages: ${profile.identity.languages.join(", ") || "unknown"}.`,
+    `Identity: ${profile.identity.age ?? "unknown"} years old, ${status}, based in ${[profile.identity.city, profile.identity.state, profile.identity.country].filter(Boolean).join(", ") || "unknown location"}. Education: ${profile.identity.education ?? "unknown"}. Languages: ${profile.identity.languages.join(", ") || "unknown"}.`,
   );
 
   if (profile.skills.length > 0) {

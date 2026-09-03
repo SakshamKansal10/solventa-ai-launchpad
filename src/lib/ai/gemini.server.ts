@@ -19,6 +19,10 @@ import { env } from "@/lib/env.server";
  */
 export const MODEL = env.GEMINI_MODEL;
 
+/** Optional secondary model, tried once when the primary fails with a
+ * transient/provider-side error — see GEMINI_FALLBACK_MODEL in env.server.ts. */
+export const FALLBACK_MODEL = env.GEMINI_FALLBACK_MODEL ?? null;
+
 let client: GoogleGenAI | null = null;
 
 function getClient(): GoogleGenAI {
@@ -69,17 +73,37 @@ export function toGeminiSchema(schema: z.ZodTypeAny): unknown {
  */
 export type GeminiFailureCategory =
   | "GEMINI_INVALID_REQUEST" // 400 — the request itself was malformed/rejected
+  | "GEMINI_PERMISSION_DENIED" // 401/403 — key/auth/provider permission problem
   | "GEMINI_QUOTA_EXCEEDED" // 429 — rate limit or daily quota
+  | "GEMINI_UNAVAILABLE" // 503 — temporary model overload/high demand
   | "GEMINI_EMPTY_RESPONSE" // 2xx but no text came back
   | "GEMINI_SCHEMA_MISMATCH" // response parsed but failed Zod validation
-  | "GEMINI_REQUEST_FAILED"; // anything else (network, 5xx, unknown)
+  | "GEMINI_REQUEST_FAILED"; // network/timeout/unknown
 
 function classifyGeminiFailure(err: unknown): GeminiFailureCategory {
   if (err instanceof ApiError) {
     if (err.status === 400) return "GEMINI_INVALID_REQUEST";
+    if (err.status === 401 || err.status === 403) return "GEMINI_PERMISSION_DENIED";
     if (err.status === 429) return "GEMINI_QUOTA_EXCEEDED";
+    if (err.status === 503) return "GEMINI_UNAVAILABLE";
   }
   return "GEMINI_REQUEST_FAILED";
+}
+
+/** Whether it's safe/sensible to retry the SAME request against a different
+ * model. Only true for provider-side/transient failures — a 400 (bad
+ * request) or 401/403 (key/permission) would fail identically on any model
+ * under the same key/project, so retrying those elsewhere would just spend
+ * a second request to reproduce the same error. Schema/empty-response
+ * issues are output-quality problems already handled by the same-model
+ * corrective retry inside a single model's own attempt loop, not by
+ * switching providers. */
+function isFallbackEligible(category: GeminiFailureCategory): boolean {
+  return (
+    category === "GEMINI_UNAVAILABLE" ||
+    category === "GEMINI_QUOTA_EXCEEDED" ||
+    category === "GEMINI_REQUEST_FAILED"
+  );
 }
 
 export class AIGenerationError extends Error {
@@ -167,6 +191,9 @@ function logCallCost(fields: {
     totalTokenCount?: number;
   };
   errorCategory?: GeminiFailureCategory;
+  fallbackUsed?: boolean;
+  responseSchemaPresent?: boolean;
+  responseMimeType?: string;
 }) {
   console.info(
     "GEMINI_CALL",
@@ -174,9 +201,13 @@ function logCallCost(fields: {
       requestId: fields.requestId,
       purpose: fields.purpose,
       route: fields.route,
+      provider: "google",
       model: fields.model,
+      fallbackUsed: fields.fallbackUsed ?? false,
       thinkingLevel: fields.thinkingLevel,
       attempt: fields.attempt,
+      responseSchemaPresent: fields.responseSchemaPresent ?? null,
+      responseMimeType: fields.responseMimeType ?? null,
       promptTokenCount: fields.usage?.promptTokenCount ?? null,
       candidatesTokenCount: fields.usage?.candidatesTokenCount ?? null,
       thoughtsTokenCount: fields.usage?.thoughtsTokenCount ?? null,
@@ -199,123 +230,156 @@ async function runGenerationLoop<T>(
   responseSchema: unknown,
 ): Promise<T> {
   const ai = getClient();
-  const model = MODEL;
   const maxAttempts = params.allowRetry === false ? 1 : 2;
   const route = params.route ?? params.callSite ?? "unknown";
+  // Fallback is a SEPARATE tier from the same-model retry above: at most one
+  // other model is ever tried, and only once the primary model's own
+  // attempt budget is fully exhausted with a transient/provider-side error.
+  const models = FALLBACK_MODEL ? [MODEL, FALLBACK_MODEL] : [MODEL];
 
   // Proves, from real server logs, exactly which function/generator/
   // attempt-budget the current request actually runs with — never logs the
   // prompt (which carries the founder's profile answers) or any secret.
   console.info(
-    `STAGE7_PIPELINE_ENTRY function=${params.callSite ?? "unknown"} generator=${responseSchema ? "generateStructured" : "generateJSON"} allowRetry=${params.allowRetry !== false} maxAttempts=${maxAttempts} responseSchemaAttached=${responseSchema !== null} model=${model}`,
+    `STAGE7_PIPELINE_ENTRY function=${params.callSite ?? "unknown"} generator=${responseSchema ? "generateStructured" : "generateJSON"} allowRetry=${params.allowRetry !== false} maxAttempts=${maxAttempts} responseSchemaAttached=${responseSchema !== null} model=${MODEL} fallbackModel=${FALLBACK_MODEL ?? "none"}`,
   );
 
   let lastError: string | null = null;
   let lastCategory: GeminiFailureCategory = "GEMINI_REQUEST_FAILED";
   let lastCause: unknown;
+  let attemptedFallback = false;
 
-  // Every failure mode (the request itself throwing, an empty response, a
-  // JSON parse failure, or a schema mismatch) records lastError and lets the
-  // loop retry once — a transient API error used to skip the retry entirely
-  // and throw on the first attempt, which is exactly what a request-level
-  // hiccup shouldn't do when a second attempt might just succeed.
-  for (let attempt = 0; attempt < maxAttempts; attempt++) {
-    const requestId = crypto.randomUUID();
-    const startedAt = Date.now();
-    const prompt =
-      attempt === 0
-        ? params.prompt
-        : `${params.prompt}\n\nYour previous response failed validation with this error, fix it and respond again with ONLY valid JSON matching the required shape:\n${lastError}`;
+  for (let modelIndex = 0; modelIndex < models.length; modelIndex++) {
+    const model = models[modelIndex];
+    const isFallbackModel = modelIndex > 0;
 
-    try {
-      const response = await ai.models.generateContent({
-        model,
-        contents: prompt,
-        config: {
-          systemInstruction: params.systemInstruction,
-          responseMimeType: "application/json",
-          ...(responseSchema ? { responseSchema } : {}),
-          ...(params.thinkingLevel
-            ? { thinkingConfig: { thinkingLevel: SDK_THINKING_LEVEL[params.thinkingLevel] } }
-            : {}),
-        },
-      });
-      const usage = response.usageMetadata;
-      const durationMs = Date.now() - startedAt;
+    // Every failure mode (the request itself throwing, an empty response, a
+    // JSON parse failure, or a schema mismatch) records lastError and lets the
+    // loop retry once — a transient API error used to skip the retry entirely
+    // and throw on the first attempt, which is exactly what a request-level
+    // hiccup shouldn't do when a second attempt might just succeed.
+    for (let attempt = 0; attempt < maxAttempts; attempt++) {
+      const requestId = crypto.randomUUID();
+      const startedAt = Date.now();
+      const prompt =
+        attempt === 0
+          ? params.prompt
+          : `${params.prompt}\n\nYour previous response failed validation with this error, fix it and respond again with ONLY valid JSON matching the required shape:\n${lastError}`;
 
-      const responseText = response.text;
-      if (!responseText) {
-        lastError = "Empty response from model.";
-        lastCategory = "GEMINI_EMPTY_RESPONSE";
+      try {
+        const response = await ai.models.generateContent({
+          model,
+          contents: prompt,
+          config: {
+            systemInstruction: params.systemInstruction,
+            responseMimeType: "application/json",
+            ...(responseSchema ? { responseSchema } : {}),
+            ...(params.thinkingLevel
+              ? { thinkingConfig: { thinkingLevel: SDK_THINKING_LEVEL[params.thinkingLevel] } }
+              : {}),
+          },
+        });
+        const usage = response.usageMetadata;
+        const durationMs = Date.now() - startedAt;
+
+        const responseText = response.text;
+        if (!responseText) {
+          lastError = "Empty response from model.";
+          lastCategory = "GEMINI_EMPTY_RESPONSE";
+          logCallCost({
+            requestId,
+            purpose: params.purpose,
+            route,
+            model,
+            fallbackUsed: isFallbackModel,
+            thinkingLevel: params.thinkingLevel ?? "default",
+            attempt,
+            durationMs,
+            success: false,
+            usage,
+            errorCategory: lastCategory,
+            responseSchemaPresent: responseSchema !== null,
+            responseMimeType: "application/json",
+          });
+          continue;
+        }
+        const parsed = JSON.parse(responseText);
+        const result = schema.safeParse(parsed);
+        if (result.success) {
+          logCallCost({
+            requestId,
+            purpose: params.purpose,
+            route,
+            model,
+            fallbackUsed: isFallbackModel,
+            thinkingLevel: params.thinkingLevel ?? "default",
+            attempt,
+            durationMs,
+            success: true,
+            usage,
+            responseSchemaPresent: responseSchema !== null,
+            responseMimeType: "application/json",
+          });
+          return result.data;
+        }
+        lastError = result.error.message;
+        lastCategory = "GEMINI_SCHEMA_MISMATCH";
         logCallCost({
           requestId,
           purpose: params.purpose,
           route,
           model,
+          fallbackUsed: isFallbackModel,
           thinkingLevel: params.thinkingLevel ?? "default",
           attempt,
           durationMs,
           success: false,
           usage,
           errorCategory: lastCategory,
+          responseSchemaPresent: responseSchema !== null,
+          responseMimeType: "application/json",
         });
-        continue;
-      }
-      const parsed = JSON.parse(responseText);
-      const result = schema.safeParse(parsed);
-      if (result.success) {
+      } catch (err) {
+        lastError = err instanceof Error ? err.message : "Gemini request failed.";
+        lastCategory = classifyGeminiFailure(err);
+        lastCause = err;
         logCallCost({
           requestId,
           purpose: params.purpose,
           route,
           model,
+          fallbackUsed: isFallbackModel,
           thinkingLevel: params.thinkingLevel ?? "default",
           attempt,
-          durationMs,
-          success: true,
-          usage,
+          durationMs: Date.now() - startedAt,
+          success: false,
+          errorCategory: lastCategory,
+          responseSchemaPresent: responseSchema !== null,
+          responseMimeType: "application/json",
         });
-        return result.data;
       }
-      lastError = result.error.message;
-      lastCategory = "GEMINI_SCHEMA_MISMATCH";
-      logCallCost({
-        requestId,
-        purpose: params.purpose,
-        route,
-        model,
-        thinkingLevel: params.thinkingLevel ?? "default",
-        attempt,
-        durationMs,
-        success: false,
-        usage,
-        errorCategory: lastCategory,
-      });
-    } catch (err) {
-      lastError = err instanceof Error ? err.message : "Gemini request failed.";
-      lastCategory = classifyGeminiFailure(err);
-      lastCause = err;
-      logCallCost({
-        requestId,
-        purpose: params.purpose,
-        route,
-        model,
-        thinkingLevel: params.thinkingLevel ?? "default",
-        attempt,
-        durationMs: Date.now() - startedAt,
-        success: false,
-        errorCategory: lastCategory,
-      });
     }
+
+    const hasNextModel = modelIndex < models.length - 1;
+    if (hasNextModel && isFallbackEligible(lastCategory)) {
+      attemptedFallback = true;
+      console.info(
+        `[gemini] model=${model} category=${lastCategory} exhausted — trying fallback model=${models[modelIndex + 1]}`,
+      );
+      continue;
+    }
+    break;
   }
 
   console.error(
-    `[gemini] model=${model} category=${lastCategory} attempts=${maxAttempts}: ${lastError}`,
+    `[gemini] model=${MODEL} fallbackModel=${FALLBACK_MODEL ?? "none"} fallbackUsed=${attemptedFallback} category=${lastCategory} attempts=${maxAttempts}: ${lastError}`,
   );
   throw new AIGenerationError(
-    maxAttempts > 1
-      ? `Gemini request failed after retry: ${lastError}`
-      : `Gemini request failed: ${lastError}`,
+    attemptedFallback
+      ? `Gemini request failed after fallback: ${lastError}`
+      : maxAttempts > 1
+        ? `Gemini request failed after retry: ${lastError}`
+        : `Gemini request failed: ${lastError}`,
     lastCategory,
     lastCause,
   );

@@ -1,0 +1,70 @@
+<!--
+  Solventia — branded OTP/magic-link email template.
+
+  WHERE TO PASTE THIS:
+    Supabase Dashboard → Authentication → Email Templates
+    Paste into BOTH "Confirm signup" and "Magic Link" (Supabase routes
+    signInWithOtp to one or the other depending on whether the account is
+    new or existing — updating both guarantees consistent branding either
+    way). Leave the Subject line as-is or set it to something like
+    "Your Solventia verification code".
+
+  Supabase template variables used below: {{ .Token }} (the 6-digit code),
+  {{ .Email }}. Do not remove/rename these — they're substituted server-side
+  by Supabase when the email is actually sent.
+-->
+<!DOCTYPE html>
+<html lang="en">
+  <body style="margin:0; padding:0; background-color:#F4F1EA; font-family:Georgia,'Times New Roman',serif;">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#F4F1EA; padding:40px 16px;">
+      <tr>
+        <td align="center">
+          <table role="presentation" width="480" cellpadding="0" cellspacing="0" style="max-width:480px; width:100%; background-color:#FFFFFF; border-radius:20px; overflow:hidden; border:1px solid #E5DFD0;">
+            <!-- Header -->
+            <tr>
+              <td style="background-color:#101B2A; padding:32px 40px; text-align:center;">
+                <div style="font-family:Georgia,'Times New Roman',serif; font-size:20px; font-weight:700; letter-spacing:4px; color:#F4F1EA;">
+                  SOLVENTIA
+                </div>
+              </td>
+            </tr>
+
+            <!-- Body -->
+            <tr>
+              <td style="padding:40px 40px 32px;">
+                <p style="margin:0 0 8px; font-size:13px; letter-spacing:1.5px; text-transform:uppercase; color:#B08D57; font-weight:700;">
+                  Your verification code
+                </p>
+                <h1 style="margin:0 0 20px; font-size:22px; line-height:1.4; color:#101B2A; font-weight:600;">
+                  Enter this code to continue
+                </h1>
+                <p style="margin:0 0 28px; font-size:15px; line-height:1.6; color:#4A4A4A;">
+                  Use the code below on the Solventia page where you requested it. It expires shortly, so enter it soon.
+                </p>
+
+                <div style="text-align:center; margin:0 0 28px;">
+                  <span style="display:inline-block; padding:16px 32px; background-color:#F4F1EA; border:1px solid #E5DFD0; border-radius:12px; font-family:'Courier New',monospace; font-size:32px; font-weight:700; letter-spacing:10px; color:#101B2A;">
+                    {{ .Token }}
+                  </span>
+                </div>
+
+                <p style="margin:0; font-size:13px; line-height:1.6; color:#8A8A8A;">
+                  If you didn't request this code, you can safely ignore this email — no account changes will be made.
+                </p>
+              </td>
+            </tr>
+
+            <!-- Footer -->
+            <tr>
+              <td style="padding:24px 40px; border-top:1px solid #E5DFD0; text-align:center;">
+                <p style="margin:0; font-size:12px; color:#A8A8A8;">
+                  Solventia · Sent to {{ .Email }}
+                </p>
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>
