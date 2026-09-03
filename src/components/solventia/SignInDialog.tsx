@@ -14,7 +14,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { PremiumButton } from "./PremiumButton";
 import { GoogleSignInButton } from "./GoogleSignInButton";
-import { signIn, sendOtp, verifyOtpCode } from "@/lib/actions/auth";
+import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
+import {
+  getOtpSendErrorMessage,
+  getOtpVerifyErrorMessage,
+  getPasswordSignInErrorMessage,
+} from "@/lib/auth-error-messages";
 
 const RESEND_COOLDOWN_SECONDS = 30;
 
@@ -56,15 +61,17 @@ export function SignInDialog({ trigger }: { trigger: ReactNode }) {
     setLoading(true);
     setError(null);
     try {
-      const result = await signIn({ data: { email, password } });
-      if (!result.ok) {
-        setError(result.error);
+      const supabase = createSupabaseBrowserClient();
+      const { error: signInError } = await supabase.auth.signInWithPassword({ email, password });
+      if (signInError) {
+        console.error("[sign-in] failed:", signInError);
+        setError(getPasswordSignInErrorMessage(signInError));
         return;
       }
       finishSignIn();
     } catch (err) {
       console.error("[sign-in] failed:", err);
-      setError("Something went wrong. Try again.");
+      setError(getPasswordSignInErrorMessage(err));
     } finally {
       setLoading(false);
     }
@@ -74,16 +81,21 @@ export function SignInDialog({ trigger }: { trigger: ReactNode }) {
     setLoading(true);
     setError(null);
     try {
-      const result = await sendOtp({ data: { email, shouldCreateUser: false } });
-      if (!result.ok) {
-        setError(result.error);
+      const supabase = createSupabaseBrowserClient();
+      const { error: otpError } = await supabase.auth.signInWithOtp({
+        email,
+        options: { shouldCreateUser: false },
+      });
+      if (otpError) {
+        console.error("[sign-in] sending code failed:", otpError);
+        setError(getOtpSendErrorMessage(otpError));
         return;
       }
       setMode("otp");
       tickCooldown();
     } catch (err) {
       console.error("[sign-in] sending code failed:", err);
-      setError("Something went wrong sending your code. Try again.");
+      setError(getOtpSendErrorMessage(err));
     } finally {
       setLoading(false);
     }
@@ -94,15 +106,21 @@ export function SignInDialog({ trigger }: { trigger: ReactNode }) {
     setLoading(true);
     setError(null);
     try {
-      const result = await verifyOtpCode({ data: { email, token: code } });
-      if (!result.ok) {
-        setError(result.error);
+      const supabase = createSupabaseBrowserClient();
+      const { error: verifyError } = await supabase.auth.verifyOtp({
+        email,
+        token: code,
+        type: "email",
+      });
+      if (verifyError) {
+        console.error("[sign-in] code verification failed:", verifyError);
+        setError(getOtpVerifyErrorMessage(verifyError));
         return;
       }
       finishSignIn();
     } catch (err) {
       console.error("[sign-in] code verification failed:", err);
-      setError("Something went wrong. Try again.");
+      setError(getOtpVerifyErrorMessage(err));
     } finally {
       setLoading(false);
     }

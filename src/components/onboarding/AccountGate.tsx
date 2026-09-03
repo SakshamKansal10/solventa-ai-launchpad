@@ -5,7 +5,13 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { PremiumButton } from "@/components/solventia/PremiumButton";
 import { GoogleSignInButton } from "@/components/solventia/GoogleSignInButton";
-import { signIn, sendOtp, verifyOtpCode } from "@/lib/actions/auth";
+import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
+import { sendWelcomeEmailForNewUser } from "@/lib/actions/auth";
+import {
+  getOtpSendErrorMessage,
+  getOtpVerifyErrorMessage,
+  getPasswordSignInErrorMessage,
+} from "@/lib/auth-error-messages";
 
 interface AccountGateProps {
   onAuthenticated: (email: string) => void;
@@ -26,7 +32,17 @@ const RESEND_COOLDOWN_SECONDS = 30;
  * bug here (a success message rendered as a red error). A 6-digit code
  * the founder types on THIS page has no such awkward middle state, and
  * doubles as the answer to "I forgot my password": request a code
- * instead — no separate reset flow to build or explain. */
+ * instead — no separate reset flow to build or explain.
+ *
+ * Every Supabase Auth call here (password sign-in, OTP send, OTP verify)
+ * runs directly against the browser Supabase client — never through a
+ * TanStack server function. A production diagnostic proved Vercel's
+ * server runtime cannot reach Supabase Auth at all (even an
+ * unauthenticated settings GET failed), while the browser has never had
+ * that problem; @supabase/ssr's browser client persists the resulting
+ * session into cookies the server already reads, so nothing else in the
+ * app needs to change for this session to be visible on the next
+ * request. */
 export function AccountGate({ onAuthenticated }: AccountGateProps) {
   const [mode, setMode] = useState<Mode>("signup");
   const [email, setEmail] = useState("");
@@ -58,15 +74,17 @@ export function AccountGate({ onAuthenticated }: AccountGateProps) {
     setLoading(true);
     setError(null);
     try {
-      const result = await sendOtp({
-        data: {
-          email: targetEmail,
+      const supabase = createSupabaseBrowserClient();
+      const { error: otpError } = await supabase.auth.signInWithOtp({
+        email: targetEmail,
+        options: {
           shouldCreateUser,
-          fullName: shouldCreateUser && fullName ? fullName : undefined,
+          ...(shouldCreateUser && fullName ? { data: { full_name: fullName } } : {}),
         },
       });
-      if (!result.ok) {
-        setError(result.error);
+      if (otpError) {
+        console.error("[account-gate] sending code failed:", otpError);
+        setError(getOtpSendErrorMessage(otpError));
         return;
       }
       setOtpContext({ email: targetEmail, shouldCreateUser });
@@ -74,7 +92,7 @@ export function AccountGate({ onAuthenticated }: AccountGateProps) {
       tickCooldown();
     } catch (err) {
       console.error("[account-gate] sending code failed:", err);
-      setError("Something went wrong sending your code. Your answers are safe — try again.");
+      setError(getOtpSendErrorMessage(err));
     } finally {
       setLoading(false);
     }
@@ -91,16 +109,18 @@ export function AccountGate({ onAuthenticated }: AccountGateProps) {
     setLoading(true);
     setError(null);
     try {
-      const result = await signIn({ data: { email, password } });
-      if (!result.ok) {
-        setError(result.error);
+      const supabase = createSupabaseBrowserClient();
+      const { error: signInError } = await supabase.auth.signInWithPassword({ email, password });
+      if (signInError) {
+        console.error("[account-gate] sign-in failed:", signInError);
+        setError(getPasswordSignInErrorMessage(signInError));
         return;
       }
       queryClient.clear();
       onAuthenticated(email);
     } catch (err) {
       console.error("[account-gate] sign-in failed:", err);
-      setError("Something went wrong. Your answers are safe — try again.");
+      setError(getPasswordSignInErrorMessage(err));
     } finally {
       setLoading(false);
     }
@@ -112,16 +132,38 @@ export function AccountGate({ onAuthenticated }: AccountGateProps) {
     setLoading(true);
     setError(null);
     try {
-      const result = await verifyOtpCode({ data: { email: otpContext.email, token: code } });
-      if (!result.ok) {
-        setError(result.error);
+      const supabase = createSupabaseBrowserClient();
+      const { data: verifyData, error: verifyError } = await supabase.auth.verifyOtp({
+        email: otpContext.email,
+        token: code,
+        type: "email",
+      });
+      if (verifyError) {
+        console.error("[account-gate] code verification failed:", verifyError);
+        setError(getOtpVerifyErrorMessage(verifyError));
         return;
       }
+
+      // A brand-new account's very first sign-in lands within the same
+      // instant it was created — an existing account returning via "sign
+      // in with a code" was created long before this moment.
+      const user = verifyData.user;
+      if (user?.email && user.created_at && user.last_sign_in_at) {
+        const justCreated =
+          Math.abs(new Date(user.last_sign_in_at).getTime() - new Date(user.created_at).getTime()) <
+          10_000;
+        if (justCreated) {
+          void sendWelcomeEmailForNewUser({
+            data: { email: user.email, fullName: fullName || undefined },
+          });
+        }
+      }
+
       queryClient.clear();
       onAuthenticated(otpContext.email);
     } catch (err) {
       console.error("[account-gate] code verification failed:", err);
-      setError("Something went wrong. Your answers are safe — try again.");
+      setError(getOtpVerifyErrorMessage(err));
     } finally {
       setLoading(false);
     }
