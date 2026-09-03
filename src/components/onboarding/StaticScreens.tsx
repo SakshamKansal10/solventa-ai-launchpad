@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { ArrowRight, Check, Clock, RotateCcw, Sparkles } from "lucide-react";
 import { Link, useNavigate } from "@tanstack/react-router";
@@ -334,6 +334,13 @@ export function CompletionScreen() {
 
   const [phase, setPhase] = useState<SubmitPhase>("idle");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  // A ref, not state — state updates aren't visible until the next render,
+  // which leaves a real window for two rapid clicks (or AccountGate's
+  // onAuthenticated firing alongside a manual retry) to both pass the
+  // "not already submitting" check before either commits. A ref is read
+  // and written synchronously, so the second call sees the first call's
+  // guard immediately, with no such window.
+  const submittingRef = useRef(false);
 
   const summaryLines = [
     answers.currentStatus && `You're currently a ${answers.currentStatus}.`,
@@ -344,6 +351,8 @@ export function CompletionScreen() {
   ].filter(Boolean) as string[];
 
   async function runSubmission() {
+    if (submittingRef.current) return;
+    submittingRef.current = true;
     setErrorMessage(null);
     setPhase("converging");
     try {
@@ -368,6 +377,8 @@ export function CompletionScreen() {
         "Sol couldn't complete the analysis. Your answers are safely saved — try again.",
       );
       setPhase("error");
+    } finally {
+      submittingRef.current = false;
     }
   }
 

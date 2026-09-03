@@ -41,6 +41,30 @@ export const completeConsultation = createServerFn({ method: "POST" })
     const normalized = normalizeProfile(answers);
     const profileHash = hashProfile(normalized);
 
+    // Cheap idempotency pre-check: a double-click, or the in-page submit
+    // racing auth/callback's resumePendingConsultation, would otherwise
+    // spend a second full Gemini generation (and create a duplicate
+    // business_dna + opportunities + roadmaps row set) for the exact same
+    // answers. This check alone isn't safe under true concurrency — two
+    // requests can both pass it before either inserts — the unique index
+    // on (user_id, profile_hash) below is the real guard for that; this is
+    // just the fast path that avoids paying for a Gemini call in the
+    // common (sequential) case.
+    const { data: existingDna } = await supabase
+      .from("business_dna")
+      .select("id, founder_analysis")
+      .eq("user_id", user.id)
+      .eq("profile_hash", profileHash)
+      .maybeSingle();
+    if (existingDna) {
+      return {
+        businessDnaId: existingDna.id as string,
+        founderDNA: existingDna.founder_analysis as unknown as Awaited<
+          ReturnType<typeof generateIntelligencePackage>
+        >["founderDNA"],
+      };
+    }
+
     const overallStart = Date.now();
     let pkg: Awaited<ReturnType<typeof generateIntelligencePackage>>;
     try {
@@ -82,6 +106,27 @@ export const completeConsultation = createServerFn({ method: "POST" })
       })
       .select("id")
       .single();
+
+    // 23505 = unique_violation on business_dna_user_profile_hash_key — the
+    // true-concurrency case the pre-check above can't catch: another
+    // request for this exact answer set won the race and already
+    // committed. Converge on its row rather than surface an error after a
+    // Gemini call that (in this one narrow case) turned out to be wasted.
+    if (dnaError?.code === "23505") {
+      const { data: winner, error: winnerError } = await supabase
+        .from("business_dna")
+        .select("id, founder_analysis")
+        .eq("user_id", user.id)
+        .eq("profile_hash", profileHash)
+        .single();
+      if (winnerError || !winner) {
+        throw new Error(winnerError?.message ?? "Failed to load existing analysis");
+      }
+      return {
+        businessDnaId: winner.id as string,
+        founderDNA: winner.founder_analysis as unknown as typeof pkg.founderDNA,
+      };
+    }
     if (dnaError || !dnaRow) throw new Error(dnaError?.message ?? "Failed to save Business DNA");
 
     const scored = pkg.opportunities
