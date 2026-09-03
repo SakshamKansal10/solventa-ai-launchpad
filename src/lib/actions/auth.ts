@@ -28,22 +28,24 @@ export const signIn = createServerFn({ method: "POST" })
  * signup surface, false from sign-in/"use a code instead" so a mistyped
  * email on that surface can't silently create a new account.
  *
- * emailRedirectTo is a safety net, not the primary path: Supabase's STOCK
- * "Confirm signup"/"Magic Link" templates render {{ .ConfirmationURL }} (a
- * clickable link) and do NOT show {{ .Token }} (the code) unless the
- * template is edited in the Supabase dashboard to include it — a code-only
- * request can still arrive as a link-only email until that template is
- * updated there (not something this app's code can control). Setting this
- * means that if someone clicks the link instead of typing a code, it still
- * lands on /auth/callback and signs them in correctly, rather than on
- * whatever the bare Site URL happens to be. */
+ * No emailRedirectTo here, deliberately: signInWithOtp() always renders
+ * through Supabase's "Magic Link" email template slot (confirmed against
+ * Supabase's own docs — it's shared by new-signup and existing-user OTP
+ * requests alike; "Confirm signup" is only used by the password-based
+ * signUp() flow, which this app no longer calls anywhere), and whether the
+ * recipient sees a code or a link is decided ENTIRELY by whether that one
+ * template's body contains {{ .Token }} or {{ .ConfirmationURL }} — the
+ * SDK call itself is identical either way, and emailRedirectTo only
+ * affects the URL a link would point to, not whether a link exists at
+ * all. Solventia's template (supabase/email-templates/otp-code.html)
+ * contains only {{ .Token }} and no link, so a redirect URL has nothing
+ * to attach to. */
 export const sendOtp = createServerFn({ method: "POST" })
   .validator(
     z.object({
       email: z.string().email(),
       shouldCreateUser: z.boolean(),
       fullName: z.string().min(1).optional(),
-      emailRedirectTo: z.string().url().optional(),
     }),
   )
   .handler(async ({ data }) => {
@@ -53,7 +55,6 @@ export const sendOtp = createServerFn({ method: "POST" })
       options: {
         shouldCreateUser: data.shouldCreateUser,
         ...(data.fullName ? { data: { full_name: data.fullName } } : {}),
-        ...(data.emailRedirectTo ? { emailRedirectTo: data.emailRedirectTo } : {}),
       },
     });
     if (error) return { ok: false as const, error: error.message };
@@ -61,7 +62,9 @@ export const sendOtp = createServerFn({ method: "POST" })
   });
 
 export const verifyOtpCode = createServerFn({ method: "POST" })
-  .validator(z.object({ email: z.string().email(), token: z.string().min(6).max(8) }))
+  .validator(
+    z.object({ email: z.string().email(), token: z.string().length(6, "Enter the 6-digit code") }),
+  )
   .handler(async ({ data }) => {
     const supabase = createSupabaseServerClient();
     const { data: verifyData, error } = await supabase.auth.verifyOtp({

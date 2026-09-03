@@ -74,13 +74,7 @@ export function SignInDialog({ trigger }: { trigger: ReactNode }) {
     setLoading(true);
     setError(null);
     try {
-      const result = await sendOtp({
-        data: {
-          email,
-          shouldCreateUser: false,
-          emailRedirectTo: `${window.location.origin}/auth/callback`,
-        },
-      });
+      const result = await sendOtp({ data: { email, shouldCreateUser: false } });
       if (!result.ok) {
         setError(result.error);
         return;
@@ -145,7 +139,7 @@ export function SignInDialog({ trigger }: { trigger: ReactNode }) {
                   id="signin-otp"
                   inputMode="numeric"
                   autoComplete="one-time-code"
-                  maxLength={8}
+                  maxLength={6}
                   required
                   value={code}
                   onChange={(e) => setCode(e.target.value.replace(/\s/g, ""))}

@@ -1,63 +1,176 @@
 <!--
-  Solventia — branded OTP/magic-link email template.
+  Solventia — premium OTP email template.
 
   WHERE TO PASTE THIS:
-    Supabase Dashboard → Authentication → Email Templates
-    Paste into BOTH "Confirm signup" and "Magic Link" (Supabase routes
-    signInWithOtp to one or the other depending on whether the account is
-    new or existing — updating both guarantees consistent branding either
-    way). Leave the Subject line as-is or set it to something like
-    "Your Solventia verification code".
+    Supabase Dashboard → Authentication → Email Templates → "Magic Link"
+    ONLY. This is the one and only template signInWithOtp() renders
+    through — for both brand-new signups (shouldCreateUser: true) and
+    existing users signing in with a code (shouldCreateUser: false) alike.
+    "Confirm signup" is a separate template used only by the password-based
+    signUp() flow, which this app no longer calls anywhere — editing it
+    has no effect on this flow, so don't bother.
 
-  Supabase template variables used below: {{ .Token }} (the 6-digit code),
-  {{ .Email }}. Do not remove/rename these — they're substituted server-side
-  by Supabase when the email is actually sent.
+    Set the Subject field (in the same dashboard panel, above the body) to
+    something like: Your Solventia verification code
+
+  Table-based layout, inline styles throughout — this is deliberate for
+  email-client compatibility (Outlook desktop in particular ignores much
+  of modern CSS and flexbox/grid entirely; table + inline style is still
+  the professional standard for transactional email, same approach used
+  by Stripe/Linear/Notion's own emails).
+
+  Supabase template variables used: {{ .Token }} (the 6-digit code),
+  {{ .Email }}. Do not rename/remove these — Supabase substitutes them
+  server-side when the email is actually sent. No {{ .ConfirmationURL }}
+  appears anywhere in this file, deliberately — a code-only email has
+  nothing for a link to do.
 -->
 <!DOCTYPE html>
 <html lang="en">
-  <body style="margin:0; padding:0; background-color:#F4F1EA; font-family:Georgia,'Times New Roman',serif;">
-    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#F4F1EA; padding:40px 16px;">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="light" />
+    <meta name="supported-color-schemes" content="light" />
+    <title>Your Solventia verification code</title>
+    <style>
+      @media (max-width: 480px) {
+        .solventia-outer-pad {
+          padding: 28px 16px !important;
+        }
+        .solventia-card-pad {
+          padding: 36px 24px !important;
+        }
+        .solventia-otp-digits {
+          font-size: 34px !important;
+          letter-spacing: 8px !important;
+        }
+        .solventia-headline {
+          font-size: 20px !important;
+        }
+      }
+    </style>
+  </head>
+  <body
+    style="margin: 0; padding: 0; background-color: #eeeae1; font-family: Georgia, 'Times New Roman', serif;"
+  >
+    <table
+      role="presentation"
+      width="100%"
+      cellpadding="0"
+      cellspacing="0"
+      style="background-color: #eeeae1;"
+    >
       <tr>
-        <td align="center">
-          <table role="presentation" width="480" cellpadding="0" cellspacing="0" style="max-width:480px; width:100%; background-color:#FFFFFF; border-radius:20px; overflow:hidden; border:1px solid #E5DFD0;">
-            <!-- Header -->
+        <td align="center" class="solventia-outer-pad" style="padding: 48px 16px;">
+          <table
+            role="presentation"
+            width="600"
+            cellpadding="0"
+            cellspacing="0"
+            style="max-width: 600px; width: 100%;"
+          >
+            <!-- Wordmark, above the card -->
             <tr>
-              <td style="background-color:#101B2A; padding:32px 40px; text-align:center;">
-                <div style="font-family:Georgia,'Times New Roman',serif; font-size:20px; font-weight:700; letter-spacing:4px; color:#F4F1EA;">
-                  SOLVENTIA
-                </div>
+              <td align="center" style="padding-bottom: 28px;">
+                <span
+                  style="font-family: Georgia, 'Times New Roman', serif; font-size: 15px; font-weight: 700; letter-spacing: 6px; color: #101b2a;"
+                  >SOLVENTIA</span
+                >
               </td>
             </tr>
 
-            <!-- Body -->
+            <!-- Card -->
             <tr>
-              <td style="padding:40px 40px 32px;">
-                <p style="margin:0 0 8px; font-size:13px; letter-spacing:1.5px; text-transform:uppercase; color:#B08D57; font-weight:700;">
-                  Your verification code
-                </p>
-                <h1 style="margin:0 0 20px; font-size:22px; line-height:1.4; color:#101B2A; font-weight:600;">
-                  Enter this code to continue
-                </h1>
-                <p style="margin:0 0 28px; font-size:15px; line-height:1.6; color:#4A4A4A;">
-                  Use the code below on the Solventia page where you requested it. It expires shortly, so enter it soon.
-                </p>
+              <td
+                style="background-color: #fffdf9; border: 1px solid #e4ddcc; border-radius: 20px; box-shadow: 0 24px 60px -30px rgba(16, 27, 42, 0.35);"
+              >
+                <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+                  <tr>
+                    <td class="solventia-card-pad" style="padding: 52px 48px 44px;">
+                      <p
+                        class="solventia-headline"
+                        style="margin: 0 0 6px; font-family: Georgia, 'Times New Roman', serif; font-size: 24px; line-height: 1.35; color: #101b2a; font-weight: 700;"
+                      >
+                        Welcome to Solventia.
+                      </p>
+                      <p
+                        style="margin: 0 0 24px; font-family: Georgia, 'Times New Roman', serif; font-size: 24px; line-height: 1.35; color: #101b2a; font-weight: 700;"
+                      >
+                        We&rsquo;re excited to have you.
+                      </p>
+                      <p
+                        style="margin: 0 0 32px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif; font-size: 15.5px; line-height: 1.65; color: #4a4740;"
+                      >
+                        Use the verification code below to securely sign in to your account.
+                      </p>
 
-                <div style="text-align:center; margin:0 0 28px;">
-                  <span style="display:inline-block; padding:16px 32px; background-color:#F4F1EA; border:1px solid #E5DFD0; border-radius:12px; font-family:'Courier New',monospace; font-size:32px; font-weight:700; letter-spacing:10px; color:#101B2A;">
-                    {{ .Token }}
-                  </span>
-                </div>
+                      <!-- OTP centerpiece -->
+                      <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+                        <tr>
+                          <td
+                            align="center"
+                            style="background-color: #101b2a; border: 1px solid #b08d57; border-radius: 16px; padding: 30px 20px;"
+                          >
+                            <p
+                              style="margin: 0 0 12px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif; font-size: 11px; font-weight: 700; letter-spacing: 2.5px; text-transform: uppercase; color: #cbb27e;"
+                            >
+                              Your verification code
+                            </p>
+                            <p
+                              class="solventia-otp-digits"
+                              style="margin: 0; font-family: Georgia, 'Times New Roman', serif; font-size: 46px; font-weight: 700; letter-spacing: 14px; color: #fdfcfa;"
+                            >
+                              {{ .Token }}
+                            </p>
+                          </td>
+                        </tr>
+                      </table>
 
-                <p style="margin:0; font-size:13px; line-height:1.6; color:#8A8A8A;">
-                  If you didn't request this code, you can safely ignore this email — no account changes will be made.
-                </p>
+                      <p
+                        style="margin: 24px 0 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif; font-size: 13.5px; line-height: 1.6; color: #7a766c;"
+                      >
+                        This code will expire shortly and can only be used once. For your
+                        security, never share it with anyone — Solventia will never call, email,
+                        or message you to ask for it.
+                      </p>
+
+                      <div style="height: 1px; background-color: #ece6d6; margin: 36px 0 28px;"></div>
+
+                      <p
+                        style="margin: 0 0 14px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif; font-size: 14.5px; line-height: 1.65; color: #4a4740;"
+                      >
+                        Thank you for choosing Solventia. We&rsquo;re excited to help you build
+                        your entrepreneurial journey — from your first idea to your first real
+                        step forward.
+                      </p>
+                      <p
+                        style="margin: 0 0 14px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif; font-size: 13px; line-height: 1.65; color: #928d80;"
+                      >
+                        If you didn&rsquo;t request this code, you can safely ignore this email —
+                        no changes will be made to your account.
+                      </p>
+                      <p
+                        style="margin: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif; font-size: 13px; line-height: 1.65; color: #928d80;"
+                      >
+                        Need help? Reach out anytime at
+                        <a href="mailto:sol@solventia.in" style="color: #101b2a; font-weight: 600;"
+                          >sol@solventia.in</a
+                        >
+                        — we&rsquo;re happy to assist.
+                      </p>
+                    </td>
+                  </tr>
+                </table>
               </td>
             </tr>
 
             <!-- Footer -->
             <tr>
-              <td style="padding:24px 40px; border-top:1px solid #E5DFD0; text-align:center;">
-                <p style="margin:0; font-size:12px; color:#A8A8A8;">
+              <td align="center" style="padding: 28px 20px 0;">
+                <p
+                  style="margin: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif; font-size: 12px; color: #a39d8e;"
+                >
                   Solventia · Sent to {{ .Email }}
                 </p>
               </td>

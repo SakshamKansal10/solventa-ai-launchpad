@@ -63,7 +63,6 @@ export function AccountGate({ onAuthenticated }: AccountGateProps) {
           email: targetEmail,
           shouldCreateUser,
           fullName: shouldCreateUser && fullName ? fullName : undefined,
-          emailRedirectTo: `${window.location.origin}/auth/callback`,
         },
       });
       if (!result.ok) {
@@ -147,7 +146,7 @@ export function AccountGate({ onAuthenticated }: AccountGateProps) {
               id="gate-otp"
               inputMode="numeric"
               autoComplete="one-time-code"
-              maxLength={8}
+              maxLength={6}
               required
               value={code}
               onChange={(e) => setCode(e.target.value.replace(/\s/g, ""))}
