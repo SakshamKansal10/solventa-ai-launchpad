@@ -27,6 +27,13 @@ export function SkillPicker({
 }) {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
+  // A skill someone already had a level for when this picker first
+  // mounted (resumed session, or revisiting this step) counts as already
+  // confirmed — only a skill added THIS visit needs an explicit level
+  // click. Without this distinction, a freshly-added skill silently kept
+  // whatever default it was given, so the level question was never
+  // actually asked despite the UI implying it had been.
+  const [confirmedNames, setConfirmedNames] = useState(() => new Set(value.map((s) => s.name)));
 
   const selectedNames = new Set(value.map((s) => s.name));
 
@@ -38,10 +45,16 @@ export function SkillPicker({
 
   function removeSkill(name: string) {
     onChange(value.filter((s) => s.name !== name));
+    setConfirmedNames((prev) => {
+      const next = new Set(prev);
+      next.delete(name);
+      return next;
+    });
   }
 
   function setLevel(name: string, level: SkillLevel) {
     onChange(value.map((s) => (s.name === name ? { ...s, level } : s)));
+    setConfirmedNames((prev) => new Set(prev).add(name));
   }
 
   const showAddCustom =
@@ -107,41 +120,54 @@ export function SkillPicker({
 
       {value.length > 0 && (
         <ul className="flex flex-col gap-2.5">
-          {value.map((skill) => (
-            <li
-              key={skill.name}
-              className="flex flex-col gap-2.5 rounded-xl border border-border/70 bg-card p-3.5 sm:flex-row sm:items-center sm:justify-between"
-            >
-              <div className="flex items-center gap-2">
-                <span className="text-[0.9rem] font-semibold text-primary">{skill.name}</span>
-                <button
-                  type="button"
-                  onClick={() => removeSkill(skill.name)}
-                  aria-label={`Remove ${skill.name}`}
-                  className="flex size-5 items-center justify-center rounded-full text-muted-foreground hover:bg-secondary hover:text-primary"
-                >
-                  <X className="size-3.5" aria-hidden="true" />
-                </button>
-              </div>
-              <div className="flex flex-wrap gap-1.5">
-                {SKILL_LEVELS.map((lvl) => (
+          {value.map((skill) => {
+            const isConfirmed = confirmedNames.has(skill.name);
+            return (
+              <li
+                key={skill.name}
+                className={cn(
+                  "flex flex-col gap-2.5 rounded-xl border p-3.5 sm:flex-row sm:items-center sm:justify-between",
+                  isConfirmed ? "border-border/70 bg-card" : "border-accent/50 bg-accent/[0.04]",
+                )}
+              >
+                <div className="flex items-center gap-2">
+                  <span className="text-[0.9rem] font-semibold text-primary">{skill.name}</span>
                   <button
-                    key={lvl.value}
                     type="button"
-                    onClick={() => setLevel(skill.name, lvl.value)}
-                    className={cn(
-                      "rounded-full px-3 py-1.5 text-[0.72rem] font-semibold transition-colors",
-                      skill.level === lvl.value
-                        ? "bg-primary text-primary-foreground"
-                        : "bg-secondary text-muted-foreground hover:bg-secondary/70",
-                    )}
+                    onClick={() => removeSkill(skill.name)}
+                    aria-label={`Remove ${skill.name}`}
+                    className="flex size-5 items-center justify-center rounded-full text-muted-foreground hover:bg-secondary hover:text-primary"
                   >
-                    {lvl.label}
+                    <X className="size-3.5" aria-hidden="true" />
                   </button>
-                ))}
-              </div>
-            </li>
-          ))}
+                </div>
+                <div className="flex flex-col gap-1.5">
+                  {!isConfirmed && (
+                    <span className="text-[0.7rem] font-medium text-accent">
+                      How comfortable are you with this?
+                    </span>
+                  )}
+                  <div className="flex flex-wrap gap-1.5">
+                    {SKILL_LEVELS.map((lvl) => (
+                      <button
+                        key={lvl.value}
+                        type="button"
+                        onClick={() => setLevel(skill.name, lvl.value)}
+                        className={cn(
+                          "rounded-full px-3 py-1.5 text-[0.72rem] font-semibold transition-colors",
+                          isConfirmed && skill.level === lvl.value
+                            ? "bg-primary text-primary-foreground"
+                            : "bg-secondary text-muted-foreground hover:bg-secondary/70",
+                        )}
+                      >
+                        {lvl.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </li>
+            );
+          })}
         </ul>
       )}
     </div>

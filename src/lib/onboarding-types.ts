@@ -127,67 +127,212 @@ export const SKILL_LEVELS: { value: SkillLevel; label: string }[] = [
   { value: "advanced", label: "Advanced" },
 ];
 
+/** ~25 categories deliberately covering far more than a "startup skills"
+ * list — so a founder whose real strength is a trade, a craft, or a
+ * caregiving skill never feels like "my field isn't even here." Every
+ * skill from the original 5-category list is preserved, just relocated
+ * to its best-fit new home (no skill was dropped in this expansion). */
 export const SKILL_CATEGORIES: { label: string; skills: string[] }[] = [
-  {
-    label: "Creating",
-    skills: [
-      "Writing",
-      "Graphic Design",
-      "Video Editing",
-      "Photography",
-      "Illustration",
-      "Copywriting",
-      "Music Production",
-      "Singing",
-      "Fashion & Styling",
-    ],
-  },
   {
     label: "Technology",
     skills: [
       "Coding",
       "Web Development",
       "App Development",
-      "Data Analysis",
-      "Excel / Spreadsheets",
-      "SEO",
-      "Digital Marketing",
+      "IT Support / Troubleshooting",
+      "Cybersecurity Basics",
+      "Cloud Computing Basics",
     ],
   },
   {
-    label: "People",
+    label: "AI and Automation",
     skills: [
-      "Public Speaking",
-      "Teaching / Tutoring",
-      "Customer Service",
-      "Negotiation",
-      "Leadership",
-      "Translation",
-      "Sports Coaching",
-      "Event Planning",
+      "Using AI Tools (ChatGPT, Gemini, etc.)",
+      "Prompt Engineering",
+      "No-Code / Low-Code Tools",
+      "Workflow Automation",
+      "Basic Machine Learning",
+    ],
+  },
+  {
+    label: "Data and Analytics",
+    skills: [
+      "Data Analysis",
+      "Excel / Spreadsheets",
+      "Data Visualization",
+      "Research",
+      "Market Research",
+      "Statistics Basics",
+    ],
+  },
+  {
+    label: "Design",
+    skills: [
+      "Graphic Design",
+      "UI/UX Design",
+      "Illustration",
+      "Photography",
+      "Video Editing",
+      "3D Design / Animation",
+    ],
+  },
+  {
+    label: "Content and Media",
+    skills: [
+      "Writing",
+      "Copywriting",
+      "Content Creation",
+      "Video Production",
+      "Podcasting",
+      "Social Media Content",
     ],
   },
   {
     label: "Business",
     skills: [
-      "Sales",
-      "Social Media",
-      "Accounting",
-      "Bookkeeping",
+      "Business Planning",
       "Project Management",
-      "Research",
+      "Negotiation",
+      "Strategic Planning",
+      "Operations Management",
     ],
   },
   {
-    label: "Practical & Trades",
+    label: "Marketing",
     skills: [
-      "Cooking / Baking",
+      "Digital Marketing",
+      "SEO",
+      "Social Media Marketing",
+      "Email Marketing",
+      "Branding",
+      "Advertising",
+    ],
+  },
+  {
+    label: "Sales",
+    skills: ["Sales", "Cold Outreach", "Customer Relationship Management", "Pitching & Closing"],
+  },
+  {
+    label: "Finance",
+    skills: [
+      "Accounting",
+      "Bookkeeping",
+      "Personal Finance",
+      "Investing Basics",
+      "Budgeting",
+      "Financial Modeling",
+    ],
+  },
+  {
+    label: "Operations",
+    skills: [
+      "Inventory Management",
+      "Supply Chain Basics",
+      "Process Improvement",
+      "Logistics",
+      "Vendor Management",
+    ],
+  },
+  {
+    label: "Education",
+    skills: ["Teaching / Tutoring", "Curriculum Design", "Mentoring", "Course Creation"],
+  },
+  {
+    label: "Communication",
+    skills: [
+      "Public Speaking",
+      "Translation",
+      "Interpersonal Communication",
+      "Presentation Skills",
+    ],
+  },
+  {
+    label: "Leadership",
+    skills: ["Leadership", "Team Management", "Delegation", "Conflict Resolution"],
+  },
+  {
+    label: "Local Services",
+    skills: ["Driving", "Home Repair", "Cleaning Services", "Delivery / Courier", "Pet Care"],
+  },
+  {
+    label: "Creative Arts",
+    skills: [
+      "Music Production",
+      "Singing",
+      "Fashion & Styling",
       "Handicrafts",
-      "Agriculture",
+      "Tailoring",
+      "Painting / Fine Art",
+      "Acting / Performance",
+    ],
+  },
+  {
+    label: "Personal Services",
+    skills: ["Event Planning", "Life Coaching", "Styling & Grooming", "Personal Assistance"],
+  },
+  {
+    label: "Commerce",
+    skills: [
+      "E-commerce Management",
+      "Retail Sales",
+      "Merchandising",
+      "Dropshipping",
+      "Product Sourcing",
+    ],
+  },
+  {
+    label: "Engineering",
+    skills: [
       "Carpentry",
       "Electrical Work",
-      "Tailoring",
-      "Driving",
+      "Mechanical Repair",
+      "Plumbing",
+      "CAD / Technical Drawing",
+    ],
+  },
+  {
+    label: "Healthcare-adjacent",
+    skills: ["First Aid", "Elderly Care", "Childcare", "Nutrition Basics"],
+  },
+  {
+    label: "Agriculture / Food",
+    skills: ["Agriculture", "Cooking / Baking", "Food Safety", "Urban Farming", "Catering"],
+  },
+  {
+    label: "Hospitality",
+    skills: [
+      "Customer Service",
+      "Hospitality Management",
+      "Tour Guiding",
+      "Housekeeping",
+      "Event Hosting",
+    ],
+  },
+  {
+    label: "Legal / Admin Awareness",
+    skills: [
+      "Basic Contract Understanding",
+      "Compliance Awareness",
+      "Documentation & Filing",
+      "Data Entry",
+    ],
+  },
+  {
+    label: "Social Impact",
+    skills: [
+      "Community Organizing",
+      "Volunteer Coordination",
+      "Fundraising",
+      "Advocacy / Awareness Campaigns",
+    ],
+  },
+  {
+    label: "Sports / Fitness",
+    skills: [
+      "Sports Coaching",
+      "Personal Training",
+      "Fitness Instruction",
+      "Refereeing / Officiating",
     ],
   },
 ];
