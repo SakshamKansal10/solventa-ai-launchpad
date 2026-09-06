@@ -86,7 +86,7 @@ export function MentorPanel({
       >
         <SheetHeader className="border-b border-border/60 px-6 py-5">
           <SheetTitle className="flex items-center gap-2 text-primary">
-            <Sparkles className="size-4 text-[oklch(0.55_0.16_292.7)]" aria-hidden="true" />
+            <Sparkles className="size-4 text-violet" aria-hidden="true" />
             Ask Sol
           </SheetTitle>
         </SheetHeader>
@@ -123,7 +123,7 @@ export function MentorPanel({
                       type="button"
                       onClick={() => handleSend(prompt)}
                       disabled={sending}
-                      className="rounded-xl border border-border px-4 py-2.5 text-left text-[0.85rem] font-medium text-foreground transition-colors hover:border-[oklch(0.606_0.19_292.7_/_0.4)] hover:bg-[oklch(0.606_0.19_292.7_/_0.04)] disabled:opacity-50"
+                      className="rounded-xl border border-border px-4 py-2.5 text-left text-[0.85rem] font-medium text-foreground transition-colors hover:border-violet/40 hover:bg-violet/4 disabled:opacity-50"
                     >
                       {prompt}
                     </button>

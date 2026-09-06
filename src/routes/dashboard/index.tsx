@@ -4,9 +4,10 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { ArrowRight, Compass, Loader2, Sparkles } from "lucide-react";
 import { DashboardShell, useOpenMentor } from "@/components/dashboard/DashboardShell";
-import { FitScoreMatrix, fitQualitativeLabel } from "@/components/dashboard/FitScore";
+import { FitRing, FitScoreMatrix, fitQualitativeLabel } from "@/components/dashboard/FitScore";
 import { RoadmapStageTimeline } from "@/components/dashboard/RoadmapStageTimeline";
 import { BusinessDnaPanel } from "@/components/dashboard/BusinessDnaPanel";
+import { SolventiaLoadingState } from "@/components/dashboard/SolventiaLoadingState";
 import { PremiumButton } from "@/components/solventia/PremiumButton";
 import { Button } from "@/components/ui/button";
 import { requireAuthLoader } from "@/lib/route-guards";
@@ -191,7 +192,7 @@ function DashboardHome() {
               }}
             >
               <div className="relative p-7 sm:p-10">
-                <p className="eyebrow text-econ-green-active">Your Strongest Match</p>
+                <p className="eyebrow text-econ-green-active">Your Strongest Founder Match</p>
 
                 <div className="mt-6 flex flex-col gap-8 lg:flex-row lg:items-start lg:justify-between">
                   <div className="max-w-xl">
@@ -202,11 +203,9 @@ function DashboardHome() {
                       {primary.one_liner}
                     </p>
                   </div>
-                  <div className="flex shrink-0 flex-row items-end gap-3 lg:flex-col lg:items-end lg:gap-1">
-                    <span className="font-display text-[3.1rem] font-semibold leading-none text-workspace-foreground sm:text-[3.6rem]">
-                      {primary.fit_score}
-                    </span>
-                    <span className="pb-1.5 text-[0.7rem] font-semibold uppercase tracking-[0.14em] text-econ-green-active lg:pb-0">
+                  <div className="flex shrink-0 flex-col items-center gap-2">
+                    <FitRing score={primary.fit_score} size={104} variant="dark" />
+                    <span className="text-[0.7rem] font-semibold uppercase tracking-[0.14em] text-econ-green-active">
                       {fitQualitativeLabel(primary.fit_score)}
                     </span>
                   </div>
@@ -288,23 +287,29 @@ function DashboardHome() {
           {/* ===== BUILD MY ROADMAP — primary is selected but has no roadmap yet ===== */}
           {primary && !data.roadmap && (
             <section className="mt-6 rounded-[1.5rem] border border-econ-green/25 bg-econ-green-soft/50 p-6 text-center sm:p-7">
-              <p className="eyebrow text-econ-green-deep">Ready to Execute</p>
-              <h3 className="mt-2 font-display text-[1.2rem] font-semibold text-primary">
-                Turn {primary.title} into a week-by-week plan.
-              </h3>
-              <p className="mx-auto mt-1.5 max-w-md text-[0.88rem] leading-relaxed text-muted-foreground">
-                Sol builds a staged roadmap tailored to this idea and your real time and capital —
-                it unlocks one week at a time as you make progress.
-              </p>
-              <Button
-                className="mt-4 bg-econ-green-active text-white hover:bg-econ-green-deep"
-                onClick={() => handleBuildRoadmap(primary.id)}
-                disabled={buildingRoadmap}
-              >
-                {buildingRoadmap && <Loader2 className="size-4 animate-spin" aria-hidden="true" />}
-                Build My Roadmap
-                <ArrowRight className="size-4" aria-hidden="true" />
-              </Button>
+              {buildingRoadmap ? (
+                <SolventiaLoadingState
+                  message={`Sol is building your week-by-week roadmap for ${primary.title}…`}
+                />
+              ) : (
+                <>
+                  <p className="eyebrow text-econ-green-deep">Ready to Execute</p>
+                  <h3 className="mt-2 font-display text-[1.2rem] font-semibold text-primary">
+                    Turn {primary.title} into a week-by-week plan.
+                  </h3>
+                  <p className="mx-auto mt-1.5 max-w-md text-[0.88rem] leading-relaxed text-muted-foreground">
+                    Sol builds a staged roadmap tailored to this idea and your real time and capital
+                    — it unlocks one week at a time as you make progress.
+                  </p>
+                  <Button
+                    className="mt-4 bg-econ-green-active text-white hover:bg-econ-green-deep"
+                    onClick={() => handleBuildRoadmap(primary.id)}
+                  >
+                    Build My Roadmap
+                    <ArrowRight className="size-4" aria-hidden="true" />
+                  </Button>
+                </>
+              )}
             </section>
           )}
 
@@ -313,7 +318,14 @@ function DashboardHome() {
             <div className="mt-6 grid gap-6 lg:grid-cols-2 lg:items-start">
               {data.roadmap?.nextTask && (
                 <section className="rounded-[1.5rem] border border-econ-green/25 bg-econ-green-soft/50 p-6 sm:p-7">
-                  <p className="eyebrow text-econ-green-deep">Your Next Move</p>
+                  <div className="flex items-center justify-between gap-2">
+                    <p className="eyebrow text-econ-green-deep">Your Next Move</p>
+                    {data.roadmap.currentWeek && (
+                      <p className="text-[0.72rem] font-medium text-muted-foreground">
+                        This week: {data.roadmap.currentWeek.title}
+                      </p>
+                    )}
+                  </div>
                   <h3 className="mt-2 font-display text-[1.2rem] font-semibold text-primary">
                     {data.roadmap.nextTask.what}
                   </h3>
@@ -368,10 +380,10 @@ function DashboardHome() {
             </div>
           )}
 
-          {/* ===== OTHER STRONG MATCHES ===== */}
+          {/* ===== ALTERNATIVE FOUNDER PATHS ===== */}
           {alternatives.length > 0 && (
             <section className="mt-9">
-              <p className="eyebrow text-muted-foreground">Other Strong Matches</p>
+              <p className="eyebrow text-muted-foreground">Alternative Founder Paths</p>
               <div className="mt-3 flex flex-col divide-y divide-border/60 rounded-2xl border border-border/70 bg-card/60">
                 {alternatives.map((opp, i) => (
                   <div
@@ -411,7 +423,7 @@ function DashboardHome() {
                         {switching === opp.id && (
                           <Loader2 className="size-3.5 animate-spin" aria-hidden="true" />
                         )}
-                        Make Primary
+                        Select This Direction
                       </Button>
                     </div>
                   </div>
@@ -458,8 +470,8 @@ function DashboardHome() {
 function AskSolCta({ opportunityTitle }: { opportunityTitle: string | null }) {
   const openMentor = useOpenMentor();
   return (
-    <section className="mt-6 flex flex-col items-center gap-2.5 rounded-[1.5rem] border border-[oklch(0.606_0.19_292.7_/_0.18)] bg-[oklch(0.606_0.19_292.7_/_0.04)] px-6 py-8 text-center">
-      <Sparkles className="size-5 text-[oklch(0.55_0.16_292.7)]" aria-hidden="true" />
+    <section className="mt-6 flex flex-col items-center gap-2.5 rounded-[1.5rem] border border-violet/18 bg-violet/4 px-6 py-8 text-center">
+      <Sparkles className="size-5 text-violet" aria-hidden="true" />
       <p className="font-display text-[1.05rem] font-semibold text-primary">
         Need help with your next step?
       </p>

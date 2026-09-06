@@ -33,7 +33,7 @@ function AIOrb() {
         animate={{ scale: [1, 1.15, 1] }}
         transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
       />
-      <span className="relative flex size-14 items-center justify-center rounded-full bg-gradient-to-br from-accent to-[oklch(0.606_0.219_292.7)] shadow-[0_0_40px_-4px_oklch(0.745_0.132_72_/_0.7)]">
+      <span className="relative flex size-14 items-center justify-center rounded-full bg-gradient-to-br from-accent to-violet shadow-[0_0_40px_-4px_oklch(0.745_0.132_72_/_0.7)]">
         <Sparkles className="size-6 text-primary" aria-hidden="true" />
       </span>
     </div>

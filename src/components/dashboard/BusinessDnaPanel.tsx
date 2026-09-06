@@ -95,8 +95,8 @@ export function BusinessDnaPanel({ analysis, signals }: BusinessDnaPanelProps) {
       </div>
 
       {solNote && (
-        <div className="mt-5 rounded-xl border border-[oklch(0.606_0.19_292.7_/_0.18)] bg-[oklch(0.606_0.19_292.7_/_0.05)] p-4">
-          <p className="text-[0.68rem] font-semibold uppercase tracking-wide text-[oklch(0.55_0.16_292.7)]">
+        <div className="mt-5 rounded-xl border border-violet/18 bg-violet/5 p-4">
+          <p className="text-[0.68rem] font-semibold uppercase tracking-wide text-violet">
             Sol Noticed
           </p>
           <p className="mt-1.5 text-[0.88rem] leading-relaxed text-foreground">{solNote}</p>

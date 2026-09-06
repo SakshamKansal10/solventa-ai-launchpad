@@ -36,6 +36,11 @@
   --color-workspace-foreground: var(--workspace-foreground);
   --color-workspace-muted: var(--workspace-muted);
   --color-workspace-border: var(--workspace-border);
+  --color-violet: var(--violet);
+  --color-violet-soft: var(--violet-soft);
+  --color-dashboard-heading: var(--dashboard-heading);
+  --color-dashboard-body: var(--dashboard-body);
+  --color-dashboard-muted: var(--dashboard-muted);
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
@@ -112,6 +117,22 @@
      atmosphere rather than muddying the navy. */
   --workspace-green-glow: oklch(0.5 0.1 155.5 / 10%);
   --workspace-violet-glow: oklch(0.55 0.16 292.7 / 8%);
+
+  /* Sol/mentor brand violet — was 3 slightly different hand-rolled oklch
+     literals scattered across dashboard components; consolidated into one
+     real token so every "Ask Sol" touchpoint reads as the same color. */
+  --violet: oklch(0.55 0.16 292.7);
+  --violet-soft: oklch(0.606 0.19 292.7 / 0.12);
+
+  /* Dashboard-only typography (see the dashboard re-skin's gold-as-accent
+     rule) — deliberately separate from --foreground/--muted-foreground,
+     which the marketing site and onboarding flow also use, so this pass
+     never touches their look. Heading = rich navy-black, body = dark
+     charcoal, secondary = a genuinely WARM gray (foreground/muted-
+     foreground are both cool blue-gray, hue ~264-268). */
+  --dashboard-heading: oklch(0.22 0.03 264);
+  --dashboard-body: oklch(0.32 0.012 60);
+  --dashboard-muted: oklch(0.56 0.014 70);
   --background: oklch(0.9908 0.0013 106.4);
   --foreground: oklch(0.245 0.055 268);
   --card: oklch(0.9967 0.0013 106.4);

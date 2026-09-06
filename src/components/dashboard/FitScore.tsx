@@ -23,12 +23,27 @@ export function fitQualitativeLabel(score: number): string {
 }
 
 /** The dashboard hero's fit visual — a radial gauge, not a bordered
- * circle, since this is the single most important number on the page. */
-export function FitRing({ score, size = 128 }: { score: number; size?: number }) {
+ * circle, since this is the single most important number on the page.
+ * The gauge stroke/glow is gold (a deliberate accent on "the single most
+ * important number" — exactly what the dashboard's gold-as-accent rule
+ * allows), but the number itself stays navy/near-white text, never gold,
+ * matching the same rule. */
+export function FitRing({
+  score,
+  size = 128,
+  variant = "light",
+}: {
+  score: number;
+  size?: number;
+  variant?: "light" | "dark";
+}) {
   const stroke = size * 0.075;
   const radius = (size - stroke) / 2;
   const circumference = 2 * Math.PI * radius;
   const offset = circumference * (1 - score / 100);
+  const trackColor = variant === "dark" ? "var(--workspace-border)" : "var(--secondary)";
+  const numberClass = variant === "dark" ? "text-workspace-foreground" : "text-dashboard-heading";
+  const labelClass = variant === "dark" ? "text-workspace-muted" : "text-dashboard-muted";
 
   return (
     <div className="relative shrink-0" style={{ width: size, height: size }}>
@@ -38,7 +53,7 @@ export function FitRing({ score, size = 128 }: { score: number; size?: number })
           cy={size / 2}
           r={radius}
           fill="none"
-          stroke="var(--secondary)"
+          stroke={trackColor}
           strokeWidth={stroke}
         />
         <circle
@@ -46,7 +61,7 @@ export function FitRing({ score, size = 128 }: { score: number; size?: number })
           cy={size / 2}
           r={radius}
           fill="none"
-          stroke="var(--accent)"
+          stroke="var(--gold)"
           strokeWidth={stroke}
           strokeLinecap="round"
           strokeDasharray={circumference}
@@ -55,10 +70,15 @@ export function FitRing({ score, size = 128 }: { score: number; size?: number })
         />
       </svg>
       <div className="absolute inset-0 flex flex-col items-center justify-center">
-        <span className="font-display text-[1.9rem] font-semibold leading-none text-primary">
+        <span className={cn("font-display text-[1.9rem] font-semibold leading-none", numberClass)}>
           {score}
         </span>
-        <span className="mt-1.5 text-[0.62rem] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+        <span
+          className={cn(
+            "mt-1.5 text-[0.62rem] font-semibold uppercase tracking-[0.14em]",
+            labelClass,
+          )}
+        >
           Solventia Fit
         </span>
       </div>

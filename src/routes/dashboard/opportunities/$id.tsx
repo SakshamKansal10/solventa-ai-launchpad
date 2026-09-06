@@ -4,7 +4,8 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { ArrowRight, Loader2, RefreshCw } from "lucide-react";
 import { DashboardShell } from "@/components/dashboard/DashboardShell";
-import { FitScoreMatrix, fitQualitativeLabel } from "@/components/dashboard/FitScore";
+import { SolventiaLoadingState } from "@/components/dashboard/SolventiaLoadingState";
+import { FitRing, FitScoreMatrix, fitQualitativeLabel } from "@/components/dashboard/FitScore";
 import { PremiumButton } from "@/components/solventia/PremiumButton";
 import { Button } from "@/components/ui/button";
 import { requireAuthLoader } from "@/lib/route-guards";
@@ -30,7 +31,7 @@ const EVIDENCE_TONE: Record<MarketEvidenceItem["label"], { label: string; dot: s
   strong_signal: { label: "Strong", dot: "bg-econ-green-active" },
   early_signal: { label: "Early signal", dot: "bg-econ-green" },
   emerging: { label: "Emerging", dot: "bg-gold" },
-  competitive: { label: "Competitive", dot: "bg-[oklch(0.606_0.19_292.7)]" },
+  competitive: { label: "Competitive", dot: "bg-violet" },
   needs_validation: { label: "Needs validation", dot: "bg-muted-foreground" },
   limited_evidence: { label: "Limited evidence", dot: "bg-muted-foreground/50" },
 };
@@ -417,11 +418,9 @@ function OpportunityDetailPage() {
       {/* ===== FIT SCORE ===== */}
       <section className="border-t border-border/60 pt-8 mt-8">
         <div className="flex flex-col gap-6 rounded-2xl border border-border/70 bg-card/70 p-6 sm:flex-row sm:items-start sm:gap-10">
-          <div className="flex shrink-0 flex-col items-center sm:items-start">
-            <span className="font-display text-[2.75rem] font-semibold leading-none text-primary">
-              {opportunity.fit_score}
-            </span>
-            <span className="mt-1.5 text-[0.68rem] font-semibold uppercase tracking-[0.14em] text-econ-green-active">
+          <div className="flex shrink-0 flex-col items-center gap-2 sm:items-start">
+            <FitRing score={opportunity.fit_score} size={112} />
+            <span className="text-[0.68rem] font-semibold uppercase tracking-[0.14em] text-econ-green-active">
               {fitQualitativeLabel(opportunity.fit_score)}
             </span>
           </div>
@@ -531,25 +530,25 @@ function OpportunityDetailPage() {
       </section>
 
       <div className="mt-8 flex flex-col items-center gap-3 text-center">
-        <p className="text-[0.85rem] text-muted-foreground">
-          {isSelected
-            ? "This is your primary direction — build a roadmap to start executing."
-            : "Ready to commit to this opportunity?"}
-        </p>
-        {isSelected ? (
-          <PremiumButton
-            tone="solid"
-            shape="rounded"
-            size="lg"
-            onClick={buildRoadmap}
-            disabled={busy === "build-roadmap"}
-          >
-            {busy === "build-roadmap" && (
-              <Loader2 className="size-4 animate-spin" aria-hidden="true" />
-            )}
-            Build My Roadmap
-          </PremiumButton>
+        {isSelected && busy === "build-roadmap" ? (
+          <SolventiaLoadingState
+            message={`Sol is building your week-by-week roadmap for ${candidate.title}…`}
+          />
         ) : (
+          <>
+            <p className="text-[0.85rem] text-muted-foreground">
+              {isSelected
+                ? "This is your primary direction — build a roadmap to start executing."
+                : "Ready to commit to this opportunity?"}
+            </p>
+            {isSelected && (
+              <PremiumButton tone="solid" shape="rounded" size="lg" onClick={buildRoadmap}>
+                Build My Roadmap
+              </PremiumButton>
+            )}
+          </>
+        )}
+        {!isSelected && (
           <PremiumButton
             tone="solid"
             shape="rounded"

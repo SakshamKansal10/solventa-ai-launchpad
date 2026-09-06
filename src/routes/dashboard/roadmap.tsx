@@ -420,9 +420,9 @@ function AskSolStageButton() {
     <button
       type="button"
       onClick={openMentor}
-      className="flex items-center justify-center gap-2 rounded-xl border border-[oklch(0.606_0.19_292.7_/_0.25)] bg-[oklch(0.606_0.19_292.7_/_0.05)] px-4 py-3 text-[0.82rem] font-medium text-primary transition-colors hover:bg-[oklch(0.606_0.19_292.7_/_0.09)]"
+      className="flex items-center justify-center gap-2 rounded-xl border border-violet/25 bg-violet/5 px-4 py-3 text-[0.82rem] font-medium text-primary transition-colors hover:bg-violet/9"
     >
-      <Sparkles className="size-4 text-[oklch(0.55_0.16_292.7)]" aria-hidden="true" />
+      <Sparkles className="size-4 text-violet" aria-hidden="true" />
       Ask Sol about this stage
     </button>
   );
