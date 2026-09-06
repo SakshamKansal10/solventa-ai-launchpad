@@ -5,6 +5,7 @@ import { z } from "zod";
 import { normalizeProfile, type NormalizedProfile } from "@/lib/profile/normalize";
 import { computeFitScore, type FitScoreBreakdown } from "@/lib/profile/scoring";
 import { generateIntelligencePackage } from "@/lib/ai/prompts/intelligence-package";
+import { generateRoadmapPlan } from "@/lib/ai/prompts/roadmap-generation";
 import { researchMarketEvidence } from "@/lib/ai/prompts/market-research";
 import { generateMentorReply } from "@/lib/ai/prompts/mentor";
 import { getWhyReasons } from "@/lib/opportunity-display";
@@ -31,9 +32,9 @@ export const PUBLIC_REVIEW_PROFILE_ANSWERS: Record<string, unknown> = {
   degree: "B.A.",
   major: "Economics",
   skills: [
-    { name: "Public Speaking", level: "intermediate" },
+    { name: "Public Speaking", level: "comfortable" },
     { name: "Graphic Design", level: "beginner" },
-    { name: "Research", level: "intermediate" },
+    { name: "Research", level: "comfortable" },
   ],
   investmentBudget: "₹10,000 – ₹50,000",
   timeAvailableWeekly: "10–20 hrs",
@@ -274,11 +275,10 @@ export const runPublicMarketResearch = createServerFn({ method: "POST" })
   });
 
 // ============================================================
-// Roadmap — the one-call architecture means this needs ZERO further Gemini
-// calls: the candidate handed back from runPublicAnalysis already carries
-// its complete roadmap. This "action" exists only so the diagnostics
-// panel can show a real, timed (near-instant) step confirming that, the
-// same way the real dashboard's opportunity-switching costs zero calls.
+// Roadmap — a genuine second Gemini call, matching production: ideas are
+// generated without a roadmap, and a roadmap is only ever built on-demand
+// for one selected opportunity (see roadmap-generation.ts). This
+// diagnostic step exercises that exact call, not a pre-built value.
 // ============================================================
 
 export interface PublicRoadmapResult {
@@ -292,15 +292,27 @@ export interface PublicRoadmapResult {
 export const runPublicRoadmap = createServerFn({ method: "POST" })
   .validator(z.object({ candidate: z.custom<OpportunityPackage>() }))
   .handler(async ({ data }): Promise<PublicRoadmapResult> => {
+    await checkRateLimit();
     const telemetry: PipelineStep[] = [];
-    await timedStep(telemetry, "Read pre-built roadmap (0 Gemini calls)", async () => true);
-    return {
-      telemetry,
-      detail: data.candidate,
-      plan: data.candidate.roadmap,
-      failed: false,
-      failureStep: null,
-    };
+    try {
+      const profile = normalizeProfile(
+        PUBLIC_REVIEW_PROFILE_ANSWERS as Parameters<typeof normalizeProfile>[0],
+      );
+      const plan = await timedStep(telemetry, "Gemini — roadmap generation (1 call)", async () =>
+        generateRoadmapPlan(profile, data.candidate),
+      );
+      return { telemetry, detail: data.candidate, plan, failed: false, failureStep: null };
+    } catch (err) {
+      const failedStep = telemetry.find((t) => t.status === "error");
+      console.error("[review-public] roadmap generation failed:", err);
+      return {
+        telemetry,
+        detail: null,
+        plan: null,
+        failed: true,
+        failureStep: failedStep?.step ?? "unknown",
+      };
+    }
   });
 
 // ============================================================
@@ -362,7 +374,7 @@ const PROFILE_B: Record<string, unknown> = {
   investmentBudget: "More than ₹2,00,000",
   preciseCapital: "10 lakh",
   skills: [
-    { name: "Sales", level: "professional" },
+    { name: "Sales", level: "advanced" },
     { name: "Project Management", level: "advanced" },
   ],
   riskAppetite: "Comfortable experimenting",
@@ -382,11 +394,11 @@ export interface PublicTwoProfileResult {
   reason: string;
 }
 
-/** Each profile's top opportunity already carries its complete roadmap
- * (the one-call architecture) — no further Gemini call needed to show its
- * first action, just a read of already-generated data. */
+/** Ideas are generated without a roadmap now — a candidate only carries
+ * one if this diagnostic run also called runPublicRoadmap for it. Null
+ * here just means that step wasn't run, not a failure. */
 function getFirstRoadmapAction(candidate: OpportunityPackage | undefined): string | null {
-  return candidate?.roadmap.phases[0]?.tasks[0]?.what ?? null;
+  return candidate?.roadmap?.phases[0]?.weeks[0]?.tasks[0]?.what ?? null;
 }
 
 export const runPublicTwoProfileTest = createServerFn({ method: "POST" }).handler(

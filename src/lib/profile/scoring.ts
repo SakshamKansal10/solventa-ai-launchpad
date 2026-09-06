@@ -69,7 +69,9 @@ function scoreSkills(profile: NormalizedProfile, factors: OpportunityFitFactors)
     if (!owned) return 0;
     const diff = owned.levelScore - SKILL_LEVEL_SCORE[req.minLevel];
     if (diff >= 0) return 1;
-    return clamp(1 + diff / 4, 0, 1);
+    // Max possible shortfall is 3 levels (never_tried vs. advanced) now
+    // that SkillLevel has 4 values, not 5 — see SKILL_LEVEL_SCORE.
+    return clamp(1 + diff / 3, 0, 1);
   });
 
   const avg = ratios.reduce((a, b) => a + b, 0) / ratios.length;

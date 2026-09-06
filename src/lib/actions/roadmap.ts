@@ -8,7 +8,39 @@ import {
   replanRoadmap as replanRoadmapPlan,
   type ReplanBlockerReason,
 } from "@/lib/ai/prompts/roadmap-adjustment";
-import { persistRoadmapPlan } from "@/lib/actions/roadmap-persistence.server";
+import { persistRoadmapPlan, unlockNextWeek } from "@/lib/actions/roadmap-persistence.server";
+
+export interface RoadmapTaskRow {
+  id: string;
+  phase_id: string;
+  week_id: string | null;
+  order_index: number;
+  what: string;
+  why: string;
+  how: string;
+  resource: string | null;
+  time_estimate: string | null;
+  deadline: string | null;
+  deadline_days_from_start: number;
+  required: boolean;
+  depends_on: string | null;
+  done_when: string;
+  status: "pending" | "in_progress" | "done" | "blocked";
+  blocked_reason: string | null;
+}
+
+export interface RoadmapWeekWithTasks {
+  id: string;
+  phase_id: string;
+  order_index: number;
+  week_number: number;
+  title: string;
+  objective: string;
+  status: "locked" | "active" | "completed";
+  unlocked_at: string | null;
+  completed_at: string | null;
+  roadmap_tasks: RoadmapTaskRow[];
+}
 
 export interface RoadmapPhaseWithTasks {
   id: string;
@@ -17,23 +49,12 @@ export interface RoadmapPhaseWithTasks {
   key: string;
   title: string;
   description: string | null;
-  roadmap_tasks: {
-    id: string;
-    phase_id: string;
-    order_index: number;
-    what: string;
-    why: string;
-    how: string;
-    resource: string | null;
-    time_estimate: string | null;
-    deadline: string | null;
-    deadline_days_from_start: number;
-    required: boolean;
-    depends_on: string | null;
-    done_when: string;
-    status: "pending" | "in_progress" | "done" | "blocked";
-    blocked_reason: string | null;
-  }[];
+  // Populated for every roadmap generated after the week-unlock migration.
+  // Empty for older roadmaps generated before it — the UI falls back to
+  // rendering `roadmap_tasks` directly under the phase in that case,
+  // exactly as it always has.
+  roadmap_weeks: RoadmapWeekWithTasks[];
+  roadmap_tasks: RoadmapTaskRow[];
 }
 
 export const getRoadmap = createServerFn({ method: "GET" })
@@ -69,7 +90,7 @@ export const getRoadmap = createServerFn({ method: "GET" })
 
     const { data: phases, error: phasesError } = await supabase
       .from("roadmap_phases")
-      .select("*, roadmap_tasks(*)")
+      .select("*, roadmap_weeks(*, roadmap_tasks(*)), roadmap_tasks(*)")
       .eq("roadmap_id", roadmap.id)
       .order("order_index");
     if (phasesError) throw new Error(phasesError.message);
@@ -108,12 +129,29 @@ export const updateTaskStatus = createServerFn({ method: "POST" })
   )
   .handler(async ({ data }) => {
     const { supabase, user } = await requireUser();
-    const { error } = await supabase
+    const { data: taskRow, error } = await supabase
       .from("roadmap_tasks")
       .update({ status: data.status, blocked_reason: data.blockedReason ?? null })
       .eq("id", data.taskId)
-      .eq("user_id", user.id);
+      .eq("user_id", user.id)
+      .select("week_id")
+      .single();
     if (error) throw new Error(error.message);
+
+    // Marking the last remaining task in a week done unlocks the next one.
+    // Never locks anything back — un-marking a task is a correction, not a
+    // reason to re-lock progress the founder already made.
+    if (data.status === "done" && taskRow?.week_id) {
+      const { data: siblings, error: siblingsError } = await supabase
+        .from("roadmap_tasks")
+        .select("status")
+        .eq("week_id", taskRow.week_id);
+      if (siblingsError) throw new Error(siblingsError.message);
+      if ((siblings ?? []).every((t) => t.status === "done")) {
+        await unlockNextWeek(supabase, user.id, taskRow.week_id);
+      }
+    }
+
     return { ok: true };
   });
 
@@ -197,6 +235,29 @@ export const replanRoadmap = createServerFn({ method: "POST" })
         .from("roadmap_phases")
         .delete()
         .in("id", emptyPhases as string[]);
+    }
+
+    // A phase can survive (it still has done tasks in some other week)
+    // while one specific week inside it was fully cleared above — that
+    // week would otherwise be left behind as an empty, orphaned row.
+    const survivingPhaseIds = phases
+      .map((p) => (p as unknown as { id?: string }).id)
+      .filter((id): id is string => Boolean(id) && !emptyPhases.includes(id));
+    if (survivingPhaseIds.length > 0) {
+      const { data: remainingWeeksData } = await supabase
+        .from("roadmap_weeks")
+        .select("id, roadmap_tasks(id)")
+        .in("phase_id", survivingPhaseIds);
+      const remainingWeeks = (remainingWeeksData ?? []) as unknown as {
+        id: string;
+        roadmap_tasks: { id: string }[];
+      }[];
+      const orphanedWeekIds = remainingWeeks
+        .filter((w) => (w.roadmap_tasks ?? []).length === 0)
+        .map((w) => w.id);
+      if (orphanedWeekIds.length > 0) {
+        await supabase.from("roadmap_weeks").delete().in("id", orphanedWeekIds);
+      }
     }
 
     const maxOrder = Math.max(0, ...phases.map((p) => p.order_index));

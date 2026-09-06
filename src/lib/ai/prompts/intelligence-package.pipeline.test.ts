@@ -114,8 +114,11 @@ describe("Stage 7 generation call path (mocked Gemini, no live network call)", (
     expect(requestArg.model.length).toBeGreaterThan(0);
     // The JSON contract has to actually be IN the prompt, since nothing
     // else enforces the response shape without a provider-side schema.
-    expect(requestArg.contents).toContain("roadmapPhases");
-    expect(requestArg.contents).toContain("EXACT COUNTS MATTER");
+    // This is the ideas-only contract now — no roadmap fields at all.
+    expect(requestArg.contents).toContain("founderDNA");
+    expect(requestArg.contents).toContain("opportunityIndex");
+    expect(requestArg.contents).not.toContain("roadmapPhases");
+    expect(requestArg.contents).not.toContain("roadmapTasks");
   });
 
   it("inspects the full locally-constructed request shape — no personal data logged, only types/lengths/keys", async () => {
@@ -186,7 +189,7 @@ describe("Stage 7 generation call path (mocked Gemini, no live network call)", (
     expect(generateContentMock).toHaveBeenCalledTimes(2);
   });
 
-  it("normalizes (caps) a valid but oversized roadmap instead of rejecting it — a good response is never discarded for count variance", async () => {
+  it("reconstructs a valid flat response into 3 ordered opportunities, none carrying a roadmap", async () => {
     const founderDNA = {
       narrativeSummary: "x",
       strengths: ["a", "b"],
@@ -220,6 +223,7 @@ describe("Stage 7 generation call path (mocked Gemini, no live network call)", (
       validationNeeded: [],
       revenuePath: "x",
       firstExperiment: "x",
+      whyNow: "x",
       fitSignals: {
         requiredSkills: [],
         startupCapitalINR: 1000,
@@ -234,50 +238,13 @@ describe("Stage 7 generation call path (mocked Gemini, no live network call)", (
         locationFlexible: true,
       },
     });
-    const phase = (oi: number, pi: number) => ({
-      opportunityIndex: oi,
-      phaseIndex: pi,
-      key: "understand",
-      title: `Phase ${pi}`,
-      description: "x",
-    });
-    const task = (oi: number, pi: number, ti: number) => ({
-      opportunityIndex: oi,
-      phaseIndex: pi,
-      taskIndex: ti,
-      what: "x",
-      why: "x",
-      how: "x",
-      resource: null,
-      timeEstimate: "1 hour",
-      deadlineDaysFromStart: 1,
-      doneWhen: "x",
-      required: true,
-      dependsOn: null,
-    });
 
-    // Opportunity 0: 7 phases (above the acceptable-5 cap, within the
-    // hard-8 ceiling). Every phase: 5 tasks (above the acceptable-4 cap,
-    // within the hard-6 ceiling). Opportunities 1/2: a normal 3x2.
-    const roadmapPhases: unknown[] = [];
-    const roadmapTasks: unknown[] = [];
-    for (let pi = 0; pi < 7; pi++) {
-      roadmapPhases.push(phase(0, pi));
-      for (let ti = 0; ti < 5; ti++) roadmapTasks.push(task(0, pi, ti));
-    }
-    for (const oi of [1, 2]) {
-      for (let pi = 0; pi < 3; pi++) {
-        roadmapPhases.push(phase(oi, pi));
-        for (let ti = 0; ti < 2; ti++) roadmapTasks.push(task(oi, pi, ti));
-      }
-    }
-
+    // Deliberately out of order (2, 0, 1) — reconstructPackage must sort
+    // back to 0, 1, 2 regardless of the order Gemini returned them in.
     generateContentMock.mockImplementation(() => ({
       text: JSON.stringify({
         founderDNA,
-        opportunities: [0, 1, 2].map(opportunity),
-        roadmapPhases,
-        roadmapTasks,
+        opportunities: [2, 0, 1].map(opportunity),
       }),
     }));
 
@@ -286,11 +253,9 @@ describe("Stage 7 generation call path (mocked Gemini, no live network call)", (
 
     expect(generateContentMock).toHaveBeenCalledTimes(1);
     expect(pkg.opportunities).toHaveLength(3);
-    // Capped to the acceptable maximum, not rejected and not left oversized.
-    expect(pkg.opportunities[0].roadmap.phases).toHaveLength(5);
-    for (const p of pkg.opportunities[0].roadmap.phases) {
-      expect(p.tasks.length).toBeLessThanOrEqual(4);
+    expect(pkg.opportunities.map((o) => o.title)).toEqual(["Opp 0", "Opp 1", "Opp 2"]);
+    for (const opp of pkg.opportunities) {
+      expect(opp.roadmap).toBeUndefined();
     }
-    expect(pkg.opportunities[1].roadmap.phases).toHaveLength(3);
   });
 });

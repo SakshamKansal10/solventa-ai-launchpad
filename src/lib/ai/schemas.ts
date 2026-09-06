@@ -1,12 +1,6 @@
 import { z } from "zod";
 
-const skillLevelEnum = z.enum([
-  "never_tried",
-  "beginner",
-  "intermediate",
-  "advanced",
-  "professional",
-]);
+const skillLevelEnum = z.enum(["never_tried", "beginner", "comfortable", "advanced"]);
 const riskLevelEnum = z.enum(["cautious", "balanced", "experimental"]);
 
 export const FitFactorsSchema = z.object({
@@ -144,20 +138,27 @@ export const RoadmapTaskSchema = z.object({
 });
 export type RoadmapTaskPlan = z.infer<typeof RoadmapTaskSchema>;
 
+export const RoadmapWeekSchema = z.object({
+  weekNumber: z.number().int().min(1).describe("1-based order within this phase."),
+  title: z.string(),
+  objective: z
+    .string()
+    .describe("One sentence: what this week is actually for, shown before it unlocks."),
+  tasks: z.array(RoadmapTaskSchema).min(2).max(4),
+});
+export type RoadmapWeekPlan = z.infer<typeof RoadmapWeekSchema>;
+
 export const RoadmapPhaseSchema = z.object({
   key: z
     .enum(["understand", "explore", "validate", "build", "launch", "improve"])
     .describe("Only include phases that genuinely apply to this opportunity."),
   title: z.string(),
   description: z.string(),
-  // Capped at 2-3 (not the originally-allowed 8): three full roadmaps
-  // nested inside one intelligence-package response empirically hit
-  // Gemini's structured-output complexity ceiling twice — first at 1-8
-  // tasks/phase (fixed by capping to 2-4), then again at the FULL nested
-  // package with 2-4 (a live 400 INVALID_ARGUMENT each time, on the real
-  // combined schema, not just this array in isolation). Cut further here
-  // rather than guessed at — this is the second empirical reduction.
-  tasks: z.array(RoadmapTaskSchema).min(2).max(3),
+  // Roadmap generation now happens per-opportunity (never 3 at once — see
+  // roadmap-generation.ts), which is why this schema can afford a week
+  // tier without approaching the complexity ceiling that forced the flat
+  // wire format in the old combined one-call response.
+  weeks: z.array(RoadmapWeekSchema).min(1).max(3),
 });
 export type RoadmapPhasePlan = z.infer<typeof RoadmapPhaseSchema>;
 
@@ -289,8 +290,19 @@ export const OpportunityPackageSchema = z.object({
     .describe(
       "One concrete, low-cost, doable-this-week action to test the idea — specific, never 'validate the market'.",
     ),
+  whyNow: z
+    .string()
+    .describe(
+      "One honest sentence on why this is a good time for THIS founder to pursue this — a real timing signal, never generic hype.",
+    ),
   fitSignals: FitFactorsSchema,
-  roadmap: RoadmapPlanSchema,
+  // Optional: an opportunity is generated without a roadmap (see
+  // idea-generation.ts) and only gets one attached, out-of-band, once the
+  // founder explicitly selects it and clicks "Build My Roadmap" (see
+  // roadmap-generation.ts). Kept optional (not removed) so any
+  // pre-existing `opportunities.candidate` row that still has a roadmap
+  // embedded from before this split keeps deserializing unchanged.
+  roadmap: RoadmapPlanSchema.optional(),
 });
 export type OpportunityPackage = z.infer<typeof OpportunityPackageSchema>;
 

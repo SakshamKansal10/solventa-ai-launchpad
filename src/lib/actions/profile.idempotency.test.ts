@@ -141,8 +141,8 @@ vi.mock("@/lib/supabase/server", () => ({ requireUser: vi.fn() }));
 vi.mock("@/lib/ai/prompts/intelligence-package", () => ({
   generateIntelligencePackage: vi.fn(),
 }));
-vi.mock("@/lib/actions/roadmap-persistence.server", () => ({ createRoadmap: vi.fn() }));
 vi.mock("@/lib/actions/email.server", () => ({
+  sendIdeasReadyEmail: vi.fn(),
   sendRoadmapReadyEmail: vi.fn(),
   sendWelcomeEmail: vi.fn(),
 }));
@@ -204,8 +204,8 @@ function fakePackage() {
     validationNeeded: [],
     revenuePath: "x",
     firstExperiment: "x",
+    whyNow: "x",
     fitSignals,
-    roadmap: { phases: [] },
   });
   return { founderDNA, opportunities: [0, 1, 2].map(opportunity) };
 }

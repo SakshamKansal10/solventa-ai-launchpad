@@ -145,6 +145,7 @@ export interface Database {
           opportunity_id: string;
           status: "available" | "active" | "archived";
           ai_model: string | null;
+          activated_at: string | null;
           created_at: string;
           updated_at: string;
         };
@@ -175,10 +176,36 @@ export interface Database {
         Update: Partial<Database["public"]["Tables"]["roadmap_phases"]["Row"]>;
         Relationships: [];
       };
+      roadmap_weeks: {
+        Row: {
+          id: string;
+          phase_id: string;
+          user_id: string;
+          order_index: number;
+          week_number: number;
+          title: string;
+          objective: string;
+          status: "locked" | "active" | "completed";
+          unlocked_at: string | null;
+          completed_at: string | null;
+          created_at: string;
+        };
+        Insert: Partial<Database["public"]["Tables"]["roadmap_weeks"]["Row"]> & {
+          phase_id: string;
+          user_id: string;
+          order_index: number;
+          week_number: number;
+          title: string;
+          objective: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["roadmap_weeks"]["Row"]>;
+        Relationships: [];
+      };
       roadmap_tasks: {
         Row: {
           id: string;
           phase_id: string;
+          week_id: string | null;
           user_id: string;
           order_index: number;
           what: string;

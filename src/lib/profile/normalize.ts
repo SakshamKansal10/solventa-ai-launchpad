@@ -72,9 +72,8 @@ export interface NormalizedProfile {
 export const SKILL_LEVEL_SCORE: Record<SkillLevel, number> = {
   never_tried: 0,
   beginner: 1,
-  intermediate: 2,
+  comfortable: 2,
   advanced: 3,
-  professional: 4,
 };
 
 const INVESTMENT_BRACKET_MIDPOINT: Record<string, number> = {

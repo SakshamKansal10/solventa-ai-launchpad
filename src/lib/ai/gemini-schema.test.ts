@@ -92,7 +92,10 @@ describe("toGeminiSchema", () => {
     const result = toGeminiSchema(RoadmapPlanSchema) as {
       properties: { phases: { items: { properties: Record<string, Record<string, unknown>> } } };
     };
-    const taskProps = result.properties.phases.items.properties.tasks as unknown as {
+    const weekProps = result.properties.phases.items.properties.weeks as unknown as {
+      items: { properties: Record<string, Record<string, unknown>> };
+    };
+    const taskProps = weekProps.items.properties.tasks as unknown as {
       items: { properties: Record<string, Record<string, unknown>> };
     };
     const resourceField = taskProps.items.properties.resource;

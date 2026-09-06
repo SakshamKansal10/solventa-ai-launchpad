@@ -21,6 +21,11 @@ interface NextTask {
   deadline: string | null;
 }
 
+interface CurrentWeekSummary {
+  title: string;
+  objective: string;
+}
+
 export const getDashboard = createServerFn({ method: "GET" }).handler(async () => {
   const { supabase, user } = await requireUser();
 
@@ -74,13 +79,17 @@ export const getDashboard = createServerFn({ method: "GET" }).handler(async () =
     selected ?? active.find((o) => o.id === activeRoadmapOpportunityId) ?? active[0] ?? null;
   const alternatives = active.filter((o) => o.id !== primary?.id).slice(0, 2);
 
-  let roadmap: { phases: RoadmapPhaseSummary[]; nextTask: NextTask | null } | null = null;
+  let roadmap: {
+    phases: RoadmapPhaseSummary[];
+    nextTask: NextTask | null;
+    currentWeek: CurrentWeekSummary | null;
+  } | null = null;
 
   if (primary) {
     const roadmapRes = await supabase
       .from("roadmaps")
       .select(
-        "id, roadmap_phases(key, title, order_index, roadmap_tasks(what, why, status, time_estimate, deadline, order_index))",
+        "id, roadmap_phases(key, title, order_index, roadmap_weeks(title, objective, status), roadmap_tasks(what, why, status, time_estimate, deadline, order_index))",
       )
       .eq("opportunity_id", primary.id)
       .eq("status", "active")
@@ -92,6 +101,7 @@ export const getDashboard = createServerFn({ method: "GET" }).handler(async () =
           key: string;
           title: string;
           order_index: number;
+          roadmap_weeks: { title: string; objective: string; status: string }[];
           roadmap_tasks: {
             what: string;
             why: string;
@@ -127,6 +137,12 @@ export const getDashboard = createServerFn({ method: "GET" }).handler(async () =
         .sort((a, b) => a.order_index - b.order_index)
         .find((t) => t.status !== "done");
 
+      // Empty for a roadmap generated before the week-unlock migration —
+      // the dashboard's weekly mission card simply doesn't render then.
+      const activeWeek = sortedPhases
+        .flatMap((p) => p.roadmap_weeks)
+        .find((w) => w.status === "active");
+
       roadmap = {
         phases: phaseSummaries,
         nextTask: nextTaskRow
@@ -136,6 +152,9 @@ export const getDashboard = createServerFn({ method: "GET" }).handler(async () =
               timeEstimate: nextTaskRow.time_estimate,
               deadline: nextTaskRow.deadline,
             }
+          : null,
+        currentWeek: activeWeek
+          ? { title: activeWeek.title, objective: activeWeek.objective }
           : null,
       };
     }

@@ -8,7 +8,7 @@ import {
 import { normalizeProfile } from "@/lib/profile/normalize";
 
 const baseFactors: OpportunityFitFactors = {
-  requiredSkills: [{ name: "Coding", minLevel: "intermediate" }],
+  requiredSkills: [{ name: "Coding", minLevel: "comfortable" }],
   startupCapitalINR: 50_000,
   weeklyHoursNeeded: 10,
   riskLevel: "balanced",
@@ -110,7 +110,7 @@ describe("computeFitScore", () => {
     });
     const founder = normalizeProfile({
       currentStatus: "Business Owner",
-      skills: [{ name: "Coding", level: "professional" }],
+      skills: [{ name: "Coding", level: "advanced" }],
       investmentBudget: "More than ₹2,00,000",
       preciseCapital: "10 lakh",
       timeAvailableWeekly: "Full-time",
@@ -126,7 +126,7 @@ describe("computeFitScore", () => {
   });
 
   it("is deterministic — the same inputs always produce the same score", () => {
-    const profile = normalizeProfile({ skills: [{ name: "Coding", level: "intermediate" }] });
+    const profile = normalizeProfile({ skills: [{ name: "Coding", level: "comfortable" }] });
     const first = computeFitScore(profile, baseFactors);
     const second = computeFitScore(profile, baseFactors);
     expect(first).toEqual(second);

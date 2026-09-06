@@ -27,7 +27,7 @@ Already completed: ${ctx.completedSummary || "nothing yet"}
 Remaining tasks before replanning: ${ctx.remainingTasksSummary}
 What got in the way: ${ctx.blockerReason}${ctx.blockerNote ? ` — "${ctx.blockerNote}"` : ""}
 
-Replan ONLY the remaining path forward, adjusted for what actually happened. If the blocker was time or money, reduce scope or stretch deadlines realistically rather than pretending nothing changed. If it was difficulty or confusion, break the next task down smaller and add a learning step first. Return the full remaining roadmap as phases/tasks (do not include already-completed work).`;
+Replan ONLY the remaining path forward, adjusted for what actually happened. If the blocker was time or money, reduce scope or stretch deadlines realistically rather than pretending nothing changed. If it was difficulty or confusion, break the next task down smaller and add a learning step first. Return the full remaining roadmap as phases, each broken into weeks (1-3 per phase, 2-4 tasks per week, each week with its own short objective) — do not include already-completed work.`;
 
   return generateStructured(RoadmapPlanSchema, {
     systemInstruction: SYSTEM_INSTRUCTION,

@@ -8,6 +8,7 @@ import { MODEL } from "@/lib/ai/gemini.server";
 import {
   FIXTURE_INTELLIGENCE_PACKAGE,
   FIXTURE_PROFILE_ANSWERS,
+  FIXTURE_ROADMAPS,
 } from "@/lib/ai/fixtures/intelligence-package.fixture";
 import type { Database, Json } from "@/lib/supabase/types";
 
@@ -16,12 +17,15 @@ import type { Database, Json } from "@/lib/supabase/types";
  *
  * Seeds the isolated review-bypass account (REVIEW_USER_EMAIL in
  * .env.local) with the hand-written dev fixture (src/lib/ai/fixtures/
- * intelligence-package.fixture.ts) through the exact same persistence
- * logic completeConsultation uses — real Supabase writes, zero Gemini
- * calls. Use this to test the dashboard/roadmap/opportunity/Sol UI
- * against realistic data without spending quota. Sign into that account
- * through the normal Sign In dialog (real credentials, not
- * REVIEW_BYPASS_AUTH) to view the result in a browser.
+ * intelligence-package.fixture.ts) through the same persistence logic
+ * completeConsultation + buildRoadmapForOpportunity use — real Supabase
+ * writes, zero Gemini calls. All 3 ideas are seeded without a roadmap,
+ * matching production; the top-scored one also gets a roadmap built
+ * immediately (from FIXTURE_ROADMAPS), matching what "Build My Roadmap"
+ * would produce for it. Use this to test the dashboard/roadmap/
+ * opportunity/Sol UI against realistic data without spending quota. Sign
+ * into that account through the normal Sign In dialog (real credentials,
+ * not REVIEW_BYPASS_AUTH) to view the result in a browser.
  *
  * Never imported by application code — this only runs as a standalone
  * script.
@@ -63,11 +67,15 @@ async function main() {
   console.log(`business_dna seeded: ${dnaRow.id}`);
 
   const scored = pkg.opportunities
-    .map((opp) => ({ opp, score: computeFitScore(profile, opp.fitSignals) }))
+    .map((opp, originalIndex) => ({
+      opp,
+      originalIndex,
+      score: computeFitScore(profile, opp.fitSignals),
+    }))
     .sort((a, b) => b.score.total - a.score.total);
 
   for (let i = 0; i < scored.length; i++) {
-    const { opp, score } = scored[i];
+    const { opp, originalIndex, score } = scored[i];
     const { data: oppRow, error: oppError } = await supabase
       .from("opportunities")
       .insert({
@@ -79,7 +87,11 @@ async function main() {
         fit_score: score.total,
         score_breakdown: score as unknown as Json,
         candidate: opp as unknown as Json,
-        status: "active",
+        // Matches production: only the opportunity that actually gets a
+        // roadmap built below is ever 'selected' — the others stay
+        // 'active' the same way freshly generated ideas do before anyone
+        // picks one.
+        status: i === 0 ? "selected" : "active",
         batch_number: 1,
         ai_model: `${MODEL} (DEV FIXTURE)`,
       })
@@ -95,16 +107,22 @@ async function main() {
     });
     if (detailError) throw new Error(`opportunity_details insert failed: ${detailError.message}`);
 
-    const roadmapId = await createRoadmap(
-      supabase,
-      userId,
-      oppRow.id,
-      opp.roadmap,
-      i === 0 ? "active" : "available",
-    );
-    console.log(
-      `  #${i + 1} [${score.total}/100] "${opp.title}" -> opp=${oppRow.id.slice(0, 8)}... roadmap=${roadmapId.slice(0, 8)}... (${i === 0 ? "active" : "available"})`,
-    );
+    if (i === 0) {
+      const roadmapId = await createRoadmap(
+        supabase,
+        userId,
+        oppRow.id,
+        FIXTURE_ROADMAPS[originalIndex],
+        "active",
+      );
+      console.log(
+        `  #${i + 1} [${score.total}/100] "${opp.title}" -> opp=${oppRow.id.slice(0, 8)}... roadmap=${roadmapId.slice(0, 8)}... (active)`,
+      );
+    } else {
+      console.log(
+        `  #${i + 1} [${score.total}/100] "${opp.title}" -> opp=${oppRow.id.slice(0, 8)}... (no roadmap yet — matches "Build My Roadmap" being on-demand)`,
+      );
+    }
   }
 
   console.log("\nSeed complete — sign into the review account in a browser to inspect it.");

@@ -126,6 +126,7 @@ export type GeminiCallPurpose =
   | "EXPLORE_MORE"
   | "SOL_MESSAGE"
   | "MARKET_REFRESH"
+  | "ROADMAP_GENERATION"
   | "ROADMAP_REPLAN"
   | "REANALYZE"
   | "LEGACY_FALLBACK";

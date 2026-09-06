@@ -552,18 +552,27 @@ function ReviewPublicPage() {
                     <p className="mt-1.5 pl-10 text-[0.85rem] text-muted-foreground">
                       {phase.description}
                     </p>
-                    <div className="mt-3 flex flex-col gap-2 pl-0 sm:pl-10">
-                      {phase.tasks.map((task) => (
-                        <div
-                          key={task.what}
-                          className="rounded-xl border border-border/50 bg-background/60 p-3 text-[0.85rem]"
-                        >
-                          <p className="font-medium text-foreground">{task.what}</p>
-                          <p className="mt-1 text-[0.78rem] text-muted-foreground">{task.why}</p>
-                          <div className="mt-1.5 flex items-center gap-3 text-[0.74rem] text-muted-foreground">
-                            <span>{task.timeEstimate}</span>
-                            <span>Day {task.deadlineDaysFromStart}</span>
-                          </div>
+                    <div className="mt-3 flex flex-col gap-4 pl-0 sm:pl-10">
+                      {phase.weeks.map((week) => (
+                        <div key={week.weekNumber} className="flex flex-col gap-2">
+                          <p className="text-[0.74rem] font-semibold uppercase tracking-[0.1em] text-muted-foreground">
+                            Week {week.weekNumber} — {week.title}
+                          </p>
+                          {week.tasks.map((task) => (
+                            <div
+                              key={task.what}
+                              className="rounded-xl border border-border/50 bg-background/60 p-3 text-[0.85rem]"
+                            >
+                              <p className="font-medium text-foreground">{task.what}</p>
+                              <p className="mt-1 text-[0.78rem] text-muted-foreground">
+                                {task.why}
+                              </p>
+                              <div className="mt-1.5 flex items-center gap-3 text-[0.74rem] text-muted-foreground">
+                                <span>{task.timeEstimate}</span>
+                                <span>Day {task.deadlineDaysFromStart}</span>
+                              </div>
+                            </div>
+                          ))}
                         </div>
                       ))}
                     </div>
@@ -593,9 +602,9 @@ function ReviewPublicPage() {
                 {selected.title}
               </p>
               <p className="mt-1 text-[0.85rem] text-muted-foreground">{selected.oneLiner}</p>
-              {roadmapResult?.plan?.phases[0]?.tasks[0] && (
+              {roadmapResult?.plan?.phases[0]?.weeks[0]?.tasks[0] && (
                 <p className="mt-3 text-[0.85rem] text-foreground">
-                  Next task: {roadmapResult.plan.phases[0].tasks[0].what}
+                  Next task: {roadmapResult.plan.phases[0].weeks[0].tasks[0].what}
                 </p>
               )}
             </div>

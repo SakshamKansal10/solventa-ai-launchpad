@@ -1,4 +1,4 @@
-import type { SolventiaIntelligencePackage } from "@/lib/ai/schemas";
+import type { SolventiaIntelligencePackage, RoadmapPlan } from "@/lib/ai/schemas";
 
 /**
  * DEV/TEST FIXTURE — NOT AI OUTPUT, NEVER A PRODUCTION FALLBACK.
@@ -11,6 +11,12 @@ import type { SolventiaIntelligencePackage } from "@/lib/ai/schemas";
  * — the only importer is scripts/seed-fixture.ts, a standalone dev tool.
  * If you ever see this content in a real user's dashboard, that's a bug:
  * check whether something outside scripts/ started importing this file.
+ *
+ * Ideas are generated without a roadmap in production now (see
+ * intelligence-package.ts) — FIXTURE_ROADMAPS below is a separate,
+ * optional hand-written roadmap per opportunity index, for exercising
+ * roadmap/task UI specifically, matching the real on-demand
+ * roadmap-generation.ts call site rather than the initial package.
  */
 export const FIXTURE_PROFILE_ANSWERS: Record<string, unknown> = {
   age: "26",
@@ -21,7 +27,7 @@ export const FIXTURE_PROFILE_ANSWERS: Record<string, unknown> = {
   yearsExperience: "3–5 years",
   annualIncome: "₹5–10L",
   skills: [
-    { name: "Web Development", level: "intermediate" },
+    { name: "Web Development", level: "comfortable" },
     { name: "Digital Marketing", level: "beginner" },
   ],
   investmentBudget: "₹50,000 – ₹2,00,000",
@@ -41,7 +47,7 @@ export const FIXTURE_INTELLIGENCE_PACKAGE: SolventiaIntelligencePackage = {
     narrativeSummary:
       "You're a working professional with real technical skills and a stable income, looking for a side venture that respects your limited weekly hours rather than demanding you quit your job. You lean toward calculated bets, not big swings.",
     strengths: [
-      "Intermediate web development skills you can monetize directly",
+      "Comfortable web development skills you can monetize directly",
       "Stable day-job income reduces pressure to earn immediately",
       "Comfortable working solo and remotely",
     ],
@@ -78,7 +84,7 @@ export const FIXTURE_INTELLIGENCE_PACKAGE: SolventiaIntelligencePackage = {
       solution:
         "Offer fixed-price, fast-turnaround websites built on a simple template you customize per client.",
       whyThisFounder: [
-        "Your intermediate web development skills directly produce the deliverable — no new skill needed to start",
+        "Your web development skill directly produces the deliverable — no new skill needed to start",
         "10-20 hrs/week is enough for 1-2 client projects per month at a realistic pace",
         "Solo execution fits your stated preference for working alone",
       ],
@@ -115,8 +121,10 @@ export const FIXTURE_INTELLIGENCE_PACKAGE: SolventiaIntelligencePackage = {
         "Start with 1 client at ₹8,000-10,000, raise prices as you build a portfolio and referrals.",
       firstExperiment:
         "Message 5 local business owners you already know (or walk into 5 shops) and ask if they have a website — if not, offer to show them a mockup for free.",
+      whyNow:
+        "Most local businesses only just started feeling pressure from customers searching online post-pandemic — the gap is real and still under-served by agencies that ignore this small-business tier.",
       fitSignals: {
-        requiredSkills: [{ name: "Web Development", minLevel: "intermediate" }],
+        requiredSkills: [{ name: "Web Development", minLevel: "comfortable" }],
         startupCapitalINR: 8000,
         weeklyHoursNeeded: 12,
         riskLevel: "cautious",
@@ -127,97 +135,6 @@ export const FIXTURE_INTELLIGENCE_PACKAGE: SolventiaIntelligencePackage = {
         relevantExperienceYears: 1,
         requiresDigitalAssets: true,
         locationFlexible: true,
-      },
-      roadmap: {
-        phases: [
-          {
-            key: "validate",
-            title: "Validate Demand",
-            description: "Confirm local businesses actually want this before building anything.",
-            tasks: [
-              {
-                what: "List 15 local businesses without a website",
-                why: "You need real prospects before you can validate anything.",
-                how: "Walk your neighborhood's main street and note every shop/service without visible web presence, or search Google Maps for local categories and check which ones lack a website link.",
-                resource: null,
-                timeEstimate: "1-2 hours",
-                deadlineDaysFromStart: 3,
-                doneWhen: "You have a list of 15 named businesses with contact info.",
-                required: true,
-                dependsOn: null,
-              },
-              {
-                what: "Talk to 5 of them about their website situation",
-                why: "Confirms real demand and realistic pricing expectations before you invest more time.",
-                how: "Visit or call, ask: 'Do you have a website? Would you want one if it was affordable?' Note their reactions.",
-                resource: null,
-                timeEstimate: "2-3 hours",
-                deadlineDaysFromStart: 10,
-                doneWhen: "You've had 5 real conversations and written down what each said.",
-                required: true,
-                dependsOn: "List 15 local businesses without a website",
-              },
-            ],
-          },
-          {
-            key: "build",
-            title: "Build Your First Site",
-            description: "Create a real, presentable portfolio piece.",
-            tasks: [
-              {
-                what: "Learn a simple website builder or template system",
-                why: "Speeds up every future build and keeps quality consistent.",
-                how: "Pick one tool (e.g. a modern site builder or a simple template) and build one full practice site end to end.",
-                resource: "Official documentation/tutorials for whichever builder you choose",
-                timeEstimate: "4-6 hours",
-                deadlineDaysFromStart: 20,
-                doneWhen: "You've built one complete practice website using your chosen tool.",
-                required: true,
-                dependsOn: null,
-              },
-              {
-                what: "Build your own portfolio site",
-                why: "You need something real to show prospects — nobody hires a web builder with no visible site.",
-                how: "Use what you just learned to build a simple one-page site showcasing your service and pricing.",
-                resource: null,
-                timeEstimate: "3-4 hours",
-                deadlineDaysFromStart: 25,
-                doneWhen: "Your portfolio site is live at a real URL.",
-                required: true,
-                dependsOn: "Learn a simple website builder or template system",
-              },
-            ],
-          },
-          {
-            key: "launch",
-            title: "Get Your First Paying Client",
-            description: "Turn one of your validated conversations into a paid project.",
-            tasks: [
-              {
-                what: "Send a firm offer to your 2 warmest leads",
-                why: "Conversations without a concrete offer rarely convert.",
-                how: "Message the 2 business owners who responded most positively with a specific price and turnaround time.",
-                resource: null,
-                timeEstimate: "1 hour",
-                deadlineDaysFromStart: 30,
-                doneWhen: "You've sent 2 concrete offers with price and timeline.",
-                required: true,
-                dependsOn: "Talk to 5 of them about their website situation",
-              },
-              {
-                what: "Deliver your first paid website",
-                why: "This is the actual first revenue and proof the business works.",
-                how: "Build, review with the client, and launch their site.",
-                resource: null,
-                timeEstimate: "8-10 hours",
-                deadlineDaysFromStart: 45,
-                doneWhen: "The client's site is live and they've paid.",
-                required: true,
-                dependsOn: "Send a firm offer to your 2 warmest leads",
-              },
-            ],
-          },
-        ],
       },
     },
     {
@@ -266,8 +183,10 @@ export const FIXTURE_INTELLIGENCE_PACKAGE: SolventiaIntelligencePackage = {
         "Launch at a low intro price to first buyers, raise price as reviews/proof accumulate.",
       firstExperiment:
         "Post in one freelancer Discord/community describing the template pack idea and ask who'd actually buy it at ₹999.",
+      whyNow:
+        "Freelance platforms have never had more new entrants than right now, and most arrive with zero starting assets — this gap doesn't close, it keeps refilling.",
       fitSignals: {
-        requiredSkills: [{ name: "Web Development", minLevel: "intermediate" }],
+        requiredSkills: [{ name: "Web Development", minLevel: "comfortable" }],
         startupCapitalINR: 5000,
         weeklyHoursNeeded: 18,
         riskLevel: "balanced",
@@ -278,98 +197,6 @@ export const FIXTURE_INTELLIGENCE_PACKAGE: SolventiaIntelligencePackage = {
         relevantExperienceYears: 1,
         requiresDigitalAssets: true,
         locationFlexible: true,
-      },
-      roadmap: {
-        phases: [
-          {
-            key: "validate",
-            title: "Test the Idea",
-            description: "Confirm freelancers would actually pay before spending weeks building.",
-            tasks: [
-              {
-                what: "Post the idea in 2 freelancer communities",
-                why: "Real reactions from your target audience are worth more than guessing.",
-                how: "Write a short post describing the template pack and ask who would pay ₹999 for it.",
-                resource: null,
-                timeEstimate: "1 hour",
-                deadlineDaysFromStart: 5,
-                doneWhen:
-                  "You've posted in 2 communities and collected at least 10 reactions/replies.",
-                required: true,
-                dependsOn: null,
-              },
-              {
-                what: "List the exact templates to include",
-                why: "A vague 'template pack' doesn't sell — a specific, named list does.",
-                how: "Based on the feedback, write down the 5-8 specific templates you'll build.",
-                resource: null,
-                timeEstimate: "1 hour",
-                deadlineDaysFromStart: 7,
-                doneWhen: "You have a finalized, named list of templates.",
-                required: true,
-                dependsOn: "Post the idea in 2 freelancer communities",
-              },
-            ],
-          },
-          {
-            key: "build",
-            title: "Build the Pack",
-            description: "Create the actual product.",
-            tasks: [
-              {
-                what: "Build the first 3 templates",
-                why: "Starting with a subset lets you test quality and pacing before committing to the full set.",
-                how: "Design and build each template to a genuinely professional standard, not a rough draft.",
-                resource: null,
-                timeEstimate: "10-12 hours",
-                deadlineDaysFromStart: 21,
-                doneWhen: "3 templates are complete and polished.",
-                required: true,
-                dependsOn: "List the exact templates to include",
-              },
-              {
-                what: "Build the remaining templates and package the pack",
-                why: "Completes the sellable product.",
-                how: "Finish the rest of the list, then bundle everything into a clean, documented download.",
-                resource: null,
-                timeEstimate: "10-12 hours",
-                deadlineDaysFromStart: 35,
-                doneWhen: "The full pack is built, tested, and ready to sell.",
-                required: true,
-                dependsOn: "Build the first 3 templates",
-              },
-            ],
-          },
-          {
-            key: "launch",
-            title: "Launch and Sell",
-            description: "Get it in front of buyers.",
-            tasks: [
-              {
-                what: "Set up a simple storefront",
-                why: "You need somewhere real to sell the pack.",
-                how: "Use a simple digital-product storefront tool to list the pack with screenshots and pricing.",
-                resource: null,
-                timeEstimate: "2-3 hours",
-                deadlineDaysFromStart: 38,
-                doneWhen: "The storefront listing is live and purchasable.",
-                required: true,
-                dependsOn: "Build the remaining templates and package the pack",
-              },
-              {
-                what: "Announce it to everyone who showed early interest",
-                why: "Your warmest leads are the people who already reacted positively during validation.",
-                how: "Message everyone who engaged with your original post, with a launch discount.",
-                resource: null,
-                timeEstimate: "1-2 hours",
-                deadlineDaysFromStart: 40,
-                doneWhen: "You've made your first sale.",
-                required: true,
-                dependsOn: "Set up a simple storefront",
-              },
-            ],
-          },
-        ],
       },
     },
     {
@@ -415,6 +242,8 @@ export const FIXTURE_INTELLIGENCE_PACKAGE: SolventiaIntelligencePackage = {
         "Publish one free sample issue curating 10 real local job openings and share it in 2 local community groups.",
       revenuePath:
         "Grow a free list to 200+ engaged readers first, then introduce a modest paid tier.",
+      whyNow:
+        "Job listings have fragmented across more platforms than ever, and generic job boards keep getting noisier — a curated, local, human-filtered list stands out precisely because of that fragmentation.",
       fitSignals: {
         requiredSkills: [{ name: "Digital Marketing", minLevel: "beginner" }],
         startupCapitalINR: 3000,
@@ -428,12 +257,251 @@ export const FIXTURE_INTELLIGENCE_PACKAGE: SolventiaIntelligencePackage = {
         requiresDigitalAssets: true,
         locationFlexible: true,
       },
-      roadmap: {
-        phases: [
+    },
+  ],
+};
+
+/** One hand-written roadmap per opportunity index (0-2 above), matching
+ * what the real on-demand roadmap-generation.ts call now produces for a
+ * single selected opportunity — phases, each broken into weeks, each week
+ * broken into tasks. Only used by scripts/seed-fixture.ts, never shipped. */
+export const FIXTURE_ROADMAPS: RoadmapPlan[] = [
+  {
+    phases: [
+      {
+        key: "validate",
+        title: "Validate Demand",
+        description: "Confirm local businesses actually want this before building anything.",
+        weeks: [
           {
-            key: "understand",
-            title: "Understand the Format",
-            description: "Learn what makes a newsletter people actually open and read.",
+            weekNumber: 1,
+            title: "Find and talk to real prospects",
+            objective: "Confirm real demand exists before you invest more time.",
+            tasks: [
+              {
+                what: "List 15 local businesses without a website",
+                why: "You need real prospects before you can validate anything.",
+                how: "Walk your neighborhood's main street and note every shop/service without visible web presence, or search Google Maps for local categories and check which ones lack a website link.",
+                resource: null,
+                timeEstimate: "1-2 hours",
+                deadlineDaysFromStart: 3,
+                doneWhen: "You have a list of 15 named businesses with contact info.",
+                required: true,
+                dependsOn: null,
+              },
+              {
+                what: "Talk to 5 of them about their website situation",
+                why: "Confirms real demand and realistic pricing expectations before you invest more time.",
+                how: "Visit or call, ask: 'Do you have a website? Would you want one if it was affordable?' Note their reactions.",
+                resource: null,
+                timeEstimate: "2-3 hours",
+                deadlineDaysFromStart: 10,
+                doneWhen: "You've had 5 real conversations and written down what each said.",
+                required: true,
+                dependsOn: "List 15 local businesses without a website",
+              },
+            ],
+          },
+        ],
+      },
+      {
+        key: "build",
+        title: "Build Your First Site",
+        description: "Create a real, presentable portfolio piece.",
+        weeks: [
+          {
+            weekNumber: 1,
+            title: "Learn your tool and build a portfolio",
+            objective: "Have a real, live site you can show to prospects.",
+            tasks: [
+              {
+                what: "Learn a simple website builder or template system",
+                why: "Speeds up every future build and keeps quality consistent.",
+                how: "Pick one tool (e.g. a modern site builder or a simple template) and build one full practice site end to end.",
+                resource: "Official documentation/tutorials for whichever builder you choose",
+                timeEstimate: "4-6 hours",
+                deadlineDaysFromStart: 20,
+                doneWhen: "You've built one complete practice website using your chosen tool.",
+                required: true,
+                dependsOn: null,
+              },
+              {
+                what: "Build your own portfolio site",
+                why: "You need something real to show prospects — nobody hires a web builder with no visible site.",
+                how: "Use what you just learned to build a simple one-page site showcasing your service and pricing.",
+                resource: null,
+                timeEstimate: "3-4 hours",
+                deadlineDaysFromStart: 25,
+                doneWhen: "Your portfolio site is live at a real URL.",
+                required: true,
+                dependsOn: "Learn a simple website builder or template system",
+              },
+            ],
+          },
+        ],
+      },
+      {
+        key: "launch",
+        title: "Get Your First Paying Client",
+        description: "Turn one of your validated conversations into a paid project.",
+        weeks: [
+          {
+            weekNumber: 1,
+            title: "Convert a lead into paid, delivered work",
+            objective: "Land and deliver your first real, paid project.",
+            tasks: [
+              {
+                what: "Send a firm offer to your 2 warmest leads",
+                why: "Conversations without a concrete offer rarely convert.",
+                how: "Message the 2 business owners who responded most positively with a specific price and turnaround time.",
+                resource: null,
+                timeEstimate: "1 hour",
+                deadlineDaysFromStart: 30,
+                doneWhen: "You've sent 2 concrete offers with price and timeline.",
+                required: true,
+                dependsOn: "Talk to 5 of them about their website situation",
+              },
+              {
+                what: "Deliver your first paid website",
+                why: "This is the actual first revenue and proof the business works.",
+                how: "Build, review with the client, and launch their site.",
+                resource: null,
+                timeEstimate: "8-10 hours",
+                deadlineDaysFromStart: 45,
+                doneWhen: "The client's site is live and they've paid.",
+                required: true,
+                dependsOn: "Send a firm offer to your 2 warmest leads",
+              },
+            ],
+          },
+        ],
+      },
+    ],
+  },
+  {
+    phases: [
+      {
+        key: "validate",
+        title: "Test the Idea",
+        description: "Confirm freelancers would actually pay before spending weeks building.",
+        weeks: [
+          {
+            weekNumber: 1,
+            title: "Gauge real interest",
+            objective: "Know whether people would actually pay before you build anything.",
+            tasks: [
+              {
+                what: "Post the idea in 2 freelancer communities",
+                why: "Real reactions from your target audience are worth more than guessing.",
+                how: "Write a short post describing the template pack and ask who would pay ₹999 for it.",
+                resource: null,
+                timeEstimate: "1 hour",
+                deadlineDaysFromStart: 5,
+                doneWhen:
+                  "You've posted in 2 communities and collected at least 10 reactions/replies.",
+                required: true,
+                dependsOn: null,
+              },
+              {
+                what: "List the exact templates to include",
+                why: "A vague 'template pack' doesn't sell — a specific, named list does.",
+                how: "Based on the feedback, write down the 5-8 specific templates you'll build.",
+                resource: null,
+                timeEstimate: "1 hour",
+                deadlineDaysFromStart: 7,
+                doneWhen: "You have a finalized, named list of templates.",
+                required: true,
+                dependsOn: "Post the idea in 2 freelancer communities",
+              },
+            ],
+          },
+        ],
+      },
+      {
+        key: "build",
+        title: "Build the Pack",
+        description: "Create the actual product.",
+        weeks: [
+          {
+            weekNumber: 1,
+            title: "Build the full template pack",
+            objective: "Finish a genuinely sellable product.",
+            tasks: [
+              {
+                what: "Build the first 3 templates",
+                why: "Starting with a subset lets you test quality and pacing before committing to the full set.",
+                how: "Design and build each template to a genuinely professional standard, not a rough draft.",
+                resource: null,
+                timeEstimate: "10-12 hours",
+                deadlineDaysFromStart: 21,
+                doneWhen: "3 templates are complete and polished.",
+                required: true,
+                dependsOn: "List the exact templates to include",
+              },
+              {
+                what: "Build the remaining templates and package the pack",
+                why: "Completes the sellable product.",
+                how: "Finish the rest of the list, then bundle everything into a clean, documented download.",
+                resource: null,
+                timeEstimate: "10-12 hours",
+                deadlineDaysFromStart: 35,
+                doneWhen: "The full pack is built, tested, and ready to sell.",
+                required: true,
+                dependsOn: "Build the first 3 templates",
+              },
+            ],
+          },
+        ],
+      },
+      {
+        key: "launch",
+        title: "Launch and Sell",
+        description: "Get it in front of buyers.",
+        weeks: [
+          {
+            weekNumber: 1,
+            title: "Ship the storefront and announce it",
+            objective: "Make your first sale.",
+            tasks: [
+              {
+                what: "Set up a simple storefront",
+                why: "You need somewhere real to sell the pack.",
+                how: "Use a simple digital-product storefront tool to list the pack with screenshots and pricing.",
+                resource: null,
+                timeEstimate: "2-3 hours",
+                deadlineDaysFromStart: 38,
+                doneWhen: "The storefront listing is live and purchasable.",
+                required: true,
+                dependsOn: "Build the remaining templates and package the pack",
+              },
+              {
+                what: "Announce it to everyone who showed early interest",
+                why: "Your warmest leads are the people who already reacted positively during validation.",
+                how: "Message everyone who engaged with your original post, with a launch discount.",
+                resource: null,
+                timeEstimate: "1-2 hours",
+                deadlineDaysFromStart: 40,
+                doneWhen: "You've made your first sale.",
+                required: true,
+                dependsOn: "Set up a simple storefront",
+              },
+            ],
+          },
+        ],
+      },
+    ],
+  },
+  {
+    phases: [
+      {
+        key: "understand",
+        title: "Understand the Format",
+        description: "Learn what makes a newsletter people actually open and read.",
+        weeks: [
+          {
+            weekNumber: 1,
+            title: "Study the format and gather sources",
+            objective: "Have a real model and real sources before writing anything.",
             tasks: [
               {
                 what: "Subscribe to 3 similar newsletters in other cities",
@@ -459,10 +527,17 @@ export const FIXTURE_INTELLIGENCE_PACKAGE: SolventiaIntelligencePackage = {
               },
             ],
           },
+        ],
+      },
+      {
+        key: "build",
+        title: "Publish Your First Issues",
+        description: "Prove you can consistently produce a real issue.",
+        weeks: [
           {
-            key: "build",
-            title: "Publish Your First Issues",
-            description: "Prove you can consistently produce a real issue.",
+            weekNumber: 1,
+            title: "Set up and publish issue #1",
+            objective: "Get a real issue into real inboxes.",
             tasks: [
               {
                 what: "Set up your newsletter platform",
@@ -488,10 +563,17 @@ export const FIXTURE_INTELLIGENCE_PACKAGE: SolventiaIntelligencePackage = {
               },
             ],
           },
+        ],
+      },
+      {
+        key: "improve",
+        title: "Grow and Refine",
+        description: "Build a real, engaged audience.",
+        weeks: [
           {
-            key: "improve",
-            title: "Grow and Refine",
-            description: "Build a real, engaged audience.",
+            weekNumber: 1,
+            title: "Share consistently and review real data",
+            objective: "Grow a real audience and know whether it's working.",
             tasks: [
               {
                 what: "Share each issue in 2 local community groups",
@@ -520,6 +602,6 @@ export const FIXTURE_INTELLIGENCE_PACKAGE: SolventiaIntelligencePackage = {
           },
         ],
       },
-    },
-  ],
-};
+    ],
+  },
+];

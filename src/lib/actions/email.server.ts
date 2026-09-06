@@ -35,6 +35,22 @@ export async function sendWelcomeEmail(email: string, fullName: string | null): 
   });
 }
 
+/** Sent once, right after the initial consultation finishes — ideas exist,
+ * a roadmap doesn't yet (that's a separate, later, on-demand generation
+ * triggered by "Build My Roadmap"). */
+export async function sendIdeasReadyEmail(
+  email: string,
+  topOpportunityTitle: string,
+): Promise<void> {
+  await sendSafely({
+    to: email,
+    subject: "Your business ideas are ready",
+    html: `<p>Sol found your strongest founder match: "${topOpportunityTitle}", plus two alternative directions. <a href="${env.SITE_URL}/dashboard">Open your dashboard</a> to see all three and build a roadmap for the one you choose.</p>`,
+  });
+}
+
+/** Sent once a founder's roadmap has actually been built (after they
+ * click "Build My Roadmap" for their selected opportunity). */
 export async function sendRoadmapReadyEmail(
   email: string,
   opportunityTitle: string,

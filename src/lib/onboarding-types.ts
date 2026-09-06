@@ -12,7 +12,7 @@ export type CurrentStatus =
   | "Career Break"
   | "Other";
 
-export type SkillLevel = "never_tried" | "beginner" | "intermediate" | "advanced" | "professional";
+export type SkillLevel = "never_tried" | "beginner" | "comfortable" | "advanced";
 
 export interface SkillEntry {
   name: string;
@@ -110,11 +110,10 @@ export const STATUS_OPTIONS: CurrentStatus[] = [
 ];
 
 export const SKILL_LEVELS: { value: SkillLevel; label: string }[] = [
-  { value: "never_tried", label: "Never Tried" },
+  { value: "never_tried", label: "Never tried" },
   { value: "beginner", label: "Beginner" },
-  { value: "intermediate", label: "Intermediate" },
+  { value: "comfortable", label: "Comfortable" },
   { value: "advanced", label: "Advanced" },
-  { value: "professional", label: "Professional" },
 ];
 
 export const SKILL_CATEGORIES: { label: string; skills: string[] }[] = [

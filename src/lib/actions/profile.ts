@@ -7,8 +7,7 @@ import { normalizeProfile, type NormalizedProfile } from "@/lib/profile/normaliz
 import { computeFitScore } from "@/lib/profile/scoring";
 import { generateIntelligencePackage } from "@/lib/ai/prompts/intelligence-package";
 import { MODEL, AIGenerationError } from "@/lib/ai/gemini.server";
-import { createRoadmap } from "@/lib/actions/roadmap-persistence.server";
-import { sendRoadmapReadyEmail } from "@/lib/actions/email.server";
+import { sendIdeasReadyEmail } from "@/lib/actions/email.server";
 import type { Json } from "@/lib/supabase/types";
 
 // OnboardingAnswers is a fully-optional bag of loosely-typed bracket
@@ -23,15 +22,17 @@ function hashProfile(profile: NormalizedProfile): string {
 /**
  * The ONE automatic Gemini request that fires after Stage 7. A single
  * generateIntelligencePackage call returns the founder's synthesis plus
- * all 3 opportunities — each already carrying its complete detail and its
- * complete roadmap — replacing what used to be a founder-analysis call
- * plus a candidate-generation call plus (lazily, later) up to 3 detail
- * calls plus up to 3 roadmap calls. Everything after generation —
+ * all 3 opportunities with their complete detail — replacing what used to
+ * be a founder-analysis call plus a candidate-generation call plus
+ * (lazily, later) up to 3 detail calls. No roadmap is generated here: that
+ * is a separate, on-demand Gemini call the founder triggers explicitly by
+ * selecting one opportunity and clicking "Build My Roadmap" (see
+ * buildRoadmapForOpportunity in roadmap.ts) — generating a roadmap for
+ * all 3 ideas up front would spend 3x the roadmap-generation cost on 2
+ * ideas the founder may never choose. Everything after generation here —
  * deterministic fit scoring, ranking, and every database write — is plain
- * application code; no second model call happens here under any
- * circumstance. Only the deterministic top scorer's roadmap is marked
- * active; the other two are pre-built and ready, so switching between the
- * initial 3 opportunities later costs zero further Gemini calls.
+ * application code; no second model call happens in this function under
+ * any circumstance.
  */
 export const completeConsultation = createServerFn({ method: "POST" })
   .validator(z.object({ answers: onboardingAnswersSchema }))
@@ -175,21 +176,13 @@ export const completeConsultation = createServerFn({ method: "POST" })
           ai_model: MODEL,
         });
         if (detailError) throw new Error(detailError.message);
-
-        await createRoadmap(
-          supabase,
-          user.id,
-          oppRow.id,
-          opp.roadmap,
-          i === 0 ? "active" : "available",
-        );
       }
     } catch (err) {
       await supabase.from("business_dna").delete().eq("id", dnaRow.id);
       throw err;
     }
 
-    if (user.email) void sendRoadmapReadyEmail(user.email, scored[0].opp.title);
+    if (user.email) void sendIdeasReadyEmail(user.email, scored[0].opp.title);
 
     return { businessDnaId: dnaRow.id as string, founderDNA: pkg.founderDNA };
   });

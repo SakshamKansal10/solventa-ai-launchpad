@@ -9,7 +9,6 @@ import { computeFitScore, type FitScoreBreakdown } from "@/lib/profile/scoring";
 import { generateIntelligencePackage } from "@/lib/ai/prompts/intelligence-package";
 import { toDisplayFounderDNA } from "@/lib/founder-dna-display";
 import { getWhyReasons } from "@/lib/opportunity-display";
-import { createRoadmap } from "@/lib/actions/roadmap-persistence.server";
 import { AIGenerationError, MODEL } from "@/lib/ai/gemini.server";
 import type { FounderAnalysis, OpportunityPackage } from "@/lib/ai/schemas";
 import type { Json } from "@/lib/supabase/types";
@@ -198,49 +197,38 @@ async function runPipeline(
         return data.id as string;
       });
 
-      opportunityIds = await timedStep(
-        telemetry,
-        "Database — opportunities + roadmaps write",
-        async () => {
-          const ids: string[] = [];
-          for (let i = 0; i < scored.length; i++) {
-            const { candidate, score } = scored[i];
-            const { data, error } = await supabase
-              .from("opportunities")
-              .insert({
-                user_id: userId,
-                business_dna_id: businessDnaId as string,
-                title: candidate.title,
-                one_liner: candidate.plainEnglishSummary,
-                who_for: candidate.customer,
-                fit_score: score.total,
-                score_breakdown: score as unknown as Json,
-                candidate: candidate as unknown as Json,
-                status: "active" as const,
-                batch_number: 1,
-                ai_model: MODEL,
-              })
-              .select("id")
-              .single();
-            if (error || !data) throw new Error(error?.message ?? "Opportunity insert failed");
-            await supabase.from("opportunity_details").insert({
-              opportunity_id: data.id,
+      opportunityIds = await timedStep(telemetry, "Database — opportunities write", async () => {
+        const ids: string[] = [];
+        for (let i = 0; i < scored.length; i++) {
+          const { candidate, score } = scored[i];
+          const { data, error } = await supabase
+            .from("opportunities")
+            .insert({
               user_id: userId,
-              detail: candidate as unknown as Json,
+              business_dna_id: businessDnaId as string,
+              title: candidate.title,
+              one_liner: candidate.plainEnglishSummary,
+              who_for: candidate.customer,
+              fit_score: score.total,
+              score_breakdown: score as unknown as Json,
+              candidate: candidate as unknown as Json,
+              status: "active" as const,
+              batch_number: 1,
               ai_model: MODEL,
-            });
-            await createRoadmap(
-              supabase,
-              userId,
-              data.id,
-              candidate.roadmap,
-              i === 0 ? "active" : "available",
-            );
-            ids.push(data.id as string);
-          }
-          return ids;
-        },
-      );
+            })
+            .select("id")
+            .single();
+          if (error || !data) throw new Error(error?.message ?? "Opportunity insert failed");
+          await supabase.from("opportunity_details").insert({
+            opportunity_id: data.id,
+            user_id: userId,
+            detail: candidate as unknown as Json,
+            ai_model: MODEL,
+          });
+          ids.push(data.id as string);
+        }
+        return ids;
+      });
     } else {
       telemetry.push({ step: "Database — Business DNA write", status: "skipped", durationMs: 0 });
       telemetry.push({
@@ -330,7 +318,7 @@ const PROFILE_B: Record<string, unknown> = {
   investmentBudget: "More than ₹2,00,000",
   preciseCapital: "10 lakh",
   skills: [
-    { name: "Sales", level: "professional" },
+    { name: "Sales", level: "advanced" },
     { name: "Project Management", level: "advanced" },
   ],
   riskAppetite: "Comfortable experimenting",
