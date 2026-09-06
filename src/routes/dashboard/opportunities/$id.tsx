@@ -13,6 +13,7 @@ import {
   refreshMarketEvidence,
   submitIdeaFeedback,
   switchSelectedOpportunity,
+  buildRoadmapForOpportunity,
 } from "@/lib/actions/opportunities";
 import { toDisplayDetail, getFitFactors } from "@/lib/opportunity-display";
 import type { OpportunityPackage, OpportunityDetail, MarketEvidenceItem } from "@/lib/ai/schemas";
@@ -137,18 +138,37 @@ function OpportunityDetailPage() {
     }
   }
 
+  // Selecting an idea costs zero Gemini calls — it only changes which
+  // opportunity is primary and archives whatever roadmap was active
+  // (never deletes it — it can be revisited later). Building a roadmap
+  // for THIS idea is a separate, explicit next step (buildRoadmap below),
+  // so a founder never pays AI cost for switching their mind.
   async function selectThisOpportunity() {
     setBusy("select");
     try {
-      // Switching opportunities costs zero Gemini calls — this
-      // opportunity's roadmap was already fully built when it was
-      // generated (see roadmap-persistence.server.ts's activateRoadmap).
       await switchSelectedOpportunity({ data: { opportunityId: id } });
       await queryClient.invalidateQueries({ queryKey: ["dashboard"] });
-      navigate({ to: "/dashboard/roadmap" });
+      await queryClient.invalidateQueries({ queryKey: ["opportunity", id] });
+      toast.success(
+        "Set as your primary direction. Your previous roadmap, if any, has been archived — you can revisit it anytime.",
+      );
     } catch (err) {
       console.error("[opportunity] select failed:", err);
       toast.error("Sol couldn't select this opportunity right now — try again.");
+    } finally {
+      setBusy(null);
+    }
+  }
+
+  async function buildRoadmap() {
+    setBusy("build-roadmap");
+    try {
+      await buildRoadmapForOpportunity({ data: { opportunityId: id } });
+      await queryClient.invalidateQueries({ queryKey: ["dashboard"] });
+      navigate({ to: "/dashboard/roadmap" });
+    } catch (err) {
+      console.error("[opportunity] build roadmap failed:", err);
+      toast.error("Sol couldn't build your roadmap right now — try again.");
     } finally {
       setBusy(null);
     }
@@ -236,16 +256,31 @@ function OpportunityDetailPage() {
       </div>
 
       <div className="mt-6 flex flex-wrap items-center gap-3">
-        <PremiumButton
-          tone={isSelected ? "outline" : "solid"}
-          shape="rounded"
-          size="sm"
-          onClick={selectThisOpportunity}
-          disabled={busy === "select" || isSelected}
-        >
-          {busy === "select" && <Loader2 className="size-4 animate-spin" aria-hidden="true" />}
-          {isSelected ? "This is your selected opportunity" : "Select this as my opportunity"}
-        </PremiumButton>
+        {isSelected ? (
+          <PremiumButton
+            tone="solid"
+            shape="rounded"
+            size="sm"
+            onClick={buildRoadmap}
+            disabled={busy === "build-roadmap"}
+          >
+            {busy === "build-roadmap" && (
+              <Loader2 className="size-4 animate-spin" aria-hidden="true" />
+            )}
+            Build My Roadmap
+          </PremiumButton>
+        ) : (
+          <PremiumButton
+            tone="outline"
+            shape="rounded"
+            size="sm"
+            onClick={selectThisOpportunity}
+            disabled={busy === "select"}
+          >
+            {busy === "select" && <Loader2 className="size-4 animate-spin" aria-hidden="true" />}
+            Select this as my opportunity
+          </PremiumButton>
+        )}
         <Button
           variant="outline"
           size="sm"
@@ -497,18 +532,35 @@ function OpportunityDetailPage() {
 
       <div className="mt-8 flex flex-col items-center gap-3 text-center">
         <p className="text-[0.85rem] text-muted-foreground">
-          {isSelected ? "This is your current path." : "Ready to commit to this opportunity?"}
+          {isSelected
+            ? "This is your primary direction — build a roadmap to start executing."
+            : "Ready to commit to this opportunity?"}
         </p>
-        <PremiumButton
-          tone={isSelected ? "outline" : "solid"}
-          shape="rounded"
-          size="lg"
-          onClick={selectThisOpportunity}
-          disabled={busy === "select" || isSelected}
-        >
-          {busy === "select" && <Loader2 className="size-4 animate-spin" aria-hidden="true" />}
-          {isSelected ? "This is your selected opportunity" : "Select this as my opportunity"}
-        </PremiumButton>
+        {isSelected ? (
+          <PremiumButton
+            tone="solid"
+            shape="rounded"
+            size="lg"
+            onClick={buildRoadmap}
+            disabled={busy === "build-roadmap"}
+          >
+            {busy === "build-roadmap" && (
+              <Loader2 className="size-4 animate-spin" aria-hidden="true" />
+            )}
+            Build My Roadmap
+          </PremiumButton>
+        ) : (
+          <PremiumButton
+            tone="solid"
+            shape="rounded"
+            size="lg"
+            onClick={selectThisOpportunity}
+            disabled={busy === "select"}
+          >
+            {busy === "select" && <Loader2 className="size-4 animate-spin" aria-hidden="true" />}
+            Select this as my opportunity
+          </PremiumButton>
+        )}
       </div>
     </DashboardShell>
   );

@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { Check, ChevronRight, Loader2, MapPin, Sparkles } from "lucide-react";
+import { Check, ChevronDown, ChevronRight, Lock, Loader2, MapPin, Sparkles } from "lucide-react";
 import { DashboardShell, useOpenMentor } from "@/components/dashboard/DashboardShell";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -33,6 +33,7 @@ const BLOCKER_REASONS: {
 
 interface Task {
   id: string;
+  week_id: string | null;
   what: string;
   why: string;
   how: string;
@@ -44,6 +45,16 @@ interface Task {
   depends_on: string | null;
   done_when: string;
   status: "pending" | "in_progress" | "done" | "blocked";
+}
+
+interface Week {
+  id: string;
+  order_index: number;
+  week_number: number;
+  title: string;
+  objective: string;
+  status: "locked" | "active" | "completed";
+  tasks: Task[];
 }
 
 /** dependsOn is supposed to be a prior task's exact human-readable "what"
@@ -296,6 +307,102 @@ function TaskRow({
   );
 }
 
+/** One week within the focused phase. Locked weeks show only their
+ * objective — no tasks, nothing interactive — so a founder knows what's
+ * coming without being able to jump ahead. Active weeks are fully
+ * expanded by default; completed weeks collapse to a quiet summary line
+ * but can be reopened to review past work, same spirit as a done TaskRow. */
+function WeekBlock({
+  week,
+  roadmapId,
+  onToggle,
+  onReplanNeeded,
+}: {
+  week: Week;
+  roadmapId: string;
+  onToggle: (taskId: string, nextStatus: "pending" | "done") => void;
+  onReplanNeeded: () => Promise<void>;
+}) {
+  const [expanded, setExpanded] = useState(week.status === "active");
+  const doneCount = week.tasks.filter((t) => t.status === "done").length;
+
+  if (week.status === "locked") {
+    return (
+      <div className="flex items-start gap-3 rounded-xl border border-dashed border-border/70 bg-secondary/30 px-4 py-3.5 opacity-70">
+        <Lock className="mt-0.5 size-4 shrink-0 text-muted-foreground" aria-hidden="true" />
+        <div>
+          <p className="text-[0.85rem] font-medium text-muted-foreground">
+            Week {week.week_number} — {week.title}
+          </p>
+          <p className="mt-0.5 text-[0.78rem] text-muted-foreground/80">{week.objective}</p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div
+      className={cn(
+        "rounded-xl border px-4 py-3.5",
+        week.status === "active"
+          ? "border-econ-green-active/30 bg-econ-green-soft/30"
+          : "border-border/60 bg-card/40",
+      )}
+    >
+      <button
+        type="button"
+        onClick={() => setExpanded((v) => !v)}
+        className="flex w-full items-center justify-between gap-3 text-left"
+      >
+        <div className="flex items-center gap-2.5">
+          {week.status === "completed" ? (
+            <span className="flex size-5 shrink-0 items-center justify-center rounded-full bg-econ-green-active text-white">
+              <Check className="size-3" aria-hidden="true" />
+            </span>
+          ) : (
+            <span className="flex size-5 shrink-0 items-center justify-center rounded-full border border-econ-green-active text-[0.65rem] font-semibold text-econ-green-active ring-4 ring-econ-green-active/15">
+              {week.week_number}
+            </span>
+          )}
+          <div>
+            <p className="text-[0.85rem] font-medium text-foreground">
+              Week {week.week_number} — {week.title}
+            </p>
+            {(!expanded || week.status === "completed") && (
+              <p className="text-[0.72rem] text-muted-foreground">
+                {doneCount}/{week.tasks.length} done
+              </p>
+            )}
+          </div>
+        </div>
+        <ChevronDown
+          className={cn(
+            "size-4 shrink-0 text-muted-foreground transition-transform",
+            expanded && "rotate-180",
+          )}
+          aria-hidden="true"
+        />
+      </button>
+      {expanded && (
+        <>
+          <p className="mt-2 pl-[1.85rem] text-[0.78rem] text-muted-foreground">{week.objective}</p>
+          <div className="mt-3 flex flex-col gap-2.5 pl-0 sm:pl-[1.85rem]">
+            {week.tasks.map((task) => (
+              <TaskRow
+                key={task.id}
+                task={task}
+                roadmapId={roadmapId}
+                onToggle={onToggle}
+                onReplanNeeded={onReplanNeeded}
+              />
+            ))}
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
 function formatINR(n: number): string {
   if (n <= 0) return "₹0";
   if (n >= 100_000) return `₹${(n / 100_000).toFixed(n % 100_000 === 0 ? 0 : 1)}L`;
@@ -346,6 +453,16 @@ function RoadmapPage() {
             roadmap_tasks: phase.roadmap_tasks.map((t) =>
               t.id === vars.taskId ? { ...t, status: vars.status } : t,
             ),
+            // Weeks carry their own copy of each task (see getRoadmap) —
+            // patch both so the week-tier UI updates optimistically too.
+            // A newly-unlocked next week only appears after the
+            // server round-trip (onSettled refetches "roadmap" below).
+            roadmap_weeks: phase.roadmap_weeks.map((week) => ({
+              ...week,
+              roadmap_tasks: week.roadmap_tasks.map((t) =>
+                t.id === vars.taskId ? { ...t, status: vars.status } : t,
+              ),
+            })),
           })),
         };
       });
@@ -419,6 +536,15 @@ function RoadmapPage() {
   const phasesWithTasks = sortedPhases.map((phase) => ({
     ...phase,
     tasks: [...phase.roadmap_tasks].sort((a, b) => a.order_index - b.order_index) as Task[],
+    // Empty for a roadmap generated before the week-unlock migration — the
+    // UI falls back to the flat `tasks` list above in that case (see the
+    // two render sites below).
+    weeks: [...phase.roadmap_weeks]
+      .sort((a, b) => a.order_index - b.order_index)
+      .map((week) => ({
+        ...week,
+        tasks: [...week.roadmap_tasks].sort((a, b) => a.order_index - b.order_index) as Task[],
+      })) as Week[],
   }));
   const currentPhaseIndex = phasesWithTasks.findIndex((p) =>
     p.tasks.some((t) => t.status !== "done"),
@@ -571,15 +697,25 @@ function RoadmapPage() {
               </p>
             )}
             <div className="mt-4 flex flex-col gap-2.5">
-              {activePhase.tasks.map((task) => (
-                <TaskRow
-                  key={task.id}
-                  task={task}
-                  roadmapId={roadmap.id}
-                  onToggle={(taskId, status) => toggleTaskMutation.mutate({ taskId, status })}
-                  onReplanNeeded={refresh}
-                />
-              ))}
+              {activePhase.weeks.length > 0
+                ? activePhase.weeks.map((week) => (
+                    <WeekBlock
+                      key={week.id}
+                      week={week}
+                      roadmapId={roadmap.id}
+                      onToggle={(taskId, status) => toggleTaskMutation.mutate({ taskId, status })}
+                      onReplanNeeded={refresh}
+                    />
+                  ))
+                : activePhase.tasks.map((task) => (
+                    <TaskRow
+                      key={task.id}
+                      task={task}
+                      roadmapId={roadmap.id}
+                      onToggle={(taskId, status) => toggleTaskMutation.mutate({ taskId, status })}
+                      onReplanNeeded={refresh}
+                    />
+                  ))}
             </div>
           </section>
         )}
@@ -648,15 +784,29 @@ function RoadmapPage() {
                   </p>
                 )}
                 <div className="mt-3 flex flex-col gap-2.5 pl-0 sm:pl-9">
-                  {phase.tasks.map((task) => (
-                    <TaskRow
-                      key={task.id}
-                      task={task}
-                      roadmapId={roadmap.id}
-                      onToggle={(taskId, status) => toggleTaskMutation.mutate({ taskId, status })}
-                      onReplanNeeded={refresh}
-                    />
-                  ))}
+                  {phase.weeks.length > 0
+                    ? phase.weeks.map((week) => (
+                        <WeekBlock
+                          key={week.id}
+                          week={week}
+                          roadmapId={roadmap.id}
+                          onToggle={(taskId, status) =>
+                            toggleTaskMutation.mutate({ taskId, status })
+                          }
+                          onReplanNeeded={refresh}
+                        />
+                      ))
+                    : phase.tasks.map((task) => (
+                        <TaskRow
+                          key={task.id}
+                          task={task}
+                          roadmapId={roadmap.id}
+                          onToggle={(taskId, status) =>
+                            toggleTaskMutation.mutate({ taskId, status })
+                          }
+                          onReplanNeeded={refresh}
+                        />
+                      ))}
                 </div>
               </section>
             );

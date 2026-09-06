@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -11,7 +11,11 @@ import { PremiumButton } from "@/components/solventia/PremiumButton";
 import { Button } from "@/components/ui/button";
 import { requireAuthLoader } from "@/lib/route-guards";
 import { getDashboard } from "@/lib/actions/dashboard";
-import { exploreMoreOpportunities, switchSelectedOpportunity } from "@/lib/actions/opportunities";
+import {
+  exploreMoreOpportunities,
+  switchSelectedOpportunity,
+  buildRoadmapForOpportunity,
+} from "@/lib/actions/opportunities";
 import { getFitFactors, getWhyReasons } from "@/lib/opportunity-display";
 import { getConstraintWarnings, type FitScoreResult } from "@/lib/profile/scoring";
 import type { OpportunityCandidate, OpportunityPackage } from "@/lib/ai/schemas";
@@ -47,10 +51,12 @@ function getEconomicSnapshot(candidate: OpportunityPackage | OpportunityCandidat
 }
 
 function DashboardHome() {
+  const navigate = useNavigate();
   const queryClient = useQueryClient();
   const dashboardQuery = useQuery({ queryKey: ["dashboard"], queryFn: () => getDashboard() });
   const [exploring, setExploring] = useState(false);
   const [switching, setSwitching] = useState<string | null>(null);
+  const [buildingRoadmap, setBuildingRoadmap] = useState(false);
   const [showBreakdown, setShowBreakdown] = useState(false);
 
   async function refresh() {
@@ -76,11 +82,28 @@ function DashboardHome() {
     try {
       await switchSelectedOpportunity({ data: { opportunityId } });
       await refresh();
+      toast.success(
+        "Set as your primary direction. Your previous roadmap, if any, has been archived — you can revisit it anytime.",
+      );
     } catch (err) {
       console.error("[dashboard] switch opportunity failed:", err);
       toast.error("Couldn't switch opportunities — try again.");
     } finally {
       setSwitching(null);
+    }
+  }
+
+  async function handleBuildRoadmap(opportunityId: string) {
+    setBuildingRoadmap(true);
+    try {
+      await buildRoadmapForOpportunity({ data: { opportunityId } });
+      await refresh();
+      navigate({ to: "/dashboard/roadmap" });
+    } catch (err) {
+      console.error("[dashboard] build roadmap failed:", err);
+      toast.error("Sol couldn't build your roadmap right now — try again.");
+    } finally {
+      setBuildingRoadmap(false);
     }
   }
 
@@ -259,6 +282,29 @@ function DashboardHome() {
                   ))}
                 </div>
               )}
+            </section>
+          )}
+
+          {/* ===== BUILD MY ROADMAP — primary is selected but has no roadmap yet ===== */}
+          {primary && !data.roadmap && (
+            <section className="mt-6 rounded-[1.5rem] border border-econ-green/25 bg-econ-green-soft/50 p-6 text-center sm:p-7">
+              <p className="eyebrow text-econ-green-deep">Ready to Execute</p>
+              <h3 className="mt-2 font-display text-[1.2rem] font-semibold text-primary">
+                Turn {primary.title} into a week-by-week plan.
+              </h3>
+              <p className="mx-auto mt-1.5 max-w-md text-[0.88rem] leading-relaxed text-muted-foreground">
+                Sol builds a staged roadmap tailored to this idea and your real time and capital —
+                it unlocks one week at a time as you make progress.
+              </p>
+              <Button
+                className="mt-4 bg-econ-green-active text-white hover:bg-econ-green-deep"
+                onClick={() => handleBuildRoadmap(primary.id)}
+                disabled={buildingRoadmap}
+              >
+                {buildingRoadmap && <Loader2 className="size-4 animate-spin" aria-hidden="true" />}
+                Build My Roadmap
+                <ArrowRight className="size-4" aria-hidden="true" />
+              </Button>
             </section>
           )}
 
