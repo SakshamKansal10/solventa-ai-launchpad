@@ -1,12 +1,29 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "@tanstack/react-router";
+import { useNavigate, Link } from "@tanstack/react-router";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { motion } from "motion/react";
-import { ArrowRight, Menu } from "lucide-react";
+import {
+  ArrowRight,
+  History,
+  LayoutDashboard,
+  LogOut,
+  Menu,
+  Settings,
+  Sparkles,
+} from "lucide-react";
 import mark from "@/assets/solventia-mark.png";
 import { useActiveSection, scrollToSection } from "@/hooks/use-active-section";
 import { PremiumButton } from "./PremiumButton";
 import { SignInDialog } from "./SignInDialog";
 import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { getCurrentUser, signOut } from "@/lib/actions/auth";
 
 const NAV: { label: string; id: string }[] = [
   { label: "How It Works", id: "how-it-works" },
@@ -48,11 +65,18 @@ function NavLink({
   );
 }
 
+function initials(email: string | null): string {
+  return email ? email[0].toUpperCase() : "S";
+}
+
 export function Header() {
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const activeId = useActiveSection(NAV_IDS);
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  const currentUser = useQuery({ queryKey: ["current-user"], queryFn: () => getCurrentUser() });
+  const isSignedIn = Boolean(currentUser.data);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 12);
@@ -64,6 +88,15 @@ export function Header() {
   function handleNavigate(id: string) {
     scrollToSection(id);
     setMobileOpen(false);
+  }
+
+  async function handleSignOut() {
+    try {
+      await signOut();
+    } finally {
+      queryClient.clear();
+      navigate({ to: "/" });
+    }
   }
 
   return (
@@ -116,28 +149,87 @@ export function Header() {
         </nav>
 
         <div className="flex items-center gap-3">
-          <SignInDialog
-            trigger={
+          {isSignedIn ? (
+            <>
               <PremiumButton
-                tone="outline"
+                tone="solid"
                 shape="pill"
                 size="sm"
+                onClick={() => navigate({ to: "/dashboard" })}
                 className="hidden sm:inline-flex"
               >
-                Sign In
+                Continue Dashboard
+                <ArrowRight className="size-4 text-accent" aria-hidden="true" />
               </PremiumButton>
-            }
-          />
-          <PremiumButton
-            tone="solid"
-            shape="pill"
-            size="sm"
-            onClick={() => navigate({ to: "/consultation" })}
-            className="hidden sm:inline-flex"
-          >
-            Find Your Business Idea
-            <ArrowRight className="size-4 text-accent transition-transform duration-300 group-hover:translate-x-1" />
-          </PremiumButton>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button
+                    type="button"
+                    aria-label="Account menu"
+                    className="hidden size-10 items-center justify-center rounded-full bg-gradient-to-br from-gold to-violet text-[0.85rem] font-semibold text-white sm:flex"
+                  >
+                    {initials(currentUser.data?.email ?? null)}
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-56">
+                  <DropdownMenuItem asChild>
+                    <Link to="/dashboard" className="cursor-pointer">
+                      <LayoutDashboard className="size-4" aria-hidden="true" />
+                      Dashboard
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link to="/consultation" className="cursor-pointer">
+                      <Sparkles className="size-4" aria-hidden="true" />
+                      Start New Consultation
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link to="/dashboard/history" className="cursor-pointer">
+                      <History className="size-4" aria-hidden="true" />
+                      Idea History
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link to="/dashboard/settings" className="cursor-pointer">
+                      <Settings className="size-4" aria-hidden="true" />
+                      Settings
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={handleSignOut} className="cursor-pointer">
+                    <LogOut className="size-4" aria-hidden="true" />
+                    Sign Out
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </>
+          ) : (
+            <>
+              <SignInDialog
+                trigger={
+                  <PremiumButton
+                    tone="outline"
+                    shape="pill"
+                    size="sm"
+                    className="hidden sm:inline-flex"
+                  >
+                    Sign In
+                  </PremiumButton>
+                }
+              />
+              <PremiumButton
+                tone="solid"
+                shape="pill"
+                size="sm"
+                onClick={() => navigate({ to: "/consultation" })}
+                className="hidden sm:inline-flex"
+              >
+                Find Your Business Idea
+                <ArrowRight className="size-4 text-accent transition-transform duration-300 group-hover:translate-x-1" />
+              </PremiumButton>
+            </>
+          )}
 
           <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
             <SheetTrigger asChild>
@@ -171,26 +263,80 @@ export function Header() {
                 ))}
               </nav>
               <div className="mt-8 flex flex-col gap-3">
-                <SignInDialog
-                  trigger={
-                    <PremiumButton tone="outline" shape="rounded" size="sm" className="w-full">
-                      Sign In
+                {isSignedIn ? (
+                  <>
+                    <PremiumButton
+                      tone="solid"
+                      shape="rounded"
+                      size="sm"
+                      className="w-full"
+                      onClick={() => {
+                        setMobileOpen(false);
+                        navigate({ to: "/dashboard" });
+                      }}
+                    >
+                      Continue Dashboard
+                      <ArrowRight className="size-4 text-accent" aria-hidden="true" />
                     </PremiumButton>
-                  }
-                />
-                <PremiumButton
-                  tone="solid"
-                  shape="rounded"
-                  size="sm"
-                  className="w-full"
-                  onClick={() => {
-                    setMobileOpen(false);
-                    navigate({ to: "/consultation" });
-                  }}
-                >
-                  Find Your Business Idea
-                  <ArrowRight className="size-4 text-accent" aria-hidden="true" />
-                </PremiumButton>
+                    <PremiumButton
+                      tone="outline"
+                      shape="rounded"
+                      size="sm"
+                      className="w-full"
+                      onClick={() => {
+                        setMobileOpen(false);
+                        navigate({ to: "/consultation" });
+                      }}
+                    >
+                      Start New Consultation
+                    </PremiumButton>
+                    <PremiumButton
+                      tone="outline"
+                      shape="rounded"
+                      size="sm"
+                      className="w-full"
+                      onClick={() => {
+                        setMobileOpen(false);
+                        navigate({ to: "/dashboard/settings" });
+                      }}
+                    >
+                      Settings
+                    </PremiumButton>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setMobileOpen(false);
+                        handleSignOut();
+                      }}
+                      className="text-center text-[0.82rem] font-medium text-muted-foreground hover:text-primary"
+                    >
+                      Sign Out
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <SignInDialog
+                      trigger={
+                        <PremiumButton tone="outline" shape="rounded" size="sm" className="w-full">
+                          Sign In
+                        </PremiumButton>
+                      }
+                    />
+                    <PremiumButton
+                      tone="solid"
+                      shape="rounded"
+                      size="sm"
+                      className="w-full"
+                      onClick={() => {
+                        setMobileOpen(false);
+                        navigate({ to: "/consultation" });
+                      }}
+                    >
+                      Find Your Business Idea
+                      <ArrowRight className="size-4 text-accent" aria-hidden="true" />
+                    </PremiumButton>
+                  </>
+                )}
               </div>
             </SheetContent>
           </Sheet>
