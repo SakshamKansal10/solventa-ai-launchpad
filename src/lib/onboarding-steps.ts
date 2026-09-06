@@ -327,6 +327,7 @@ export const STEPS: Step[] = [
       "None of these yet",
     ],
     optional: true,
+    allowSelectAll: true,
   },
   {
     kind: "question-group",

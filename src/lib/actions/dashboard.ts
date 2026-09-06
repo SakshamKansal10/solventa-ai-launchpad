@@ -31,14 +31,13 @@ export const getDashboard = createServerFn({ method: "GET" }).handler(async () =
 
   const [profileRes, opportunitiesRes, dnaRes, activeRoadmapRes] = await Promise.all([
     supabase.from("profiles").select("full_name, email").eq("id", user.id).maybeSingle(),
-    // Tie-break by created_at ascending: completeConsultation inserts
-    // opportunities in the same stable-sorted order it used to decide
-    // which one's roadmap became "active" (see profile.ts), so the
-    // earliest-created among equal fit scores is the one whose roadmap
-    // actually exists as active — without this second key, Postgres's
-    // ORDER BY has no guaranteed tie order, and a fit-score tie could
-    // make `primary` (below) disagree with which roadmap the roadmap page
-    // finds, even though nothing about the data is wrong.
+    // Every opportunity the founder has ever had, across every
+    // consultation they've ever completed — deliberately unscoped here.
+    // `latestOpportunities` below narrows to the current consultation for
+    // the PASSIVE fallback path; an explicit `selected` status or a real
+    // active roadmap (both real founder actions) are honored regardless
+    // of which consultation produced them — see the primary/alternatives
+    // derivation below for why the two cases are handled differently.
     supabase
       .from("opportunities")
       .select("*")
@@ -47,7 +46,7 @@ export const getDashboard = createServerFn({ method: "GET" }).handler(async () =
       .order("created_at", { ascending: true }),
     supabase
       .from("business_dna")
-      .select("founder_analysis, normalized_signals")
+      .select("id, founder_analysis, normalized_signals")
       .eq("user_id", user.id)
       .order("created_at", { ascending: false })
       .limit(1)
@@ -70,14 +69,30 @@ export const getDashboard = createServerFn({ method: "GET" }).handler(async () =
   if (opportunitiesRes.error) throw new Error(opportunitiesRes.error.message);
 
   const opportunities = opportunitiesRes.data ?? [];
-  const active = opportunities.filter((o) => o.status === "active");
+  const latestBusinessDnaId = dnaRes.data?.id ?? null;
+  // The passive fallback (no explicit selection, no active roadmap yet)
+  // must only ever consider the MOST RECENT consultation's ideas — without
+  // this, a founder who redoes onboarding with new answers would keep
+  // seeing an old idea from a previous consultation just because it
+  // happened to score higher, since old opportunities are never deleted
+  // or touched by completing a new consultation (see profile.ts).
+  const latestOpportunities = latestBusinessDnaId
+    ? opportunities.filter((o) => o.business_dna_id === latestBusinessDnaId)
+    : [];
+  const activeLatest = latestOpportunities.filter((o) => o.status === "active");
+  // An explicit `selected` status is real founder intent and wins
+  // regardless of which consultation it came from — a founder switching
+  // back to an old idea via history should never be silently overridden
+  // by a newer, never-acted-on consultation.
   const selected = opportunities.find((o) => o.status === "selected") ?? null;
   const saved = opportunities.filter((o) => o.status === "saved");
 
   const activeRoadmapOpportunityId = activeRoadmapRes.data?.opportunity_id ?? null;
-  const primary =
-    selected ?? active.find((o) => o.id === activeRoadmapOpportunityId) ?? active[0] ?? null;
-  const alternatives = active.filter((o) => o.id !== primary?.id).slice(0, 2);
+  const activeRoadmapOpportunity = activeRoadmapOpportunityId
+    ? (opportunities.find((o) => o.id === activeRoadmapOpportunityId) ?? null)
+    : null;
+  const primary = selected ?? activeRoadmapOpportunity ?? activeLatest[0] ?? null;
+  const alternatives = activeLatest.filter((o) => o.id !== primary?.id).slice(0, 2);
 
   let roadmap: {
     phases: RoadmapPhaseSummary[];
@@ -175,4 +190,108 @@ export const getDashboard = createServerFn({ method: "GET" }).handler(async () =
       : null,
     roadmap,
   };
+});
+
+export interface ConsultationHistoryEntry {
+  businessDnaId: string;
+  createdAt: string;
+  opportunities: {
+    id: string;
+    title: string;
+    oneLiner: string;
+    fitScore: number;
+    status: string;
+  }[];
+}
+
+/** Every consultation EXCEPT the current one — completing a new
+ * consultation never deletes or hides old ideas, it just stops them from
+ * being the default dashboard view (see getDashboard). This is what lets
+ * a founder browse and, from an opportunity's own page, explicitly switch
+ * back to an old idea (getOpportunity/switchSelectedOpportunity already
+ * work by opportunity id regardless of which consultation produced it). */
+/** Everything the Settings page needs, gathered in one call: identity,
+ * current founder status, and counts — never raw enough data to need its
+ * own separate loading states per section. */
+export const getSettingsData = createServerFn({ method: "GET" }).handler(async () => {
+  const { supabase, user } = await requireUser();
+
+  const [profileRes, dnaRes, opportunitiesCountRes, roadmapCountRes] = await Promise.all([
+    supabase
+      .from("profiles")
+      .select("full_name, email, created_at")
+      .eq("id", user.id)
+      .maybeSingle(),
+    supabase
+      .from("business_dna")
+      .select("normalized_signals")
+      .eq("user_id", user.id)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle(),
+    supabase
+      .from("opportunities")
+      .select("id", { count: "exact", head: true })
+      .eq("user_id", user.id),
+    supabase.from("roadmaps").select("id", { count: "exact", head: true }).eq("user_id", user.id),
+  ]);
+
+  const signals = dnaRes.data?.normalized_signals as unknown as NormalizedProfile | undefined;
+
+  return {
+    fullName: profileRes.data?.full_name ?? null,
+    email: profileRes.data?.email ?? user.email ?? null,
+    memberSince: profileRes.data?.created_at ?? null,
+    currentStatus: signals?.identity.currentStatus ?? null,
+    ideaCount: opportunitiesCountRes.count ?? 0,
+    roadmapCount: roadmapCountRes.count ?? 0,
+  };
+});
+
+export const getConsultationHistory = createServerFn({ method: "GET" }).handler(async () => {
+  const { supabase, user } = await requireUser();
+
+  const [dnaRes, latestDnaRes, opportunitiesRes] = await Promise.all([
+    supabase
+      .from("business_dna")
+      .select("id, created_at")
+      .eq("user_id", user.id)
+      .order("created_at", { ascending: false }),
+    supabase
+      .from("business_dna")
+      .select("id")
+      .eq("user_id", user.id)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle(),
+    supabase
+      .from("opportunities")
+      .select("id, business_dna_id, title, one_liner, fit_score, status")
+      .eq("user_id", user.id)
+      .order("fit_score", { ascending: false }),
+  ]);
+  if (dnaRes.error) throw new Error(dnaRes.error.message);
+  if (opportunitiesRes.error) throw new Error(opportunitiesRes.error.message);
+
+  const latestId = latestDnaRes.data?.id ?? null;
+  const opportunities = opportunitiesRes.data ?? [];
+
+  const history: ConsultationHistoryEntry[] = (dnaRes.data ?? [])
+    .filter((dna) => dna.id !== latestId)
+    .map((dna) => ({
+      businessDnaId: dna.id,
+      createdAt: dna.created_at,
+      opportunities: opportunities
+        .filter((o) => o.business_dna_id === dna.id)
+        .map((o) => ({
+          id: o.id,
+          title: o.title,
+          oneLiner: o.one_liner,
+          fitScore: o.fit_score,
+          status: o.status,
+        })),
+    }))
+    .filter((entry) => entry.opportunities.length > 0);
+
+  return history;
 });

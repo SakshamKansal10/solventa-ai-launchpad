@@ -1,13 +1,18 @@
 import { describe, it, expect, vi } from "vitest";
 
 /**
- * Proves the dashboard's "primary" opportunity always matches whichever
- * roadmap is actually active — not just whichever active opportunity has
- * the highest fit_score. Explore More Opportunities can add a
- * higher-scoring opportunity without activating its roadmap (deliberate —
- * exploring more must never silently switch the founder's current path),
- * which used to make the dashboard show that new idea as "Your Strongest
- * Match" while the roadmap page kept showing the real current one.
+ * Proves the dashboard's "primary" opportunity:
+ * 1. Always matches whichever roadmap is actually active — not just
+ *    whichever active opportunity has the highest fit_score. Explore More
+ *    Opportunities can add a higher-scoring opportunity without activating
+ *    its roadmap (deliberate — exploring more must never silently switch
+ *    the founder's current path).
+ * 2. Never falls back to an opportunity from an OLDER consultation just
+ *    because it happens to score higher than the founder's latest one —
+ *    completing a new consultation must show the new ideas, not resurrect
+ *    an old one, unless the founder explicitly selected it or it has a
+ *    real active roadmap (both real founder actions, honored regardless
+ *    of which consultation produced them).
  *
  * Everything Supabase is mocked; this makes no live database call.
  */
@@ -24,6 +29,7 @@ import { getDashboard } from "@/lib/actions/dashboard";
 
 const requireUserMock = vi.mocked(requireUser);
 const FAKE_USER = { id: "user-1", email: "founder@example.com" };
+const LATEST_DNA_ID = "dna-2";
 
 interface Row {
   [key: string]: unknown;
@@ -72,12 +78,21 @@ function createFakeSupabase(tables: Record<string, Row[]>) {
   return { from: (table: string) => builder(table) };
 }
 
+// Every scenario below has one "current" business_dna row (id=LATEST_DNA_ID)
+// unless a test is specifically about multiple consultations.
+const LATEST_DNA_ROW: Row = {
+  id: LATEST_DNA_ID,
+  user_id: FAKE_USER.id,
+  created_at: "2026-02-01T00:00:00Z",
+};
+
 describe("getDashboard primary-opportunity selection", () => {
   it("primary matches the ACTIVE roadmap's opportunity, not just the highest fit_score among active opportunities", async () => {
     const opportunities: Row[] = [
       {
         id: "opp-current",
         user_id: FAKE_USER.id,
+        business_dna_id: LATEST_DNA_ID,
         status: "active",
         fit_score: 70,
         created_at: "2026-01-01T00:00:00Z",
@@ -86,6 +101,7 @@ describe("getDashboard primary-opportunity selection", () => {
       {
         id: "opp-explored-higher-score",
         user_id: FAKE_USER.id,
+        business_dna_id: LATEST_DNA_ID,
         status: "active",
         fit_score: 90,
         created_at: "2026-02-01T00:00:00Z",
@@ -106,7 +122,7 @@ describe("getDashboard primary-opportunity selection", () => {
     const supabase = createFakeSupabase({
       profiles: [{ id: FAKE_USER.id, full_name: "Founder", email: FAKE_USER.email }],
       opportunities,
-      business_dna: [],
+      business_dna: [LATEST_DNA_ROW],
       roadmaps,
     });
     requireUserMock.mockResolvedValue({ supabase, user: FAKE_USER } as never);
@@ -117,11 +133,12 @@ describe("getDashboard primary-opportunity selection", () => {
     expect(dashboard.alternatives.map((o) => o.id)).toEqual(["opp-explored-higher-score"]);
   });
 
-  it("falls back to the highest-scoring active opportunity when no roadmap is active at all", async () => {
+  it("falls back to the highest-scoring active opportunity in the latest consultation when no roadmap is active at all", async () => {
     const opportunities: Row[] = [
       {
         id: "opp-a",
         user_id: FAKE_USER.id,
+        business_dna_id: LATEST_DNA_ID,
         status: "active",
         fit_score: 60,
         created_at: "2026-01-01T00:00:00Z",
@@ -129,6 +146,7 @@ describe("getDashboard primary-opportunity selection", () => {
       {
         id: "opp-b",
         user_id: FAKE_USER.id,
+        business_dna_id: LATEST_DNA_ID,
         status: "active",
         fit_score: 80,
         created_at: "2026-01-02T00:00:00Z",
@@ -137,7 +155,7 @@ describe("getDashboard primary-opportunity selection", () => {
     const supabase = createFakeSupabase({
       profiles: [],
       opportunities,
-      business_dna: [],
+      business_dna: [LATEST_DNA_ROW],
       roadmaps: [],
     });
     requireUserMock.mockResolvedValue({ supabase, user: FAKE_USER } as never);
@@ -152,6 +170,7 @@ describe("getDashboard primary-opportunity selection", () => {
       {
         id: "opp-selected",
         user_id: FAKE_USER.id,
+        business_dna_id: LATEST_DNA_ID,
         status: "selected",
         fit_score: 50,
         created_at: "2026-01-01T00:00:00Z",
@@ -159,6 +178,7 @@ describe("getDashboard primary-opportunity selection", () => {
       {
         id: "opp-other",
         user_id: FAKE_USER.id,
+        business_dna_id: LATEST_DNA_ID,
         status: "active",
         fit_score: 95,
         created_at: "2026-01-02T00:00:00Z",
@@ -167,7 +187,7 @@ describe("getDashboard primary-opportunity selection", () => {
     const supabase = createFakeSupabase({
       profiles: [],
       opportunities,
-      business_dna: [],
+      business_dna: [LATEST_DNA_ROW],
       roadmaps: [{ opportunity_id: "opp-other", user_id: FAKE_USER.id, status: "active" }],
     });
     requireUserMock.mockResolvedValue({ supabase, user: FAKE_USER } as never);
@@ -175,5 +195,91 @@ describe("getDashboard primary-opportunity selection", () => {
     const dashboard = await getDashboard();
 
     expect(dashboard.primary?.id).toBe("opp-selected");
+  });
+
+  it("REGRESSION: a returning founder who completes a new consultation sees the NEW ideas, never an old higher-scoring one, when nothing has been explicitly selected yet", async () => {
+    const opportunities: Row[] = [
+      // Old consultation — founder never selected anything, no roadmap
+      // was ever built, but it scored higher than anything in the new batch.
+      {
+        id: "opp-old-high-score",
+        user_id: FAKE_USER.id,
+        business_dna_id: "dna-1-old",
+        status: "active",
+        fit_score: 99,
+        created_at: "2026-01-01T00:00:00Z",
+        title: "Old idea from a previous consultation",
+      },
+      // New consultation — lower score than the old one, but must win
+      // because it's the LATEST consultation and nothing is explicitly
+      // selected or active yet.
+      {
+        id: "opp-new-primary",
+        user_id: FAKE_USER.id,
+        business_dna_id: LATEST_DNA_ID,
+        status: "active",
+        fit_score: 70,
+        created_at: "2026-02-01T00:00:00Z",
+        title: "New idea from the latest consultation",
+      },
+      {
+        id: "opp-new-alt",
+        user_id: FAKE_USER.id,
+        business_dna_id: LATEST_DNA_ID,
+        status: "active",
+        fit_score: 65,
+        created_at: "2026-02-01T00:00:01Z",
+        title: "New alternative from the latest consultation",
+      },
+    ];
+    const supabase = createFakeSupabase({
+      profiles: [],
+      opportunities,
+      business_dna: [LATEST_DNA_ROW],
+      roadmaps: [],
+    });
+    requireUserMock.mockResolvedValue({ supabase, user: FAKE_USER } as never);
+
+    const dashboard = await getDashboard();
+
+    expect(dashboard.primary?.id).toBe("opp-new-primary");
+    expect(dashboard.alternatives.map((o) => o.id)).toEqual(["opp-new-alt"]);
+    // The old opportunity must never appear as primary or as an
+    // alternative to the new consultation's ideas.
+    expect(dashboard.alternatives.map((o) => o.id)).not.toContain("opp-old-high-score");
+  });
+
+  it("REGRESSION: explicitly re-selecting an idea from an OLD consultation still wins over the latest one", async () => {
+    const opportunities: Row[] = [
+      {
+        id: "opp-old-reselected",
+        user_id: FAKE_USER.id,
+        business_dna_id: "dna-1-old",
+        status: "selected",
+        fit_score: 40,
+        created_at: "2026-01-01T00:00:00Z",
+        title: "Founder deliberately switched back to this old idea",
+      },
+      {
+        id: "opp-new-primary",
+        user_id: FAKE_USER.id,
+        business_dna_id: LATEST_DNA_ID,
+        status: "active",
+        fit_score: 90,
+        created_at: "2026-02-01T00:00:00Z",
+        title: "New idea from the latest consultation",
+      },
+    ];
+    const supabase = createFakeSupabase({
+      profiles: [],
+      opportunities,
+      business_dna: [LATEST_DNA_ROW],
+      roadmaps: [],
+    });
+    requireUserMock.mockResolvedValue({ supabase, user: FAKE_USER } as never);
+
+    const dashboard = await getDashboard();
+
+    expect(dashboard.primary?.id).toBe("opp-old-reselected");
   });
 });

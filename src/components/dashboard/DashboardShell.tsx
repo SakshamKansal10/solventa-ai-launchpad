@@ -4,11 +4,13 @@ import { useQueryClient } from "@tanstack/react-query";
 import {
   Compass,
   Fingerprint,
+  History,
   LineChart,
   Lock,
   LogOut,
   Map,
   Menu,
+  Settings,
   Sparkles,
   Target,
 } from "lucide-react";
@@ -96,7 +98,9 @@ function useNavItems(opportunityId: string | null, hasRoadmap?: boolean): NavIte
       hash: "business-dna",
       isRealDestination: true,
     },
+    { label: "Idea History", icon: History, to: "/dashboard/history", isRealDestination: true },
     { label: "Ask Sol", icon: Sparkles, action: "ask-sol", isRealDestination: true },
+    { label: "Settings", icon: Settings, to: "/dashboard/settings", isRealDestination: true },
   ];
 }
 
@@ -303,6 +307,18 @@ export function DashboardShell({
             />
           </SheetContent>
         </Sheet>
+
+        {/* ===== FLOATING ASK SOL TRIGGER — the primary entry point ===== */}
+        {!mentorOpen && (
+          <button
+            type="button"
+            onClick={() => setMentorOpen(true)}
+            aria-label="Ask Sol"
+            className="fixed bottom-6 right-6 z-30 flex size-14 items-center justify-center rounded-full bg-gradient-to-br from-gold to-violet shadow-[0_12px_32px_-8px_oklch(0.606_0.19_292.7_/_0.45)] transition-transform hover:scale-105"
+          >
+            <img src={mark} alt="" width={298} height={436} className="h-6 w-auto" />
+          </button>
+        )}
 
         <MentorPanel
           open={mentorOpen}

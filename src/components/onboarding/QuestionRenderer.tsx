@@ -33,6 +33,17 @@ const SPECTRUM_INTERPRETATIONS: Record<string, string> = {
     "You're willing to take real risks for a real shot at something bigger.",
 };
 
+/** Options "All of the above" must never select — it means every
+ * PREDEFINED option applies, never a catch-all/uncertain one. */
+function isExcludedFromSelectAll(option: string): boolean {
+  const normalized = option.trim().toLowerCase();
+  return (
+    normalized === "other" ||
+    normalized.startsWith("none of these") ||
+    normalized.startsWith("not sure")
+  );
+}
+
 export function QuestionRenderer({ step }: { step: QuestionStep }) {
   const { answers, setAnswer, goNext, skip } = useOnboarding();
   const theme = getStageTheme(step.section);
@@ -116,31 +127,6 @@ export function QuestionRenderer({ step }: { step: QuestionStep }) {
 
       {step.input === "multi-choice" && step.options && (
         <div className="flex flex-col gap-3">
-          {step.allowSelectAll &&
-            (() => {
-              const list = Array.isArray(value) ? (value as string[]) : [];
-              const allSelected = step.options!.every((o) => list.includes(o));
-              return (
-                <motion.button
-                  type="button"
-                  whileHover={{ y: -2 }}
-                  whileTap={{ scale: 0.98 }}
-                  onClick={() =>
-                    setAnswer(step.id, (allSelected ? [] : [...step.options!]) as never)
-                  }
-                  className={cn(
-                    "flex items-center justify-center gap-2 rounded-full border-2 px-5 py-3.5 text-[0.92rem] font-semibold shadow-sm transition-colors duration-200",
-                    allSelected
-                      ? "border-gold bg-gold/[0.12] text-primary"
-                      : "border-gold/50 bg-gold/[0.05] text-primary hover:border-gold hover:bg-gold/[0.1]",
-                  )}
-                >
-                  <Sparkles className="size-4 text-gold" aria-hidden="true" />
-                  All of the above
-                  {allSelected && <Check className="size-4 text-gold" aria-hidden="true" />}
-                </motion.button>
-              );
-            })()}
           <div className="grid gap-3 sm:grid-cols-2">
             {step.options.map((option) => {
               const list = Array.isArray(value) ? (value as string[]) : [];
@@ -188,6 +174,32 @@ export function QuestionRenderer({ step }: { step: QuestionStep }) {
               );
             })}
           </div>
+          {step.allowSelectAll &&
+            (() => {
+              const list = Array.isArray(value) ? (value as string[]) : [];
+              const selectableOptions = step.options!.filter((o) => !isExcludedFromSelectAll(o));
+              const allSelected = selectableOptions.every((o) => list.includes(o));
+              return (
+                <motion.button
+                  type="button"
+                  whileHover={{ y: -2 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={() =>
+                    setAnswer(step.id, (allSelected ? [] : selectableOptions) as never)
+                  }
+                  className={cn(
+                    "flex items-center justify-center gap-2 rounded-full border-2 px-5 py-3.5 text-[0.92rem] font-semibold shadow-sm transition-colors duration-200",
+                    allSelected
+                      ? "border-gold bg-gold/[0.12] text-primary"
+                      : "border-gold/50 bg-gold/[0.05] text-primary hover:border-gold hover:bg-gold/[0.1]",
+                  )}
+                >
+                  <Sparkles className="size-4 text-gold" aria-hidden="true" />
+                  All of the above
+                  {allSelected && <Check className="size-4 text-gold" aria-hidden="true" />}
+                </motion.button>
+              );
+            })()}
         </div>
       )}
 

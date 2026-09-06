@@ -17,7 +17,9 @@ import { Route as ReviewPublicRouteImport } from './routes/review-public'
 import { Route as TermsRouteImport } from './routes/terms'
 import { Route as AuthCallbackRouteImport } from './routes/auth/callback'
 import { Route as DashboardIndexRouteImport } from './routes/dashboard/index'
+import { Route as DashboardHistoryRouteImport } from './routes/dashboard/history'
 import { Route as DashboardRoadmapRouteImport } from './routes/dashboard/roadmap'
+import { Route as DashboardSettingsRouteImport } from './routes/dashboard/settings'
 import { Route as DashboardOpportunitiesIdRouteImport } from './routes/dashboard/opportunities/$id'
 
 const IndexRoute = IndexRouteImport.update({
@@ -60,9 +62,19 @@ const DashboardIndexRoute = DashboardIndexRouteImport.update({
   path: '/dashboard/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const DashboardHistoryRoute = DashboardHistoryRouteImport.update({
+  id: '/dashboard/history',
+  path: '/dashboard/history',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const DashboardRoadmapRoute = DashboardRoadmapRouteImport.update({
   id: '/dashboard/roadmap',
   path: '/dashboard/roadmap',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DashboardSettingsRoute = DashboardSettingsRouteImport.update({
+  id: '/dashboard/settings',
+  path: '/dashboard/settings',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DashboardOpportunitiesIdRoute =
@@ -80,7 +92,9 @@ export interface FileRoutesByFullPath {
   '/review-public': typeof ReviewPublicRoute
   '/terms': typeof TermsRoute
   '/auth/callback': typeof AuthCallbackRoute
+  '/dashboard/history': typeof DashboardHistoryRoute
   '/dashboard/roadmap': typeof DashboardRoadmapRoute
+  '/dashboard/settings': typeof DashboardSettingsRoute
   '/dashboard/': typeof DashboardIndexRoute
   '/dashboard/opportunities/$id': typeof DashboardOpportunitiesIdRoute
 }
@@ -92,7 +106,9 @@ export interface FileRoutesByTo {
   '/review-public': typeof ReviewPublicRoute
   '/terms': typeof TermsRoute
   '/auth/callback': typeof AuthCallbackRoute
+  '/dashboard/history': typeof DashboardHistoryRoute
   '/dashboard/roadmap': typeof DashboardRoadmapRoute
+  '/dashboard/settings': typeof DashboardSettingsRoute
   '/dashboard': typeof DashboardIndexRoute
   '/dashboard/opportunities/$id': typeof DashboardOpportunitiesIdRoute
 }
@@ -105,7 +121,9 @@ export interface FileRoutesById {
   '/review-public': typeof ReviewPublicRoute
   '/terms': typeof TermsRoute
   '/auth/callback': typeof AuthCallbackRoute
+  '/dashboard/history': typeof DashboardHistoryRoute
   '/dashboard/roadmap': typeof DashboardRoadmapRoute
+  '/dashboard/settings': typeof DashboardSettingsRoute
   '/dashboard/': typeof DashboardIndexRoute
   '/dashboard/opportunities/$id': typeof DashboardOpportunitiesIdRoute
 }
@@ -119,7 +137,9 @@ export interface FileRouteTypes {
     | '/review-public'
     | '/terms'
     | '/auth/callback'
+    | '/dashboard/history'
     | '/dashboard/roadmap'
+    | '/dashboard/settings'
     | '/dashboard/'
     | '/dashboard/opportunities/$id'
   fileRoutesByTo: FileRoutesByTo
@@ -131,7 +151,9 @@ export interface FileRouteTypes {
     | '/review-public'
     | '/terms'
     | '/auth/callback'
+    | '/dashboard/history'
     | '/dashboard/roadmap'
+    | '/dashboard/settings'
     | '/dashboard'
     | '/dashboard/opportunities/$id'
   id:
@@ -143,7 +165,9 @@ export interface FileRouteTypes {
     | '/review-public'
     | '/terms'
     | '/auth/callback'
+    | '/dashboard/history'
     | '/dashboard/roadmap'
+    | '/dashboard/settings'
     | '/dashboard/'
     | '/dashboard/opportunities/$id'
   fileRoutesById: FileRoutesById
@@ -156,7 +180,9 @@ export interface RootRouteChildren {
   ReviewPublicRoute: typeof ReviewPublicRoute
   TermsRoute: typeof TermsRoute
   AuthCallbackRoute: typeof AuthCallbackRoute
+  DashboardHistoryRoute: typeof DashboardHistoryRoute
   DashboardRoadmapRoute: typeof DashboardRoadmapRoute
+  DashboardSettingsRoute: typeof DashboardSettingsRoute
   DashboardIndexRoute: typeof DashboardIndexRoute
   DashboardOpportunitiesIdRoute: typeof DashboardOpportunitiesIdRoute
 }
@@ -219,11 +245,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/dashboard/history': {
+      id: '/dashboard/history'
+      path: '/dashboard/history'
+      fullPath: '/dashboard/history'
+      preLoaderRoute: typeof DashboardHistoryRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/dashboard/roadmap': {
       id: '/dashboard/roadmap'
       path: '/dashboard/roadmap'
       fullPath: '/dashboard/roadmap'
       preLoaderRoute: typeof DashboardRoadmapRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/dashboard/settings': {
+      id: '/dashboard/settings'
+      path: '/dashboard/settings'
+      fullPath: '/dashboard/settings'
+      preLoaderRoute: typeof DashboardSettingsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/dashboard/opportunities/$id': {
@@ -244,7 +284,9 @@ const rootRouteChildren: RootRouteChildren = {
   ReviewPublicRoute: ReviewPublicRoute,
   TermsRoute: TermsRoute,
   AuthCallbackRoute: AuthCallbackRoute,
+  DashboardHistoryRoute: DashboardHistoryRoute,
   DashboardRoadmapRoute: DashboardRoadmapRoute,
+  DashboardSettingsRoute: DashboardSettingsRoute,
   DashboardIndexRoute: DashboardIndexRoute,
   DashboardOpportunitiesIdRoute: DashboardOpportunitiesIdRoute,
 }
