@@ -62,7 +62,34 @@ export interface StaticStep {
   kind: "welcome" | "ai-intro" | "complete";
 }
 
-export type Step = QuestionStep | SectionIntroStep | ThinkingStep | StaticStep;
+/** One sub-question inside a question-group screen — always a compact
+ * chip choice, never a text/textarea/select (those don't compress well
+ * onto a shared screen). Each keeps its own optional condition so a
+ * group can still adapt per branch without needing a whole separate
+ * group variant. */
+export interface GroupItem {
+  id: keyof OnboardingAnswers;
+  label: string;
+  options: string[];
+  optional?: boolean;
+  condition?: (a: OnboardingAnswers) => boolean;
+}
+
+/** Several short, related chip questions on ONE screen instead of one
+ * screen each — this is the actual mechanism behind "group similar MCQs
+ * together," not just shorter copy. Exists specifically for clusters of
+ * quick, low-stakes choice questions (work style, comfort with people,
+ * day-to-day reliability) that felt like rapid-fire form fields when each
+ * got its own full screen. */
+export interface QuestionGroupStep {
+  kind: "question-group";
+  section: number;
+  title: string;
+  helper?: string;
+  items: GroupItem[];
+}
+
+export type Step = QuestionStep | QuestionGroupStep | SectionIntroStep | ThinkingStep | StaticStep;
 
 const isStudent = (a: OnboardingAnswers) =>
   a.currentStatus === "School Student" || a.currentStatus === "College Student";
@@ -213,10 +240,17 @@ export const STEPS: Step[] = [
     kind: "question",
     id: "currentBusinessCustomers",
     section: 1,
-    input: "text",
+    input: "multi-choice",
     label: "Who are your current customers?",
-    placeholder: "e.g. Local retail shops, young professionals in my city",
+    options: [
+      "Individual consumers",
+      "Local businesses",
+      "Other businesses (B2B)",
+      "Government or institutions",
+      "Online & global customers",
+    ],
     optional: true,
+    allowSelectAll: true,
     condition: isEntrepreneur,
   },
 
@@ -295,22 +329,21 @@ export const STEPS: Step[] = [
     optional: true,
   },
   {
-    kind: "question",
-    id: "internetQuality",
+    kind: "question-group",
     section: 3,
-    input: "choice",
-    label: "How reliable is your internet access?",
-    options: ["Excellent, always on", "Good, mostly reliable", "Patchy", "Very limited"],
-    autoContinue: true,
-  },
-  {
-    kind: "question",
-    id: "transportation",
-    section: 3,
-    input: "choice",
-    label: "How easily can you travel to meet people or run errands?",
-    options: ["Very easily", "With some planning", "Difficult", "Not able to travel much"],
-    autoContinue: true,
+    title: "Your Everyday Reality",
+    items: [
+      {
+        id: "internetQuality",
+        label: "How reliable is your internet access?",
+        options: ["Excellent, always on", "Good, mostly reliable", "Patchy", "Very limited"],
+      },
+      {
+        id: "transportation",
+        label: "How easily can you travel to meet people or run errands?",
+        options: ["Very easily", "With some planning", "Difficult", "Not able to travel much"],
+      },
+    ],
   },
 
   { kind: "thinking", afterSection: 3 },
@@ -323,40 +356,43 @@ export const STEPS: Step[] = [
     body: "There's no wrong answer here — how you handle exposure and uncertainty shapes what kind of venture will actually feel right to run.",
   },
   {
-    kind: "question",
-    id: "workLocation",
+    kind: "question-group",
     section: 4,
-    input: "choice",
-    label: "Would you rather work remotely or in person?",
-    options: ["Remote", "In person", "A mix of both", "No strong preference"],
-    autoContinue: true,
+    title: "Your Work Style",
+    items: [
+      {
+        id: "workLocation",
+        label: "Remote or in person?",
+        options: ["Remote", "In person", "A mix of both", "No strong preference"],
+      },
+      {
+        id: "workType",
+        label: "What kind of venture excites you most?",
+        options: ["Making content", "Building a product", "Offering a service", "Not sure yet"],
+      },
+      {
+        id: "soloOrTeam",
+        label: "Building this alone or with others?",
+        options: ["Solo", "With a small team", "With a co-founder", "Not sure yet"],
+      },
+    ],
   },
   {
-    kind: "question",
-    id: "workType",
+    kind: "question-group",
     section: 4,
-    input: "choice",
-    label: "What kind of venture excites you most?",
-    options: ["Making content", "Building a product", "Offering a service", "Not sure yet"],
-    autoContinue: true,
-  },
-  {
-    kind: "question",
-    id: "leadership",
-    section: 4,
-    input: "choice",
-    label: "How comfortable are you leading others?",
-    options: ["Very comfortable", "Somewhat comfortable", "Prefer not to", "Untested"],
-    autoContinue: true,
-  },
-  {
-    kind: "question",
-    id: "salesComfort",
-    section: 4,
-    input: "choice",
-    label: "How do you feel about selling or pitching?",
-    options: ["I enjoy it", "I can do it if needed", "It makes me uneasy", "Never tried"],
-    autoContinue: true,
+    title: "Working With People",
+    items: [
+      {
+        id: "leadership",
+        label: "How comfortable are you leading others?",
+        options: ["Very comfortable", "Somewhat comfortable", "Prefer not to", "Untested"],
+      },
+      {
+        id: "salesComfort",
+        label: "How do you feel about selling or pitching?",
+        options: ["I enjoy it", "I can do it if needed", "It makes me uneasy", "Never tried"],
+      },
+    ],
   },
   {
     kind: "question",
@@ -365,15 +401,6 @@ export const STEPS: Step[] = [
     input: "spectrum",
     label: "How comfortable are you with uncertainty?",
     options: ["Very cautious", "Balanced", "Comfortable experimenting"],
-  },
-  {
-    kind: "question",
-    id: "soloOrTeam",
-    section: 4,
-    input: "choice",
-    label: "Do you see yourself building this alone or with others?",
-    options: ["Solo", "With a small team", "With a co-founder", "Not sure yet"],
-    autoContinue: true,
   },
 
   // ===== Section 5 — Your Motivation =====
@@ -449,18 +476,11 @@ export const STEPS: Step[] = [
   },
   {
     kind: "question",
-    id: "healthLimitations",
-    section: 6,
-    input: "textarea",
-    label: "Any health or physical limitations we should factor in?",
-    optional: true,
-  },
-  {
-    kind: "question",
     id: "otherConstraints",
     section: 6,
     input: "textarea",
-    label: "Anything else that would help us plan around your reality?",
+    label: "Anything else Sol should know about your situation?",
+    helper: "Health, scheduling, family commitments — anything that shapes what's realistic.",
     optional: true,
   },
 
@@ -553,23 +573,38 @@ export const STEPS: Step[] = [
 
 /** Resolve the active step list for this user's path — conditional
  * steps whose `condition` fails (or whose duplicate id already matched
- * a prior condition) are filtered out entirely. */
+ * a prior condition) are filtered out entirely. A question-group keeps
+ * only the items whose own condition passes, and is dropped entirely if
+ * that leaves it with nothing to ask. */
 export function resolveSteps(answers: OnboardingAnswers): Step[] {
   const seenGoalStep = new Set<number>();
   const seenStateStep = new Set<number>();
-  return STEPS.filter((step, index) => {
-    if (step.kind !== "question") return true;
-    if (step.condition && !step.condition(answers)) return false;
+  const resolved: Step[] = [];
+
+  STEPS.forEach((step, index) => {
+    if (step.kind === "question-group") {
+      const items = step.items.filter((item) => !item.condition || item.condition(answers));
+      if (items.length === 0) return;
+      resolved.push({ ...step, items });
+      return;
+    }
+    if (step.kind !== "question") {
+      resolved.push(step);
+      return;
+    }
+    if (step.condition && !step.condition(answers)) return;
     // The three "goals" variants share an id — only one can be active at a time.
     if (step.id === "goals") {
-      if (seenGoalStep.size > 0) return false;
+      if (seenGoalStep.size > 0) return;
       seenGoalStep.add(index);
     }
     // The two "state" variants (India dropdown vs. free-text region) share an id.
     if (step.id === "state") {
-      if (seenStateStep.size > 0) return false;
+      if (seenStateStep.size > 0) return;
       seenStateStep.add(index);
     }
-    return true;
+    resolved.push(step);
   });
+
+  return resolved;
 }

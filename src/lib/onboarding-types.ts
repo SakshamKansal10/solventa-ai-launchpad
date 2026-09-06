@@ -64,7 +64,7 @@ export interface OnboardingAnswers {
    * start something adjacent. */
   currentBusinessRevenue?: string;
   /** Business Owner / Freelancer branch only. */
-  currentBusinessCustomers?: string;
+  currentBusinessCustomers?: string[];
 
   timeAvailableWeekly?: string;
 
@@ -99,7 +99,8 @@ export interface OnboardingAnswers {
    * covers common cases but can't enumerate everything. */
   industryRestrictionsOther?: string;
   relocation?: string;
-  healthLimitations?: string;
+  /** Catch-all for health/physical/scheduling/anything-else limitations —
+   * one combined question instead of two separate textareas. */
   otherConstraints?: string;
 
   // Section 7 — Founder Mindset

@@ -1,7 +1,17 @@
 import { createContext, useContext, useState, type ReactNode } from "react";
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
-import { Compass, Fingerprint, LineChart, LogOut, Map, Menu, Sparkles, Target } from "lucide-react";
+import {
+  Compass,
+  Fingerprint,
+  LineChart,
+  Lock,
+  LogOut,
+  Map,
+  Menu,
+  Sparkles,
+  Target,
+} from "lucide-react";
 import mark from "@/assets/solventia-mark.png";
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 import { MentorPanel } from "@/components/dashboard/MentorPanel";
@@ -30,6 +40,12 @@ interface DashboardShellProps {
    * ("Working with you on X") — never fetched, just threaded down from
    * whatever the page already loaded. */
   opportunityTitle?: string | null;
+  /** Whether the founder's currently-selected opportunity actually has a
+   * built roadmap yet. `undefined` (the default, for pages that haven't
+   * loaded this data) leaves the Roadmap nav item in its normal state;
+   * `false` renders it visibly locked instead of a normal clickable item
+   * that would otherwise just land on an empty state. */
+  hasRoadmap?: boolean;
 }
 
 interface NavItem {
@@ -43,9 +59,14 @@ interface NavItem {
    * opportunityId yet, and shouldn't compete with Overview for the active
    * highlight while they're just placeholders. */
   isRealDestination: boolean;
+  /** Rendered as a visibly locked, non-navigable row instead of a normal
+   * link — for Roadmap before a roadmap has actually been built, so the
+   * nav item itself teaches "this exists once you build it" rather than
+   * silently landing on an empty state. */
+  locked?: boolean;
 }
 
-function useNavItems(opportunityId: string | null): NavItem[] {
+function useNavItems(opportunityId: string | null, hasRoadmap?: boolean): NavItem[] {
   return [
     { label: "Overview", icon: Compass, to: "/dashboard", isRealDestination: true },
     {
@@ -54,7 +75,13 @@ function useNavItems(opportunityId: string | null): NavItem[] {
       to: opportunityId ? `/dashboard/opportunities/${opportunityId}` : "/dashboard",
       isRealDestination: opportunityId !== null,
     },
-    { label: "Roadmap", icon: Map, to: "/dashboard/roadmap", isRealDestination: true },
+    {
+      label: "Roadmap",
+      icon: Map,
+      to: "/dashboard/roadmap",
+      isRealDestination: true,
+      locked: hasRoadmap === false,
+    },
     {
       label: "Market Validation",
       icon: LineChart,
@@ -95,6 +122,18 @@ function NavLink({
       : "text-workspace-muted hover:bg-white/5 hover:text-workspace-foreground",
   );
 
+  if (item.locked) {
+    return (
+      <div
+        className="flex cursor-not-allowed items-center gap-3 rounded-lg px-3.5 py-2.5 text-[0.85rem] font-medium text-workspace-muted/50"
+        title="Build your roadmap to unlock this"
+      >
+        <Lock className="size-4 shrink-0" aria-hidden="true" strokeWidth={1.75} />
+        <span className="uppercase tracking-[0.06em]">{item.label}</span>
+      </div>
+    );
+  }
+
   if (item.action === "ask-sol") {
     return (
       <button
@@ -121,16 +160,18 @@ function NavLink({
 
 function SidebarContent({
   opportunityId,
+  hasRoadmap,
   onNavigate,
   onAskSol,
   onSignOut,
 }: {
   opportunityId: string | null;
+  hasRoadmap?: boolean;
   onNavigate: () => void;
   onAskSol: () => void;
   onSignOut: () => void;
 }) {
-  const navItems = useNavItems(opportunityId);
+  const navItems = useNavItems(opportunityId, hasRoadmap);
   const currentPath = useRouterState({ select: (s) => s.location.pathname });
 
   return (
@@ -177,6 +218,7 @@ export function DashboardShell({
   children,
   opportunityId = null,
   opportunityTitle = null,
+  hasRoadmap,
 }: DashboardShellProps) {
   const [mentorOpen, setMentorOpen] = useState(false);
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
@@ -214,6 +256,7 @@ export function DashboardShell({
         <aside className="hidden h-dvh w-[248px] shrink-0 overflow-y-auto border-r border-workspace-border bg-workspace lg:block">
           <SidebarContent
             opportunityId={opportunityId}
+            hasRoadmap={hasRoadmap}
             onNavigate={() => {}}
             onAskSol={() => setMentorOpen(true)}
             onSignOut={handleSignOut}
@@ -253,6 +296,7 @@ export function DashboardShell({
             <SheetTitle className="sr-only">Navigation</SheetTitle>
             <SidebarContent
               opportunityId={opportunityId}
+              hasRoadmap={hasRoadmap}
               onNavigate={() => setMobileNavOpen(false)}
               onAskSol={() => setMentorOpen(true)}
               onSignOut={handleSignOut}

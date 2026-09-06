@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
-import { ArrowRight, Check } from "lucide-react";
+import { ArrowRight, Check, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { QuestionStep } from "@/lib/onboarding-steps";
 import { LANGUAGE_LIBRARY, type SkillEntry } from "@/lib/onboarding-types";
@@ -115,48 +115,7 @@ export function QuestionRenderer({ step }: { step: QuestionStep }) {
       )}
 
       {step.input === "multi-choice" && step.options && (
-        <div className="grid gap-3 sm:grid-cols-2">
-          {step.options.map((option) => {
-            const list = Array.isArray(value) ? (value as string[]) : [];
-            const active = list.includes(option);
-            return (
-              <motion.button
-                key={option}
-                type="button"
-                whileHover={{ y: -2 }}
-                whileTap={{ scale: 0.98 }}
-                animate={active ? { y: -1 } : { y: 0 }}
-                onClick={() =>
-                  setAnswer(
-                    step.id,
-                    (active ? list.filter((o) => o !== option) : [...list, option]) as never,
-                  )
-                }
-                style={
-                  active
-                    ? { borderColor: theme.color, backgroundColor: theme.colorSoft }
-                    : undefined
-                }
-                className={cn(
-                  "flex items-center justify-between rounded-xl border px-5 py-4 text-left text-[0.95rem] font-medium text-primary shadow-sm transition-colors duration-200",
-                  !active && "border-border bg-card text-foreground hover:border-primary/30",
-                )}
-              >
-                {option}
-                <AnimatePresence>
-                  {active && (
-                    <motion.span
-                      initial={{ scale: 0, opacity: 0 }}
-                      animate={{ scale: 1, opacity: 1 }}
-                      transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
-                    >
-                      <Check className="size-4" style={{ color: theme.color }} aria-hidden="true" />
-                    </motion.span>
-                  )}
-                </AnimatePresence>
-              </motion.button>
-            );
-          })}
+        <div className="flex flex-col gap-3">
           {step.allowSelectAll &&
             (() => {
               const list = Array.isArray(value) ? (value as string[]) : [];
@@ -166,24 +125,52 @@ export function QuestionRenderer({ step }: { step: QuestionStep }) {
                   type="button"
                   whileHover={{ y: -2 }}
                   whileTap={{ scale: 0.98 }}
-                  animate={allSelected ? { y: -1 } : { y: 0 }}
                   onClick={() =>
                     setAnswer(step.id, (allSelected ? [] : [...step.options!]) as never)
                   }
-                  style={
+                  className={cn(
+                    "flex items-center justify-center gap-2 rounded-full border-2 px-5 py-3.5 text-[0.92rem] font-semibold shadow-sm transition-colors duration-200",
                     allSelected
+                      ? "border-gold bg-gold/[0.12] text-primary"
+                      : "border-gold/50 bg-gold/[0.05] text-primary hover:border-gold hover:bg-gold/[0.1]",
+                  )}
+                >
+                  <Sparkles className="size-4 text-gold" aria-hidden="true" />
+                  All of the above
+                  {allSelected && <Check className="size-4 text-gold" aria-hidden="true" />}
+                </motion.button>
+              );
+            })()}
+          <div className="grid gap-3 sm:grid-cols-2">
+            {step.options.map((option) => {
+              const list = Array.isArray(value) ? (value as string[]) : [];
+              const active = list.includes(option);
+              return (
+                <motion.button
+                  key={option}
+                  type="button"
+                  whileHover={{ y: -2 }}
+                  whileTap={{ scale: 0.98 }}
+                  animate={active ? { y: -1 } : { y: 0 }}
+                  onClick={() =>
+                    setAnswer(
+                      step.id,
+                      (active ? list.filter((o) => o !== option) : [...list, option]) as never,
+                    )
+                  }
+                  style={
+                    active
                       ? { borderColor: theme.color, backgroundColor: theme.colorSoft }
                       : undefined
                   }
                   className={cn(
-                    "flex items-center justify-between rounded-xl border border-dashed px-5 py-4 text-left text-[0.95rem] font-medium text-primary shadow-sm transition-colors duration-200 sm:col-span-2",
-                    !allSelected &&
-                      "border-border bg-card/60 text-foreground hover:border-primary/30",
+                    "flex items-center justify-between rounded-xl border px-5 py-4 text-left text-[0.95rem] font-medium text-primary shadow-sm transition-colors duration-200",
+                    !active && "border-border bg-card text-foreground hover:border-primary/30",
                   )}
                 >
-                  All of the above
+                  {option}
                   <AnimatePresence>
-                    {allSelected && (
+                    {active && (
                       <motion.span
                         initial={{ scale: 0, opacity: 0 }}
                         animate={{ scale: 1, opacity: 1 }}
@@ -199,7 +186,8 @@ export function QuestionRenderer({ step }: { step: QuestionStep }) {
                   </AnimatePresence>
                 </motion.button>
               );
-            })()}
+            })}
+          </div>
         </div>
       )}
 

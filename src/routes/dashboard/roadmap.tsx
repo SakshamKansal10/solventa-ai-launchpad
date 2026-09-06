@@ -515,7 +515,7 @@ function RoadmapPage() {
 
   if (!query.data) {
     return (
-      <DashboardShell>
+      <DashboardShell hasRoadmap={false}>
         <div className="mt-10 rounded-[1.75rem] border border-border/70 bg-card/80 px-8 py-12 text-center">
           <MapPin className="mx-auto size-8 text-accent" aria-hidden="true" />
           <h2 className="mt-4 font-display text-xl font-semibold text-primary">No roadmap yet.</h2>
@@ -573,6 +573,7 @@ function RoadmapPage() {
     <DashboardShell
       opportunityId={roadmap.opportunity_id}
       opportunityTitle={opportunity?.title ?? null}
+      hasRoadmap
     >
       {/* ===== TOP: EXECUTION ROADMAP HEADER ===== */}
       <p className="eyebrow text-econ-green-active">Execution Roadmap</p>

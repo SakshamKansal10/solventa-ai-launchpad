@@ -51,7 +51,14 @@ export function getPersonalizedInsight(afterSection: number, a: OnboardingAnswer
       ? `with ${a.timeAvailableWeekly.toLowerCase()} a week to give this`
       : "";
 
-    return `Interesting. Since you're ${statusPhrase}${timePhrase ? `, ${timePhrase}` : ""}, I'm already narrowing toward opportunities that fit that reality — not generic advice.`;
+    const tailorPhrase =
+      a.currentStatus === "Business Owner" || a.currentStatus === "Freelancer"
+        ? " The next questions are about growing what you've already built, not starting from zero."
+        : a.currentStatus === "Working Professional"
+          ? " The next questions are about fitting this around your job, not replacing it overnight."
+          : "";
+
+    return `Interesting. Since you're ${statusPhrase}${timePhrase ? `, ${timePhrase}` : ""}, I'm already narrowing toward opportunities that fit that reality — not generic advice.${tailorPhrase}`;
   }
 
   if (afterSection === 2) {

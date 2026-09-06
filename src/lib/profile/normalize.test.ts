@@ -57,12 +57,10 @@ describe("normalizeProfile", () => {
   it("collects real constraints without dropping any", () => {
     const answers: OnboardingAnswers = {
       relocation: "No",
-      healthLimitations: "Limited mobility",
-      otherConstraints: "Must work evenings only",
+      otherConstraints: "Limited mobility; must work evenings only",
     };
     const profile = normalizeProfile(answers);
     expect(profile.constraints.relocation).toBe("No");
-    expect(profile.constraints.health).toBe("Limited mobility");
-    expect(profile.constraints.other).toBe("Must work evenings only");
+    expect(profile.constraints.other).toBe("Limited mobility; must work evenings only");
   });
 });

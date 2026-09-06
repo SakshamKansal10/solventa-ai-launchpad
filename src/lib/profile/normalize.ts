@@ -62,7 +62,6 @@ export interface NormalizedProfile {
   constraints: {
     industryRestrictions: string[];
     relocation: string | null;
-    health: string | null;
     other: string | null;
   };
   direction: {
@@ -191,7 +190,9 @@ export function normalizeProfile(answers: OnboardingAnswers): NormalizedProfile 
         answers.currentStatus === "Business Owner" || answers.currentStatus === "Freelancer"
           ? {
               revenueBracket: answers.currentBusinessRevenue ?? null,
-              customers: answers.currentBusinessCustomers ?? null,
+              customers: answers.currentBusinessCustomers?.length
+                ? answers.currentBusinessCustomers.join(", ")
+                : null,
             }
           : null,
     },
@@ -239,7 +240,6 @@ export function normalizeProfile(answers: OnboardingAnswers): NormalizedProfile 
         .filter((v) => v !== "Other")
         .concat(answers.industryRestrictionsOther ? [answers.industryRestrictionsOther] : []),
       relocation: answers.relocation ?? null,
-      health: answers.healthLimitations ?? null,
       other: answers.otherConstraints ?? null,
     },
     direction: {

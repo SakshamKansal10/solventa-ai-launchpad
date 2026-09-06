@@ -53,7 +53,6 @@ export function formatProfileForPrompt(profile: NormalizedProfile): string {
   const constraints = [
     ...profile.constraints.industryRestrictions,
     profile.constraints.relocation ? `relocation: ${profile.constraints.relocation}` : null,
-    profile.constraints.health ? `health/physical: ${profile.constraints.health}` : null,
     profile.constraints.other,
   ].filter(Boolean);
   if (constraints.length > 0) {

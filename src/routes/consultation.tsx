@@ -14,6 +14,7 @@ import {
 } from "@/components/onboarding/StaticScreens";
 import { ThinkingScreen } from "@/components/onboarding/ThinkingScreen";
 import { QuestionRenderer } from "@/components/onboarding/QuestionRenderer";
+import { QuestionGroupRenderer } from "@/components/onboarding/QuestionGroupRenderer";
 import { FounderProfilePanel } from "@/components/onboarding/FounderProfilePanel";
 import { StageAtmosphere } from "@/components/onboarding/StageAtmosphere";
 import type { InputKind, Step } from "@/lib/onboarding-steps";
@@ -30,7 +31,8 @@ const OPEN_CANVAS_INPUTS = new Set<InputKind>(["choice", "number", "currency", "
  * showing the chapter it's reflecting on; the welcome/intro screens open
  * on chapter one; completion settles into the final, gold chapter. */
 function getActiveSection(step: Step): number {
-  if (step.kind === "question" || step.kind === "section-intro") return step.section;
+  if (step.kind === "question" || step.kind === "section-intro" || step.kind === "question-group")
+    return step.section;
   if (step.kind === "thinking") return step.afterSection;
   if (step.kind === "complete") return 7;
   return 1;
@@ -215,6 +217,11 @@ function ConsultationShell() {
                     <QuestionRenderer step={currentStep} />
                   </div>
                 ))}
+              {currentStep.kind === "question-group" && (
+                <div className="card-breathe w-full rounded-[2rem] border border-border/70 bg-card/90 px-6 py-10 shadow-[0_30px_80px_-45px_oklch(0.245_0.055_268_/_0.22)] backdrop-blur-xl sm:px-12 sm:py-14">
+                  <QuestionGroupRenderer step={currentStep} />
+                </div>
+              )}
               {currentStep.kind === "complete" && <CompletionScreen />}
             </motion.div>
           </AnimatePresence>

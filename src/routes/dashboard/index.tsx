@@ -145,6 +145,7 @@ function DashboardHome() {
     <DashboardShell
       opportunityId={data.selected?.id ?? primary?.id ?? null}
       opportunityTitle={primary?.title ?? null}
+      hasRoadmap={primary ? Boolean(data.roadmap) : undefined}
     >
       <div className="flex flex-col gap-1">
         <h1 className="font-display text-[clamp(1.7rem,3vw,2.2rem)] font-semibold leading-tight text-primary">

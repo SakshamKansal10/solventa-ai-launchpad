@@ -131,14 +131,15 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
     setSavedAvailable(false);
   }, []);
 
-  const questionSteps = steps.filter((s) => s.kind === "question");
-  const answeredQuestionSteps = questionSteps.filter((s) =>
-    s.kind === "question" ? answers[s.id] !== undefined : false,
+  // Progress counts individual answerable fields, not screens — a
+  // question-group step is one screen but several distinct answers, and
+  // must weigh the same as several single-question screens would have.
+  const answerableIds = steps.flatMap((s) =>
+    s.kind === "question" ? [s.id] : s.kind === "question-group" ? s.items.map((i) => i.id) : [],
   );
+  const answeredCount = answerableIds.filter((id) => answers[id] !== undefined).length;
   const progress =
-    questionSteps.length === 0
-      ? 0
-      : Math.round((answeredQuestionSteps.length / questionSteps.length) * 100);
+    answerableIds.length === 0 ? 0 : Math.round((answeredCount / answerableIds.length) * 100);
 
   const value: OnboardingContextValue = {
     answers,
