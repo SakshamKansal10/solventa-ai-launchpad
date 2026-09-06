@@ -12,6 +12,11 @@ export function formatProfileForPrompt(profile: NormalizedProfile): string {
   lines.push(
     `Identity: ${profile.identity.age ?? "unknown"} years old, ${status}, based in ${[profile.identity.city, profile.identity.state, profile.identity.country].filter(Boolean).join(", ") || "unknown location"}. Education: ${profile.identity.education ?? "unknown"}. Languages: ${profile.identity.languages.join(", ") || "unknown"}.`,
   );
+  if (profile.identity.currentBusiness) {
+    lines.push(
+      `Already runs a business/freelance practice — revenue: ${profile.identity.currentBusiness.revenueBracket ?? "not shared"}, customers: ${profile.identity.currentBusiness.customers ?? "not shared"}. Consider whether extending this existing business fits better than starting something unrelated.`,
+    );
+  }
 
   if (profile.skills.length > 0) {
     lines.push(
@@ -60,6 +65,11 @@ export function formatProfileForPrompt(profile: NormalizedProfile): string {
   lines.push(
     `Direction: goals = ${profile.direction.goals.join(", ") || "unspecified"}; monthly income goal ≈ ${profile.direction.monthlyIncomeGoalINR ? `₹${profile.direction.monthlyIncomeGoalINR.toLocaleString("en-IN")}` : "not focused on income"}; timeline = ${profile.direction.timeline ?? "unspecified"}.`,
   );
+  if (profile.direction.willingToLeaveJob) {
+    lines.push(
+      `Willingness to eventually leave their job for this: ${profile.direction.willingToLeaveJob}.`,
+    );
+  }
 
   return lines.join("\n");
 }

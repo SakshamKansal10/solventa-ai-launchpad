@@ -38,6 +38,11 @@ export interface QuestionStep {
    * auto-advance a beat after selection instead of waiting for Continue. */
   autoContinue?: boolean;
   condition?: (a: OnboardingAnswers) => boolean;
+  /** multi-choice only. Adds an "All of the above" chip that selects every
+   * option at once — only for questions where every option can genuinely
+   * apply simultaneously (goals, assets, things to avoid), never for a
+   * question with one true answer (risk tolerance, capital, time). */
+  allowSelectAll?: boolean;
 }
 
 export interface SectionIntroStep {
@@ -62,10 +67,15 @@ export type Step = QuestionStep | SectionIntroStep | ThinkingStep | StaticStep;
 const isStudent = (a: OnboardingAnswers) =>
   a.currentStatus === "School Student" || a.currentStatus === "College Student";
 
-const isProfessional = (a: OnboardingAnswers) =>
-  a.currentStatus === "Working Professional" ||
-  a.currentStatus === "Business Owner" ||
-  a.currentStatus === "Freelancer";
+/** Has a job, not their own business — distinct from isEntrepreneur below
+ * because the questions/goals that actually apply differ (career/income
+ * questions vs. existing-business questions). */
+const isEmployee = (a: OnboardingAnswers) => a.currentStatus === "Working Professional";
+
+const isEntrepreneur = (a: OnboardingAnswers) =>
+  a.currentStatus === "Business Owner" || a.currentStatus === "Freelancer";
+
+const isWorking = (a: OnboardingAnswers) => isEmployee(a) || isEntrepreneur(a);
 
 export const STEPS: Step[] = [
   { kind: "welcome" },
@@ -164,7 +174,7 @@ export const STEPS: Step[] = [
     section: 1,
     input: "text",
     label: "What industry are you in?",
-    condition: isProfessional,
+    condition: isWorking,
   },
   {
     kind: "question",
@@ -173,7 +183,7 @@ export const STEPS: Step[] = [
     input: "select",
     label: "How many years of experience do you have?",
     options: ["Under 1 year", "1–3 years", "3–5 years", "5–10 years", "10+ years"],
-    condition: (a) => a.currentStatus === "Working Professional",
+    condition: isEmployee,
   },
   {
     kind: "question",
@@ -183,10 +193,31 @@ export const STEPS: Step[] = [
     label: "What's your approximate annual income?",
     options: INCOME_BRACKETS,
     optional: true,
-    condition: (a) =>
-      a.currentStatus === "Working Professional" ||
-      a.currentStatus === "Business Owner" ||
-      a.currentStatus === "Freelancer",
+    condition: isWorking,
+  },
+
+  // Entrepreneur / freelancer branch — an existing business changes what
+  // "starting" even means, so it needs its own questions rather than
+  // being folded into the employee-shaped ones above.
+  {
+    kind: "question",
+    id: "currentBusinessRevenue",
+    section: 1,
+    input: "select",
+    label: "What's your current business's approximate annual revenue?",
+    options: INCOME_BRACKETS,
+    optional: true,
+    condition: isEntrepreneur,
+  },
+  {
+    kind: "question",
+    id: "currentBusinessCustomers",
+    section: 1,
+    input: "text",
+    label: "Who are your current customers?",
+    placeholder: "e.g. Local retail shops, young professionals in my city",
+    optional: true,
+    condition: isEntrepreneur,
   },
 
   {
@@ -395,6 +426,7 @@ export const STEPS: Step[] = [
       "Other",
     ],
     optional: true,
+    allowSelectAll: true,
   },
   {
     kind: "question",
@@ -441,12 +473,28 @@ export const STEPS: Step[] = [
   },
   {
     kind: "question",
+    id: "willingToLeaveJob",
+    section: 7,
+    input: "choice",
+    label: "Would you consider leaving your job for this, if it worked out?",
+    options: [
+      "Yes, if it replaced my income",
+      "Possibly, eventually",
+      "No, this is deliberately a side project",
+      "Not sure yet",
+    ],
+    condition: isEmployee,
+    autoContinue: true,
+  },
+  {
+    kind: "question",
     id: "goals",
     section: 7,
     input: "multi-choice",
     label: "What are you hoping this leads to?",
     options: ["Pocket money", "Learning entrepreneurship", "A future startup", "Social impact"],
     condition: isStudent,
+    allowSelectAll: true,
   },
   {
     kind: "question",
@@ -460,7 +508,8 @@ export const STEPS: Step[] = [
       "Eventually quitting my job",
       "Scaling an existing venture",
     ],
-    condition: isProfessional,
+    condition: isWorking,
+    allowSelectAll: true,
   },
   {
     kind: "question",
@@ -469,7 +518,8 @@ export const STEPS: Step[] = [
     input: "multi-choice",
     label: "What are you hoping this leads to?",
     options: ["A steady income", "Learning entrepreneurship", "A future startup", "Social impact"],
-    condition: (a) => !isStudent(a) && !isProfessional(a),
+    condition: (a) => !isStudent(a) && !isWorking(a),
+    allowSelectAll: true,
   },
   {
     kind: "question",

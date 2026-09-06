@@ -22,6 +22,9 @@ export interface NormalizedProfile {
      * elaboration. Null whenever currentStatus isn't "Other". */
     currentStatusDetail: string | null;
     languages: string[];
+    /** Business Owner / Freelancer branch only — null for every other
+     * founder, not "no revenue". */
+    currentBusiness: { revenueBracket: string | null; customers: string | null } | null;
   };
   skills: NormalizedSkill[];
   experienceYears: number;
@@ -66,6 +69,8 @@ export interface NormalizedProfile {
     goals: string[];
     monthlyIncomeGoalINR: number | null;
     timeline: string | null;
+    /** Employee branch only — null for every other founder. */
+    willingToLeaveJob: string | null;
   };
 }
 
@@ -182,6 +187,13 @@ export function normalizeProfile(answers: OnboardingAnswers): NormalizedProfile 
       currentStatusDetail:
         answers.currentStatus === "Other" ? (answers.currentStatusOther ?? null) : null,
       languages: answers.languages ?? [],
+      currentBusiness:
+        answers.currentStatus === "Business Owner" || answers.currentStatus === "Freelancer"
+          ? {
+              revenueBracket: answers.currentBusinessRevenue ?? null,
+              customers: answers.currentBusinessCustomers ?? null,
+            }
+          : null,
     },
     skills: (answers.skills ?? []).map((s) => ({
       name: s.name,
@@ -234,6 +246,10 @@ export function normalizeProfile(answers: OnboardingAnswers): NormalizedProfile 
       goals: answers.goals ?? [],
       monthlyIncomeGoalINR,
       timeline: answers.timeline ?? null,
+      willingToLeaveJob:
+        answers.currentStatus === "Working Professional"
+          ? (answers.willingToLeaveJob ?? null)
+          : null,
     },
   };
 }

@@ -54,6 +54,17 @@ export interface OnboardingAnswers {
    * capital aren't the same thing), and directly useful for judging
    * realistic side-income goals against their existing earnings. */
   annualIncome?: string;
+  /** Employee branch only — distinguishes "this must eventually replace my
+   * job" from "this is deliberately just a side project," which changes
+   * how aggressively a roadmap should push toward full-time income. */
+  willingToLeaveJob?: string;
+  /** Business Owner / Freelancer branch only — an existing business's real
+   * revenue is a different signal than personal annualIncome and directly
+   * shapes whether a recommendation should extend the current business or
+   * start something adjacent. */
+  currentBusinessRevenue?: string;
+  /** Business Owner / Freelancer branch only. */
+  currentBusinessCustomers?: string;
 
   timeAvailableWeekly?: string;
 

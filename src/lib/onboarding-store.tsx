@@ -71,7 +71,31 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
   const currentStep = steps[Math.min(stepIndex, steps.length - 1)];
 
   const setAnswer = useCallback<OnboardingContextValue["setAnswer"]>((key, value) => {
-    setAnswers((prev) => ({ ...prev, [key]: value }));
+    setAnswers((prev) => {
+      // currentStatus decides which branch (student/employee/entrepreneur)
+      // is active, and several downstream questions (and one of the
+      // multi-select "goals" variants) only make sense for one branch. A
+      // founder can always go Back and change this answer — without this,
+      // an answer given under the OLD branch (e.g. a student's "Pocket
+      // money" goal, or an employee's yearsExperience) would silently
+      // survive into the new branch's profile even though the question
+      // that produced it is no longer even shown.
+      if (key === "currentStatus" && prev.currentStatus !== value) {
+        const {
+          industry: _industry,
+          yearsExperience: _yearsExperience,
+          annualIncome: _annualIncome,
+          willingToLeaveJob: _willingToLeaveJob,
+          currentBusinessRevenue: _currentBusinessRevenue,
+          currentBusinessCustomers: _currentBusinessCustomers,
+          major: _major,
+          goals: _goals,
+          ...rest
+        } = prev;
+        return { ...rest, [key]: value };
+      }
+      return { ...prev, [key]: value };
+    });
   }, []);
 
   const goNext = useCallback(() => {

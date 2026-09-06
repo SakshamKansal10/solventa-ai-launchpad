@@ -157,6 +157,49 @@ export function QuestionRenderer({ step }: { step: QuestionStep }) {
               </motion.button>
             );
           })}
+          {step.allowSelectAll &&
+            (() => {
+              const list = Array.isArray(value) ? (value as string[]) : [];
+              const allSelected = step.options!.every((o) => list.includes(o));
+              return (
+                <motion.button
+                  type="button"
+                  whileHover={{ y: -2 }}
+                  whileTap={{ scale: 0.98 }}
+                  animate={allSelected ? { y: -1 } : { y: 0 }}
+                  onClick={() =>
+                    setAnswer(step.id, (allSelected ? [] : [...step.options!]) as never)
+                  }
+                  style={
+                    allSelected
+                      ? { borderColor: theme.color, backgroundColor: theme.colorSoft }
+                      : undefined
+                  }
+                  className={cn(
+                    "flex items-center justify-between rounded-xl border border-dashed px-5 py-4 text-left text-[0.95rem] font-medium text-primary shadow-sm transition-colors duration-200 sm:col-span-2",
+                    !allSelected &&
+                      "border-border bg-card/60 text-foreground hover:border-primary/30",
+                  )}
+                >
+                  All of the above
+                  <AnimatePresence>
+                    {allSelected && (
+                      <motion.span
+                        initial={{ scale: 0, opacity: 0 }}
+                        animate={{ scale: 1, opacity: 1 }}
+                        transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
+                      >
+                        <Check
+                          className="size-4"
+                          style={{ color: theme.color }}
+                          aria-hidden="true"
+                        />
+                      </motion.span>
+                    )}
+                  </AnimatePresence>
+                </motion.button>
+              );
+            })()}
         </div>
       )}
 
