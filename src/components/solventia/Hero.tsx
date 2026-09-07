@@ -125,27 +125,17 @@ export function Hero() {
         ))}
       </div>
 
-      {/* Floating intelligence signals — desktop shows all three, mobile
-          shows two (Proof Signal hidden per spec). */}
+      {/* Floating intelligence signals — desktop only. On mobile the text
+          column fills nearly the full width, so absolute-positioned cards
+          would sit on top of the headline/buttons; those render in normal
+          document flow below the CTAs instead (see mobile block below). */}
       <div className="pointer-events-none absolute inset-0 z-10 hidden sm:block">
         {SIGNAL_CARDS.map((card) => (
           <SignalCard key={card.label} card={card} />
         ))}
       </div>
-      <div className="pointer-events-none absolute inset-0 z-10 sm:hidden">
-        {SIGNAL_CARDS.filter((c) => !c.hideOnMobile).map((card) => (
-          <div key={card.label} className={`absolute ${card.className}`}>
-            <div className="flex h-[58px] w-[136px] flex-col justify-center rounded-[18px] border border-[rgba(229,221,209,0.9)] bg-[rgba(255,253,249,0.94)] px-3.5 shadow-[0_16px_45px_rgba(23,32,61,0.08)]">
-              <p className="text-[10px] font-semibold uppercase tracking-[0.08em] text-sol-secondary">
-                {card.label}
-              </p>
-              <p className="mt-0.5 text-[15px] font-bold leading-none text-sol-ink">{card.value}</p>
-            </div>
-          </div>
-        ))}
-      </div>
 
-      <div className="relative z-20 mx-auto flex h-full max-w-[1920px] flex-col justify-center px-6 pt-[90px] lg:px-10">
+      <div className="relative z-20 mx-auto flex h-full max-w-[1920px] flex-col justify-center overflow-y-auto px-6 pb-8 pt-[90px] lg:overflow-visible lg:px-10">
         <motion.div
           initial="hidden"
           animate="show"
@@ -207,6 +197,26 @@ export function Hero() {
             >
               See How It Works
             </button>
+          </motion.div>
+
+          <motion.div
+            variants={fadeUp}
+            transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
+            className="mt-6 flex flex-wrap gap-3 sm:hidden"
+          >
+            {SIGNAL_CARDS.filter((c) => !c.hideOnMobile).map((card) => (
+              <div
+                key={card.label}
+                className="flex h-[58px] w-[136px] flex-col justify-center rounded-[18px] border border-[rgba(229,221,209,0.9)] bg-[rgba(255,253,249,0.94)] px-3.5 shadow-[0_16px_45px_rgba(23,32,61,0.08)]"
+              >
+                <p className="text-[10px] font-semibold uppercase tracking-[0.08em] text-sol-secondary">
+                  {card.label}
+                </p>
+                <p className="mt-0.5 text-[15px] font-bold leading-none text-sol-ink">
+                  {card.value}
+                </p>
+              </div>
+            ))}
           </motion.div>
         </motion.div>
       </div>
