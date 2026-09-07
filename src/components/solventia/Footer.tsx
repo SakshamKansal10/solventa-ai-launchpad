@@ -1,7 +1,8 @@
 import { Link } from "@tanstack/react-router";
-import { toast } from "sonner";
 import { Mail, Sparkles } from "lucide-react";
 import mark from "@/assets/solventia-mark.png";
+
+const CONTACT_EMAIL = "solventia.in@gmail.com";
 
 export function Footer() {
   return (
@@ -40,19 +41,17 @@ export function Footer() {
           </p>
         </div>
 
-        <div className="relative flex items-center gap-6">
-          <button
-            type="button"
-            aria-label="Email"
-            onClick={() =>
-              toast("Contact details coming soon", {
-                description: "We're setting up direct email — check back shortly.",
-              })
-            }
-            className="text-primary transition-all duration-300 hover:-translate-y-0.5 hover:text-accent"
+        <div className="relative flex flex-col items-end gap-1.5 text-right">
+          <p className="text-[0.78rem] text-muted-foreground">
+            Questions, partnerships or feedback?
+          </p>
+          <a
+            href={`mailto:${CONTACT_EMAIL}`}
+            className="flex items-center gap-2 text-[0.88rem] font-medium text-primary transition-all duration-300 hover:-translate-y-0.5 hover:text-accent"
           >
-            <Mail className="size-5" aria-hidden="true" />
-          </button>
+            <Mail className="size-4" aria-hidden="true" />
+            {CONTACT_EMAIL}
+          </a>
         </div>
       </div>
 

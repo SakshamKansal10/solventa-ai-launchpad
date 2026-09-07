@@ -340,6 +340,8 @@ export const runPublicMentorReply = createServerFn({ method: "POST" })
           profile,
           opportunityTitle: data.opportunityTitle,
           currentPhase: null,
+          currentWeek: null,
+          nextTaskWhat: null,
           recentHistory: data.history,
         },
         data.message,

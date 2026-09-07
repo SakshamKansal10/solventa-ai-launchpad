@@ -60,6 +60,8 @@ export const sendMentorMessage = createServerFn({ method: "POST" })
 
     let opportunityTitle: string | null = null;
     let currentPhase: string | null = null;
+    let currentWeek: { title: string; mission: string | null } | null = null;
+    let nextTaskWhat: string | null = null;
     if (data.opportunityId) {
       const opp = await supabase
         .from("opportunities")
@@ -70,7 +72,9 @@ export const sendMentorMessage = createServerFn({ method: "POST" })
 
       const roadmap = await supabase
         .from("roadmaps")
-        .select("id, roadmap_phases(title, order_index, roadmap_tasks(status))")
+        .select(
+          "id, roadmap_phases(title, order_index, roadmap_weeks(title, mission, status), roadmap_tasks(what, status, required, order_index))",
+        )
         .eq("opportunity_id", data.opportunityId)
         .eq("status", "active")
         .maybeSingle();
@@ -79,15 +83,34 @@ export const sendMentorMessage = createServerFn({ method: "POST" })
           roadmap_phases: {
             title: string;
             order_index: number;
-            roadmap_tasks: { status: string }[];
+            roadmap_weeks: { title: string; mission: string | null; status: string }[];
+            roadmap_tasks: {
+              what: string;
+              status: string;
+              required: boolean;
+              order_index: number;
+            }[];
           }[];
         } | null
       )?.roadmap_phases;
       if (phases) {
-        const active = [...phases]
-          .sort((a, b) => a.order_index - b.order_index)
-          .find((p) => p.roadmap_tasks.some((t) => t.status !== "done"));
+        const sorted = [...phases].sort((a, b) => a.order_index - b.order_index);
+        const active = sorted.find((p) => p.roadmap_tasks.some((t) => t.status !== "done"));
         currentPhase = active?.title ?? null;
+
+        const activeWeekRow = sorted
+          .flatMap((p) => p.roadmap_weeks)
+          .find((w) => w.status === "active");
+        currentWeek = activeWeekRow
+          ? { title: activeWeekRow.title, mission: activeWeekRow.mission }
+          : null;
+
+        const nextTask = active
+          ? [...active.roadmap_tasks]
+              .sort((a, b) => a.order_index - b.order_index)
+              .find((t) => t.status !== "done" && t.required)
+          : null;
+        nextTaskWhat = nextTask?.what ?? null;
       }
     }
 
@@ -96,6 +119,8 @@ export const sendMentorMessage = createServerFn({ method: "POST" })
         profile,
         opportunityTitle,
         currentPhase,
+        currentWeek,
+        nextTaskWhat,
         recentHistory: (history ?? []).map((m) => ({ role: m.role, content: m.content })),
       },
       data.message,
