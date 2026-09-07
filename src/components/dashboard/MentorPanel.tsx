@@ -106,15 +106,22 @@ export function MentorPanel({
     <AnimatePresence>
       {open && (
         <motion.aside
-          initial={{ x: "100%" }}
-          animate={{ x: 0 }}
-          exit={{ x: "100%" }}
-          transition={{ duration: 0.32, ease: [0.22, 1, 0.36, 1] }}
-          className="fixed inset-y-0 right-0 z-50 flex w-full flex-col border-l border-border/70 bg-card shadow-[-24px_0_60px_-30px_oklch(0.245_0.055_268_/_0.35)] sm:max-w-[400px]"
+          // Slides in via transform (GPU-composited, never janky) rather
+          // than literally animating width 0->420 — animating to an
+          // intrinsic/breakpoint-driven width in Framer Motion needs an
+          // "auto" measurement trick that's prone to layout jumps,
+          // especially combined with `fixed` positioning. This delivers
+          // the same "panel grows in from the right, fades up" feel
+          // without that risk.
+          initial={{ x: "100%", opacity: 0.6 }}
+          animate={{ x: 0, opacity: 1 }}
+          exit={{ x: "100%", opacity: 0.6 }}
+          transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
+          className="fixed inset-y-0 right-0 z-50 flex w-full flex-col border-l border-[#DED4EF] bg-sol-surface shadow-[-24px_0_60px_-30px_oklch(0.245_0.055_268_/_0.35)] lg:w-[360px] min-[1440px]:w-[420px]"
         >
-          <div className="flex items-center justify-between border-b border-violet/15 bg-violet/[0.04] px-6 py-5">
+          <div className="flex items-center justify-between border-b border-sol-violet-mist bg-sol-violet-ultralight px-6 py-5">
             <div className="flex items-center gap-2.5">
-              <span className="flex size-9 items-center justify-center rounded-full bg-gradient-to-br from-gold to-violet">
+              <span className="flex size-9 items-center justify-center rounded-full bg-gradient-to-br from-sol-champagne to-sol-violet">
                 <img src={mark} alt="" width={298} height={436} className="h-4 w-auto" />
               </span>
               <div className="leading-tight">

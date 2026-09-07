@@ -41,6 +41,30 @@
   --color-dashboard-heading: var(--dashboard-heading);
   --color-dashboard-body: var(--dashboard-body);
   --color-dashboard-muted: var(--dashboard-muted);
+  --color-dashboard-tertiary: var(--dashboard-tertiary);
+
+  /* Exact founder-workspace design tokens — see the master UI
+     specification. Parallel to (not a replacement for) the marketing/
+     homepage palette above: the homepage explicitly keeps its existing
+     identity, this set is for the founder-facing product only. */
+  --color-sol-pearl: var(--sol-pearl);
+  --color-sol-surface: var(--sol-surface);
+  --color-sol-ivory: var(--sol-ivory);
+  --color-sol-ink: var(--sol-ink);
+  --color-sol-navy: var(--sol-navy);
+  --color-sol-navy-soft: var(--sol-navy-soft);
+  --color-sol-violet: var(--sol-violet);
+  --color-sol-violet-deep: var(--sol-violet-deep);
+  --color-sol-violet-mist: var(--sol-violet-mist);
+  --color-sol-violet-ultralight: var(--sol-violet-ultralight);
+  --color-sol-champagne: var(--sol-champagne);
+  --color-sol-champagne-deep: var(--sol-champagne-deep);
+  --color-sol-champagne-soft: var(--sol-champagne-soft);
+  --color-sol-border: var(--sol-border);
+  --color-sol-border-strong: var(--sol-border-strong);
+  --color-sol-secondary: var(--sol-secondary);
+  --color-sol-muted: var(--sol-muted);
+  --color-sol-danger: var(--sol-danger);
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
@@ -124,15 +148,40 @@
   --violet: oklch(0.55 0.16 292.7);
   --violet-soft: oklch(0.606 0.19 292.7 / 0.12);
 
-  /* Dashboard-only typography (see the dashboard re-skin's gold-as-accent
-     rule) — deliberately separate from --foreground/--muted-foreground,
-     which the marketing site and onboarding flow also use, so this pass
-     never touches their look. Heading = rich navy-black, body = dark
-     charcoal, secondary = a genuinely WARM gray (foreground/muted-
-     foreground are both cool blue-gray, hue ~264-268). */
-  --dashboard-heading: oklch(0.22 0.03 264);
-  --dashboard-body: oklch(0.32 0.012 60);
-  --dashboard-muted: oklch(0.56 0.014 70);
+  /* Exact founder-workspace design tokens (hex source of truth in the
+     master UI spec; converted to oklch here per this file's own
+     oklch-only rule via proper sRGB->OKLCH color math, not approximated). */
+  --sol-pearl: oklch(0.9653 0.0102 81.8); /* #F7F3EC */
+  --sol-surface: oklch(0.9945 0.0057 84.6); /* #FFFDF9 */
+  --sol-ivory: oklch(0.9798 0.0086 84.6); /* #FBF8F2 */
+  --sol-ink: oklch(0.2137 0.03 274.9); /* #151827 */
+  --sol-navy: oklch(0.2517 0.0564 269.1); /* #17203D */
+  --sol-navy-soft: oklch(0.3256 0.06 271.2); /* #293253 */
+  --sol-violet: oklch(0.5534 0.189 288.3); /* #7257D8 */
+  --sol-violet-deep: oklch(0.4635 0.1813 286); /* #563EB7 */
+  --sol-violet-mist: oklch(0.9471 0.0285 296.8); /* #EFEAFF */
+  --sol-violet-ultralight: oklch(0.9726 0.0149 298.6); /* #F7F4FF */
+  --sol-champagne: oklch(0.7332 0.0846 79.8); /* #C5A36A */
+  --sol-champagne-deep: oklch(0.6294 0.092 75.9); /* #A98145 */
+  --sol-champagne-soft: oklch(0.9338 0.0274 83.5); /* #F2E8D5 */
+  --sol-border: oklch(0.9006 0.0184 78.2); /* #E5DDD1 */
+  --sol-border-strong: oklch(0.8455 0.0251 71.4); /* #D7CABB */
+  --sol-secondary: oklch(0.5068 0.0163 303.9); /* #67636D */
+  --sol-muted: oklch(0.6075 0.016 308.2); /* #85808A */
+  --sol-danger: oklch(0.5594 0.1436 16.5); /* #B94A56 */
+
+  /* Dashboard-only typography — deliberately separate from
+     --foreground/--muted-foreground, which the marketing site and
+     onboarding flow also use, so this pass never touches their look.
+     Now sourced directly from the exact sol-* tokens above: heading =
+     sol-ink, body = sol-ink at slightly reduced weight-equivalent
+     lightness, secondary = sol-secondary (readable — spec is explicit
+     this must stay AA, never faint), tertiary = sol-muted, reserved
+     ONLY for timestamps/low-priority metadata per the spec's own rule. */
+  --dashboard-heading: oklch(0.2137 0.03 274.9); /* sol-ink */
+  --dashboard-body: oklch(0.28 0.025 274.9);
+  --dashboard-muted: oklch(0.5068 0.0163 303.9); /* sol-secondary */
+  --dashboard-tertiary: oklch(0.6075 0.016 308.2); /* sol-muted */
   --background: oklch(0.9908 0.0013 106.4);
   --foreground: oklch(0.245 0.055 268);
   --card: oklch(0.9967 0.0013 106.4);
