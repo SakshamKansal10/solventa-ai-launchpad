@@ -6,6 +6,7 @@ import { ArrowRight, Loader2, RefreshCw } from "lucide-react";
 import { DashboardShell } from "@/components/dashboard/DashboardShell";
 import { SolventiaLoadingState } from "@/components/dashboard/SolventiaLoadingState";
 import { FitRing, FitScoreMatrix, fitQualitativeLabel } from "@/components/dashboard/FitScore";
+import { EvidenceVault } from "@/components/dashboard/EvidenceVault";
 import { PremiumButton } from "@/components/solventia/PremiumButton";
 import { Button } from "@/components/ui/button";
 import { requireAuthLoader } from "@/lib/route-guards";
@@ -51,9 +52,10 @@ const SECTION_NAV = [
   { id: "overview", label: "Overview" },
   { id: "why-you", label: "Why You" },
   { id: "economics", label: "Economics" },
-  { id: "market-signals", label: "Evidence" },
+  { id: "market-signals", label: "Market Research" },
   { id: "risks", label: "Risks" },
   { id: "first-experiment", label: "First Experiment" },
+  { id: "evidence", label: "My Evidence" },
 ];
 
 function FlowStep({ label, value, isLast }: { label: string; value: string; isLast?: boolean }) {
@@ -521,6 +523,8 @@ function OpportunityDetailPage() {
           {detail.firstExperiment}
         </p>
       </section>
+
+      <EvidenceVault opportunityId={id} />
 
       <div className="mt-8 flex flex-col items-center gap-3 text-center">
         {isSelected && busy === "build-roadmap" ? (
