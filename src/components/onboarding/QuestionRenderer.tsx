@@ -34,13 +34,15 @@ const SPECTRUM_INTERPRETATIONS: Record<string, string> = {
 };
 
 /** Options "All of the above" must never select — it means every
- * PREDEFINED option applies, never a catch-all/uncertain one. */
+ * PREDEFINED option applies, never a catch-all/uncertain/manual one. */
 function isExcludedFromSelectAll(option: string): boolean {
   const normalized = option.trim().toLowerCase();
   return (
     normalized === "other" ||
-    normalized.startsWith("none of these") ||
-    normalized.startsWith("not sure")
+    normalized.startsWith("add your own") ||
+    normalized.startsWith("none") ||
+    normalized.startsWith("not sure") ||
+    normalized.startsWith("prefer not to say")
   );
 }
 

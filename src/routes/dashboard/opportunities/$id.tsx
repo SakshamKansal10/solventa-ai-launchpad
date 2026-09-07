@@ -193,7 +193,7 @@ function OpportunityDetailPage() {
     );
   }
 
-  const { opportunity, detail: detailJson, evidence, founderSummary } = query.data;
+  const { opportunity, detail: detailJson, evidence, founderSummary, hasRoadmap } = query.data;
   const detail = toDisplayDetail(detailJson as unknown as OpportunityPackage | OpportunityDetail);
   const candidate = opportunity.candidate as unknown as OpportunityPackage;
   const score = opportunity.score_breakdown as unknown as FitScoreResult;
@@ -229,7 +229,7 @@ function OpportunityDetailPage() {
   }
 
   return (
-    <DashboardShell opportunityId={id} opportunityTitle={candidate.title}>
+    <DashboardShell opportunityId={id} opportunityTitle={candidate.title} hasRoadmap={hasRoadmap}>
       {/* ===== TOP ===== */}
       <p className="eyebrow text-accent">{candidate.category}</p>
       <h1 className="mt-2 font-display text-[clamp(1.9rem,3.4vw,2.5rem)] font-semibold leading-tight text-primary">

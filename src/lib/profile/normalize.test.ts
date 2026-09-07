@@ -57,10 +57,41 @@ describe("normalizeProfile", () => {
   it("collects real constraints without dropping any", () => {
     const answers: OnboardingAnswers = {
       relocation: "No",
-      otherConstraints: "Limited mobility; must work evenings only",
+      otherConstraints: ["Limited mobility or travel", "Fixed work/school schedule"],
     };
     const profile = normalizeProfile(answers);
     expect(profile.constraints.relocation).toBe("No");
-    expect(profile.constraints.other).toBe("Limited mobility; must work evenings only");
+    expect(profile.constraints.other).toEqual([
+      "Limited mobility or travel",
+      "Fixed work/school schedule",
+    ]);
+  });
+
+  it("replaces the 'Other' constraint chip with its elaboration, and drops it if deselected", () => {
+    const withOther = normalizeProfile({
+      otherConstraints: ["Other"],
+      otherConstraintsOther: "Caring for an elderly relative full-time",
+    });
+    expect(withOther.constraints.other).toEqual(["Caring for an elderly relative full-time"]);
+
+    // Stale detail text left over from a since-deselected "Other" chip must
+    // never leak through just because the field still holds old text.
+    const staleDetail = normalizeProfile({
+      otherConstraints: ["Fixed work/school schedule"],
+      otherConstraintsOther: "Caring for an elderly relative full-time",
+    });
+    expect(staleDetail.constraints.other).toEqual(["Fixed work/school schedule"]);
+  });
+
+  it("collects motivation and problem-area chips, dropping the 'nothing specific' placeholder", () => {
+    const profile = normalizeProfile({
+      biggestMotivation: ["Financial independence", "Learning by building something real"],
+      dailyFrustration: ["Nothing specific comes to mind"],
+    });
+    expect(profile.motivation.biggestMotivation).toEqual([
+      "Financial independence",
+      "Learning by building something real",
+    ]);
+    expect(profile.motivation.dailyFrustration).toEqual([]);
   });
 });

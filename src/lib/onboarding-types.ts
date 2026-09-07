@@ -46,6 +46,9 @@ export interface OnboardingAnswers {
   languages?: string[];
 
   major?: string;
+  /** Only asked when major === "Other" — MAJOR_OPTIONS covers the common
+   * fields of study but can't enumerate every specialization. */
+  majorOther?: string;
 
   industry?: string;
   /** Only asked when industry === "Other" — INDUSTRY_OPTIONS covers the
@@ -103,12 +106,23 @@ export interface OnboardingAnswers {
   industryRestrictionsOther?: string;
   relocation?: string;
   /** Catch-all for health/physical/scheduling/anything-else limitations —
-   * one combined question instead of two separate textareas. */
-  otherConstraints?: string;
+   * structured chips (CONSTRAINT_OPTIONS) instead of free typing; "Other"
+   * elaborates via otherConstraintsOther. */
+  otherConstraints?: string[];
+  /** Only asked when otherConstraints includes "Other". */
+  otherConstraintsOther?: string;
 
   // Section 7 — Founder Mindset
-  biggestMotivation?: string;
-  dailyFrustration?: string;
+  /** Structured chips (MOTIVATION_OPTIONS) — a founder can genuinely be
+   * driven by more than one of these at once, unlike a single free-text
+   * answer that forced picking one framing. */
+  biggestMotivation?: string[];
+  /** Only asked when biggestMotivation includes "Other". */
+  biggestMotivationOther?: string;
+  /** Structured chips (PROBLEM_DOMAIN_OPTIONS). */
+  dailyFrustration?: string[];
+  /** Only asked when dailyFrustration includes "Other". */
+  dailyFrustrationOther?: string;
 }
 
 export type AnswerKey = keyof OnboardingAnswers;
@@ -400,5 +414,75 @@ export const INDUSTRY_OPTIONS = [
   "Government / Public Sector",
   "Non-profit / Social Impact",
   "Legal",
+  "Other",
+];
+
+/** Replaces a free-text "what's your major?" field for the college-student
+ * branch — same searchable-select + Other fallback pattern as country. */
+export const MAJOR_OPTIONS = [
+  "Computer Science / IT",
+  "Engineering",
+  "Business / Commerce",
+  "Economics",
+  "Finance / Accounting",
+  "Marketing",
+  "Design",
+  "Architecture",
+  "Medicine / Health Sciences",
+  "Life Sciences / Biology",
+  "Physics / Chemistry / Math",
+  "Law",
+  "Psychology",
+  "Social Sciences",
+  "Political Science / Public Policy",
+  "Journalism / Mass Communication",
+  "Literature / Languages",
+  "Fine Arts / Performing Arts",
+  "Education",
+  "Agriculture",
+  "Hospitality / Tourism",
+  "Other",
+];
+
+/** Replaces a required free-text "what would you love to build?" question
+ * — a founder can genuinely be driven by more than one of these at once,
+ * so this is a multi-select rather than a forced single framing. */
+export const MOTIVATION_OPTIONS = [
+  "Solving a problem I've personally experienced",
+  "Building something people would pay for",
+  "Financial independence",
+  "Learning by building something real",
+  "Making an impact in my community",
+  "Creative expression through a product or brand",
+  "Proving I can build something from scratch",
+  "Following an idea I've had for a while",
+  "Other",
+];
+
+/** Replaces a free-text "what problem bothers you?" question. */
+export const PROBLEM_DOMAIN_OPTIONS = [
+  "Healthcare & wellbeing",
+  "Education & learning",
+  "Environment & sustainability",
+  "Local commerce & small business",
+  "Technology accessibility",
+  "Financial inclusion",
+  "Food & agriculture",
+  "Transportation & logistics",
+  "Housing & urban life",
+  "Community & social connection",
+  "Nothing specific comes to mind",
+  "Other",
+];
+
+/** Replaces a free-text "anything else Sol should know?" catch-all. */
+export const CONSTRAINT_OPTIONS = [
+  "Health or medical considerations",
+  "Caregiving or family commitments",
+  "Fixed work/school schedule",
+  "Limited mobility or travel",
+  "Visa or work-authorization limits",
+  "Language barrier in local market",
+  "None of these",
   "Other",
 ];

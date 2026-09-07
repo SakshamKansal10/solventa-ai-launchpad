@@ -56,13 +56,16 @@ export interface NormalizedProfile {
     appetite: RiskLevel | null;
   };
   motivation: {
-    biggestMotivation: string | null;
-    dailyFrustration: string | null;
+    /** Structured chips (MOTIVATION_OPTIONS), with "Other" replaced by its
+     * elaboration when selected. */
+    biggestMotivation: string[];
+    dailyFrustration: string[];
   };
   constraints: {
     industryRestrictions: string[];
     relocation: string | null;
-    other: string | null;
+    /** Structured chips (CONSTRAINT_OPTIONS), "Other" elaborated. */
+    other: string[];
   };
   direction: {
     goals: string[];
@@ -130,6 +133,18 @@ const RISK_APPETITE_MAP: Record<string, RiskLevel> = {
 function toArray(value: string | string[] | undefined): string[] {
   if (!value) return [];
   return Array.isArray(value) ? value.filter(Boolean) : [value];
+}
+
+/** Replaces the literal chip "Other" with its elaborated free-text detail
+ * — but ONLY when "Other" is actually still selected. Without the guard,
+ * a founder who once selected "Other", typed something, then deselected
+ * it and picked a normal chip instead would still silently send the old
+ * elaboration to the AI, since the detail field itself is never cleared
+ * (its question is just no longer shown — see resolveSteps). */
+function withOtherElaborated(chips: string[], otherDetail: string | undefined): string[] {
+  if (!chips.includes("Other")) return chips.filter((c) => c !== "Other");
+  const rest = chips.filter((c) => c !== "Other");
+  return otherDetail ? [...rest, otherDetail] : rest;
 }
 
 function toNumber(value: string | undefined): number | null {
@@ -225,22 +240,34 @@ export function normalizeProfile(answers: OnboardingAnswers): NormalizedProfile 
       appetite: riskAppetite,
     },
     motivation: {
-      biggestMotivation: answers.biggestMotivation ?? null,
-      dailyFrustration: answers.dailyFrustration ?? null,
+      biggestMotivation: withOtherElaborated(
+        toArray(answers.biggestMotivation as unknown as string | string[] | undefined),
+        answers.biggestMotivationOther,
+      ),
+      dailyFrustration: withOtherElaborated(
+        toArray(answers.dailyFrustration as unknown as string | string[] | undefined).filter(
+          (v) => v !== "Nothing specific comes to mind",
+        ),
+        answers.dailyFrustrationOther,
+      ),
     },
     constraints: {
-      // Collected as multi-choice chips today; toArray() stays defensive
-      // for any older persisted answers still shaped as a single free-text
-      // string from before that change. "Other" is replaced by its
-      // elaborated detail when present — the literal word "Other" is not
-      // useful to send to the AI on its own.
-      industryRestrictions: toArray(
-        answers.industryRestrictions as unknown as string | string[] | undefined,
-      )
-        .filter((v) => v !== "Other")
-        .concat(answers.industryRestrictionsOther ? [answers.industryRestrictionsOther] : []),
+      // Collected as multi-choice chips; toArray() stays defensive for any
+      // older persisted answers still shaped as a single free-text string
+      // from before that change. "Other" is replaced by its elaborated
+      // detail only when still selected (see withOtherElaborated) — the
+      // literal word "Other" is not useful to send to the AI on its own.
+      industryRestrictions: withOtherElaborated(
+        toArray(answers.industryRestrictions as unknown as string | string[] | undefined),
+        answers.industryRestrictionsOther,
+      ),
       relocation: answers.relocation ?? null,
-      other: answers.otherConstraints ?? null,
+      other: withOtherElaborated(
+        toArray(answers.otherConstraints as unknown as string | string[] | undefined).filter(
+          (v) => v !== "None of these",
+        ),
+        answers.otherConstraintsOther,
+      ),
     },
     direction: {
       goals: answers.goals ?? [],

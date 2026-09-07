@@ -307,7 +307,7 @@ const PROFILE_A: Record<string, unknown> = {
   skills: [{ name: "Writing", level: "beginner" }],
   riskAppetite: "Very cautious",
   workLocation: "Remote",
-  biggestMotivation: "I want to help other students learn things school doesn't teach well.",
+  biggestMotivation: ["Making an impact in my community"],
   goals: ["Learning entrepreneurship"],
 };
 
@@ -325,7 +325,7 @@ const PROFILE_B: Record<string, unknown> = {
   workLocation: "A mix of both",
   leadership: "Very comfortable",
   salesComfort: "I enjoy it",
-  biggestMotivation: "I want to build a new revenue line separate from my existing business.",
+  biggestMotivation: ["Building something people would pay for", "Financial independence"],
   goals: ["Scaling an existing venture"],
 };
 

@@ -38,8 +38,7 @@ export const FIXTURE_PROFILE_ANSWERS: Record<string, unknown> = {
   goals: ["A second income stream"],
   monthlyIncomeGoal: "₹20,000 – ₹50,000",
   timeline: "6–12 months",
-  biggestMotivation:
-    "I want more control over my time and income instead of relying only on my job.",
+  biggestMotivation: ["Financial independence", "Learning by building something real"],
 };
 
 export const FIXTURE_INTELLIGENCE_PACKAGE: SolventiaIntelligencePackage = {

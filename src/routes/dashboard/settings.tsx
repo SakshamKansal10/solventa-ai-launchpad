@@ -61,6 +61,9 @@ function SettingsPage() {
   }
 
   const data = query.data;
+  // undefined while loading (nav stays in its normal, un-locked state until
+  // we actually know) — never a false "locked" flash before data arrives.
+  const hasRoadmap = data ? data.hasActiveRoadmap : undefined;
 
   if (query.isLoading) {
     return (
@@ -73,7 +76,7 @@ function SettingsPage() {
   }
 
   return (
-    <DashboardShell>
+    <DashboardShell hasRoadmap={hasRoadmap}>
       <div className="flex items-center gap-4">
         <div className="flex size-16 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-gold to-violet font-display text-[1.4rem] font-semibold text-white shadow-[0_10px_28px_-10px_oklch(0.606_0.19_292.7_/_0.4)]">
           {initials(data?.fullName ?? null, data?.email ?? null)}

@@ -43,17 +43,21 @@ export function formatProfileForPrompt(profile: NormalizedProfile): string {
   );
   lines.push(`Risk appetite: ${profile.risk.appetite ?? "unknown"}.`);
 
-  if (profile.motivation.biggestMotivation) {
-    lines.push(`What they want to build/change: "${profile.motivation.biggestMotivation}"`);
+  if (profile.motivation.biggestMotivation.length > 0) {
+    lines.push(
+      `What drives them to build this: ${profile.motivation.biggestMotivation.join(", ")}.`,
+    );
   }
-  if (profile.motivation.dailyFrustration) {
-    lines.push(`Real-world problem that bothers them: "${profile.motivation.dailyFrustration}"`);
+  if (profile.motivation.dailyFrustration.length > 0) {
+    lines.push(
+      `Problem areas that resonate with them: ${profile.motivation.dailyFrustration.join(", ")}.`,
+    );
   }
 
   const constraints = [
     ...profile.constraints.industryRestrictions,
     profile.constraints.relocation ? `relocation: ${profile.constraints.relocation}` : null,
-    profile.constraints.other,
+    ...profile.constraints.other,
   ].filter(Boolean);
   if (constraints.length > 0) {
     lines.push(

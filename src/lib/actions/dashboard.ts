@@ -216,25 +216,36 @@ export interface ConsultationHistoryEntry {
 export const getSettingsData = createServerFn({ method: "GET" }).handler(async () => {
   const { supabase, user } = await requireUser();
 
-  const [profileRes, dnaRes, opportunitiesCountRes, roadmapCountRes] = await Promise.all([
-    supabase
-      .from("profiles")
-      .select("full_name, email, created_at")
-      .eq("id", user.id)
-      .maybeSingle(),
-    supabase
-      .from("business_dna")
-      .select("normalized_signals")
-      .eq("user_id", user.id)
-      .order("created_at", { ascending: false })
-      .limit(1)
-      .maybeSingle(),
-    supabase
-      .from("opportunities")
-      .select("id", { count: "exact", head: true })
-      .eq("user_id", user.id),
-    supabase.from("roadmaps").select("id", { count: "exact", head: true }).eq("user_id", user.id),
-  ]);
+  const [profileRes, dnaRes, opportunitiesCountRes, roadmapCountRes, activeRoadmapRes] =
+    await Promise.all([
+      supabase
+        .from("profiles")
+        .select("full_name, email, created_at")
+        .eq("id", user.id)
+        .maybeSingle(),
+      supabase
+        .from("business_dna")
+        .select("normalized_signals")
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle(),
+      supabase
+        .from("opportunities")
+        .select("id", { count: "exact", head: true })
+        .eq("user_id", user.id),
+      supabase.from("roadmaps").select("id", { count: "exact", head: true }).eq("user_id", user.id),
+      // Distinct from roadmapCount above: a founder can have built and then
+      // archived several roadmaps by switching ideas — the nav lock state
+      // must reflect whether one is CURRENTLY active, not how many ever
+      // existed.
+      supabase
+        .from("roadmaps")
+        .select("id")
+        .eq("user_id", user.id)
+        .eq("status", "active")
+        .maybeSingle(),
+    ]);
 
   const signals = dnaRes.data?.normalized_signals as unknown as NormalizedProfile | undefined;
 
@@ -245,6 +256,7 @@ export const getSettingsData = createServerFn({ method: "GET" }).handler(async (
     currentStatus: signals?.identity.currentStatus ?? null,
     ideaCount: opportunitiesCountRes.count ?? 0,
     roadmapCount: roadmapCountRes.count ?? 0,
+    hasActiveRoadmap: Boolean(activeRoadmapRes.data),
   };
 });
 

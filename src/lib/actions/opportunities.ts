@@ -240,7 +240,24 @@ export const getOpportunity = createServerFn({ method: "GET" })
       riskAppetite: profile.risk.appetite,
     };
 
-    return { opportunity, detail: detailRow.detail, evidence: evidence ?? [], founderSummary };
+    // Scoped to THIS opportunity specifically — the Roadmap nav item must
+    // stay locked while viewing an opportunity that has no roadmap of its
+    // own, even if some OTHER opportunity's roadmap happens to be active
+    // (e.g. browsing an alternative idea before switching to it).
+    const roadmapRes = await supabase
+      .from("roadmaps")
+      .select("id")
+      .eq("opportunity_id", opportunity.id)
+      .eq("status", "active")
+      .maybeSingle();
+
+    return {
+      opportunity,
+      detail: detailRow.detail,
+      evidence: evidence ?? [],
+      founderSummary,
+      hasRoadmap: Boolean(roadmapRes.data),
+    };
   });
 
 /** The ONLY way opportunity_evidence ever gets a live Gemini call — an

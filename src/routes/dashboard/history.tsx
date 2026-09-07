@@ -4,7 +4,7 @@ import { History } from "lucide-react";
 import { DashboardShell } from "@/components/dashboard/DashboardShell";
 import { SolventiaLoadingState } from "@/components/dashboard/SolventiaLoadingState";
 import { requireAuthLoader } from "@/lib/route-guards";
-import { getConsultationHistory } from "@/lib/actions/dashboard";
+import { getConsultationHistory, getSettingsData } from "@/lib/actions/dashboard";
 
 export const Route = createFileRoute("/dashboard/history")({
   beforeLoad: requireAuthLoader,
@@ -27,9 +27,14 @@ function HistoryPage() {
     queryKey: ["consultation-history"],
     queryFn: () => getConsultationHistory(),
   });
+  // Same "settings-data" query key Settings itself uses — often already
+  // warm from navigating between the two, and keeps the Roadmap nav's
+  // locked/unlocked state consistent across every dashboard page.
+  const settingsQuery = useQuery({ queryKey: ["settings-data"], queryFn: () => getSettingsData() });
+  const hasRoadmap = settingsQuery.data ? settingsQuery.data.hasActiveRoadmap : undefined;
 
   return (
-    <DashboardShell>
+    <DashboardShell hasRoadmap={hasRoadmap}>
       <div className="flex items-center gap-3">
         <History className="size-6 text-gold" aria-hidden="true" />
         <div>

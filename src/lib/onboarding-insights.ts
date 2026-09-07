@@ -35,11 +35,12 @@ export function getKnownSignals(afterSection: number): string[] {
 export function getPersonalizedInsight(afterSection: number, a: OnboardingAnswers): string {
   if (afterSection === 1) {
     const industryName = a.industry === "Other" ? a.industryOther : a.industry;
+    const majorName = a.major === "Other" ? a.majorOther : a.major;
     const statusPhrase =
       a.currentStatus === "School Student"
         ? "a school student"
         : a.currentStatus === "College Student"
-          ? `a college student${a.major ? ` studying ${a.major}` : ""}`
+          ? `a college student${majorName ? ` studying ${majorName}` : ""}`
           : a.currentStatus === "Working Professional"
             ? `a working professional${industryName ? ` in ${industryName}` : ""}`
             : a.currentStatus === "Business Owner"

@@ -111,6 +111,7 @@ export function OnboardingProvider({
           currentBusinessRevenue: _currentBusinessRevenue,
           currentBusinessCustomers: _currentBusinessCustomers,
           major: _major,
+          majorOther: _majorOther,
           goals: _goals,
           ...rest
         } = prev;

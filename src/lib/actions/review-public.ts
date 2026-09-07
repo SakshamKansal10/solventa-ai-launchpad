@@ -40,8 +40,10 @@ export const PUBLIC_REVIEW_PROFILE_ANSWERS: Record<string, unknown> = {
   timeAvailableWeekly: "10–20 hrs",
   riskAppetite: "Balanced",
   workLocation: "Remote",
-  biggestMotivation:
-    "I want to learn how to actually run a business, not just study it — something small and real I can point to.",
+  biggestMotivation: [
+    "Learning by building something real",
+    "Proving I can build something from scratch",
+  ],
   goals: ["A future startup", "Learning entrepreneurship"],
   timeline: "6–12 months",
 };
@@ -363,7 +365,7 @@ const PROFILE_A: Record<string, unknown> = {
   skills: [{ name: "Writing", level: "beginner" }],
   riskAppetite: "Very cautious",
   workLocation: "Remote",
-  biggestMotivation: "I want to help other students learn things school doesn't teach well.",
+  biggestMotivation: ["Making an impact in my community"],
   goals: ["Learning entrepreneurship"],
 };
 
@@ -381,7 +383,7 @@ const PROFILE_B: Record<string, unknown> = {
   workLocation: "A mix of both",
   leadership: "Very comfortable",
   salesComfort: "I enjoy it",
-  biggestMotivation: "I want to build a new revenue line separate from my existing business.",
+  biggestMotivation: ["Building something people would pay for", "Financial independence"],
   goals: ["Scaling an existing venture"],
 };
 
