@@ -10,6 +10,7 @@ import { computeAmbitionCalibration } from "@/lib/profile/ambition";
 import { generateIntelligencePackage } from "@/lib/ai/prompts/intelligence-package";
 import { MODEL, AIGenerationError } from "@/lib/ai/gemini.server";
 import { sendIdeasReadyEmail } from "@/lib/actions/email.server";
+import { notifyFounder } from "@/lib/actions/notifications";
 import type { Json } from "@/lib/supabase/types";
 
 // OnboardingAnswers is a fully-optional bag of loosely-typed bracket
@@ -222,6 +223,12 @@ export const completeConsultation = createServerFn({ method: "POST" })
     }
 
     if (user.email) void sendIdeasReadyEmail(user.email, scored[0].opp.title);
+    void notifyFounder(supabase, user.id, {
+      type: "ideas_ready",
+      title: "Your ideas are ready",
+      body: `Sol found ${scored.length} directions for you — ${scored[0].opp.title} is the strongest match.`,
+      link: "/dashboard",
+    });
 
     return { businessDnaId: dnaRow.id as string, founderDNA: pkg.founderDNA };
   });

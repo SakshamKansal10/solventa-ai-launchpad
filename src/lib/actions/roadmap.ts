@@ -15,6 +15,7 @@ import {
   persistWeekDetail,
   unlockNextWeek,
 } from "@/lib/actions/roadmap-persistence.server";
+import { notifyFounder } from "@/lib/actions/notifications";
 
 export interface RoadmapTaskRow {
   id: string;
@@ -193,6 +194,12 @@ export const updateTaskStatus = createServerFn({ method: "POST" })
         // active with no tasks yet; the roadmap page's self-healing retry
         // (generateActiveWeekDetail) picks it up from there.
         if (result.nextWeek) {
+          void notifyFounder(supabase, user.id, {
+            type: "week_unlocked",
+            title: `Week ${result.nextWeek.weekNumber} unlocked`,
+            body: `You finished "${result.completedWeekTitle}" — ${result.nextWeek.title} is ready to start.`,
+            link: "/dashboard/roadmap",
+          });
           try {
             await generateAndPersistWeekDetail(supabase, user.id, result.nextWeek, {
               title: result.completedWeekTitle,

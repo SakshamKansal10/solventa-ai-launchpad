@@ -12,6 +12,7 @@ import { generateRoadmapSkeleton, generateWeekDetail } from "@/lib/ai/prompts/ro
 import { researchMarketEvidence } from "@/lib/ai/prompts/market-research";
 import { MODEL } from "@/lib/ai/gemini.server";
 import { sendRoadmapReadyEmail } from "@/lib/actions/email.server";
+import { notifyFounder } from "@/lib/actions/notifications";
 import {
   activateRoadmap,
   archiveActiveRoadmap,
@@ -468,6 +469,12 @@ export const buildRoadmapForOpportunity = createServerFn({ method: "POST" })
     }
 
     if (user.email) void sendRoadmapReadyEmail(user.email, opportunity.title);
+    void notifyFounder(supabase, user.id, {
+      type: "roadmap_ready",
+      title: "Your roadmap is ready",
+      body: `Week 1 of your roadmap for ${opportunity.title} is ready to start.`,
+      link: "/dashboard/roadmap",
+    });
 
     return { ok: true };
   });

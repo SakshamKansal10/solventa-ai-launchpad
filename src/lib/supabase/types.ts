@@ -316,6 +316,26 @@ export interface Database {
         Update: Partial<Database["public"]["Tables"]["founder_evidence"]["Row"]>;
         Relationships: [];
       };
+      founder_notifications: {
+        Row: {
+          id: string;
+          user_id: string;
+          type: "ideas_ready" | "roadmap_ready" | "week_unlocked" | "roadmap_build_failed";
+          title: string;
+          body: string;
+          link: string | null;
+          read_at: string | null;
+          created_at: string;
+        };
+        Insert: Partial<Database["public"]["Tables"]["founder_notifications"]["Row"]> & {
+          user_id: string;
+          type: Database["public"]["Tables"]["founder_notifications"]["Row"]["type"];
+          title: string;
+          body: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["founder_notifications"]["Row"]>;
+        Relationships: [];
+      };
       research_cache: {
         Row: {
           cache_key: string;

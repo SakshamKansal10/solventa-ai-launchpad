@@ -23,6 +23,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { MentorPanel } from "@/components/dashboard/MentorPanel";
+import { NotificationBell } from "@/components/dashboard/NotificationBell";
 import { getCurrentUser, signOut } from "@/lib/actions/auth";
 import { cn } from "@/lib/utils";
 
@@ -340,12 +341,13 @@ export function DashboardShell({
             mentorOpen && "min-[1440px]:mr-[420px] max-[1439px]:lg:mr-[360px]",
           )}
         >
-          {/* ===== DESKTOP TOP HEADER — page context only, never a second
-           * nav ===== */}
-          <header className="sticky top-0 z-30 hidden h-[72px] shrink-0 items-center border-b border-sol-border bg-[rgba(247,243,236,0.90)] px-8 backdrop-blur-xl lg:flex lg:px-12">
+          {/* ===== DESKTOP TOP HEADER — page context + the Founder Inbox,
+           * never a second nav ===== */}
+          <header className="sticky top-0 z-30 hidden h-[72px] shrink-0 items-center justify-between border-b border-sol-border bg-[rgba(247,243,236,0.90)] px-8 backdrop-blur-xl lg:flex lg:px-12">
             <p className="text-[0.95rem] font-semibold text-sol-ink">
               {pageTitleFromPath(currentPath, pageTitle)}
             </p>
+            <NotificationBell />
           </header>
 
           {/* ===== MOBILE TOP BAR ===== */}
@@ -356,14 +358,17 @@ export function DashboardShell({
                 SOLVENTIA
               </span>
             </Link>
-            <button
-              type="button"
-              onClick={() => setMobileNavOpen(true)}
-              className="flex size-9 items-center justify-center rounded-lg border border-sol-border text-sol-ink"
-              aria-label="Open menu"
-            >
-              <Menu className="size-[1.125rem]" aria-hidden="true" />
-            </button>
+            <div className="flex items-center gap-2">
+              <NotificationBell />
+              <button
+                type="button"
+                onClick={() => setMobileNavOpen(true)}
+                className="flex size-9 items-center justify-center rounded-lg border border-sol-border text-sol-ink"
+                aria-label="Open menu"
+              >
+                <Menu className="size-[1.125rem]" aria-hidden="true" />
+              </button>
+            </div>
           </header>
 
           <main className="mx-auto flex w-full max-w-[1440px] flex-1 flex-col gap-0 px-[18px] py-9 sm:px-6 lg:px-12 lg:py-14">
