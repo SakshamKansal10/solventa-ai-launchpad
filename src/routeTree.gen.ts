@@ -10,7 +10,9 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AboutRouteImport } from './routes/about'
 import { Route as ConsultationRouteImport } from './routes/consultation'
+import { Route as ForOrganizationsRouteImport } from './routes/for-organizations'
 import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as ReviewRouteImport } from './routes/review'
 import { Route as ReviewPublicRouteImport } from './routes/review-public'
@@ -27,9 +29,19 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AboutRoute = AboutRouteImport.update({
+  id: '/about',
+  path: '/about',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ConsultationRoute = ConsultationRouteImport.update({
   id: '/consultation',
   path: '/consultation',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ForOrganizationsRoute = ForOrganizationsRouteImport.update({
+  id: '/for-organizations',
+  path: '/for-organizations',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PrivacyRoute = PrivacyRouteImport.update({
@@ -86,7 +98,9 @@ const DashboardOpportunitiesIdRoute =
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/about': typeof AboutRoute
   '/consultation': typeof ConsultationRoute
+  '/for-organizations': typeof ForOrganizationsRoute
   '/privacy': typeof PrivacyRoute
   '/review': typeof ReviewRoute
   '/review-public': typeof ReviewPublicRoute
@@ -100,7 +114,9 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/about': typeof AboutRoute
   '/consultation': typeof ConsultationRoute
+  '/for-organizations': typeof ForOrganizationsRoute
   '/privacy': typeof PrivacyRoute
   '/review': typeof ReviewRoute
   '/review-public': typeof ReviewPublicRoute
@@ -115,7 +131,9 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/about': typeof AboutRoute
   '/consultation': typeof ConsultationRoute
+  '/for-organizations': typeof ForOrganizationsRoute
   '/privacy': typeof PrivacyRoute
   '/review': typeof ReviewRoute
   '/review-public': typeof ReviewPublicRoute
@@ -131,7 +149,9 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/about'
     | '/consultation'
+    | '/for-organizations'
     | '/privacy'
     | '/review'
     | '/review-public'
@@ -145,7 +165,9 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/about'
     | '/consultation'
+    | '/for-organizations'
     | '/privacy'
     | '/review'
     | '/review-public'
@@ -159,7 +181,9 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/'
+    | '/about'
     | '/consultation'
+    | '/for-organizations'
     | '/privacy'
     | '/review'
     | '/review-public'
@@ -174,7 +198,9 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AboutRoute: typeof AboutRoute
   ConsultationRoute: typeof ConsultationRoute
+  ForOrganizationsRoute: typeof ForOrganizationsRoute
   PrivacyRoute: typeof PrivacyRoute
   ReviewRoute: typeof ReviewRoute
   ReviewPublicRoute: typeof ReviewPublicRoute
@@ -196,11 +222,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/about': {
+      id: '/about'
+      path: '/about'
+      fullPath: '/about'
+      preLoaderRoute: typeof AboutRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/consultation': {
       id: '/consultation'
       path: '/consultation'
       fullPath: '/consultation'
       preLoaderRoute: typeof ConsultationRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/for-organizations': {
+      id: '/for-organizations'
+      path: '/for-organizations'
+      fullPath: '/for-organizations'
+      preLoaderRoute: typeof ForOrganizationsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/privacy': {
@@ -278,7 +318,9 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AboutRoute: AboutRoute,
   ConsultationRoute: ConsultationRoute,
+  ForOrganizationsRoute: ForOrganizationsRoute,
   PrivacyRoute: PrivacyRoute,
   ReviewRoute: ReviewRoute,
   ReviewPublicRoute: ReviewPublicRoute,

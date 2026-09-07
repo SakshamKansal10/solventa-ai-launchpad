@@ -1,69 +1,104 @@
-import { Link } from "@tanstack/react-router";
-import { Mail, Sparkles } from "lucide-react";
+import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
+import { Mail } from "lucide-react";
 import mark from "@/assets/solventia-mark.png";
+import { scrollToSection } from "@/hooks/use-active-section";
 
 const CONTACT_EMAIL = "solventia.in@gmail.com";
 
+const FOOTER_LINKS: {
+  label: string;
+  id?: string;
+  to?: "/about" | "/for-organizations" | "/privacy" | "/terms";
+}[] = [
+  { label: "Product", id: "founder-signal" },
+  { label: "How It Works", id: "how-it-works" },
+  { label: "For Organizations", to: "/for-organizations" },
+  { label: "About", to: "/about" },
+  { label: "Privacy", to: "/privacy" },
+  { label: "Terms", to: "/terms" },
+];
+
+/** Simple, on purpose — not another marketing block. No social icons:
+ * this product has no real, live social presence yet, and a row of
+ * placeholder links would be exactly the kind of unsupported claim the
+ * rest of this homepage was rebuilt to remove. */
 export function Footer() {
+  const navigate = useNavigate();
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const isHome = pathname === "/";
+
   return (
-    <footer className="mx-auto max-w-[1320px] px-6 pb-10 pt-6 lg:px-10">
-      <div className="relative flex flex-col gap-8 overflow-hidden rounded-2xl border border-border/60 bg-secondary/60 px-8 py-8 sm:flex-row sm:items-center sm:justify-between">
-        <svg
-          viewBox="0 0 400 120"
-          className="pointer-events-none absolute inset-y-0 right-1/3 h-full w-[400px] text-primary/10"
-          fill="none"
-          aria-hidden="true"
-        >
-          <path
-            d="M-20 100C60 100 90 20 170 20s110 80 190 80"
-            stroke="currentColor"
-            strokeWidth="1.5"
-          />
-          <path
-            d="M-20 118C60 118 90 38 170 38s110 80 190 80"
-            stroke="currentColor"
-            strokeWidth="1.5"
-          />
-        </svg>
+    <footer className="bg-sol-footer px-[18px] py-12 sm:px-10">
+      <div className="mx-auto max-w-[1360px]">
+        <div className="flex flex-col gap-10 sm:flex-row sm:items-start sm:justify-between">
+          <div className="flex items-center gap-3">
+            <img
+              src={mark}
+              alt="Solventia"
+              width={298}
+              height={436}
+              loading="lazy"
+              className="h-9 w-auto"
+            />
+            <div className="leading-tight">
+              <p className="font-display text-[1rem] font-semibold tracking-[0.1em] text-sol-ink">
+                SOLVENTIA
+              </p>
+              <p className="mt-0.5 text-[0.62rem] font-medium tracking-[0.28em] text-sol-champagne-deep">
+                VALIDATE • BUILD • ELEVATE
+              </p>
+            </div>
+          </div>
 
-        <div className="relative flex items-center gap-5">
-          <img
-            src={mark}
-            alt="Solventia"
-            width={298}
-            height={436}
-            loading="lazy"
-            className="h-11 w-auto drop-shadow-[0_2px_6px_oklch(0.245_0.055_268_/_0.25)]"
-          />
-          <p className="max-w-[32ch] text-[0.9rem] leading-[1.8] text-muted-foreground">
-            Empowering young dreamers to build meaningful impact with AI.{" "}
-            <Sparkles className="inline size-3.5 -translate-y-px text-accent" aria-hidden="true" />
-          </p>
+          <nav className="flex flex-wrap gap-x-7 gap-y-2">
+            {FOOTER_LINKS.map((link) =>
+              link.id ? (
+                <button
+                  key={link.label}
+                  type="button"
+                  onClick={() =>
+                    isHome ? scrollToSection(link.id!) : navigate({ to: "/", hash: link.id })
+                  }
+                  className="text-[0.85rem] font-medium text-sol-secondary transition-colors hover:text-sol-ink"
+                >
+                  {link.label}
+                </button>
+              ) : (
+                <Link
+                  key={link.label}
+                  to={link.to!}
+                  className="text-[0.85rem] font-medium text-sol-secondary transition-colors hover:text-sol-ink"
+                >
+                  {link.label}
+                </Link>
+              ),
+            )}
+          </nav>
+
+          <div className="flex flex-col gap-1.5 sm:items-end sm:text-right">
+            <p className="text-[0.78rem] text-sol-secondary">
+              Questions, partnerships or feedback?
+            </p>
+            <a
+              href={`mailto:${CONTACT_EMAIL}`}
+              className="flex items-center gap-2 text-[0.88rem] font-medium text-sol-ink transition-colors hover:text-sol-violet-deep sm:justify-end"
+            >
+              <Mail className="size-4" aria-hidden="true" />
+              {CONTACT_EMAIL}
+            </a>
+          </div>
         </div>
 
-        <div className="relative flex flex-col items-end gap-1.5 text-right">
-          <p className="text-[0.78rem] text-muted-foreground">
-            Questions, partnerships or feedback?
-          </p>
-          <a
-            href={`mailto:${CONTACT_EMAIL}`}
-            className="flex items-center gap-2 text-[0.88rem] font-medium text-primary transition-all duration-300 hover:-translate-y-0.5 hover:text-accent"
-          >
-            <Mail className="size-4" aria-hidden="true" />
-            {CONTACT_EMAIL}
-          </a>
-        </div>
-      </div>
-
-      <div className="relative mt-6 flex flex-col items-center gap-3 px-2 text-[0.78rem] text-muted-foreground sm:flex-row sm:justify-between">
-        <p>© {new Date().getFullYear()} Solventia. All rights reserved.</p>
-        <div className="flex items-center gap-6">
-          <Link to="/privacy" className="transition-colors hover:text-primary">
-            Privacy
-          </Link>
-          <Link to="/terms" className="transition-colors hover:text-primary">
-            Terms
-          </Link>
+        <div className="mt-9 flex flex-col items-center gap-3 border-t border-sol-border pt-6 text-[0.78rem] text-sol-muted sm:flex-row sm:justify-between">
+          <p>© {new Date().getFullYear()} Solventia. All rights reserved.</p>
+          <div className="flex items-center gap-6">
+            <Link to="/privacy" className="transition-colors hover:text-sol-ink">
+              Privacy
+            </Link>
+            <Link to="/terms" className="transition-colors hover:text-sol-ink">
+              Terms
+            </Link>
+          </div>
         </div>
       </div>
     </footer>

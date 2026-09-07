@@ -65,6 +65,8 @@
   --color-sol-secondary: var(--sol-secondary);
   --color-sol-muted: var(--sol-muted);
   --color-sol-danger: var(--sol-danger);
+  --color-sol-page: var(--sol-page);
+  --color-sol-footer: var(--sol-footer);
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
@@ -169,6 +171,11 @@
   --sol-secondary: oklch(0.5068 0.0163 303.9); /* #67636D */
   --sol-muted: oklch(0.6075 0.016 308.2); /* #85808A */
   --sol-danger: oklch(0.5594 0.1436 16.5); /* #B94A56 */
+  /* Homepage-only surfaces — close to but deliberately distinct from
+     sol-pearl/sol-ivory (the product dashboard's own background family),
+     per the homepage reconstruction spec's own exact hex values. */
+  --sol-page: oklch(0.9708 0.0086 84.6); /* #F8F5EF */
+  --sol-footer: oklch(0.9503 0.0103 81.8); /* #F2EEE7 */
 
   /* Dashboard-only typography — deliberately separate from
      --foreground/--muted-foreground, which the marketing site and

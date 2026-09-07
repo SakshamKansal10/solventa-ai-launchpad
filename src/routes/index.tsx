@@ -1,19 +1,18 @@
+import { useEffect } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { createServerFn } from "@tanstack/react-start";
 import { env } from "@/lib/env.server";
 import { Header } from "@/components/solventia/Header";
 import { Hero } from "@/components/solventia/Hero";
-import { Steps } from "@/components/solventia/Steps";
-import { AIDiscoveryFlow } from "@/components/solventia/AIDiscoveryFlow";
-import { Features } from "@/components/solventia/Features";
-import { FeaturedIdeas } from "@/components/solventia/FeaturedIdeas";
+import { FounderSignal } from "@/components/solventia/FounderSignal";
+import { HowItWorks } from "@/components/solventia/HowItWorks";
+import { AdaptiveRoadmap } from "@/components/solventia/AdaptiveRoadmap";
 import { WhySolventia } from "@/components/solventia/WhySolventia";
-import { RoadmapTimeline } from "@/components/solventia/RoadmapTimeline";
-import { MissionVision } from "@/components/solventia/MissionVision";
-import { FoundersStory } from "@/components/solventia/FoundersStory";
-import { ForNGOs } from "@/components/solventia/ForNGOs";
+import { BrandMoment } from "@/components/solventia/BrandMoment";
+import { FinalCTA } from "@/components/solventia/FinalCTA";
 import { FAQ } from "@/components/solventia/FAQ";
 import { Footer } from "@/components/solventia/Footer";
+import { scrollToSection } from "@/hooks/use-active-section";
 
 /** og:url/canonical must be absolute per spec — "/" alone is invalid there,
  * unlike every auth redirect in this app, which correctly derives from the
@@ -32,31 +31,31 @@ export const Route = createFileRoute("/")({
     const image = `${url.replace(/\/$/, "")}/favicon.png`;
     return {
       meta: [
-        { title: "Solventia — AI Business Idea & Founder Roadmap Platform" },
+        { title: "Solventia — Personalized AI Business Ideas & Founder Roadmaps" },
         {
           name: "description",
           content:
-            "Solventia helps students and aspiring founders discover personalized AI-powered business ideas, validate opportunities, and follow step-by-step founder roadmaps from scratch.",
+            "Solventia turns your skills, resources, and ambition into personalized business directions you can test, build, and grow — with a roadmap that adapts as you learn.",
         },
         {
           property: "og:title",
-          content: "Solventia — AI Business Idea & Founder Roadmap Platform",
+          content: "Solventia — Personalized AI Business Ideas & Founder Roadmaps",
         },
         {
           property: "og:description",
           content:
-            "AI-powered idea discovery, data-backed validation, and step-by-step founder roadmaps — for students and aspiring founders.",
+            "Personalized business directions, real-world evidence, and an adaptive weekly roadmap — for founders, not just idea browsers.",
         },
         { property: "og:url", content: url },
         { property: "og:image", content: image },
         {
           name: "twitter:title",
-          content: "Solventia — AI Business Idea & Founder Roadmap Platform",
+          content: "Solventia — Personalized AI Business Ideas & Founder Roadmaps",
         },
         {
           name: "twitter:description",
           content:
-            "AI-powered idea discovery, data-backed validation, and step-by-step founder roadmaps — for students and aspiring founders.",
+            "Personalized business directions, real-world evidence, and an adaptive weekly roadmap — for founders, not just idea browsers.",
         },
         { name: "twitter:image", content: image },
       ],
@@ -87,21 +86,34 @@ export const Route = createFileRoute("/")({
   },
 });
 
+/** Exactly eight sections, one continuous product story — see the
+ * homepage reconstruction spec this implements. Nothing here is a
+ * generic marketing filler section; every block earns its place in the
+ * HERO -> FOUNDER SIGNAL -> HOW IT WORKS -> ADAPTIVE ROADMAP -> WHY
+ * SOLVENTIA -> BRAND MOMENT -> CTA -> FAQ narrative. */
 function Index() {
+  // A nav link clicked from another page (or the footer) navigates here
+  // with a hash — scroll to it ourselves, at the same header-offset used
+  // for in-page clicks, rather than relying on the browser's own
+  // (header-unaware) fragment jump.
+  useEffect(() => {
+    const hash = window.location.hash.replace("#", "");
+    if (!hash) return;
+    const id = window.setTimeout(() => scrollToSection(hash), 80);
+    return () => window.clearTimeout(id);
+  }, []);
+
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-sol-page">
       <Header />
       <main>
         <Hero />
-        <Steps />
-        <AIDiscoveryFlow />
-        <Features />
-        <FeaturedIdeas />
+        <FounderSignal />
+        <HowItWorks />
+        <AdaptiveRoadmap />
         <WhySolventia />
-        <RoadmapTimeline />
-        <MissionVision />
-        <FoundersStory />
-        <ForNGOs />
+        <BrandMoment />
+        <FinalCTA />
         <FAQ />
       </main>
       <Footer />
