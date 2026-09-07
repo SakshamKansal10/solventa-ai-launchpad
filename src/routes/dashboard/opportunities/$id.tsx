@@ -19,6 +19,7 @@ import {
 import { toDisplayDetail, getFitFactors } from "@/lib/opportunity-display";
 import type { OpportunityPackage, OpportunityDetail, MarketEvidenceItem } from "@/lib/ai/schemas";
 import type { FitScoreResult } from "@/lib/profile/scoring";
+import { formatCompactMoney } from "@/lib/country-currency";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/dashboard/opportunities/$id")({
@@ -54,13 +55,6 @@ const SECTION_NAV = [
   { id: "risks", label: "Risks" },
   { id: "first-experiment", label: "First Experiment" },
 ];
-
-function formatINR(n: number): string {
-  if (n <= 0) return "₹0";
-  if (n >= 100_000) return `₹${(n / 100_000).toFixed(n % 100_000 === 0 ? 0 : 1)}L`;
-  if (n >= 1_000) return `₹${Math.round(n / 1000)}K`;
-  return `₹${n}`;
-}
 
 function FlowStep({ label, value, isLast }: { label: string; value: string; isLast?: boolean }) {
   return (
@@ -212,9 +206,9 @@ function OpportunityDetailPage() {
       needs: `Needs ~${fitFactors.weeklyHoursNeeded} hrs/week`,
     });
     matchRows.push({
-      you: `${formatINR(founderSummary.capitalINR)} available`,
-      match: founderSummary.capitalINR >= fitFactors.startupCapitalINR ? "yes" : "gap",
-      needs: `Needs ~${formatINR(fitFactors.startupCapitalINR)}`,
+      you: `${formatCompactMoney(founderSummary.capitalAmount, founderSummary.currency)} available`,
+      match: founderSummary.capitalAmount >= fitFactors.startupCapitalAmount ? "yes" : "gap",
+      needs: `Needs ~${formatCompactMoney(fitFactors.startupCapitalAmount, founderSummary.currency)}`,
     });
     for (const req of fitFactors.requiredSkills.slice(0, 3)) {
       const owned = founderSummary.skills.some(

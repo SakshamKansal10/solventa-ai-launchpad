@@ -1,9 +1,7 @@
 import type { OnboardingAnswers } from "./onboarding-types";
 import {
   CONSTRAINT_OPTIONS,
-  INCOME_BRACKETS,
   INDUSTRY_OPTIONS,
-  INVESTMENT_BRACKETS,
   MAJOR_OPTIONS,
   MOTIVATION_OPTIONS,
   PROBLEM_DOMAIN_OPTIONS,
@@ -11,6 +9,42 @@ import {
   WEEKLY_HOURS,
 } from "./onboarding-types";
 import { COUNTRY_NAMES } from "./location-data";
+import {
+  getCurrencyForCountry,
+  getInvestmentBrackets,
+  getAnnualIncomeBrackets,
+  getMonthlyIncomeGoalBrackets,
+} from "./country-currency";
+
+/** The founder's currency, resolved as soon as `country` is answered (in
+ * Section 1, before any monetary question). Falls back to INR — the
+ * product's original default — only when country isn't set yet, which
+ * never actually happens in the real step order. */
+function currencyFor(a: OnboardingAnswers) {
+  return getCurrencyForCountry(a.country);
+}
+
+function investmentBracketOptions(a: OnboardingAnswers): string[] {
+  return getInvestmentBrackets(currencyFor(a).code).map((b) => b.label);
+}
+
+function annualIncomeBracketOptions(a: OnboardingAnswers): string[] {
+  return getAnnualIncomeBrackets(currencyFor(a).code).map((b) => b.label);
+}
+
+function monthlyIncomeGoalBracketOptions(a: OnboardingAnswers): string[] {
+  return getMonthlyIncomeGoalBrackets(currencyFor(a).code)
+    .map((b) => b.label)
+    .concat("Not about income for me");
+}
+
+/** True when the founder picked the open-ended TOP investment bracket —
+ * currency-agnostic (the exact label text differs per currency), so this
+ * checks position rather than matching a literal string. */
+function isTopInvestmentBracket(a: OnboardingAnswers): boolean {
+  const brackets = investmentBracketOptions(a);
+  return a.investmentBudget === brackets[brackets.length - 1];
+}
 
 export type InputKind =
   | "text"
@@ -37,6 +71,11 @@ export interface QuestionStep {
   label: string;
   helper?: string;
   options?: string[];
+  /** For currency-dependent brackets (capital/income), where the right
+   * option LABELS depend on the founder's country — takes priority over
+   * the static `options` when present. Computed from answers already
+   * given (country is always asked first, in Section 1). */
+  getOptions?: (a: OnboardingAnswers) => string[];
   optional?: boolean;
   placeholder?: string;
   /** Simple questions (few options, no follow-up implications) can
@@ -243,7 +282,7 @@ export const STEPS: Step[] = [
     section: 1,
     input: "select",
     label: "What's your approximate annual income?",
-    options: INCOME_BRACKETS,
+    getOptions: annualIncomeBracketOptions,
     optional: true,
     condition: isWorking,
   },
@@ -257,7 +296,7 @@ export const STEPS: Step[] = [
     section: 1,
     input: "select",
     label: "What's your current business's approximate annual revenue?",
-    options: INCOME_BRACKETS,
+    getOptions: annualIncomeBracketOptions,
     optional: true,
     condition: isEntrepreneur,
   },
@@ -325,7 +364,7 @@ export const STEPS: Step[] = [
     section: 3,
     input: "choice",
     label: "How much could you realistically invest to get started?",
-    options: INVESTMENT_BRACKETS,
+    getOptions: investmentBracketOptions,
   },
   {
     kind: "question",
@@ -334,8 +373,8 @@ export const STEPS: Step[] = [
     input: "currency",
     label: "Roughly how much could you realistically invest?",
     helper: "An approximate amount is perfectly fine.",
-    placeholder: "e.g. 25 lakh, or 2 crore",
-    condition: (a) => a.investmentBudget === "More than ₹2,00,000",
+    placeholder: "e.g. 25,000",
+    condition: isTopInvestmentBracket,
   },
   {
     kind: "question",
@@ -609,14 +648,7 @@ export const STEPS: Step[] = [
     section: 7,
     input: "select",
     label: "What monthly income would feel like a real win, a year from now?",
-    options: [
-      "Under ₹5,000",
-      "₹5,000 – ₹20,000",
-      "₹20,000 – ₹50,000",
-      "₹50,000 – ₹1,50,000",
-      "₹1,50,000+",
-      "Not about income for me",
-    ],
+    getOptions: monthlyIncomeGoalBracketOptions,
     optional: true,
   },
   {

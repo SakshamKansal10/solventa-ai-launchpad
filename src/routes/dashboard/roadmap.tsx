@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { requireAuthLoader } from "@/lib/route-guards";
 import { getRoadmap, updateTaskStatus, replanRoadmap } from "@/lib/actions/roadmap";
+import { formatCompactMoney } from "@/lib/country-currency";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/dashboard/roadmap")({
@@ -404,13 +405,6 @@ function WeekBlock({
   );
 }
 
-function formatINR(n: number): string {
-  if (n <= 0) return "₹0";
-  if (n >= 100_000) return `₹${(n / 100_000).toFixed(n % 100_000 === 0 ? 0 : 1)}L`;
-  if (n >= 1_000) return `₹${Math.round(n / 1000)}K`;
-  return `₹${n}`;
-}
-
 /** useOpenMentor() reads a context that only exists inside <DashboardShell>'s
  * own subtree — it must be called from a component rendered as DashboardShell's
  * child, never from RoadmapPage itself (RoadmapPage is what creates
@@ -582,7 +576,7 @@ function RoadmapPage() {
       </h1>
       <p className="mt-2 max-w-xl text-[0.95rem] text-muted-foreground">
         {founderSummary
-          ? `Built around your ${founderSummary.weeklyHours || "available"} hrs/week and ${formatINR(founderSummary.capitalINR)} starting capital.`
+          ? `Built around your ${founderSummary.weeklyHours || "available"} hrs/week and ${formatCompactMoney(founderSummary.capitalAmount, founderSummary.currency)} starting capital.`
           : (opportunity?.one_liner ?? "Your personalized execution plan.")}
       </p>
 

@@ -226,7 +226,7 @@ describe("Stage 7 generation call path (mocked Gemini, no live network call)", (
       whyNow: "x",
       fitSignals: {
         requiredSkills: [],
-        startupCapitalINR: 1000,
+        startupCapitalAmount: 1000,
         weeklyHoursNeeded: 5,
         riskLevel: "cautious",
         motivationAlignment: "high",

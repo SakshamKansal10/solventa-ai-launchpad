@@ -235,7 +235,8 @@ export const getOpportunity = createServerFn({ method: "GET" })
     // anything or fabricating a comparison.
     const founderSummary = {
       weeklyHours: profile.time.weeklyHours,
-      capitalINR: profile.resources.capitalINR,
+      capitalAmount: profile.resources.capitalAmount,
+      currency: profile.identity.currency,
       skills: profile.skills.map((s) => s.name),
       riskAppetite: profile.risk.appetite,
     };

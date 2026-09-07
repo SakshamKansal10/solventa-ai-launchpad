@@ -1,5 +1,11 @@
 import type { OnboardingAnswers, SkillLevel } from "@/lib/onboarding-types";
-import { parseIndianCurrency } from "@/lib/currency";
+import {
+  getAnnualIncomeBrackets,
+  getCurrencyForCountry,
+  getInvestmentBrackets,
+  getMonthlyIncomeGoalBrackets,
+  parseCurrencyAmount,
+} from "@/lib/country-currency";
 
 export type RiskLevel = "cautious" | "balanced" | "experimental";
 
@@ -25,18 +31,25 @@ export interface NormalizedProfile {
     /** Business Owner / Freelancer branch only — null for every other
      * founder, not "no revenue". */
     currentBusiness: { revenueBracket: string | null; customers: string | null } | null;
+    /** ISO 4217, derived from country — INR when country is unset (the
+     * product's original, still-dominant market). Every monetary value in
+     * this profile (and every opportunity fit-signal it's compared
+     * against) is in THIS currency; nothing is ever converted between
+     * currencies, so comparisons stay valid without needing FX rates. */
+    currency: string;
+    currencySymbol: string;
   };
   skills: NormalizedSkill[];
   experienceYears: number;
   resources: {
-    capitalINR: number;
+    capitalAmount: number;
     capitalBracket: string | null;
     /** Existing income (salary/business/freelance) — a distinct signal
-     * from capitalINR: income implies ongoing earning capacity and
+     * from capitalAmount: income implies ongoing earning capacity and
      * realistic side-income targets, not money already set aside to
      * invest. Null for founders who were never asked (students,
      * unemployed) — absence is not the same as zero. */
-    annualIncomeINR: number | null;
+    annualIncomeAmount: number | null;
     assets: string[];
     internetQuality: string | null;
     transportation: string | null;
@@ -69,7 +82,7 @@ export interface NormalizedProfile {
   };
   direction: {
     goals: string[];
-    monthlyIncomeGoalINR: number | null;
+    monthlyIncomeGoalAmount: number | null;
     timeline: string | null;
     /** Employee branch only — null for every other founder. */
     willingToLeaveJob: string | null;
@@ -81,14 +94,6 @@ export const SKILL_LEVEL_SCORE: Record<SkillLevel, number> = {
   beginner: 1,
   comfortable: 2,
   advanced: 3,
-};
-
-const INVESTMENT_BRACKET_MIDPOINT: Record<string, number> = {
-  "₹0 — I have no capital right now": 0,
-  "Under ₹10,000": 5_000,
-  "₹10,000 – ₹50,000": 30_000,
-  "₹50,000 – ₹2,00,000": 125_000,
-  "More than ₹2,00,000": 300_000, // overridden by preciseCapital when present
 };
 
 const WEEKLY_HOURS_MIDPOINT: Record<string, number> = {
@@ -105,23 +110,6 @@ const YEARS_EXPERIENCE_MIDPOINT: Record<string, number> = {
   "3–5 years": 4,
   "5–10 years": 7,
   "10+ years": 12,
-};
-
-const MONTHLY_INCOME_GOAL_MIDPOINT: Record<string, number> = {
-  "Under ₹5,000": 3_000,
-  "₹5,000 – ₹20,000": 12_500,
-  "₹20,000 – ₹50,000": 35_000,
-  "₹50,000 – ₹1,50,000": 100_000,
-  "₹1,50,000+": 200_000,
-};
-
-const ANNUAL_INCOME_MIDPOINT: Record<string, number> = {
-  "< ₹3L": 200_000,
-  "₹3–5L": 400_000,
-  "₹5–10L": 750_000,
-  "₹10–20L": 1_500_000,
-  "₹20–50L": 3_500_000,
-  "₹50L+": 6_000_000,
 };
 
 const RISK_APPETITE_MAP: Record<string, RiskLevel> = {
@@ -153,18 +141,27 @@ function toNumber(value: string | undefined): number | null {
   return Number.isFinite(n) ? n : null;
 }
 
+function bracketValue(brackets: { label: string; value: number }[], label: string | undefined) {
+  if (!label) return null;
+  return brackets.find((b) => b.label === label)?.value ?? null;
+}
+
 /**
  * Converts the raw onboarding answers (free-text-shaped bracket labels) into
  * numeric/enum signals the deterministic scoring engine and AI prompts can
  * both consume without re-parsing bracket strings themselves.
  */
 export function normalizeProfile(answers: OnboardingAnswers): NormalizedProfile {
-  let capitalINR = answers.investmentBudget
-    ? (INVESTMENT_BRACKET_MIDPOINT[answers.investmentBudget] ?? 0)
-    : 0;
-  if (answers.investmentBudget === "More than ₹2,00,000" && answers.preciseCapital) {
-    const precise = parseIndianCurrency(answers.preciseCapital);
-    if (precise !== null && precise > 0) capitalINR = precise;
+  const currency = getCurrencyForCountry(answers.country);
+  const investmentBrackets = getInvestmentBrackets(currency.code);
+  const annualIncomeBrackets = getAnnualIncomeBrackets(currency.code);
+  const monthlyIncomeGoalBrackets = getMonthlyIncomeGoalBrackets(currency.code);
+  const topInvestmentBracketLabel = investmentBrackets[investmentBrackets.length - 1]?.label;
+
+  let capitalAmount = bracketValue(investmentBrackets, answers.investmentBudget) ?? 0;
+  if (answers.investmentBudget === topInvestmentBracketLabel && answers.preciseCapital) {
+    const precise = parseCurrencyAmount(answers.preciseCapital, currency.code);
+    if (precise !== null && precise > 0) capitalAmount = precise;
   }
 
   const weeklyHours = answers.timeAvailableWeekly
@@ -175,13 +172,12 @@ export function normalizeProfile(answers: OnboardingAnswers): NormalizedProfile 
     ? (YEARS_EXPERIENCE_MIDPOINT[answers.yearsExperience] ?? 0)
     : 0;
 
-  const monthlyIncomeGoalINR = answers.monthlyIncomeGoal
-    ? (MONTHLY_INCOME_GOAL_MIDPOINT[answers.monthlyIncomeGoal] ?? null)
-    : null;
+  const monthlyIncomeGoalAmount = bracketValue(
+    monthlyIncomeGoalBrackets,
+    answers.monthlyIncomeGoal,
+  );
 
-  const annualIncomeINR = answers.annualIncome
-    ? (ANNUAL_INCOME_MIDPOINT[answers.annualIncome] ?? null)
-    : null;
+  const annualIncomeAmount = bracketValue(annualIncomeBrackets, answers.annualIncome);
 
   const riskAppetite = answers.riskAppetite
     ? (RISK_APPETITE_MAP[answers.riskAppetite] ?? null)
@@ -210,6 +206,8 @@ export function normalizeProfile(answers: OnboardingAnswers): NormalizedProfile 
                 : null,
             }
           : null,
+      currency: currency.code,
+      currencySymbol: currency.symbol,
     },
     skills: (answers.skills ?? []).map((s) => ({
       name: s.name,
@@ -218,9 +216,9 @@ export function normalizeProfile(answers: OnboardingAnswers): NormalizedProfile 
     })),
     experienceYears,
     resources: {
-      capitalINR,
+      capitalAmount,
       capitalBracket: answers.investmentBudget ?? null,
-      annualIncomeINR,
+      annualIncomeAmount,
       assets: answers.assets ?? [],
       internetQuality: answers.internetQuality ?? null,
       transportation: answers.transportation ?? null,
@@ -271,7 +269,7 @@ export function normalizeProfile(answers: OnboardingAnswers): NormalizedProfile 
     },
     direction: {
       goals: answers.goals ?? [],
-      monthlyIncomeGoalINR,
+      monthlyIncomeGoalAmount,
       timeline: answers.timeline ?? null,
       willingToLeaveJob:
         answers.currentStatus === "Working Professional"

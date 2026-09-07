@@ -170,7 +170,7 @@ function fakePackage() {
   };
   const fitSignals = {
     requiredSkills: [],
-    startupCapitalINR: 1000,
+    startupCapitalAmount: 1000,
     weeklyHoursNeeded: 5,
     riskLevel: "cautious" as const,
     motivationAlignment: "high" as const,

@@ -1,37 +1,43 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
-import { formatIndianCurrency, parseIndianCurrency, toIndianShorthand } from "@/lib/currency";
+import { formatMoney, parseCurrencyAmount } from "@/lib/country-currency";
 
-/** Free-form Indian currency input — understands "2.5 lakh", "2 crore",
- * "2,50,000", or plain digits, and shows a live normalized preview so
- * the user can see it was understood correctly. Stores the raw rupee
- * number (as a string) via onChange, not the text they typed. */
+/** Free-form currency input — understands "2.5k", "1.2m", plain digits,
+ * and (for INR specifically) Indian lakh/crore shorthand, then shows a
+ * live formatted preview in the founder's own currency so they can see
+ * it was understood correctly. Stores the raw numeric amount (as a
+ * string) via onChange, not the text they typed. */
 export function CurrencyInput({
   value,
   onChange,
   placeholder,
+  currencyCode = "INR",
+  currencySymbol = "₹",
 }: {
   value?: string;
   onChange: (raw: string | undefined) => void;
   placeholder?: string;
+  currencyCode?: string;
+  currencySymbol?: string;
 }) {
   const [text, setText] = useState(value ?? "");
-  const parsed = text.trim() ? parseIndianCurrency(text) : null;
+  const parsed = text.trim() ? parseCurrencyAmount(text, currencyCode) : null;
+  const example = currencyCode === "INR" ? "e.g. 25 lakh" : "e.g. 25,000";
 
   return (
     <div>
       <div className="flex h-16 items-center gap-2 rounded-xl border border-border bg-card px-5 shadow-sm transition-colors focus-within:border-accent/50">
-        <span className="text-xl font-medium text-muted-foreground">₹</span>
+        <span className="text-xl font-medium text-muted-foreground">{currencySymbol}</span>
         <input
           type="text"
           inputMode="decimal"
           autoFocus
           value={text}
-          placeholder={placeholder ?? "e.g. 25 lakh"}
+          placeholder={placeholder ?? example}
           onChange={(e) => {
             const next = e.target.value;
             setText(next);
-            const num = next.trim() ? parseIndianCurrency(next) : null;
+            const num = next.trim() ? parseCurrencyAmount(next, currencyCode) : null;
             onChange(num !== null ? String(num) : undefined);
           }}
           className="h-full w-full bg-transparent text-lg text-foreground outline-none placeholder:text-muted-foreground/60"
@@ -45,9 +51,8 @@ export function CurrencyInput({
             exit={{ opacity: 0 }}
             className="mt-3 text-[0.88rem] text-muted-foreground"
           >
-            That's{" "}
-            <span className="font-semibold text-primary">{formatIndianCurrency(parsed)}</span>
-            {toIndianShorthand(parsed) ? ` (${toIndianShorthand(parsed)})` : ""}.
+            That&rsquo;s{" "}
+            <span className="font-semibold text-primary">{formatMoney(parsed, currencyCode)}</span>.
           </motion.p>
         )}
         {text.trim().length > 0 && parsed === null && (
@@ -57,7 +62,8 @@ export function CurrencyInput({
             exit={{ opacity: 0 }}
             className="mt-3 text-[0.88rem] text-muted-foreground/70"
           >
-            Try a number, or something like &ldquo;25 lakh&rdquo; or &ldquo;2 crore&rdquo;.
+            Try a number{currencyCode === "INR" ? ', or something like "25 lakh"' : ' like "25000"'}
+            .
           </motion.p>
         )}
       </AnimatePresence>

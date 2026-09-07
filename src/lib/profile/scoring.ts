@@ -1,6 +1,7 @@
 import type { SkillLevel } from "@/lib/onboarding-types";
 import type { NormalizedProfile, RiskLevel } from "@/lib/profile/normalize";
 import { SKILL_LEVEL_SCORE } from "@/lib/profile/normalize";
+import { formatMoney } from "@/lib/country-currency";
 
 /**
  * What Gemini proposes per candidate opportunity — qualitative/estimated
@@ -11,7 +12,10 @@ import { SKILL_LEVEL_SCORE } from "@/lib/profile/normalize";
  */
 export interface OpportunityFitFactors {
   requiredSkills: { name: string; minLevel: SkillLevel }[];
-  startupCapitalINR: number;
+  /** In the FOUNDER's own currency (profile.identity.currency) — Gemini is
+   * instructed to generate this in that currency, never converted, so it
+   * can be compared directly against profile.resources.capitalAmount. */
+  startupCapitalAmount: number;
   weeklyHoursNeeded: number;
   riskLevel: RiskLevel;
   motivationAlignment: "high" | "medium" | "low";
@@ -81,9 +85,9 @@ function scoreSkills(profile: NormalizedProfile, factors: OpportunityFitFactors)
 function scoreResources(profile: NormalizedProfile, factors: OpportunityFitFactors): number {
   const max = FIT_SCORE_MAXIMA.resources;
   const capitalRatio =
-    factors.startupCapitalINR <= 0
+    factors.startupCapitalAmount <= 0
       ? 1
-      : clamp(profile.resources.capitalINR / factors.startupCapitalINR, 0, 1);
+      : clamp(profile.resources.capitalAmount / factors.startupCapitalAmount, 0, 1);
 
   let score = max * capitalRatio;
 
@@ -171,9 +175,12 @@ export function getConstraintWarnings(
   factors: OpportunityFitFactors,
 ): string[] {
   const warnings: string[] = [];
-  if (profile.resources.capitalINR <= 500 && factors.startupCapitalINR > 5_000) {
+  // <= 0, not a small nonzero threshold — the old ₹500 cutoff was a
+  // currency-specific magic number; "no capital at all" (the actual
+  // intent) is precisely and currency-independently capitalAmount === 0.
+  if (profile.resources.capitalAmount <= 0 && factors.startupCapitalAmount > 0) {
     warnings.push(
-      `This typically needs about ₹${factors.startupCapitalINR.toLocaleString("en-IN")} to start, but your profile has no capital set aside yet.`,
+      `This typically needs about ${formatMoney(factors.startupCapitalAmount, profile.identity.currency)} to start, but your profile has no capital set aside yet.`,
     );
   }
   if (factors.weeklyHoursNeeded > profile.time.weeklyHours * 2 && profile.time.weeklyHours > 0) {

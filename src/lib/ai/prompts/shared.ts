@@ -1,9 +1,11 @@
 import type { NormalizedProfile } from "@/lib/profile/normalize";
+import { formatMoney } from "@/lib/country-currency";
 
 export const PLAIN_LANGUAGE_RULE = `Never use unexplained jargon (SaaS, B2B, B2C, TAM, CAC, LTV, go-to-market, vertical integration, product-market fit, acquisition funnel, infrastructure layer). If a concept is needed, explain it in one plain clause the same sentence. Write for someone who has never studied business. Never say a business idea is "validated" unless real evidence justifies that — prefer "strong signal", "early signal", "emerging", "needs validation", or "limited evidence". Never invent statistics, customer counts, testimonials, or sources. If you don't know something, say so plainly instead of guessing confidently.`;
 
 export function formatProfileForPrompt(profile: NormalizedProfile): string {
   const lines: string[] = [];
+  const money = (amount: number) => formatMoney(amount, profile.identity.currency);
 
   const status =
     profile.identity.currentStatus === "Other" && profile.identity.currentStatusDetail
@@ -11,6 +13,9 @@ export function formatProfileForPrompt(profile: NormalizedProfile): string {
       : (profile.identity.currentStatus ?? "status unknown");
   lines.push(
     `Identity: ${profile.identity.age ?? "unknown"} years old, ${status}, based in ${[profile.identity.city, profile.identity.state, profile.identity.country].filter(Boolean).join(", ") || "unknown location"}. Education: ${profile.identity.education ?? "unknown"}. Languages: ${profile.identity.languages.join(", ") || "unknown"}.`,
+  );
+  lines.push(
+    `Currency: this founder's monetary figures below, and every monetary figure you generate for them, must be in ${profile.identity.currency} (${profile.identity.currencySymbol}) — never rupees/lakh/crore unless that is genuinely their currency.`,
   );
   if (profile.identity.currentBusiness) {
     lines.push(
@@ -30,11 +35,11 @@ export function formatProfileForPrompt(profile: NormalizedProfile): string {
 
   lines.push(`Relevant experience: ~${profile.experienceYears} years.`);
   lines.push(
-    `Resources: about ₹${profile.resources.capitalINR.toLocaleString("en-IN")} available to start. Assets available: ${profile.resources.assets.join(", ") || "none listed"}. Internet: ${profile.resources.internetQuality ?? "unknown"}. Transportation: ${profile.resources.transportation ?? "unknown"}.`,
+    `Resources: about ${money(profile.resources.capitalAmount)} available to start. Assets available: ${profile.resources.assets.join(", ") || "none listed"}. Internet: ${profile.resources.internetQuality ?? "unknown"}. Transportation: ${profile.resources.transportation ?? "unknown"}.`,
   );
-  if (profile.resources.annualIncomeINR) {
+  if (profile.resources.annualIncomeAmount) {
     lines.push(
-      `Existing annual income: about ₹${profile.resources.annualIncomeINR.toLocaleString("en-IN")} — this is ongoing earning capacity, separate from the capital available to invest above. A side-income idea should feel meaningful relative to this, not trivial.`,
+      `Existing annual income: about ${money(profile.resources.annualIncomeAmount)} — this is ongoing earning capacity, separate from the capital available to invest above. A side-income idea should feel meaningful relative to this, not trivial.`,
     );
   }
   lines.push(`Time: about ${profile.time.weeklyHours} hours/week realistically available.`);
@@ -66,7 +71,7 @@ export function formatProfileForPrompt(profile: NormalizedProfile): string {
   }
 
   lines.push(
-    `Direction: goals = ${profile.direction.goals.join(", ") || "unspecified"}; monthly income goal ≈ ${profile.direction.monthlyIncomeGoalINR ? `₹${profile.direction.monthlyIncomeGoalINR.toLocaleString("en-IN")}` : "not focused on income"}; timeline = ${profile.direction.timeline ?? "unspecified"}.`,
+    `Direction: goals = ${profile.direction.goals.join(", ") || "unspecified"}; monthly income goal ≈ ${profile.direction.monthlyIncomeGoalAmount ? money(profile.direction.monthlyIncomeGoalAmount) : "not focused on income"}; timeline = ${profile.direction.timeline ?? "unspecified"}.`,
   );
   if (profile.direction.willingToLeaveJob) {
     lines.push(

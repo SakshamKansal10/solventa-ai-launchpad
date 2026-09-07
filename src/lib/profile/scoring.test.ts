@@ -9,7 +9,7 @@ import { normalizeProfile } from "@/lib/profile/normalize";
 
 const baseFactors: OpportunityFitFactors = {
   requiredSkills: [{ name: "Coding", minLevel: "comfortable" }],
-  startupCapitalINR: 50_000,
+  startupCapitalAmount: 50_000,
   weeklyHoursNeeded: 10,
   riskLevel: "balanced",
   motivationAlignment: "high",
@@ -88,7 +88,7 @@ describe("computeFitScore", () => {
     });
     const demandingFactors: OpportunityFitFactors = {
       ...baseFactors,
-      startupCapitalINR: 5_000_000,
+      startupCapitalAmount: 5_000_000,
       weeklyHoursNeeded: 60,
       riskLevel: "experimental",
       motivationAlignment: "low",
@@ -149,13 +149,16 @@ describe("computeFitScore", () => {
 describe("getConstraintWarnings", () => {
   it("flags a real capital mismatch for a founder with no money", () => {
     const broke = normalizeProfile({ investmentBudget: "₹0 — I have no capital right now" });
-    const warnings = getConstraintWarnings(broke, { ...baseFactors, startupCapitalINR: 500_000 });
+    const warnings = getConstraintWarnings(broke, {
+      ...baseFactors,
+      startupCapitalAmount: 500_000,
+    });
     expect(warnings.some((w) => w.includes("capital"))).toBe(true);
   });
 
   it("does not flag a modest, affordable capital requirement", () => {
     const broke = normalizeProfile({ investmentBudget: "₹0 — I have no capital right now" });
-    const warnings = getConstraintWarnings(broke, { ...baseFactors, startupCapitalINR: 0 });
+    const warnings = getConstraintWarnings(broke, { ...baseFactors, startupCapitalAmount: 0 });
     expect(warnings).toHaveLength(0);
   });
 

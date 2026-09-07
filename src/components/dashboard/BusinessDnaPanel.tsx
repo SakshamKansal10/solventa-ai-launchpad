@@ -4,17 +4,12 @@ import { ChevronDown } from "lucide-react";
 import type { FounderDNA, FounderAnalysis } from "@/lib/ai/schemas";
 import type { NormalizedProfile } from "@/lib/profile/normalize";
 import { toDisplayFounderDNA } from "@/lib/founder-dna-display";
-import { formatIndianCurrency, toIndianShorthand } from "@/lib/currency";
+import { formatCompactMoney } from "@/lib/country-currency";
 import { cn } from "@/lib/utils";
 
 interface BusinessDnaPanelProps {
   analysis: FounderDNA | FounderAnalysis | null;
   signals: NormalizedProfile;
-}
-
-function capitalLabel(inr: number): string {
-  const shorthand = toIndianShorthand(inr);
-  return shorthand ? `~${shorthand}` : formatIndianCurrency(inr);
 }
 
 const RISK_LABEL: Record<string, string> = {
@@ -56,7 +51,7 @@ export function BusinessDnaPanel({ analysis, signals }: BusinessDnaPanelProps) {
 
   const resourceChips = [
     `${signals.time.weeklyHours} hrs/week`,
-    capitalLabel(signals.resources.capitalINR),
+    `~${formatCompactMoney(signals.resources.capitalAmount, signals.identity.currency)}`,
     ...(dna?.resources.slice(0, 2) ?? signals.resources.assets.slice(0, 2)),
   ].filter(Boolean);
 

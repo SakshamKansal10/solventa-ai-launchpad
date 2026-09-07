@@ -124,7 +124,7 @@ export const FIXTURE_INTELLIGENCE_PACKAGE: SolventiaIntelligencePackage = {
         "Most local businesses only just started feeling pressure from customers searching online post-pandemic — the gap is real and still under-served by agencies that ignore this small-business tier.",
       fitSignals: {
         requiredSkills: [{ name: "Web Development", minLevel: "comfortable" }],
-        startupCapitalINR: 8000,
+        startupCapitalAmount: 8000,
         weeklyHoursNeeded: 12,
         riskLevel: "cautious",
         motivationAlignment: "high",
@@ -186,7 +186,7 @@ export const FIXTURE_INTELLIGENCE_PACKAGE: SolventiaIntelligencePackage = {
         "Freelance platforms have never had more new entrants than right now, and most arrive with zero starting assets — this gap doesn't close, it keeps refilling.",
       fitSignals: {
         requiredSkills: [{ name: "Web Development", minLevel: "comfortable" }],
-        startupCapitalINR: 5000,
+        startupCapitalAmount: 5000,
         weeklyHoursNeeded: 18,
         riskLevel: "balanced",
         motivationAlignment: "medium",
@@ -245,7 +245,7 @@ export const FIXTURE_INTELLIGENCE_PACKAGE: SolventiaIntelligencePackage = {
         "Job listings have fragmented across more platforms than ever, and generic job boards keep getting noisier — a curated, local, human-filtered list stands out precisely because of that fragmentation.",
       fitSignals: {
         requiredSkills: [{ name: "Digital Marketing", minLevel: "beginner" }],
-        startupCapitalINR: 3000,
+        startupCapitalAmount: 3000,
         weeklyHoursNeeded: 9,
         riskLevel: "cautious",
         motivationAlignment: "medium",

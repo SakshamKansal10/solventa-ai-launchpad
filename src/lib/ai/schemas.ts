@@ -7,10 +7,12 @@ export const FitFactorsSchema = z.object({
   requiredSkills: z
     .array(z.object({ name: z.string(), minLevel: skillLevelEnum }))
     .describe("Skills genuinely needed to start, with the minimum comfort level required."),
-  startupCapitalINR: z
+  startupCapitalAmount: z
     .number()
     .min(0)
-    .describe("Realistic rupee amount needed to start, not scale."),
+    .describe(
+      "Realistic amount needed to start, not scale — in the founder's own currency (given explicitly in the prompt), never a different currency.",
+    ),
   weeklyHoursNeeded: z.number().min(0).describe("Realistic hours/week to get this moving."),
   riskLevel: riskLevelEnum,
   motivationAlignment: z
@@ -263,7 +265,9 @@ export const OpportunityPackageSchema = z.object({
     .describe("Plain-language explanation of how this makes money."),
   startingCapital: z
     .string()
-    .describe("Realistic starting range in plain words, e.g. '₹5,000–15,000 to start'."),
+    .describe(
+      "Realistic starting range in plain words, in the founder's own currency given in the prompt, e.g. '$500–1,500 to start' for a USD founder — never default to rupees for a non-Indian founder.",
+    ),
   weeklyTime: z.string().describe("Realistic weekly time commitment in plain words."),
   difficulty: z
     .enum(["Beginner-friendly", "Moderate", "Challenging"])

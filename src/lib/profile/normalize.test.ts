@@ -5,7 +5,7 @@ import type { OnboardingAnswers } from "@/lib/onboarding-types";
 describe("normalizeProfile", () => {
   it("uses the investment bracket midpoint when no precise capital is given", () => {
     const profile = normalizeProfile({ investmentBudget: "₹50,000 – ₹2,00,000" });
-    expect(profile.resources.capitalINR).toBe(125_000);
+    expect(profile.resources.capitalAmount).toBe(125_000);
   });
 
   it("prefers preciseCapital over the bracket midpoint for the open-ended top bracket", () => {
@@ -13,12 +13,12 @@ describe("normalizeProfile", () => {
       investmentBudget: "More than ₹2,00,000",
       preciseCapital: "25 lakh",
     });
-    expect(profile.resources.capitalINR).toBe(2_500_000);
+    expect(profile.resources.capitalAmount).toBe(2_500_000);
   });
 
   it("falls back to the bracket default when the top bracket has no precise figure yet", () => {
     const profile = normalizeProfile({ investmentBudget: "More than ₹2,00,000" });
-    expect(profile.resources.capitalINR).toBe(300_000);
+    expect(profile.resources.capitalAmount).toBe(300_000);
   });
 
   it("maps weekly hours brackets to numeric midpoints", () => {
@@ -49,7 +49,7 @@ describe("normalizeProfile", () => {
   it("never throws on a fully-empty profile (every field is optional)", () => {
     expect(() => normalizeProfile({})).not.toThrow();
     const profile = normalizeProfile({});
-    expect(profile.resources.capitalINR).toBe(0);
+    expect(profile.resources.capitalAmount).toBe(0);
     expect(profile.time.weeklyHours).toBe(5);
     expect(profile.skills).toEqual([]);
   });

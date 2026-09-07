@@ -47,7 +47,7 @@ function buildOpportunity(opportunityIndex: number, overrides: Record<string, un
     whyNow: "Local demand for this has grown faster than local supply this year.",
     fitSignals: {
       requiredSkills: [{ name: "Communication", minLevel: "beginner" as const }],
-      startupCapitalINR: 8000,
+      startupCapitalAmount: 8000,
       weeklyHoursNeeded: 9,
       riskLevel: "cautious" as const,
       motivationAlignment: "high" as const,

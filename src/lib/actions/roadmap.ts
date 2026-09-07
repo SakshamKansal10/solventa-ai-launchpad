@@ -108,7 +108,11 @@ export const getRoadmap = createServerFn({ method: "GET" })
       .maybeSingle();
     const signals = dnaRow.data?.normalized_signals as unknown as NormalizedProfile | undefined;
     const founderSummary = signals
-      ? { weeklyHours: signals.time.weeklyHours, capitalINR: signals.resources.capitalINR }
+      ? {
+          weeklyHours: signals.time.weeklyHours,
+          capitalAmount: signals.resources.capitalAmount,
+          currency: signals.identity.currency,
+        }
       : null;
 
     return {

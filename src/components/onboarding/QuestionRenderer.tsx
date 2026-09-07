@@ -4,6 +4,7 @@ import { ArrowRight, Check, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { QuestionStep } from "@/lib/onboarding-steps";
 import { LANGUAGE_LIBRARY, type SkillEntry } from "@/lib/onboarding-types";
+import { getCurrencyForCountry } from "@/lib/country-currency";
 import { useOnboarding } from "@/lib/onboarding-store";
 import { getStageTheme } from "@/lib/onboarding-themes";
 import { Input } from "@/components/ui/input";
@@ -52,6 +53,12 @@ export function QuestionRenderer({ step }: { step: QuestionStep }) {
   const value = answers[step.id];
   const [localText, setLocalText] = useState(typeof value === "string" ? value : "");
   const [pendingChoice, setPendingChoice] = useState<string | null>(null);
+  // Currency-dependent questions (investmentBudget, annualIncome, etc.)
+  // supply getOptions instead of a static options array — this is the one
+  // place that distinction is resolved, so every render branch below just
+  // reads `options` uniformly.
+  const options = step.getOptions ? step.getOptions(answers) : step.options;
+  const currency = getCurrencyForCountry(answers.country);
 
   const canContinueDefault =
     step.optional ||
@@ -85,9 +92,9 @@ export function QuestionRenderer({ step }: { step: QuestionStep }) {
         )}
       </div>
 
-      {step.input === "choice" && step.options && (
+      {step.input === "choice" && options && (
         <div className="grid gap-3 sm:grid-cols-2">
-          {step.options.map((option) => {
+          {options.map((option) => {
             const selected = value === option;
             return (
               <motion.button
@@ -127,10 +134,10 @@ export function QuestionRenderer({ step }: { step: QuestionStep }) {
         </div>
       )}
 
-      {step.input === "multi-choice" && step.options && (
+      {step.input === "multi-choice" && options && (
         <div className="flex flex-col gap-3">
           <div className="grid gap-3 sm:grid-cols-2">
-            {step.options.map((option) => {
+            {options.map((option) => {
               const list = Array.isArray(value) ? (value as string[]) : [];
               const active = list.includes(option);
               return (
@@ -179,7 +186,7 @@ export function QuestionRenderer({ step }: { step: QuestionStep }) {
           {step.allowSelectAll &&
             (() => {
               const list = Array.isArray(value) ? (value as string[]) : [];
-              const selectableOptions = step.options!.filter((o) => !isExcludedFromSelectAll(o));
+              const selectableOptions = (options ?? []).filter((o) => !isExcludedFromSelectAll(o));
               const allSelected = selectableOptions.every((o) => list.includes(o));
               return (
                 <motion.button
@@ -239,6 +246,8 @@ export function QuestionRenderer({ step }: { step: QuestionStep }) {
         <CurrencyInput
           value={typeof value === "string" ? value : undefined}
           placeholder={step.placeholder}
+          currencyCode={currency.code}
+          currencySymbol={currency.symbol}
           onChange={(raw) => setAnswer(step.id, raw as never)}
         />
       )}
@@ -253,7 +262,7 @@ export function QuestionRenderer({ step }: { step: QuestionStep }) {
         />
       )}
 
-      {step.input === "select" && step.options && (
+      {step.input === "select" && options && (
         <Select
           value={typeof value === "string" ? value : undefined}
           onValueChange={(v) => setAnswer(step.id, v as never)}
@@ -262,7 +271,7 @@ export function QuestionRenderer({ step }: { step: QuestionStep }) {
             <SelectValue placeholder="Choose one…" />
           </SelectTrigger>
           <SelectContent>
-            {step.options.map((option) => (
+            {options.map((option) => (
               <SelectItem key={option} value={option}>
                 {option}
               </SelectItem>
@@ -273,7 +282,7 @@ export function QuestionRenderer({ step }: { step: QuestionStep }) {
 
       {step.input === "searchable-select" && (
         <SearchableSelect
-          options={step.options ?? []}
+          options={options ?? []}
           value={typeof value === "string" ? value : undefined}
           onChange={(next) => setAnswer(step.id, next as never)}
           placeholder="Search…"
@@ -300,11 +309,11 @@ export function QuestionRenderer({ step }: { step: QuestionStep }) {
         />
       )}
 
-      {step.input === "spectrum" && step.options && (
+      {step.input === "spectrum" && options && (
         <div className="flex flex-col gap-6">
           <div className="relative flex items-start justify-between gap-2">
             <div className="absolute inset-x-6 top-[10px] h-px bg-border" aria-hidden="true" />
-            {step.options.map((option) => {
+            {options.map((option) => {
               const selected = value === option;
               return (
                 <button

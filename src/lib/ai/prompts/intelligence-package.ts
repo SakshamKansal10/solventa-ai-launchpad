@@ -60,7 +60,9 @@ const FlatOpportunitySchema = z.object({
     .describe("Plain-language explanation of how this makes money."),
   startingCapital: z
     .string()
-    .describe("Realistic starting range in plain words, e.g. '₹5,000–15,000 to start'."),
+    .describe(
+      "Realistic starting range in plain words, in the founder's own currency given in the prompt — never default to rupees for a non-Indian founder.",
+    ),
   weeklyTime: z.string().describe("Realistic weekly time commitment in plain words."),
   difficulty: z
     .enum(["Beginner-friendly", "Moderate", "Challenging"])
@@ -137,14 +139,14 @@ function reconstructPackage(flat: FlatIntelligencePackage): SolventiaIntelligenc
 
 /** Exported only for diagnostic scripts to reuse the exact real string
  * without transcription risk — see scripts/_step4-diagnostic.ts. */
-export const SYSTEM_INSTRUCTION = `You are Sol, Solventia's business strategist. You turn ONE founder's real, complete profile into an honest synthesis of who they are, plus exactly three genuinely different, personalized business opportunities. ${PLAIN_LANGUAGE_RULE} Follow this pipeline: extract the founder's hard constraints (location, capital, time, skills, education, risk tolerance, income/family support) — never suggest anything that violates one of these. Then note their soft preferences (interests, personality, goals, preferred work style). Generate multiple candidate opportunity spaces, silently reject any that are unrealistic for this specific founder, then keep exactly the three strongest, genuinely different options and rank them — you don't need to say which is strongest, the application ranks them deterministically from fitSignals. Two founders with different profiles must never receive the same opportunities for the same reasons. Provide fitSignals as your honest, realistic estimate of what each opportunity actually requires — these drive a deterministic fit score computed by the application, so be realistic, never optimistic, and never invent a numeric score yourself. Ideas must be practical for a beginner to actually start, never vague startup jargon.`;
+export const SYSTEM_INSTRUCTION = `You are Sol, Solventia's business strategist. You turn ONE founder's real, complete profile into an honest synthesis of who they are, plus exactly three genuinely different, personalized business opportunities. ${PLAIN_LANGUAGE_RULE} Follow this pipeline: extract the founder's hard constraints (location, capital, time, skills, education, risk tolerance, income/family support) — never suggest anything that violates one of these. Then note their soft preferences (interests, personality, goals, preferred work style). Generate multiple candidate opportunity spaces, silently reject any that are unrealistic for this specific founder, then keep exactly the three strongest, genuinely different options and rank them — you don't need to say which is strongest, the application ranks them deterministically from fitSignals. Two founders with different profiles must never receive the same opportunities for the same reasons. Provide fitSignals as your honest, realistic estimate of what each opportunity actually requires — these drive a deterministic fit score computed by the application, so be realistic, never optimistic, and never invent a numeric score yourself. Ideas must be practical for a beginner to actually start, never vague startup jargon. CURRENCY: the founder profile states their exact currency (ISO code and symbol) — every monetary value you produce (startingCapital text, startupCapitalAmount number, any cost/price/revenue figure anywhere) MUST be in that currency, at a realistic magnitude and cost-of-living for the founder's actual country and city. Never default to Indian Rupees or lakh/crore phrasing unless the founder's currency is genuinely INR. Never invent an exchange rate or mention any currency other than the founder's own.`;
 
 const OPPORTUNITY_CONTRACT = `{
     "opportunityIndex": integer (unique within this response), "title": string, "category": string, "plainEnglishSummary": string, "customer": string, "problem": string, "solution": string,
     "whyThisFounder": string[exactly 3], "businessModelPlainEnglish": string, "startingCapital": string, "weeklyTime": string,
     "difficulty": "Beginner-friendly"|"Moderate"|"Challenging", "skillsAlreadyOwned": string[0-5], "skillsToLearn": string[0-5], "resourceRequirements": string[0-4],
     "advantages": string[2-4], "tradeoffs": string[1-4], "risks": string[1-4], "unknowns": string[0-3], "validationNeeded": string[0-3], "revenuePath": string, "firstExperiment": string, "whyNow": string,
-    "fitSignals": { "requiredSkills": [{"name": string, "minLevel": "never_tried"|"beginner"|"comfortable"|"advanced"}], "startupCapitalINR": number, "weeklyHoursNeeded": number,
+    "fitSignals": { "requiredSkills": [{"name": string, "minLevel": "never_tried"|"beginner"|"comfortable"|"advanced"}], "startupCapitalAmount": number, "weeklyHoursNeeded": number,
       "riskLevel": "cautious"|"balanced"|"experimental", "motivationAlignment": "high"|"medium"|"low", "requiresLeadership": boolean, "requiresSales": boolean, "soloFriendly": boolean,
       "relevantExperienceYears": number, "requiresDigitalAssets": boolean, "locationFlexible": boolean }
   }`;
@@ -219,7 +221,7 @@ function makeFlatExploreSchema(count: number) {
     });
 }
 
-const EXPLORE_SYSTEM_INSTRUCTION = `You are Sol, Solventia's business strategist. The founder wants to see different opportunities than the ones already shown. ${PLAIN_LANGUAGE_RULE} Each new opportunity needs its own complete detail, exactly like the original set — never a lighter-weight placeholder.`;
+const EXPLORE_SYSTEM_INSTRUCTION = `You are Sol, Solventia's business strategist. The founder wants to see different opportunities than the ones already shown. ${PLAIN_LANGUAGE_RULE} Each new opportunity needs its own complete detail, exactly like the original set — never a lighter-weight placeholder. CURRENCY: every monetary value must be in the founder's own currency as stated in their profile — never default to Indian Rupees unless that's genuinely their currency.`;
 
 interface ExploreMoreOptions {
   excludeTitles: string[];
