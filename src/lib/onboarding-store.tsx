@@ -46,16 +46,37 @@ interface OnboardingContextValue {
 
 const OnboardingContext = createContext<OnboardingContextValue | null>(null);
 
-export function OnboardingProvider({ children }: { children: ReactNode }) {
-  const [answers, setAnswers] = useState<OnboardingAnswers>({});
+export function OnboardingProvider({
+  children,
+  initialAnswers,
+}: {
+  children: ReactNode;
+  /** Pre-fills the flow from a founder's most recent consultation (see
+   * Settings → "Edit Founder Profile") instead of starting blank. This is
+   * the ONLY difference from a normal fresh consultation — every question
+   * screen, and completeConsultation itself, behave exactly as they
+   * already do, so editing carries zero new risk to the working
+   * submission pipeline. Takes priority over any localStorage draft: an
+   * old half-finished draft is almost always staler than the founder's
+   * actual last completed consultation. */
+  initialAnswers?: OnboardingAnswers;
+}) {
+  const [answers, setAnswers] = useState<OnboardingAnswers>(initialAnswers ?? {});
   const [stepIndex, setStepIndex] = useState(0);
   const [savedAvailable, setSavedAvailable] = useState(false);
 
   useEffect(() => {
+    // Editing an existing profile already starts with real answers loaded
+    // — a leftover "resume saved progress" banner from some earlier,
+    // unrelated abandoned draft would be confusing here, not helpful.
+    if (Object.keys(answers).length > 0) return;
     const stored = loadStored();
     if (stored && Object.keys(stored.answers).length > 0) {
       setSavedAvailable(true);
     }
+    // Deliberately mount-only: this decides whether to show the "resume
+    // saved progress" banner once, based on state as of first render.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
@@ -83,6 +104,7 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
       if (key === "currentStatus" && prev.currentStatus !== value) {
         const {
           industry: _industry,
+          industryOther: _industryOther,
           yearsExperience: _yearsExperience,
           annualIncome: _annualIncome,
           willingToLeaveJob: _willingToLeaveJob,

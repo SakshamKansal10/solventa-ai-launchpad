@@ -267,8 +267,18 @@ export function DashboardShell({
           />
         </aside>
 
-        {/* ===== MAIN WORKSPACE COLUMN — the only scrolling region ===== */}
-        <div className="flex h-dvh min-w-0 flex-1 flex-col overflow-y-auto">
+        {/* ===== MAIN WORKSPACE COLUMN — the only scrolling region =====
+         * Shifts left (via margin, not overlap) when Sol is open on
+         * desktop so the panel docks beside the workspace instead of
+         * covering it — both stay fully visible and usable at once. On
+         * mobile the panel is intentionally full-width (see MentorPanel),
+         * so no shift happens there. */}
+        <div
+          className={cn(
+            "flex h-dvh min-w-0 flex-1 flex-col overflow-y-auto transition-[margin-right] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]",
+            mentorOpen && "lg:mr-[400px]",
+          )}
+        >
           {/* ===== MOBILE TOP BAR ===== */}
           <header className="sticky top-0 z-30 flex shrink-0 items-center justify-between gap-4 border-b border-border/60 bg-background/90 px-5 py-4 backdrop-blur-xl lg:hidden">
             <Link to="/" className="flex items-center gap-2.5" aria-label="Solventia home">

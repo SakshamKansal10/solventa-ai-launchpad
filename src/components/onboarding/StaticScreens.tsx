@@ -12,6 +12,8 @@ import { AccountGate } from "@/components/onboarding/AccountGate";
 import { getCurrentUser } from "@/lib/actions/auth";
 import { completeConsultation } from "@/lib/actions/profile";
 import { STAGE_THEMES } from "@/lib/onboarding-themes";
+import { cn } from "@/lib/utils";
+import mark from "@/assets/solventia-mark.png";
 
 const fadeUp = {
   hidden: { opacity: 0, y: 20 },
@@ -40,7 +42,7 @@ function AIOrb() {
   );
 }
 
-export function WelcomeScreen() {
+export function WelcomeScreen({ editMode = false }: { editMode?: boolean }) {
   const { goNext, hasSavedProgress, resumeSaved, discardSaved } = useOnboarding();
 
   return (
@@ -52,23 +54,26 @@ export function WelcomeScreen() {
     >
       <motion.p variants={fadeUp} className="eyebrow flex items-center gap-2 text-accent">
         <Sparkles className="size-3.5" aria-hidden="true" />
-        Solventia Consultation
+        {editMode ? "Editing Your Founder Profile" : "Solventia Consultation"}
       </motion.p>
       <motion.h1
         variants={fadeUp}
         className="mt-6 font-display text-[clamp(2rem,4.5vw,3rem)] font-semibold leading-[1.15] text-primary"
       >
-        Let&rsquo;s Build Your Entrepreneurial Journey.
+        {editMode ? "Update What’s Changed." : "Let’s Build Your Entrepreneurial Journey."}
       </motion.h1>
       <motion.p
         variants={fadeUp}
         className="mt-6 text-[1.02rem] leading-[1.9] text-muted-foreground"
       >
-        Over the next few minutes, I&rsquo;ll understand your ambitions, strengths, resources, and
-        circumstances before recommending a business that genuinely fits you.
+        {editMode
+          ? "Every answer is already filled in from your last consultation. Skip through anything unchanged, and edit only what’s different."
+          : "Over the next few minutes, I’ll understand your ambitions, strengths, resources, and circumstances before recommending a business that genuinely fits you."}
       </motion.p>
       <motion.p variants={fadeUp} className="mt-3 text-[1.02rem] font-semibold text-primary">
-        This isn&rsquo;t a quiz. It&rsquo;s a personalized strategy consultation.
+        {editMode
+          ? "Your current ideas and roadmap stay exactly where they are until you finish and submit."
+          : "This isn’t a quiz. It’s a personalized strategy consultation."}
       </motion.p>
 
       <motion.div
@@ -76,16 +81,16 @@ export function WelcomeScreen() {
         className="mt-8 flex items-center gap-2 rounded-full border border-border bg-card px-4 py-2 text-[0.85rem] text-muted-foreground shadow-sm"
       >
         <Clock className="size-4 text-accent" aria-hidden="true" />
-        Estimated time: 8–10 minutes
+        {editMode ? "Estimated time: 2–4 minutes" : "Estimated time: 8–10 minutes"}
       </motion.div>
 
       <motion.div variants={fadeUp} className="mt-10 flex flex-col items-center gap-3">
         <PremiumButton type="button" tone="solid" shape="rounded" size="lg" onClick={goNext}>
-          Begin My Consultation
+          {editMode ? "Continue to My Answers" : "Begin My Consultation"}
           <ArrowRight className="size-4 text-accent" aria-hidden="true" />
         </PremiumButton>
 
-        {hasSavedProgress && (
+        {!editMode && hasSavedProgress && (
           <div className="mt-2 flex items-center gap-3 text-[0.85rem]">
             <button
               type="button"
@@ -205,6 +210,22 @@ type SubmitPhase = "idle" | "converging" | "generating" | "done" | "error";
 
 const STAGE_ORDER = [1, 2, 3, 4, 5, 6, 7];
 
+/** Named stages of the single real Gemini request — advances on a timer
+ * for visual storytelling, but deliberately STOPS and holds on the final
+ * stage rather than looping back to the start. A real generation takes
+ * anywhere from ~10s to ~70s: looping would eventually show an
+ * already-"done" step reappearing as pending, which reads as regression,
+ * not progress. Holding on the last stage with its dot still pulsing
+ * carries no false claim of completion — it just keeps admitting real,
+ * ongoing work until the actual response resolves (see runSubmission). */
+const GENERATION_STAGES = [
+  "Reading your founder profile",
+  "Mapping your constraints",
+  "Finding opportunity spaces",
+  "Scoring founder fit",
+  "Preparing your strongest directions",
+];
+
 /** The seven-signal convergence — purely a visual transition, never gates
  * real work: saveOnboarding is already in flight underneath it (see
  * runSubmission), so this doesn't add wall-clock time on top of the real
@@ -217,7 +238,7 @@ function SignalConvergence() {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="mt-8 flex flex-col items-center gap-6"
+      className="flex flex-col items-center gap-6"
     >
       <div className="flex flex-wrap items-center justify-center gap-3">
         {STAGE_ORDER.map((section, i) => {
@@ -249,29 +270,13 @@ function SignalConvergence() {
   );
 }
 
-/** Purely ambient captions rotated while the ONE real request is in flight
- * (see runSubmission) — never tied to an actual completion event, since
- * there's nothing to report progress on until the single response comes
- * back. Deliberately NOT a checklist: a real generation takes anywhere
- * from ~10s to ~70s, so a fixed set of steps on a fixed timer would either
- * finish long before the request does (implying false completion) or need
- * to loop back to the start (implying an already-done step un-completed —
- * exactly the "fake progress reset" this replaces). Looping plain
- * captions with no done/pending state carries no such claim. */
-const AMBIENT_CAPTIONS = [
-  "Understanding your strengths",
-  "Respecting your constraints",
-  "Comparing viable paths",
-  "Building practical roadmaps",
-];
-
 function SolWorkingVisual() {
-  const [captionIndex, setCaptionIndex] = useState(0);
+  const [stageIndex, setStageIndex] = useState(0);
 
   useEffect(() => {
     const interval = setInterval(() => {
-      setCaptionIndex((i) => (i + 1) % AMBIENT_CAPTIONS.length);
-    }, 3200);
+      setStageIndex((i) => Math.min(i + 1, GENERATION_STAGES.length - 1));
+    }, 2600);
     return () => clearInterval(interval);
   }, []);
 
@@ -281,7 +286,7 @@ function SolWorkingVisual() {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="mt-8 flex flex-col items-center gap-6"
+      className="flex flex-col items-center gap-9"
     >
       <div className="relative flex items-center justify-center">
         <AIOrb />
@@ -306,20 +311,53 @@ function SolWorkingVisual() {
           />
         ))}
       </div>
-      <p className="eyebrow text-accent">Sol is building your strategy</p>
-      <AnimatePresence mode="wait">
-        <motion.p
-          key={captionIndex}
-          initial={{ opacity: 0, y: 6 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -6 }}
-          transition={{ duration: 0.4 }}
-          className="text-[0.92rem] text-muted-foreground"
-        >
-          {AMBIENT_CAPTIONS[captionIndex]}
-        </motion.p>
-      </AnimatePresence>
-      <p className="max-w-xs text-[0.78rem] leading-relaxed text-muted-foreground/70">
+      <div>
+        <p className="eyebrow text-center text-accent">Sol is building your strategy</p>
+        <ul className="mt-5 flex flex-col gap-3">
+          {GENERATION_STAGES.map((label, i) => {
+            const isDone = i < stageIndex;
+            const isCurrent = i === stageIndex;
+            return (
+              <li key={label} className="flex items-center gap-3">
+                <span
+                  className={cn(
+                    "flex size-5 shrink-0 items-center justify-center rounded-full border transition-colors duration-500",
+                    isDone
+                      ? "border-accent bg-accent text-primary"
+                      : isCurrent
+                        ? "border-accent"
+                        : "border-border",
+                  )}
+                >
+                  {isDone ? (
+                    <Check className="size-3" aria-hidden="true" />
+                  ) : isCurrent ? (
+                    <motion.span
+                      aria-hidden="true"
+                      className="size-2 rounded-full bg-accent"
+                      animate={{ opacity: [0.4, 1, 0.4] }}
+                      transition={{ duration: 1.3, repeat: Infinity, ease: "easeInOut" }}
+                    />
+                  ) : null}
+                </span>
+                <span
+                  className={cn(
+                    "text-[0.98rem] transition-colors duration-500",
+                    isDone
+                      ? "text-muted-foreground line-through decoration-accent/40"
+                      : isCurrent
+                        ? "font-medium text-primary"
+                        : "text-muted-foreground/50",
+                  )}
+                >
+                  {label}
+                </span>
+              </li>
+            );
+          })}
+        </ul>
+      </div>
+      <p className="max-w-xs text-center text-[0.78rem] leading-relaxed text-muted-foreground/70">
         This usually takes under a minute. Your answers are already saved — safe even if you leave
         this page.
       </p>
@@ -385,6 +423,40 @@ export function CompletionScreen() {
   const isSubmitting = phase === "converging" || phase === "generating" || phase === "done";
   const isConverging = phase === "converging";
   const isGenerating = phase === "generating";
+  const isFullScreenWait = isConverging || isGenerating;
+
+  // The real-work wait (converging → generating) takes over the entire
+  // viewport — no header, no exit button, no progress-bar chrome from
+  // ConsultationShell competing for attention. This is deliberately the
+  // one moment in the whole flow that isn't boxed into the small content
+  // column: a founder waiting ~10-70s for their actual business ideas
+  // should feel like Solventia is seriously working, not stuck inside a
+  // form. `phase === "done"` intentionally falls through to the normal
+  // boxed layout below — the checkmark summary is a quick beat, not a wait.
+  if (isFullScreenWait) {
+    return (
+      <div className="fixed inset-0 z-40 flex flex-col items-center justify-center gap-10 bg-background px-6">
+        <div
+          className="pointer-events-none absolute inset-0 opacity-[0.05]"
+          style={{
+            background:
+              "radial-gradient(circle at 50% 35%, var(--gold-soft) 0%, var(--violet-soft) 45%, transparent 75%)",
+          }}
+          aria-hidden="true"
+        />
+        <img
+          src={mark}
+          alt=""
+          width={298}
+          height={436}
+          className="relative h-9 w-auto opacity-90 drop-shadow-[0_1px_2px_rgba(10,25,47,0.18)]"
+        />
+        <AnimatePresence mode="wait">
+          {isConverging ? <SignalConvergence /> : <SolWorkingVisual />}
+        </AnimatePresence>
+      </div>
+    );
+  }
 
   return (
     <motion.div
@@ -393,11 +465,9 @@ export function CompletionScreen() {
       transition={{ staggerChildren: 0.1 }}
       className="mx-auto flex max-w-[560px] flex-col items-center text-center"
     >
-      {!isGenerating && (
-        <motion.div variants={fadeUp}>
-          <AIOrb />
-        </motion.div>
-      )}
+      <motion.div variants={fadeUp}>
+        <AIOrb />
+      </motion.div>
       <motion.h2
         variants={fadeUp}
         className="mt-8 font-display text-[clamp(1.8rem,3.5vw,2.4rem)] font-semibold text-primary"
@@ -416,11 +486,7 @@ export function CompletionScreen() {
       )}
 
       <AnimatePresence mode="wait">
-        {isConverging ? (
-          <SignalConvergence />
-        ) : isGenerating ? (
-          <SolWorkingVisual />
-        ) : phase === "done" ? (
+        {phase === "done" ? (
           <motion.div
             key="done"
             initial={{ opacity: 0, y: 8 }}

@@ -1,7 +1,8 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { History, Loader2 } from "lucide-react";
+import { History } from "lucide-react";
 import { DashboardShell } from "@/components/dashboard/DashboardShell";
+import { SolventiaLoadingState } from "@/components/dashboard/SolventiaLoadingState";
 import { requireAuthLoader } from "@/lib/route-guards";
 import { getConsultationHistory } from "@/lib/actions/dashboard";
 
@@ -44,7 +45,7 @@ function HistoryPage() {
 
       {query.isLoading && (
         <div className="mt-10 flex justify-center">
-          <Loader2 className="size-6 animate-spin text-dashboard-muted" aria-hidden="true" />
+          <SolventiaLoadingState message="Gathering your past consultations…" />
         </div>
       )}
 

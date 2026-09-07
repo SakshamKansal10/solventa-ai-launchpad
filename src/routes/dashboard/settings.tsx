@@ -1,8 +1,9 @@
 import type { ReactNode } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Bell, History, LogOut, Map, Sparkles, UserRound } from "lucide-react";
+import { Bell, History, LogOut, Map, PencilLine, Sparkles, UserRound } from "lucide-react";
 import { DashboardShell } from "@/components/dashboard/DashboardShell";
+import { SolventiaLoadingState } from "@/components/dashboard/SolventiaLoadingState";
 import { Button } from "@/components/ui/button";
 import { requireAuthLoader } from "@/lib/route-guards";
 import { getSettingsData } from "@/lib/actions/dashboard";
@@ -61,6 +62,16 @@ function SettingsPage() {
 
   const data = query.data;
 
+  if (query.isLoading) {
+    return (
+      <DashboardShell>
+        <div className="flex min-h-[50vh] items-center justify-center">
+          <SolventiaLoadingState message="Opening your settings…" />
+        </div>
+      </DashboardShell>
+    );
+  }
+
   return (
     <DashboardShell>
       <div className="flex items-center gap-4">
@@ -97,6 +108,16 @@ function SettingsPage() {
           </dl>
           <p className="mt-4 text-[0.78rem] leading-relaxed text-dashboard-muted">
             A profile picture upload is coming soon — for now Solventia uses your initials.
+          </p>
+          <Button asChild variant="outline" size="sm" className="mt-4 justify-start">
+            <Link to="/consultation" search={{ edit: true }}>
+              <PencilLine className="size-4" aria-hidden="true" />
+              Edit Founder Profile
+            </Link>
+          </Button>
+          <p className="mt-2 text-[0.76rem] leading-relaxed text-dashboard-muted">
+            Update individual answers from your last consultation without starting over. Your
+            current ideas and roadmap aren&rsquo;t touched until you finish and submit.
           </p>
         </SettingsCard>
 

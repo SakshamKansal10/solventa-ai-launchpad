@@ -1,6 +1,7 @@
 import type { OnboardingAnswers } from "./onboarding-types";
 import {
   INCOME_BRACKETS,
+  INDUSTRY_OPTIONS,
   INVESTMENT_BRACKETS,
   STATUS_OPTIONS,
   WEEKLY_HOURS,
@@ -199,9 +200,19 @@ export const STEPS: Step[] = [
     kind: "question",
     id: "industry",
     section: 1,
+    input: "select",
+    label: "What industry are you in?",
+    options: INDUSTRY_OPTIONS,
+    condition: isWorking,
+  },
+  {
+    kind: "question",
+    id: "industryOther",
+    section: 1,
     input: "text",
     label: "What industry are you in?",
-    condition: isWorking,
+    placeholder: "e.g. Renewable energy, aerospace",
+    condition: (a) => isWorking(a) && a.industry === "Other",
   },
   {
     kind: "question",

@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "motion/react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Loader2, Send, Sparkles, X } from "lucide-react";
+import { Loader2, Send, X } from "lucide-react";
+import mark from "@/assets/solventia-mark.png";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { getMentorConversation, sendMentorMessage } from "@/lib/actions/mentor";
@@ -25,12 +26,20 @@ const SUGGESTED_PROMPTS_WITH_OPPORTUNITY = [
   "I'm stuck — help me think this through",
 ];
 
-/** A real assistant panel, not a modal — deliberately NOT built on the
- * shadcn Sheet/Radix Dialog primitive used elsewhere in this app, since
- * that always renders a fixed inset-0 bg-black/80 scrim behind it. The
- * dashboard must stay fully visible and interactive while Sol is open;
- * this only intercepts clicks on the invisible outside-click catcher
- * (to close) and inside the panel itself. */
+/** A real persistent assistant panel, not a modal — deliberately NOT built
+ * on the shadcn Sheet/Radix Dialog primitive used elsewhere in this app,
+ * since that always renders a fixed inset-0 bg-black/80 scrim behind it,
+ * and a Radix Dialog also traps focus/scroll on the page underneath. There
+ * is deliberately NO outside-click-to-close catcher either: an earlier
+ * version used a `fixed inset-0` invisible button to detect outside
+ * clicks, which — being full-viewport — silently intercepted every click
+ * and scroll/wheel event over the dashboard behind it, not just closes.
+ * Closing is only ever explicit (the X button or Escape), so the dashboard
+ * stays fully clickable and scrollable the entire time the panel is open.
+ * On desktop, DashboardShell shifts the main column left by the panel's
+ * width so the two sit side by side with no overlap; on mobile the panel
+ * is full-width by design (see className below), matching the panel's own
+ * "mobile can become full-screen" spec. */
 export function MentorPanel({
   open,
   onOpenChange,
@@ -96,128 +105,118 @@ export function MentorPanel({
   return (
     <AnimatePresence>
       {open && (
-        <>
-          {/* Invisible outside-click catcher — closes the panel, never
-           * darkens or blurs the dashboard behind it. */}
-          <button
-            type="button"
-            aria-label="Close Ask Sol"
-            onClick={() => onOpenChange(false)}
-            className="fixed inset-0 z-40 cursor-default"
-          />
-          <motion.aside
-            initial={{ x: "100%" }}
-            animate={{ x: 0 }}
-            exit={{ x: "100%" }}
-            transition={{ duration: 0.32, ease: [0.22, 1, 0.36, 1] }}
-            className="fixed inset-y-0 right-0 z-50 flex w-full flex-col border-l border-border/70 bg-card shadow-[-24px_0_60px_-30px_oklch(0.245_0.055_268_/_0.35)] sm:max-w-[400px]"
-          >
-            <div className="flex items-center justify-between border-b border-violet/15 bg-violet/[0.04] px-6 py-5">
-              <div className="flex items-center gap-2.5">
-                <span className="flex size-8 items-center justify-center rounded-full bg-violet/12">
-                  <Sparkles className="size-4 text-violet" aria-hidden="true" />
-                </span>
-                <div className="leading-tight">
-                  <p className="font-display text-[1.05rem] font-semibold text-dashboard-heading">
-                    Ask Sol
+        <motion.aside
+          initial={{ x: "100%" }}
+          animate={{ x: 0 }}
+          exit={{ x: "100%" }}
+          transition={{ duration: 0.32, ease: [0.22, 1, 0.36, 1] }}
+          className="fixed inset-y-0 right-0 z-50 flex w-full flex-col border-l border-border/70 bg-card shadow-[-24px_0_60px_-30px_oklch(0.245_0.055_268_/_0.35)] sm:max-w-[400px]"
+        >
+          <div className="flex items-center justify-between border-b border-violet/15 bg-violet/[0.04] px-6 py-5">
+            <div className="flex items-center gap-2.5">
+              <span className="flex size-9 items-center justify-center rounded-full bg-gradient-to-br from-gold to-violet">
+                <img src={mark} alt="" width={298} height={436} className="h-4 w-auto" />
+              </span>
+              <div className="leading-tight">
+                <p className="font-display text-[1.05rem] font-semibold text-dashboard-heading">
+                  Ask Sol
+                </p>
+                <p className="text-[0.72rem] text-dashboard-muted">Your founder assistant</p>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={() => onOpenChange(false)}
+              aria-label="Close"
+              className="flex size-8 items-center justify-center rounded-full text-dashboard-muted transition-colors hover:bg-secondary hover:text-dashboard-heading"
+            >
+              <X className="size-4" aria-hidden="true" />
+            </button>
+          </div>
+
+          <div ref={scrollRef} className="flex-1 overflow-y-auto px-6 py-5">
+            {conversationQuery.isLoading ? (
+              <p className="text-sm text-dashboard-muted">Loading your conversation…</p>
+            ) : localMessages.length === 0 ? (
+              <div className="flex flex-col gap-6">
+                <div>
+                  <p className="text-[0.95rem] font-medium leading-snug text-dashboard-heading">
+                    {opportunityTitle
+                      ? `Working with you on ${opportunityTitle}.`
+                      : "Working with you on your business search."}
                   </p>
-                  <p className="text-[0.72rem] text-dashboard-muted">Your founder assistant</p>
+                  <p className="mt-1.5 text-[0.82rem] leading-relaxed text-dashboard-muted">
+                    {opportunityTitle
+                      ? "Sol knows your profile, this opportunity, and your roadmap progress."
+                      : "Sol knows your full profile and progress so far."}
+                  </p>
+                </div>
+
+                <div>
+                  <p className="text-[0.68rem] font-semibold uppercase tracking-[0.1em] text-dashboard-muted">
+                    What can I help with?
+                  </p>
+                  <div className="mt-2.5 flex flex-col gap-2">
+                    {(opportunityId
+                      ? SUGGESTED_PROMPTS_WITH_OPPORTUNITY
+                      : SUGGESTED_PROMPTS_GENERAL
+                    ).map((prompt) => (
+                      <button
+                        key={prompt}
+                        type="button"
+                        onClick={() => handleSend(prompt)}
+                        disabled={sending}
+                        className="rounded-xl border border-border px-4 py-2.5 text-left text-[0.85rem] font-medium text-dashboard-body transition-colors hover:border-violet/40 hover:bg-violet/4 disabled:opacity-50"
+                      >
+                        {prompt}
+                      </button>
+                    ))}
+                  </div>
                 </div>
               </div>
-              <button
-                type="button"
-                onClick={() => onOpenChange(false)}
-                aria-label="Close"
-                className="flex size-8 items-center justify-center rounded-full text-dashboard-muted transition-colors hover:bg-secondary hover:text-dashboard-heading"
-              >
-                <X className="size-4" aria-hidden="true" />
-              </button>
-            </div>
-
-            <div ref={scrollRef} className="flex-1 overflow-y-auto px-6 py-5">
-              {conversationQuery.isLoading ? (
-                <p className="text-sm text-dashboard-muted">Loading your conversation…</p>
-              ) : localMessages.length === 0 ? (
-                <div className="flex flex-col gap-6">
-                  <div>
-                    <p className="text-[0.95rem] font-medium leading-snug text-dashboard-heading">
-                      {opportunityTitle
-                        ? `Working with you on ${opportunityTitle}.`
-                        : "Working with you on your business search."}
-                    </p>
-                    <p className="mt-1.5 text-[0.82rem] leading-relaxed text-dashboard-muted">
-                      {opportunityTitle
-                        ? "Sol knows your profile, this opportunity, and your roadmap progress."
-                        : "Sol knows your full profile and progress so far."}
-                    </p>
+            ) : (
+              <div className="flex flex-col gap-4">
+                {localMessages.map((m, i) => (
+                  <div
+                    key={i}
+                    className={cn(
+                      "max-w-[85%] rounded-2xl px-4 py-2.5 text-[0.88rem] leading-relaxed",
+                      m.role === "user"
+                        ? "ml-auto bg-dashboard-heading text-background"
+                        : "bg-secondary text-dashboard-body",
+                    )}
+                  >
+                    {m.content}
                   </div>
-
-                  <div>
-                    <p className="text-[0.68rem] font-semibold uppercase tracking-[0.1em] text-dashboard-muted">
-                      What can I help with?
-                    </p>
-                    <div className="mt-2.5 flex flex-col gap-2">
-                      {(opportunityId
-                        ? SUGGESTED_PROMPTS_WITH_OPPORTUNITY
-                        : SUGGESTED_PROMPTS_GENERAL
-                      ).map((prompt) => (
-                        <button
-                          key={prompt}
-                          type="button"
-                          onClick={() => handleSend(prompt)}
-                          disabled={sending}
-                          className="rounded-xl border border-border px-4 py-2.5 text-left text-[0.85rem] font-medium text-dashboard-body transition-colors hover:border-violet/40 hover:bg-violet/4 disabled:opacity-50"
-                        >
-                          {prompt}
-                        </button>
-                      ))}
-                    </div>
+                ))}
+                {sending && (
+                  <div className="flex items-center gap-2 text-dashboard-muted">
+                    <Loader2 className="size-3.5 animate-spin" aria-hidden="true" />
+                    <span className="text-[0.8rem]">Sol is thinking…</span>
                   </div>
-                </div>
-              ) : (
-                <div className="flex flex-col gap-4">
-                  {localMessages.map((m, i) => (
-                    <div
-                      key={i}
-                      className={cn(
-                        "max-w-[85%] rounded-2xl px-4 py-2.5 text-[0.88rem] leading-relaxed",
-                        m.role === "user"
-                          ? "ml-auto bg-dashboard-heading text-background"
-                          : "bg-secondary text-dashboard-body",
-                      )}
-                    >
-                      {m.content}
-                    </div>
-                  ))}
-                  {sending && (
-                    <div className="flex items-center gap-2 text-dashboard-muted">
-                      <Loader2 className="size-3.5 animate-spin" aria-hidden="true" />
-                      <span className="text-[0.8rem]">Sol is thinking…</span>
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
+                )}
+              </div>
+            )}
+          </div>
 
-            <div className="flex items-end gap-2 border-t border-border/60 px-4 py-4">
-              <Textarea
-                value={draft}
-                onChange={(e) => setDraft(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" && !e.shiftKey) {
-                    e.preventDefault();
-                    handleSend();
-                  }
-                }}
-                placeholder="Ask Sol something specific…"
-                className="min-h-[44px] flex-1 resize-none"
-              />
-              <Button size="icon" onClick={() => handleSend()} disabled={sending || !draft.trim()}>
-                <Send className="size-4" aria-hidden="true" />
-              </Button>
-            </div>
-          </motion.aside>
-        </>
+          <div className="flex items-end gap-2 border-t border-border/60 px-4 py-4">
+            <Textarea
+              value={draft}
+              onChange={(e) => setDraft(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && !e.shiftKey) {
+                  e.preventDefault();
+                  handleSend();
+                }
+              }}
+              placeholder="Ask Sol something specific…"
+              className="min-h-[44px] flex-1 resize-none"
+            />
+            <Button size="icon" onClick={() => handleSend()} disabled={sending || !draft.trim()}>
+              <Send className="size-4" aria-hidden="true" />
+            </Button>
+          </div>
+        </motion.aside>
       )}
     </AnimatePresence>
   );

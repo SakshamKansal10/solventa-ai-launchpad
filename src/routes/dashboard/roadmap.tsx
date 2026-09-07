@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Check, ChevronDown, ChevronRight, Lock, Loader2, MapPin, Sparkles } from "lucide-react";
 import { DashboardShell, useOpenMentor } from "@/components/dashboard/DashboardShell";
+import { SolventiaLoadingState } from "@/components/dashboard/SolventiaLoadingState";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { requireAuthLoader } from "@/lib/route-guards";
@@ -505,9 +506,8 @@ function RoadmapPage() {
   if (query.isLoading) {
     return (
       <DashboardShell>
-        <div className="flex min-h-[50vh] items-center justify-center text-muted-foreground">
-          <Loader2 className="mr-2 size-5 animate-spin" aria-hidden="true" />
-          Loading your roadmap…
+        <div className="flex min-h-[50vh] items-center justify-center">
+          <SolventiaLoadingState message="Opening your roadmap…" />
         </div>
       </DashboardShell>
     );

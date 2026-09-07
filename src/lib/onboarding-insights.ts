@@ -34,13 +34,14 @@ export function getKnownSignals(afterSection: number): string[] {
  * pauses, not one after every section. */
 export function getPersonalizedInsight(afterSection: number, a: OnboardingAnswers): string {
   if (afterSection === 1) {
+    const industryName = a.industry === "Other" ? a.industryOther : a.industry;
     const statusPhrase =
       a.currentStatus === "School Student"
         ? "a school student"
         : a.currentStatus === "College Student"
           ? `a college student${a.major ? ` studying ${a.major}` : ""}`
           : a.currentStatus === "Working Professional"
-            ? `a working professional${a.industry ? ` in ${a.industry}` : ""}`
+            ? `a working professional${industryName ? ` in ${industryName}` : ""}`
             : a.currentStatus === "Business Owner"
               ? "already running a business"
               : a.currentStatus === "Freelancer"

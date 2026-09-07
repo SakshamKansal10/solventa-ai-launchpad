@@ -178,9 +178,8 @@ function OpportunityDetailPage() {
   if (query.isLoading) {
     return (
       <DashboardShell opportunityId={id}>
-        <div className="flex min-h-[50vh] items-center justify-center text-muted-foreground">
-          <Loader2 className="mr-2 size-5 animate-spin" aria-hidden="true" />
-          Loading opportunity…
+        <div className="flex min-h-[50vh] items-center justify-center">
+          <SolventiaLoadingState message="Opening this opportunity…" />
         </div>
       </DashboardShell>
     );

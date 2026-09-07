@@ -48,6 +48,9 @@ export interface OnboardingAnswers {
   major?: string;
 
   industry?: string;
+  /** Only asked when industry === "Other" — INDUSTRY_OPTIONS covers the
+   * common cases but can't enumerate every field. */
+  industryOther?: string;
   yearsExperience?: string;
   /** Asked for Working Professional, Business Owner, and Freelancer — it's
    * a distinct signal from investmentBudget (income vs. investable
@@ -375,3 +378,27 @@ export const INVESTMENT_BRACKETS = [
 ];
 
 export const WEEKLY_HOURS = ["Under 5 hrs", "5–10 hrs", "10–20 hrs", "20+ hrs", "Full-time"];
+
+/** Replaces a free-text "what industry are you in?" field — a founder
+ * picks the closest fit here (or "Other" with a one-line follow-up)
+ * instead of typing, matching the same "Other" fallback pattern already
+ * used for education/currentStatus. */
+export const INDUSTRY_OPTIONS = [
+  "Technology / Software",
+  "E-commerce / Retail",
+  "Finance / Banking",
+  "Healthcare",
+  "Education",
+  "Manufacturing",
+  "Real Estate / Construction",
+  "Hospitality / Travel",
+  "Media / Entertainment",
+  "Marketing / Advertising",
+  "Consulting",
+  "Agriculture / Food",
+  "Logistics / Transportation",
+  "Government / Public Sector",
+  "Non-profit / Social Impact",
+  "Legal",
+  "Other",
+];

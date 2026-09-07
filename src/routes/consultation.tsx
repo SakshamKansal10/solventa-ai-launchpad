@@ -1,7 +1,9 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { AnimatePresence, motion } from "motion/react";
 import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { ArrowLeft, Sparkles, X } from "lucide-react";
+import { z } from "zod";
 import mark from "@/assets/solventia-mark.png";
 import { OnboardingProvider, useOnboarding } from "@/lib/onboarding-store";
 import { Progress } from "@/components/ui/progress";
@@ -12,13 +14,16 @@ import {
   SectionIntroScreen,
   CompletionScreen,
 } from "@/components/onboarding/StaticScreens";
+import { SolventiaLoadingState } from "@/components/dashboard/SolventiaLoadingState";
 import { ThinkingScreen } from "@/components/onboarding/ThinkingScreen";
 import { QuestionRenderer } from "@/components/onboarding/QuestionRenderer";
 import { QuestionGroupRenderer } from "@/components/onboarding/QuestionGroupRenderer";
 import { FounderProfilePanel } from "@/components/onboarding/FounderProfilePanel";
 import { StageAtmosphere } from "@/components/onboarding/StageAtmosphere";
 import type { InputKind, Step } from "@/lib/onboarding-steps";
+import type { OnboardingAnswers } from "@/lib/onboarding-types";
 import { getStageTheme } from "@/lib/onboarding-themes";
+import { getLatestBusinessDna } from "@/lib/actions/profile";
 
 /** Simple, single-focus questions get an open canvas (question, input,
  * button, and generous whitespace — no card boundary). Everything with
@@ -39,6 +44,13 @@ function getActiveSection(step: Step): number {
 }
 
 export const Route = createFileRoute("/consultation")({
+  validateSearch: z.object({
+    // Set by Settings → "Edit Founder Profile" — pre-fills every question
+    // with the founder's most recent answers instead of starting blank.
+    // Everything else about the flow (including completeConsultation on
+    // submit) is completely unchanged.
+    edit: z.boolean().optional(),
+  }),
   component: ConsultationPage,
   head: () => ({
     meta: [{ title: "Your Consultation — Solventia" }, { name: "robots", content: "noindex" }],
@@ -61,14 +73,37 @@ const BACKDROP_PARTICLES = [
 ];
 
 function ConsultationPage() {
+  const { edit } = Route.useSearch();
+
+  // Only fetch when actually editing — a fresh consultation never makes
+  // this request at all, so the normal flow's load time is untouched.
+  const priorAnswers = useQuery({
+    queryKey: ["latest-business-dna-for-edit"],
+    queryFn: () => getLatestBusinessDna(),
+    enabled: edit === true,
+  });
+
+  if (edit === true && priorAnswers.isLoading) {
+    return (
+      <div className="flex min-h-screen w-full items-center justify-center bg-background">
+        <SolventiaLoadingState message="Loading your founder profile…" />
+      </div>
+    );
+  }
+
+  const initialAnswers =
+    edit === true
+      ? ((priorAnswers.data?.onboarding_answers as OnboardingAnswers | undefined) ?? undefined)
+      : undefined;
+
   return (
-    <OnboardingProvider>
-      <ConsultationShell />
+    <OnboardingProvider initialAnswers={initialAnswers}>
+      <ConsultationShell editMode={edit === true} />
     </OnboardingProvider>
   );
 }
 
-function ConsultationShell() {
+function ConsultationShell({ editMode = false }: { editMode?: boolean }) {
   const { currentStep, stepIndex, goBack, progress } = useOnboarding();
   const [mobileProfileOpen, setMobileProfileOpen] = useState(false);
 
@@ -203,7 +238,7 @@ function ConsultationShell() {
               transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
               className="w-full"
             >
-              {currentStep.kind === "welcome" && <WelcomeScreen />}
+              {currentStep.kind === "welcome" && <WelcomeScreen editMode={editMode} />}
               {currentStep.kind === "ai-intro" && <AIIntroScreen />}
               {currentStep.kind === "section-intro" && <SectionIntroScreen step={currentStep} />}
               {currentStep.kind === "thinking" && <ThinkingScreen step={currentStep} />}
