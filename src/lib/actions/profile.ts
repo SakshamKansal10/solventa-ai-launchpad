@@ -239,3 +239,75 @@ export const getLatestBusinessDna = createServerFn({ method: "GET" }).handler(as
   if (error) throw new Error(error.message);
   return data;
 });
+
+/**
+ * Settings -> Founder Profile -> Edit [section]: patches a handful of
+ * onboarding answer fields onto the founder's LATEST business_dna row IN
+ * PLACE — no new row, no AI call, zero cost. This is what "Keep Current
+ * Ideas" means concretely: current opportunities all still point at this
+ * same business_dna_id, so they're completely unaffected; only the
+ * founder's stored profile (and everything deterministic computed from
+ * it — Founder Genome, Fit Score display, ambition band) reflects the
+ * edit going forward. profile_hash is deliberately left untouched — it
+ * only guards completeConsultation's full-submission idempotency, which
+ * a single-field edit has nothing to do with.
+ */
+export const updateFounderProfileAnswers = createServerFn({ method: "POST" })
+  .validator(z.object({ answers: z.record(z.string(), z.unknown()) }))
+  .handler(async ({ data }) => {
+    const { supabase, user } = await requireUser();
+    const { data: latest, error: latestError } = await supabase
+      .from("business_dna")
+      .select("id, onboarding_answers")
+      .eq("user_id", user.id)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    if (latestError) throw new Error(latestError.message);
+    if (!latest) throw new Error("No consultation found to edit — complete one first.");
+
+    const mergedAnswers = {
+      ...(latest.onboarding_answers as Record<string, unknown>),
+      ...data.answers,
+    };
+    const normalized = normalizeProfile(mergedAnswers as Parameters<typeof normalizeProfile>[0]);
+
+    const { error: updateError } = await supabase
+      .from("business_dna")
+      .update({
+        onboarding_answers: mergedAnswers as unknown as Json,
+        normalized_signals: normalized as unknown as Json,
+      })
+      .eq("id", latest.id);
+    if (updateError) throw new Error(updateError.message);
+
+    return { businessDnaId: latest.id as string };
+  });
+
+/**
+ * Settings -> "Your founder profile changed" banner -> "Re-analyze
+ * Directions". Runs the exact same pipeline a fresh consultation submit
+ * does (completeConsultation), seeded with the founder's current
+ * (possibly just-edited) answers — a real new business_dna row, a real
+ * new Gemini call, a real new opportunity set. Exactly like completing a
+ * new consultation any other way, this NEVER touches or deletes the
+ * founder's existing opportunities/roadmaps; they simply stop being the
+ * default dashboard view (see getDashboard's "latest consultation" rule)
+ * and remain reachable from Idea History.
+ */
+export const reanalyzeFromCurrentProfile = createServerFn({ method: "POST" }).handler(async () => {
+  const { supabase, user } = await requireUser();
+  const { data: latest, error } = await supabase
+    .from("business_dna")
+    .select("onboarding_answers")
+    .eq("user_id", user.id)
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  if (error) throw new Error(error.message);
+  if (!latest) throw new Error("No consultation found to re-analyze.");
+
+  return completeConsultation({
+    data: { answers: latest.onboarding_answers as Record<string, unknown> },
+  });
+});

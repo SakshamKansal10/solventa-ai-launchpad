@@ -36,6 +36,12 @@ interface OnboardingContextValue {
   currentStep: Step;
   goNext: () => void;
   goBack: () => void;
+  /** Jumps directly to a step by index — used by Settings' single-field
+   * edit sheets (see FounderProfileEditSheet) to land on exactly one
+   * question inside a full OnboardingProvider instance, without forcing
+   * the founder through every screen before it. Normal onboarding never
+   * calls this; it only ever advances via goNext/goBack. */
+  goToStep: (index: number) => void;
   skip: () => void;
   restart: () => void;
   progress: number;
@@ -132,6 +138,13 @@ export function OnboardingProvider({
     setStepIndex((i) => Math.max(i - 1, 0));
   }, []);
 
+  const goToStep = useCallback(
+    (index: number) => {
+      setStepIndex(Math.max(0, Math.min(index, steps.length - 1)));
+    },
+    [steps.length],
+  );
+
   const skip = useCallback(() => {
     setStepIndex((i) => Math.min(i + 1, steps.length - 1));
   }, [steps.length]);
@@ -175,6 +188,7 @@ export function OnboardingProvider({
     currentStep,
     goNext,
     goBack,
+    goToStep,
     skip,
     restart,
     progress,
