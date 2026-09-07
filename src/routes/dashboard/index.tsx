@@ -339,7 +339,12 @@ function DashboardHome() {
             <section className="mt-6 rounded-[18px] border border-sol-border bg-sol-surface p-6 text-center sm:p-7">
               {buildingRoadmap ? (
                 <SolventiaLoadingState
-                  message={`Sol is building your week-by-week roadmap for ${primary.title}…`}
+                  stages={[
+                    `Reading your founder profile for ${primary.title}…`,
+                    "Mapping out the phases ahead…",
+                    "Designing Week 1's mission and tasks…",
+                    "Finalizing your roadmap…",
+                  ]}
                 />
               ) : (
                 <>
