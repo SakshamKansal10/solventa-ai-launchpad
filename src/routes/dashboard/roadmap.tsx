@@ -743,14 +743,27 @@ function RoadmapPage() {
   const allTasks = phasesWithTasks.flatMap((p) => p.tasks);
   const totalDone = allTasks.filter((t) => t.status === "done").length;
   const overallProgress = allTasks.length > 0 ? Math.round((totalDone / allTasks.length) * 100) : 0;
-  const estimatedWeeks = Math.max(
-    1,
-    Math.ceil(Math.max(0, ...allTasks.map((t) => t.deadline_days_from_start)) / 7),
-  );
+  const allWeeks = phasesWithTasks.flatMap((p) => p.weeks);
+  // deadline_days_from_start is WEEK-relative (0-6) since just-in-time
+  // generation — every week's tasks reset to day 0 when THAT week
+  // unlocks, not day 0 of the whole roadmap (see roadmap-persistence
+  // .server.ts). So the real "how long is this path" answer is the
+  // skeleton's actual week COUNT, not a days-based estimate — that
+  // stopped meaning anything the moment deadlines became per-week. Only
+  // a legacy pre-JIT roadmap (allWeeks empty, flat tasks with genuinely
+  // roadmap-relative days) still uses the old days-based estimate.
+  const estimatedWeeks =
+    allWeeks.length > 0
+      ? allWeeks.length
+      : Math.max(1, Math.ceil(Math.max(0, ...allTasks.map((t) => t.deadline_days_from_start)) / 7));
   const activePhase = phasesWithTasks[activeIndex];
-  const dueThisWeek = allTasks.filter(
-    (t) => t.status !== "done" && t.deadline_days_from_start <= 7,
-  ).length;
+  // "Due this week" is literally the active week's own pending tasks now
+  // — under JIT generation there is only ever one unlocked week with
+  // pending work at a time, so this is exact, not a days-based guess.
+  const activeWeekTasks = allWeeks.find((w) => w.status === "active")?.tasks;
+  const dueThisWeek = activeWeekTasks
+    ? activeWeekTasks.filter((t) => t.status !== "done").length
+    : allTasks.filter((t) => t.status !== "done" && t.deadline_days_from_start <= 7).length;
   const nextTask = phasesWithTasks
     .flatMap((p) => p.tasks)
     .find((t) => t.status !== "done" && t.required);

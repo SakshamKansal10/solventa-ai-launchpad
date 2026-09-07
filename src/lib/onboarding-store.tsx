@@ -112,6 +112,9 @@ export function OnboardingProvider({
           currentBusinessCustomers: _currentBusinessCustomers,
           major: _major,
           majorOther: _majorOther,
+          institutionName: _institutionName,
+          institutionCountry: _institutionCountry,
+          institutionManual: _institutionManual,
           goals: _goals,
           ...rest
         } = prev;

@@ -122,14 +122,14 @@ function NavLink({
   const className = cn(
     "flex items-center gap-3 rounded-lg px-3.5 py-2.5 text-[0.85rem] font-medium transition-colors",
     isActive
-      ? "bg-econ-green-soft/10 text-econ-green-active"
-      : "text-workspace-muted hover:bg-white/5 hover:text-workspace-foreground",
+      ? "bg-econ-green-soft text-econ-green-deep"
+      : "text-dashboard-muted hover:bg-secondary/60 hover:text-dashboard-heading",
   );
 
   if (item.locked) {
     return (
       <div
-        className="flex cursor-not-allowed items-center gap-3 rounded-lg px-3.5 py-2.5 text-[0.85rem] font-medium text-workspace-muted/50"
+        className="flex cursor-not-allowed items-center gap-3 rounded-lg px-3.5 py-2.5 text-[0.85rem] font-medium text-dashboard-muted/50"
         title="Build your roadmap to unlock this"
       >
         <Lock className="size-4 shrink-0" aria-hidden="true" strokeWidth={1.75} />
@@ -183,10 +183,10 @@ function SidebarContent({
       <div className="flex items-center gap-2.5 px-5 pb-8 pt-7">
         <img src={mark} alt="" width={298} height={436} className="h-7 w-auto" />
         <div className="flex flex-col leading-none">
-          <span className="font-display text-[0.95rem] font-semibold tracking-[0.16em] text-workspace-foreground">
+          <span className="font-display text-[0.95rem] font-semibold tracking-[0.16em] text-dashboard-heading">
             SOLVENTIA
           </span>
-          <span className="mt-1 text-[0.62rem] uppercase tracking-[0.14em] text-workspace-muted">
+          <span className="mt-1 text-[0.62rem] uppercase tracking-[0.14em] text-gold">
             Your Workspace
           </span>
         </div>
@@ -204,11 +204,11 @@ function SidebarContent({
         ))}
       </nav>
 
-      <div className="border-t border-workspace-border px-3 py-4">
+      <div className="border-t border-border/70 px-3 py-4">
         <button
           type="button"
           onClick={onSignOut}
-          className="flex w-full items-center gap-3 rounded-lg px-3.5 py-2.5 text-[0.85rem] font-medium text-workspace-muted transition-colors hover:bg-white/5 hover:text-workspace-foreground"
+          className="flex w-full items-center gap-3 rounded-lg px-3.5 py-2.5 text-[0.85rem] font-medium text-dashboard-muted transition-colors hover:bg-secondary/60 hover:text-dashboard-heading"
         >
           <LogOut className="size-4 shrink-0" aria-hidden="true" strokeWidth={1.75} />
           Sign Out
@@ -256,8 +256,14 @@ export function DashboardShell({
        * main workspace column does, so the sidebar is simply never in a
        * scrolling context to begin with. */}
       <div className="flex h-dvh w-full overflow-hidden bg-background text-foreground">
-        {/* ===== DESKTOP SIDEBAR — fixed, never scrolls with content ===== */}
-        <aside className="hidden h-dvh w-[248px] shrink-0 overflow-y-auto border-r border-workspace-border bg-workspace lg:block">
+        {/* ===== DESKTOP SIDEBAR — fixed, never scrolls with content =====
+         * Pearl/ivory, matching the homepage's brand identity — the
+         * earlier dark-navy "workspace" treatment read as a generic dark
+         * app shell disconnected from Solventia's own brand, not a
+         * deliberate premium choice. The dark --workspace tokens stay in
+         * use elsewhere (the flagship opportunity hero card), just not
+         * for this persistent, always-visible surface. */}
+        <aside className="hidden h-dvh w-[248px] shrink-0 overflow-y-auto border-r border-border/70 bg-card lg:block">
           <SidebarContent
             opportunityId={opportunityId}
             hasRoadmap={hasRoadmap}
@@ -305,7 +311,7 @@ export function DashboardShell({
         <Sheet open={mobileNavOpen} onOpenChange={setMobileNavOpen}>
           <SheetContent
             side="left"
-            className="w-[280px] border-workspace-border bg-workspace p-0 text-workspace-foreground [&_button]:text-workspace-foreground"
+            className="w-[280px] border-border/70 bg-card p-0 text-dashboard-heading [&_button]:text-dashboard-heading"
           >
             <SheetTitle className="sr-only">Navigation</SheetTitle>
             <SidebarContent

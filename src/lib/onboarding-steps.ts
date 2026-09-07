@@ -61,7 +61,12 @@ export type InputKind =
   /** Country → postal/PIN lookup → confirm/change → (fallback) region +
    * searchable city. Manages state/city/postalCode itself; see
    * LocationPicker.tsx. */
-  | "location";
+  | "location"
+  /** Country-scoped searchable university/college search, with "studying
+   * in a different country" and "not listed" (manual entry) fallbacks.
+   * Manages institutionName/institutionCountry/institutionManual itself;
+   * see InstitutionPicker.tsx. */
+  | "institution";
 
 export interface QuestionStep {
   kind: "question";
@@ -229,6 +234,15 @@ export const STEPS: Step[] = [
   },
 
   // College student branch
+  {
+    kind: "question",
+    id: "institutionName",
+    section: 1,
+    input: "institution",
+    label: "Where are you studying?",
+    helper: "Search for your college or university.",
+    condition: (a) => a.currentStatus === "College Student",
+  },
   {
     kind: "question",
     id: "major",

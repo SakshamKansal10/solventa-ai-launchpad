@@ -49,6 +49,16 @@ export interface OnboardingAnswers {
   /** Only asked when major === "Other" — MAJOR_OPTIONS covers the common
    * fields of study but can't enumerate every specialization. */
   majorOther?: string;
+  /** The founder's actual institution name — either picked from a real
+   * search result or typed manually (see institutionManual). Searched
+   * within institutionCountry, which defaults to the founder's main
+   * `country` but can differ (studying abroad). */
+  institutionName?: string;
+  institutionCountry?: string;
+  /** True when no search result matched and the founder typed the name
+   * themselves — never blocks completion just because an institution
+   * isn't in the lookup dataset. */
+  institutionManual?: boolean;
 
   industry?: string;
   /** Only asked when industry === "Other" — INDUSTRY_OPTIONS covers the

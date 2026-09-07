@@ -22,6 +22,7 @@ import { SearchableSelect } from "./SearchableSelect";
 import { CurrencyInput } from "./CurrencyInput";
 import { SkillPicker } from "./SkillPicker";
 import { LocationPicker } from "./LocationPicker";
+import { InstitutionPicker } from "./InstitutionPicker";
 
 /** One short, grounded reflection per spectrum position — helps the user
  * recognize themselves in the choice rather than just picking a label. */
@@ -291,6 +292,10 @@ export function QuestionRenderer({ step }: { step: QuestionStep }) {
 
       {step.input === "location" && typeof answers.country === "string" && (
         <LocationPicker country={answers.country} />
+      )}
+
+      {step.input === "institution" && typeof answers.country === "string" && (
+        <InstitutionPicker homeCountry={answers.country} />
       )}
 
       {step.input === "searchable-multi" && (
