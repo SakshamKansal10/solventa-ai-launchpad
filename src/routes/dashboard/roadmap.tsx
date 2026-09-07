@@ -547,18 +547,21 @@ function WeekBlock({
                 </div>
               )}
               {week.mistakes_to_avoid && week.mistakes_to_avoid.length > 0 && (
-                <div className="rounded-lg border border-destructive/20 bg-destructive/[0.04] px-3.5 py-3">
-                  <p className="flex items-center gap-1.5 text-[0.66rem] font-semibold uppercase tracking-wide text-destructive/80">
+                <div>
+                  <p className="flex items-center gap-1.5 text-[0.66rem] font-semibold uppercase tracking-wide text-sol-champagne-deep">
                     <ShieldAlert className="size-3.5" aria-hidden="true" />
                     Mistakes to avoid
                   </p>
-                  <ul className="mt-1.5 flex flex-col gap-1">
+                  <div className="mt-1.5 flex gap-2.5 overflow-x-auto pb-1">
                     {week.mistakes_to_avoid.map((m, i) => (
-                      <li key={i} className="text-[0.8rem] leading-relaxed text-foreground">
-                        {m}
-                      </li>
+                      <div
+                        key={i}
+                        className="w-[220px] shrink-0 rounded-xl border border-sol-champagne/30 bg-sol-ivory px-3.5 py-3"
+                      >
+                        <p className="text-[0.8rem] leading-relaxed text-foreground">{m}</p>
+                      </div>
                     ))}
-                  </ul>
+                  </div>
                 </div>
               )}
             </div>
