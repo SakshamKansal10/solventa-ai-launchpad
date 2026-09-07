@@ -152,3 +152,73 @@ export function BusinessDnaPanel({ analysis, signals }: BusinessDnaPanelProps) {
     </section>
   );
 }
+
+const QUADRANTS: { key: "edge" | "resources" | "constraint" | "ambition"; label: string }[] = [
+  { key: "edge", label: "Edge" },
+  { key: "resources", label: "Resources" },
+  { key: "constraint", label: "Constraint" },
+  { key: "ambition", label: "Ambition" },
+];
+
+/** Business DNA as four quadrants scanned at a glance, not six rows of
+ * chips under section headers — same underlying signals as
+ * BusinessDnaPanel (real stored data, never invented), laid out as a
+ * 2x2 grid for the Command Center specifically. BusinessDnaPanel itself
+ * stays unchanged for review pages, which need the fuller narrative
+ * layout this quadrant intentionally leaves out. */
+export function BusinessDnaQuadrant({ analysis, signals }: BusinessDnaPanelProps) {
+  const dna = toDisplayFounderDNA(analysis);
+
+  const resourceChips = [
+    `${signals.time.weeklyHours} hrs/week`,
+    `~${formatCompactMoney(signals.resources.capitalAmount, signals.identity.currency)}`,
+    ...(dna?.resources.slice(0, 2) ?? signals.resources.assets.slice(0, 2)),
+  ].filter(Boolean);
+  const directionChips = dna?.direction ? [dna.direction] : signals.direction.goals.slice(0, 3);
+
+  const content: Record<(typeof QUADRANTS)[number]["key"], string[]> = {
+    edge: dna?.strengths.slice(0, 3) ?? [],
+    resources: resourceChips,
+    constraint: dna?.constraints.slice(0, 3) ?? [],
+    ambition: directionChips,
+  };
+
+  return (
+    <div
+      id="business-dna"
+      className="scroll-mt-24 rounded-[24px] border border-sol-border bg-sol-surface p-8"
+    >
+      <div className="flex items-center justify-between">
+        <p className="text-[12px] font-semibold uppercase tracking-[0.12em] text-sol-champagne-deep">
+          Business DNA
+        </p>
+        <Link
+          to="/consultation"
+          className="text-[0.78rem] font-medium text-sol-secondary hover:text-sol-ink"
+        >
+          Update
+        </Link>
+      </div>
+      <div className="mt-5 grid grid-cols-2 gap-x-6 gap-y-6">
+        {QUADRANTS.map((q) => (
+          <div key={q.key}>
+            <p className="text-[0.68rem] font-semibold uppercase tracking-[0.1em] text-sol-muted">
+              {q.label}
+            </p>
+            <div className="mt-2 flex flex-col gap-1">
+              {content[q.key].length > 0 ? (
+                content[q.key].map((item) => (
+                  <p key={item} className="text-[0.86rem] leading-snug text-sol-ink">
+                    {item}
+                  </p>
+                ))
+              ) : (
+                <p className="text-[0.86rem] text-sol-muted">—</p>
+              )}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}

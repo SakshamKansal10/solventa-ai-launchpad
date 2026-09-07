@@ -2,23 +2,12 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "sonner";
-import {
-  ArrowRight,
-  Clock,
-  Compass,
-  GraduationCap,
-  Loader2,
-  Gauge,
-  Sparkles,
-  Wallet,
-} from "lucide-react";
-import { DashboardShell, useOpenMentor } from "@/components/dashboard/DashboardShell";
-import { FitRing, fitQualitativeLabel } from "@/components/dashboard/FitScore";
-import { RoadmapStageTimeline } from "@/components/dashboard/RoadmapStageTimeline";
-import { AttributeBadge } from "@/components/dashboard/AttributeBadge";
-import { ProgressMap } from "@/components/dashboard/ProgressMap";
-import { BusinessDnaPanel } from "@/components/dashboard/BusinessDnaPanel";
-import { FounderGenomeCard } from "@/components/dashboard/FounderGenome";
+import { ArrowRight, Compass, Loader2 } from "lucide-react";
+import { DashboardShell } from "@/components/dashboard/DashboardShell";
+import { FounderFitOrbit } from "@/components/dashboard/FounderFitOrbit";
+import { FounderPathJourney } from "@/components/dashboard/FounderPathJourney";
+import { FounderGenomeCardV2 } from "@/components/dashboard/FounderGenomeRadar";
+import { BusinessDnaQuadrant } from "@/components/dashboard/BusinessDnaPanel";
 import { SolventiaLoadingState } from "@/components/dashboard/SolventiaLoadingState";
 import { PremiumButton } from "@/components/solventia/PremiumButton";
 import { Button } from "@/components/ui/button";
@@ -30,7 +19,7 @@ import {
   buildRoadmapForOpportunity,
 } from "@/lib/actions/opportunities";
 import { getFitFactors, getWhyReasons } from "@/lib/opportunity-display";
-import { getConstraintWarnings } from "@/lib/profile/scoring";
+import { getConstraintWarnings, type FitScoreResult } from "@/lib/profile/scoring";
 import type { OpportunityCandidate, OpportunityPackage } from "@/lib/ai/schemas";
 import { cn } from "@/lib/utils";
 
@@ -51,48 +40,62 @@ function greeting(): string {
 
 type Candidate = OpportunityPackage | OpportunityCandidate;
 
-/** Four badges instead of a paragraph — capital/time/risk only exist on
- * the current one-call OpportunityPackage shape, not pre-migration
- * OpportunityCandidate rows, so each is included only when present. */
-function getIdeaBadges(
+/** Four plain values read left to right with separators, not icon badges —
+ * capital/time/skill-gap only exist on the current one-call
+ * OpportunityPackage shape, not pre-migration OpportunityCandidate rows,
+ * so each is included only when present. */
+function getIdeaMetrics(
   candidate: Candidate,
   riskLevel: string,
-): { icon: typeof Wallet; label: string; value: string }[] {
-  const badges: { icon: typeof Wallet; label: string; value: string }[] = [];
+): { label: string; value: string }[] {
+  const metrics: { label: string; value: string }[] = [];
   if ("startingCapital" in candidate) {
-    badges.push({ icon: Wallet, label: "Capital", value: candidate.startingCapital });
+    metrics.push({ label: "Capital", value: candidate.startingCapital });
   }
   if ("weeklyTime" in candidate) {
-    badges.push({ icon: Clock, label: "Time", value: candidate.weeklyTime });
+    metrics.push({ label: "Time", value: candidate.weeklyTime });
   }
-  badges.push({
-    icon: Gauge,
-    label: "Risk",
-    value: riskLevel.charAt(0).toUpperCase() + riskLevel.slice(1),
-  });
+  metrics.push({ label: "Risk", value: riskLevel.charAt(0).toUpperCase() + riskLevel.slice(1) });
   if ("skillsToLearn" in candidate && candidate.skillsToLearn.length > 0) {
-    badges.push({
-      icon: GraduationCap,
-      label: "Skill Gap",
-      value: `${candidate.skillsToLearn.length} to learn`,
-    });
+    metrics.push({ label: "Skill Gap", value: `${candidate.skillsToLearn.length} to learn` });
   }
-  return badges;
+  return metrics;
 }
 
-/** Idea -> Validation -> First Offer -> First Users -> Growth, derived
- * from real state, never asserted. No roadmap yet = still at "Idea". Once
- * a roadmap exists, position scales with how far through its phases the
- * founder actually is. */
+/** Idea -> Proof -> Offer -> First Users -> Repeatability -> Growth,
+ * derived from real state, never asserted. No roadmap yet = still at
+ * "Idea". Once a roadmap exists, position scales with how far through
+ * its phases the founder actually is. */
 function deriveActiveStage(
   hasRoadmap: boolean,
   phases: { isCurrent: boolean }[] | undefined,
 ): number {
   if (!hasRoadmap || !phases || phases.length === 0) return 0;
   const currentIndex = phases.findIndex((p) => p.isCurrent);
-  if (currentIndex === -1) return 4; // every phase done
+  if (currentIndex === -1) return 5; // every phase done
   const ratio = phases.length <= 1 ? 1 : currentIndex / (phases.length - 1);
-  return 1 + Math.round(ratio * 3);
+  return 1 + Math.round(ratio * 4);
+}
+
+/** A small SVG orbit motif — the flagship card's only decoration, built
+ * from plain circles/arcs (never stock imagery), positioned to sit behind
+ * the fit orbit without competing with the real content. */
+function FlagshipOrbitMotif() {
+  return (
+    <svg
+      className="pointer-events-none absolute -right-16 -top-16 opacity-[0.35]"
+      width={360}
+      height={360}
+      viewBox="0 0 360 360"
+      aria-hidden="true"
+    >
+      <circle cx={180} cy={180} r={160} fill="none" stroke="var(--sol-champagne)" strokeWidth={1} />
+      <circle cx={180} cy={180} r={120} fill="none" stroke="var(--sol-violet)" strokeWidth={1} />
+      <circle cx={180} cy={180} r={80} fill="none" stroke="var(--sol-champagne)" strokeWidth={1} />
+      <circle cx={340} cy={180} r={4} fill="var(--sol-champagne)" />
+      <circle cx={180} cy={20} r={3} fill="var(--sol-violet)" />
+    </svg>
+  );
 }
 
 function DashboardHome() {
@@ -182,39 +185,58 @@ function DashboardHome() {
     primaryCandidate && data.businessDna
       ? getConstraintWarnings(data.businessDna.signals, getFitFactors(primaryCandidate))
       : [];
-  const ideaBadges =
-    primaryCandidate && fitFactors ? getIdeaBadges(primaryCandidate, fitFactors.riskLevel) : [];
+  const ideaMetrics =
+    primaryCandidate && fitFactors ? getIdeaMetrics(primaryCandidate, fitFactors.riskLevel) : [];
   const topReason = primaryCandidate ? getWhyReasons(primaryCandidate)[0] : null;
   const whyNow = primaryCandidate && "whyNow" in primaryCandidate ? primaryCandidate.whyNow : null;
-  const firstStep =
-    primaryCandidate && "firstExperiment" in primaryCandidate
-      ? primaryCandidate.firstExperiment
-      : null;
+  const primaryScore = primary?.score_breakdown
+    ? (primary.score_breakdown as unknown as FitScoreResult)
+    : null;
   const activeStage = deriveActiveStage(Boolean(data.roadmap), data.roadmap?.phases);
+  const currentPhase = data.roadmap?.phases.find((p) => p.isCurrent) ?? null;
+  const missionProgress =
+    currentPhase && currentPhase.totalTasks > 0
+      ? currentPhase.doneTasks / currentPhase.totalTasks
+      : 0;
+
+  const headline = !primary
+    ? "Let's find your direction."
+    : !data.roadmap
+      ? "Time to build your roadmap."
+      : "Your next move is clear.";
+  const subheading = !primary
+    ? "Sol has a set of directions worth considering below."
+    : !data.roadmap
+      ? `${primary.title} is selected — turn it into a week-by-week plan.`
+      : data.roadmap.currentWeek
+        ? data.roadmap.currentWeek.objective
+        : `Keep moving on ${primary.title}.`;
 
   return (
     <DashboardShell
       opportunityId={data.selected?.id ?? primary?.id ?? null}
       opportunityTitle={primary?.title ?? null}
       hasRoadmap={primary ? Boolean(data.roadmap) : undefined}
+      pageTitle="Command Center"
     >
-      {/* ===== COMMAND CENTER HEADER — minimal, one line ===== */}
-      <div className="flex flex-col gap-1">
-        <h1 className="font-display text-[clamp(2rem,3.6vw,2.6rem)] font-semibold leading-tight text-dashboard-heading">
-          {greeting()}, {displayName}.
-        </h1>
-        <p className="text-[1.02rem] text-dashboard-muted">
-          {primary ? primary.title : "Your founder operating system is ready."}
+      {/* ===== HEADER — small label, then a real headline, then one line ===== */}
+      <div className="flex flex-col gap-2">
+        <p className="text-[16px] font-semibold uppercase tracking-[0.1em] text-sol-champagne-deep">
+          {greeting()}, {displayName}
         </p>
+        <h1 className="font-display text-[clamp(2rem,3.6vw,2.75rem)] font-semibold leading-[1.08] text-sol-ink">
+          {headline}
+        </h1>
+        <p className="max-w-2xl text-[1.02rem] text-sol-secondary">{subheading}</p>
       </div>
 
       {!primary && !data.selected ? (
-        <section className="mt-10 rounded-[1.75rem] border border-border/70 bg-card/80 px-8 py-14 text-center">
-          <Compass className="mx-auto size-9 text-gold" aria-hidden="true" />
-          <h2 className="mt-5 font-display text-[1.4rem] font-semibold text-dashboard-heading">
+        <section className="mt-10 rounded-[24px] border border-sol-border bg-sol-surface px-8 py-14 text-center">
+          <Compass className="mx-auto size-9 text-sol-champagne-deep" aria-hidden="true" />
+          <h2 className="mt-5 font-display text-[1.4rem] font-semibold text-sol-ink">
             We haven&rsquo;t found a strong enough match yet.
           </h2>
-          <p className="mx-auto mt-2.5 max-w-md text-[1rem] text-dashboard-muted">
+          <p className="mx-auto mt-2.5 max-w-md text-[1rem] text-sol-secondary">
             Let&rsquo;s explore a wider set of possibilities, or refine your profile.
           </p>
           <div className="mt-7 flex justify-center gap-3">
@@ -235,223 +257,226 @@ function DashboardHome() {
         </section>
       ) : (
         <>
-          {primary && (
-            <div className="mt-7 overflow-x-auto rounded-2xl border border-border/60 bg-card/50 px-6 py-4">
-              <ProgressMap activeStage={activeStage} />
-            </div>
-          )}
-
-          {/* ===== FLAGSHIP IDEA — visually dominant, badge-driven ===== */}
+          {/* ===== FLAGSHIP IDEA — light gradient card, badge-free ===== */}
           {primary && (
             <section
-              className="relative mt-6 overflow-hidden rounded-[1.75rem] bg-workspace shadow-[0_40px_90px_-50px_oklch(0.16_0.02_260/_0.55)]"
+              className="relative mt-8 overflow-hidden rounded-[28px] p-8 sm:p-10"
               style={{
-                backgroundImage:
-                  "radial-gradient(ellipse 60% 50% at 12% -10%, var(--workspace-green-glow), transparent 70%), radial-gradient(ellipse 50% 45% at 100% 110%, var(--workspace-violet-glow), transparent 70%)",
+                background: "linear-gradient(135deg, #FFFDF9 0%, #F8F3FF 55%, #F4EBDD 100%)",
+                border: "1px solid rgba(197,163,106,0.35)",
+                minHeight: 440,
               }}
             >
-              <div className="relative p-7 sm:p-10">
-                <p className="eyebrow text-gold">Your Strongest Founder Match</p>
+              <FlagshipOrbitMotif />
 
-                <div className="mt-5 flex flex-col gap-8 lg:flex-row lg:items-center lg:justify-between">
-                  <h2 className="max-w-xl font-display text-[clamp(2.1rem,4vw,3rem)] font-semibold leading-[1.05] text-workspace-foreground">
+              <div className="relative flex flex-col gap-8 lg:flex-row lg:items-start lg:justify-between">
+                <div className="min-w-0 flex-1">
+                  <p className="text-[12px] font-semibold uppercase tracking-[0.12em] text-sol-champagne-deep">
+                    Your Strongest Founder Match
+                  </p>
+                  <h2 className="mt-4 max-w-xl font-display text-[clamp(1.9rem,3.4vw,2.6rem)] font-semibold leading-[1.12] text-sol-ink">
                     {primary.title}
                   </h2>
-                  <div className="flex shrink-0 flex-col items-center gap-2">
-                    <FitRing score={primary.fit_score} size={112} variant="dark" />
-                    <span className="text-[0.72rem] font-semibold uppercase tracking-[0.14em] text-econ-green-active">
-                      {fitQualitativeLabel(primary.fit_score)}
-                    </span>
-                  </div>
-                </div>
-
-                {ideaBadges.length > 0 && (
-                  <div className="mt-6 flex flex-wrap gap-2.5">
-                    {ideaBadges.map((b) => (
-                      <AttributeBadge key={b.label} {...b} variant="dark" />
-                    ))}
-                  </div>
-                )}
-
-                {topReason && (
-                  <p className="mt-5 max-w-2xl text-[0.92rem] leading-relaxed text-workspace-foreground/90">
-                    {topReason}
-                  </p>
-                )}
-
-                {constraintWarnings.length > 0 && (
-                  <div className="mt-5 rounded-xl border border-gold/25 bg-gold/[0.08] px-4 py-3">
-                    <p className="text-[0.85rem] text-workspace-foreground">
-                      {constraintWarnings[0]}
+                  {(topReason || primary.one_liner) && (
+                    <p className="mt-4 max-w-xl text-[0.98rem] leading-relaxed text-sol-secondary">
+                      {topReason ?? primary.one_liner}
                     </p>
-                  </div>
-                )}
+                  )}
 
-                {whyNow && (
-                  <p className="mt-6 max-w-2xl text-[0.95rem] leading-relaxed text-workspace-muted">
-                    <span className="font-semibold text-gold">Why now — </span>
-                    {whyNow}
-                  </p>
-                )}
+                  {ideaMetrics.length > 0 && (
+                    <div className="mt-6 flex flex-wrap items-center gap-x-5 gap-y-2">
+                      {ideaMetrics.map((m, i) => (
+                        <span key={m.label} className="flex items-center gap-5">
+                          {i > 0 && (
+                            <span className="text-sol-border-strong" aria-hidden="true">
+                              |
+                            </span>
+                          )}
+                          <span className="text-[0.85rem] text-sol-secondary">
+                            <span className="font-semibold text-sol-ink">{m.value}</span> {m.label}
+                          </span>
+                        </span>
+                      ))}
+                    </div>
+                  )}
 
-                {firstStep && (
-                  <div className="mt-5 max-w-2xl rounded-xl border border-econ-green-active/25 bg-white/[0.03] px-4 py-3.5">
-                    <p className="text-[0.68rem] font-semibold uppercase tracking-[0.1em] text-econ-green-active">
-                      First Validation Step
+                  {constraintWarnings.length > 0 && (
+                    <div className="mt-5 max-w-xl rounded-xl border border-sol-champagne/30 bg-sol-champagne-soft/40 px-4 py-3">
+                      <p className="text-[0.85rem] text-sol-ink">{constraintWarnings[0]}</p>
+                    </div>
+                  )}
+
+                  {whyNow && (
+                    <p className="mt-5 max-w-xl text-[0.92rem] leading-relaxed text-sol-secondary">
+                      <span className="font-semibold text-sol-violet-deep">Why now — </span>
+                      {whyNow}
                     </p>
-                    <p className="mt-1 text-[0.9rem] leading-relaxed text-workspace-foreground">
-                      {firstStep}
-                    </p>
-                  </div>
-                )}
+                  )}
 
-                <div className="mt-7 flex flex-wrap items-center gap-4">
-                  <Button
-                    asChild
-                    className="bg-econ-green-active text-white hover:bg-econ-green-deep"
-                  >
-                    <Link to="/dashboard/opportunities/$id" params={{ id: primary.id }}>
+                  <div className="mt-8">
+                    <Link
+                      to="/dashboard/opportunities/$id"
+                      params={{ id: primary.id }}
+                      className="inline-flex items-center gap-2 rounded-xl bg-sol-navy px-6 py-3.5 text-[0.92rem] font-semibold text-white transition-colors hover:bg-sol-navy-soft"
+                    >
                       View Full Opportunity
-                      <ArrowRight className="size-4" aria-hidden="true" />
+                      <ArrowRight className="size-4 text-sol-champagne" aria-hidden="true" />
                     </Link>
-                  </Button>
+                  </div>
                 </div>
+
+                {primaryScore && (
+                  <div className="mx-auto shrink-0 lg:mx-0">
+                    <FounderFitOrbit score={primary.fit_score} breakdown={primaryScore.breakdown} />
+                  </div>
+                )}
               </div>
             </section>
           )}
 
-          {/* ===== BUILD MY ROADMAP — primary is selected but has no roadmap yet ===== */}
+          {/* ===== BUILD MY ROADMAP — primary selected but no roadmap yet ===== */}
           {primary && !data.roadmap && (
-            <section className="mt-6 rounded-[1.5rem] border border-econ-green/25 bg-econ-green-soft/50 p-6 text-center sm:p-7">
+            <section className="mt-6 rounded-[18px] border border-sol-border bg-sol-surface p-6 text-center sm:p-7">
               {buildingRoadmap ? (
                 <SolventiaLoadingState
                   message={`Sol is building your week-by-week roadmap for ${primary.title}…`}
                 />
               ) : (
                 <>
-                  <p className="eyebrow text-econ-green-deep">Ready to Execute</p>
-                  <h3 className="mt-2.5 font-display text-[1.35rem] font-semibold text-dashboard-heading">
+                  <p className="text-[12px] font-semibold uppercase tracking-[0.12em] text-sol-champagne-deep">
+                    Ready to Execute
+                  </p>
+                  <h3 className="mt-2.5 font-display text-[1.35rem] font-semibold text-sol-ink">
                     Turn this into a week-by-week plan.
                   </h3>
-                  <p className="mx-auto mt-2 max-w-md text-[0.92rem] leading-relaxed text-dashboard-muted">
+                  <p className="mx-auto mt-2 max-w-md text-[0.92rem] leading-relaxed text-sol-secondary">
                     Sol designs it around your real time and capital — it unlocks one week at a time
                     as you make progress.
                   </p>
-                  <Button
-                    className="mt-5 bg-econ-green-active text-white hover:bg-econ-green-deep"
+                  <button
+                    type="button"
+                    className="mt-5 inline-flex items-center gap-2 rounded-xl bg-sol-navy px-6 py-3 text-[0.9rem] font-semibold text-white transition-colors hover:bg-sol-navy-soft"
                     onClick={() => handleBuildRoadmap(primary.id)}
                   >
                     Build My Roadmap
-                    <ArrowRight className="size-4" aria-hidden="true" />
-                  </Button>
+                    <ArrowRight className="size-4 text-sol-champagne" aria-hidden="true" />
+                  </button>
                 </>
               )}
             </section>
           )}
 
-          {/* ===== WEEKLY MISSION — only once a roadmap actually exists ===== */}
-          {data.roadmap && data.roadmap.phases.length > 0 && (
-            <section className="mt-6 grid gap-6 lg:grid-cols-[1.1fr_0.9fr] lg:items-start">
-              <div className="rounded-[1.5rem] border border-gold/25 bg-gold/[0.05] p-6 sm:p-7">
-                <div className="flex items-center justify-between gap-2">
-                  <p className="eyebrow text-dashboard-heading">
-                    {data.roadmap.currentWeek
-                      ? `This Week — ${data.roadmap.currentWeek.title}`
-                      : "Your Next Move"}
-                  </p>
-                </div>
-                {data.roadmap.currentWeek && (
-                  <p className="mt-2 text-[0.9rem] leading-relaxed text-dashboard-body">
-                    {data.roadmap.currentWeek.objective}
-                  </p>
-                )}
-                {data.roadmap.nextTask && (
-                  <div className="mt-4 rounded-xl border border-border/60 bg-card/70 p-4">
-                    <p className="text-[0.68rem] font-semibold uppercase tracking-wide text-dashboard-muted">
-                      Next action
-                    </p>
-                    <p className="mt-1 text-[1rem] font-semibold text-dashboard-heading">
-                      {data.roadmap.nextTask.what}
-                    </p>
-                    <div className="mt-2 flex flex-wrap items-center gap-3 text-[0.78rem] text-dashboard-muted">
-                      {data.roadmap.nextTask.timeEstimate && (
-                        <span>{data.roadmap.nextTask.timeEstimate}</span>
-                      )}
-                      {data.roadmap.nextTask.deadline && (
-                        <span>Due {data.roadmap.nextTask.deadline}</span>
-                      )}
-                    </div>
-                  </div>
-                )}
-                <Button
-                  asChild
-                  size="sm"
-                  className="mt-5 bg-econ-green-active text-white hover:bg-econ-green-deep"
-                >
-                  <Link to="/dashboard/roadmap">
-                    Continue in Roadmap
-                    <ArrowRight className="size-4" aria-hidden="true" />
-                  </Link>
-                </Button>
+          {/* ===== CURRENT MISSION STRIP — deliberately dark, full-width focal point ===== */}
+          {data.roadmap && data.roadmap.currentWeek && (
+            <section
+              className="relative mt-8 flex flex-col items-start gap-5 overflow-hidden rounded-[24px] px-7 py-8 sm:flex-row sm:items-center sm:justify-between sm:px-10"
+              style={{ background: "#17203D", minHeight: 180 }}
+            >
+              <div className="min-w-0">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-sol-champagne">
+                  This Week
+                </p>
+                <h3 className="mt-3 max-w-xl font-display text-[1.5rem] font-semibold leading-snug text-white sm:text-[1.7rem]">
+                  {data.roadmap.currentWeek.title}
+                </h3>
+                <p className="mt-2 max-w-lg text-[0.92rem] leading-relaxed text-white/70">
+                  {data.roadmap.currentWeek.objective}
+                </p>
               </div>
 
-              <div className="rounded-[1.5rem] border border-border/70 bg-card/70 p-6 sm:p-7">
-                <p className="eyebrow text-dashboard-muted">Your Path</p>
-                <div className="mt-5 overflow-x-auto">
-                  <RoadmapStageTimeline
-                    phases={data.roadmap.phases.map((p) => ({
-                      key: p.key,
-                      title: p.title,
-                      isCurrent: p.isCurrent,
-                      isDone: p.isDone,
-                    }))}
-                  />
+              <div className="flex shrink-0 items-center gap-6">
+                <div className="relative flex size-16 items-center justify-center">
+                  <svg width={64} height={64} viewBox="0 0 64 64" className="-rotate-90">
+                    <circle
+                      cx={32}
+                      cy={32}
+                      r={27}
+                      fill="none"
+                      stroke="rgba(255,255,255,0.14)"
+                      strokeWidth={5}
+                    />
+                    <circle
+                      cx={32}
+                      cy={32}
+                      r={27}
+                      fill="none"
+                      stroke="var(--sol-champagne)"
+                      strokeWidth={5}
+                      strokeLinecap="round"
+                      strokeDasharray={2 * Math.PI * 27}
+                      strokeDashoffset={2 * Math.PI * 27 * (1 - missionProgress)}
+                      className="transition-[stroke-dashoffset] duration-700 ease-out"
+                    />
+                  </svg>
+                  <span className="absolute text-[0.78rem] font-semibold text-white">
+                    {Math.round(missionProgress * 100)}%
+                  </span>
                 </div>
+                <Link
+                  to="/dashboard/roadmap"
+                  className="inline-flex items-center gap-1.5 whitespace-nowrap text-[0.92rem] font-semibold text-sol-champagne hover:text-white"
+                >
+                  Continue {data.roadmap.currentWeek.title}
+                  <ArrowRight className="size-4" aria-hidden="true" />
+                </Link>
               </div>
             </section>
           )}
 
-          {/* ===== ALTERNATIVE FOUNDER PATHS — real cards, side by side ===== */}
+          {/* ===== ALTERNATIVE FOUNDER PATHS — minimal cards, no paragraphs ===== */}
           {alternatives.length > 0 && (
             <section className="mt-9">
-              <p className="eyebrow text-dashboard-muted">Alternative Founder Paths</p>
+              <p className="text-[12px] font-semibold uppercase tracking-[0.12em] text-sol-muted">
+                Alternative Founder Paths
+              </p>
               <div className="mt-4 grid gap-4 sm:grid-cols-2">
-                {alternatives.map((opp) => (
-                  <div
-                    key={opp.id}
-                    className="flex flex-col gap-4 rounded-2xl border border-border/70 bg-card/60 p-5"
-                  >
-                    <div className="flex items-start justify-between gap-3">
-                      <h3 className="font-display text-[1.1rem] font-semibold leading-tight text-dashboard-heading">
-                        {opp.title}
-                      </h3>
-                      <span className="shrink-0 rounded-full border border-gold/30 bg-gold/[0.08] px-2.5 py-1 text-[0.72rem] font-semibold text-dashboard-heading">
-                        {opp.fit_score}/100
-                      </span>
-                    </div>
-                    <p className="line-clamp-2 text-[0.85rem] leading-relaxed text-dashboard-muted">
-                      {opp.one_liner}
-                    </p>
-                    <div className="mt-auto flex gap-2">
-                      <Button asChild variant="outline" size="sm" className="flex-1">
-                        <Link to="/dashboard/opportunities/$id" params={{ id: opp.id }}>
-                          Explore
-                        </Link>
-                      </Button>
-                      <Button
-                        size="sm"
-                        className="flex-1 bg-econ-green-active text-white hover:bg-econ-green-deep"
-                        onClick={() => handleSwitch(opp.id)}
-                        disabled={switching === opp.id}
-                      >
-                        {switching === opp.id && (
-                          <Loader2 className="size-3.5 animate-spin" aria-hidden="true" />
+                {alternatives.map((opp) => {
+                  const candidate = opp.candidate as unknown as Candidate;
+                  const capital = "startingCapital" in candidate ? candidate.startingCapital : null;
+                  const time = "weeklyTime" in candidate ? candidate.weeklyTime : null;
+                  return (
+                    <div
+                      key={opp.id}
+                      className="flex min-h-[205px] flex-col justify-between gap-4 rounded-[18px] border border-sol-border bg-sol-surface p-5"
+                    >
+                      <div>
+                        <div className="flex items-start justify-between gap-3">
+                          <h3 className="font-display text-[1.05rem] font-semibold leading-tight text-sol-ink">
+                            {opp.title}
+                          </h3>
+                          <span className="shrink-0 rounded-full border border-sol-champagne/30 bg-sol-champagne-soft/50 px-2.5 py-1 text-[0.72rem] font-semibold text-sol-champagne-deep">
+                            {opp.fit_score}/100
+                          </span>
+                        </div>
+                        {(capital || time) && (
+                          <div className="mt-3 flex items-center gap-4 text-[0.8rem] text-sol-secondary">
+                            {capital && <span>{capital}</span>}
+                            {capital && time && <span className="text-sol-border-strong">|</span>}
+                            {time && <span>{time}</span>}
+                          </div>
                         )}
-                        Select This Direction
-                      </Button>
+                      </div>
+                      <div className="flex gap-2">
+                        <Button asChild variant="outline" size="sm" className="flex-1">
+                          <Link to="/dashboard/opportunities/$id" params={{ id: opp.id }}>
+                            Explore
+                          </Link>
+                        </Button>
+                        <button
+                          type="button"
+                          className="flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-sol-navy px-3 py-2 text-[0.82rem] font-semibold text-white transition-colors hover:bg-sol-navy-soft disabled:opacity-60"
+                          onClick={() => handleSwitch(opp.id)}
+                          disabled={switching === opp.id}
+                        >
+                          {switching === opp.id && (
+                            <Loader2 className="size-3.5 animate-spin" aria-hidden="true" />
+                          )}
+                          Choose Direction
+                        </button>
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </section>
           )}
@@ -462,7 +487,7 @@ function DashboardHome() {
               onClick={handleExploreMore}
               disabled={exploring}
               className={cn(
-                "text-[0.85rem] font-medium text-dashboard-muted hover:text-dashboard-heading",
+                "text-[0.85rem] font-medium text-sol-secondary hover:text-sol-ink",
                 exploring && "opacity-60",
               )}
             >
@@ -473,44 +498,32 @@ function DashboardHome() {
             </button>
           </section>
 
+          {/* ===== PROGRESS JOURNEY ===== */}
+          {primary && (
+            <section className="mt-9 rounded-[24px] border border-sol-border bg-sol-surface p-6 sm:p-8">
+              <p className="text-[12px] font-semibold uppercase tracking-[0.12em] text-sol-muted">
+                Progress Journey
+              </p>
+              <div className="mt-6 overflow-x-auto">
+                <FounderPathJourney activeStage={activeStage} />
+              </div>
+            </section>
+          )}
+
           {/* ===== FOUNDER INTELLIGENCE ===== */}
           {data.businessDna && (
-            <div className="mt-9 grid gap-6 lg:grid-cols-[0.9fr_1.1fr] lg:items-start">
+            <div className="mt-6 grid gap-6 lg:grid-cols-2 lg:items-start">
               {data.genome && (
-                <FounderGenomeCard genome={data.genome} persona={data.persona ?? undefined} />
+                <FounderGenomeCardV2 genome={data.genome} persona={data.persona ?? undefined} />
               )}
-              <BusinessDnaPanel
+              <BusinessDnaQuadrant
                 analysis={data.businessDna.analysis}
                 signals={data.businessDna.signals}
               />
             </div>
           )}
-
-          {/* ===== ASK SOL ===== */}
-          <AskSolCta opportunityTitle={primary?.title ?? null} />
         </>
       )}
     </DashboardShell>
-  );
-}
-
-function AskSolCta({ opportunityTitle }: { opportunityTitle: string | null }) {
-  const openMentor = useOpenMentor();
-  return (
-    <section className="mt-6 flex flex-col items-center gap-2.5 rounded-[1.5rem] border border-violet/18 bg-violet/4 px-6 py-8 text-center">
-      <Sparkles className="size-5 text-violet" aria-hidden="true" />
-      <p className="font-display text-[1.1rem] font-semibold text-dashboard-heading">
-        Need help with your next step?
-      </p>
-      <p className="max-w-md text-[0.9rem] text-dashboard-muted">
-        {opportunityTitle
-          ? `Sol is working with you on ${opportunityTitle} — ask anything.`
-          : "Sol knows your full profile — ask anything."}
-      </p>
-      <Button onClick={openMentor} variant="outline" className="mt-1 border-accent/40">
-        Ask Sol
-        <ArrowRight className="size-4" aria-hidden="true" />
-      </Button>
-    </section>
   );
 }
