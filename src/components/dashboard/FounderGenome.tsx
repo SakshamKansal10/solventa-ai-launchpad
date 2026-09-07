@@ -1,5 +1,5 @@
 import { motion } from "motion/react";
-import type { FounderGenome, FounderPersona, GenomeDimension } from "@/lib/profile/founder-genome";
+import type { FounderGenome, GenomeDimension } from "@/lib/profile/founder-genome";
 import { cn } from "@/lib/utils";
 
 const DOT_COUNT = 5;
@@ -40,58 +40,6 @@ function DimensionRow({
       </span>
       <span className="sr-only">{dimension.score}/100</span>
     </motion.div>
-  );
-}
-
-/** The compact, dashboard-scoped genome card — dot rows + persona, no
- * expandable narrative (that's what BusinessDnaPanel is for). Every dot
- * row is deterministically derived (see founder-genome.ts), never an AI
- * guess dressed up as a visual. */
-export function FounderGenomeCard({
-  genome,
-  persona,
-  color = "var(--gold)",
-}: {
-  genome: FounderGenome;
-  persona?: FounderPersona;
-  color?: string;
-}) {
-  return (
-    <div className="rounded-[1.5rem] border border-border/70 bg-card/70 p-6 sm:p-7">
-      <p className="eyebrow text-dashboard-muted">Founder Genome</p>
-      {persona && (
-        <div className="mt-2 flex flex-wrap items-baseline gap-x-2.5 gap-y-1">
-          <h3 className="font-display text-[1.3rem] font-semibold text-dashboard-heading">
-            {persona.name}
-          </h3>
-        </div>
-      )}
-      {persona && persona.attributes.length > 0 && (
-        <div className="mt-2.5 flex flex-wrap gap-1.5">
-          {persona.attributes.map((attr) => (
-            <span
-              key={attr}
-              className="rounded-full border border-border/70 bg-secondary/60 px-2.5 py-1 text-[0.74rem] font-medium text-dashboard-muted"
-            >
-              {attr}
-            </span>
-          ))}
-        </div>
-      )}
-      <div className="mt-5 flex flex-col gap-2.5">
-        {genome.dimensions.map((d, i) => (
-          <DimensionRow key={d.key} dimension={d} index={i} color={color} />
-        ))}
-      </div>
-      <div className="mt-4 flex flex-wrap gap-1.5 border-t border-border/50 pt-4">
-        <span className="rounded-full bg-violet/10 px-2.5 py-1 text-[0.72rem] font-medium text-violet">
-          {genome.executionStyle}
-        </span>
-        <span className="rounded-full bg-econ-green-soft px-2.5 py-1 text-[0.72rem] font-medium text-econ-green-deep">
-          {genome.independence}
-        </span>
-      </div>
-    </div>
   );
 }
 
