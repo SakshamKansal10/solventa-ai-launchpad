@@ -3,6 +3,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { requireUser } from "@/lib/supabase/server";
 import type { FounderAnalysis, FounderDNA } from "@/lib/ai/schemas";
 import type { NormalizedProfile } from "@/lib/profile/normalize";
+import { computeFounderGenome, computeFounderPersona } from "@/lib/profile/founder-genome";
 
 interface RoadmapPhaseSummary {
   key: string;
@@ -175,6 +176,10 @@ export const getDashboard = createServerFn({ method: "GET" }).handler(async () =
     }
   }
 
+  const genomeSource = dnaRes.data?.normalized_signals
+    ? (dnaRes.data.normalized_signals as unknown as NormalizedProfile)
+    : null;
+
   return {
     profile: profileRes.data ?? null,
     hasBusinessDna: opportunities.length > 0,
@@ -187,6 +192,16 @@ export const getDashboard = createServerFn({ method: "GET" }).handler(async () =
           analysis: dnaRes.data.founder_analysis as unknown as FounderDNA | FounderAnalysis | null,
           signals: dnaRes.data.normalized_signals as unknown as NormalizedProfile,
         }
+      : null,
+    // Deterministic, computed fresh from stored signals every time —
+    // never persisted, never drifts out of sync with the real profile.
+    // Guarded on normalized_signals specifically (not just the row
+    // existing) — a pre-normalization-schema row could theoretically
+    // have a null/missing signals blob, and that must degrade to no
+    // genome shown, never a crashed dashboard.
+    genome: genomeSource ? computeFounderGenome(genomeSource) : null,
+    persona: genomeSource
+      ? computeFounderPersona(genomeSource, computeFounderGenome(genomeSource))
       : null,
     roadmap,
   };

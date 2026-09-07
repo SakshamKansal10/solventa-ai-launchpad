@@ -18,6 +18,7 @@ import { RoadmapStageTimeline } from "@/components/dashboard/RoadmapStageTimelin
 import { AttributeBadge } from "@/components/dashboard/AttributeBadge";
 import { ProgressMap } from "@/components/dashboard/ProgressMap";
 import { BusinessDnaPanel } from "@/components/dashboard/BusinessDnaPanel";
+import { FounderGenomeCard } from "@/components/dashboard/FounderGenome";
 import { SolventiaLoadingState } from "@/components/dashboard/SolventiaLoadingState";
 import { PremiumButton } from "@/components/solventia/PremiumButton";
 import { Button } from "@/components/ui/button";
@@ -474,7 +475,10 @@ function DashboardHome() {
 
           {/* ===== FOUNDER INTELLIGENCE ===== */}
           {data.businessDna && (
-            <div className="mt-9">
+            <div className="mt-9 grid gap-6 lg:grid-cols-[0.9fr_1.1fr] lg:items-start">
+              {data.genome && (
+                <FounderGenomeCard genome={data.genome} persona={data.persona ?? undefined} />
+              )}
               <BusinessDnaPanel
                 analysis={data.businessDna.analysis}
                 signals={data.businessDna.signals}
