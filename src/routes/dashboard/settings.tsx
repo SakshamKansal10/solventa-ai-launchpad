@@ -36,10 +36,12 @@ function SettingsCard({
   children: ReactNode;
 }) {
   return (
-    <section className="rounded-[1.5rem] border border-border/70 bg-card/70 p-6 sm:p-7">
+    <section className="rounded-[18px] border border-sol-border bg-sol-surface p-6 sm:p-7">
       <div className="flex items-center gap-2.5">
-        <Icon className="size-4 text-gold" aria-hidden="true" />
-        <p className="eyebrow text-dashboard-muted">{title}</p>
+        <Icon className="size-4 text-sol-champagne-deep" aria-hidden="true" />
+        <p className="text-[12px] font-semibold uppercase tracking-[0.12em] text-sol-muted">
+          {title}
+        </p>
       </div>
       <div className="mt-5">{children}</div>
     </section>
@@ -76,16 +78,22 @@ function SettingsPage() {
   }
 
   return (
-    <DashboardShell hasRoadmap={hasRoadmap}>
+    <DashboardShell hasRoadmap={hasRoadmap} pageTitle="Settings">
       <div className="flex items-center gap-4">
-        <div className="flex size-16 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-gold to-violet font-display text-[1.4rem] font-semibold text-white shadow-[0_10px_28px_-10px_oklch(0.606_0.19_292.7_/_0.4)]">
+        <div
+          className="flex size-16 shrink-0 items-center justify-center rounded-full font-display text-[1.4rem] font-semibold text-white"
+          style={{
+            background: "linear-gradient(135deg, var(--sol-champagne), var(--sol-violet))",
+            boxShadow: "0 10px 28px -10px rgba(86,62,183,.28)",
+          }}
+        >
           {initials(data?.fullName ?? null, data?.email ?? null)}
         </div>
         <div>
-          <h1 className="font-display text-[clamp(1.8rem,3.2vw,2.3rem)] font-semibold text-dashboard-heading">
+          <h1 className="font-display text-[clamp(1.8rem,3.2vw,2.3rem)] font-semibold text-sol-ink">
             {data?.fullName || "Your Profile"}
           </h1>
-          <p className="mt-0.5 text-[0.92rem] text-dashboard-muted">{data?.email}</p>
+          <p className="mt-0.5 text-[0.92rem] text-sol-secondary">{data?.email}</p>
         </div>
       </div>
 
@@ -93,23 +101,23 @@ function SettingsPage() {
         <SettingsCard icon={UserRound} title="Profile">
           <dl className="flex flex-col gap-3">
             <div className="flex items-center justify-between">
-              <dt className="text-[0.85rem] text-dashboard-muted">Name</dt>
-              <dd className="text-[0.9rem] font-medium text-dashboard-heading">
+              <dt className="text-[0.85rem] text-sol-secondary">Name</dt>
+              <dd className="text-[0.9rem] font-medium text-sol-ink">
                 {data?.fullName || "Not set"}
               </dd>
             </div>
             <div className="flex items-center justify-between">
-              <dt className="text-[0.85rem] text-dashboard-muted">Email</dt>
-              <dd className="text-[0.9rem] font-medium text-dashboard-heading">{data?.email}</dd>
+              <dt className="text-[0.85rem] text-sol-secondary">Email</dt>
+              <dd className="text-[0.9rem] font-medium text-sol-ink">{data?.email}</dd>
             </div>
             <div className="flex items-center justify-between">
-              <dt className="text-[0.85rem] text-dashboard-muted">Founder status</dt>
-              <dd className="text-[0.9rem] font-medium text-dashboard-heading">
+              <dt className="text-[0.85rem] text-sol-secondary">Founder status</dt>
+              <dd className="text-[0.9rem] font-medium text-sol-ink">
                 {data?.currentStatus || "Not set"}
               </dd>
             </div>
           </dl>
-          <p className="mt-4 text-[0.78rem] leading-relaxed text-dashboard-muted">
+          <p className="mt-4 text-[0.78rem] leading-relaxed text-sol-secondary">
             A profile picture upload is coming soon — for now Solventia uses your initials.
           </p>
           <Button asChild variant="outline" size="sm" className="mt-4 justify-start">
@@ -118,7 +126,7 @@ function SettingsPage() {
               Edit Founder Profile
             </Link>
           </Button>
-          <p className="mt-2 text-[0.76rem] leading-relaxed text-dashboard-muted">
+          <p className="mt-2 text-[0.76rem] leading-relaxed text-sol-secondary">
             Update individual answers from your last consultation without starting over. Your
             current ideas and roadmap aren&rsquo;t touched until you finish and submit.
           </p>
@@ -127,14 +135,12 @@ function SettingsPage() {
         <SettingsCard icon={Sparkles} title="Your Founder Journey">
           <div className="flex flex-col gap-3">
             <div className="flex items-center justify-between">
-              <span className="text-[0.85rem] text-dashboard-muted">Ideas generated</span>
-              <span className="text-[0.9rem] font-medium text-dashboard-heading">
-                {data?.ideaCount ?? 0}
-              </span>
+              <span className="text-[0.85rem] text-sol-secondary">Ideas generated</span>
+              <span className="text-[0.9rem] font-medium text-sol-ink">{data?.ideaCount ?? 0}</span>
             </div>
             <div className="flex items-center justify-between">
-              <span className="text-[0.85rem] text-dashboard-muted">Roadmaps built</span>
-              <span className="text-[0.9rem] font-medium text-dashboard-heading">
+              <span className="text-[0.85rem] text-sol-secondary">Roadmaps built</span>
+              <span className="text-[0.9rem] font-medium text-sol-ink">
                 {data?.roadmapCount ?? 0}
               </span>
             </div>
@@ -156,28 +162,34 @@ function SettingsPage() {
         </SettingsCard>
 
         <SettingsCard icon={Sparkles} title="Start Fresh">
-          <p className="text-[0.88rem] leading-relaxed text-dashboard-body">
+          <p className="text-[0.88rem] leading-relaxed text-sol-ink">
             Want Sol to find you a new set of directions? Redo the consultation any time — your
             current ideas and roadmap stay exactly where they are.
           </p>
-          <Button asChild className="mt-4 bg-econ-green-active text-white hover:bg-econ-green-deep">
-            <Link to="/consultation">Start New Consultation</Link>
-          </Button>
+          <button
+            type="button"
+            className="mt-4 inline-flex items-center gap-2 rounded-xl bg-sol-navy px-5 py-2.5 text-[0.85rem] font-semibold text-white transition-colors hover:bg-sol-navy-soft"
+            onClick={() => navigate({ to: "/consultation" })}
+          >
+            Start New Consultation
+          </button>
         </SettingsCard>
 
         <SettingsCard icon={Bell} title="Notifications">
-          <p className="text-[0.88rem] leading-relaxed text-dashboard-body">
+          <p className="text-[0.88rem] leading-relaxed text-sol-ink">
             Email reminders for pending roadmap actions are coming soon.
           </p>
-          <span className="mt-3 inline-block rounded-full border border-border/70 bg-secondary px-3 py-1 text-[0.72rem] font-semibold text-dashboard-muted">
+          <span className="mt-3 inline-block rounded-full border border-sol-border bg-sol-ivory px-3 py-1 text-[0.72rem] font-semibold text-sol-muted">
             Coming soon
           </span>
         </SettingsCard>
       </div>
 
-      <section className="mt-6 rounded-[1.5rem] border border-destructive/25 bg-destructive/[0.04] p-6 sm:p-7">
-        <p className="eyebrow text-destructive/80">Account</p>
-        <p className="mt-2 text-[0.88rem] leading-relaxed text-dashboard-body">
+      <section className="mt-6 rounded-[18px] border border-sol-danger/25 bg-sol-danger/[0.04] p-6 sm:p-7">
+        <p className="text-[12px] font-semibold uppercase tracking-[0.12em] text-sol-danger/80">
+          Account
+        </p>
+        <p className="mt-2 text-[0.88rem] leading-relaxed text-sol-ink">
           Sign out of Solventia on this device.
         </p>
         <Button variant="outline" className="mt-4" onClick={handleSignOut}>
