@@ -2,13 +2,29 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { Check, ChevronDown, ChevronRight, Lock, Loader2, MapPin, Sparkles } from "lucide-react";
+import {
+  AlertTriangle,
+  Check,
+  ChevronDown,
+  ChevronRight,
+  Lock,
+  Loader2,
+  MapPin,
+  ShieldAlert,
+  Sparkles,
+  Target,
+} from "lucide-react";
 import { DashboardShell, useOpenMentor } from "@/components/dashboard/DashboardShell";
 import { SolventiaLoadingState } from "@/components/dashboard/SolventiaLoadingState";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { requireAuthLoader } from "@/lib/route-guards";
-import { getRoadmap, updateTaskStatus, replanRoadmap } from "@/lib/actions/roadmap";
+import {
+  generateActiveWeekDetail,
+  getRoadmap,
+  updateTaskStatus,
+  replanRoadmap,
+} from "@/lib/actions/roadmap";
 import { formatCompactMoney } from "@/lib/country-currency";
 import { cn } from "@/lib/utils";
 
@@ -56,6 +72,11 @@ interface Week {
   title: string;
   objective: string;
   status: "locked" | "active" | "completed";
+  mission: string | null;
+  mistakes_to_avoid: string[] | null;
+  evidence_required: string | null;
+  success_threshold: string | null;
+  founder_reflection: string | null;
   tasks: Task[];
 }
 
@@ -87,16 +108,25 @@ function splitHowSteps(how: string): string[] {
 function TaskRow({
   task,
   roadmapId,
+  isLastInWeek,
   onToggle,
   onReplanNeeded,
 }: {
   task: Task;
   roadmapId: string;
+  /** True when completing this task would finish every task in its week
+   * — completing it triggers unlocking (and generating) the next week,
+   * so this is the one moment worth pausing one click longer to ask the
+   * founder how the week actually went (see the inline reflection prompt
+   * below) rather than the instant no-questions-asked toggle every other
+   * task gets. */
+  isLastInWeek: boolean;
   /** Fires immediately on click — the caller applies an optimistic cache
    * update synchronously and persists in the background (see RoadmapPage's
    * toggleTaskMutation). Never awaited here: waiting is exactly the "feels
-   * like 5 seconds" problem this replaces. */
-  onToggle: (taskId: string, nextStatus: "pending" | "done") => void;
+   * like 5 seconds" problem this replaces. `reflection` is only ever sent
+   * alongside marking the LAST task in a week done. */
+  onToggle: (taskId: string, nextStatus: "pending" | "done", reflection?: string) => void;
   onReplanNeeded: () => Promise<void>;
 }) {
   const [expanded, setExpanded] = useState(false);
@@ -106,10 +136,25 @@ function TaskRow({
   >(null);
   const [blockerNote, setBlockerNote] = useState("");
   const [busy, setBusy] = useState(false);
+  const [showReflectionPrompt, setShowReflectionPrompt] = useState(false);
+  const [reflection, setReflection] = useState("");
   const isDone = task.status === "done";
 
   function markDone() {
-    onToggle(task.id, isDone ? "pending" : "done");
+    if (isDone) {
+      onToggle(task.id, "pending");
+      return;
+    }
+    if (isLastInWeek) {
+      setShowReflectionPrompt(true);
+      return;
+    }
+    onToggle(task.id, "done");
+  }
+
+  function finishWeek() {
+    onToggle(task.id, "done", reflection.trim() || undefined);
+    setShowReflectionPrompt(false);
   }
 
   async function submitBlocked() {
@@ -303,8 +348,79 @@ function TaskRow({
               </Button>
             </div>
           )}
+          {showReflectionPrompt && (
+            <div className="mt-3 rounded-lg border border-econ-green-active/30 bg-econ-green-soft/30 p-3">
+              <p className="text-[0.82rem] font-medium text-foreground">
+                This finishes the week. How did it actually go?
+              </p>
+              <p className="mt-0.5 text-[0.74rem] text-muted-foreground">
+                Optional — Sol uses this to plan next week around what really happened, not just the
+                original plan.
+              </p>
+              <Textarea
+                autoFocus
+                value={reflection}
+                onChange={(e) => setReflection(e.target.value)}
+                placeholder="e.g. Only got 3 of the 8 interviews done, but the ones I did were promising…"
+                className="mt-2 min-h-[60px] resize-none text-[0.85rem]"
+              />
+              <div className="mt-2 flex items-center gap-3">
+                <Button size="sm" onClick={finishWeek}>
+                  Finish Week
+                </Button>
+                <button
+                  type="button"
+                  onClick={() => setShowReflectionPrompt(false)}
+                  className="text-[0.8rem] font-medium text-muted-foreground hover:text-foreground"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       </div>
+    </div>
+  );
+}
+
+/** An active week with zero tasks and no mission yet means its detail
+ * generation either hasn't run or failed (see buildRoadmapForOpportunity
+ * / updateTaskStatus, both of which deliberately never let a generation
+ * failure become a dead end) — this is the self-healing retry for that
+ * exact state. Fires automatically once on mount, and offers a manual
+ * retry button if that attempt also fails. */
+function GeneratingWeekState({ weekId, onDone }: { weekId: string; onDone: () => void }) {
+  const mutation = useMutation({
+    mutationFn: () => generateActiveWeekDetail({ data: { weekId } }),
+    onSuccess: onDone,
+    onError: (err) => {
+      console.error("[roadmap] week detail generation failed:", err);
+    },
+  });
+
+  useEffect(() => {
+    mutation.mutate();
+    // Deliberately fires once per mount (once per time this state is
+    // actually shown) — not on every render.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [weekId]);
+
+  return (
+    <div className="mt-3 pl-[1.85rem]">
+      {mutation.isError ? (
+        <div className="flex items-center gap-3 rounded-lg border border-border/60 bg-background p-3">
+          <AlertTriangle className="size-4 shrink-0 text-muted-foreground" aria-hidden="true" />
+          <p className="flex-1 text-[0.82rem] text-muted-foreground">
+            Sol couldn't prepare this week — try again.
+          </p>
+          <Button size="sm" variant="outline" onClick={() => mutation.mutate()}>
+            Retry
+          </Button>
+        </div>
+      ) : (
+        <SolventiaLoadingState message="Sol is preparing this week's mission…" />
+      )}
     </div>
   );
 }
@@ -319,14 +435,18 @@ function WeekBlock({
   roadmapId,
   onToggle,
   onReplanNeeded,
+  onWeekReady,
 }: {
   week: Week;
   roadmapId: string;
-  onToggle: (taskId: string, nextStatus: "pending" | "done") => void;
+  onToggle: (taskId: string, nextStatus: "pending" | "done", reflection?: string) => void;
   onReplanNeeded: () => Promise<void>;
+  onWeekReady: () => void;
 }) {
   const [expanded, setExpanded] = useState(week.status === "active");
   const doneCount = week.tasks.filter((t) => t.status === "done").length;
+  const remainingCount = week.tasks.length - doneCount;
+  const stillGenerating = week.status === "active" && week.tasks.length === 0 && !week.mission;
 
   if (week.status === "locked") {
     return (
@@ -370,7 +490,7 @@ function WeekBlock({
             <p className="text-[0.85rem] font-medium text-foreground">
               Week {week.week_number} — {week.title}
             </p>
-            {(!expanded || week.status === "completed") && (
+            {(!expanded || week.status === "completed") && !stillGenerating && (
               <p className="text-[0.72rem] text-muted-foreground">
                 {doneCount}/{week.tasks.length} done
               </p>
@@ -388,17 +508,87 @@ function WeekBlock({
       {expanded && (
         <>
           <p className="mt-2 pl-[1.85rem] text-[0.78rem] text-muted-foreground">{week.objective}</p>
-          <div className="mt-3 flex flex-col gap-2.5 pl-0 sm:pl-[1.85rem]">
-            {week.tasks.map((task) => (
-              <TaskRow
-                key={task.id}
-                task={task}
-                roadmapId={roadmapId}
-                onToggle={onToggle}
-                onReplanNeeded={onReplanNeeded}
-              />
-            ))}
-          </div>
+
+          {stillGenerating && <GeneratingWeekState weekId={week.id} onDone={onWeekReady} />}
+
+          {!stillGenerating && week.mission && week.status === "active" && (
+            <div className="mt-3 flex flex-col gap-2.5 pl-0 sm:pl-[1.85rem]">
+              <div className="rounded-lg border border-gold/25 bg-gold/[0.06] px-3.5 py-3">
+                <p className="flex items-center gap-1.5 text-[0.68rem] font-semibold uppercase tracking-wide text-gold">
+                  <Target className="size-3.5" aria-hidden="true" />
+                  Mission
+                </p>
+                <p className="mt-1 text-[0.85rem] leading-relaxed text-foreground">
+                  {week.mission}
+                </p>
+              </div>
+              {(week.evidence_required || week.success_threshold) && (
+                <div className="grid gap-2.5 sm:grid-cols-2">
+                  {week.evidence_required && (
+                    <div className="rounded-lg border border-border/60 bg-card/60 px-3.5 py-3">
+                      <p className="text-[0.66rem] font-semibold uppercase tracking-wide text-muted-foreground">
+                        Evidence required
+                      </p>
+                      <p className="mt-1 text-[0.8rem] leading-relaxed text-foreground">
+                        {week.evidence_required}
+                      </p>
+                    </div>
+                  )}
+                  {week.success_threshold && (
+                    <div className="rounded-lg border border-border/60 bg-card/60 px-3.5 py-3">
+                      <p className="text-[0.66rem] font-semibold uppercase tracking-wide text-muted-foreground">
+                        This week worked if…
+                      </p>
+                      <p className="mt-1 text-[0.8rem] leading-relaxed text-foreground">
+                        {week.success_threshold}
+                      </p>
+                    </div>
+                  )}
+                </div>
+              )}
+              {week.mistakes_to_avoid && week.mistakes_to_avoid.length > 0 && (
+                <div className="rounded-lg border border-destructive/20 bg-destructive/[0.04] px-3.5 py-3">
+                  <p className="flex items-center gap-1.5 text-[0.66rem] font-semibold uppercase tracking-wide text-destructive/80">
+                    <ShieldAlert className="size-3.5" aria-hidden="true" />
+                    Mistakes to avoid
+                  </p>
+                  <ul className="mt-1.5 flex flex-col gap-1">
+                    {week.mistakes_to_avoid.map((m, i) => (
+                      <li key={i} className="text-[0.8rem] leading-relaxed text-foreground">
+                        {m}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </div>
+          )}
+
+          {!stillGenerating && (
+            <div className="mt-3 flex flex-col gap-2.5 pl-0 sm:pl-[1.85rem]">
+              {week.tasks.map((task) => (
+                <TaskRow
+                  key={task.id}
+                  task={task}
+                  roadmapId={roadmapId}
+                  isLastInWeek={task.status !== "done" && remainingCount === 1}
+                  onToggle={onToggle}
+                  onReplanNeeded={onReplanNeeded}
+                />
+              ))}
+            </div>
+          )}
+
+          {week.status === "completed" && week.founder_reflection && (
+            <div className="mt-3 rounded-lg border border-border/60 bg-card/50 px-3.5 py-3 sm:ml-[1.85rem]">
+              <p className="text-[0.66rem] font-semibold uppercase tracking-wide text-muted-foreground">
+                Your reflection
+              </p>
+              <p className="mt-1 text-[0.82rem] italic leading-relaxed text-foreground">
+                “{week.founder_reflection}”
+              </p>
+            </div>
+          )}
         </>
       )}
     </div>
@@ -434,8 +624,10 @@ function RoadmapPage() {
   // real failure; the founder just never has to wait to see it happen.
   type RoadmapQueryData = NonNullable<typeof query.data>;
   const toggleTaskMutation = useMutation({
-    mutationFn: (vars: { taskId: string; status: "pending" | "done" }) =>
-      updateTaskStatus({ data: { taskId: vars.taskId, status: vars.status } }),
+    mutationFn: (vars: { taskId: string; status: "pending" | "done"; reflection?: string }) =>
+      updateTaskStatus({
+        data: { taskId: vars.taskId, status: vars.status, weekReflection: vars.reflection },
+      }),
     onMutate: async (vars) => {
       await queryClient.cancelQueries({ queryKey: ["roadmap"] });
       const previous = queryClient.getQueryData<RoadmapQueryData>(["roadmap"]);
@@ -698,8 +890,11 @@ function RoadmapPage() {
                       key={week.id}
                       week={week}
                       roadmapId={roadmap.id}
-                      onToggle={(taskId, status) => toggleTaskMutation.mutate({ taskId, status })}
+                      onToggle={(taskId, status, reflection) =>
+                        toggleTaskMutation.mutate({ taskId, status, reflection })
+                      }
                       onReplanNeeded={refresh}
+                      onWeekReady={refresh}
                     />
                   ))
                 : activePhase.tasks.map((task) => (
@@ -707,6 +902,7 @@ function RoadmapPage() {
                       key={task.id}
                       task={task}
                       roadmapId={roadmap.id}
+                      isLastInWeek={false}
                       onToggle={(taskId, status) => toggleTaskMutation.mutate({ taskId, status })}
                       onReplanNeeded={refresh}
                     />
@@ -785,10 +981,11 @@ function RoadmapPage() {
                           key={week.id}
                           week={week}
                           roadmapId={roadmap.id}
-                          onToggle={(taskId, status) =>
-                            toggleTaskMutation.mutate({ taskId, status })
+                          onToggle={(taskId, status, reflection) =>
+                            toggleTaskMutation.mutate({ taskId, status, reflection })
                           }
                           onReplanNeeded={refresh}
+                          onWeekReady={refresh}
                         />
                       ))
                     : phase.tasks.map((task) => (
@@ -796,6 +993,7 @@ function RoadmapPage() {
                           key={task.id}
                           task={task}
                           roadmapId={roadmap.id}
+                          isLastInWeek={false}
                           onToggle={(taskId, status) =>
                             toggleTaskMutation.mutate({ taskId, status })
                           }

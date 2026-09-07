@@ -8,14 +8,15 @@ import type { NormalizedProfile } from "@/lib/profile/normalize";
 import { computeFitScore } from "@/lib/profile/scoring";
 import { generateOpportunityPackageBatch } from "@/lib/ai/prompts/intelligence-package";
 import { generateOpportunityDetail } from "@/lib/ai/prompts/opportunity-detail";
-import { generateRoadmapPlan } from "@/lib/ai/prompts/roadmap-generation";
+import { generateRoadmapSkeleton, generateWeekDetail } from "@/lib/ai/prompts/roadmap-generation";
 import { researchMarketEvidence } from "@/lib/ai/prompts/market-research";
 import { MODEL } from "@/lib/ai/gemini.server";
 import { sendRoadmapReadyEmail } from "@/lib/actions/email.server";
 import {
-  createRoadmap,
   activateRoadmap,
   archiveActiveRoadmap,
+  createRoadmapFromSkeleton,
+  persistWeekDetail,
 } from "@/lib/actions/roadmap-persistence.server";
 import type {
   OpportunityCandidate,
@@ -423,8 +424,47 @@ export const buildRoadmapForOpportunity = createServerFn({ method: "POST" })
       const profile = dnaRow.data.normalized_signals as unknown as NormalizedProfile;
       const opportunityPackage = opportunity.candidate as unknown as OpportunityPackage;
 
-      const plan = await generateRoadmapPlan(profile, opportunityPackage);
-      await createRoadmap(supabase, user.id, data.opportunityId, plan, "active");
+      // Two Gemini calls, not one: a lightweight skeleton (the long-term
+      // shape, no task detail) persisted immediately, then Week 1's real
+      // detail generated right away so the founder never lands on an
+      // empty active week. Every week after Week 1 is generated later,
+      // just-in-time, when it actually unlocks (see updateTaskStatus) —
+      // never all up front.
+      const skeleton = await generateRoadmapSkeleton(profile, opportunityPackage);
+      const { firstWeek } = await createRoadmapFromSkeleton(
+        supabase,
+        user.id,
+        data.opportunityId,
+        skeleton,
+      );
+
+      // The roadmap itself (skeleton, phases, weeks) already exists and is
+      // active at this point — that's the real, meaningful success. If
+      // generating Week 1's detail specifically fails, don't throw and
+      // undo all of that from the founder's perspective: let them land on
+      // the roadmap page, where an active week with no tasks yet is a
+      // known, self-healing state (see generateActiveWeekDetail) rather
+      // than a dead end.
+      try {
+        const weekDetail = await generateWeekDetail(profile, opportunityPackage, {
+          phaseTitle: firstWeek.phaseTitle,
+          phaseDescription: firstWeek.phaseDescription,
+          weekTitle: firstWeek.title,
+          weekObjective: firstWeek.objective,
+          weekNumber: firstWeek.weekNumber,
+          priorWeek: null,
+        });
+        await persistWeekDetail(
+          supabase,
+          user.id,
+          firstWeek.id,
+          firstWeek.phaseId,
+          weekDetail,
+          new Date(),
+        );
+      } catch (err) {
+        console.error("[roadmap] week 1 detail generation failed after skeleton succeeded:", err);
+      }
     }
 
     if (user.email) void sendRoadmapReadyEmail(user.email, opportunity.title);

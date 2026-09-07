@@ -170,6 +170,65 @@ export const RoadmapPlanSchema = z.object({
 });
 export type RoadmapPlan = z.infer<typeof RoadmapPlanSchema>;
 
+// ============================================================
+// JIT (just-in-time) roadmap generation — a SKELETON (phases + weeks,
+// titles/objectives only, no tasks) covering the founder's realistic
+// long-term path, generated once. Only the currently-active week's full
+// detail (mission, tasks, mistakes to avoid, evidence required, success
+// threshold) is ever generated — on unlock, not up front — so a 40-52
+// week roadmap costs one lightweight call plus one small call per week
+// actually reached, not one giant call describing months of work nobody
+// may ever act on. See roadmap-generation.ts.
+// ============================================================
+
+export const RoadmapWeekSkeletonSchema = z.object({
+  weekNumber: z.number().int().min(1).describe("1-based order within this phase."),
+  title: z.string(),
+  objective: z
+    .string()
+    .describe("One sentence: what this week is for, shown before it unlocks — no task detail yet."),
+});
+export type RoadmapWeekSkeletonPlan = z.infer<typeof RoadmapWeekSkeletonSchema>;
+
+export const RoadmapPhaseSkeletonSchema = z.object({
+  key: z
+    .enum(["understand", "explore", "validate", "build", "launch", "improve"])
+    .describe("Only include phases that genuinely apply to this opportunity."),
+  title: z.string(),
+  description: z.string(),
+  // No tasks nested here (unlike RoadmapPhaseSchema above) — that's what
+  // safely allows far more weeks per phase without approaching Gemini's
+  // structured-output complexity ceiling.
+  weeks: z.array(RoadmapWeekSkeletonSchema).min(1).max(10),
+});
+export type RoadmapPhaseSkeletonPlan = z.infer<typeof RoadmapPhaseSkeletonSchema>;
+
+export const RoadmapSkeletonSchema = z.object({
+  phases: z
+    .array(RoadmapPhaseSkeletonSchema)
+    .min(4)
+    .max(8)
+    .describe("Together should span roughly 40-52 weeks of realistic founder progress."),
+});
+export type RoadmapSkeletonPlan = z.infer<typeof RoadmapSkeletonSchema>;
+
+export const RoadmapWeekDetailSchema = z.object({
+  mission: z
+    .string()
+    .describe(
+      "The founder's concrete mission this week — more specific than the objective shown before unlock.",
+    ),
+  tasks: z.array(RoadmapTaskSchema).min(2).max(5),
+  mistakesToAvoid: z.array(z.string()).min(1).max(3),
+  evidenceRequired: z
+    .string()
+    .describe(
+      "What real-world evidence this week should produce — plain words, or 'None — this is a pure execution week' if there's genuinely nothing to collect.",
+    ),
+  successThreshold: z.string().describe("What 'this week worked' concretely looks like."),
+});
+export type RoadmapWeekDetailPlan = z.infer<typeof RoadmapWeekDetailSchema>;
+
 export const MentorResponseSchema = z.object({
   message: z
     .string()

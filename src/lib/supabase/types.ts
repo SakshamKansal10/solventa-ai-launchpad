@@ -189,6 +189,16 @@ export interface Database {
           unlocked_at: string | null;
           completed_at: string | null;
           created_at: string;
+          /** Populated only once this week's detail has actually been
+           * generated (just-in-time, on unlock) — null for a locked week
+           * that hasn't unlocked yet, or a pre-migration roadmap. */
+          mission: string | null;
+          mistakes_to_avoid: Json | null;
+          evidence_required: string | null;
+          success_threshold: string | null;
+          /** The founder's own short reflection on finishing this week —
+           * the real signal fed into generating the NEXT week's detail. */
+          founder_reflection: string | null;
         };
         Insert: Partial<Database["public"]["Tables"]["roadmap_weeks"]["Row"]> & {
           phase_id: string;
@@ -264,6 +274,39 @@ export interface Database {
           content: string;
         };
         Update: Partial<Database["public"]["Tables"]["mentor_messages"]["Row"]>;
+        Relationships: [];
+      };
+      founder_evidence: {
+        Row: {
+          id: string;
+          user_id: string;
+          opportunity_id: string;
+          category:
+            | "problem"
+            | "customer"
+            | "demand"
+            | "price"
+            | "competition"
+            | "product"
+            | "channel"
+            | "economics";
+          entry_type: "interview" | "note" | "observation";
+          customer_type: string | null;
+          interview_date: string | null;
+          key_quote: string | null;
+          pain_severity: "low" | "medium" | "high" | null;
+          existing_workaround: string | null;
+          willingness_to_pay: "no" | "maybe" | "yes" | null;
+          content: string;
+          created_at: string;
+        };
+        Insert: Partial<Database["public"]["Tables"]["founder_evidence"]["Row"]> & {
+          user_id: string;
+          opportunity_id: string;
+          category: Database["public"]["Tables"]["founder_evidence"]["Row"]["category"];
+          content: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["founder_evidence"]["Row"]>;
         Relationships: [];
       };
       research_cache: {
