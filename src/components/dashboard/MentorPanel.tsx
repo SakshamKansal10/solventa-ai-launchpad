@@ -173,7 +173,7 @@ export function MentorPanel({
                         type="button"
                         onClick={() => handleSend(prompt)}
                         disabled={sending}
-                        className="rounded-xl border border-border px-4 py-2.5 text-left text-[0.85rem] font-medium text-dashboard-body transition-colors hover:border-violet/40 hover:bg-violet/4 disabled:opacity-50"
+                        className="rounded-xl border border-sol-border px-4 py-2.5 text-left text-[0.9rem] font-medium text-dashboard-body transition-colors hover:border-sol-violet/40 hover:bg-sol-violet-mist/40 disabled:opacity-50"
                       >
                         {prompt}
                       </button>
@@ -187,7 +187,7 @@ export function MentorPanel({
                   <div
                     key={i}
                     className={cn(
-                      "max-w-[85%] rounded-2xl px-4 py-2.5 text-[0.88rem] leading-relaxed",
+                      "max-w-[85%] rounded-2xl px-4 py-2.5 text-[0.95rem] leading-relaxed",
                       m.role === "user"
                         ? "ml-auto bg-dashboard-heading text-background"
                         : "bg-secondary text-dashboard-body",

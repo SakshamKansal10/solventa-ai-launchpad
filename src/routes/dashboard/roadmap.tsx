@@ -183,23 +183,23 @@ function TaskRow({
       <button
         type="button"
         onClick={() => setExpanded(true)}
-        className="flex w-full items-center gap-3 rounded-xl border border-transparent px-4 py-3 text-left transition-colors hover:border-border/60 hover:bg-card/60"
+        className="flex w-full items-center gap-3 rounded-xl border border-transparent px-4 py-3 text-left transition-colors hover:border-sol-border hover:bg-sol-ivory"
       >
-        <span className="flex size-5 shrink-0 items-center justify-center rounded-full bg-econ-green-active text-white">
+        <span className="flex size-5 shrink-0 items-center justify-center rounded-full bg-sol-champagne text-white">
           <Check className="size-3" aria-hidden="true" />
         </span>
         <span className="min-w-0 flex-1">
-          <span className="block truncate text-[0.88rem] font-medium text-foreground">
+          <span className="block truncate text-[0.95rem] font-medium text-sol-ink">
             {task.what}
           </span>
-          <span className="text-[0.72rem] text-muted-foreground">Completed</span>
+          <span className="text-[0.72rem] text-sol-muted">Completed</span>
         </span>
       </button>
     );
   }
 
   return (
-    <div className="rounded-xl border border-border/60 bg-card/60 p-4">
+    <div className="rounded-xl border border-sol-border bg-sol-surface p-4">
       <div className="flex items-start gap-3">
         <button
           type="button"
@@ -207,7 +207,7 @@ function TaskRow({
           disabled={busy}
           className={cn(
             "mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full border transition-colors",
-            isDone ? "border-econ-green-active bg-econ-green-active text-white" : "border-border",
+            isDone ? "border-sol-champagne bg-sol-champagne text-white" : "border-sol-border",
           )}
           aria-label={isDone ? "Mark as not done" : "Mark complete"}
         >
@@ -219,46 +219,46 @@ function TaskRow({
             onClick={() => setExpanded((v) => !v)}
             className="flex flex-wrap items-center gap-2 text-left"
           >
-            <p className="text-[0.92rem] font-medium text-foreground">{task.what}</p>
+            <p className="text-[0.95rem] font-medium text-sol-ink">{task.what}</p>
             {!task.required && (
-              <span className="rounded-full bg-secondary px-2 py-0.5 text-[0.68rem] font-medium text-muted-foreground">
+              <span className="rounded-full bg-sol-ivory px-2 py-0.5 text-[0.68rem] font-medium text-sol-muted">
                 Optional
               </span>
             )}
           </button>
           {!expanded && (
-            <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-[0.76rem] text-muted-foreground">
+            <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-[0.78rem] text-sol-secondary">
               {task.time_estimate && <span>{task.time_estimate}</span>}
               {task.required && <span>Required</span>}
               {task.deadline && <span>Due {task.deadline}</span>}
             </div>
           )}
           {task.status === "blocked" && (
-            <p className="mt-1 text-[0.78rem] text-destructive">
+            <p className="mt-1 text-[0.8rem] text-sol-danger">
               Blocked — Sol has replanned what's ahead.
             </p>
           )}
           {task.depends_on && isDisplayableDependency(task.depends_on) && (
-            <p className="mt-1 text-[0.76rem] text-muted-foreground">
-              Depends on: <span className="text-foreground">{task.depends_on}</span>
+            <p className="mt-1 text-[0.78rem] text-sol-secondary">
+              Depends on: <span className="text-sol-ink">{task.depends_on}</span>
             </p>
           )}
           {expanded && (
-            <div className="mt-3 flex flex-col gap-3 text-[0.85rem] text-muted-foreground">
+            <div className="mt-3 flex flex-col gap-3 text-[0.95rem] text-sol-secondary">
               <div>
-                <p className="text-[0.7rem] font-semibold uppercase tracking-wide text-muted-foreground/80">
+                <p className="text-[0.7rem] font-semibold uppercase tracking-wide text-sol-muted">
                   Why this matters
                 </p>
-                <p className="mt-1 leading-relaxed text-foreground">{task.why}</p>
+                <p className="mt-1 leading-relaxed text-sol-ink">{task.why}</p>
               </div>
               <div>
-                <p className="text-[0.7rem] font-semibold uppercase tracking-wide text-muted-foreground/80">
+                <p className="text-[0.7rem] font-semibold uppercase tracking-wide text-sol-muted">
                   How
                 </p>
                 <ol className="mt-1.5 flex flex-col gap-1">
                   {splitHowSteps(task.how).map((step, i) => (
-                    <li key={i} className="flex gap-2 leading-relaxed text-foreground">
-                      <span className="shrink-0 text-econ-green-active">{i + 1}.</span>
+                    <li key={i} className="flex gap-2 leading-relaxed text-sol-ink">
+                      <span className="shrink-0 text-sol-violet-deep">{i + 1}.</span>
                       {step}
                     </li>
                   ))}
@@ -266,17 +266,17 @@ function TaskRow({
               </div>
               {task.resource && (
                 <div>
-                  <p className="text-[0.7rem] font-semibold uppercase tracking-wide text-muted-foreground/80">
+                  <p className="text-[0.7rem] font-semibold uppercase tracking-wide text-sol-muted">
                     Resource
                   </p>
-                  <p className="mt-1 text-foreground">{task.resource}</p>
+                  <p className="mt-1 text-sol-ink">{task.resource}</p>
                 </div>
               )}
               <div>
-                <p className="text-[0.7rem] font-semibold uppercase tracking-wide text-muted-foreground/80">
+                <p className="text-[0.7rem] font-semibold uppercase tracking-wide text-sol-muted">
                   Done when
                 </p>
-                <p className="mt-1 text-foreground">{task.done_when}</p>
+                <p className="mt-1 text-sol-ink">{task.done_when}</p>
               </div>
               <div className="flex items-center gap-3 text-[0.78rem]">
                 {task.time_estimate && <span>{task.time_estimate}</span>}
@@ -290,8 +290,8 @@ function TaskRow({
                   className={cn(
                     "self-start rounded-full px-3.5 py-1.5 text-[0.72rem] font-semibold uppercase tracking-[0.06em] transition-colors",
                     isDone
-                      ? "bg-secondary text-muted-foreground"
-                      : "bg-econ-green-active text-white hover:bg-econ-green-deep",
+                      ? "bg-sol-ivory text-sol-muted"
+                      : "bg-sol-navy text-white hover:bg-sol-navy-soft",
                   )}
                 >
                   {busy && (
@@ -303,7 +303,7 @@ function TaskRow({
                   <button
                     type="button"
                     onClick={() => setShowBlocker((v) => !v)}
-                    className="self-start text-[0.8rem] font-medium text-econ-green-active hover:underline"
+                    className="self-start text-[0.82rem] font-medium text-sol-violet-deep hover:underline"
                   >
                     I'm stuck on this
                   </button>
@@ -312,8 +312,8 @@ function TaskRow({
             </div>
           )}
           {showBlocker && (
-            <div className="mt-3 rounded-lg border border-border/60 bg-background p-3">
-              <p className="text-[0.82rem] font-medium text-foreground">What got in the way?</p>
+            <div className="mt-3 rounded-lg border border-sol-border bg-sol-page p-3">
+              <p className="text-[0.82rem] font-medium text-sol-ink">What got in the way?</p>
               <div className="mt-2 flex flex-wrap gap-1.5">
                 {BLOCKER_REASONS.map((r) => (
                   <button
@@ -323,8 +323,8 @@ function TaskRow({
                     className={cn(
                       "rounded-full border px-2.5 py-1 text-[0.76rem]",
                       blockerReason === r.value
-                        ? "border-econ-green-active bg-econ-green-active/10 text-econ-green-deep"
-                        : "border-border text-muted-foreground",
+                        ? "border-sol-violet bg-sol-violet-mist text-sol-violet-deep"
+                        : "border-sol-border text-sol-secondary",
                     )}
                   >
                     {r.label}
@@ -335,7 +335,7 @@ function TaskRow({
                 value={blockerNote}
                 onChange={(e) => setBlockerNote(e.target.value)}
                 placeholder="Anything else Sol should know? (optional)"
-                className="mt-2 min-h-[60px] resize-none text-[0.85rem]"
+                className="mt-2 min-h-[60px] resize-none text-[0.9rem]"
               />
               <Button
                 size="sm"
@@ -349,11 +349,11 @@ function TaskRow({
             </div>
           )}
           {showReflectionPrompt && (
-            <div className="mt-3 rounded-lg border border-econ-green-active/30 bg-econ-green-soft/30 p-3">
-              <p className="text-[0.82rem] font-medium text-foreground">
+            <div className="mt-3 rounded-lg border border-sol-champagne/30 bg-sol-champagne-soft/40 p-3">
+              <p className="text-[0.82rem] font-medium text-sol-ink">
                 This finishes the week. How did it actually go?
               </p>
-              <p className="mt-0.5 text-[0.74rem] text-muted-foreground">
+              <p className="mt-0.5 text-[0.76rem] text-sol-secondary">
                 Optional — Sol uses this to plan next week around what really happened, not just the
                 original plan.
               </p>
@@ -362,7 +362,7 @@ function TaskRow({
                 value={reflection}
                 onChange={(e) => setReflection(e.target.value)}
                 placeholder="e.g. Only got 3 of the 8 interviews done, but the ones I did were promising…"
-                className="mt-2 min-h-[60px] resize-none text-[0.85rem]"
+                className="mt-2 min-h-[60px] resize-none text-[0.9rem]"
               />
               <div className="mt-2 flex items-center gap-3">
                 <Button size="sm" onClick={finishWeek}>
@@ -371,7 +371,7 @@ function TaskRow({
                 <button
                   type="button"
                   onClick={() => setShowReflectionPrompt(false)}
-                  className="text-[0.8rem] font-medium text-muted-foreground hover:text-foreground"
+                  className="text-[0.82rem] font-medium text-sol-secondary hover:text-sol-ink"
                 >
                   Cancel
                 </button>
@@ -409,9 +409,9 @@ function GeneratingWeekState({ weekId, onDone }: { weekId: string; onDone: () =>
   return (
     <div className="mt-3 pl-[1.85rem]">
       {mutation.isError ? (
-        <div className="flex items-center gap-3 rounded-lg border border-border/60 bg-background p-3">
-          <AlertTriangle className="size-4 shrink-0 text-muted-foreground" aria-hidden="true" />
-          <p className="flex-1 text-[0.82rem] text-muted-foreground">
+        <div className="flex items-center gap-3 rounded-lg border border-sol-border bg-sol-page p-3">
+          <AlertTriangle className="size-4 shrink-0 text-sol-muted" aria-hidden="true" />
+          <p className="flex-1 text-[0.85rem] text-sol-secondary">
             Sol couldn't prepare this week — try again.
           </p>
           <Button size="sm" variant="outline" onClick={() => mutation.mutate()}>
@@ -450,13 +450,13 @@ function WeekBlock({
 
   if (week.status === "locked") {
     return (
-      <div className="flex items-start gap-3 rounded-xl border border-dashed border-border/70 bg-secondary/30 px-4 py-3.5 opacity-70">
-        <Lock className="mt-0.5 size-4 shrink-0 text-muted-foreground" aria-hidden="true" />
+      <div className="flex items-start gap-3 rounded-xl border border-dashed border-sol-border px-4 py-3.5 opacity-70">
+        <Lock className="mt-0.5 size-4 shrink-0 text-sol-muted" aria-hidden="true" />
         <div>
-          <p className="text-[0.85rem] font-medium text-muted-foreground">
+          <p className="text-[0.85rem] font-medium text-sol-secondary">
             Week {week.week_number} — {week.title}
           </p>
-          <p className="mt-0.5 text-[0.78rem] text-muted-foreground/80">{week.objective}</p>
+          <p className="mt-0.5 text-[0.78rem] text-sol-muted">{week.objective}</p>
         </div>
       </div>
     );
@@ -467,8 +467,8 @@ function WeekBlock({
       className={cn(
         "rounded-xl border px-4 py-3.5",
         week.status === "active"
-          ? "border-econ-green-active/30 bg-econ-green-soft/30"
-          : "border-border/60 bg-card/40",
+          ? "border-sol-violet/30 bg-sol-violet-mist/50"
+          : "border-sol-border bg-sol-surface",
       )}
     >
       <button
@@ -478,20 +478,20 @@ function WeekBlock({
       >
         <div className="flex items-center gap-2.5">
           {week.status === "completed" ? (
-            <span className="flex size-5 shrink-0 items-center justify-center rounded-full bg-econ-green-active text-white">
+            <span className="flex size-5 shrink-0 items-center justify-center rounded-full bg-sol-champagne text-white">
               <Check className="size-3" aria-hidden="true" />
             </span>
           ) : (
-            <span className="flex size-5 shrink-0 items-center justify-center rounded-full border border-econ-green-active text-[0.65rem] font-semibold text-econ-green-active ring-4 ring-econ-green-active/15">
+            <span className="flex size-5 shrink-0 items-center justify-center rounded-full border border-sol-violet text-[0.65rem] font-semibold text-sol-violet-deep ring-4 ring-sol-violet/15">
               {week.week_number}
             </span>
           )}
           <div>
-            <p className="text-[0.85rem] font-medium text-foreground">
+            <p className="text-[0.85rem] font-medium text-sol-ink">
               Week {week.week_number} — {week.title}
             </p>
             {(!expanded || week.status === "completed") && !stillGenerating && (
-              <p className="text-[0.72rem] text-muted-foreground">
+              <p className="text-[0.72rem] text-sol-muted">
                 {doneCount}/{week.tasks.length} done
               </p>
             )}
@@ -499,7 +499,7 @@ function WeekBlock({
         </div>
         <ChevronDown
           className={cn(
-            "size-4 shrink-0 text-muted-foreground transition-transform",
+            "size-4 shrink-0 text-sol-muted transition-transform",
             expanded && "rotate-180",
           )}
           aria-hidden="true"
@@ -507,39 +507,37 @@ function WeekBlock({
       </button>
       {expanded && (
         <>
-          <p className="mt-2 pl-[1.85rem] text-[0.78rem] text-muted-foreground">{week.objective}</p>
+          <p className="mt-2 pl-[1.85rem] text-[0.78rem] text-sol-secondary">{week.objective}</p>
 
           {stillGenerating && <GeneratingWeekState weekId={week.id} onDone={onWeekReady} />}
 
           {!stillGenerating && week.mission && week.status === "active" && (
             <div className="mt-3 flex flex-col gap-2.5 pl-0 sm:pl-[1.85rem]">
-              <div className="rounded-lg border border-gold/25 bg-gold/[0.06] px-3.5 py-3">
-                <p className="flex items-center gap-1.5 text-[0.68rem] font-semibold uppercase tracking-wide text-gold">
+              <div className="rounded-lg border border-sol-champagne/30 bg-sol-champagne-soft/40 px-3.5 py-3">
+                <p className="flex items-center gap-1.5 text-[0.68rem] font-semibold uppercase tracking-wide text-sol-champagne-deep">
                   <Target className="size-3.5" aria-hidden="true" />
                   Mission
                 </p>
-                <p className="mt-1 text-[0.85rem] leading-relaxed text-foreground">
-                  {week.mission}
-                </p>
+                <p className="mt-1 text-[0.95rem] leading-relaxed text-sol-ink">{week.mission}</p>
               </div>
               {(week.evidence_required || week.success_threshold) && (
                 <div className="grid gap-2.5 sm:grid-cols-2">
                   {week.evidence_required && (
-                    <div className="rounded-lg border border-border/60 bg-card/60 px-3.5 py-3">
-                      <p className="text-[0.66rem] font-semibold uppercase tracking-wide text-muted-foreground">
+                    <div className="rounded-lg border border-sol-border bg-sol-surface px-3.5 py-3">
+                      <p className="text-[0.66rem] font-semibold uppercase tracking-wide text-sol-muted">
                         Evidence required
                       </p>
-                      <p className="mt-1 text-[0.8rem] leading-relaxed text-foreground">
+                      <p className="mt-1 text-[0.9rem] leading-relaxed text-sol-ink">
                         {week.evidence_required}
                       </p>
                     </div>
                   )}
                   {week.success_threshold && (
-                    <div className="rounded-lg border border-border/60 bg-card/60 px-3.5 py-3">
-                      <p className="text-[0.66rem] font-semibold uppercase tracking-wide text-muted-foreground">
+                    <div className="rounded-lg border border-sol-border bg-sol-surface px-3.5 py-3">
+                      <p className="text-[0.66rem] font-semibold uppercase tracking-wide text-sol-muted">
                         This week worked if…
                       </p>
-                      <p className="mt-1 text-[0.8rem] leading-relaxed text-foreground">
+                      <p className="mt-1 text-[0.9rem] leading-relaxed text-sol-ink">
                         {week.success_threshold}
                       </p>
                     </div>
@@ -558,7 +556,7 @@ function WeekBlock({
                         key={i}
                         className="w-[220px] shrink-0 rounded-xl border border-sol-champagne/30 bg-sol-ivory px-3.5 py-3"
                       >
-                        <p className="text-[0.8rem] leading-relaxed text-foreground">{m}</p>
+                        <p className="text-[0.9rem] leading-relaxed text-sol-ink">{m}</p>
                       </div>
                     ))}
                   </div>
@@ -583,11 +581,11 @@ function WeekBlock({
           )}
 
           {week.status === "completed" && week.founder_reflection && (
-            <div className="mt-3 rounded-lg border border-border/60 bg-card/50 px-3.5 py-3 sm:ml-[1.85rem]">
-              <p className="text-[0.66rem] font-semibold uppercase tracking-wide text-muted-foreground">
+            <div className="mt-3 rounded-lg border border-sol-border bg-sol-surface px-3.5 py-3 sm:ml-[1.85rem]">
+              <p className="text-[0.66rem] font-semibold uppercase tracking-wide text-sol-muted">
                 Your reflection
               </p>
-              <p className="mt-1 text-[0.82rem] italic leading-relaxed text-foreground">
+              <p className="mt-1 text-[0.9rem] italic leading-relaxed text-sol-ink">
                 “{week.founder_reflection}”
               </p>
             </div>
@@ -608,9 +606,9 @@ function AskSolStageButton() {
     <button
       type="button"
       onClick={openMentor}
-      className="flex items-center justify-center gap-2 rounded-xl border border-violet/25 bg-violet/5 px-4 py-3 text-[0.82rem] font-medium text-primary transition-colors hover:bg-violet/9"
+      className="flex items-center justify-center gap-2 rounded-xl border border-sol-violet/25 bg-sol-violet-mist/50 px-4 py-3 text-[0.85rem] font-medium text-sol-violet-deep transition-colors hover:bg-sol-violet-mist"
     >
-      <Sparkles className="size-4 text-violet" aria-hidden="true" />
+      <Sparkles className="size-4 text-sol-violet" aria-hidden="true" />
       Ask Sol about this stage
     </button>
   );
@@ -705,10 +703,10 @@ function RoadmapPage() {
   if (!query.data) {
     return (
       <DashboardShell hasRoadmap={false}>
-        <div className="mt-10 rounded-[1.75rem] border border-border/70 bg-card/80 px-8 py-12 text-center">
-          <MapPin className="mx-auto size-8 text-accent" aria-hidden="true" />
-          <h2 className="mt-4 font-display text-xl font-semibold text-primary">No roadmap yet.</h2>
-          <p className="mx-auto mt-2 max-w-md text-[0.9rem] text-muted-foreground">
+        <div className="mt-10 rounded-[24px] border border-sol-border bg-sol-surface px-8 py-12 text-center">
+          <MapPin className="mx-auto size-8 text-sol-champagne-deep" aria-hidden="true" />
+          <h2 className="mt-4 font-display text-xl font-semibold text-sol-ink">No roadmap yet.</h2>
+          <p className="mx-auto mt-2 max-w-md text-[0.95rem] text-sol-secondary">
             Select an opportunity from your dashboard and Sol will build a roadmap around it.
           </p>
           <Button asChild className="mt-6">
@@ -776,30 +774,33 @@ function RoadmapPage() {
       opportunityId={roadmap.opportunity_id}
       opportunityTitle={opportunity?.title ?? null}
       hasRoadmap
+      pageTitle="Roadmap"
     >
       {/* ===== TOP: EXECUTION ROADMAP HEADER ===== */}
-      <p className="eyebrow text-econ-green-active">Execution Roadmap</p>
-      <h1 className="mt-2 font-display text-[clamp(1.9rem,3.4vw,2.5rem)] font-semibold text-primary">
+      <p className="text-[12px] font-semibold uppercase tracking-[0.12em] text-sol-champagne-deep">
+        Execution Roadmap
+      </p>
+      <h1 className="mt-2 font-display text-[clamp(1.9rem,3.4vw,2.5rem)] font-semibold text-sol-ink">
         {opportunity?.title ?? "Your Roadmap"}
       </h1>
-      <p className="mt-2 max-w-xl text-[0.95rem] text-muted-foreground">
+      <p className="mt-2 max-w-xl text-[0.98rem] text-sol-secondary">
         {founderSummary
           ? `Built around your ${founderSummary.weeklyHours || "available"} hrs/week and ${formatCompactMoney(founderSummary.capitalAmount, founderSummary.currency)} starting capital.`
           : (opportunity?.one_liner ?? "Your personalized execution plan.")}
       </p>
 
-      <div className="mt-6 grid grid-cols-2 gap-px overflow-hidden rounded-2xl border border-border/70 bg-border/70 sm:grid-cols-4">
+      <div className="mt-6 grid grid-cols-2 gap-px overflow-hidden rounded-2xl border border-sol-border bg-sol-border sm:grid-cols-4">
         {[
           { label: "Phase", value: `${effectiveCurrentIndex + 1} / ${phasesWithTasks.length}` },
           { label: "Progress", value: `${overallProgress}%` },
           { label: "This Week", value: `${dueThisWeek} task${dueThisWeek === 1 ? "" : "s"}` },
           { label: "Estimated Path", value: `~${estimatedWeeks} wks` },
         ].map((cell) => (
-          <div key={cell.label} className="bg-card px-5 py-4">
-            <p className="text-[0.62rem] font-semibold uppercase tracking-[0.1em] text-muted-foreground">
+          <div key={cell.label} className="bg-sol-surface px-5 py-4">
+            <p className="text-[0.62rem] font-semibold uppercase tracking-[0.1em] text-sol-muted">
               {cell.label}
             </p>
-            <p className="mt-1 font-display text-[1.35rem] font-semibold text-primary">
+            <p className="mt-1 font-display text-[1.35rem] font-semibold text-sol-ink">
               {cell.value}
             </p>
           </div>
@@ -807,9 +808,9 @@ function RoadmapPage() {
       </div>
 
       {nextTask && (
-        <div className="mt-4 flex items-center gap-2 text-[0.82rem] text-muted-foreground">
-          <span className="size-1.5 shrink-0 rounded-full bg-econ-green-active" />
-          Next milestone: <span className="font-medium text-foreground">{nextTask.what}</span>
+        <div className="mt-4 flex items-center gap-2 text-[0.85rem] text-sol-secondary">
+          <span className="size-1.5 shrink-0 rounded-full bg-sol-champagne" />
+          Next milestone: <span className="font-medium text-sol-ink">{nextTask.what}</span>
         </div>
       )}
 
@@ -830,17 +831,17 @@ function RoadmapPage() {
                   onClick={() => setFocusedIndex(i)}
                   className={cn(
                     "flex items-center gap-3 rounded-lg px-2.5 py-2.5 text-left transition-colors",
-                    isFocused ? "bg-econ-green-soft/40" : "hover:bg-secondary/50",
+                    isFocused ? "bg-sol-violet-mist/60" : "hover:bg-sol-ivory",
                   )}
                 >
                   <span
                     className={cn(
                       "flex size-5 shrink-0 items-center justify-center rounded-full border text-[0.65rem] font-semibold",
                       isDone
-                        ? "border-econ-green-active bg-econ-green-active text-white"
+                        ? "border-sol-champagne bg-sol-champagne text-white"
                         : isTrueCurrent
-                          ? "border-econ-green-active text-econ-green-active ring-4 ring-econ-green-active/15"
-                          : "border-border text-muted-foreground/60",
+                          ? "border-sol-violet text-sol-violet-deep ring-4 ring-sol-violet/15"
+                          : "border-sol-border text-sol-muted",
                     )}
                   >
                     {isDone ? <Check className="size-3" aria-hidden="true" /> : i + 1}
@@ -849,13 +850,13 @@ function RoadmapPage() {
                     <span
                       className={cn(
                         "text-[0.85rem] font-medium leading-tight",
-                        isFocused || isTrueCurrent ? "text-primary" : "text-muted-foreground",
+                        isFocused || isTrueCurrent ? "text-sol-ink" : "text-sol-secondary",
                       )}
                     >
                       {phase.title}
                     </span>
                     {isTrueCurrent && (
-                      <span className="text-[0.65rem] font-semibold uppercase tracking-wide text-econ-green-active">
+                      <span className="text-[0.65rem] font-semibold uppercase tracking-wide text-sol-violet-deep">
                         Current
                       </span>
                     )}
@@ -865,7 +866,7 @@ function RoadmapPage() {
                   <div
                     className={cn(
                       "ml-[1.55rem] h-4 w-px",
-                      isDone ? "bg-econ-green-active/50" : "bg-border",
+                      isDone ? "bg-sol-champagne/50" : "bg-sol-border",
                     )}
                     aria-hidden="true"
                   />
@@ -879,25 +880,23 @@ function RoadmapPage() {
         {activePhase && (
           <section className="hidden lg:block">
             {isViewingNonCurrent && (
-              <div className="mb-3 flex items-center gap-2 rounded-lg bg-secondary/60 px-3 py-2 text-[0.78rem] text-muted-foreground">
+              <div className="mb-3 flex items-center gap-2 rounded-lg bg-sol-ivory px-3 py-2 text-[0.8rem] text-sol-secondary">
                 <ChevronRight className="size-3.5 shrink-0" aria-hidden="true" />
                 Reviewing a {activeIndex < effectiveCurrentIndex ? "completed" : "upcoming"} stage —
                 your current stage stays marked in the rail.
               </div>
             )}
             <div className="flex items-center gap-3">
-              <h2 className="font-display text-xl font-semibold text-primary">
+              <h2 className="font-display text-xl font-semibold text-sol-ink">
                 {activePhase.title}
               </h2>
-              <span className="text-[0.78rem] text-muted-foreground">
+              <span className="text-[0.8rem] text-sol-secondary">
                 {activePhase.tasks.filter((t) => t.status === "done").length}/
                 {activePhase.tasks.length} done
               </span>
             </div>
             {activePhase.description && (
-              <p className="mt-1.5 text-[0.88rem] text-muted-foreground">
-                {activePhase.description}
-              </p>
+              <p className="mt-1.5 text-[0.92rem] text-sol-secondary">{activePhase.description}</p>
             )}
             <div className="mt-4 flex flex-col gap-2.5">
               {activePhase.weeks.length > 0
@@ -930,20 +929,18 @@ function RoadmapPage() {
         {/* ===== DESKTOP: CONTEXT PANEL ===== */}
         <aside className="hidden flex-col gap-4 lg:flex">
           {nextTask && (
-            <div className="rounded-xl border border-border/70 bg-card/60 p-4">
-              <p className="text-[0.68rem] font-semibold uppercase tracking-wide text-muted-foreground">
+            <div className="rounded-xl border border-sol-border bg-sol-surface p-4">
+              <p className="text-[0.68rem] font-semibold uppercase tracking-wide text-sol-muted">
                 Next Milestone
               </p>
-              <p className="mt-1.5 text-[0.85rem] leading-relaxed text-foreground">
-                {nextTask.what}
-              </p>
+              <p className="mt-1.5 text-[0.9rem] leading-relaxed text-sol-ink">{nextTask.what}</p>
             </div>
           )}
-          <div className="rounded-xl border border-border/70 bg-card/60 p-4">
-            <p className="text-[0.68rem] font-semibold uppercase tracking-wide text-muted-foreground">
+          <div className="rounded-xl border border-sol-border bg-sol-surface p-4">
+            <p className="text-[0.68rem] font-semibold uppercase tracking-wide text-sol-muted">
               This Week
             </p>
-            <p className="mt-1.5 text-[0.85rem] text-foreground">
+            <p className="mt-1.5 text-[0.9rem] text-sol-ink">
               {dueThisWeek} task{dueThisWeek === 1 ? "" : "s"} due
             </p>
           </div>
@@ -962,7 +959,7 @@ function RoadmapPage() {
                 className={cn(
                   "rounded-2xl p-5 transition-colors",
                   isCurrent
-                    ? "border border-econ-green-active/30 bg-econ-green-soft/40"
+                    ? "border border-sol-violet/30 bg-sol-violet-mist/60"
                     : "border border-transparent",
                   !isCurrent && !isDone && "opacity-70",
                 )}
@@ -972,21 +969,21 @@ function RoadmapPage() {
                     className={cn(
                       "flex size-6 shrink-0 items-center justify-center rounded-full border text-[0.65rem] font-semibold",
                       isDone
-                        ? "border-econ-green-active bg-econ-green-active text-white"
+                        ? "border-sol-champagne bg-sol-champagne text-white"
                         : isCurrent
-                          ? "border-econ-green-active text-econ-green-active ring-4 ring-econ-green-active/15"
-                          : "border-border text-muted-foreground/60",
+                          ? "border-sol-violet text-sol-violet-deep ring-4 ring-sol-violet/15"
+                          : "border-sol-border text-sol-muted",
                     )}
                   >
                     {isDone ? <Check className="size-3.5" aria-hidden="true" /> : i + 1}
                   </span>
-                  <h2 className="font-display text-lg font-semibold text-primary">{phase.title}</h2>
-                  <span className="text-[0.78rem] text-muted-foreground">
+                  <h2 className="font-display text-lg font-semibold text-sol-ink">{phase.title}</h2>
+                  <span className="text-[0.8rem] text-sol-secondary">
                     {done}/{phase.tasks.length} done
                   </span>
                 </div>
                 {phase.description && (
-                  <p className="mt-1.5 pl-9 text-[0.85rem] text-muted-foreground">
+                  <p className="mt-1.5 pl-9 text-[0.92rem] text-sol-secondary">
                     {phase.description}
                   </p>
                 )}
