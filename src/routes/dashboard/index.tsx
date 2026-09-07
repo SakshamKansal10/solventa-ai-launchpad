@@ -13,11 +13,7 @@ import { PremiumButton } from "@/components/solventia/PremiumButton";
 import { Button } from "@/components/ui/button";
 import { requireAuthLoader } from "@/lib/route-guards";
 import { getDashboard } from "@/lib/actions/dashboard";
-import {
-  exploreMoreOpportunities,
-  switchSelectedOpportunity,
-  buildRoadmapForOpportunity,
-} from "@/lib/actions/opportunities";
+import { exploreMoreOpportunities, switchSelectedOpportunity } from "@/lib/actions/opportunities";
 import { getFitFactors, getWhyReasons } from "@/lib/opportunity-display";
 import { getConstraintWarnings, type FitScoreResult } from "@/lib/profile/scoring";
 import type { OpportunityCandidate, OpportunityPackage } from "@/lib/ai/schemas";
@@ -104,7 +100,6 @@ function DashboardHome() {
   const dashboardQuery = useQuery({ queryKey: ["dashboard"], queryFn: () => getDashboard() });
   const [exploring, setExploring] = useState(false);
   const [switching, setSwitching] = useState<string | null>(null);
-  const [buildingRoadmap, setBuildingRoadmap] = useState(false);
 
   async function refresh() {
     await queryClient.invalidateQueries({ queryKey: ["dashboard"] });
@@ -140,18 +135,11 @@ function DashboardHome() {
     }
   }
 
-  async function handleBuildRoadmap(opportunityId: string) {
-    setBuildingRoadmap(true);
-    try {
-      await buildRoadmapForOpportunity({ data: { opportunityId } });
-      await refresh();
-      navigate({ to: "/dashboard/roadmap" });
-    } catch (err) {
-      console.error("[dashboard] build roadmap failed:", err);
-      toast.error("Sol couldn't build your roadmap right now — try again.");
-    } finally {
-      setBuildingRoadmap(false);
-    }
+  // The actual generation now happens on its own dedicated full-page
+  // route (branded, no dashboard chrome) rather than inline here — see
+  // /dashboard/roadmap/building.
+  function handleBuildRoadmap(opportunityId: string) {
+    navigate({ to: "/dashboard/roadmap/building", search: { opportunityId } });
   }
 
   if (dashboardQuery.isLoading) {
@@ -337,37 +325,24 @@ function DashboardHome() {
           {/* ===== BUILD MY ROADMAP — primary selected but no roadmap yet ===== */}
           {primary && !data.roadmap && (
             <section className="mt-6 rounded-[18px] border border-sol-border bg-sol-surface p-6 text-center sm:p-7">
-              {buildingRoadmap ? (
-                <SolventiaLoadingState
-                  stages={[
-                    `Reading your founder profile for ${primary.title}…`,
-                    "Mapping out the phases ahead…",
-                    "Designing Week 1's mission and tasks…",
-                    "Finalizing your roadmap…",
-                  ]}
-                />
-              ) : (
-                <>
-                  <p className="text-[12px] font-semibold uppercase tracking-[0.12em] text-sol-champagne-deep">
-                    Ready to Execute
-                  </p>
-                  <h3 className="mt-2.5 font-display text-[1.35rem] font-semibold text-sol-ink">
-                    Turn this into a week-by-week plan.
-                  </h3>
-                  <p className="mx-auto mt-2 max-w-md text-[0.92rem] leading-relaxed text-sol-secondary">
-                    Sol designs it around your real time and capital — it unlocks one week at a time
-                    as you make progress.
-                  </p>
-                  <button
-                    type="button"
-                    className="mt-5 inline-flex items-center gap-2 rounded-xl bg-sol-navy px-6 py-3 text-[0.9rem] font-semibold text-white transition-colors hover:bg-sol-navy-soft"
-                    onClick={() => handleBuildRoadmap(primary.id)}
-                  >
-                    Build My Roadmap
-                    <ArrowRight className="size-4 text-sol-champagne" aria-hidden="true" />
-                  </button>
-                </>
-              )}
+              <p className="text-[12px] font-semibold uppercase tracking-[0.12em] text-sol-champagne-deep">
+                Ready to Execute
+              </p>
+              <h3 className="mt-2.5 font-display text-[1.35rem] font-semibold text-sol-ink">
+                Turn this into a week-by-week plan.
+              </h3>
+              <p className="mx-auto mt-2 max-w-md text-[0.92rem] leading-relaxed text-sol-secondary">
+                Sol designs it around your real time and capital — it unlocks one week at a time as
+                you make progress.
+              </p>
+              <button
+                type="button"
+                className="mt-5 inline-flex items-center gap-2 rounded-xl bg-sol-navy px-6 py-3 text-[0.9rem] font-semibold text-white transition-colors hover:bg-sol-navy-soft"
+                onClick={() => handleBuildRoadmap(primary.id)}
+              >
+                Build My Roadmap
+                <ArrowRight className="size-4 text-sol-champagne" aria-hidden="true" />
+              </button>
             </section>
           )}
 

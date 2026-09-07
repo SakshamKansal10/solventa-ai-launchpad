@@ -5,6 +5,8 @@ import { z } from "zod";
 import { requireUser } from "@/lib/supabase/server";
 import { normalizeProfile, type NormalizedProfile } from "@/lib/profile/normalize";
 import { computeFitScore } from "@/lib/profile/scoring";
+import { computeFounderGenome } from "@/lib/profile/founder-genome";
+import { computeAmbitionCalibration } from "@/lib/profile/ambition";
 import { generateIntelligencePackage } from "@/lib/ai/prompts/intelligence-package";
 import { MODEL, AIGenerationError } from "@/lib/ai/gemini.server";
 import { sendIdeasReadyEmail } from "@/lib/actions/email.server";
@@ -66,10 +68,18 @@ export const completeConsultation = createServerFn({ method: "POST" })
       };
     }
 
+    // Deterministic, computed from the same normalized signals the
+    // Founder Genome and Fit Score already read — never inferred by the
+    // AI itself. Handed to it as scale-compatibility CONTEXT below, and
+    // best-effort persisted onto business_dna after the row exists (see
+    // the update after the insert) — never blocks consultation
+    // completion if that persistence isn't available yet.
+    const ambition = computeAmbitionCalibration(normalized, computeFounderGenome(normalized));
+
     const overallStart = Date.now();
     let pkg: Awaited<ReturnType<typeof generateIntelligencePackage>>;
     try {
-      pkg = await generateIntelligencePackage(normalized);
+      pkg = await generateIntelligencePackage(normalized, ambition);
     } catch (err) {
       // Dev-diagnostic detail only — the category never reaches the user,
       // who always sees the same calm "couldn't complete your analysis"
@@ -129,6 +139,35 @@ export const completeConsultation = createServerFn({ method: "POST" })
       };
     }
     if (dnaError || !dnaRow) throw new Error(dnaError?.message ?? "Failed to save Business DNA");
+
+    // Best-effort only — a separate update, not part of the insert above,
+    // specifically so a founder on a database that hasn't had migration
+    // 0006 applied yet still gets a complete, working consultation. The
+    // ambition band already shaped THIS generation via the prompt above
+    // regardless of whether this write succeeds; only its persistence
+    // for later display/history depends on it.
+    try {
+      const { error: ambitionError } = await supabase
+        .from("business_dna")
+        .update({
+          ambition_band: ambition.band,
+          ambition_score: ambition.score,
+          ambition_reason_codes: ambition.reasonCodes as unknown as Json,
+          ambition_scoring_version: ambition.scoringVersion,
+        })
+        .eq("id", dnaRow.id);
+      // Supabase returns { error } rather than throwing — e.g. if
+      // migration 0006 hasn't been applied to this database yet, this
+      // logs and moves on instead of failing the whole consultation.
+      if (ambitionError) {
+        console.error(
+          "[profile] ambition calibration persistence failed (non-fatal):",
+          ambitionError,
+        );
+      }
+    } catch (err) {
+      console.error("[profile] ambition calibration persistence threw (non-fatal):", err);
+    }
 
     const scored = pkg.opportunities
       .map((opp) => ({ opp, score: computeFitScore(normalized, opp.fitSignals) }))

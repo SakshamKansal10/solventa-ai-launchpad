@@ -6,6 +6,8 @@ import { requireReviewerLoader } from "@/lib/route-guards";
 import { requireUser } from "@/lib/supabase/server";
 import { normalizeProfile, type NormalizedProfile } from "@/lib/profile/normalize";
 import { computeFitScore, type FitScoreBreakdown } from "@/lib/profile/scoring";
+import { computeFounderGenome } from "@/lib/profile/founder-genome";
+import { computeAmbitionCalibration } from "@/lib/profile/ambition";
 import { generateIntelligencePackage } from "@/lib/ai/prompts/intelligence-package";
 import { toDisplayFounderDNA } from "@/lib/founder-dna-display";
 import { getWhyReasons } from "@/lib/opportunity-display";
@@ -145,6 +147,10 @@ async function runPipeline(
       normalizeProfile(answers),
     );
 
+    const ambition = await timedStep(telemetry, "Ambition calibration", async () =>
+      computeAmbitionCalibration(profile, computeFounderGenome(profile)),
+    );
+
     const pkg = await timedStep(telemetry, "Gemini — intelligence package (1 call)", async () => {
       if (
         injectFailure === "gemini_timeout" ||
@@ -153,7 +159,7 @@ async function runPipeline(
       ) {
         maybeInjectGeminiFailure(injectFailure);
       }
-      return generateIntelligencePackage(profile);
+      return generateIntelligencePackage(profile, ambition);
     });
 
     const scored = await timedStep(telemetry, "Fit scoring", async () =>

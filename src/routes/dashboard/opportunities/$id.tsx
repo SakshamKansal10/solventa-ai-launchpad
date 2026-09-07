@@ -15,7 +15,6 @@ import {
   refreshMarketEvidence,
   submitIdeaFeedback,
   switchSelectedOpportunity,
-  buildRoadmapForOpportunity,
 } from "@/lib/actions/opportunities";
 import { toDisplayDetail, getFitFactors } from "@/lib/opportunity-display";
 import type { OpportunityPackage, OpportunityDetail, MarketEvidenceItem } from "@/lib/ai/schemas";
@@ -160,18 +159,10 @@ function OpportunityDetailPage() {
     }
   }
 
-  async function buildRoadmap() {
-    setBusy("build-roadmap");
-    try {
-      await buildRoadmapForOpportunity({ data: { opportunityId: id } });
-      await queryClient.invalidateQueries({ queryKey: ["dashboard"] });
-      navigate({ to: "/dashboard/roadmap" });
-    } catch (err) {
-      console.error("[opportunity] build roadmap failed:", err);
-      toast.error("Sol couldn't build your roadmap right now — try again.");
-    } finally {
-      setBusy(null);
-    }
+  // Generation itself happens on its own dedicated full-page route, not
+  // inline here — see /dashboard/roadmap/building.
+  function buildRoadmap() {
+    navigate({ to: "/dashboard/roadmap/building", search: { opportunityId: id } });
   }
 
   if (query.isLoading) {
@@ -261,12 +252,8 @@ function OpportunityDetailPage() {
           <button
             type="button"
             onClick={buildRoadmap}
-            disabled={busy === "build-roadmap"}
-            className="inline-flex items-center gap-2 rounded-xl bg-sol-navy px-5 py-2.5 text-[0.85rem] font-semibold text-white transition-colors hover:bg-sol-navy-soft disabled:opacity-60"
+            className="inline-flex items-center gap-2 rounded-xl bg-sol-navy px-5 py-2.5 text-[0.85rem] font-semibold text-white transition-colors hover:bg-sol-navy-soft"
           >
-            {busy === "build-roadmap" && (
-              <Loader2 className="size-4 animate-spin" aria-hidden="true" />
-            )}
             Build My Roadmap
             <ArrowRight className="size-4 text-sol-champagne" aria-hidden="true" />
           </button>
@@ -528,28 +515,20 @@ function OpportunityDetailPage() {
       </section>
 
       <div className="mt-8 flex flex-col items-center gap-3 text-center">
-        {isSelected && busy === "build-roadmap" ? (
-          <SolventiaLoadingState
-            message={`Sol is building your week-by-week roadmap for ${candidate.title}…`}
-          />
-        ) : (
-          <>
-            <p className="text-[0.85rem] text-sol-secondary">
-              {isSelected
-                ? "This is your primary direction — build a roadmap to start executing."
-                : "Ready to commit to this opportunity?"}
-            </p>
-            {isSelected && (
-              <button
-                type="button"
-                onClick={buildRoadmap}
-                className="inline-flex items-center gap-2 rounded-xl bg-sol-navy px-6 py-3.5 text-[0.92rem] font-semibold text-white transition-colors hover:bg-sol-navy-soft"
-              >
-                Build My Roadmap
-                <ArrowRight className="size-4 text-sol-champagne" aria-hidden="true" />
-              </button>
-            )}
-          </>
+        <p className="text-[0.85rem] text-sol-secondary">
+          {isSelected
+            ? "This is your primary direction — build a roadmap to start executing."
+            : "Ready to commit to this opportunity?"}
+        </p>
+        {isSelected && (
+          <button
+            type="button"
+            onClick={buildRoadmap}
+            className="inline-flex items-center gap-2 rounded-xl bg-sol-navy px-6 py-3.5 text-[0.92rem] font-semibold text-white transition-colors hover:bg-sol-navy-soft"
+          >
+            Build My Roadmap
+            <ArrowRight className="size-4 text-sol-champagne" aria-hidden="true" />
+          </button>
         )}
         {!isSelected && (
           <PremiumButton

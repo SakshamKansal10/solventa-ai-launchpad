@@ -4,6 +4,8 @@ import { z } from "zod";
 
 import { normalizeProfile, type NormalizedProfile } from "@/lib/profile/normalize";
 import { computeFitScore, type FitScoreBreakdown } from "@/lib/profile/scoring";
+import { computeFounderGenome } from "@/lib/profile/founder-genome";
+import { computeAmbitionCalibration } from "@/lib/profile/ambition";
 import { generateIntelligencePackage } from "@/lib/ai/prompts/intelligence-package";
 import { generateRoadmapPlan } from "@/lib/ai/prompts/roadmap-generation";
 import { researchMarketEvidence } from "@/lib/ai/prompts/market-research";
@@ -169,8 +171,12 @@ async function runAnalysisCore(answersRaw: Record<string, unknown>): Promise<Pub
       normalizeProfile(answers),
     );
 
+    const ambition = await timedStep(telemetry, "Ambition calibration", async () =>
+      computeAmbitionCalibration(profile, computeFounderGenome(profile)),
+    );
+
     const pkg = await timedStep(telemetry, "Gemini — intelligence package (1 call)", async () =>
-      generateIntelligencePackage(profile),
+      generateIntelligencePackage(profile, ambition),
     );
 
     const scored = await timedStep(telemetry, "Fit scoring", async () =>

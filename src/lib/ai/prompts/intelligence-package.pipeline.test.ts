@@ -41,6 +41,8 @@ vi.mock("@google/genai", () => {
 import { ApiError } from "@google/genai";
 import { generateIntelligencePackage } from "@/lib/ai/prompts/intelligence-package";
 import { normalizeProfile } from "@/lib/profile/normalize";
+import { computeFounderGenome } from "@/lib/profile/founder-genome";
+import { computeAmbitionCalibration } from "@/lib/profile/ambition";
 import { FIXTURE_PROFILE_ANSWERS } from "@/lib/ai/fixtures/intelligence-package.fixture";
 
 type OnboardingAnswers = Parameters<typeof normalizeProfile>[0];
@@ -56,10 +58,11 @@ describe("Stage 7 generation call path (mocked Gemini, no live network call)", (
     });
 
     const profile = normalizeProfile(FIXTURE_PROFILE_ANSWERS as unknown as OnboardingAnswers);
+    const ambition = computeAmbitionCalibration(profile, computeFounderGenome(profile));
 
     let caught: unknown;
     try {
-      await generateIntelligencePackage(profile);
+      await generateIntelligencePackage(profile, ambition);
     } catch (err) {
       caught = err;
     }
@@ -80,10 +83,11 @@ describe("Stage 7 generation call path (mocked Gemini, no live network call)", (
     });
 
     const profile = normalizeProfile(FIXTURE_PROFILE_ANSWERS as unknown as OnboardingAnswers);
+    const ambition = computeAmbitionCalibration(profile, computeFounderGenome(profile));
 
     let caught: unknown;
     try {
-      await generateIntelligencePackage(profile);
+      await generateIntelligencePackage(profile, ambition);
     } catch (err) {
       caught = err;
     }
@@ -100,7 +104,8 @@ describe("Stage 7 generation call path (mocked Gemini, no live network call)", (
     });
 
     const profile = normalizeProfile(FIXTURE_PROFILE_ANSWERS as unknown as OnboardingAnswers);
-    await generateIntelligencePackage(profile).catch(() => {});
+    const ambition = computeAmbitionCalibration(profile, computeFounderGenome(profile));
+    await generateIntelligencePackage(profile, ambition).catch(() => {});
 
     expect(generateContentMock).toHaveBeenCalledTimes(1);
     const requestArg = generateContentMock.mock.calls[0][0] as {
@@ -126,7 +131,8 @@ describe("Stage 7 generation call path (mocked Gemini, no live network call)", (
       throw new ApiError({ message: "Request contains an invalid argument.", status: 400 });
     });
     const profile = normalizeProfile(FIXTURE_PROFILE_ANSWERS as unknown as OnboardingAnswers);
-    await generateIntelligencePackage(profile).catch(() => {});
+    const ambition = computeAmbitionCalibration(profile, computeFounderGenome(profile));
+    await generateIntelligencePackage(profile, ambition).catch(() => {});
 
     const requestArg = generateContentMock.mock.calls[0][0] as {
       model: string;
@@ -249,7 +255,8 @@ describe("Stage 7 generation call path (mocked Gemini, no live network call)", (
     }));
 
     const profile = normalizeProfile(FIXTURE_PROFILE_ANSWERS as unknown as OnboardingAnswers);
-    const pkg = await generateIntelligencePackage(profile);
+    const ambition = computeAmbitionCalibration(profile, computeFounderGenome(profile));
+    const pkg = await generateIntelligencePackage(profile, ambition);
 
     expect(generateContentMock).toHaveBeenCalledTimes(1);
     expect(pkg.opportunities).toHaveLength(3);

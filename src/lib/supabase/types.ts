@@ -37,6 +37,13 @@ export interface Database {
           initial_ai_calls: number | null;
           generation_duration_ms: number | null;
           prompt_version: string | null;
+          // Added by migration 0006_ambition_calibration.sql — nullable,
+          // since older rows (and any row on a database that hasn't had
+          // that migration applied yet) simply have no calibration.
+          ambition_band: "A" | "B" | "C" | "D" | "E" | null;
+          ambition_score: number | null;
+          ambition_reason_codes: Json | null;
+          ambition_scoring_version: number | null;
           created_at: string;
           updated_at: string;
         };
