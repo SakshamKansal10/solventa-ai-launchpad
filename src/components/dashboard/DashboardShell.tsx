@@ -9,6 +9,7 @@ import {
   Lock,
   LogOut,
   Map,
+  MessageSquarePlus,
   Menu,
   Settings,
   Target,
@@ -24,6 +25,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { MentorPanel } from "@/components/dashboard/MentorPanel";
 import { NotificationBell } from "@/components/dashboard/NotificationBell";
+import { FeedbackDialog } from "@/components/dashboard/FeedbackDialog";
 import { getCurrentUser, signOut } from "@/lib/actions/auth";
 import { cn } from "@/lib/utils";
 
@@ -185,11 +187,13 @@ function SidebarContent({
   hasRoadmap,
   onNavigate,
   onSignOut,
+  onOpenFeedback,
 }: {
   opportunityId: string | null;
   hasRoadmap?: boolean;
   onNavigate: () => void;
   onSignOut: () => void;
+  onOpenFeedback: () => void;
 }) {
   const navItems = useNavItems(opportunityId, hasRoadmap);
   const currentPath = useRouterState({ select: (s) => s.location.pathname });
@@ -253,6 +257,10 @@ function SidebarContent({
                 Settings
               </Link>
             </DropdownMenuItem>
+            <DropdownMenuItem onClick={onOpenFeedback} className="cursor-pointer">
+              <MessageSquarePlus className="size-4" aria-hidden="true" />
+              Share Feedback
+            </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={onSignOut} className="cursor-pointer">
               <LogOut className="size-4" aria-hidden="true" />
@@ -274,6 +282,7 @@ export function DashboardShell({
 }: DashboardShellProps) {
   const [mentorOpen, setMentorOpen] = useState(false);
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
+  const [feedbackOpen, setFeedbackOpen] = useState(false);
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const currentPath = useRouterState({ select: (s) => s.location.pathname });
@@ -325,6 +334,7 @@ export function DashboardShell({
             hasRoadmap={hasRoadmap}
             onNavigate={() => {}}
             onSignOut={handleSignOut}
+            onOpenFeedback={() => setFeedbackOpen(true)}
           />
         </aside>
 
@@ -387,9 +397,15 @@ export function DashboardShell({
               hasRoadmap={hasRoadmap}
               onNavigate={() => setMobileNavOpen(false)}
               onSignOut={handleSignOut}
+              onOpenFeedback={() => {
+                setMobileNavOpen(false);
+                setFeedbackOpen(true);
+              }}
             />
           </SheetContent>
         </Sheet>
+
+        <FeedbackDialog open={feedbackOpen} onOpenChange={setFeedbackOpen} />
 
         {/* ===== FLOATING ASK SOL TRIGGER — the ONLY Ask Sol entry point;
          * no separate nav item, no separate large CTA card ===== */}

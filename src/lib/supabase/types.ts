@@ -336,6 +336,20 @@ export interface Database {
         Update: Partial<Database["public"]["Tables"]["founder_notifications"]["Row"]>;
         Relationships: [];
       };
+      feedback_submissions: {
+        Row: {
+          id: string;
+          user_id: string;
+          message: string;
+          created_at: string;
+        };
+        Insert: Partial<Database["public"]["Tables"]["feedback_submissions"]["Row"]> & {
+          user_id: string;
+          message: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["feedback_submissions"]["Row"]>;
+        Relationships: [];
+      };
       research_cache: {
         Row: {
           cache_key: string;
