@@ -4,7 +4,7 @@ import { ArrowRight, Check, Clock, RotateCcw, Sparkles } from "lucide-react";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { PremiumButton } from "@/components/solventia/PremiumButton";
-import { useOnboarding } from "@/lib/onboarding-store";
+import { clearStoredOnboarding, useOnboarding } from "@/lib/onboarding-store";
 import type { SectionIntroStep } from "@/lib/onboarding-steps";
 import { getStageTheme } from "@/lib/onboarding-themes";
 import { StageIllustration } from "@/components/onboarding/StageIllustration";
@@ -404,6 +404,7 @@ export function CompletionScreen() {
 
       setPhase("generating");
       await resultPromise;
+      clearStoredOnboarding();
 
       setPhase("done");
       // Let the checkmarks register before leaving — the work is genuinely

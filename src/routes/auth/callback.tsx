@@ -6,6 +6,7 @@ import { z } from "zod";
 import { PremiumButton } from "@/components/solventia/PremiumButton";
 import { exchangeCodeForSession } from "@/lib/actions/auth";
 import { completeConsultation, getLatestBusinessDna } from "@/lib/actions/profile";
+import { clearStoredOnboarding } from "@/lib/onboarding-store";
 
 export const Route = createFileRoute("/auth/callback")({
   validateSearch: z.object({
@@ -44,6 +45,10 @@ async function resumePendingConsultation(onStatus: (text: string) => void): Prom
 
   onStatus("Building your Business DNA and finding opportunities…");
   await completeConsultation({ data: { answers } });
+  // Otherwise this exact draft would still be sitting in localStorage the
+  // next time ANY account signs in on this browser, and would get reused
+  // for a completely different person's Business DNA.
+  clearStoredOnboarding();
 }
 
 /** Every Supabase auth email (signup confirmation, password recovery,

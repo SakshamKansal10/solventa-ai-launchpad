@@ -28,6 +28,16 @@ function loadStored(): StoredState | null {
   }
 }
 
+/** Call once a consultation's answers have been successfully submitted
+ * (completeConsultation resolved) — otherwise this same draft lingers in
+ * localStorage forever and gets silently picked up by the NEXT sign-in on
+ * this browser (see resumePendingConsultation in routes/auth/callback.tsx),
+ * generating that account's Business DNA from a stranger's old answers. */
+export function clearStoredOnboarding() {
+  if (typeof window === "undefined") return;
+  window.localStorage.removeItem(STORAGE_KEY);
+}
+
 interface OnboardingContextValue {
   answers: OnboardingAnswers;
   setAnswer: <K extends keyof OnboardingAnswers>(key: K, value: OnboardingAnswers[K]) => void;
