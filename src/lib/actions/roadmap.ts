@@ -103,24 +103,28 @@ export const getRoadmap = createServerFn({ method: "GET" })
       };
     const opportunity = opportunities;
 
-    const { data: phases, error: phasesError } = await supabase
-      .from("roadmap_phases")
-      .select("*, roadmap_weeks(*, roadmap_tasks(*)), roadmap_tasks(*)")
-      .eq("roadmap_id", roadmap.id)
-      .order("order_index");
+    // Neither of these depends on the other — phases only needs
+    // roadmap.id (already resolved above), dnaRow only needs user.id —
+    // so they run as one round trip instead of two sequential ones.
+    const [{ data: phases, error: phasesError }, dnaRow] = await Promise.all([
+      supabase
+        .from("roadmap_phases")
+        .select("*, roadmap_weeks(*, roadmap_tasks(*)), roadmap_tasks(*)")
+        .eq("roadmap_id", roadmap.id)
+        .order("order_index"),
+      // Read-only — a compact founder summary for the roadmap header's
+      // "built around your Xh/week and ₹Y capital" line. Never used to
+      // generate or recompute anything, just to display real,
+      // already-stored numbers instead of a generic subtitle.
+      supabase
+        .from("business_dna")
+        .select("normalized_signals")
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle(),
+    ]);
     if (phasesError) throw new Error(phasesError.message);
-
-    // Read-only — a compact founder summary for the roadmap header's "built
-    // around your Xh/week and ₹Y capital" line. Never used to generate or
-    // recompute anything, just to display real, already-stored numbers
-    // instead of a generic subtitle.
-    const dnaRow = await supabase
-      .from("business_dna")
-      .select("normalized_signals")
-      .eq("user_id", user.id)
-      .order("created_at", { ascending: false })
-      .limit(1)
-      .maybeSingle();
     const signals = dnaRow.data?.normalized_signals as unknown as NormalizedProfile | undefined;
     const founderSummary = signals
       ? {
