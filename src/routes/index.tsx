@@ -26,10 +26,12 @@ export const Route = createFileRoute("/")({
   loader: () => getSiteUrl(),
   head: ({ loaderData: siteUrl }) => {
     const url = siteUrl ?? "/";
-    // The rendered favicon doubles as the interim OG/logo image — swap in
-    // a real 1200x630 asset once one exists; every field below already
-    // reads from this one constant so that's a one-line change later.
-    const image = `${url.replace(/\/$/, "")}/favicon.png`;
+    // A clean, well-cropped 512x512 export of the official Solventia mark
+    // — used as both the OG/Twitter card image and the Organization
+    // logo. Doubles as the interim OG image until a real 1200x630
+    // marketing asset exists; every field below already reads from this
+    // one constant so that's a one-line change later.
+    const image = `${url.replace(/\/$/, "")}/icon-512.png`;
     return {
       meta: [
         { title: "Solventia — Personalized AI Business Ideas & Founder Roadmaps" },
