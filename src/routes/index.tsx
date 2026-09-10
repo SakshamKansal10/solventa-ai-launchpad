@@ -1,7 +1,9 @@
 import { useEffect } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { createServerFn } from "@tanstack/react-start";
+import { z } from "zod";
 import { env } from "@/lib/env.server";
+import { sanitizeNextPath } from "@/lib/safe-redirect";
 import { Header } from "@/components/solventia/Header";
 import { Hero } from "@/components/solventia/Hero";
 import { FounderSignal } from "@/components/solventia/FounderSignal";
@@ -23,6 +25,10 @@ const getSiteUrl = createServerFn({ method: "GET" }).handler(() => env.SITE_URL)
 
 export const Route = createFileRoute("/")({
   component: Index,
+  // Set only by requireAuthLoader bouncing a signed-out visitor here from
+  // a protected route (e.g. a dashboard link from an email) — re-validated
+  // with the same same-origin check on the way out, never trusted as-is.
+  validateSearch: z.object({ next: z.string().optional() }),
   loader: () => getSiteUrl(),
   head: ({ loaderData: siteUrl }) => {
     const url = siteUrl ?? "/";
@@ -95,6 +101,9 @@ export const Route = createFileRoute("/")({
  * HERO -> FOUNDER SIGNAL -> HOW IT WORKS -> ADAPTIVE ROADMAP -> WHY
  * SOLVENTIA -> BRAND MOMENT -> CTA -> FAQ narrative. */
 function Index() {
+  const { next } = Route.useSearch();
+  const pendingNext = sanitizeNextPath(next);
+
   // A nav link clicked from another page (or the footer) navigates here
   // with a hash — scroll to it ourselves, at the same header-offset used
   // for in-page clicks, rather than relying on the browser's own
@@ -108,7 +117,7 @@ function Index() {
 
   return (
     <div className="min-h-screen bg-sol-page">
-      <Header />
+      <Header pendingNext={pendingNext} />
       <main>
         <Hero />
         <FounderSignal />

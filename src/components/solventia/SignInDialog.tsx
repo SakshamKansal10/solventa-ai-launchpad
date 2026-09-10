@@ -24,8 +24,27 @@ import { OTP_MAX_LENGTH, sanitizeOtpInput, isOtpLengthPlausible } from "@/lib/ot
 
 const RESEND_COOLDOWN_SECONDS = 30;
 
-export function SignInDialog({ trigger }: { trigger: ReactNode }) {
-  const [open, setOpen] = useState(false);
+interface SignInDialogProps {
+  trigger: ReactNode;
+  /** Sanitized, same-origin destination to return to after signing in
+   * (e.g. a dashboard deep link from an email) — falls back to
+   * "/dashboard" when absent. Never trusted as-is by this component; the
+   * caller (Header, via sanitizeNextPath) is responsible for validating
+   * it before it ever reaches here. */
+  nextPath?: string | null;
+  /** Lets a caller force this dialog open (e.g. Header auto-opening it
+   * when the URL carries a `next` redirect target) instead of only ever
+   * opening via its own trigger. Uncontrolled — manages its own open
+   * state — when omitted. */
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+}
+
+export function SignInDialog({ trigger, nextPath, open, onOpenChange }: SignInDialogProps) {
+  const [internalOpen, setInternalOpen] = useState(false);
+  const isControlled = open !== undefined;
+  const dialogOpen = isControlled ? open : internalOpen;
+  const setDialogOpen = isControlled ? (onOpenChange ?? (() => {})) : setInternalOpen;
   const [mode, setMode] = useState<"password" | "otp">("password");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -35,6 +54,9 @@ export function SignInDialog({ trigger }: { trigger: ReactNode }) {
   const [resendCooldown, setResendCooldown] = useState(0);
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const googleRedirectPath = nextPath
+    ? `/auth/callback?next=${encodeURIComponent(nextPath)}`
+    : "/auth/callback";
 
   function tickCooldown() {
     setResendCooldown(RESEND_COOLDOWN_SECONDS);
@@ -53,7 +75,15 @@ export function SignInDialog({ trigger }: { trigger: ReactNode }) {
     // A different account may be signing in on a tab that still has a
     // previous account's cached data — never show it to the new user.
     queryClient.clear();
-    setOpen(false);
+    setDialogOpen(false);
+    if (nextPath) {
+      // nextPath can carry its own query string (e.g. a specific
+      // consultation id) — a full navigation via the browser handles that
+      // correctly without needing it to be a typed, known-at-build-time
+      // route, unlike the router's own `navigate({ to })`.
+      window.location.assign(nextPath);
+      return;
+    }
     navigate({ to: "/dashboard" });
   }
 
@@ -129,9 +159,9 @@ export function SignInDialog({ trigger }: { trigger: ReactNode }) {
 
   return (
     <Dialog
-      open={open}
+      open={dialogOpen}
       onOpenChange={(next) => {
-        setOpen(next);
+        setDialogOpen(next);
         if (!next) {
           setMode("password");
           setCode("");
@@ -205,10 +235,14 @@ export function SignInDialog({ trigger }: { trigger: ReactNode }) {
           <>
             <DialogHeader>
               <DialogTitle className="font-display text-2xl text-primary">Welcome back</DialogTitle>
-              <DialogDescription>Sign in to continue building with Solventia.</DialogDescription>
+              <DialogDescription>
+                {nextPath
+                  ? "Sign in to pick up exactly where you left off."
+                  : "Sign in to continue building with Solventia."}
+              </DialogDescription>
             </DialogHeader>
             <div className="mt-2">
-              <GoogleSignInButton redirectPath="/auth/callback" />
+              <GoogleSignInButton redirectPath={googleRedirectPath} />
             </div>
             <div className="my-3 flex items-center gap-3">
               <div className="h-px flex-1 bg-border" />

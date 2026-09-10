@@ -6,11 +6,16 @@ import { z } from "zod";
 import { PremiumButton } from "@/components/solventia/PremiumButton";
 import { exchangeCodeForSession } from "@/lib/actions/auth";
 import { completeConsultation, getLatestBusinessDna } from "@/lib/actions/profile";
+import { sanitizeNextPath } from "@/lib/safe-redirect";
 
 export const Route = createFileRoute("/auth/callback")({
   validateSearch: z.object({
     code: z.string().optional(),
     error_description: z.string().optional(),
+    // Carried through from SignInDialog/GoogleSignInButton when the
+    // founder was bounced here from a protected route (e.g. a dashboard
+    // link from an email) — re-validated below, never trusted as-is.
+    next: z.string().optional(),
   }),
   component: AuthCallback,
   head: () => ({ meta: [{ name: "robots", content: "noindex" }] }),
@@ -51,7 +56,7 @@ async function resumePendingConsultation(onStatus: (text: string) => void): Prom
  * one-time `code` — this exchanges it for a real session. Without this
  * route the link/redirect just looks broken. */
 function AuthCallback() {
-  const { code, error_description } = Route.useSearch();
+  const { code, error_description, next } = Route.useSearch();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [error, setError] = useState<string | null>(error_description ?? null);
@@ -90,9 +95,21 @@ function AuthCallback() {
         return;
       }
 
+      // A pending consultation (handled above) always wins — it can only
+      // exist for a founder who just finished onboarding signed-out, a
+      // different situation than a `next` redirect (which only ever comes
+      // from a protected route bouncing a signed-out visitor here). Outside
+      // that case, honor `next` when it's a real, sanitized destination —
+      // a full navigation, since it can carry a query string a typed
+      // router `navigate({ to })` isn't built to pass through dynamically.
+      const safeNext = sanitizeNextPath(next);
+      if (safeNext) {
+        window.location.assign(safeNext);
+        return;
+      }
       navigate({ to: "/dashboard" });
     })().catch(() => setError("Something went wrong confirming your account."));
-  }, [code, error_description, navigate, queryClient]);
+  }, [code, error_description, next, navigate, queryClient]);
 
   if (error) {
     return (

@@ -18,9 +18,20 @@ import { describe, it, expect, vi } from "vitest";
  */
 
 vi.mock("@tanstack/react-start", () => {
-  const handler = (fn: (args?: { data: unknown }) => unknown) => (args?: { data: unknown }) =>
-    fn(args);
-  return { createServerFn: () => ({ handler }) };
+  // Mirrors the real runtime, which always invokes a server function's
+  // handler with a fully-formed context object — `getDashboard()` with no
+  // arguments still reaches the handler as `{ data: undefined }`, never a
+  // bare `undefined`.
+  const handler =
+    (fn: (args: { data: unknown }) => unknown) =>
+    (args?: { data: unknown }) =>
+      fn(args ?? { data: undefined });
+  return {
+    createServerFn: () => ({
+      handler,
+      validator: () => ({ handler }),
+    }),
+  };
 });
 vi.mock("@/lib/supabase/server", () => ({ requireUser: vi.fn() }));
 

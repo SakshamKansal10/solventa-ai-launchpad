@@ -414,7 +414,19 @@ export const buildRoadmapForOpportunity = createServerFn({ method: "POST" })
     await archiveActiveRoadmap(supabase, user.id);
 
     if (existingRoadmap) {
+      // A revisit — reactivating a roadmap the founder already made
+      // progress on, possibly well past Week 1. "Your roadmap is ready,
+      // start Week 01" would be false here, so this path deliberately
+      // sends no email (a distinct "welcome back" email is a real product
+      // idea, just not one this call site should half-build) — the
+      // in-app notification alone, worded generically, is enough.
       await activateRoadmap(supabase, user.id, existingRoadmap.id);
+      void notifyFounder(supabase, user.id, {
+        type: "roadmap_ready",
+        title: "Roadmap reactivated",
+        body: `Your roadmap for ${opportunity.title} is active again — pick up where you left off.`,
+        link: "/dashboard/roadmap",
+      });
     } else {
       const dnaRow = await supabase
         .from("business_dna")
@@ -445,7 +457,9 @@ export const buildRoadmapForOpportunity = createServerFn({ method: "POST" })
       // undo all of that from the founder's perspective: let them land on
       // the roadmap page, where an active week with no tasks yet is a
       // known, self-healing state (see generateActiveWeekDetail) rather
-      // than a dead end.
+      // than a dead end. Mission count stays null in that case — the
+      // email must never claim tasks exist that haven't generated yet.
+      let missionCount: number | null = null;
       try {
         const weekDetail = await generateWeekDetail(profile, opportunityPackage, {
           phaseTitle: firstWeek.phaseTitle,
@@ -463,18 +477,28 @@ export const buildRoadmapForOpportunity = createServerFn({ method: "POST" })
           weekDetail,
           new Date(),
         );
+        missionCount = weekDetail.tasks.length;
       } catch (err) {
         console.error("[roadmap] week 1 detail generation failed after skeleton succeeded:", err);
       }
-    }
 
-    if (user.email) void sendRoadmapReadyEmail(user.email, opportunity.title);
-    void notifyFounder(supabase, user.id, {
-      type: "roadmap_ready",
-      title: "Your roadmap is ready",
-      body: `Week 1 of your roadmap for ${opportunity.title} is ready to start.`,
-      link: "/dashboard/roadmap",
-    });
+      if (user.email) {
+        const fullName = (user.user_metadata?.full_name as string | undefined) ?? null;
+        void sendRoadmapReadyEmail(user.email, fullName, {
+          opportunityTitle: opportunity.title,
+          week1Title: firstWeek.title,
+          week1Objective: firstWeek.objective,
+          missionCount,
+          weeklyTimeCommitment: opportunityPackage.weeklyTime ?? null,
+        });
+      }
+      void notifyFounder(supabase, user.id, {
+        type: "roadmap_ready",
+        title: "Your roadmap is ready",
+        body: `${firstWeek.title} of your roadmap for ${opportunity.title} is ready to start.`,
+        link: "/dashboard/roadmap",
+      });
+    }
 
     return { ok: true };
   });

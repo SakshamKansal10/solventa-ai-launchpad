@@ -2,6 +2,7 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "sonner";
+import { z } from "zod";
 import { ArrowRight, Compass, Loader2 } from "lucide-react";
 import { DashboardShell } from "@/components/dashboard/DashboardShell";
 import { FounderFitOrbit } from "@/components/dashboard/FounderFitOrbit";
@@ -22,6 +23,11 @@ import { cn } from "@/lib/utils";
 export const Route = createFileRoute("/dashboard/")({
   beforeLoad: requireAuthLoader,
   component: DashboardHome,
+  // Set only by a deep link to one specific consultation's ideas (e.g.
+  // the "ideas ready" email) — pins the dashboard to THAT consultation
+  // instead of always-latest, so a founder who ran a newer consultation
+  // before clicking an older email still sees what that email described.
+  validateSearch: z.object({ consultation: z.string().uuid().optional() }),
   head: () => ({
     meta: [{ title: "Dashboard — Solventia" }, { name: "robots", content: "noindex" }],
   }),
@@ -97,7 +103,11 @@ function FlagshipOrbitMotif() {
 function DashboardHome() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const dashboardQuery = useQuery({ queryKey: ["dashboard"], queryFn: () => getDashboard() });
+  const { consultation } = Route.useSearch();
+  const dashboardQuery = useQuery({
+    queryKey: ["dashboard", consultation ?? null],
+    queryFn: () => getDashboard({ data: { consultationId: consultation } }),
+  });
   const [exploring, setExploring] = useState(false);
   const [switching, setSwitching] = useState<string | null>(null);
 

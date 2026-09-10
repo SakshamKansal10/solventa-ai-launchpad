@@ -39,13 +39,27 @@ function initials(email: string | null): string {
   return email ? email[0].toUpperCase() : "S";
 }
 
-export function Header() {
+interface HeaderProps {
+  /** A sanitized, same-origin destination carried in via `?next=` — set
+   * only when a signed-out visitor was bounced here from a protected
+   * route (e.g. a dashboard link from an email). When present, the
+   * sign-in dialog opens automatically instead of waiting for a click,
+   * and successful sign-in returns them there instead of the dashboard
+   * default. Only the homepage route reads and passes this. */
+  pendingNext?: string | null;
+}
+
+export function Header({ pendingNext }: HeaderProps = {}) {
   const [scrolled, setScrolled] = useState(false);
   // Separate, higher threshold — the background/border reveal (12px) and
   // the shadow (20px) are deliberately not the same trigger, so the
   // shadow never shows right at the top of the page.
   const [scrolledPastShadowThreshold, setScrolledPastShadowThreshold] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+  // Only ever initialized true once, from the URL this page loaded with —
+  // deliberately NOT re-derived on every render, so dismissing the
+  // auto-opened dialog (without signing in) doesn't keep reopening it.
+  const [nextPromptOpen, setNextPromptOpen] = useState(() => Boolean(pendingNext));
   const activeId = useActiveSection(SCROLL_IDS);
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -62,6 +76,15 @@ export function Header() {
     onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
+  // Strip `?next=` from the address bar once it's been used to open the
+  // prompt — a manual refresh afterward should land on a clean homepage,
+  // not silently reopen a dialog the visitor already dismissed.
+  useEffect(() => {
+    if (!pendingNext) return;
+    window.history.replaceState(null, "", "/");
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   function handleScrollNav(id: string) {
@@ -225,6 +248,9 @@ export function Header() {
                     Sign In
                   </button>
                 }
+                nextPath={pendingNext}
+                open={nextPromptOpen}
+                onOpenChange={setNextPromptOpen}
               />
               <button
                 type="button"
@@ -326,6 +352,7 @@ export function Header() {
                           Sign In
                         </button>
                       }
+                      nextPath={pendingNext}
                     />
                     <button
                       type="button"

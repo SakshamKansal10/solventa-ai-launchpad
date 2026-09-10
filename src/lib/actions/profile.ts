@@ -222,12 +222,29 @@ export const completeConsultation = createServerFn({ method: "POST" })
       throw err;
     }
 
-    if (user.email) void sendIdeasReadyEmail(user.email, scored[0].opp.title);
+    if (user.email) {
+      const fullName = (user.user_metadata?.full_name as string | undefined) ?? null;
+      void sendIdeasReadyEmail(user.email, fullName, {
+        businessDnaId: dnaRow.id,
+        primary: {
+          title: scored[0].opp.title,
+          oneLiner: scored[0].opp.plainEnglishSummary,
+          fitScore: scored[0].score.total,
+          weeklyTime: scored[0].opp.weeklyTime ?? null,
+        },
+        alternatives: scored
+          .slice(1)
+          .map((s) => ({ title: s.opp.title, oneLiner: s.opp.plainEnglishSummary })),
+      });
+    }
     void notifyFounder(supabase, user.id, {
       type: "ideas_ready",
       title: "Your ideas are ready",
       body: `Sol found ${scored.length} directions for you — ${scored[0].opp.title} is the strongest match.`,
-      link: "/dashboard",
+      // Pinned to THIS consultation — see dashboard.ts's consultationId
+      // param — never a bare "/dashboard" that could show a different,
+      // later consultation's ideas by the time this notification is read.
+      link: `/dashboard?consultation=${dnaRow.id}`,
     });
 
     return { businessDnaId: dnaRow.id as string, founderDNA: pkg.founderDNA };
