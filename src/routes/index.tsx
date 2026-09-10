@@ -1,8 +1,7 @@
 import { useEffect } from "react";
 import { createFileRoute } from "@tanstack/react-router";
-import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
-import { env } from "@/lib/env.server";
+import { getSiteUrl } from "@/lib/actions/site-url.server";
 import { sanitizeNextPath } from "@/lib/safe-redirect";
 import { Header } from "@/components/solventia/Header";
 import { Hero } from "@/components/solventia/Hero";
@@ -16,12 +15,6 @@ import { FAQ } from "@/components/solventia/FAQ";
 import { Footer } from "@/components/solventia/Footer";
 import { SectionTransition } from "@/components/solventia/SectionTransition";
 import { scrollToSection } from "@/hooks/use-active-section";
-
-/** og:url/canonical must be absolute per spec — "/" alone is invalid there,
- * unlike every auth redirect in this app, which correctly derives from the
- * request's own origin and needs no server-side site URL at all. This is
- * the one place that genuinely needs it, read server-side only. */
-const getSiteUrl = createServerFn({ method: "GET" }).handler(() => env.SITE_URL);
 
 export const Route = createFileRoute("/")({
   component: Index,
@@ -44,7 +37,7 @@ export const Route = createFileRoute("/")({
         {
           name: "description",
           content:
-            "Solventia turns your skills, resources, and ambition into personalized business directions you can test, build, and grow — with a roadmap that adapts as you learn.",
+            "Solventia turns your skills, resources, and ambition into personalized business opportunities, real-world validation, and adaptive founder roadmaps.",
         },
         {
           property: "og:title",

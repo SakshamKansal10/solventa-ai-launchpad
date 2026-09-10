@@ -1,6 +1,7 @@
 import { toast } from "sonner";
 import { Check, Compass, GraduationCap, Sparkles } from "lucide-react";
 import { PremiumButton } from "./PremiumButton";
+import { PageBreadcrumb } from "./PageBreadcrumb";
 
 /** Only real, supportable claims — the old version advertised a "mentor
  * network" and cross-organization impact tracking that don't exist as
@@ -34,6 +35,9 @@ export function ForOrganizations() {
         }}
         aria-hidden="true"
       />
+      <div className="relative text-left">
+        <PageBreadcrumb page="For Organizations" />
+      </div>
       <div className="relative text-center">
         <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-sol-champagne-deep">
           For Organizations

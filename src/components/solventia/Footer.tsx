@@ -8,12 +8,21 @@ const CONTACT_EMAIL = "solventia.in@gmail.com";
 const FOOTER_LINKS: {
   label: string;
   id?: string;
-  to?: "/about" | "/for-organizations" | "/privacy" | "/terms";
+  to?:
+    | "/find-my-business-idea"
+    | "/how-it-works"
+    | "/for-organizations"
+    | "/about"
+    | "/sign-in"
+    | "/privacy"
+    | "/terms";
 }[] = [
   { label: "Product", id: "founder-signal" },
-  { label: "How It Works", id: "how-it-works" },
+  { label: "Find My Business Idea", to: "/find-my-business-idea" },
+  { label: "How It Works", to: "/how-it-works" },
   { label: "For Organizations", to: "/for-organizations" },
-  { label: "About", to: "/about" },
+  { label: "About Solventia", to: "/about" },
+  { label: "Sign In", to: "/sign-in" },
   { label: "Privacy", to: "/privacy" },
   { label: "Terms", to: "/terms" },
 ];

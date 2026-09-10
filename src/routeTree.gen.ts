@@ -12,10 +12,14 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AboutRouteImport } from './routes/about'
 import { Route as ConsultationRouteImport } from './routes/consultation'
+import { Route as DataDeletionRouteImport } from './routes/data-deletion'
+import { Route as FindMyBusinessIdeaRouteImport } from './routes/find-my-business-idea'
 import { Route as ForOrganizationsRouteImport } from './routes/for-organizations'
+import { Route as HowItWorksRouteImport } from './routes/how-it-works'
 import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as ReviewRouteImport } from './routes/review'
 import { Route as ReviewPublicRouteImport } from './routes/review-public'
+import { Route as SignInRouteImport } from './routes/sign-in'
 import { Route as TermsRouteImport } from './routes/terms'
 import { Route as AuthCallbackRouteImport } from './routes/auth/callback'
 import { Route as DashboardIndexRouteImport } from './routes/dashboard/index'
@@ -40,9 +44,24 @@ const ConsultationRoute = ConsultationRouteImport.update({
   path: '/consultation',
   getParentRoute: () => rootRouteImport,
 } as any)
+const DataDeletionRoute = DataDeletionRouteImport.update({
+  id: '/data-deletion',
+  path: '/data-deletion',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const FindMyBusinessIdeaRoute = FindMyBusinessIdeaRouteImport.update({
+  id: '/find-my-business-idea',
+  path: '/find-my-business-idea',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ForOrganizationsRoute = ForOrganizationsRouteImport.update({
   id: '/for-organizations',
   path: '/for-organizations',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const HowItWorksRoute = HowItWorksRouteImport.update({
+  id: '/how-it-works',
+  path: '/how-it-works',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PrivacyRoute = PrivacyRouteImport.update({
@@ -58,6 +77,11 @@ const ReviewRoute = ReviewRouteImport.update({
 const ReviewPublicRoute = ReviewPublicRouteImport.update({
   id: '/review-public',
   path: '/review-public',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SignInRoute = SignInRouteImport.update({
+  id: '/sign-in',
+  path: '/sign-in',
   getParentRoute: () => rootRouteImport,
 } as any)
 const TermsRoute = TermsRouteImport.update({
@@ -107,10 +131,14 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
   '/consultation': typeof ConsultationRoute
+  '/data-deletion': typeof DataDeletionRoute
+  '/find-my-business-idea': typeof FindMyBusinessIdeaRoute
   '/for-organizations': typeof ForOrganizationsRoute
+  '/how-it-works': typeof HowItWorksRoute
   '/privacy': typeof PrivacyRoute
   '/review': typeof ReviewRoute
   '/review-public': typeof ReviewPublicRoute
+  '/sign-in': typeof SignInRoute
   '/terms': typeof TermsRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/dashboard/history': typeof DashboardHistoryRoute
@@ -124,10 +152,14 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
   '/consultation': typeof ConsultationRoute
+  '/data-deletion': typeof DataDeletionRoute
+  '/find-my-business-idea': typeof FindMyBusinessIdeaRoute
   '/for-organizations': typeof ForOrganizationsRoute
+  '/how-it-works': typeof HowItWorksRoute
   '/privacy': typeof PrivacyRoute
   '/review': typeof ReviewRoute
   '/review-public': typeof ReviewPublicRoute
+  '/sign-in': typeof SignInRoute
   '/terms': typeof TermsRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/dashboard/history': typeof DashboardHistoryRoute
@@ -142,10 +174,14 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
   '/consultation': typeof ConsultationRoute
+  '/data-deletion': typeof DataDeletionRoute
+  '/find-my-business-idea': typeof FindMyBusinessIdeaRoute
   '/for-organizations': typeof ForOrganizationsRoute
+  '/how-it-works': typeof HowItWorksRoute
   '/privacy': typeof PrivacyRoute
   '/review': typeof ReviewRoute
   '/review-public': typeof ReviewPublicRoute
+  '/sign-in': typeof SignInRoute
   '/terms': typeof TermsRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/dashboard/history': typeof DashboardHistoryRoute
@@ -161,10 +197,14 @@ export interface FileRouteTypes {
     | '/'
     | '/about'
     | '/consultation'
+    | '/data-deletion'
+    | '/find-my-business-idea'
     | '/for-organizations'
+    | '/how-it-works'
     | '/privacy'
     | '/review'
     | '/review-public'
+    | '/sign-in'
     | '/terms'
     | '/auth/callback'
     | '/dashboard/history'
@@ -178,10 +218,14 @@ export interface FileRouteTypes {
     | '/'
     | '/about'
     | '/consultation'
+    | '/data-deletion'
+    | '/find-my-business-idea'
     | '/for-organizations'
+    | '/how-it-works'
     | '/privacy'
     | '/review'
     | '/review-public'
+    | '/sign-in'
     | '/terms'
     | '/auth/callback'
     | '/dashboard/history'
@@ -195,10 +239,14 @@ export interface FileRouteTypes {
     | '/'
     | '/about'
     | '/consultation'
+    | '/data-deletion'
+    | '/find-my-business-idea'
     | '/for-organizations'
+    | '/how-it-works'
     | '/privacy'
     | '/review'
     | '/review-public'
+    | '/sign-in'
     | '/terms'
     | '/auth/callback'
     | '/dashboard/history'
@@ -213,10 +261,14 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AboutRoute: typeof AboutRoute
   ConsultationRoute: typeof ConsultationRoute
+  DataDeletionRoute: typeof DataDeletionRoute
+  FindMyBusinessIdeaRoute: typeof FindMyBusinessIdeaRoute
   ForOrganizationsRoute: typeof ForOrganizationsRoute
+  HowItWorksRoute: typeof HowItWorksRoute
   PrivacyRoute: typeof PrivacyRoute
   ReviewRoute: typeof ReviewRoute
   ReviewPublicRoute: typeof ReviewPublicRoute
+  SignInRoute: typeof SignInRoute
   TermsRoute: typeof TermsRoute
   AuthCallbackRoute: typeof AuthCallbackRoute
   DashboardHistoryRoute: typeof DashboardHistoryRoute
@@ -249,11 +301,32 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ConsultationRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/data-deletion': {
+      id: '/data-deletion'
+      path: '/data-deletion'
+      fullPath: '/data-deletion'
+      preLoaderRoute: typeof DataDeletionRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/find-my-business-idea': {
+      id: '/find-my-business-idea'
+      path: '/find-my-business-idea'
+      fullPath: '/find-my-business-idea'
+      preLoaderRoute: typeof FindMyBusinessIdeaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/for-organizations': {
       id: '/for-organizations'
       path: '/for-organizations'
       fullPath: '/for-organizations'
       preLoaderRoute: typeof ForOrganizationsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/how-it-works': {
+      id: '/how-it-works'
+      path: '/how-it-works'
+      fullPath: '/how-it-works'
+      preLoaderRoute: typeof HowItWorksRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/privacy': {
@@ -275,6 +348,13 @@ declare module '@tanstack/react-router' {
       path: '/review-public'
       fullPath: '/review-public'
       preLoaderRoute: typeof ReviewPublicRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/sign-in': {
+      id: '/sign-in'
+      path: '/sign-in'
+      fullPath: '/sign-in'
+      preLoaderRoute: typeof SignInRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/terms': {
@@ -351,10 +431,14 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AboutRoute: AboutRoute,
   ConsultationRoute: ConsultationRoute,
+  DataDeletionRoute: DataDeletionRoute,
+  FindMyBusinessIdeaRoute: FindMyBusinessIdeaRoute,
   ForOrganizationsRoute: ForOrganizationsRoute,
+  HowItWorksRoute: HowItWorksRoute,
   PrivacyRoute: PrivacyRoute,
   ReviewRoute: ReviewRoute,
   ReviewPublicRoute: ReviewPublicRoute,
+  SignInRoute: SignInRoute,
   TermsRoute: TermsRoute,
   AuthCallbackRoute: AuthCallbackRoute,
   DashboardHistoryRoute: DashboardHistoryRoute,

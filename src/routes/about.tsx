@@ -3,24 +3,39 @@ import { Header } from "@/components/solventia/Header";
 import { Footer } from "@/components/solventia/Footer";
 import { MissionVision } from "@/components/solventia/MissionVision";
 import { FoundersStory } from "@/components/solventia/FoundersStory";
+import { PageBreadcrumb } from "@/components/solventia/PageBreadcrumb";
 import {
   Accordion,
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
+import { getSiteUrl } from "@/lib/actions/site-url.server";
+import { breadcrumbJsonLd } from "@/lib/breadcrumb-jsonld";
 
 export const Route = createFileRoute("/about")({
   component: AboutPage,
-  head: () => ({
-    meta: [
-      { title: "About — Solventia" },
-      {
-        name: "description",
-        content: "Why Solventia exists, who built it, and how it works.",
-      },
-    ],
-  }),
+  loader: () => getSiteUrl(),
+  head: ({ loaderData: siteUrl }) => {
+    const url = siteUrl ?? "/";
+    const canonical = `${url.replace(/\/$/, "")}/about`;
+    return {
+      meta: [
+        { title: "About Solventia" },
+        {
+          name: "description",
+          content: "Why Solventia exists, who built it, and how it works.",
+        },
+      ],
+      links: [{ rel: "canonical", href: canonical }],
+      scripts: [
+        {
+          type: "application/ld+json",
+          children: JSON.stringify(breadcrumbJsonLd("About Solventia", "/about", url)),
+        },
+      ],
+    };
+  },
 });
 
 /** The remaining questions from the homepage's original ten-item FAQ —
@@ -63,7 +78,10 @@ function AboutPage() {
     <div className="min-h-screen bg-sol-page">
       <Header />
       <main className="pt-[68px] md:pt-[84px]">
-        <div className="mx-auto max-w-[1180px] px-[18px] pt-16 text-center sm:px-6">
+        <div className="mx-auto max-w-[1180px] px-[18px] pt-16 sm:px-6">
+          <PageBreadcrumb page="About Solventia" />
+        </div>
+        <div className="mx-auto max-w-[1180px] px-[18px] text-center sm:px-6">
           <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-sol-champagne-deep">
             About Solventia
           </p>

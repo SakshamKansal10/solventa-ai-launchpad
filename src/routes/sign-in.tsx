@@ -1,0 +1,276 @@
+import { useState, type FormEvent } from "react";
+import { createFileRoute } from "@tanstack/react-router";
+import { useQueryClient } from "@tanstack/react-query";
+import { Loader2 } from "lucide-react";
+import { z } from "zod";
+import { Header } from "@/components/solventia/Header";
+import { Footer } from "@/components/solventia/Footer";
+import { GoogleSignInButton } from "@/components/solventia/GoogleSignInButton";
+import { PremiumButton } from "@/components/solventia/PremiumButton";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
+import {
+  getOtpSendErrorMessage,
+  getOtpVerifyErrorMessage,
+  getPasswordSignInErrorMessage,
+} from "@/lib/auth-error-messages";
+import { OTP_MAX_LENGTH, sanitizeOtpInput, isOtpLengthPlausible } from "@/lib/otp";
+import { sanitizeNextPath } from "@/lib/safe-redirect";
+
+const RESEND_COOLDOWN_SECONDS = 30;
+
+// A stable, indexable, non-modal entry point for sign-in — Header's own
+// "Sign In" button still opens the existing dialog (untouched, unchanged
+// authentication logic); this page is an independent, parallel surface
+// for anyone arriving directly (a shared link, a Google result) who
+// hasn't already got the dialog open. Deliberately does not import or
+// modify SignInDialog/AccountGate.
+export const Route = createFileRoute("/sign-in")({
+  validateSearch: z.object({ next: z.string().optional() }),
+  component: SignInPage,
+  head: () => ({
+    meta: [
+      { title: "Sign In | Solventia" },
+      { name: "description", content: "Sign in to your Solventia account." },
+    ],
+    links: [{ rel: "canonical", href: "https://solventia.in/sign-in" }],
+  }),
+});
+
+function SignInPage() {
+  const { next } = Route.useSearch();
+  const nextPath = sanitizeNextPath(next);
+  const queryClient = useQueryClient();
+
+  const [mode, setMode] = useState<"password" | "otp">("password");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [code, setCode] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [resendCooldown, setResendCooldown] = useState(0);
+
+  const googleRedirectPath = nextPath
+    ? `/auth/callback?next=${encodeURIComponent(nextPath)}`
+    : "/auth/callback";
+
+  function tickCooldown() {
+    setResendCooldown(RESEND_COOLDOWN_SECONDS);
+    const interval = setInterval(() => {
+      setResendCooldown((s) => {
+        if (s <= 1) {
+          clearInterval(interval);
+          return 0;
+        }
+        return s - 1;
+      });
+    }, 1000);
+  }
+
+  function finishSignIn() {
+    queryClient.clear();
+    window.location.assign(nextPath ?? "/dashboard");
+  }
+
+  async function handlePasswordSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setLoading(true);
+    setError(null);
+    try {
+      const supabase = createSupabaseBrowserClient();
+      const { error: signInError } = await supabase.auth.signInWithPassword({ email, password });
+      if (signInError) {
+        console.error("[sign-in-page] failed:", signInError);
+        setError(getPasswordSignInErrorMessage(signInError));
+        return;
+      }
+      finishSignIn();
+    } catch (err) {
+      console.error("[sign-in-page] failed:", err);
+      setError(getPasswordSignInErrorMessage(err));
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function requestCode() {
+    setLoading(true);
+    setError(null);
+    try {
+      const supabase = createSupabaseBrowserClient();
+      const { error: otpError } = await supabase.auth.signInWithOtp({
+        email,
+        options: { shouldCreateUser: false },
+      });
+      if (otpError) {
+        console.error("[sign-in-page] sending code failed:", otpError);
+        setError(getOtpSendErrorMessage(otpError));
+        return;
+      }
+      setMode("otp");
+      tickCooldown();
+    } catch (err) {
+      console.error("[sign-in-page] sending code failed:", err);
+      setError(getOtpSendErrorMessage(err));
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function handleVerify(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setLoading(true);
+    setError(null);
+    try {
+      const supabase = createSupabaseBrowserClient();
+      const { error: verifyError } = await supabase.auth.verifyOtp({
+        email,
+        token: code,
+        type: "email",
+      });
+      if (verifyError) {
+        console.error("[sign-in-page] code verification failed:", verifyError);
+        setError(getOtpVerifyErrorMessage(verifyError));
+        return;
+      }
+      finishSignIn();
+    } catch (err) {
+      console.error("[sign-in-page] code verification failed:", err);
+      setError(getOtpVerifyErrorMessage(err));
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <div className="min-h-screen bg-sol-page">
+      <Header />
+      <main className="flex min-h-screen items-center justify-center px-[18px] pt-[68px] sm:px-6 md:pt-[84px]">
+        <div className="w-full max-w-[400px] rounded-2xl border border-sol-border bg-sol-surface px-6 py-8 sm:px-8">
+          {mode === "otp" ? (
+            <>
+              <h1 className="font-display text-2xl font-semibold text-sol-ink">
+                Check your email for a code
+              </h1>
+              <p className="mt-1.5 text-[0.85rem] text-sol-secondary">
+                We sent a verification code to <span className="text-sol-ink">{email}</span>.
+              </p>
+              <form onSubmit={handleVerify} className="mt-5 flex flex-col gap-4">
+                <div className="flex flex-col gap-1.5">
+                  <Label htmlFor="page-signin-otp">Verification code</Label>
+                  <Input
+                    id="page-signin-otp"
+                    autoFocus
+                    autoComplete="one-time-code"
+                    maxLength={OTP_MAX_LENGTH}
+                    required
+                    value={code}
+                    onChange={(e) => setCode(sanitizeOtpInput(e.target.value))}
+                    placeholder="Enter your code"
+                    className="text-center text-[1.2rem] font-semibold tracking-[0.4em]"
+                  />
+                </div>
+                {error && <p className="text-[0.82rem] text-destructive">{error}</p>}
+                <PremiumButton
+                  type="submit"
+                  tone="solid"
+                  shape="rounded"
+                  size="sm"
+                  className="mt-1 w-full"
+                  disabled={loading || !isOtpLengthPlausible(code)}
+                >
+                  {loading && <Loader2 className="size-4 animate-spin" aria-hidden="true" />}
+                  Verify & sign in
+                </PremiumButton>
+                <div className="flex items-center justify-between text-[0.8rem]">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setMode("password");
+                      setCode("");
+                      setError(null);
+                    }}
+                    className="text-sol-secondary hover:text-sol-ink"
+                  >
+                    Back
+                  </button>
+                  <button
+                    type="button"
+                    disabled={resendCooldown > 0 || loading}
+                    onClick={requestCode}
+                    className="font-medium text-sol-violet-deep disabled:text-sol-muted"
+                  >
+                    {resendCooldown > 0 ? `Resend code (${resendCooldown}s)` : "Resend code"}
+                  </button>
+                </div>
+              </form>
+            </>
+          ) : (
+            <>
+              <h1 className="font-display text-2xl font-semibold text-sol-ink">Welcome back</h1>
+              <p className="mt-1.5 text-[0.85rem] text-sol-secondary">
+                {nextPath
+                  ? "Sign in to pick up exactly where you left off."
+                  : "Sign in to continue building with Solventia."}
+              </p>
+              <div className="mt-5">
+                <GoogleSignInButton redirectPath={googleRedirectPath} />
+              </div>
+              <div className="my-4 flex items-center gap-3">
+                <div className="h-px flex-1 bg-sol-border" />
+                <span className="text-[0.75rem] text-sol-muted">or</span>
+                <div className="h-px flex-1 bg-sol-border" />
+              </div>
+              <form onSubmit={handlePasswordSubmit} className="flex flex-col gap-4">
+                <div className="flex flex-col gap-1.5">
+                  <Label htmlFor="page-signin-email">Email</Label>
+                  <Input
+                    id="page-signin-email"
+                    type="email"
+                    placeholder="you@example.com"
+                    required
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                  />
+                </div>
+                <div className="flex flex-col gap-1.5">
+                  <Label htmlFor="page-signin-password">Password</Label>
+                  <Input
+                    id="page-signin-password"
+                    type="password"
+                    placeholder="••••••••"
+                    required
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                  />
+                </div>
+                {error && <p className="text-[0.82rem] text-destructive">{error}</p>}
+                <PremiumButton
+                  type="submit"
+                  tone="solid"
+                  shape="rounded"
+                  size="sm"
+                  className="mt-1 w-full"
+                  disabled={loading}
+                >
+                  {loading && <Loader2 className="size-4 animate-spin" aria-hidden="true" />}
+                  Sign In
+                </PremiumButton>
+                <button
+                  type="button"
+                  disabled={!email || loading}
+                  onClick={requestCode}
+                  className="text-center text-[0.8rem] text-sol-secondary hover:text-sol-ink disabled:opacity-50"
+                >
+                  Forgot your password? Sign in with a code instead
+                </button>
+              </form>
+            </>
+          )}
+        </div>
+      </main>
+      <Footer />
+    </div>
+  );
+}
