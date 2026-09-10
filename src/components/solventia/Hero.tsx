@@ -28,33 +28,58 @@ const SIGNAL_CARDS: {
   label: string;
   value: string;
   className: string;
+  width: number;
   duration: number;
   delay: number;
+  dot: "champagne" | "violet" | "gradient";
   hideOnMobile?: boolean;
 }[] = [
   {
     label: "Founder Fit",
     value: "92",
     className: "right-[2.5%] top-[28%]",
-    duration: 8,
+    width: 156,
+    duration: 9,
     delay: 0,
+    dot: "champagne",
   },
   {
     label: "Proof Signal",
     value: "Strong",
     className: "right-[12%] top-[52%]",
-    duration: 9.5,
+    width: 160,
+    duration: 11,
     delay: 1.4,
+    dot: "violet",
     hideOnMobile: true,
   },
   {
     label: "Week 01",
     value: "Ready",
     className: "right-[3.5%] top-[73%]",
-    duration: 7,
+    width: 150,
+    duration: 8,
     delay: 0.8,
+    dot: "gradient",
   },
 ];
+
+function StatusDot({ tone }: { tone: "champagne" | "violet" | "gradient" }) {
+  return (
+    <span
+      className="size-2 shrink-0 rounded-full"
+      style={{
+        background:
+          tone === "champagne"
+            ? "var(--sol-champagne)"
+            : tone === "violet"
+              ? "var(--sol-violet)"
+              : "linear-gradient(135deg, var(--sol-champagne), var(--sol-violet))",
+      }}
+      aria-hidden="true"
+    />
+  );
+}
 
 function SignalCard({ card }: { card: (typeof SIGNAL_CARDS)[number] }) {
   const reduceMotion = useReducedMotion();
@@ -63,19 +88,109 @@ function SignalCard({ card }: { card: (typeof SIGNAL_CARDS)[number] }) {
       initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.9, delay: 0.6 + card.delay * 0.15, ease: [0.22, 1, 0.36, 1] }}
-      className={`absolute w-[168px] ${card.className} ${card.hideOnMobile ? "hidden sm:block" : ""}`}
+      className={`group absolute ${card.className} ${card.hideOnMobile ? "hidden sm:block" : ""}`}
+      style={{ width: card.width }}
     >
       <motion.div
-        animate={reduceMotion ? undefined : { y: [-4, 4, -4] }}
-        transition={{ duration: card.duration, repeat: Infinity, ease: "easeInOut" }}
-        className="flex h-[66px] w-full flex-col justify-center rounded-[18px] border border-[rgba(229,221,209,0.9)] bg-[rgba(255,253,249,0.91)] px-4 shadow-[0_16px_45px_rgba(23,32,61,0.08)] backdrop-blur-sm"
+        animate={reduceMotion ? undefined : { y: [-3, 3, -3] }}
+        whileHover={{ y: -2 }}
+        transition={{
+          y: { duration: card.duration, repeat: Infinity, ease: "easeInOut" },
+        }}
+        className="flex h-[62px] w-full items-center gap-2.5 rounded-[17px] border border-[rgba(214,203,190,0.78)] bg-[rgba(255,253,250,0.91)] px-4 shadow-[0_12px_34px_rgba(23,32,61,0.075)] backdrop-blur-[14px] transition-colors duration-[180ms] group-hover:border-[rgba(114,87,216,0.28)]"
       >
-        <p className="text-[11px] font-semibold uppercase tracking-[0.1em] text-sol-secondary">
-          {card.label}
-        </p>
-        <p className="mt-0.5 text-[16px] font-bold leading-none text-sol-ink">{card.value}</p>
+        <StatusDot tone={card.dot} />
+        <div className="min-w-0">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.1em] text-sol-secondary">
+            {card.label}
+          </p>
+          <p className="mt-0.5 text-[16px] font-bold leading-none text-sol-ink">{card.value}</p>
+        </div>
       </motion.div>
     </motion.div>
+  );
+}
+
+/** Atmospheric orbital structure behind the hero copy — never a graph,
+ * never labeled, never surrounding the headline like a target. Two
+ * incomplete (dashed) elliptical curves suggesting Solventia's
+ * intelligence path, with one slow highlight segment traveling around
+ * the outer curve. Everything else stays static. */
+function HeroOrbitGraphic() {
+  const reduceMotion = useReducedMotion();
+  return (
+    <svg
+      className="pointer-events-none absolute -left-[130px] top-[90px] hidden lg:block"
+      width={760}
+      height={590}
+      viewBox="0 0 760 590"
+      fill="none"
+      aria-hidden="true"
+    >
+      <ellipse
+        cx={430}
+        cy={300}
+        rx={330}
+        ry={230}
+        stroke="rgba(114,87,216,.13)"
+        strokeWidth={1}
+        strokeDasharray="220 90"
+        transform="rotate(-8 430 300)"
+      />
+      <ellipse
+        cx={400}
+        cy={260}
+        rx={230}
+        ry={160}
+        stroke="rgba(197,163,106,.11)"
+        strokeWidth={1}
+        strokeDasharray="160 70"
+        transform="rotate(6 400 260)"
+      />
+      {!reduceMotion && (
+        <motion.ellipse
+          cx={430}
+          cy={300}
+          rx={330}
+          ry={230}
+          stroke="rgba(114,87,216,.55)"
+          strokeWidth={1.5}
+          strokeDasharray="40 2560"
+          strokeLinecap="round"
+          transform="rotate(-8 430 300)"
+          animate={{ strokeDashoffset: [0, -2600], opacity: [0, 0.55, 0] }}
+          transition={{ duration: 16, repeat: Infinity, ease: "linear" }}
+        />
+      )}
+    </svg>
+  );
+}
+
+/** Very subtle vertical connector suggesting the three intelligence
+ * signals are one system, not three unrelated floating widgets — never
+ * literally edge-to-edge. */
+function HeroCardConnector() {
+  return (
+    <svg
+      className="pointer-events-none absolute right-[9%] top-[30%] hidden h-[46%] w-[80px] xl:block"
+      viewBox="0 0 80 320"
+      fill="none"
+      preserveAspectRatio="none"
+      aria-hidden="true"
+    >
+      <defs>
+        <linearGradient id="hero-card-connector" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor="var(--sol-champagne)" />
+          <stop offset="100%" stopColor="var(--sol-violet)" />
+        </linearGradient>
+      </defs>
+      <path
+        d="M 20,0 C 60,60 0,140 40,180 C 70,210 20,270 30,320"
+        stroke="url(#hero-card-connector)"
+        strokeWidth={1}
+        opacity={0.22}
+      />
+    </svg>
   );
 }
 
@@ -84,7 +199,9 @@ function SignalCard({ card }: { card: (typeof SIGNAL_CARDS)[number] }) {
  * spec: calmer left side for text, three minimal intelligence signals
  * instead of four generic floating cards, no people-bubble social proof,
  * no Discover/Validate/Plan/Launch strip underneath (How It Works now
- * owns that story, once, not twice). */
+ * owns that story, once, not twice). Violet ambience + an orbital path
+ * graphic fill what would otherwise be an empty upper-left/upper-middle
+ * region, without adding another card or paragraph. */
 export function Hero() {
   const navigate = useNavigate();
 
@@ -125,6 +242,20 @@ export function Hero() {
         ))}
       </div>
 
+      {/* Restored Solventia violet ambience — light, not paint. Sits above
+          the image/scrim and below the copy/cards. */}
+      <div
+        className="pointer-events-none absolute inset-0 z-[5]"
+        style={{
+          background:
+            "radial-gradient(ellipse 520px 420px at 15% 22%, rgba(114,87,216,0.13), rgba(114,87,216,0.055) 42%, transparent 72%), radial-gradient(ellipse 420px 320px at 62% 10%, rgba(197,163,106,0.07), transparent 72%)",
+        }}
+        aria-hidden="true"
+      />
+
+      <HeroOrbitGraphic />
+      <HeroCardConnector />
+
       {/* Floating intelligence signals — desktop only. On mobile the text
           column fills nearly the full width, so absolute-positioned cards
           would sit on top of the headline/buttons; those render in normal
@@ -135,7 +266,10 @@ export function Hero() {
         ))}
       </div>
 
-      <div className="relative z-20 mx-auto flex h-full max-w-[1920px] flex-col justify-center overflow-y-auto px-6 pb-8 pt-[90px] lg:overflow-visible lg:px-10">
+      <div
+        className="relative z-20 mx-auto flex h-full max-w-[1920px] flex-col overflow-y-auto px-6 pb-8 lg:overflow-visible lg:px-10"
+        style={{ paddingTop: "clamp(150px, 19vh, 190px)" }}
+      >
         <motion.div
           initial="hidden"
           animate="show"
@@ -153,7 +287,7 @@ export function Hero() {
           <motion.h1
             variants={fadeUp}
             transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
-            className="mt-6 text-[46px] font-semibold leading-[1.04] tracking-[-0.025em] text-sol-ink sm:text-[56px] lg:text-[72px] lg:leading-[0.98]"
+            className="mt-[28px] max-w-[670px] text-[46px] font-semibold leading-[1.04] tracking-[-0.025em] text-sol-ink sm:text-[56px] lg:text-[72px] lg:leading-[0.98]"
           >
             Your Direction.
             <br />
@@ -167,7 +301,7 @@ export function Hero() {
           <motion.p
             variants={fadeUp}
             transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
-            className="mt-8 max-w-[520px] text-[17px] leading-[28px] text-sol-secondary"
+            className="mt-[28px] max-w-[520px] text-[17px] leading-[28px] text-sol-secondary"
           >
             Solventia turns your skills, resources and ambition into business directions you can
             actually test, build and grow.
@@ -176,7 +310,7 @@ export function Hero() {
           <motion.div
             variants={fadeUp}
             transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
-            className="mt-[34px] flex flex-wrap items-center gap-3.5"
+            className="mt-[30px] flex flex-wrap items-center gap-3.5"
           >
             <button
               type="button"
@@ -207,14 +341,17 @@ export function Hero() {
             {SIGNAL_CARDS.filter((c) => !c.hideOnMobile).map((card) => (
               <div
                 key={card.label}
-                className="flex h-[58px] w-[136px] flex-col justify-center rounded-[18px] border border-[rgba(229,221,209,0.9)] bg-[rgba(255,253,249,0.94)] px-3.5 shadow-[0_16px_45px_rgba(23,32,61,0.08)]"
+                className="flex h-[58px] w-[136px] items-center gap-2 rounded-[17px] border border-[rgba(214,203,190,0.78)] bg-[rgba(255,253,250,0.94)] px-3.5 shadow-[0_12px_34px_rgba(23,32,61,0.075)]"
               >
-                <p className="text-[10px] font-semibold uppercase tracking-[0.08em] text-sol-secondary">
-                  {card.label}
-                </p>
-                <p className="mt-0.5 text-[15px] font-bold leading-none text-sol-ink">
-                  {card.value}
-                </p>
+                <StatusDot tone={card.dot} />
+                <div className="min-w-0">
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.08em] text-sol-secondary">
+                    {card.label}
+                  </p>
+                  <p className="mt-0.5 text-[15px] font-bold leading-none text-sol-ink">
+                    {card.value}
+                  </p>
+                </div>
               </div>
             ))}
           </motion.div>

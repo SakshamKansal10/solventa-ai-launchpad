@@ -25,8 +25,16 @@ const AUDIENCES = [
 
 export function ForOrganizations() {
   return (
-    <section className="mx-auto max-w-[1180px] px-[18px] py-20 sm:px-6 lg:px-10">
-      <div className="text-center">
+    <section className="relative mx-auto max-w-[1180px] px-[18px] py-20 sm:px-6 lg:px-10">
+      <div
+        className="pointer-events-none absolute inset-x-0 top-0 mx-auto h-[320px] max-w-[1180px]"
+        style={{
+          background:
+            "radial-gradient(ellipse 500px 320px at 50% 25%, rgba(114,87,216,.08), transparent 70%)",
+        }}
+        aria-hidden="true"
+      />
+      <div className="relative text-center">
         <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-sol-champagne-deep">
           For Organizations
         </p>
@@ -40,11 +48,11 @@ export function ForOrganizations() {
         </p>
       </div>
 
-      <div className="mt-12 flex flex-wrap items-center justify-center gap-2">
+      <div className="relative mt-12 flex flex-wrap items-center justify-center gap-2">
         {AUDIENCES.map((a) => (
           <span
             key={a}
-            className="flex items-center gap-1.5 rounded-full border border-sol-border bg-sol-surface px-3.5 py-1.5 text-[0.8rem] font-medium text-sol-secondary"
+            className="flex items-center gap-1.5 rounded-full border border-sol-border bg-sol-surface px-3.5 py-1.5 text-[0.8rem] font-medium text-sol-secondary transition-colors duration-[180ms] hover:bg-sol-violet-mist"
           >
             <GraduationCap className="size-3.5 text-sol-champagne-deep" aria-hidden="true" />
             {a}
@@ -52,7 +60,13 @@ export function ForOrganizations() {
         ))}
       </div>
 
-      <div className="relative mt-14 overflow-hidden rounded-[28px] bg-sol-navy px-8 py-14 lg:px-16">
+      <div
+        className="relative mt-14 overflow-hidden rounded-[28px] bg-sol-navy px-8 py-14 lg:px-16"
+        style={{
+          backgroundImage:
+            "radial-gradient(circle at 90% 15%, rgba(114,87,216,.20), transparent 48%)",
+        }}
+      >
         <span
           aria-hidden="true"
           className="pointer-events-none absolute -right-10 -top-10 font-display text-[11rem] font-bold leading-none text-white/[0.05]"

@@ -28,7 +28,10 @@ export function Footer() {
   const isHome = pathname === "/";
 
   return (
-    <footer className="bg-sol-footer px-[18px] py-12 sm:px-10">
+    <footer
+      className="bg-sol-footer px-[18px] py-11 sm:px-10"
+      style={{ borderTop: "1px solid #DDD4CA" }}
+    >
       <div className="mx-auto max-w-[1360px]">
         <div className="flex flex-col gap-10 sm:flex-row sm:items-start sm:justify-between">
           <div className="flex items-center gap-3">

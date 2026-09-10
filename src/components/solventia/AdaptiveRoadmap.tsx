@@ -19,11 +19,15 @@ const THRESHOLD = 5;
  * honestly-labeled product demonstration (not a real founder's actual
  * data) showing evidence accumulating until a real threshold is met,
  * at which point the next week generates and unlocks. This is the
- * exact "just-in-time" mechanism the real product roadmap runs on. */
+ * exact "just-in-time" mechanism the real product roadmap runs on.
+ *
+ * Never green, anywhere — violet marks the intelligent/progress state,
+ * champagne marks completion, navy marks structure. */
 export function AdaptiveRoadmap() {
   const reduceMotion = useReducedMotion();
   const [entered, setEntered] = useState(false);
   const [count, setCount] = useState(0);
+  const [pulsing, setPulsing] = useState(false);
   const [unlocked, setUnlocked] = useState(false);
 
   useEffect(() => {
@@ -41,15 +45,31 @@ export function AdaptiveRoadmap() {
         if (n >= TARGET_COUNT) clearInterval(id);
       }, 110);
     }, 700);
-    const unlockTimer = setTimeout(() => setUnlocked(true), 1900);
-    return () => {
-      clearTimeout(countStart);
-      clearTimeout(unlockTimer);
-    };
+    return () => clearTimeout(countStart);
   }, [entered, reduceMotion]);
 
+  // Threshold reached -> pause 180ms -> one 700ms halo pulse -> unlock.
+  // A single causal sequence, never two independent flat timers, and
+  // never more than one pulse.
+  useEffect(() => {
+    if (count < THRESHOLD || unlocked) return;
+    if (reduceMotion) {
+      setUnlocked(true);
+      return;
+    }
+    const pauseTimer = setTimeout(() => setPulsing(true), 180);
+    const unlockTimer = setTimeout(() => {
+      setPulsing(false);
+      setUnlocked(true);
+    }, 180 + 700);
+    return () => {
+      clearTimeout(pauseTimer);
+      clearTimeout(unlockTimer);
+    };
+  }, [count, unlocked, reduceMotion]);
+
   return (
-    <section className="bg-sol-surface px-[18px] py-[96px] sm:px-6 lg:px-9 lg:py-[120px]">
+    <section className="bg-sol-hp-pearl px-[18px] py-[96px] sm:px-6 lg:px-9 lg:py-[120px]">
       <div className="mx-auto max-w-[1180px]">
         <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-sol-champagne-deep">
           Adaptive Execution
@@ -68,10 +88,11 @@ export function AdaptiveRoadmap() {
         >
           {/* LEFT — Week 01 */}
           <div
-            className="rounded-[28px] p-[34px]"
+            className="rounded-[24px] p-[34px]"
             style={{
-              background: "var(--sol-violet-ultralight)",
-              border: "1px solid rgba(114,87,216,.22)",
+              background: "linear-gradient(135deg, #F7F4FF, #F4F0FC)",
+              border: "1px solid rgba(114,87,216,.24)",
+              boxShadow: "0 14px 40px rgba(86,62,183,.055)",
             }}
           >
             <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-sol-violet-deep">
@@ -87,7 +108,7 @@ export function AdaptiveRoadmap() {
             <div className="mt-5 flex flex-col gap-2.5">
               {WEEK_1_TASKS.map((task) => (
                 <div key={task} className="flex items-center gap-2.5">
-                  <span className="flex size-4 shrink-0 items-center justify-center rounded-full border border-sol-violet-deep/40" />
+                  <span className="flex size-4 shrink-0 items-center justify-center rounded-full border border-sol-violet/50" />
                   <span className="text-[14px] text-sol-ink">{task}</span>
                 </div>
               ))}
@@ -102,7 +123,8 @@ export function AdaptiveRoadmap() {
               </div>
               <div className="mt-1.5 h-1.5 w-full overflow-hidden rounded-full bg-white/70">
                 <motion.div
-                  className="h-full rounded-full bg-sol-champagne"
+                  className="h-full rounded-full"
+                  style={{ background: "linear-gradient(90deg, #C5A36A, #7257D8)" }}
                   animate={{ width: `${(count / EVIDENCE_TOTAL) * 100}%` }}
                   transition={{ duration: 0.15 }}
                 />
@@ -121,26 +143,41 @@ export function AdaptiveRoadmap() {
             )}
           </div>
 
-          {/* CENTER — decision node (overlaid on lg, stacked otherwise) */}
+          {/* CENTER — Solventia Adapts node (overlaid on lg, stacked otherwise) */}
           <div className="pointer-events-none absolute inset-0 hidden items-center justify-center lg:flex">
-            <motion.div
-              animate={unlocked && !reduceMotion ? { scale: [1, 1.12, 1] } : {}}
-              transition={{ duration: 0.6, ease: "easeOut" }}
-              className="pointer-events-auto flex flex-col items-center gap-2 rounded-full bg-sol-surface p-2 shadow-[0_16px_40px_rgba(23,32,61,0.12)]"
-            >
-              <span
-                className="flex size-[84px] items-center justify-center rounded-full"
-                style={{ background: "var(--sol-violet)" }}
+            <div className="pointer-events-auto relative flex flex-col items-center gap-2.5">
+              <div
+                className="relative flex items-center justify-center"
+                style={{ width: 128, height: 128 }}
               >
-                <img src={mark} alt="" width={298} height={436} className="h-8 w-auto" />
-              </span>
+                <motion.span
+                  className="absolute rounded-full"
+                  style={{
+                    width: 128,
+                    height: 128,
+                    background: "radial-gradient(circle, rgba(114,87,216,.11), transparent 68%)",
+                  }}
+                  animate={
+                    pulsing && !reduceMotion
+                      ? { scale: [1, 1.15], opacity: [0.4, 0] }
+                      : { scale: 1, opacity: 0.7 }
+                  }
+                  transition={{ duration: 0.7, ease: "easeOut" }}
+                />
+                <span
+                  className="relative flex items-center justify-center rounded-full"
+                  style={{ width: 104, height: 104, background: "var(--sol-violet)" }}
+                >
+                  <img src={mark} alt="" width={298} height={436} className="h-9 w-auto" />
+                </span>
+              </div>
               <p className="text-center text-[11px] font-semibold uppercase tracking-[0.08em] text-sol-violet-deep">
                 Solventia Adapts
               </p>
-              <p className="max-w-[110px] text-center text-[11px] leading-tight text-sol-secondary">
+              <p className="max-w-[130px] text-center text-[13px] leading-tight text-sol-secondary">
                 Evidence changed the plan.
               </p>
-            </motion.div>
+            </div>
           </div>
 
           {/* RIGHT — Week 02 (locked -> unlocked) + future preview */}
@@ -148,11 +185,11 @@ export function AdaptiveRoadmap() {
             <motion.div
               animate={
                 unlocked
-                  ? { opacity: 1, x: 0, borderColor: "rgba(197,163,106,0.5)" }
-                  : { opacity: 0.55, x: reduceMotion ? 0 : 10 }
+                  ? { opacity: 1, x: 0, borderColor: "rgba(197,163,106,0.55)" }
+                  : { opacity: 0.54, x: reduceMotion ? 0 : 8, borderColor: "#E4DDD4" }
               }
-              transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-              className="rounded-[24px] border border-sol-border bg-sol-surface p-6"
+              transition={{ duration: 0.46, ease: [0.22, 1, 0.36, 1] }}
+              className="rounded-[24px] border bg-sol-hp-surface p-6"
             >
               <div className="flex items-center justify-between">
                 <div>
@@ -165,7 +202,7 @@ export function AdaptiveRoadmap() {
                 </div>
                 {!unlocked && <Lock className="size-4 text-sol-muted" aria-hidden="true" />}
                 {unlocked && (
-                  <span className="flex size-6 items-center justify-center rounded-full bg-econ-green-active text-white">
+                  <span className="flex size-6 items-center justify-center rounded-full bg-sol-violet text-white">
                     <Check className="size-3.5" aria-hidden="true" />
                   </span>
                 )}
@@ -181,10 +218,11 @@ export function AdaptiveRoadmap() {
               {FUTURE_WEEKS.map((label) => (
                 <div
                   key={label}
-                  className="flex items-center justify-between rounded-xl border border-dashed border-sol-border px-4 py-3 opacity-70"
+                  className="flex items-center justify-between rounded-xl border border-dashed px-4 py-3"
+                  style={{ background: "rgba(255,253,249,.58)", borderColor: "#D8D0C6" }}
                 >
-                  <span className="text-[14px] text-sol-secondary">{label}</span>
-                  <Lock className="size-3.5 text-sol-muted" aria-hidden="true" />
+                  <span className="text-[14px] text-[#8A858D]">{label}</span>
+                  <Lock className="size-3.5 text-[#8A858D]" aria-hidden="true" />
                 </div>
               ))}
             </div>

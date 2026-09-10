@@ -67,6 +67,15 @@
   --color-sol-danger: var(--sol-danger);
   --color-sol-page: var(--sol-page);
   --color-sol-footer: var(--sol-footer);
+  --color-sol-hp-pearl: var(--sol-hp-pearl);
+  --color-sol-hp-ivory: var(--sol-hp-ivory);
+  --color-sol-hp-ivory-light: var(--sol-hp-ivory-light);
+  --color-sol-hp-ivory-deep: var(--sol-hp-ivory-deep);
+  --color-sol-hp-surface: var(--sol-hp-surface);
+  --color-sol-hp-border: var(--sol-hp-border);
+  --color-sol-hp-why: var(--sol-hp-why);
+  --color-sol-hp-faq-panel: var(--sol-hp-faq-panel);
+  --color-sol-hp-violet-card: var(--sol-hp-violet-card);
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
@@ -175,7 +184,22 @@
      sol-pearl/sol-ivory (the product dashboard's own background family),
      per the homepage reconstruction spec's own exact hex values. */
   --sol-page: oklch(0.9708 0.0086 84.6); /* #F8F5EF */
-  --sol-footer: oklch(0.9503 0.0103 81.8); /* #F2EEE7 */
+  --sol-footer: oklch(0.9423 0.0137 78.3); /* #F1EBE2 — visual-finishing-pass value */
+  /* Homepage background RHYTHM — several distinct warm-light tones so
+     consecutive sections read as deliberate zones, not one repeated
+     cream block. Cream/ivory is a KEPT brand color here, never replaced
+     with white — these just vary its lightness/warmth section to
+     section. See the homepage visual-finishing-pass spec's own exact
+     background plan for which section uses which. */
+  --sol-hp-pearl: oklch(0.9858 0.0045 78.3); /* #FCFAF7 */
+  --sol-hp-ivory: oklch(0.9628 0.0119 79.8); /* #F7F2EA */
+  --sol-hp-ivory-light: oklch(0.9768 0.0086 84.6); /* #FAF7F1 */
+  --sol-hp-ivory-deep: oklch(0.945 0.0148 80.7); /* #F2ECE2 */
+  --sol-hp-surface: oklch(0.995 0.0034 67.8); /* #FFFDFB */
+  --sol-hp-border: oklch(0.9006 0.0144 74.4); /* #E4DDD4 */
+  --sol-hp-why: oklch(0.9543 0.0136 78.3); /* #F5EFE6 — Why Solventia section */
+  --sol-hp-faq-panel: oklch(0.9713 0.0102 81.8); /* #F9F5EE — FAQ container */
+  --sol-hp-violet-card: oklch(0.9655 0.0167 304.8); /* #F6F1FD — Week 01 card option */
 
   /* Dashboard-only typography — deliberately separate from
      --foreground/--muted-foreground, which the marketing site and

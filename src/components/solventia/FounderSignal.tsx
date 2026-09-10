@@ -50,7 +50,7 @@ export function FounderSignal() {
   return (
     <section
       id="founder-signal"
-      className="scroll-mt-[84px] bg-sol-surface px-[18px] py-[96px] sm:px-6 lg:px-9 lg:py-[120px]"
+      className="scroll-mt-[84px] bg-sol-hp-pearl px-[18px] py-[96px] sm:px-6 lg:px-9 lg:py-[120px]"
     >
       <div className="mx-auto max-w-[1180px] text-center">
         <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-sol-champagne-deep">
@@ -73,10 +73,12 @@ export function FounderSignal() {
           width: "min(1280px, calc(100vw - 80px))",
           minHeight: 620,
           background:
-            "radial-gradient(circle at 52% 50%, rgba(114,87,216,0.075), transparent 36%), linear-gradient(135deg, #FFFDF9, #FBF8F2)",
+            "radial-gradient(circle at 49% 50%, rgba(114,87,216,.10), rgba(114,87,216,.035) 30%, transparent 52%), linear-gradient(135deg, #FFFDFB 0%, #F8F2E9 100%)",
         }}
       >
-        {/* Connector lines — left signals into the Founder Genome center. */}
+        {/* Connector lines — left signals into the Founder Genome center.
+         * Each signal appears, then its own curve draws immediately after
+         * (120ms stagger, ~850ms total) — not one slow simultaneous wash. */}
         <svg
           viewBox="0 0 100 100"
           preserveAspectRatio="none"
@@ -88,14 +90,14 @@ export function FounderSignal() {
               key={i}
               d={`M 25,${y} Q ${(25 + ORBIT_CENTER.x) / 2},${y} ${ORBIT_CENTER.x - 8},${ORBIT_CENTER.y}`}
               fill="none"
-              stroke="rgba(197,163,106,0.55)"
-              strokeWidth={0.25}
+              stroke="rgba(197,163,106,0.46)"
+              strokeWidth={0.3}
               strokeDasharray="1.4 1.2"
               initial={{ pathLength: 0, opacity: 0 }}
               animate={entered ? { pathLength: 1, opacity: 1 } : {}}
               transition={{
-                duration: reduceMotion ? 0 : 2.4,
-                delay: reduceMotion ? 0 : 0.6 + i * 0.08,
+                duration: reduceMotion ? 0 : 0.35,
+                delay: reduceMotion ? 0 : i * 0.12,
                 ease: "easeInOut",
               }}
             />
@@ -141,17 +143,17 @@ export function FounderSignal() {
                 ease: [0.22, 1, 0.36, 1],
               }}
               className="relative flex items-center justify-center"
-              style={{ width: 260, height: 260 }}
+              style={{ width: 294, height: 294 }}
             >
-              <svg width={260} height={260} viewBox="0 0 260 260" className="absolute inset-0">
+              <svg width={294} height={294} viewBox="0 0 294 294" className="absolute inset-0">
                 {[1, 0.68].map((ratio, ringIndex) => (
                   <circle
                     key={ringIndex}
-                    cx={130}
-                    cy={130}
-                    r={100 * ratio}
+                    cx={147}
+                    cy={147}
+                    r={113 * ratio}
                     fill="none"
-                    stroke="#DCD3E8"
+                    stroke="rgba(114,87,216,.3)"
                     strokeWidth={1}
                   />
                 ))}
@@ -160,35 +162,51 @@ export function FounderSignal() {
                   return (
                     <line
                       key={i}
-                      x1={130}
-                      y1={130}
-                      x2={(outer.x / 100) * 260}
-                      y2={(outer.y / 100) * 260}
-                      stroke="#DCD3E8"
+                      x1={147}
+                      y1={147}
+                      x2={(outer.x / 100) * 294}
+                      y2={(outer.y / 100) * 294}
+                      stroke="rgba(114,87,216,.3)"
                       strokeWidth={1}
                     />
                   );
                 })}
+                {/* Two active arcs — violet primary, champagne secondary —
+                 * counter-rotating slowly so the genome reads as a live
+                 * intelligence instrument, not a static badge. */}
                 <motion.circle
-                  cx={130}
-                  cy={130}
-                  r={100}
+                  cx={147}
+                  cy={147}
+                  r={113}
+                  fill="none"
+                  stroke="var(--sol-violet)"
+                  strokeWidth={2}
+                  strokeLinecap="round"
+                  strokeDasharray="20 92"
+                  animate={reduceMotion ? undefined : { rotate: 360 }}
+                  style={{ transformOrigin: "147px 147px" }}
+                  transition={{ duration: 46, repeat: Infinity, ease: "linear" }}
+                />
+                <motion.circle
+                  cx={147}
+                  cy={147}
+                  r={90}
                   fill="none"
                   stroke="var(--sol-champagne)"
                   strokeWidth={1.75}
                   strokeLinecap="round"
-                  strokeDasharray="16 46"
-                  animate={reduceMotion ? undefined : { rotate: 360 }}
-                  style={{ transformOrigin: "130px 130px" }}
-                  transition={{ duration: 50, repeat: Infinity, ease: "linear" }}
+                  strokeDasharray="16 60"
+                  animate={reduceMotion ? undefined : { rotate: -360 }}
+                  style={{ transformOrigin: "147px 147px" }}
+                  transition={{ duration: 58, repeat: Infinity, ease: "linear" }}
                 />
                 {GENOME_NODES.map((label, i) => {
                   const p = orbitPoint(i, GENOME_NODES.length, 100);
                   return (
                     <g key={label}>
                       <circle
-                        cx={(p.x / 100) * 260}
-                        cy={(p.y / 100) * 260}
+                        cx={(p.x / 100) * 294}
+                        cy={(p.y / 100) * 294}
                         r={6}
                         fill={i % 2 === 0 ? "var(--sol-violet)" : "var(--sol-champagne)"}
                       />
@@ -201,19 +219,19 @@ export function FounderSignal() {
                 return (
                   <span
                     key={label}
-                    className="absolute -translate-x-1/2 -translate-y-1/2 whitespace-nowrap text-[10px] font-semibold uppercase tracking-[0.06em] text-sol-secondary"
+                    className="absolute -translate-x-1/2 -translate-y-1/2 whitespace-nowrap text-[11px] font-semibold uppercase tracking-[0.05em] text-[#5E5B67]"
                     style={{ left: `${p.x}%`, top: `${p.y}%` }}
                   >
                     {label}
                   </span>
                 );
               })}
-              <div className="relative flex flex-col items-center gap-1.5 text-center">
-                <img src={mark} alt="" width={298} height={436} className="h-6 w-auto" />
-                <p className="font-display text-[15px] font-semibold leading-tight text-sol-ink">
+              <div className="relative flex flex-col items-center gap-2 text-center">
+                <img src={mark} alt="" width={298} height={436} className="h-[26px] w-auto" />
+                <p className="font-display text-[18px] font-semibold leading-tight text-sol-ink">
                   Technical Builder
                 </p>
-                <p className="text-[10px] font-semibold uppercase tracking-[0.1em] text-sol-muted">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.11em] text-sol-muted">
                   Founder Genome
                 </p>
               </div>
@@ -235,8 +253,9 @@ export function FounderSignal() {
               }}
               className="relative mt-4 overflow-hidden rounded-[22px] p-6 text-white"
               style={{
-                height: 148,
-                background: "linear-gradient(135deg, #17203D, #232D50)",
+                height: 140,
+                background:
+                  "radial-gradient(circle at 90% 10%, rgba(114,87,216,.22), transparent 48%), linear-gradient(135deg, #17203D, #232D50)",
               }}
             >
               <p className="text-[11px] font-semibold uppercase tracking-[0.1em] text-sol-champagne">
@@ -251,24 +270,24 @@ export function FounderSignal() {
                     <circle
                       cx={32}
                       cy={32}
-                      r={26}
+                      r={25}
                       fill="none"
                       stroke="rgba(255,255,255,.16)"
-                      strokeWidth={5}
+                      strokeWidth={6}
                     />
                     <circle
                       cx={32}
                       cy={32}
-                      r={26}
+                      r={25}
                       fill="none"
                       stroke="var(--sol-champagne)"
-                      strokeWidth={5}
+                      strokeWidth={6}
                       strokeLinecap="round"
-                      strokeDasharray={2 * Math.PI * 26}
-                      strokeDashoffset={2 * Math.PI * 26 * (1 - 0.92)}
+                      strokeDasharray={2 * Math.PI * 25}
+                      strokeDashoffset={2 * Math.PI * 25 * (1 - 0.92)}
                     />
                   </svg>
-                  <span className="absolute text-[15px] font-bold">92</span>
+                  <span className="absolute text-[20px] font-bold">92</span>
                 </div>
               </div>
               <p className="absolute bottom-6 left-6 text-[12px] text-white/60">

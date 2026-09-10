@@ -12,6 +12,7 @@ import { BrandMoment } from "@/components/solventia/BrandMoment";
 import { FinalCTA } from "@/components/solventia/FinalCTA";
 import { FAQ } from "@/components/solventia/FAQ";
 import { Footer } from "@/components/solventia/Footer";
+import { SectionTransition } from "@/components/solventia/SectionTransition";
 import { scrollToSection } from "@/hooks/use-active-section";
 
 /** og:url/canonical must be absolute per spec — "/" alone is invalid there,
@@ -109,10 +110,13 @@ function Index() {
       <main>
         <Hero />
         <FounderSignal />
+        <SectionTransition from="#FCFAF7" to="#F7F2EA" line="champagne" />
         <HowItWorks />
         <AdaptiveRoadmap />
+        <SectionTransition from="#FCFAF7" to="#F5EFE6" />
         <WhySolventia />
         <BrandMoment />
+        <SectionTransition from="#F7F2EA" to="#17203D" line="violet" />
         <FinalCTA />
         <FAQ />
       </main>

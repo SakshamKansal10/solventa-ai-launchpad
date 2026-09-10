@@ -41,6 +41,10 @@ function initials(email: string | null): string {
 
 export function Header() {
   const [scrolled, setScrolled] = useState(false);
+  // Separate, higher threshold — the background/border reveal (12px) and
+  // the shadow (20px) are deliberately not the same trigger, so the
+  // shadow never shows right at the top of the page.
+  const [scrolledPastShadowThreshold, setScrolledPastShadowThreshold] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const activeId = useActiveSection(SCROLL_IDS);
   const navigate = useNavigate();
@@ -51,7 +55,10 @@ export function Header() {
   const isSignedIn = Boolean(currentUser.data);
 
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 12);
+    const onScroll = () => {
+      setScrolled(window.scrollY > 12);
+      setScrolledPastShadowThreshold(window.scrollY > 20);
+    };
     onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
@@ -79,9 +86,12 @@ export function Header() {
     <header
       className={`fixed inset-x-0 top-0 z-50 h-[68px] transition-all duration-500 md:h-[84px] ${
         scrolled || !isHome
-          ? "border-b border-[rgba(229,221,209,0.70)] bg-[rgba(255,253,249,0.88)] backdrop-blur-[18px]"
+          ? "border-b border-[rgba(228,221,212,0.72)] bg-[rgba(252,250,247,0.88)] backdrop-blur-[18px] backdrop-saturate-[1.05]"
           : "border-b border-transparent"
       }`}
+      style={
+        scrolledPastShadowThreshold ? { boxShadow: "0 6px 28px rgba(23,32,61,0.045)" } : undefined
+      }
     >
       <div className="mx-auto grid h-full max-w-[1920px] grid-cols-[auto_1fr_auto] items-center gap-6 px-[18px] sm:px-6 lg:px-10">
         <Link
@@ -119,27 +129,27 @@ export function Header() {
               className={`relative text-[14px] font-[550] uppercase tracking-[0.04em] transition-colors duration-300 ${
                 isHome && activeId === item.id
                   ? "text-sol-ink"
-                  : "text-sol-ink/80 hover:text-sol-ink"
+                  : "text-sol-ink/80 hover:text-sol-navy"
               }`}
             >
               {item.label}
               <span
-                className={`absolute -bottom-1.5 left-0 h-px bg-sol-champagne transition-all duration-300 ${
-                  isHome && activeId === item.id ? "w-full" : "w-0"
+                className={`absolute -bottom-1.5 left-[-2px] h-[1.5px] w-[calc(100%+4px)] origin-center bg-sol-champagne transition-transform duration-[180ms] ${
+                  isHome && activeId === item.id ? "scale-x-100" : "scale-x-0"
                 }`}
               />
             </button>
           ))}
           <Link
             to="/for-organizations"
-            className="text-[14px] font-[550] uppercase tracking-[0.04em] text-sol-ink/80 transition-colors duration-300 hover:text-sol-ink"
+            className="text-[14px] font-[550] uppercase tracking-[0.04em] text-sol-ink/80 transition-colors duration-300 hover:text-sol-navy"
             activeProps={{ className: "text-sol-ink" }}
           >
             For Organizations
           </Link>
           <Link
             to="/about"
-            className="text-[14px] font-[550] uppercase tracking-[0.04em] text-sol-ink/80 transition-colors duration-300 hover:text-sol-ink"
+            className="text-[14px] font-[550] uppercase tracking-[0.04em] text-sol-ink/80 transition-colors duration-300 hover:text-sol-navy"
             activeProps={{ className: "text-sol-ink" }}
           >
             About
