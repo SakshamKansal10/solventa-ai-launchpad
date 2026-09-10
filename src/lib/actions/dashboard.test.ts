@@ -22,10 +22,8 @@ vi.mock("@tanstack/react-start", () => {
   // handler with a fully-formed context object — `getDashboard()` with no
   // arguments still reaches the handler as `{ data: undefined }`, never a
   // bare `undefined`.
-  const handler =
-    (fn: (args: { data: unknown }) => unknown) =>
-    (args?: { data: unknown }) =>
-      fn(args ?? { data: undefined });
+  const handler = (fn: (args: { data: unknown }) => unknown) => (args?: { data: unknown }) =>
+    fn(args ?? { data: undefined });
   return {
     createServerFn: () => ({
       handler,

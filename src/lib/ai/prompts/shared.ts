@@ -1,5 +1,7 @@
 import type { NormalizedProfile } from "@/lib/profile/normalize";
 import { formatMoney } from "@/lib/country-currency";
+import { computeFounderGenome, computeFounderPersona } from "@/lib/profile/founder-genome";
+import { computeAmbitionCalibration, formatAmbitionContextForPrompt } from "@/lib/profile/ambition";
 
 export const PLAIN_LANGUAGE_RULE = `Never use unexplained jargon (SaaS, B2B, B2C, TAM, CAC, LTV, go-to-market, vertical integration, product-market fit, acquisition funnel, infrastructure layer). If a concept is needed, explain it in one plain clause the same sentence. Write for someone who has never studied business. Never say a business idea is "validated" unless real evidence justifies that — prefer "strong signal", "early signal", "emerging", "needs validation", or "limited evidence". Never invent statistics, customer counts, testimonials, or sources. If you don't know something, say so plainly instead of guessing confidently.`;
 
@@ -80,4 +82,23 @@ export function formatProfileForPrompt(profile: NormalizedProfile): string {
   }
 
   return lines.join("\n");
+}
+
+/** Founder Genome + Ambition Calibration, both deterministic and
+ * pre-computed from the same normalized signals as formatProfileForPrompt
+ * above — never re-derived or second-guessed by the model. Used by
+ * roadmap generation (skeleton and per-week detail alike) so plan scale
+ * stays calibrated to this specific founder: never a ceiling-scraping
+ * venture plan for someone with no capital or time, and never a
+ * timid side-hustle plan for someone with real capability and capacity. */
+export function formatGenomeAndAmbitionForPrompt(profile: NormalizedProfile): string {
+  const genome = computeFounderGenome(profile);
+  const persona = computeFounderPersona(profile, genome);
+  const ambition = computeAmbitionCalibration(profile, genome);
+  const sorted = [...genome.dimensions].sort((a, b) => b.score - a.score);
+  const strongest = sorted.slice(0, 2).map((d) => d.label);
+  const weakest = sorted[sorted.length - 1]?.label;
+
+  return `Founder Genome (deterministic, not your opinion): ${persona.name} — ${persona.attributes.join("; ")}. Strongest: ${strongest.join(", ")}. Weakest: ${weakest ?? "none flagged"}.
+${formatAmbitionContextForPrompt(ambition)}`;
 }

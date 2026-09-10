@@ -265,6 +265,7 @@ export async function createRoadmapFromSkeleton(
       status: "active" as const,
       ai_model: MODEL,
       activated_at: now.toISOString(),
+      north_star: skeleton.northStar,
     })
     .select("id")
     .single();

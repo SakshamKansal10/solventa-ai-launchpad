@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import {
   AlertTriangle,
+  ArrowRight,
   Check,
   ChevronDown,
   ChevronRight,
@@ -47,6 +48,18 @@ const BLOCKER_REASONS: {
   { value: "motivation", label: "Motivation" },
   { value: "access", label: "Access" },
   { value: "other", label: "Something else" },
+];
+
+/** The week-close reflection is a compact rating, not an essay prompt —
+ * this one tap is what actually shapes next week's generation (see
+ * generateWeekDetail's priorWeek.reflection), so it needs to be something
+ * a founder will realistically fill in every time, not something they
+ * skip because typing feels like homework. */
+const REFLECTION_RATINGS: { value: string; label: string }[] = [
+  { value: "stronger", label: "Stronger than expected" },
+  { value: "as_expected", label: "About as expected" },
+  { value: "weaker", label: "Weaker than expected" },
+  { value: "mixed", label: "Mixed" },
 ];
 
 interface Task {
@@ -137,7 +150,11 @@ function TaskRow({
   const [blockerNote, setBlockerNote] = useState("");
   const [busy, setBusy] = useState(false);
   const [showReflectionPrompt, setShowReflectionPrompt] = useState(false);
-  const [reflection, setReflection] = useState("");
+  const [reflectionRating, setReflectionRating] = useState<string | null>(null);
+  const [reflectionBlocker, setReflectionBlocker] = useState<
+    (typeof BLOCKER_REASONS)[number]["value"] | null
+  >(null);
+  const [reflectionNote, setReflectionNote] = useState("");
   const isDone = task.status === "done";
 
   function markDone() {
@@ -152,8 +169,22 @@ function TaskRow({
     onToggle(task.id, "done");
   }
 
+  /** Composes the tap-first structured reflection into the one plain-text
+   * string generateWeekDetail's priorWeek.reflection actually reads —
+   * the AI prompt contract stays a single string; only this sheet's UI
+   * needs to be more than a free-text box. */
+  function composeReflection(): string | undefined {
+    const parts: string[] = [];
+    const rating = REFLECTION_RATINGS.find((r) => r.value === reflectionRating);
+    if (rating) parts.push(rating.label);
+    const blocker = BLOCKER_REASONS.find((b) => b.value === reflectionBlocker);
+    if (blocker) parts.push(`Blocker: ${blocker.label}`);
+    if (reflectionNote.trim()) parts.push(reflectionNote.trim());
+    return parts.length > 0 ? parts.join(". ") : undefined;
+  }
+
   function finishWeek() {
-    onToggle(task.id, "done", reflection.trim() || undefined);
+    onToggle(task.id, "done", composeReflection());
     setShowReflectionPrompt(false);
   }
 
@@ -349,24 +380,59 @@ function TaskRow({
             </div>
           )}
           {showReflectionPrompt && (
-            <div className="mt-3 rounded-lg border border-sol-champagne/30 bg-sol-champagne-soft/40 p-3">
+            <div className="mt-3 rounded-lg border border-sol-champagne/30 bg-sol-champagne-soft/40 p-3.5">
               <p className="text-[0.82rem] font-medium text-sol-ink">
                 This finishes the week. How did it actually go?
               </p>
-              <p className="mt-0.5 text-[0.76rem] text-sol-secondary">
-                Optional — Sol uses this to plan next week around what really happened, not just the
-                original plan.
+              <div className="mt-2.5 flex flex-wrap gap-1.5">
+                {REFLECTION_RATINGS.map((r) => (
+                  <button
+                    key={r.value}
+                    type="button"
+                    onClick={() => setReflectionRating(r.value)}
+                    className={cn(
+                      "rounded-full border px-3 py-1.5 text-[0.78rem] font-medium transition-colors",
+                      reflectionRating === r.value
+                        ? "border-sol-violet bg-sol-violet text-white"
+                        : "border-sol-border bg-sol-surface text-sol-secondary hover:border-sol-violet/40",
+                    )}
+                  >
+                    {r.label}
+                  </button>
+                ))}
+              </div>
+              <p className="mt-3 text-[0.72rem] font-semibold uppercase tracking-wide text-sol-muted">
+                Anything in your way? (optional)
               </p>
+              <div className="mt-1.5 flex flex-wrap gap-1.5">
+                {BLOCKER_REASONS.map((b) => (
+                  <button
+                    key={b.value}
+                    type="button"
+                    onClick={() =>
+                      setReflectionBlocker((cur) => (cur === b.value ? null : b.value))
+                    }
+                    className={cn(
+                      "rounded-full border px-2.5 py-1 text-[0.74rem] font-medium transition-colors",
+                      reflectionBlocker === b.value
+                        ? "border-sol-champagne bg-sol-champagne text-white"
+                        : "border-sol-border bg-sol-surface text-sol-secondary hover:border-sol-champagne/40",
+                    )}
+                  >
+                    {b.label}
+                  </button>
+                ))}
+              </div>
               <Textarea
-                autoFocus
-                value={reflection}
-                onChange={(e) => setReflection(e.target.value)}
-                placeholder="e.g. Only got 3 of the 8 interviews done, but the ones I did were promising…"
-                className="mt-2 min-h-[60px] resize-none text-[0.9rem]"
+                value={reflectionNote}
+                onChange={(e) => setReflectionNote(e.target.value)}
+                placeholder="Anything else Sol should know? (optional)"
+                className="mt-3 min-h-[52px] resize-none text-[0.88rem]"
               />
-              <div className="mt-2 flex items-center gap-3">
+              <div className="mt-2.5 flex items-center gap-3">
                 <Button size="sm" onClick={finishWeek}>
-                  Finish Week
+                  Prepare Next Week
+                  <ArrowRight className="ml-1 size-3.5" aria-hidden="true" />
                 </Button>
                 <button
                   type="button"
@@ -511,61 +577,79 @@ function WeekBlock({
 
           {stillGenerating && <GeneratingWeekState weekId={week.id} onDone={onWeekReady} />}
 
+          {/* The active week's premium workspace — 64/36 on desktop: left
+              is the mission plus the tasks that make it up, right is
+              everything that supports the mission without being work
+              itself (threshold/evidence/what-goes-wrong). A completed
+              week being reviewed later doesn't need this weight — it
+              falls through to the plain stacked list below instead. */}
           {!stillGenerating && week.mission && week.status === "active" && (
-            <div className="mt-3 flex flex-col gap-2.5 pl-0 sm:pl-[1.85rem]">
-              <div className="rounded-lg border border-sol-champagne/30 bg-sol-champagne-soft/40 px-3.5 py-3">
-                <p className="flex items-center gap-1.5 text-[0.68rem] font-semibold uppercase tracking-wide text-sol-champagne-deep">
-                  <Target className="size-3.5" aria-hidden="true" />
-                  Mission
-                </p>
-                <p className="mt-1 text-[0.95rem] leading-relaxed text-sol-ink">{week.mission}</p>
-              </div>
-              {(week.evidence_required || week.success_threshold) && (
-                <div className="grid gap-2.5 sm:grid-cols-2">
-                  {week.evidence_required && (
-                    <div className="rounded-lg border border-sol-border bg-sol-surface px-3.5 py-3">
-                      <p className="text-[0.66rem] font-semibold uppercase tracking-wide text-sol-muted">
-                        Evidence required
-                      </p>
-                      <p className="mt-1 text-[0.9rem] leading-relaxed text-sol-ink">
-                        {week.evidence_required}
-                      </p>
-                    </div>
-                  )}
-                  {week.success_threshold && (
-                    <div className="rounded-lg border border-sol-border bg-sol-surface px-3.5 py-3">
-                      <p className="text-[0.66rem] font-semibold uppercase tracking-wide text-sol-muted">
-                        This week worked if…
-                      </p>
-                      <p className="mt-1 text-[0.9rem] leading-relaxed text-sol-ink">
-                        {week.success_threshold}
-                      </p>
-                    </div>
-                  )}
-                </div>
-              )}
-              {week.mistakes_to_avoid && week.mistakes_to_avoid.length > 0 && (
-                <div>
-                  <p className="flex items-center gap-1.5 text-[0.66rem] font-semibold uppercase tracking-wide text-sol-champagne-deep">
-                    <ShieldAlert className="size-3.5" aria-hidden="true" />
-                    Mistakes to avoid
+            <div className="mt-3 grid gap-4 pl-0 sm:pl-[1.85rem] lg:grid-cols-[1.78fr_1fr] lg:pl-0">
+              <div className="flex flex-col gap-2.5 lg:pl-[1.85rem]">
+                <div className="rounded-lg border border-sol-champagne/30 bg-sol-champagne-soft/40 px-3.5 py-3">
+                  <p className="flex items-center gap-1.5 text-[0.68rem] font-semibold uppercase tracking-wide text-sol-champagne-deep">
+                    <Target className="size-3.5" aria-hidden="true" />
+                    Mission
                   </p>
-                  <div className="mt-1.5 flex gap-2.5 overflow-x-auto pb-1">
-                    {week.mistakes_to_avoid.map((m, i) => (
-                      <div
-                        key={i}
-                        className="w-[220px] shrink-0 rounded-xl border border-sol-champagne/30 bg-sol-ivory px-3.5 py-3"
-                      >
-                        <p className="text-[0.9rem] leading-relaxed text-sol-ink">{m}</p>
-                      </div>
-                    ))}
-                  </div>
+                  <p className="mt-1 text-[0.95rem] leading-relaxed text-sol-ink">{week.mission}</p>
                 </div>
-              )}
+                <div className="flex flex-col gap-2.5">
+                  {week.tasks.map((task) => (
+                    <TaskRow
+                      key={task.id}
+                      task={task}
+                      roadmapId={roadmapId}
+                      isLastInWeek={task.status !== "done" && remainingCount === 1}
+                      onToggle={onToggle}
+                      onReplanNeeded={onReplanNeeded}
+                    />
+                  ))}
+                </div>
+              </div>
+              <div className="flex flex-col gap-2.5">
+                {week.success_threshold && (
+                  <div className="rounded-lg border border-sol-border bg-sol-surface px-3.5 py-3">
+                    <p className="text-[0.66rem] font-semibold uppercase tracking-wide text-sol-muted">
+                      This week worked if…
+                    </p>
+                    <p className="mt-1 text-[0.9rem] leading-relaxed text-sol-ink">
+                      {week.success_threshold}
+                    </p>
+                  </div>
+                )}
+                {week.evidence_required && (
+                  <div className="rounded-lg border border-sol-border bg-sol-surface px-3.5 py-3">
+                    <p className="text-[0.66rem] font-semibold uppercase tracking-wide text-sol-muted">
+                      Evidence to capture
+                    </p>
+                    <p className="mt-1 text-[0.9rem] leading-relaxed text-sol-ink">
+                      {week.evidence_required}
+                    </p>
+                  </div>
+                )}
+                {week.mistakes_to_avoid && week.mistakes_to_avoid.length > 0 && (
+                  <div>
+                    <p className="flex items-center gap-1.5 text-[0.66rem] font-semibold uppercase tracking-wide text-sol-champagne-deep">
+                      <ShieldAlert className="size-3.5" aria-hidden="true" />
+                      Avoid
+                    </p>
+                    <div className="mt-1.5 flex flex-col gap-2">
+                      {week.mistakes_to_avoid.map((m, i) => (
+                        <div
+                          key={i}
+                          className="shrink-0 rounded-xl border border-sol-champagne/30 bg-sol-ivory px-3.5 py-3"
+                        >
+                          <p className="text-[0.85rem] leading-relaxed text-sol-ink">{m}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
           )}
 
-          {!stillGenerating && (
+          {!stillGenerating && !(week.mission && week.status === "active") && (
             <div className="mt-3 flex flex-col gap-2.5 pl-0 sm:pl-[1.85rem]">
               {week.tasks.map((task) => (
                 <TaskRow
@@ -783,6 +867,14 @@ function RoadmapPage() {
       <h1 className="mt-2 font-display text-[clamp(1.9rem,3.4vw,2.5rem)] font-semibold text-sol-ink">
         {opportunity?.title ?? "Your Roadmap"}
       </h1>
+      {/* North Star — the one-sentence "what this is building toward,"
+          generated once alongside the skeleton. Absent for a roadmap
+          built before this existed; the line simply doesn't render. */}
+      {roadmap.north_star && (
+        <p className="mt-2 max-w-2xl font-display text-[1.05rem] italic leading-snug text-sol-ink">
+          {roadmap.north_star}
+        </p>
+      )}
       <p className="mt-2 max-w-xl text-[0.98rem] text-sol-secondary">
         {founderSummary
           ? `Built around your ${founderSummary.weeklyHours || "available"} hrs/week and ${formatCompactMoney(founderSummary.capitalAmount, founderSummary.currency)} starting capital.`
@@ -814,76 +906,73 @@ function RoadmapPage() {
         </div>
       )}
 
-      {/* ===== MAIN GRID: STAGE RAIL / CURRENT PHASE / CONTEXT ===== */}
-      <div className="mt-9 grid gap-8 lg:grid-cols-[200px_1fr_220px]">
-        {/* ===== DESKTOP: STAGE RAIL — the visual journey ===== */}
-        <nav className="hidden flex-col lg:flex">
-          {phasesWithTasks.map((phase, i) => {
-            const done = phase.tasks.filter((t) => t.status === "done").length;
-            const isDone = phase.tasks.length > 0 && done === phase.tasks.length;
-            const isTrueCurrent = i === effectiveCurrentIndex;
-            const isFocused = i === activeIndex;
-            const isLast = i === phasesWithTasks.length - 1;
-            return (
-              <div key={phase.id} className="flex flex-col">
-                <button
-                  type="button"
-                  onClick={() => setFocusedIndex(i)}
+      {/* ===== HORIZONTAL STAGE/PHASE NAVIGATOR — one strip, every
+          breakpoint. Violet = current, champagne = completed, neutral
+          border/text = future. Never green. Scrolls horizontally on
+          narrow screens instead of collapsing into a second, different
+          mobile layout. Clicking a future phase only changes which
+          phase's skeleton is previewed below — it never triggers
+          generation; that only ever happens when a week actually
+          unlocks (see updateTaskStatus / generateActiveWeekDetail). ===== */}
+      <nav className="mt-9 -mx-1 flex gap-2 overflow-x-auto px-1 pb-1" aria-label="Roadmap phases">
+        {phasesWithTasks.map((phase, i) => {
+          const done = phase.tasks.filter((t) => t.status === "done").length;
+          const isDone = phase.tasks.length > 0 && done === phase.tasks.length;
+          const isTrueCurrent = i === effectiveCurrentIndex;
+          const isFocused = i === activeIndex;
+          return (
+            <button
+              key={phase.id}
+              type="button"
+              onClick={() => setFocusedIndex(i)}
+              className={cn(
+                "flex shrink-0 items-center gap-2.5 rounded-full border px-4 py-2.5 text-left transition-colors",
+                isFocused
+                  ? "border-sol-violet bg-sol-violet-mist/60"
+                  : "border-sol-border bg-sol-surface hover:border-sol-violet/30",
+              )}
+            >
+              <span
+                className={cn(
+                  "flex size-5 shrink-0 items-center justify-center rounded-full border text-[0.65rem] font-semibold",
+                  isDone
+                    ? "border-sol-champagne bg-sol-champagne text-white"
+                    : isTrueCurrent
+                      ? "border-sol-violet text-sol-violet-deep ring-4 ring-sol-violet/15"
+                      : "border-sol-border text-sol-muted",
+                )}
+              >
+                {isDone ? <Check className="size-3" aria-hidden="true" /> : i + 1}
+              </span>
+              <span className="flex flex-col">
+                <span
                   className={cn(
-                    "flex items-center gap-3 rounded-lg px-2.5 py-2.5 text-left transition-colors",
-                    isFocused ? "bg-sol-violet-mist/60" : "hover:bg-sol-ivory",
+                    "whitespace-nowrap text-[0.85rem] font-medium leading-tight",
+                    isFocused || isTrueCurrent ? "text-sol-ink" : "text-sol-secondary",
                   )}
                 >
-                  <span
-                    className={cn(
-                      "flex size-5 shrink-0 items-center justify-center rounded-full border text-[0.65rem] font-semibold",
-                      isDone
-                        ? "border-sol-champagne bg-sol-champagne text-white"
-                        : isTrueCurrent
-                          ? "border-sol-violet text-sol-violet-deep ring-4 ring-sol-violet/15"
-                          : "border-sol-border text-sol-muted",
-                    )}
-                  >
-                    {isDone ? <Check className="size-3" aria-hidden="true" /> : i + 1}
+                  {phase.title}
+                </span>
+                {isTrueCurrent && (
+                  <span className="text-[0.62rem] font-semibold uppercase tracking-wide text-sol-violet-deep">
+                    Current
                   </span>
-                  <span className="flex flex-col">
-                    <span
-                      className={cn(
-                        "text-[0.85rem] font-medium leading-tight",
-                        isFocused || isTrueCurrent ? "text-sol-ink" : "text-sol-secondary",
-                      )}
-                    >
-                      {phase.title}
-                    </span>
-                    {isTrueCurrent && (
-                      <span className="text-[0.65rem] font-semibold uppercase tracking-wide text-sol-violet-deep">
-                        Current
-                      </span>
-                    )}
-                  </span>
-                </button>
-                {!isLast && (
-                  <div
-                    className={cn(
-                      "ml-[1.55rem] h-4 w-px",
-                      isDone ? "bg-sol-champagne/50" : "bg-sol-border",
-                    )}
-                    aria-hidden="true"
-                  />
                 )}
-              </div>
-            );
-          })}
-        </nav>
+              </span>
+            </button>
+          );
+        })}
+      </nav>
 
-        {/* ===== DESKTOP: FOCUSED STAGE ===== */}
+      {/* ===== FOCUSED PHASE WORKSPACE + CONTEXT ===== */}
+      <div className="mt-6 grid gap-8 lg:grid-cols-[1fr_220px]">
         {activePhase && (
-          <section className="hidden lg:block">
+          <section>
             {isViewingNonCurrent && (
               <div className="mb-3 flex items-center gap-2 rounded-lg bg-sol-ivory px-3 py-2 text-[0.8rem] text-sol-secondary">
                 <ChevronRight className="size-3.5 shrink-0" aria-hidden="true" />
-                Reviewing a {activeIndex < effectiveCurrentIndex ? "completed" : "upcoming"} stage —
-                your current stage stays marked in the rail.
+                Previewing a {activeIndex < effectiveCurrentIndex ? "completed" : "upcoming"} stage
+                — your current stage stays marked in the navigator above.
               </div>
             )}
             <div className="flex items-center gap-3">
@@ -926,7 +1015,9 @@ function RoadmapPage() {
           </section>
         )}
 
-        {/* ===== DESKTOP: CONTEXT PANEL ===== */}
+        {/* ===== CONTEXT PANEL (desktop only — same content isn't worth
+            the extra scroll on a narrow screen where it's already one tap
+            away via Ask Sol in the header) ===== */}
         <aside className="hidden flex-col gap-4 lg:flex">
           {nextTask && (
             <div className="rounded-xl border border-sol-border bg-sol-surface p-4">
@@ -946,78 +1037,6 @@ function RoadmapPage() {
           </div>
           <AskSolStageButton />
         </aside>
-
-        {/* ===== MOBILE: FULL VERTICAL TIMELINE ===== */}
-        <div className="flex flex-col gap-8 lg:hidden">
-          {phasesWithTasks.map((phase, i) => {
-            const done = phase.tasks.filter((t) => t.status === "done").length;
-            const isCurrent = i === effectiveCurrentIndex;
-            const isDone = phase.tasks.length > 0 && done === phase.tasks.length;
-            return (
-              <section
-                key={phase.id}
-                className={cn(
-                  "rounded-2xl p-5 transition-colors",
-                  isCurrent
-                    ? "border border-sol-violet/30 bg-sol-violet-mist/60"
-                    : "border border-transparent",
-                  !isCurrent && !isDone && "opacity-70",
-                )}
-              >
-                <div className="flex items-center gap-3">
-                  <span
-                    className={cn(
-                      "flex size-6 shrink-0 items-center justify-center rounded-full border text-[0.65rem] font-semibold",
-                      isDone
-                        ? "border-sol-champagne bg-sol-champagne text-white"
-                        : isCurrent
-                          ? "border-sol-violet text-sol-violet-deep ring-4 ring-sol-violet/15"
-                          : "border-sol-border text-sol-muted",
-                    )}
-                  >
-                    {isDone ? <Check className="size-3.5" aria-hidden="true" /> : i + 1}
-                  </span>
-                  <h2 className="font-display text-lg font-semibold text-sol-ink">{phase.title}</h2>
-                  <span className="text-[0.8rem] text-sol-secondary">
-                    {done}/{phase.tasks.length} done
-                  </span>
-                </div>
-                {phase.description && (
-                  <p className="mt-1.5 pl-9 text-[0.92rem] text-sol-secondary">
-                    {phase.description}
-                  </p>
-                )}
-                <div className="mt-3 flex flex-col gap-2.5 pl-0 sm:pl-9">
-                  {phase.weeks.length > 0
-                    ? phase.weeks.map((week) => (
-                        <WeekBlock
-                          key={week.id}
-                          week={week}
-                          roadmapId={roadmap.id}
-                          onToggle={(taskId, status, reflection) =>
-                            toggleTaskMutation.mutate({ taskId, status, reflection })
-                          }
-                          onReplanNeeded={refresh}
-                          onWeekReady={refresh}
-                        />
-                      ))
-                    : phase.tasks.map((task) => (
-                        <TaskRow
-                          key={task.id}
-                          task={task}
-                          roadmapId={roadmap.id}
-                          isLastInWeek={false}
-                          onToggle={(taskId, status) =>
-                            toggleTaskMutation.mutate({ taskId, status })
-                          }
-                          onReplanNeeded={refresh}
-                        />
-                      ))}
-                </div>
-              </section>
-            );
-          })}
-        </div>
       </div>
     </DashboardShell>
   );

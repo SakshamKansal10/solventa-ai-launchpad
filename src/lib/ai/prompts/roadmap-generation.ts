@@ -8,8 +8,19 @@ import {
   type RoadmapWeekDetailPlan,
   type OpportunityPackage,
 } from "@/lib/ai/schemas";
-import { formatProfileForPrompt, PLAIN_LANGUAGE_RULE } from "@/lib/ai/prompts/shared";
+import {
+  formatProfileForPrompt,
+  formatGenomeAndAmbitionForPrompt,
+  PLAIN_LANGUAGE_RULE,
+} from "@/lib/ai/prompts/shared";
 import type { NormalizedProfile } from "@/lib/profile/normalize";
+
+/** Shared by every roadmap-generation prompt below — concrete over
+ * abstract, short over long, a founder should never feel like they're
+ * reading a pitch deck. Word counts aren't mechanically enforced by the
+ * schema, so this has to actually land as a followed instruction, not a
+ * suggestion — exact numbers, not "keep it brief". */
+const OUTPUT_STYLE_RULE = `Style: concrete and short, never essay prose. Approximate max lengths — treat these as real limits, not suggestions: a phase description/outcome is 12-18 words, a week objective is 10-16 words, a mission title is 5-12 words, an action bullet (task "what") is 8-18 words, a mistake to avoid is 8-16 words, a success threshold is ONE measurable statement, not a list. Never use these phrases or their equivalents: "embark on", "unlock", "leverage the power of", "revolutionize", "seamless", "game-changing", "unleash". Prefer concrete verbs: interview, build, test, publish, price, call, measure, compare, recruit, deliver, review, automate.`;
 
 /** The on-demand, single-opportunity Gemini call behind "Build My
  * Roadmap" — fires only after a founder explicitly selects one of their 3
@@ -82,12 +93,15 @@ ${ROADMAP_JSON_CONTRACT}`;
 // real founder-facing "Build My Roadmap" flow.
 // ============================================================
 
-const SKELETON_SYSTEM_INSTRUCTION = `You are Sol, Solventia's execution planner. You design the long-term SHAPE of a founder's path to actually build ONE specific business — phases and, within each phase, weeks — WITHOUT writing any task detail yet, since only the active week's detail is ever generated, just before the founder needs it. ${PLAIN_LANGUAGE_RULE} Use only the phases that genuinely apply (choose from: understand, explore, validate, build, launch, improve — skip any that don't fit this specific opportunity, and use realistic phase LENGTH — validating a problem might be 3 weeks, building repeatable acquisition might be 10). Together the phases should span roughly 40-52 weeks of realistic founder progress — a real year of building a business, not a 6-week sprint — but never pad with meaningless weeks just to hit that number; a genuinely simpler business can run shorter. Each week needs a title and ONE-sentence objective a founder can read before it unlocks, without seeing any tasks yet.`;
+const SKELETON_SYSTEM_INSTRUCTION = `You are Sol, Solventia's execution planner. You design the long-term SHAPE of a founder's path to actually build ONE specific business — a one-sentence North Star, then phases and, within each phase, weeks — WITHOUT writing any task detail yet, since only the active week's detail is ever generated, just before the founder needs it. ${PLAIN_LANGUAGE_RULE} ${OUTPUT_STYLE_RULE}
+
+Use only the phases that genuinely apply (choose from: understand, explore, validate, build, launch, improve — skip any that don't fit this specific opportunity, and use realistic phase LENGTH — validating a problem might be 3 weeks, building repeatable acquisition might be 10). Aim for 6-8 phases for most businesses — a genuinely simpler opportunity or a founder with limited capacity can have fewer, but never pad phases or weeks that don't apply just to hit a number. Together the phases should span roughly 26-52 weeks of realistic founder progress, calibrated to THIS founder and THIS opportunity: target close to a full year (~52 weeks) when the business and this founder's real capability/capacity genuinely support sustained, ambitious work, and a shorter path (as low as ~26 weeks) for a narrower opportunity or a founder with real, stated capacity limits — never force either direction. Each phase MUST be adapted to this specific opportunity type, never a generic copy-paste sequence — a physical-product business, a service business, and a digital product need genuinely different phase shapes. Each week needs a title and ONE-sentence objective a founder can read before it unlocks, without seeing any tasks yet.`;
 
 const SKELETON_JSON_CONTRACT = `{
+  "northStar": string (one sentence: what this whole roadmap is building toward),
   "phases": [ 4-8 objects, each: {
-    "key": "understand"|"explore"|"validate"|"build"|"launch"|"improve", "title": string, "description": string,
-    "weeks": [ 1-10 objects, each: { "weekNumber": integer starting at 1 within this phase, "title": string, "objective": string (one sentence) } ]
+    "key": "understand"|"explore"|"validate"|"build"|"launch"|"improve", "title": string, "description": string (the phase's outcome, 12-18 words),
+    "weeks": [ 1-10 objects, each: { "weekNumber": integer starting at 1 within this phase, "title": string, "objective": string (one sentence, 10-16 words) } ]
   } ]
 }`;
 
@@ -96,6 +110,8 @@ export async function generateRoadmapSkeleton(
   opportunity: OpportunityPackage,
 ): Promise<RoadmapSkeletonPlan> {
   const prompt = `Founder profile:\n${formatProfileForPrompt(profile)}
+
+${formatGenomeAndAmbitionForPrompt(profile)}
 
 Opportunity: ${opportunity.title}
 What it is: ${opportunity.plainEnglishSummary}
@@ -106,7 +122,7 @@ Starting capital: ${opportunity.startingCapital}
 Weekly time: ${opportunity.weeklyTime}
 Revenue path: ${opportunity.revenuePath}
 
-Design the long-term shape only — phase and week titles/objectives, no tasks. This founder has ${profile.time.weeklyHours} hrs/week realistically available; phase/week LENGTH (how many weeks a phase takes) should reflect that, not a generic timeline.
+Design the long-term shape only — North Star, phase and week titles/objectives, no tasks. This founder has ${profile.time.weeklyHours} hrs/week realistically available; phase/week LENGTH (how many weeks a phase takes) should reflect that, not a generic timeline. Calibrate scope and ambition to the Founder Genome and Ambition Calibration above — never a ceiling-scraping venture plan for a resource-limited beginner, and never an unrealistically small plan for a highly capable, well-resourced founder.
 
 Respond with ONLY a single JSON object — no markdown fences, no commentary before or after — matching this exact shape:
 ${SKELETON_JSON_CONTRACT}`;
@@ -120,14 +136,16 @@ ${SKELETON_JSON_CONTRACT}`;
   });
 }
 
-const WEEK_DETAIL_SYSTEM_INSTRUCTION = `You are Sol, Solventia's execution planner. You are filling in the REAL detail for exactly ONE week of a founder's roadmap, right as it unlocks — not the whole roadmap. ${PLAIN_LANGUAGE_RULE} Give this week 2-5 concrete actions (tasks) that realistically fit this founder's weekly hours. If the founder lacks a skill a task requires, insert a short learning task before the task that needs it. State honestly what real-world evidence (if any) this week should produce — interviews, a test purchase, a signed customer, direct observation — and what "this week worked" concretely looks like; a pure-execution week (no evidence to collect) should say so plainly rather than inventing evidence for its own sake. Name 1-3 real, specific mistakes founders make in exactly this kind of week — never generic advice like "stay organized". If this week follows an earlier one, actually use what happened in that earlier week (what got done, and the founder's own reflection if given) to shape this week — never ignore it and repeat a generic template.`;
+const WEEK_DETAIL_SYSTEM_INSTRUCTION = `You are Sol, Solventia's execution planner. You are filling in the REAL detail for exactly ONE week of a founder's roadmap, right as it unlocks — not the whole roadmap. ${PLAIN_LANGUAGE_RULE} ${OUTPUT_STYLE_RULE}
+
+Give this week 2-5 concrete actions (tasks) that realistically fit this founder's weekly hours — never 15 microtasks; a founder should be able to hold this week's whole plan in their head. If the founder lacks a skill a task requires, insert a short learning task before the task that needs it. State honestly what real-world evidence (if any) this week should produce — interviews, a test purchase, a signed customer, direct observation — and what "this week worked" concretely looks like; a pure-execution week (no evidence to collect) should say so plainly rather than inventing evidence for its own sake. Name 1-3 real, specific mistakes founders make in exactly this kind of week — never generic advice like "stay organized". If this week follows an earlier one, actually use what happened in that earlier week (what got done, and the founder's own reflection if given) to shape this week — never ignore it and repeat a generic template. You may refine or flag a needed pivot based on what actually happened, but never silently rewrite what the founder already completed.`;
 
 const WEEK_DETAIL_JSON_CONTRACT = `{
-  "mission": string (concrete, more specific than the objective already shown),
-  "tasks": [ 2-5 objects, each: { "what": string, "why": string, "how": string, "resource": string|null, "timeEstimate": string, "deadlineDaysFromStart": number, "doneWhen": string, "required": boolean, "dependsOn": the exact "what" text of a prior task THIS WEEK, or null if it can start independently — NEVER an index, number, or ID } ],
-  "mistakesToAvoid": string[1-3],
+  "mission": string (short and concrete, 5-14 words — more specific than the objective already shown, not a restatement of it),
+  "tasks": [ 2-5 objects, each: { "what": string (8-18 words), "why": string, "how": string, "resource": string|null, "timeEstimate": string, "deadlineDaysFromStart": number, "doneWhen": string, "required": boolean, "dependsOn": the exact "what" text of a prior task THIS WEEK, or null if it can start independently — NEVER an index, number, or ID } ],
+  "mistakesToAvoid": string[1-3] (each 8-16 words),
   "evidenceRequired": string,
-  "successThreshold": string
+  "successThreshold": string (one measurable statement)
 }`;
 
 export interface WeekGenerationContext {
@@ -157,6 +175,8 @@ export async function generateWeekDetail(
     : "\nThis is Week 1 — nothing precedes it.";
 
   const prompt = `Founder profile:\n${formatProfileForPrompt(profile)}
+
+${formatGenomeAndAmbitionForPrompt(profile)}
 
 Opportunity: ${opportunity.title}
 What it is: ${opportunity.plainEnglishSummary}
