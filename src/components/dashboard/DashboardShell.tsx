@@ -371,7 +371,13 @@ export function DashboardShell({
             </div>
           </header>
 
-          <main className="mx-auto flex w-full max-w-[1440px] flex-1 flex-col gap-0 px-[18px] py-9 sm:px-6 lg:px-12 lg:py-14">
+          {/* Right padding at lg is deliberately wider than left (96px vs
+              48px) — the fixed Ask Sol trigger below reserves an 88px-wide
+              strip at the viewport's bottom-right (28px offset + 60px
+              button), and content that fills the full column width would
+              otherwise render text underneath it whenever that row's
+              vertical position happens to land in the trigger's zone. */}
+          <main className="mx-auto flex w-full max-w-[1440px] flex-1 flex-col gap-0 px-[18px] py-9 sm:px-6 sm:pr-10 lg:pl-12 lg:pr-24 lg:py-14">
             {children}
           </main>
         </div>
