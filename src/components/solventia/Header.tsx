@@ -14,6 +14,7 @@ import {
 import mark from "@/assets/solventia-mark.png";
 import { useActiveSection, scrollToSection } from "@/hooks/use-active-section";
 import { SignInDialog } from "./SignInDialog";
+import { LanguageSwitcher } from "./LanguageSwitcher";
 import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import {
   DropdownMenu,
@@ -23,15 +24,16 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { getCurrentUser, signOut } from "@/lib/actions/auth";
+import { useLocale } from "@/lib/i18n/LocaleProvider";
 
 /** Exactly four items, exactly these anchors — PRODUCT and HOW IT WORKS
  * are same-page scrolls (only meaningful on "/"), FOR ORGANIZATIONS and
  * ABOUT are real routes. No "Explore Ideas" (Solventia isn't a public
  * idea catalogue) and no top-level "Roadmaps" (roadmaps live inside
  * Product / How It Works). */
-const SCROLL_NAV: { label: string; id: string }[] = [
-  { label: "Product", id: "founder-signal" },
-  { label: "How It Works", id: "how-it-works" },
+const SCROLL_NAV: { labelKey: string; id: string }[] = [
+  { labelKey: "nav.product", id: "founder-signal" },
+  { labelKey: "nav.howItWorks", id: "how-it-works" },
 ];
 const SCROLL_IDS = SCROLL_NAV.map((item) => item.id);
 
@@ -50,6 +52,7 @@ interface HeaderProps {
 }
 
 export function Header({ pendingNext }: HeaderProps = {}) {
+  const { t } = useLocale();
   const [scrolled, setScrolled] = useState(false);
   // Separate, higher threshold — the background/border reveal (12px) and
   // the shadow (20px) are deliberately not the same trigger, so the
@@ -155,7 +158,7 @@ export function Header({ pendingNext }: HeaderProps = {}) {
                   : "text-sol-ink/80 hover:text-sol-navy"
               }`}
             >
-              {item.label}
+              {t(item.labelKey)}
               <span
                 className={`absolute -bottom-1.5 left-[-2px] h-[1.5px] w-[calc(100%+4px)] origin-center bg-sol-champagne transition-transform duration-[180ms] ${
                   isHome && activeId === item.id ? "scale-x-100" : "scale-x-0"
@@ -168,18 +171,19 @@ export function Header({ pendingNext }: HeaderProps = {}) {
             className="text-[14px] font-[550] uppercase tracking-[0.04em] text-sol-ink/80 transition-colors duration-300 hover:text-sol-navy"
             activeProps={{ className: "text-sol-ink" }}
           >
-            For Organizations
+            {t("nav.forOrganizations")}
           </Link>
           <Link
             to="/about"
             className="text-[14px] font-[550] uppercase tracking-[0.04em] text-sol-ink/80 transition-colors duration-300 hover:text-sol-navy"
             activeProps={{ className: "text-sol-ink" }}
           >
-            About
+            {t("nav.about")}
           </Link>
         </nav>
 
         <div className="flex items-center gap-3">
+          <LanguageSwitcher className="hidden text-[13px] font-medium text-sol-ink/70 transition-colors hover:text-sol-navy sm:inline-flex sm:items-center sm:gap-1" />
           {isSignedIn ? (
             <>
               <button
@@ -187,7 +191,7 @@ export function Header({ pendingNext }: HeaderProps = {}) {
                 onClick={() => navigate({ to: "/dashboard" })}
                 className="hidden h-12 items-center gap-2 rounded-full bg-sol-navy px-[22px] text-[15px] font-semibold text-white transition-all duration-[180ms] hover:-translate-y-px hover:shadow-[0_10px_30px_rgba(23,32,61,.13)] sm:inline-flex"
               >
-                Continue Dashboard
+                {t("nav.continueDashboard")}
                 <ArrowRight className="size-4 text-sol-champagne" aria-hidden="true" />
               </button>
               <DropdownMenu>
@@ -214,25 +218,25 @@ export function Header({ pendingNext }: HeaderProps = {}) {
                   <DropdownMenuItem asChild>
                     <Link to="/consultation" className="cursor-pointer">
                       <Sparkles className="size-4" aria-hidden="true" />
-                      Start New Consultation
+                      {t("nav.startNewConsultation")}
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
                     <Link to="/dashboard/history" className="cursor-pointer">
                       <History className="size-4" aria-hidden="true" />
-                      History
+                      {t("nav.history")}
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
                     <Link to="/dashboard/settings" className="cursor-pointer">
                       <Settings className="size-4" aria-hidden="true" />
-                      Settings
+                      {t("nav.settings")}
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={handleSignOut} className="cursor-pointer">
                     <LogOut className="size-4" aria-hidden="true" />
-                    Sign Out
+                    {t("nav.signOut")}
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
@@ -245,7 +249,7 @@ export function Header({ pendingNext }: HeaderProps = {}) {
                     type="button"
                     className="hidden text-[15px] font-semibold text-sol-ink transition-colors hover:text-sol-violet-deep sm:inline-flex"
                   >
-                    Sign In
+                    {t("nav.signIn")}
                   </button>
                 }
                 nextPath={pendingNext}
@@ -257,7 +261,7 @@ export function Header({ pendingNext }: HeaderProps = {}) {
                 onClick={() => navigate({ to: "/consultation" })}
                 className="hidden h-12 items-center gap-2 rounded-full bg-sol-navy px-[22px] text-[15px] font-semibold text-white transition-all duration-[180ms] hover:-translate-y-px hover:shadow-[0_10px_30px_rgba(23,32,61,.13)] sm:inline-flex"
               >
-                Find My Business Idea
+                {t("nav.findMyBusinessIdea")}
                 <ArrowRight className="size-4 text-sol-champagne" aria-hidden="true" />
               </button>
             </>
@@ -287,7 +291,7 @@ export function Header({ pendingNext }: HeaderProps = {}) {
                         : "text-sol-secondary hover:bg-sol-ivory hover:text-sol-ink"
                     }`}
                   >
-                    {item.label}
+                    {t(item.labelKey)}
                   </button>
                 ))}
                 <Link
@@ -295,15 +299,18 @@ export function Header({ pendingNext }: HeaderProps = {}) {
                   onClick={() => setMobileOpen(false)}
                   className="rounded-lg px-3 py-3 text-left text-base font-medium text-sol-secondary transition-colors hover:bg-sol-ivory hover:text-sol-ink"
                 >
-                  For Organizations
+                  {t("nav.forOrganizations")}
                 </Link>
                 <Link
                   to="/about"
                   onClick={() => setMobileOpen(false)}
                   className="rounded-lg px-3 py-3 text-left text-base font-medium text-sol-secondary transition-colors hover:bg-sol-ivory hover:text-sol-ink"
                 >
-                  About
+                  {t("nav.about")}
                 </Link>
+                <div className="px-3 py-3">
+                  <LanguageSwitcher />
+                </div>
               </nav>
               <div className="mt-8 flex flex-col gap-3">
                 {isSignedIn ? (
@@ -316,7 +323,7 @@ export function Header({ pendingNext }: HeaderProps = {}) {
                       }}
                       className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-sol-navy text-[15px] font-semibold text-white"
                     >
-                      Continue Dashboard
+                      {t("nav.continueDashboard")}
                       <ArrowRight className="size-4 text-sol-champagne" aria-hidden="true" />
                     </button>
                     <button
@@ -327,7 +334,7 @@ export function Header({ pendingNext }: HeaderProps = {}) {
                       }}
                       className="inline-flex h-12 w-full items-center justify-center rounded-xl border border-sol-border text-[15px] font-semibold text-sol-ink"
                     >
-                      Start New Consultation
+                      {t("nav.startNewConsultation")}
                     </button>
                     <button
                       type="button"
@@ -337,7 +344,7 @@ export function Header({ pendingNext }: HeaderProps = {}) {
                       }}
                       className="text-center text-[0.82rem] font-medium text-sol-secondary hover:text-sol-ink"
                     >
-                      Sign Out
+                      {t("nav.signOut")}
                     </button>
                   </>
                 ) : (
@@ -349,7 +356,7 @@ export function Header({ pendingNext }: HeaderProps = {}) {
                           onClick={() => setMobileOpen(false)}
                           className="inline-flex h-12 w-full items-center justify-center rounded-xl border border-sol-border text-[15px] font-semibold text-sol-ink"
                         >
-                          Sign In
+                          {t("nav.signIn")}
                         </button>
                       }
                       nextPath={pendingNext}
@@ -362,7 +369,7 @@ export function Header({ pendingNext }: HeaderProps = {}) {
                       }}
                       className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-sol-navy text-[15px] font-semibold text-white"
                     >
-                      Find My Business Idea
+                      {t("nav.findMyBusinessIdea")}
                       <ArrowRight className="size-4 text-sol-champagne" aria-hidden="true" />
                     </button>
                   </>

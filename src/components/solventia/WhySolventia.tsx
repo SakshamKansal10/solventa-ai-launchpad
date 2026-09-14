@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { motion, useReducedMotion } from "motion/react";
 import { Check, X } from "lucide-react";
+import { useLocale } from "@/lib/i18n/LocaleProvider";
 
 /** Exactly three rows each side — compressed from the old five, and with
  * every unsupported claim removed (no "mentor marketplace", "funding
@@ -11,6 +12,7 @@ const GENERIC = ["One-off advice", "No execution memory", "No proof loop"];
 const SOLVENTIA = ["Living founder profile", "Real-world evidence", "Adaptive weekly execution"];
 
 export function WhySolventia() {
+  const { t } = useLocale();
   const reduceMotion = useReducedMotion();
   const [entered, setEntered] = useState(false);
 
@@ -18,7 +20,7 @@ export function WhySolventia() {
     <section className="bg-[#F5EFE6] px-[18px] py-[100px] sm:px-6 lg:px-9">
       <div className="mx-auto max-w-[1120px]">
         <h2 className="text-center font-display text-[32px] font-semibold leading-[1.15] text-sol-ink sm:text-[40px]">
-          Why not just ask a chatbot?
+          {t("whySolventia.headline")}
         </h2>
 
         <motion.div

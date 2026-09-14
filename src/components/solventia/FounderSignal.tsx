@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { motion, useReducedMotion } from "motion/react";
 import mark from "@/assets/solventia-mark.png";
+import { useLocale } from "@/lib/i18n/LocaleProvider";
 
 /** A generic but high-potential demo profile — deliberately not the
  * founder's own data (this section renders identically for every
@@ -44,6 +45,7 @@ function orbitPoint(index: number, total: number, radius: number) {
  * produces three ranked directions, which flow into execution. The
  * point is showing the mechanism, not listing features. */
 export function FounderSignal() {
+  const { t } = useLocale();
   const reduceMotion = useReducedMotion();
   const [entered, setEntered] = useState(false);
 
@@ -54,14 +56,14 @@ export function FounderSignal() {
     >
       <div className="mx-auto max-w-[1180px] text-center">
         <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-sol-champagne-deep">
-          The Solventia Difference
+          {t("founderSignal.eyebrow")}
         </p>
         <h2 className="mx-auto mt-5 max-w-[720px] font-display text-[32px] font-semibold leading-[1.15] text-sol-ink sm:text-[40px] sm:leading-[46px]">
-          Your profile should{" "}
-          <span className="italic text-sol-champagne-deep">change the opportunity.</span>
+          {t("founderSignal.headline1")}{" "}
+          <span className="italic text-sol-champagne-deep">{t("founderSignal.headline2")}</span>
         </h2>
         <p className="mx-auto mt-5 max-w-[580px] text-[17px] leading-[27px] text-sol-secondary">
-          Watch how Solventia turns founder context into business direction.
+          {t("founderSignal.subhead")}
         </p>
       </div>
 

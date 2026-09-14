@@ -17,6 +17,7 @@ import {
 } from "@/lib/auth-error-messages";
 import { OTP_MAX_LENGTH, sanitizeOtpInput, isOtpLengthPlausible } from "@/lib/otp";
 import { sanitizeNextPath } from "@/lib/safe-redirect";
+import { useLocale } from "@/lib/i18n/LocaleProvider";
 
 const RESEND_COOLDOWN_SECONDS = 30;
 
@@ -39,6 +40,7 @@ export const Route = createFileRoute("/sign-in")({
 });
 
 function SignInPage() {
+  const { t } = useLocale();
   const { next } = Route.useSearch();
   const nextPath = sanitizeNextPath(next);
   const queryClient = useQueryClient();
@@ -151,7 +153,7 @@ function SignInPage() {
           {mode === "otp" ? (
             <>
               <h1 className="font-display text-2xl font-semibold text-sol-ink">
-                Check your email for a code
+                {t("signin.checkEmail")}
               </h1>
               <p className="mt-1.5 text-[0.85rem] text-sol-secondary">
                 We sent a verification code to <span className="text-sol-ink">{email}</span>.
@@ -181,7 +183,7 @@ function SignInPage() {
                   disabled={loading || !isOtpLengthPlausible(code)}
                 >
                   {loading && <Loader2 className="size-4 animate-spin" aria-hidden="true" />}
-                  Verify & sign in
+                  {t("signin.verify")}
                 </PremiumButton>
                 <div className="flex items-center justify-between text-[0.8rem]">
                   <button
@@ -193,7 +195,7 @@ function SignInPage() {
                     }}
                     className="text-sol-secondary hover:text-sol-ink"
                   >
-                    Back
+                    {t("signin.back")}
                   </button>
                   <button
                     type="button"
@@ -201,30 +203,32 @@ function SignInPage() {
                     onClick={requestCode}
                     className="font-medium text-sol-violet-deep disabled:text-sol-muted"
                   >
-                    {resendCooldown > 0 ? `Resend code (${resendCooldown}s)` : "Resend code"}
+                    {resendCooldown > 0
+                      ? `${t("signin.resendCode")} (${resendCooldown}s)`
+                      : t("signin.resendCode")}
                   </button>
                 </div>
               </form>
             </>
           ) : (
             <>
-              <h1 className="font-display text-2xl font-semibold text-sol-ink">Welcome back</h1>
+              <h1 className="font-display text-2xl font-semibold text-sol-ink">
+                {t("signin.welcomeBack")}
+              </h1>
               <p className="mt-1.5 text-[0.85rem] text-sol-secondary">
-                {nextPath
-                  ? "Sign in to pick up exactly where you left off."
-                  : "Sign in to continue building with Solventia."}
+                {nextPath ? "Sign in to pick up exactly where you left off." : t("signin.subhead")}
               </p>
               <div className="mt-5">
                 <GoogleSignInButton redirectPath={googleRedirectPath} />
               </div>
               <div className="my-4 flex items-center gap-3">
                 <div className="h-px flex-1 bg-sol-border" />
-                <span className="text-[0.75rem] text-sol-muted">or</span>
+                <span className="text-[0.75rem] text-sol-muted">{t("signin.or")}</span>
                 <div className="h-px flex-1 bg-sol-border" />
               </div>
               <form onSubmit={handlePasswordSubmit} className="flex flex-col gap-4">
                 <div className="flex flex-col gap-1.5">
-                  <Label htmlFor="page-signin-email">Email</Label>
+                  <Label htmlFor="page-signin-email">{t("signin.email")}</Label>
                   <Input
                     id="page-signin-email"
                     type="email"
@@ -235,7 +239,7 @@ function SignInPage() {
                   />
                 </div>
                 <div className="flex flex-col gap-1.5">
-                  <Label htmlFor="page-signin-password">Password</Label>
+                  <Label htmlFor="page-signin-password">{t("signin.password")}</Label>
                   <Input
                     id="page-signin-password"
                     type="password"
@@ -255,7 +259,7 @@ function SignInPage() {
                   disabled={loading}
                 >
                   {loading && <Loader2 className="size-4 animate-spin" aria-hidden="true" />}
-                  Sign In
+                  {t("signin.submit")}
                 </PremiumButton>
                 <button
                   type="button"
@@ -263,7 +267,7 @@ function SignInPage() {
                   onClick={requestCode}
                   className="text-center text-[0.8rem] text-sol-secondary hover:text-sol-ink disabled:opacity-50"
                 >
-                  Forgot your password? Sign in with a code instead
+                  {t("signin.forgotPassword")}
                 </button>
               </form>
             </>

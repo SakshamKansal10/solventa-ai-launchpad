@@ -1,4 +1,5 @@
 import { motion, useReducedMotion } from "motion/react";
+import { useLocale } from "@/lib/i18n/LocaleProvider";
 
 const RINGS: { r: number; stroke: string; dash: string }[] = [
   { r: 230, stroke: "rgba(114,87,216,.10)", dash: "180 46 120 70" },
@@ -15,6 +16,7 @@ const RINGS: { r: number; stroke: string; dash: string }[] = [
  * statement itself never moves; only two thin highlight arcs travel,
  * slowly, in opposite directions. */
 export function BrandMoment() {
+  const { t } = useLocale();
   const reduceMotion = useReducedMotion();
   return (
     <section
@@ -82,12 +84,12 @@ export function BrandMoment() {
 
       <div className="relative mx-auto max-w-[980px] text-center">
         <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-sol-champagne-deep">
-          Why Solventia Exists
+          {t("brandMoment.eyebrow")}
         </p>
         <p className="mx-auto mt-6 font-display text-[36px] font-medium leading-[1.2] text-sol-ink sm:text-[48px] lg:text-[56px] lg:leading-[1.15]">
-          Millions have ideas.{" "}
-          <span className="italic text-sol-champagne-deep">Few have the clarity</span> to turn them
-          into something real.
+          {t("brandMoment.statement1")}{" "}
+          <span className="italic text-sol-champagne-deep">{t("brandMoment.statement2")}</span>{" "}
+          {t("brandMoment.statement3")}
         </p>
       </div>
     </section>

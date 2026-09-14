@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Loader2 } from "lucide-react";
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
 import { cn } from "@/lib/utils";
+import { useLocale } from "@/lib/i18n/LocaleProvider";
 
 function GoogleGlyph() {
   return (
@@ -40,6 +41,7 @@ interface GoogleSignInButtonProps {
  * the whole page to Google's own consent screen via Supabase Auth, then
  * back to /auth/callback to complete the session. */
 export function GoogleSignInButton({ redirectPath, className }: GoogleSignInButtonProps) {
+  const { t } = useLocale();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -77,7 +79,7 @@ export function GoogleSignInButton({ redirectPath, className }: GoogleSignInButt
         )}
       >
         {loading ? <Loader2 className="size-4 animate-spin" aria-hidden="true" /> : <GoogleGlyph />}
-        Continue with Google
+        {t("signin.continueWithGoogle")}
       </button>
       {error && <p className="text-center text-[0.78rem] text-destructive">{error}</p>}
     </div>

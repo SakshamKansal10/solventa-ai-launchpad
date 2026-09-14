@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { motion, useReducedMotion } from "motion/react";
 import { Compass, FlaskConical, Map, Sparkles } from "lucide-react";
+import { useLocale } from "@/lib/i18n/LocaleProvider";
 
 /** Four stages only — the seven internal onboarding chapters don't need
  * individual advertising; what matters publicly is the shape of the
@@ -42,6 +43,7 @@ const DRAW_DURATION = 1.2;
  * the old seven isolated circle-plus-paragraph grid, which read as a list
  * rather than a transformation. */
 export function HowItWorks() {
+  const { t } = useLocale();
   const reduceMotion = useReducedMotion();
   const [entered, setEntered] = useState(false);
 
@@ -52,13 +54,13 @@ export function HowItWorks() {
     >
       <div className="mx-auto max-w-[1180px]">
         <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-sol-champagne-deep">
-          How It Works
+          {t("howItWorks.eyebrow")}
         </p>
         <h2 className="mt-4 font-display text-[32px] font-semibold leading-[1.15] text-sol-ink sm:text-[40px] sm:leading-[46px]">
-          From uncertainty to execution.
+          {t("howItWorks.headline")}
         </h2>
         <p className="mt-4 max-w-[560px] text-[17px] leading-[27px] text-sol-secondary">
-          Every consultation moves you through the same four stages, calibrated to your own answers.
+          {t("howItWorks.subhead")}
         </p>
 
         <motion.div

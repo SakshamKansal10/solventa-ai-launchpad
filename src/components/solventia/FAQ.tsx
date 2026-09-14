@@ -4,6 +4,7 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
+import { useLocale } from "@/lib/i18n/LocaleProvider";
 
 /** Exactly five — the remaining questions from the old ten-item list
  * move to /about rather than disappearing outright. */
@@ -31,6 +32,7 @@ const FAQS = [
 ];
 
 export function FAQ() {
+  const { t } = useLocale();
   return (
     <section
       id="faq"
@@ -38,7 +40,7 @@ export function FAQ() {
     >
       <div className="mx-auto max-w-[840px]">
         <h2 className="text-center font-display text-[32px] font-semibold leading-[1.15] text-sol-ink sm:text-[36px]">
-          Questions before you start?
+          {t("faq.title")}
         </h2>
 
         <div className="mt-10 rounded-[24px] border border-sol-border bg-sol-hp-faq-panel px-6 lg:px-10">

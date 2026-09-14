@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { motion, useReducedMotion } from "motion/react";
 import { Check, Lock } from "lucide-react";
 import mark from "@/assets/solventia-mark.png";
+import { useLocale } from "@/lib/i18n/LocaleProvider";
 
 const WEEK_1_TASKS = [
   "Draft your 8-question interview script",
@@ -24,6 +25,7 @@ const THRESHOLD = 5;
  * Never green, anywhere — violet marks the intelligent/progress state,
  * champagne marks completion, navy marks structure. */
 export function AdaptiveRoadmap() {
+  const { t } = useLocale();
   const reduceMotion = useReducedMotion();
   const [entered, setEntered] = useState(false);
   const [count, setCount] = useState(0);
@@ -75,7 +77,7 @@ export function AdaptiveRoadmap() {
           Adaptive Execution
         </p>
         <h2 className="mt-4 max-w-[600px] font-display text-[32px] font-semibold leading-[1.15] text-sol-ink sm:text-[40px] sm:leading-[46px]">
-          Your plan changes when reality does.
+          {t("adaptiveRoadmap.headline")}
         </h2>
         <p className="mt-4 max-w-[600px] text-[17px] leading-[27px] text-sol-secondary">
           Solventia generates the next mission from what you actually learn.

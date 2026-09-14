@@ -2,6 +2,8 @@ import { useNavigate } from "@tanstack/react-router";
 import { motion, useReducedMotion } from "motion/react";
 import { ArrowRight } from "lucide-react";
 import { scrollToSection } from "@/hooks/use-active-section";
+import { useLocale } from "@/lib/i18n/LocaleProvider";
+import { cn } from "@/lib/utils";
 
 const fadeUp = {
   hidden: { opacity: 0, y: 24 },
@@ -342,6 +344,11 @@ function HeroCardConnector() {
  * region, without adding another card or paragraph. */
 export function Hero() {
   const navigate = useNavigate();
+  const { t, locale } = useLocale();
+  // Devanagari's taller vertical metrics (shirorekha + matras) clip
+  // against the tight Latin-display leading below — give Hindi more
+  // breathing room instead of reusing the same value for both scripts.
+  const isHindi = locale === "hi";
 
   return (
     <section
@@ -405,20 +412,23 @@ export function Hero() {
             transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
             className="text-[12px] font-semibold uppercase tracking-[0.15em] text-sol-champagne-deep"
           >
-            AI-Powered Founder Operating System
+            {t("hero.eyebrow")}
           </motion.p>
 
           <motion.h1
             variants={fadeUp}
             transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
-            className="mt-[28px] max-w-[670px] text-[46px] font-semibold leading-[1.04] tracking-[-0.025em] text-sol-ink sm:text-[56px] lg:text-[72px] lg:leading-[0.98]"
+            className={cn(
+              "mt-[28px] max-w-[670px] text-[46px] font-semibold tracking-[-0.025em] text-sol-ink sm:text-[56px] lg:text-[72px]",
+              isHindi ? "leading-[1.3] lg:leading-[1.22]" : "leading-[1.04] lg:leading-[0.98]",
+            )}
           >
-            Your Direction.
+            {t("hero.headline1")}
             <br />
-            Our Intelligence.
+            {t("hero.headline2")}
             <br />
             <span className="text-shimmer-gold text-[1.02em] font-bold italic">
-              Real Execution.
+              {t("hero.headline3")}
             </span>
           </motion.h1>
 
@@ -427,8 +437,7 @@ export function Hero() {
             transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
             className="mt-[28px] max-w-[520px] text-[17px] leading-[28px] text-sol-secondary"
           >
-            Solventia turns your skills, resources and ambition into business directions you can
-            actually test, build and grow.
+            {t("hero.subhead")}
           </motion.p>
 
           <motion.div
@@ -441,7 +450,7 @@ export function Hero() {
               onClick={() => navigate({ to: "/consultation" })}
               className="group inline-flex h-[54px] items-center gap-2.5 rounded-2xl bg-sol-navy px-[26px] text-[15px] font-semibold text-white transition-all duration-[180ms] hover:-translate-y-px hover:shadow-[0_10px_30px_rgba(23,32,61,.13)]"
             >
-              Find My Business Idea
+              {t("hero.cta.primary")}
               <ArrowRight
                 className="size-4 text-sol-champagne transition-transform duration-300 group-hover:translate-x-1"
                 aria-hidden="true"
@@ -453,7 +462,7 @@ export function Hero() {
               onClick={() => scrollToSection("how-it-works")}
               className="inline-flex h-[54px] items-center gap-2 rounded-2xl border border-sol-border bg-[rgba(255,253,249,0.6)] px-[26px] text-[15px] font-semibold text-sol-ink transition-colors hover:border-sol-champagne/50"
             >
-              See How It Works
+              {t("hero.cta.secondary")}
             </button>
           </motion.div>
 

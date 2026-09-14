@@ -21,6 +21,7 @@ import {
   getPasswordSignInErrorMessage,
 } from "@/lib/auth-error-messages";
 import { OTP_MAX_LENGTH, sanitizeOtpInput, isOtpLengthPlausible } from "@/lib/otp";
+import { useLocale } from "@/lib/i18n/LocaleProvider";
 
 const RESEND_COOLDOWN_SECONDS = 30;
 
@@ -41,6 +42,7 @@ interface SignInDialogProps {
 }
 
 export function SignInDialog({ trigger, nextPath, open, onOpenChange }: SignInDialogProps) {
+  const { t } = useLocale();
   const [internalOpen, setInternalOpen] = useState(false);
   const isControlled = open !== undefined;
   const dialogOpen = isControlled ? open : internalOpen;
@@ -175,7 +177,7 @@ export function SignInDialog({ trigger, nextPath, open, onOpenChange }: SignInDi
           <>
             <DialogHeader>
               <DialogTitle className="font-display text-2xl text-primary">
-                Check your email for a code
+                {t("signin.checkEmail")}
               </DialogTitle>
               <DialogDescription>
                 We sent a verification code to <span className="text-foreground">{email}</span>.
@@ -206,7 +208,7 @@ export function SignInDialog({ trigger, nextPath, open, onOpenChange }: SignInDi
                 disabled={loading || !isOtpLengthPlausible(code)}
               >
                 {loading && <Loader2 className="size-4 animate-spin" aria-hidden="true" />}
-                Verify & sign in
+                {t("signin.verify")}
               </PremiumButton>
               <div className="flex items-center justify-between text-[0.8rem]">
                 <button
@@ -218,7 +220,7 @@ export function SignInDialog({ trigger, nextPath, open, onOpenChange }: SignInDi
                   }}
                   className="text-muted-foreground hover:text-primary"
                 >
-                  Back
+                  {t("signin.back")}
                 </button>
                 <button
                   type="button"
@@ -226,7 +228,9 @@ export function SignInDialog({ trigger, nextPath, open, onOpenChange }: SignInDi
                   onClick={requestCode}
                   className="font-medium text-primary disabled:text-muted-foreground"
                 >
-                  {resendCooldown > 0 ? `Resend code (${resendCooldown}s)` : "Resend code"}
+                  {resendCooldown > 0
+                    ? `${t("signin.resendCode")} (${resendCooldown}s)`
+                    : t("signin.resendCode")}
                 </button>
               </div>
             </form>
@@ -234,11 +238,11 @@ export function SignInDialog({ trigger, nextPath, open, onOpenChange }: SignInDi
         ) : (
           <>
             <DialogHeader>
-              <DialogTitle className="font-display text-2xl text-primary">Welcome back</DialogTitle>
+              <DialogTitle className="font-display text-2xl text-primary">
+                {t("signin.welcomeBack")}
+              </DialogTitle>
               <DialogDescription>
-                {nextPath
-                  ? "Sign in to pick up exactly where you left off."
-                  : "Sign in to continue building with Solventia."}
+                {nextPath ? "Sign in to pick up exactly where you left off." : t("signin.subhead")}
               </DialogDescription>
             </DialogHeader>
             <div className="mt-2">
@@ -246,12 +250,12 @@ export function SignInDialog({ trigger, nextPath, open, onOpenChange }: SignInDi
             </div>
             <div className="my-3 flex items-center gap-3">
               <div className="h-px flex-1 bg-border" />
-              <span className="text-[0.75rem] text-muted-foreground">or</span>
+              <span className="text-[0.75rem] text-muted-foreground">{t("signin.or")}</span>
               <div className="h-px flex-1 bg-border" />
             </div>
             <form onSubmit={handlePasswordSubmit} className="flex flex-col gap-4">
               <div className="flex flex-col gap-1.5">
-                <Label htmlFor="signin-email">Email</Label>
+                <Label htmlFor="signin-email">{t("signin.email")}</Label>
                 <Input
                   id="signin-email"
                   type="email"
@@ -262,7 +266,7 @@ export function SignInDialog({ trigger, nextPath, open, onOpenChange }: SignInDi
                 />
               </div>
               <div className="flex flex-col gap-1.5">
-                <Label htmlFor="signin-password">Password</Label>
+                <Label htmlFor="signin-password">{t("signin.password")}</Label>
                 <Input
                   id="signin-password"
                   type="password"
@@ -282,7 +286,7 @@ export function SignInDialog({ trigger, nextPath, open, onOpenChange }: SignInDi
                 disabled={loading}
               >
                 {loading && <Loader2 className="size-4 animate-spin" aria-hidden="true" />}
-                Sign In
+                {t("signin.submit")}
               </PremiumButton>
               <button
                 type="button"
@@ -290,7 +294,7 @@ export function SignInDialog({ trigger, nextPath, open, onOpenChange }: SignInDi
                 onClick={requestCode}
                 className="text-center text-[0.8rem] text-muted-foreground hover:text-primary disabled:opacity-50"
               >
-                Forgot your password? Sign in with a code instead
+                {t("signin.forgotPassword")}
               </button>
             </form>
           </>
