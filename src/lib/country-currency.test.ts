@@ -33,6 +33,18 @@ describe("formatMoney", () => {
   it("never throws on an unrecognized currency code", () => {
     expect(() => formatMoney(100, "NOTACODE")).not.toThrow();
   });
+
+  // REGRESSION: a pre-migration/incomplete business_dna row can have a
+  // missing capitalAmount or currency — this used to render the literal
+  // string "undefined" or "NaN" to the founder (observed live on the
+  // roadmap page's "Built around your ... starting capital" line and the
+  // opportunity detail page's Founder Fit match table) instead of failing
+  // closed to an honest fallback.
+  it("never renders literal 'undefined'/'NaN' text for missing amount or currency", () => {
+    expect(formatMoney(undefined as unknown as number, "INR")).not.toMatch(/undefined|NaN/);
+    expect(formatMoney(1000, undefined as unknown as string)).not.toMatch(/undefined|NaN/);
+    expect(formatMoney(NaN, "INR")).not.toMatch(/undefined|NaN/);
+  });
 });
 
 describe("formatCompactMoney", () => {
@@ -43,6 +55,14 @@ describe("formatCompactMoney", () => {
 
   it("uses standard K/M compact notation for other currencies", () => {
     expect(formatCompactMoney(12_500, "USD")).toMatch(/\$12\.5K/);
+  });
+
+  // Same regression as formatMoney above — this is the formatter that was
+  // actually observed producing broken output live.
+  it("never renders literal 'undefined'/'NaN' text for missing amount or currency", () => {
+    expect(formatCompactMoney(undefined as unknown as number, "INR")).not.toMatch(/undefined|NaN/);
+    expect(formatCompactMoney(1000, undefined as unknown as string)).not.toMatch(/undefined|NaN/);
+    expect(formatCompactMoney(NaN, "INR")).not.toMatch(/undefined|NaN/);
   });
 });
 

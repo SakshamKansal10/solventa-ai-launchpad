@@ -200,11 +200,21 @@ function OpportunityDetailPage() {
       match: founderSummary.weeklyHours >= fitFactors.weeklyHoursNeeded ? "yes" : "gap",
       needs: `Needs ~${fitFactors.weeklyHoursNeeded} hrs/week`,
     });
-    matchRows.push({
-      you: `${formatCompactMoney(founderSummary.capitalAmount, founderSummary.currency)} available`,
-      match: founderSummary.capitalAmount >= fitFactors.startupCapitalAmount ? "yes" : "gap",
-      needs: `Needs ~${formatCompactMoney(fitFactors.startupCapitalAmount, founderSummary.currency)}`,
-    });
+    // A pre-migration or otherwise incomplete profile can have a missing
+    // capitalAmount/currency — formatting that through Intl.NumberFormat
+    // literally renders "undefined"/"NaN" to the founder. Skip the row
+    // entirely rather than show broken currency text.
+    if (
+      founderSummary.currency &&
+      Number.isFinite(founderSummary.capitalAmount) &&
+      Number.isFinite(fitFactors.startupCapitalAmount)
+    ) {
+      matchRows.push({
+        you: `${formatCompactMoney(founderSummary.capitalAmount, founderSummary.currency)} available`,
+        match: founderSummary.capitalAmount >= fitFactors.startupCapitalAmount ? "yes" : "gap",
+        needs: `Needs ~${formatCompactMoney(fitFactors.startupCapitalAmount, founderSummary.currency)}`,
+      });
+    }
     for (const req of fitFactors.requiredSkills.slice(0, 3)) {
       const owned = founderSummary.skills.some(
         (s) => s.toLowerCase().trim() === req.name.toLowerCase().trim(),
@@ -238,10 +248,12 @@ function OpportunityDetailPage() {
           { label: "Difficulty", value: detail.difficulty },
         ].map((cell) => (
           <div key={cell.label} className="bg-sol-surface px-4 py-3.5">
-            <p className="text-[0.6rem] font-semibold uppercase tracking-[0.1em] text-sol-muted">
+            <p className="text-[0.65rem] font-semibold uppercase tracking-[0.1em] text-sol-muted">
               {cell.label}
             </p>
-            <p className="mt-1 truncate text-[0.9rem] font-semibold text-sol-ink">{cell.value}</p>
+            <p className="mt-1 line-clamp-2 text-[0.9rem] font-semibold leading-snug text-sol-ink">
+              {cell.value}
+            </p>
           </div>
         ))}
       </div>

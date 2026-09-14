@@ -37,6 +37,17 @@ export function getCurrencyForCountry(countryName: string | undefined | null): C
   return CURRENCY_BY_COUNTRY_CODE[code] ?? DEFAULT_CURRENCY;
 }
 
+/** A pre-migration or otherwise incomplete profile can hand either
+ * formatter a missing amount/currency — checked once, up front, by both,
+ * so neither ever has to fall through to Intl.NumberFormat with garbage
+ * input (which renders literal "undefined"/"NaN" text to the founder,
+ * not a thrown error the try/catch below would actually catch). */
+function isFormattableMoney(amount: number, currencyCode: string): boolean {
+  return Number.isFinite(amount) && typeof currencyCode === "string" && currencyCode.length > 0;
+}
+
+const UNSPECIFIED_MONEY_LABEL = "not specified";
+
 /** The one place money ever gets formatted for display — always via
  * Intl.NumberFormat's real currency support (correct symbol placement,
  * digit grouping, and decimal conventions per currency), never hand-rolled
@@ -44,6 +55,7 @@ export function getCurrencyForCountry(countryName: string | undefined | null): C
  * if the code somehow isn't ISO-4217-recognized by the runtime, which
  * should not happen given the source data but must never crash a page. */
 export function formatMoney(amount: number, currencyCode: string): string {
+  if (!isFormattableMoney(amount, currencyCode)) return UNSPECIFIED_MONEY_LABEL;
   try {
     return new Intl.NumberFormat(undefined, {
       style: "currency",
@@ -61,6 +73,7 @@ export function formatMoney(amount: number, currencyCode: string): string {
  * other currency (real K/M/B compact notation) — both via Intl's own
  * compact-notation support, never hand-rolled division/suffix logic. */
 export function formatCompactMoney(amount: number, currencyCode: string): string {
+  if (!isFormattableMoney(amount, currencyCode)) return UNSPECIFIED_MONEY_LABEL;
   try {
     return new Intl.NumberFormat(currencyCode === "INR" ? "en-IN" : undefined, {
       style: "currency",

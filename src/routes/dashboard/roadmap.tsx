@@ -93,6 +93,23 @@ interface Week {
   tasks: Task[];
 }
 
+/** A pre-migration or otherwise incomplete business_dna row can have a
+ * missing/zero capitalAmount or currency — formatting that through
+ * Intl.NumberFormat literally renders "undefined"/"NaN" to the founder
+ * instead of failing closed. Degrades to just the hours clause (still
+ * genuinely useful) rather than showing broken currency text. */
+function buildFounderSummaryLine(summary: {
+  weeklyHours: number;
+  capitalAmount: number;
+  currency: string;
+}): string {
+  const hours = summary.weeklyHours ? `${summary.weeklyHours} hrs/week` : "available time";
+  const hasCapital =
+    Number.isFinite(summary.capitalAmount) && summary.capitalAmount > 0 && summary.currency;
+  if (!hasCapital) return `Built around your ${hours}.`;
+  return `Built around your ${hours} and ${formatCompactMoney(summary.capitalAmount, summary.currency)} starting capital.`;
+}
+
 /** dependsOn is supposed to be a prior task's exact human-readable "what"
  * text (see the roadmap contract in intelligence-package.ts) — but a
  * response can still slip through with something index-shaped instead
@@ -877,7 +894,7 @@ function RoadmapPage() {
       )}
       <p className="mt-2 max-w-xl text-[0.98rem] text-sol-secondary">
         {founderSummary
-          ? `Built around your ${founderSummary.weeklyHours || "available"} hrs/week and ${formatCompactMoney(founderSummary.capitalAmount, founderSummary.currency)} starting capital.`
+          ? buildFounderSummaryLine(founderSummary)
           : (opportunity?.one_liner ?? "Your personalized execution plan.")}
       </p>
 
