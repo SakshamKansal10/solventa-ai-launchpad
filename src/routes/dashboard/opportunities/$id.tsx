@@ -47,7 +47,7 @@ const DISMISS_REASONS = [
   "Other",
 ];
 
-// Five views, exactly: Overview / Founder Fit / Market / Economics / Proof.
+// Four views, exactly: Overview / Founder Fit / Market / Proof.
 // Still a single scrolling page with a sticky jump nav (not hide/show
 // tabs) — DashboardShell's own "Proof" nav item already links here via
 // `#evidence`, so the Proof view keeps that exact id rather than
@@ -56,7 +56,6 @@ const SECTION_NAV = [
   { id: "overview", label: "Overview" },
   { id: "founder-fit", label: "Founder Fit" },
   { id: "market", label: "Market" },
-  { id: "economics", label: "Economics" },
   { id: "evidence", label: "Proof" },
 ];
 
@@ -437,42 +436,7 @@ function OpportunityDetailPage() {
         </div>
       </section>
 
-      {/* ===== 4. ECONOMICS — how the money works ===== */}
-      <section id="economics" className="scroll-mt-24 border-t border-sol-border pt-8 mt-8">
-        <h2 className="font-display text-[1.2rem] font-semibold text-sol-ink">Economics</h2>
-        <p className="mt-3 text-[0.92rem] leading-relaxed text-sol-ink">{detail.businessModel}</p>
-        <div className="mt-4 flex flex-col gap-2 sm:flex-row sm:gap-3">
-          <FlowStep label="Start" value={detail.startingCapital} />
-          <FlowStep label="First Move" value={detail.firstExperiment} />
-          <FlowStep label="Revenue" value={detail.revenuePath} isLast />
-        </div>
-        {(detail.advantages.length > 0 || detail.tradeoffs.length > 0) && (
-          <div className="mt-5 grid gap-5 sm:grid-cols-2">
-            {detail.advantages.length > 0 && (
-              <div>
-                <p className="text-[0.7rem] font-semibold uppercase tracking-wide text-sol-muted">
-                  Advantages
-                </p>
-                <div className="mt-2">
-                  <BulletList items={detail.advantages} />
-                </div>
-              </div>
-            )}
-            {detail.tradeoffs.length > 0 && (
-              <div>
-                <p className="text-[0.7rem] font-semibold uppercase tracking-wide text-sol-muted">
-                  Trade-offs
-                </p>
-                <div className="mt-2">
-                  <BulletList items={detail.tradeoffs} />
-                </div>
-              </div>
-            )}
-          </div>
-        )}
-      </section>
-
-      {/* ===== 5. PROOF — is this actually working / what's the risk ===== */}
+      {/* ===== 4. PROOF — is this actually working / what's the risk ===== */}
       <section id="evidence" className="scroll-mt-24 border-t border-sol-border pt-8 mt-8">
         <h2 className="font-display text-[1.2rem] font-semibold text-sol-ink">
           Proof &amp; What Still Needs Validation
@@ -517,7 +481,7 @@ function OpportunityDetailPage() {
       <div className="mt-8 flex flex-col items-center gap-3 text-center">
         <p className="text-[0.85rem] text-sol-secondary">
           {isSelected
-            ? "This is your primary direction — build a roadmap to start executing."
+            ? "Selected. Build your roadmap to start executing."
             : "Ready to commit to this opportunity?"}
         </p>
         {isSelected && (

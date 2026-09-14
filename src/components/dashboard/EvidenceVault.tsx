@@ -292,7 +292,7 @@ export function EvidenceVault({ opportunityId }: { opportunityId: string }) {
           <p className="text-[0.85rem] text-sol-secondary">Loading…</p>
         ) : entries.length === 0 ? (
           <p className="rounded-xl border border-dashed border-sol-border px-4 py-6 text-center text-[0.9rem] text-sol-secondary">
-            No evidence logged yet. Talk to a real customer, then add what you learned here.
+            Nothing logged yet. Your first interview, test, or observation goes here.
           </p>
         ) : (
           entries.map((entry) => (

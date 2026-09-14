@@ -6,7 +6,6 @@ import { z } from "zod";
 import { ArrowRight, Compass, Loader2 } from "lucide-react";
 import { DashboardShell } from "@/components/dashboard/DashboardShell";
 import { FounderFitOrbit } from "@/components/dashboard/FounderFitOrbit";
-import { FounderPathJourney } from "@/components/dashboard/FounderPathJourney";
 import { FounderGenomeCardV2 } from "@/components/dashboard/FounderGenomeRadar";
 import { BusinessDnaQuadrant } from "@/components/dashboard/BusinessDnaPanel";
 import { SolventiaLoadingState } from "@/components/dashboard/SolventiaLoadingState";
@@ -62,21 +61,6 @@ function getIdeaMetrics(
     metrics.push({ label: "Skill Gap", value: `${candidate.skillsToLearn.length} to learn` });
   }
   return metrics;
-}
-
-/** Idea -> Proof -> Offer -> First Users -> Repeatability -> Growth,
- * derived from real state, never asserted. No roadmap yet = still at
- * "Idea". Once a roadmap exists, position scales with how far through
- * its phases the founder actually is. */
-function deriveActiveStage(
-  hasRoadmap: boolean,
-  phases: { isCurrent: boolean }[] | undefined,
-): number {
-  if (!hasRoadmap || !phases || phases.length === 0) return 0;
-  const currentIndex = phases.findIndex((p) => p.isCurrent);
-  if (currentIndex === -1) return 5; // every phase done
-  const ratio = phases.length <= 1 ? 1 : currentIndex / (phases.length - 1);
-  return 1 + Math.round(ratio * 4);
 }
 
 /** A small SVG orbit motif — the flagship card's only decoration, built
@@ -190,7 +174,6 @@ function DashboardHome() {
   const primaryScore = primary?.score_breakdown
     ? (primary.score_breakdown as unknown as FitScoreResult)
     : null;
-  const activeStage = deriveActiveStage(Boolean(data.roadmap), data.roadmap?.phases);
   const currentPhase = data.roadmap?.phases.find((p) => p.isCurrent) ?? null;
   const missionProgress =
     currentPhase && currentPhase.totalTasks > 0
@@ -471,38 +454,29 @@ function DashboardHome() {
             </section>
           )}
 
-          <section className="mt-6 text-center">
+          <section className="mt-8 flex flex-col items-center gap-3 text-center">
+            <p className="text-[0.9rem] text-sol-secondary">Not seeing yourself in these?</p>
             <button
               type="button"
               onClick={handleExploreMore}
               disabled={exploring}
               className={cn(
-                "text-[0.85rem] font-medium text-sol-secondary hover:text-sol-ink",
-                exploring && "opacity-60",
+                "inline-flex items-center gap-2 rounded-full border border-sol-violet/35 bg-sol-violet-mist/70 px-6 py-3 text-[0.92rem] font-semibold text-sol-violet-deep shadow-[0_6px_20px_-10px_rgba(114,87,216,.45)] transition-all duration-200 hover:-translate-y-px hover:border-sol-violet/55 hover:bg-sol-violet-mist hover:shadow-[0_10px_26px_-10px_rgba(114,87,216,.55)]",
+                exploring && "pointer-events-none opacity-60",
               )}
             >
-              {exploring && (
-                <Loader2 className="mr-1.5 inline size-3.5 animate-spin" aria-hidden="true" />
+              {exploring ? (
+                <Loader2 className="size-4 animate-spin" aria-hidden="true" />
+              ) : (
+                <Compass className="size-4" aria-hidden="true" />
               )}
-              Not seeing yourself in these? Explore More Opportunities
+              Explore More Opportunities
             </button>
           </section>
 
-          {/* ===== PROGRESS JOURNEY ===== */}
-          {primary && (
-            <section className="mt-9 rounded-[24px] border border-sol-border bg-sol-surface p-6 sm:p-8">
-              <p className="text-[12px] font-semibold uppercase tracking-[0.12em] text-sol-muted">
-                Progress Journey
-              </p>
-              <div className="mt-6 overflow-x-auto">
-                <FounderPathJourney activeStage={activeStage} />
-              </div>
-            </section>
-          )}
-
           {/* ===== FOUNDER INTELLIGENCE ===== */}
           {data.businessDna && (
-            <div className="mt-6 grid gap-6 lg:grid-cols-2 lg:items-start">
+            <div className="mt-9 grid gap-6 lg:grid-cols-2 lg:items-start">
               {data.genome && (
                 <FounderGenomeCardV2 genome={data.genome} persona={data.persona ?? undefined} />
               )}
