@@ -1,7 +1,6 @@
 import { useNavigate } from "@tanstack/react-router";
 import { motion, useReducedMotion } from "motion/react";
 import { ArrowRight } from "lucide-react";
-import heroHorizon from "@/assets/hero-horizon.png";
 import { scrollToSection } from "@/hooks/use-active-section";
 
 const fadeUp = {
@@ -166,6 +165,144 @@ function HeroOrbitGraphic() {
   );
 }
 
+/** Fixed, hand-placed node positions (never Math.random — see PARTICLES
+ * above for why) for the hero's intelligence-field visual: a founder's
+ * scattered signals (skills, capital, time, goals) resolving into a
+ * connected plan. Concentrated in the right ~40% of the viewport, where
+ * the old photo was actually visible past the text-side scrim. */
+const FIELD_NODES = [
+  { x: 66, y: 14, r: 3, tone: "champagne" as const },
+  { x: 74, y: 9, r: 2, tone: "violet" as const },
+  { x: 82, y: 18, r: 2.5, tone: "champagne" as const },
+  { x: 61, y: 27, r: 2, tone: "violet" as const },
+  { x: 90, y: 12, r: 6, tone: "hub" as const },
+  { x: 70, y: 34, r: 2.5, tone: "champagne" as const },
+  { x: 86, y: 30, r: 3, tone: "violet" as const },
+  { x: 78, y: 44, r: 7, tone: "hub" as const },
+  { x: 94, y: 40, r: 2, tone: "champagne" as const },
+  { x: 63, y: 48, r: 2.5, tone: "violet" as const },
+  { x: 68, y: 60, r: 2, tone: "champagne" as const },
+  { x: 84, y: 58, r: 3, tone: "violet" as const },
+  { x: 91, y: 66, r: 5, tone: "hub" as const },
+  { x: 74, y: 70, r: 2.5, tone: "champagne" as const },
+  { x: 60, y: 76, r: 2, tone: "violet" as const },
+  { x: 80, y: 82, r: 3, tone: "champagne" as const },
+  { x: 92, y: 86, r: 2, tone: "violet" as const },
+  { x: 68, y: 90, r: 2.5, tone: "champagne" as const },
+];
+
+// Hand-picked pairs among FIELD_NODES above — a connected topology, not
+// every node linked to every other, so it reads as a real network rather
+// than a scatter plot.
+const FIELD_LINKS: [number, number][] = [
+  [0, 1],
+  [1, 2],
+  [0, 3],
+  [1, 4],
+  [2, 4],
+  [4, 6],
+  [3, 5],
+  [5, 7],
+  [6, 7],
+  [7, 8],
+  [7, 9],
+  [9, 10],
+  [7, 11],
+  [11, 12],
+  [8, 12],
+  [10, 13],
+  [11, 13],
+  [13, 14],
+  [13, 15],
+  [12, 16],
+  [15, 16],
+  [14, 17],
+  [15, 17],
+];
+
+const FIELD_TONE_COLOR: Record<"champagne" | "violet" | "hub", string> = {
+  champagne: "var(--sol-champagne)",
+  violet: "var(--sol-violet)",
+  hub: "var(--sol-violet)",
+};
+
+/** Replaces the old stock horizon photo — an abstract, on-brand
+ * "signals resolving into a plan" network instead of a generic
+ * landscape/skyline image unrelated to what Solventia actually does.
+ * Built entirely from SVG/CSS (no external asset), in the same
+ * violet/champagne language as the orbit graphic and signal cards, so
+ * it reads as one system rather than a decorative photo behind them. */
+function HeroIntelligenceField() {
+  const reduceMotion = useReducedMotion();
+  return (
+    <div className="absolute inset-0" aria-hidden="true">
+      <div
+        className="absolute inset-0"
+        style={{
+          background:
+            "radial-gradient(ellipse 900px 700px at 82% 45%, rgba(114,87,216,.10), transparent 60%), radial-gradient(ellipse 700px 600px at 95% 15%, rgba(197,163,106,.09), transparent 62%), linear-gradient(100deg, #F8F5EF 0%, #F8F5EF 42%, #F5F0E6 62%, #F1EBE0 100%)",
+        }}
+      />
+      <svg
+        className="absolute inset-0 h-full w-full"
+        viewBox="0 0 100 100"
+        preserveAspectRatio="none"
+        fill="none"
+      >
+        {FIELD_LINKS.map(([a, b], i) => {
+          const from = FIELD_NODES[a];
+          const to = FIELD_NODES[b];
+          const touchesHub = from.tone === "hub" || to.tone === "hub";
+          return (
+            <line
+              key={i}
+              x1={from.x}
+              y1={from.y}
+              x2={to.x}
+              y2={to.y}
+              stroke={touchesHub ? "rgba(114,87,216,.42)" : "rgba(114,87,216,.24)"}
+              strokeWidth={touchesHub ? 0.22 : 0.16}
+            />
+          );
+        })}
+        {FIELD_NODES.map((n, i) => (
+          <circle
+            key={i}
+            cx={n.x}
+            cy={n.y}
+            r={n.tone === "hub" ? n.r * 0.22 : n.r * 0.24}
+            fill={FIELD_TONE_COLOR[n.tone]}
+            opacity={n.tone === "hub" ? 0.7 : 0.55}
+          />
+        ))}
+        {!reduceMotion &&
+          FIELD_NODES.filter((n) => n.tone === "hub").map((n, i) => (
+            <motion.circle
+              key={`pulse-${i}`}
+              cx={n.x}
+              cy={n.y}
+              fill="none"
+              stroke="var(--sol-violet)"
+              strokeWidth={0.1}
+              initial={{ r: n.r * 0.16, opacity: 0.4 }}
+              animate={{ r: [n.r * 0.16, n.r * 0.5], opacity: [0.4, 0] }}
+              transition={{ duration: 3.6, repeat: Infinity, delay: i * 1.1, ease: "easeOut" }}
+            />
+          ))}
+      </svg>
+      {/* Calmer left side for text — the exact spec gradient, warm
+          sol-page tones rather than a gray scrim. */}
+      <div
+        className="absolute inset-0"
+        style={{
+          background:
+            "linear-gradient(90deg, rgba(248,245,239,0.98) 0%, rgba(248,245,239,0.93) 30%, rgba(248,245,239,0.54) 55%, rgba(248,245,239,0.05) 78%)",
+        }}
+      />
+    </div>
+  );
+}
+
 /** Very subtle vertical connector suggesting the three intelligence
  * signals are one system, not three unrelated floating widgets — never
  * literally edge-to-edge. */
@@ -194,12 +331,13 @@ function HeroCardConnector() {
   );
 }
 
-/** The hero — Solventia's strongest existing visual asset (the horizon
- * photo) preserved exactly, recomposed per the homepage reconstruction
- * spec: calmer left side for text, three minimal intelligence signals
- * instead of four generic floating cards, no people-bubble social proof,
- * no Discover/Validate/Plan/Launch strip underneath (How It Works now
- * owns that story, once, not twice). Violet ambience + an orbital path
+/** The hero — an on-brand, code-rendered intelligence field (signals
+ * resolving into a plan) instead of the old generic stock landscape
+ * photo, recomposed per the homepage reconstruction spec: calmer left
+ * side for text, three minimal intelligence signals instead of four
+ * generic floating cards, no people-bubble social proof, no
+ * Discover/Validate/Plan/Launch strip underneath (How It Works now owns
+ * that story, once, not twice). Violet ambience + an orbital path
  * graphic fill what would otherwise be an empty upper-left/upper-middle
  * region, without adding another card or paragraph. */
 export function Hero() {
@@ -211,21 +349,7 @@ export function Hero() {
       style={{ minHeight: 720, maxHeight: 860 }}
     >
       <div className="absolute inset-0" aria-hidden="true">
-        <img
-          src={heroHorizon}
-          alt=""
-          fetchPriority="high"
-          className="hero-photo-drift absolute inset-0 h-full w-full object-cover object-[68%_58%] sm:object-[64%_44%] lg:object-[76%_46%]"
-        />
-        {/* Calmer left side for text — the exact spec gradient, warm
-            sol-page tones rather than a gray scrim. */}
-        <div
-          className="absolute inset-0"
-          style={{
-            background:
-              "linear-gradient(90deg, rgba(248,245,239,0.98) 0%, rgba(248,245,239,0.93) 30%, rgba(248,245,239,0.54) 55%, rgba(248,245,239,0.05) 78%)",
-          }}
-        />
+        <HeroIntelligenceField />
 
         {PARTICLES.map((p, i) => (
           <span

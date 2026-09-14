@@ -470,23 +470,9 @@
   }
 }
 
-/* Hero cinematic layer: slow parallax drift on the background photo,
-   floating glass cards, light rays, and tiny ambient particles. All
-   independently timed so nothing repeats in visible lockstep. */
-@utility hero-photo-drift {
-  animation: hero-photo-drift 12s ease-in-out infinite;
-}
-
-@keyframes hero-photo-drift {
-  0%,
-  100% {
-    transform: scale(1.06) translateY(0);
-  }
-  50% {
-    transform: scale(1.06) translateY(-10px);
-  }
-}
-
+/* Hero cinematic layer: floating glass cards, light rays, and tiny
+   ambient particles. Independently timed so nothing repeats in visible
+   lockstep. */
 @utility float-card {
   animation: float-card 7s ease-in-out infinite;
 }
@@ -518,7 +504,6 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .hero-photo-drift,
   .float-card,
   .particle-drift {
     animation: none;

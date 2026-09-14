@@ -84,7 +84,7 @@ export function AdaptiveRoadmap() {
         <motion.div
           onViewportEnter={() => setEntered(true)}
           viewport={{ once: true, margin: "-100px" }}
-          className="relative mt-16 grid gap-8 lg:grid-cols-[55%_45%] lg:items-center"
+          className="relative mt-16 grid gap-8 lg:grid-cols-[1fr_130px_0.82fr] lg:items-center lg:gap-6"
         >
           {/* LEFT — Week 01 */}
           <div
@@ -143,41 +143,46 @@ export function AdaptiveRoadmap() {
             )}
           </div>
 
-          {/* CENTER — Solventia Adapts node (overlaid on lg, stacked otherwise) */}
-          <div className="pointer-events-none absolute inset-0 hidden items-center justify-center lg:flex">
-            <div className="pointer-events-auto relative flex flex-col items-center gap-2.5">
-              <div
-                className="relative flex items-center justify-center"
-                style={{ width: 128, height: 128 }}
+          {/* CENTER — Solventia Adapts node. A real grid column (not an
+              absolute overlay) — this grid's columns aren't equal width,
+              so a node centered on the full grid width would land inside
+              the wider left card instead of the gap between the two
+              cards; giving it its own column guarantees it can never
+              overlap either card's own content, regardless of exact
+              width tuning. Hidden below lg, where the two cards stack
+              vertically and there's no "between" for it to occupy. */}
+          <div className="pointer-events-none hidden flex-col items-center justify-self-center gap-2.5 lg:flex">
+            <div
+              className="relative flex items-center justify-center"
+              style={{ width: 110, height: 110 }}
+            >
+              <motion.span
+                className="absolute rounded-full"
+                style={{
+                  width: 110,
+                  height: 110,
+                  background: "radial-gradient(circle, rgba(114,87,216,.11), transparent 68%)",
+                }}
+                animate={
+                  pulsing && !reduceMotion
+                    ? { scale: [1, 1.15], opacity: [0.4, 0] }
+                    : { scale: 1, opacity: 0.7 }
+                }
+                transition={{ duration: 0.7, ease: "easeOut" }}
+              />
+              <span
+                className="relative flex items-center justify-center rounded-full"
+                style={{ width: 88, height: 88, background: "var(--sol-violet)" }}
               >
-                <motion.span
-                  className="absolute rounded-full"
-                  style={{
-                    width: 128,
-                    height: 128,
-                    background: "radial-gradient(circle, rgba(114,87,216,.11), transparent 68%)",
-                  }}
-                  animate={
-                    pulsing && !reduceMotion
-                      ? { scale: [1, 1.15], opacity: [0.4, 0] }
-                      : { scale: 1, opacity: 0.7 }
-                  }
-                  transition={{ duration: 0.7, ease: "easeOut" }}
-                />
-                <span
-                  className="relative flex items-center justify-center rounded-full"
-                  style={{ width: 104, height: 104, background: "var(--sol-violet)" }}
-                >
-                  <img src={mark} alt="" width={298} height={436} className="h-9 w-auto" />
-                </span>
-              </div>
-              <p className="text-center text-[11px] font-semibold uppercase tracking-[0.08em] text-sol-violet-deep">
-                Solventia Adapts
-              </p>
-              <p className="max-w-[130px] text-center text-[13px] leading-tight text-sol-secondary">
-                Evidence changed the plan.
-              </p>
+                <img src={mark} alt="" width={298} height={436} className="h-7 w-auto" />
+              </span>
             </div>
+            <p className="text-center text-[11px] font-semibold uppercase tracking-[0.08em] text-sol-violet-deep">
+              Solventia Adapts
+            </p>
+            <p className="max-w-[124px] text-center text-[13px] leading-tight text-sol-secondary">
+              Evidence changed the plan.
+            </p>
           </div>
 
           {/* RIGHT — Week 02 (locked -> unlocked) + future preview */}
