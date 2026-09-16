@@ -14,6 +14,8 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
+import { useLocale } from "@/lib/i18n/LocaleProvider";
+import { translateDashboardText } from "@/lib/i18n/dashboard-dictionary";
 
 const ENTRY_TYPES = [
   { value: "interview" as const, label: "Interview" },
@@ -34,6 +36,8 @@ const WTP_OPTIONS = [
 ];
 
 function EvidenceCard({ entry, onDelete }: { entry: EvidenceEntry; onDelete: () => void }) {
+  const { locale } = useLocale();
+  const tr = (s: string) => translateDashboardText(s, locale) ?? s;
   return (
     <div className="rounded-xl border border-sol-border bg-sol-surface p-4">
       <div className="flex items-start justify-between gap-3">
@@ -46,7 +50,7 @@ function EvidenceCard({ entry, onDelete }: { entry: EvidenceEntry; onDelete: () 
           </span>
           {entry.willingnessToPay === "yes" && (
             <span className="rounded-full bg-sol-champagne-soft px-2.5 py-0.5 text-[0.7rem] font-semibold text-sol-champagne-deep">
-              Would pay
+              {tr("Would pay")}
             </span>
           )}
         </div>
@@ -67,8 +71,17 @@ function EvidenceCard({ entry, onDelete }: { entry: EvidenceEntry; onDelete: () 
       )}
       <div className="mt-2 flex flex-wrap gap-x-3 gap-y-1 text-[0.75rem] text-sol-muted">
         {entry.customerType && <span>{entry.customerType}</span>}
-        {entry.painSeverity && <span>Pain: {entry.painSeverity}</span>}
-        {entry.existingWorkaround && <span>Workaround: {entry.existingWorkaround}</span>}
+        {entry.painSeverity && (
+          <span>
+            {tr("Pain:")}{" "}
+            {tr(entry.painSeverity.charAt(0).toUpperCase() + entry.painSeverity.slice(1))}
+          </span>
+        )}
+        {entry.existingWorkaround && (
+          <span>
+            {tr("Workaround:")} {entry.existingWorkaround}
+          </span>
+        )}
       </div>
     </div>
   );
@@ -85,6 +98,8 @@ function EvidenceCard({ entry, onDelete }: { entry: EvidenceEntry; onDelete: () 
  * to avoid a duplicate-id conflict in the DOM. */
 export function EvidenceVault({ opportunityId }: { opportunityId: string }) {
   const queryClient = useQueryClient();
+  const { locale } = useLocale();
+  const tr = (s: string) => translateDashboardText(s, locale) ?? s;
   const query = useQuery({
     queryKey: ["evidence", opportunityId],
     queryFn: () => getEvidence({ data: { opportunityId } }),
@@ -144,16 +159,17 @@ export function EvidenceVault({ opportunityId }: { opportunityId: string }) {
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <p className="text-[12px] font-semibold uppercase tracking-[0.12em] text-sol-champagne-deep">
-            Evidence Vault
+            {tr("Evidence Vault")}
           </p>
           <p className="mt-1 text-[0.9rem] text-sol-secondary">
-            Real-world signal you've actually collected — interviews, observations, pricing
-            reactions. Never AI-generated.
+            {tr(
+              "Real-world signal you've actually collected — interviews, observations, pricing reactions. Never AI-generated.",
+            )}
           </p>
         </div>
         <Button size="sm" variant="outline" onClick={() => setFormOpen((v) => !v)}>
           <Plus className="size-4" aria-hidden="true" />
-          Add Evidence
+          {tr("Add Evidence")}
         </Button>
       </div>
 
@@ -166,7 +182,7 @@ export function EvidenceVault({ opportunityId }: { opportunityId: string }) {
           ].map((cell) => (
             <div key={cell.label} className="bg-sol-surface px-4 py-3">
               <p className="text-[0.62rem] font-semibold uppercase tracking-wide text-sol-muted">
-                {cell.label}
+                {tr(cell.label)}
               </p>
               <p className="mt-0.5 font-display text-[1.15rem] font-semibold text-sol-ink">
                 {cell.value}
@@ -208,14 +224,14 @@ export function EvidenceVault({ opportunityId }: { opportunityId: string }) {
                     : "border-sol-border text-sol-secondary",
                 )}
               >
-                {t.label}
+                {tr(t.label)}
               </button>
             ))}
           </div>
           <Textarea
             value={content}
             onChange={(e) => setContent(e.target.value)}
-            placeholder="What did you learn or observe?"
+            placeholder={tr("What did you learn or observe?")}
             className="min-h-20 resize-none text-[0.9rem]"
           />
           {entryType === "interview" && (
@@ -223,18 +239,18 @@ export function EvidenceVault({ opportunityId }: { opportunityId: string }) {
               <Input
                 value={customerType}
                 onChange={(e) => setCustomerType(e.target.value)}
-                placeholder="Who did you talk to? (e.g. restaurant owner)"
+                placeholder={tr("Who did you talk to? (e.g. restaurant owner)")}
                 className="text-[0.9rem]"
               />
               <Input
                 value={keyQuote}
                 onChange={(e) => setKeyQuote(e.target.value)}
-                placeholder="A key quote (optional)"
+                placeholder={tr("A key quote (optional)")}
                 className="text-[0.9rem]"
               />
               <div className="flex flex-wrap items-center gap-4">
                 <div className="flex items-center gap-1.5">
-                  <span className="text-[0.8rem] text-sol-secondary">Pain:</span>
+                  <span className="text-[0.8rem] text-sol-secondary">{tr("Pain:")}</span>
                   {PAIN_OPTIONS.map((p) => (
                     <button
                       key={p.value}
@@ -247,12 +263,12 @@ export function EvidenceVault({ opportunityId }: { opportunityId: string }) {
                           : "border-sol-border text-sol-secondary",
                       )}
                     >
-                      {p.label}
+                      {tr(p.label)}
                     </button>
                   ))}
                 </div>
                 <div className="flex items-center gap-1.5">
-                  <span className="text-[0.8rem] text-sol-secondary">Would pay:</span>
+                  <span className="text-[0.8rem] text-sol-secondary">{tr("Would pay:")}</span>
                   {WTP_OPTIONS.map((w) => (
                     <button
                       key={w.value}
@@ -265,7 +281,7 @@ export function EvidenceVault({ opportunityId }: { opportunityId: string }) {
                           : "border-sol-border text-sol-secondary",
                       )}
                     >
-                      {w.label}
+                      {tr(w.label)}
                     </button>
                   ))}
                 </div>
@@ -281,7 +297,7 @@ export function EvidenceVault({ opportunityId }: { opportunityId: string }) {
               {addMutation.isPending && (
                 <Loader2 className="size-3.5 animate-spin" aria-hidden="true" />
               )}
-              Save Evidence
+              {tr("Save Evidence")}
             </Button>
           </div>
         </div>
@@ -289,10 +305,10 @@ export function EvidenceVault({ opportunityId }: { opportunityId: string }) {
 
       <div className="mt-4 flex flex-col gap-2.5">
         {query.isLoading ? (
-          <p className="text-[0.85rem] text-sol-secondary">Loading…</p>
+          <p className="text-[0.85rem] text-sol-secondary">{tr("Loading…")}</p>
         ) : entries.length === 0 ? (
           <p className="rounded-xl border border-dashed border-sol-border px-4 py-6 text-center text-[0.9rem] text-sol-secondary">
-            Nothing logged yet. Your first interview, test, or observation goes here.
+            {tr("Nothing logged yet. Your first interview, test, or observation goes here.")}
           </p>
         ) : (
           entries.map((entry) => (

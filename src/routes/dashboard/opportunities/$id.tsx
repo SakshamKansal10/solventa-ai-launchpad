@@ -21,6 +21,8 @@ import type { OpportunityPackage, OpportunityDetail, MarketEvidenceItem } from "
 import type { FitScoreResult } from "@/lib/profile/scoring";
 import { formatCompactMoney } from "@/lib/country-currency";
 import { cn } from "@/lib/utils";
+import { useLocale } from "@/lib/i18n/LocaleProvider";
+import { translateDashboardText } from "@/lib/i18n/dashboard-dictionary";
 
 export const Route = createFileRoute("/dashboard/opportunities/$id")({
   beforeLoad: requireAuthLoader,
@@ -105,6 +107,8 @@ function OpportunityDetailPage() {
 
   const [showReasons, setShowReasons] = useState(false);
   const [busy, setBusy] = useState<string | null>(null);
+  const { locale } = useLocale();
+  const tr = (s: string) => translateDashboardText(s, locale) ?? s;
 
   const refreshEvidenceMutation = useMutation({
     mutationFn: () => refreshMarketEvidence({ data: { opportunityId: id } }),
@@ -249,7 +253,7 @@ function OpportunityDetailPage() {
         ].map((cell) => (
           <div key={cell.label} className="bg-sol-surface px-4 py-3.5">
             <p className="text-[0.65rem] font-semibold uppercase tracking-[0.1em] text-sol-muted">
-              {cell.label}
+              {tr(cell.label)}
             </p>
             <p className="mt-1 line-clamp-2 text-[0.9rem] font-semibold leading-snug text-sol-ink">
               {cell.value}
@@ -265,7 +269,7 @@ function OpportunityDetailPage() {
             onClick={buildRoadmap}
             className="inline-flex items-center gap-2 rounded-xl bg-sol-navy px-5 py-2.5 text-[0.85rem] font-semibold text-white transition-colors hover:bg-sol-navy-soft"
           >
-            Build My Roadmap
+            {tr("Build My Roadmap")}
             <ArrowRight className="size-4 text-sol-champagne" aria-hidden="true" />
           </button>
         ) : (
@@ -277,7 +281,7 @@ function OpportunityDetailPage() {
             disabled={busy === "select"}
           >
             {busy === "select" && <Loader2 className="size-4 animate-spin" aria-hidden="true" />}
-            Select this as my opportunity
+            {tr("Select this as my opportunity")}
           </PremiumButton>
         )}
         <Button
@@ -286,7 +290,7 @@ function OpportunityDetailPage() {
           disabled={busy === "interested"}
           onClick={() => giveFeedback("interested")}
         >
-          Interested
+          {tr("Interested")}
         </Button>
         <Button
           variant="outline"
@@ -294,10 +298,10 @@ function OpportunityDetailPage() {
           disabled={busy === "saved"}
           onClick={() => giveFeedback("saved")}
         >
-          Save
+          {tr("Save")}
         </Button>
         <Button variant="ghost" size="sm" onClick={() => setShowReasons((v) => !v)}>
-          Not for me
+          {tr("Not for me")}
         </Button>
       </div>
 
@@ -310,7 +314,7 @@ function OpportunityDetailPage() {
               onClick={() => giveFeedback("not_for_me", reason)}
               className="rounded-full border border-sol-border px-3 py-1.5 text-[0.8rem] text-sol-secondary hover:border-sol-champagne/50 hover:text-sol-ink"
             >
-              {reason}
+              {tr(reason)}
             </button>
           ))}
         </div>
@@ -327,25 +331,27 @@ function OpportunityDetailPage() {
             href={`#${s.id}`}
             className="shrink-0 rounded-full px-3.5 py-1.5 text-[0.82rem] font-medium text-sol-secondary transition-colors hover:bg-sol-violet-mist hover:text-sol-violet-deep"
           >
-            {s.label}
+            {tr(s.label)}
           </a>
         ))}
       </nav>
 
       {/* ===== 1. OVERVIEW — what this is ===== */}
       <section id="overview" className="scroll-mt-24 pt-8">
-        <h2 className="font-display text-[1.2rem] font-semibold text-sol-ink">Overview</h2>
+        <h2 className="font-display text-[1.2rem] font-semibold text-sol-ink">{tr("Overview")}</h2>
         <div className="mt-4 flex flex-col gap-2 sm:flex-row sm:gap-3">
-          <FlowStep label="Problem" value={detail.problem} />
-          <FlowStep label="Your Service" value={detail.solution} />
-          <FlowStep label="Customer" value={detail.customer} />
-          <FlowStep label="Revenue" value={detail.revenuePath} isLast />
+          <FlowStep label={tr("Problem")} value={detail.problem} />
+          <FlowStep label={tr("Your Service")} value={detail.solution} />
+          <FlowStep label={tr("Customer")} value={detail.customer} />
+          <FlowStep label={tr("Revenue")} value={detail.revenuePath} isLast />
         </div>
       </section>
 
       {/* ===== 2. FOUNDER FIT — why this fits you specifically ===== */}
       <section id="founder-fit" className="scroll-mt-24 border-t border-sol-border pt-8 mt-8">
-        <h2 className="font-display text-[1.2rem] font-semibold text-sol-ink">Founder Fit</h2>
+        <h2 className="font-display text-[1.2rem] font-semibold text-sol-ink">
+          {tr("Founder Fit")}
+        </h2>
         <div className="mt-4 flex flex-col gap-6 rounded-2xl border border-sol-border bg-sol-surface p-6 sm:flex-row sm:items-start sm:gap-10">
           <div className="flex shrink-0 flex-col items-center gap-2 sm:items-start">
             <FitRing score={opportunity.fit_score} size={112} />
@@ -394,7 +400,7 @@ function OpportunityDetailPage() {
       {/* ===== 3. MARKET — real external signal, never invented ===== */}
       <section id="market" className="scroll-mt-24 border-t border-sol-border pt-8 mt-8">
         <div className="flex items-center justify-between">
-          <h2 className="font-display text-[1.2rem] font-semibold text-sol-ink">Market</h2>
+          <h2 className="font-display text-[1.2rem] font-semibold text-sol-ink">{tr("Market")}</h2>
           <button
             type="button"
             onClick={() => refreshEvidenceMutation.mutate()}
@@ -406,14 +412,15 @@ function OpportunityDetailPage() {
             ) : (
               <RefreshCw className="size-3.5" aria-hidden="true" />
             )}
-            Refresh Market Evidence
+            {tr("Refresh Market Evidence")}
           </button>
         </div>
         <div className="mt-4 flex flex-col gap-2.5">
           {evidence.length === 0 && (
             <p className="text-[0.85rem] text-sol-secondary">
-              No external evidence yet — click "Refresh Market Evidence" to have Sol search for real
-              signals.
+              {locale === "hi"
+                ? `अभी तक कोई बाहरी प्रमाण नहीं है — असली संकेत खोजने के लिए "${tr("Refresh Market Evidence")}" पर क्लिक करें।`
+                : 'No external evidence yet — click "Refresh Market Evidence" to have Sol search for real signals.'}
             </p>
           )}
           {evidence.map((item) => {
@@ -427,7 +434,7 @@ function OpportunityDetailPage() {
                   />
                   <div className="min-w-0 flex-1">
                     <p className="text-[0.68rem] font-semibold uppercase tracking-wide text-sol-muted">
-                      {tone.label}
+                      {tr(tone.label)}
                     </p>
                     <p className="mt-0.5 text-[0.88rem] text-sol-ink">{item.claim}</p>
                     {item.source_url && (
@@ -451,13 +458,13 @@ function OpportunityDetailPage() {
       {/* ===== 4. PROOF — is this actually working / what's the risk ===== */}
       <section id="evidence" className="scroll-mt-24 border-t border-sol-border pt-8 mt-8">
         <h2 className="font-display text-[1.2rem] font-semibold text-sol-ink">
-          Proof &amp; What Still Needs Validation
+          {tr("Proof & What Still Needs Validation")}
         </h2>
         <div className="mt-4 grid gap-5 sm:grid-cols-2">
           {detail.risks.length > 0 && (
             <div>
               <p className="text-[0.7rem] font-semibold uppercase tracking-wide text-sol-muted">
-                Risks
+                {tr("Risks")}
               </p>
               <div className="mt-2">
                 <BulletList items={detail.risks} />
@@ -467,7 +474,7 @@ function OpportunityDetailPage() {
           {detail.validationNeeded.length > 0 && (
             <div>
               <p className="text-[0.7rem] font-semibold uppercase tracking-wide text-sol-muted">
-                Needs Validation
+                {tr("Needs Validation")}
               </p>
               <div className="mt-2">
                 <BulletList items={detail.validationNeeded} />
@@ -478,7 +485,7 @@ function OpportunityDetailPage() {
 
         <div className="mt-6 rounded-[18px] border border-sol-champagne/25 bg-sol-champagne-soft/40 p-6 sm:p-7">
           <p className="text-[0.78rem] font-semibold uppercase tracking-wide text-sol-champagne-deep">
-            Your First Experiment
+            {tr("Your First Experiment")}
           </p>
           <p className="mt-2 text-[0.95rem] leading-relaxed text-sol-ink">
             {detail.firstExperiment}
@@ -492,9 +499,11 @@ function OpportunityDetailPage() {
 
       <div className="mt-8 flex flex-col items-center gap-3 text-center">
         <p className="text-[0.85rem] text-sol-secondary">
-          {isSelected
-            ? "Selected. Build your roadmap to start executing."
-            : "Ready to commit to this opportunity?"}
+          {tr(
+            isSelected
+              ? "Selected. Build your roadmap to start executing."
+              : "Ready to commit to this opportunity?",
+          )}
         </p>
         {isSelected && (
           <button
@@ -502,7 +511,7 @@ function OpportunityDetailPage() {
             onClick={buildRoadmap}
             className="inline-flex items-center gap-2 rounded-xl bg-sol-navy px-6 py-3.5 text-[0.92rem] font-semibold text-white transition-colors hover:bg-sol-navy-soft"
           >
-            Build My Roadmap
+            {tr("Build My Roadmap")}
             <ArrowRight className="size-4 text-sol-champagne" aria-hidden="true" />
           </button>
         )}
@@ -515,7 +524,7 @@ function OpportunityDetailPage() {
             disabled={busy === "select"}
           >
             {busy === "select" && <Loader2 className="size-4 animate-spin" aria-hidden="true" />}
-            Select this as my opportunity
+            {tr("Select this as my opportunity")}
           </PremiumButton>
         )}
       </div>

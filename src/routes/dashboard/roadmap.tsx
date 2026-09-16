@@ -28,6 +28,8 @@ import {
 } from "@/lib/actions/roadmap";
 import { formatCompactMoney } from "@/lib/country-currency";
 import { cn } from "@/lib/utils";
+import { useLocale } from "@/lib/i18n/LocaleProvider";
+import { translateDashboardText } from "@/lib/i18n/dashboard-dictionary";
 
 export const Route = createFileRoute("/dashboard/roadmap")({
   beforeLoad: requireAuthLoader,
@@ -172,6 +174,8 @@ function TaskRow({
     (typeof BLOCKER_REASONS)[number]["value"] | null
   >(null);
   const [reflectionNote, setReflectionNote] = useState("");
+  const { locale } = useLocale();
+  const tr = (s: string) => translateDashboardText(s, locale) ?? s;
   const isDone = task.status === "done";
 
   function markDone() {
@@ -240,7 +244,7 @@ function TaskRow({
           <span className="block truncate text-[0.95rem] font-medium text-sol-ink">
             {task.what}
           </span>
-          <span className="text-[0.72rem] text-sol-muted">Completed</span>
+          <span className="text-[0.72rem] text-sol-muted">{tr("Completed")}</span>
         </span>
       </button>
     );
@@ -270,38 +274,42 @@ function TaskRow({
             <p className="text-[0.95rem] font-medium text-sol-ink">{task.what}</p>
             {!task.required && (
               <span className="rounded-full bg-sol-ivory px-2 py-0.5 text-[0.68rem] font-medium text-sol-muted">
-                Optional
+                {tr("Optional")}
               </span>
             )}
           </button>
           {!expanded && (
             <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-[0.78rem] text-sol-secondary">
               {task.time_estimate && <span>{task.time_estimate}</span>}
-              {task.required && <span>Required</span>}
-              {task.deadline && <span>Due {task.deadline}</span>}
+              {task.required && <span>{tr("Required")}</span>}
+              {task.deadline && (
+                <span>
+                  {tr("Due")} {task.deadline}
+                </span>
+              )}
             </div>
           )}
           {task.status === "blocked" && (
             <p className="mt-1 text-[0.8rem] text-sol-danger">
-              Blocked — Sol has replanned what's ahead.
+              {tr("Blocked — Sol has replanned what's ahead.")}
             </p>
           )}
           {task.depends_on && isDisplayableDependency(task.depends_on) && (
             <p className="mt-1 text-[0.78rem] text-sol-secondary">
-              Depends on: <span className="text-sol-ink">{task.depends_on}</span>
+              {tr("Depends on:")} <span className="text-sol-ink">{task.depends_on}</span>
             </p>
           )}
           {expanded && (
             <div className="mt-3 flex flex-col gap-3 text-[0.95rem] text-sol-secondary">
               <div>
                 <p className="text-[0.7rem] font-semibold uppercase tracking-wide text-sol-muted">
-                  Why this matters
+                  {tr("Why this matters")}
                 </p>
                 <p className="mt-1 leading-relaxed text-sol-ink">{task.why}</p>
               </div>
               <div>
                 <p className="text-[0.7rem] font-semibold uppercase tracking-wide text-sol-muted">
-                  How
+                  {tr("How")}
                 </p>
                 <ol className="mt-1.5 flex flex-col gap-1">
                   {splitHowSteps(task.how).map((step, i) => (
@@ -315,20 +323,24 @@ function TaskRow({
               {task.resource && (
                 <div>
                   <p className="text-[0.7rem] font-semibold uppercase tracking-wide text-sol-muted">
-                    Resource
+                    {tr("Resource")}
                   </p>
                   <p className="mt-1 text-sol-ink">{task.resource}</p>
                 </div>
               )}
               <div>
                 <p className="text-[0.7rem] font-semibold uppercase tracking-wide text-sol-muted">
-                  Done when
+                  {tr("Done when")}
                 </p>
                 <p className="mt-1 text-sol-ink">{task.done_when}</p>
               </div>
               <div className="flex items-center gap-3 text-[0.78rem]">
                 {task.time_estimate && <span>{task.time_estimate}</span>}
-                {task.deadline && <span>Due {task.deadline}</span>}
+                {task.deadline && (
+                  <span>
+                    {tr("Due")} {task.deadline}
+                  </span>
+                )}
               </div>
               <div className="flex items-center gap-4 pt-1">
                 <button
@@ -345,7 +357,7 @@ function TaskRow({
                   {busy && (
                     <Loader2 className="mr-1 inline size-3 animate-spin" aria-hidden="true" />
                   )}
-                  {isDone ? "Mark Not Done" : "Mark Complete"}
+                  {tr(isDone ? "Mark Not Done" : "Mark Complete")}
                 </button>
                 {!isDone && (
                   <button
@@ -353,7 +365,7 @@ function TaskRow({
                     onClick={() => setShowBlocker((v) => !v)}
                     className="self-start text-[0.82rem] font-medium text-sol-violet-deep hover:underline"
                   >
-                    I'm stuck on this
+                    {tr("I'm stuck on this")}
                   </button>
                 )}
               </div>
@@ -361,7 +373,9 @@ function TaskRow({
           )}
           {showBlocker && (
             <div className="mt-3 rounded-lg border border-sol-border bg-sol-page p-3">
-              <p className="text-[0.82rem] font-medium text-sol-ink">What got in the way?</p>
+              <p className="text-[0.82rem] font-medium text-sol-ink">
+                {tr("What got in the way?")}
+              </p>
               <div className="mt-2 flex flex-wrap gap-1.5">
                 {BLOCKER_REASONS.map((r) => (
                   <button
@@ -375,14 +389,14 @@ function TaskRow({
                         : "border-sol-border text-sol-secondary",
                     )}
                   >
-                    {r.label}
+                    {tr(r.label)}
                   </button>
                 ))}
               </div>
               <Textarea
                 value={blockerNote}
                 onChange={(e) => setBlockerNote(e.target.value)}
-                placeholder="Anything else Sol should know? (optional)"
+                placeholder={tr("Anything else Sol should know? (optional)")}
                 className="mt-2 min-h-[60px] resize-none text-[0.9rem]"
               />
               <Button
@@ -392,14 +406,14 @@ function TaskRow({
                 disabled={!blockerReason || busy}
               >
                 {busy && <Loader2 className="size-3.5 animate-spin" aria-hidden="true" />}
-                Let Sol replan
+                {tr("Let Sol replan")}
               </Button>
             </div>
           )}
           {showReflectionPrompt && (
             <div className="mt-3 rounded-lg border border-sol-champagne/30 bg-sol-champagne-soft/40 p-3.5">
               <p className="text-[0.82rem] font-medium text-sol-ink">
-                This finishes the week. How did it actually go?
+                {tr("This finishes the week. How did it actually go?")}
               </p>
               <div className="mt-2.5 flex flex-wrap gap-1.5">
                 {REFLECTION_RATINGS.map((r) => (
@@ -414,12 +428,12 @@ function TaskRow({
                         : "border-sol-border bg-sol-surface text-sol-secondary hover:border-sol-violet/40",
                     )}
                   >
-                    {r.label}
+                    {tr(r.label)}
                   </button>
                 ))}
               </div>
               <p className="mt-3 text-[0.72rem] font-semibold uppercase tracking-wide text-sol-muted">
-                Anything in your way? (optional)
+                {tr("Anything in your way? (optional)")}
               </p>
               <div className="mt-1.5 flex flex-wrap gap-1.5">
                 {BLOCKER_REASONS.map((b) => (
@@ -436,19 +450,19 @@ function TaskRow({
                         : "border-sol-border bg-sol-surface text-sol-secondary hover:border-sol-champagne/40",
                     )}
                   >
-                    {b.label}
+                    {tr(b.label)}
                   </button>
                 ))}
               </div>
               <Textarea
                 value={reflectionNote}
                 onChange={(e) => setReflectionNote(e.target.value)}
-                placeholder="Anything else Sol should know? (optional)"
+                placeholder={tr("Anything else Sol should know? (optional)")}
                 className="mt-3 min-h-[52px] resize-none text-[0.88rem]"
               />
               <div className="mt-2.5 flex items-center gap-3">
                 <Button size="sm" onClick={finishWeek}>
-                  Prepare Next Week
+                  {tr("Prepare Next Week")}
                   <ArrowRight className="ml-1 size-3.5" aria-hidden="true" />
                 </Button>
                 <button
@@ -456,7 +470,7 @@ function TaskRow({
                   onClick={() => setShowReflectionPrompt(false)}
                   className="text-[0.82rem] font-medium text-sol-secondary hover:text-sol-ink"
                 >
-                  Cancel
+                  {tr("Cancel")}
                 </button>
               </div>
             </div>
@@ -474,6 +488,8 @@ function TaskRow({
  * exact state. Fires automatically once on mount, and offers a manual
  * retry button if that attempt also fails. */
 function GeneratingWeekState({ weekId, onDone }: { weekId: string; onDone: () => void }) {
+  const { locale } = useLocale();
+  const tr = (s: string) => translateDashboardText(s, locale) ?? s;
   const mutation = useMutation({
     mutationFn: () => generateActiveWeekDetail({ data: { weekId } }),
     onSuccess: onDone,
@@ -495,14 +511,14 @@ function GeneratingWeekState({ weekId, onDone }: { weekId: string; onDone: () =>
         <div className="flex items-center gap-3 rounded-lg border border-sol-border bg-sol-page p-3">
           <AlertTriangle className="size-4 shrink-0 text-sol-muted" aria-hidden="true" />
           <p className="flex-1 text-[0.85rem] text-sol-secondary">
-            Sol couldn't prepare this week — try again.
+            {tr("Sol couldn't prepare this week — try again.")}
           </p>
           <Button size="sm" variant="outline" onClick={() => mutation.mutate()}>
-            Retry
+            {tr("Retry")}
           </Button>
         </div>
       ) : (
-        <SolventiaLoadingState message="Sol is preparing this week's mission…" />
+        <SolventiaLoadingState message={tr("Sol is preparing this week's mission…")} />
       )}
     </div>
   );
@@ -527,6 +543,8 @@ function WeekBlock({
   onWeekReady: () => void;
 }) {
   const [expanded, setExpanded] = useState(week.status === "active");
+  const { locale } = useLocale();
+  const tr = (s: string) => translateDashboardText(s, locale) ?? s;
   const doneCount = week.tasks.filter((t) => t.status === "done").length;
   const remainingCount = week.tasks.length - doneCount;
   const stillGenerating = week.status === "active" && week.tasks.length === 0 && !week.mission;
@@ -537,7 +555,7 @@ function WeekBlock({
         <Lock className="mt-0.5 size-4 shrink-0 text-sol-muted" aria-hidden="true" />
         <div>
           <p className="text-[0.85rem] font-medium text-sol-secondary">
-            Week {week.week_number} — {week.title}
+            {tr("Week")} {week.week_number} — {week.title}
           </p>
           <p className="mt-0.5 text-[0.78rem] text-sol-muted">{week.objective}</p>
         </div>
@@ -571,11 +589,11 @@ function WeekBlock({
           )}
           <div>
             <p className="text-[0.85rem] font-medium text-sol-ink">
-              Week {week.week_number} — {week.title}
+              {tr("Week")} {week.week_number} — {week.title}
             </p>
             {(!expanded || week.status === "completed") && !stillGenerating && (
               <p className="text-[0.72rem] text-sol-muted">
-                {doneCount}/{week.tasks.length} done
+                {doneCount}/{week.tasks.length} {tr("done")}
               </p>
             )}
           </div>
@@ -606,7 +624,7 @@ function WeekBlock({
                 <div className="rounded-lg border border-sol-champagne/30 bg-sol-champagne-soft/40 px-3.5 py-3">
                   <p className="flex items-center gap-1.5 text-[0.68rem] font-semibold uppercase tracking-wide text-sol-champagne-deep">
                     <Target className="size-3.5" aria-hidden="true" />
-                    Mission
+                    {tr("Mission")}
                   </p>
                   <p className="mt-1 text-[0.95rem] leading-relaxed text-sol-ink">{week.mission}</p>
                 </div>
@@ -627,7 +645,7 @@ function WeekBlock({
                 {week.success_threshold && (
                   <div className="rounded-lg border border-sol-border bg-sol-surface px-3.5 py-3">
                     <p className="text-[0.66rem] font-semibold uppercase tracking-wide text-sol-muted">
-                      This week worked if…
+                      {tr("This week worked if…")}
                     </p>
                     <p className="mt-1 text-[0.9rem] leading-relaxed text-sol-ink">
                       {week.success_threshold}
@@ -637,7 +655,7 @@ function WeekBlock({
                 {week.evidence_required && (
                   <div className="rounded-lg border border-sol-border bg-sol-surface px-3.5 py-3">
                     <p className="text-[0.66rem] font-semibold uppercase tracking-wide text-sol-muted">
-                      Evidence to capture
+                      {tr("Evidence to capture")}
                     </p>
                     <p className="mt-1 text-[0.9rem] leading-relaxed text-sol-ink">
                       {week.evidence_required}
@@ -648,7 +666,7 @@ function WeekBlock({
                   <div>
                     <p className="flex items-center gap-1.5 text-[0.66rem] font-semibold uppercase tracking-wide text-sol-champagne-deep">
                       <ShieldAlert className="size-3.5" aria-hidden="true" />
-                      Avoid
+                      {tr("Avoid")}
                     </p>
                     <div className="mt-1.5 flex flex-col gap-2">
                       {week.mistakes_to_avoid.map((m, i) => (
@@ -684,7 +702,7 @@ function WeekBlock({
           {week.status === "completed" && week.founder_reflection && (
             <div className="mt-3 rounded-lg border border-sol-border bg-sol-surface px-3.5 py-3 sm:ml-[1.85rem]">
               <p className="text-[0.66rem] font-semibold uppercase tracking-wide text-sol-muted">
-                Your reflection
+                {tr("Your reflection")}
               </p>
               <p className="mt-1 text-[0.9rem] italic leading-relaxed text-sol-ink">
                 “{week.founder_reflection}”
@@ -703,6 +721,8 @@ function WeekBlock({
  * DashboardShell, so it renders one level above that provider). */
 function AskSolStageButton() {
   const openMentor = useOpenMentor();
+  const { locale } = useLocale();
+  const tr = (s: string) => translateDashboardText(s, locale) ?? s;
   return (
     <button
       type="button"
@@ -710,7 +730,7 @@ function AskSolStageButton() {
       className="flex items-center justify-center gap-2 rounded-xl border border-sol-violet/25 bg-sol-violet-mist/50 px-4 py-3 text-[0.85rem] font-medium text-sol-violet-deep transition-colors hover:bg-sol-violet-mist"
     >
       <Sparkles className="size-4 text-sol-violet" aria-hidden="true" />
-      Ask Sol about this stage
+      {tr("Ask Sol about this stage")}
     </button>
   );
 }
@@ -719,6 +739,8 @@ function RoadmapPage() {
   const queryClient = useQueryClient();
   const query = useQuery({ queryKey: ["roadmap"], queryFn: () => getRoadmap({ data: {} }) });
   const [focusedIndex, setFocusedIndex] = useState<number | null>(null);
+  const { locale } = useLocale();
+  const tr = (s: string) => translateDashboardText(s, locale) ?? s;
 
   // Optimistic task completion — the checkbox, progress bar, and stage
   // status must all update the instant the founder clicks, not after a
@@ -795,7 +817,7 @@ function RoadmapPage() {
     return (
       <DashboardShell>
         <div className="flex min-h-[50vh] items-center justify-center">
-          <SolventiaLoadingState message="Opening your roadmap…" />
+          <SolventiaLoadingState message={tr("Opening your roadmap…")} />
         </div>
       </DashboardShell>
     );
@@ -806,12 +828,16 @@ function RoadmapPage() {
       <DashboardShell hasRoadmap={false}>
         <div className="mt-10 rounded-[24px] border border-sol-border bg-sol-surface px-8 py-12 text-center">
           <MapPin className="mx-auto size-8 text-sol-champagne-deep" aria-hidden="true" />
-          <h2 className="mt-4 font-display text-xl font-semibold text-sol-ink">No roadmap yet.</h2>
+          <h2 className="mt-4 font-display text-xl font-semibold text-sol-ink">
+            {tr("No roadmap yet.")}
+          </h2>
           <p className="mx-auto mt-2 max-w-md text-[0.95rem] text-sol-secondary">
-            Select an opportunity from your dashboard and Sol will build a roadmap around it.
+            {tr(
+              "Select an opportunity from your dashboard and Sol will build a roadmap around it.",
+            )}
           </p>
           <Button asChild className="mt-6">
-            <Link to="/dashboard">Go to Dashboard</Link>
+            <Link to="/dashboard">{tr("Go to Dashboard")}</Link>
           </Button>
         </div>
       </DashboardShell>
@@ -879,10 +905,10 @@ function RoadmapPage() {
     >
       {/* ===== TOP: EXECUTION ROADMAP HEADER ===== */}
       <p className="text-[12px] font-semibold uppercase tracking-[0.12em] text-sol-champagne-deep">
-        Execution Roadmap
+        {tr("Execution Roadmap")}
       </p>
       <h1 className="mt-2 font-display text-[clamp(1.9rem,3.4vw,2.5rem)] font-semibold text-sol-ink">
-        {opportunity?.title ?? "Your Roadmap"}
+        {opportunity?.title ?? tr("Your Roadmap")}
       </h1>
       {/* North Star — the one-sentence "what this is building toward,"
           generated once alongside the skeleton. Absent for a roadmap
@@ -895,7 +921,7 @@ function RoadmapPage() {
       <p className="mt-2 max-w-xl text-[0.98rem] text-sol-secondary">
         {founderSummary
           ? buildFounderSummaryLine(founderSummary)
-          : (opportunity?.one_liner ?? "Your personalized execution plan.")}
+          : (opportunity?.one_liner ?? tr("Your personalized execution plan."))}
       </p>
 
       <div className="mt-6 grid grid-cols-2 gap-px overflow-hidden rounded-2xl border border-sol-border bg-sol-border sm:grid-cols-4">
@@ -907,7 +933,7 @@ function RoadmapPage() {
         ].map((cell) => (
           <div key={cell.label} className="bg-sol-surface px-5 py-4">
             <p className="text-[0.62rem] font-semibold uppercase tracking-[0.1em] text-sol-muted">
-              {cell.label}
+              {tr(cell.label)}
             </p>
             <p className="mt-1 font-display text-[1.35rem] font-semibold text-sol-ink">
               {cell.value}
@@ -919,7 +945,7 @@ function RoadmapPage() {
       {nextTask && (
         <div className="mt-4 flex items-center gap-2 text-[0.85rem] text-sol-secondary">
           <span className="size-1.5 shrink-0 rounded-full bg-sol-champagne" />
-          Next milestone: <span className="font-medium text-sol-ink">{nextTask.what}</span>
+          {tr("Next milestone:")} <span className="font-medium text-sol-ink">{nextTask.what}</span>
         </div>
       )}
 
@@ -972,7 +998,7 @@ function RoadmapPage() {
                 </span>
                 {isTrueCurrent && (
                   <span className="text-[0.62rem] font-semibold uppercase tracking-wide text-sol-violet-deep">
-                    Current
+                    {tr("Current")}
                   </span>
                 )}
               </span>
@@ -988,8 +1014,9 @@ function RoadmapPage() {
             {isViewingNonCurrent && (
               <div className="mb-3 flex items-center gap-2 rounded-lg bg-sol-ivory px-3 py-2 text-[0.8rem] text-sol-secondary">
                 <ChevronRight className="size-3.5 shrink-0" aria-hidden="true" />
-                Previewing a {activeIndex < effectiveCurrentIndex ? "completed" : "upcoming"} stage
-                — your current stage stays marked in the navigator above.
+                {locale === "hi"
+                  ? `एक ${activeIndex < effectiveCurrentIndex ? "पूरा हो चुका" : "आगामी"} चरण देखा जा रहा है — आपका मौजूदा चरण ऊपर नेविगेटर में चिह्नित रहता है।`
+                  : `Previewing a ${activeIndex < effectiveCurrentIndex ? "completed" : "upcoming"} stage — your current stage stays marked in the navigator above.`}
               </div>
             )}
             <div className="flex items-center gap-3">
@@ -998,7 +1025,7 @@ function RoadmapPage() {
               </h2>
               <span className="text-[0.8rem] text-sol-secondary">
                 {activePhase.tasks.filter((t) => t.status === "done").length}/
-                {activePhase.tasks.length} done
+                {activePhase.tasks.length} {tr("done")}
               </span>
             </div>
             {activePhase.description && (
@@ -1039,17 +1066,19 @@ function RoadmapPage() {
           {nextTask && (
             <div className="rounded-xl border border-sol-border bg-sol-surface p-4">
               <p className="text-[0.68rem] font-semibold uppercase tracking-wide text-sol-muted">
-                Next Milestone
+                {tr("Next Milestone")}
               </p>
               <p className="mt-1.5 text-[0.9rem] leading-relaxed text-sol-ink">{nextTask.what}</p>
             </div>
           )}
           <div className="rounded-xl border border-sol-border bg-sol-surface p-4">
             <p className="text-[0.68rem] font-semibold uppercase tracking-wide text-sol-muted">
-              This Week
+              {tr("This Week")}
             </p>
             <p className="mt-1.5 text-[0.9rem] text-sol-ink">
-              {dueThisWeek} task{dueThisWeek === 1 ? "" : "s"} due
+              {locale === "hi"
+                ? `${dueThisWeek} काम बाकी`
+                : `${dueThisWeek} task${dueThisWeek === 1 ? "" : "s"} due`}
             </p>
           </div>
           <AskSolStageButton />

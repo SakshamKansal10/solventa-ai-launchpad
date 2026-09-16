@@ -26,6 +26,8 @@ import { MentorPanel } from "@/components/dashboard/MentorPanel";
 import { NotificationBell } from "@/components/dashboard/NotificationBell";
 import { getCurrentUser, signOut } from "@/lib/actions/auth";
 import { cn } from "@/lib/utils";
+import { useLocale } from "@/lib/i18n/LocaleProvider";
+import { translateDashboardText } from "@/lib/i18n/dashboard-dictionary";
 
 /** Lets any page rendered inside DashboardShell trigger the mentor panel
  * (e.g. a page-level "Ask Sol" section), without lifting mentorOpen state
@@ -130,6 +132,8 @@ function NavLink({
   currentPath: string;
   onNavigate: () => void;
 }) {
+  const { locale } = useLocale();
+  const tr = (s: string) => translateDashboardText(s, locale) ?? s;
   const Icon = item.icon;
   const isActive =
     item.isRealDestination && item.to !== undefined && !item.hash && currentPath === item.to;
@@ -138,10 +142,10 @@ function NavLink({
     return (
       <div
         className="group relative flex h-12 cursor-default items-center gap-3 rounded-xl px-3.5 text-[15px] font-medium text-[#9B95A2]"
-        title="Build your roadmap after selecting a direction."
+        title={tr("Build your roadmap after selecting a direction.")}
       >
         <Lock className="size-[18px] shrink-0" aria-hidden="true" strokeWidth={1.75} />
-        <span>{item.label}</span>
+        <span>{tr(item.label)}</span>
       </div>
     );
   }
@@ -165,7 +169,7 @@ function NavLink({
         />
       )}
       <Icon className="size-[18px] shrink-0" aria-hidden="true" strokeWidth={1.75} />
-      <span>{item.label}</span>
+      <span>{tr(item.label)}</span>
     </Link>
   );
 }
@@ -194,6 +198,8 @@ function SidebarContent({
   const navItems = useNavItems(opportunityId, hasRoadmap);
   const currentPath = useRouterState({ select: (s) => s.location.pathname });
   const currentUser = useQuery({ queryKey: ["current-user"], queryFn: () => getCurrentUser() });
+  const { locale } = useLocale();
+  const tr = (s: string) => translateDashboardText(s, locale) ?? s;
 
   return (
     <div className="relative flex h-full flex-col">
@@ -240,7 +246,7 @@ function SidebarContent({
                   {firstNameFromEmail(currentUser.data?.email)}
                 </span>
                 <span className="flex items-center gap-0.5 text-[0.72rem] text-sol-secondary">
-                  View profile
+                  {tr("View profile")}
                   <ChevronRight className="size-3" aria-hidden="true" />
                 </span>
               </span>
@@ -250,13 +256,13 @@ function SidebarContent({
             <DropdownMenuItem asChild>
               <Link to="/dashboard/settings" onClick={onNavigate} className="cursor-pointer">
                 <Settings className="size-4" aria-hidden="true" />
-                Settings
+                {tr("Settings")}
               </Link>
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={onSignOut} className="cursor-pointer">
               <LogOut className="size-4" aria-hidden="true" />
-              Sign Out
+              {tr("Sign Out")}
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
@@ -277,6 +283,8 @@ export function DashboardShell({
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const currentPath = useRouterState({ select: (s) => s.location.pathname });
+  const { locale } = useLocale();
+  const tr = (s: string) => translateDashboardText(s, locale) ?? s;
 
   async function handleSignOut() {
     try {
@@ -345,7 +353,7 @@ export function DashboardShell({
            * never a second nav ===== */}
           <header className="sticky top-0 z-30 hidden h-[72px] shrink-0 items-center justify-between border-b border-sol-border bg-[rgba(247,243,236,0.90)] px-8 backdrop-blur-xl lg:flex lg:px-12">
             <p className="text-[0.95rem] font-semibold text-sol-ink">
-              {pageTitleFromPath(currentPath, pageTitle)}
+              {tr(pageTitleFromPath(currentPath, pageTitle))}
             </p>
             <NotificationBell />
           </header>
