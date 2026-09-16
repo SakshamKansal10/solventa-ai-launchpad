@@ -152,7 +152,7 @@ export function FitScoreMatrix({
         {(Object.keys(FIT_SCORE_MAXIMA) as (keyof FitScoreBreakdown)[]).map((key) => {
           const label = qualitativeFactorLabel(breakdown[key], FIT_SCORE_MAXIMA[key]);
           return (
-            <div key={key} className="flex items-center justify-between gap-3 text-[0.85rem]">
+            <div key={key} className="flex items-center justify-between gap-3 text-[0.92rem]">
               <dt className={labelClass}>{LABELS[key]}</dt>
               <dd className={cn("font-medium", FACTOR_TONE_CLASS[variant][label])}>{label}</dd>
             </div>
@@ -160,7 +160,7 @@ export function FitScoreMatrix({
         })}
       </dl>
       {skillsLabel === "Low" && (
-        <p className={cn("mt-3 text-[0.78rem] leading-relaxed", labelClass)}>
+        <p className={cn("mt-3 text-[0.85rem] leading-relaxed", labelClass)}>
           Skill gap — learnable. The score already accounts for this being something you can pick
           up, not a disqualifier.
         </p>

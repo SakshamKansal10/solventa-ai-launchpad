@@ -647,7 +647,7 @@ function WeekBlock({
                     <p className="text-[0.66rem] font-semibold uppercase tracking-wide text-sol-muted">
                       {tr("This week worked if…")}
                     </p>
-                    <p className="mt-1 text-[0.9rem] leading-relaxed text-sol-ink">
+                    <p className="mt-1 text-[0.95rem] leading-relaxed text-sol-ink">
                       {week.success_threshold}
                     </p>
                   </div>
@@ -657,7 +657,7 @@ function WeekBlock({
                     <p className="text-[0.66rem] font-semibold uppercase tracking-wide text-sol-muted">
                       {tr("Evidence to capture")}
                     </p>
-                    <p className="mt-1 text-[0.9rem] leading-relaxed text-sol-ink">
+                    <p className="mt-1 text-[0.95rem] leading-relaxed text-sol-ink">
                       {week.evidence_required}
                     </p>
                   </div>

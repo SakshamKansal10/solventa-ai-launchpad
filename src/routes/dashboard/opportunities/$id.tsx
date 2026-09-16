@@ -68,7 +68,7 @@ function FlowStep({ label, value, isLast }: { label: string; value: string; isLa
         <p className="text-[0.65rem] font-semibold uppercase tracking-wide text-sol-muted">
           {label}
         </p>
-        <p className="mt-1.5 text-[0.88rem] font-medium leading-snug text-sol-ink">{value}</p>
+        <p className="mt-1.5 text-[0.98rem] font-medium leading-snug text-sol-ink">{value}</p>
       </div>
       {!isLast && (
         <div className="flex items-center justify-center py-1 sm:py-0">
@@ -87,7 +87,7 @@ function BulletList({ items }: { items: string[] }) {
   return (
     <ul className="flex flex-col gap-1.5">
       {items.map((item) => (
-        <li key={item} className="flex gap-2 text-[0.9rem] leading-relaxed text-sol-ink">
+        <li key={item} className="flex gap-2 text-[0.98rem] leading-relaxed text-sol-ink">
           <span className="mt-1.5 size-1 shrink-0 rounded-full bg-sol-champagne" />
           {item}
         </li>
@@ -487,9 +487,7 @@ function OpportunityDetailPage() {
           <p className="text-[0.78rem] font-semibold uppercase tracking-wide text-sol-champagne-deep">
             {tr("Your First Experiment")}
           </p>
-          <p className="mt-2 text-[0.95rem] leading-relaxed text-sol-ink">
-            {detail.firstExperiment}
-          </p>
+          <p className="mt-2 text-[1rem] leading-relaxed text-sol-ink">{detail.firstExperiment}</p>
         </div>
 
         <div className="mt-6">
