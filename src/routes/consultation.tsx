@@ -24,6 +24,9 @@ import type { InputKind, Step } from "@/lib/onboarding-steps";
 import type { OnboardingAnswers } from "@/lib/onboarding-types";
 import { getStageTheme } from "@/lib/onboarding-themes";
 import { getLatestBusinessDna } from "@/lib/actions/profile";
+import { useLocale } from "@/lib/i18n/LocaleProvider";
+import { translateOnboardingText } from "@/lib/i18n/onboarding-dictionary";
+import { LanguageSwitcher } from "@/components/solventia/LanguageSwitcher";
 
 /** Simple, single-focus questions get an open canvas (question, input,
  * button, and generous whitespace — no card boundary). Everything with
@@ -105,6 +108,8 @@ function ConsultationPage() {
 
 function ConsultationShell({ editMode = false }: { editMode?: boolean }) {
   const { currentStep, stepIndex, goBack, progress } = useOnboarding();
+  const { locale } = useLocale();
+  const tr = (s: string) => translateOnboardingText(s, locale) ?? s;
   const [mobileProfileOpen, setMobileProfileOpen] = useState(false);
 
   const isIntroLike =
@@ -184,6 +189,7 @@ function ConsultationShell({ editMode = false }: { editMode?: boolean }) {
         )}
 
         <div className="flex items-center gap-3">
+          <LanguageSwitcher className="inline-flex items-center gap-1 text-[0.78rem] font-medium text-muted-foreground transition-colors hover:text-primary" />
           {showProfile && (
             <Sheet open={mobileProfileOpen} onOpenChange={setMobileProfileOpen}>
               <SheetTrigger asChild>
@@ -192,14 +198,14 @@ function ConsultationShell({ editMode = false }: { editMode?: boolean }) {
                   className="flex items-center gap-1.5 rounded-full border border-border px-3.5 py-2 text-[0.78rem] font-semibold text-foreground/80 2xl:hidden"
                 >
                   <Sparkles className="size-3.5 text-accent" aria-hidden="true" />
-                  Profile
+                  {tr("Profile")}
                 </button>
               </SheetTrigger>
               <SheetContent
                 side="right"
                 className="w-[88vw] max-w-sm border-border bg-background p-6"
               >
-                <SheetTitle className="text-primary">Your Founder Profile</SheetTitle>
+                <SheetTitle className="text-primary">{tr("Your Founder Profile")}</SheetTitle>
                 <div className="mt-6">
                   <FounderProfilePanel activeSection={activeSection} />
                 </div>
@@ -223,7 +229,7 @@ function ConsultationShell({ editMode = false }: { editMode?: boolean }) {
           className="relative z-20 ml-6 mt-6 flex items-center gap-1.5 text-[0.82rem] font-medium text-muted-foreground hover:text-primary lg:ml-10"
         >
           <ArrowLeft className="size-3.5" aria-hidden="true" />
-          Back
+          {tr("Back")}
         </button>
       )}
 

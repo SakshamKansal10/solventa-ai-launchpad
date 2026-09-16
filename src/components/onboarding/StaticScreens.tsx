@@ -14,6 +14,8 @@ import { completeConsultation } from "@/lib/actions/profile";
 import { STAGE_THEMES } from "@/lib/onboarding-themes";
 import { cn } from "@/lib/utils";
 import mark from "@/assets/solventia-mark.png";
+import { useLocale } from "@/lib/i18n/LocaleProvider";
+import { translateOnboardingText } from "@/lib/i18n/onboarding-dictionary";
 
 const fadeUp = {
   hidden: { opacity: 0, y: 20 },
@@ -44,6 +46,8 @@ function AIOrb() {
 
 export function WelcomeScreen({ editMode = false }: { editMode?: boolean }) {
   const { goNext, hasSavedProgress, resumeSaved, discardSaved } = useOnboarding();
+  const { locale } = useLocale();
+  const tr = (s: string) => translateOnboardingText(s, locale) ?? s;
 
   return (
     <motion.div
@@ -54,26 +58,30 @@ export function WelcomeScreen({ editMode = false }: { editMode?: boolean }) {
     >
       <motion.p variants={fadeUp} className="eyebrow flex items-center gap-2 text-accent">
         <Sparkles className="size-3.5" aria-hidden="true" />
-        {editMode ? "Editing Your Founder Profile" : "Solventia Consultation"}
+        {tr(editMode ? "Editing Your Founder Profile" : "Solventia Consultation")}
       </motion.p>
       <motion.h1
         variants={fadeUp}
         className="mt-6 font-display text-[clamp(2rem,4.5vw,3rem)] font-semibold leading-[1.15] text-primary"
       >
-        {editMode ? "Update What’s Changed." : "Let’s Build Your Entrepreneurial Journey."}
+        {tr(editMode ? "Update What’s Changed." : "Let’s Build Your Entrepreneurial Journey.")}
       </motion.h1>
       <motion.p
         variants={fadeUp}
         className="mt-6 text-[1.02rem] leading-[1.9] text-muted-foreground"
       >
-        {editMode
-          ? "Every answer is already filled in from your last consultation. Skip through anything unchanged, and edit only what’s different."
-          : "Over the next few minutes, I’ll understand your ambitions, strengths, resources, and circumstances before recommending a business that genuinely fits you."}
+        {tr(
+          editMode
+            ? "Every answer is already filled in from your last consultation. Skip through anything unchanged, and edit only what’s different."
+            : "Over the next few minutes, I’ll understand your ambitions, strengths, resources, and circumstances before recommending a business that genuinely fits you.",
+        )}
       </motion.p>
       <motion.p variants={fadeUp} className="mt-3 text-[1.02rem] font-semibold text-primary">
-        {editMode
-          ? "Your current ideas and roadmap stay exactly where they are until you finish and submit."
-          : "This isn’t a quiz. It’s a personalized strategy consultation."}
+        {tr(
+          editMode
+            ? "Your current ideas and roadmap stay exactly where they are until you finish and submit."
+            : "This isn’t a quiz. It’s a personalized strategy consultation.",
+        )}
       </motion.p>
 
       <motion.div
@@ -81,12 +89,12 @@ export function WelcomeScreen({ editMode = false }: { editMode?: boolean }) {
         className="mt-8 flex items-center gap-2 rounded-full border border-border bg-card px-4 py-2 text-[0.85rem] text-muted-foreground shadow-sm"
       >
         <Clock className="size-4 text-accent" aria-hidden="true" />
-        {editMode ? "Estimated time: 2–4 minutes" : "Estimated time: 8–10 minutes"}
+        {tr(editMode ? "Estimated time: 2–4 minutes" : "Estimated time: 8–10 minutes")}
       </motion.div>
 
       <motion.div variants={fadeUp} className="mt-10 flex flex-col items-center gap-3">
         <PremiumButton type="button" tone="solid" shape="rounded" size="lg" onClick={goNext}>
-          {editMode ? "Continue to My Answers" : "Begin My Consultation"}
+          {tr(editMode ? "Continue to My Answers" : "Begin My Consultation")}
           <ArrowRight className="size-4 text-accent" aria-hidden="true" />
         </PremiumButton>
 
@@ -98,7 +106,7 @@ export function WelcomeScreen({ editMode = false }: { editMode?: boolean }) {
               className="flex items-center gap-1.5 font-semibold text-accent hover:underline"
             >
               <RotateCcw className="size-3.5" aria-hidden="true" />
-              Resume saved progress
+              {tr("Resume saved progress")}
             </button>
             <span className="text-border">·</span>
             <button
@@ -106,13 +114,13 @@ export function WelcomeScreen({ editMode = false }: { editMode?: boolean }) {
               onClick={discardSaved}
               className="text-muted-foreground hover:text-primary"
             >
-              Start fresh
+              {tr("Start fresh")}
             </button>
           </div>
         )}
 
         <Link to="/" className="mt-4 text-[0.82rem] text-muted-foreground/70 hover:text-primary">
-          Not now — back to homepage
+          {tr("Not now — back to homepage")}
         </Link>
       </motion.div>
     </motion.div>
@@ -121,6 +129,8 @@ export function WelcomeScreen({ editMode = false }: { editMode?: boolean }) {
 
 export function AIIntroScreen() {
   const { goNext } = useOnboarding();
+  const { locale } = useLocale();
+  const tr = (s: string) => translateOnboardingText(s, locale) ?? s;
   return (
     <motion.div
       initial="hidden"
@@ -132,25 +142,27 @@ export function AIIntroScreen() {
         <AIOrb />
       </motion.div>
       <motion.p variants={fadeUp} className="mt-8 text-[1.1rem] leading-[1.9] text-foreground">
-        Hello. I&rsquo;m <span className="font-semibold text-accent">Sol</span>.
+        {locale === "hi" ? "नमस्ते। मैं " : "Hello. I’m "}
+        <span className="font-semibold text-accent">Sol</span>
+        {locale === "hi" ? " हूं।" : "."}
       </motion.p>
       <motion.p
         variants={fadeUp}
         className="mt-4 text-[1.02rem] leading-[1.9] text-muted-foreground"
       >
-        My role isn&rsquo;t simply to recommend business ideas. My responsibility is to understand
-        you first, eliminate unsuitable opportunities, and design a realistic roadmap you can
-        actually follow.
+        {tr(
+          "My role isn’t simply to recommend business ideas. My responsibility is to understand you first, eliminate unsuitable opportunities, and design a realistic roadmap you can actually follow.",
+        )}
       </motion.p>
       <motion.p
         variants={fadeUp}
         className="mt-4 text-[1.02rem] leading-[1.9] text-muted-foreground"
       >
-        Every answer helps me understand your entrepreneurial profile.
+        {tr("Every answer helps me understand your entrepreneurial profile.")}
       </motion.p>
       <motion.div variants={fadeUp} className="mt-10">
         <PremiumButton type="button" tone="solid" shape="rounded" size="lg" onClick={goNext}>
-          Let&rsquo;s Begin
+          {tr("Let’s Begin")}
           <ArrowRight className="size-4 text-accent" aria-hidden="true" />
         </PremiumButton>
       </motion.div>
@@ -160,6 +172,8 @@ export function AIIntroScreen() {
 
 export function SectionIntroScreen({ step }: { step: SectionIntroStep }) {
   const { goNext } = useOnboarding();
+  const { locale } = useLocale();
+  const tr = (s: string) => translateOnboardingText(s, locale) ?? s;
   const theme = getStageTheme(step.section);
   const Icon = theme.icon;
   return (
@@ -175,32 +189,32 @@ export function SectionIntroScreen({ step }: { step: SectionIntroStep }) {
       <motion.div variants={fadeUp} className="mt-6 flex items-center gap-2">
         <Icon className="size-4" style={{ color: theme.color }} aria-hidden="true" />
         <p className="eyebrow" style={{ color: theme.color }}>
-          {theme.feeling}
+          {tr(theme.feeling)}
         </p>
       </motion.div>
       <motion.h2
         variants={fadeUp}
         className="mt-4 font-display text-[clamp(1.8rem,3.5vw,2.4rem)] font-semibold text-primary"
       >
-        {step.title}
+        {tr(step.title)}
       </motion.h2>
       <motion.p variants={fadeUp} className="mt-5 text-[1.05rem] font-semibold text-primary">
-        {theme.opener}
+        {tr(theme.opener)}
       </motion.p>
       <motion.p
         variants={fadeUp}
         className="mt-3 text-[1.02rem] leading-[1.9] text-muted-foreground"
       >
-        {step.body}
+        {tr(step.body)}
       </motion.p>
       <motion.div variants={fadeUp} className="mt-9">
         <PremiumButton type="button" tone="solid" shape="rounded" size="lg" onClick={goNext}>
-          Continue
+          {tr("Continue")}
           <ArrowRight className="size-4 text-accent" aria-hidden="true" />
         </PremiumButton>
       </motion.div>
       <motion.p variants={fadeUp} className="mt-8 text-[0.72rem] text-muted-foreground/50">
-        Section {step.section} of 7
+        {locale === "hi" ? `खंड ${step.section} / 7` : `Section ${step.section} of 7`}
       </motion.p>
     </motion.div>
   );
@@ -232,6 +246,8 @@ const GENERATION_STAGES = [
  * ~20s wait, it just gives the first second of it real meaning instead of
  * a blank screen. */
 function SignalConvergence() {
+  const { locale } = useLocale();
+  const tr = (s: string) => translateOnboardingText(s, locale) ?? s;
   return (
     <motion.div
       key="converging"
@@ -264,13 +280,15 @@ function SignalConvergence() {
         transition={{ delay: 0.75, duration: 0.4 }}
         className="text-[0.88rem] text-muted-foreground"
       >
-        Bringing everything together…
+        {tr("Bringing everything together…")}
       </motion.p>
     </motion.div>
   );
 }
 
 function SolWorkingVisual() {
+  const { locale } = useLocale();
+  const tr = (s: string) => translateOnboardingText(s, locale) ?? s;
   const [stageIndex, setStageIndex] = useState(0);
 
   useEffect(() => {
@@ -312,7 +330,7 @@ function SolWorkingVisual() {
         ))}
       </div>
       <div>
-        <p className="eyebrow text-center text-accent">Sol is building your strategy</p>
+        <p className="eyebrow text-center text-accent">{tr("Sol is building your strategy")}</p>
         <ul className="mt-5 flex flex-col gap-3">
           {GENERATION_STAGES.map((label, i) => {
             const isDone = i < stageIndex;
@@ -350,7 +368,7 @@ function SolWorkingVisual() {
                         : "text-muted-foreground/50",
                   )}
                 >
-                  {label}
+                  {tr(label)}
                 </span>
               </li>
             );
@@ -358,8 +376,9 @@ function SolWorkingVisual() {
         </ul>
       </div>
       <p className="max-w-xs text-center text-[0.78rem] leading-relaxed text-muted-foreground/70">
-        This usually takes under a minute. Your answers are already saved — safe even if you leave
-        this page.
+        {tr(
+          "This usually takes under a minute. Your answers are already saved — safe even if you leave this page.",
+        )}
       </p>
     </motion.div>
   );
@@ -368,6 +387,8 @@ function SolWorkingVisual() {
 export function CompletionScreen() {
   const { answers, restart } = useOnboarding();
   const navigate = useNavigate();
+  const { locale } = useLocale();
+  const tr = (s: string) => translateOnboardingText(s, locale) ?? s;
   const currentUser = useQuery({ queryKey: ["current-user"], queryFn: () => getCurrentUser() });
 
   const [phase, setPhase] = useState<SubmitPhase>("idle");
@@ -472,7 +493,7 @@ export function CompletionScreen() {
         variants={fadeUp}
         className="mt-8 font-display text-[clamp(1.8rem,3.5vw,2.4rem)] font-semibold text-primary"
       >
-        {isSubmitting ? "Your Business DNA is complete." : "Your Founder Profile is complete."}
+        {tr(isSubmitting ? "Your Business DNA is complete." : "Your Founder Profile is complete.")}
       </motion.h2>
 
       {summaryLines.length > 0 && !isSubmitting && (
@@ -501,7 +522,7 @@ export function CompletionScreen() {
                 <span className="flex size-5 shrink-0 items-center justify-center rounded-full bg-accent text-primary">
                   <Check className="size-3" aria-hidden="true" />
                 </span>
-                <span className="text-[0.92rem] text-foreground">{label}</span>
+                <span className="text-[0.92rem] text-foreground">{tr(label)}</span>
               </div>
             ))}
           </motion.div>
@@ -512,7 +533,9 @@ export function CompletionScreen() {
             animate={{ opacity: 1, y: 0 }}
             className="mt-8 flex w-full flex-col items-center gap-4 rounded-2xl border border-destructive/30 bg-card/80 px-6 py-6"
           >
-            <p className="text-[0.92rem] text-destructive">{errorMessage}</p>
+            <p className="text-[0.92rem] text-destructive">
+              {errorMessage ? tr(errorMessage) : errorMessage}
+            </p>
             <PremiumButton
               type="button"
               tone="solid"
@@ -520,7 +543,7 @@ export function CompletionScreen() {
               size="sm"
               onClick={runSubmission}
             >
-              Try Again
+              {tr("Try Again")}
             </PremiumButton>
           </motion.div>
         ) : currentUser.data === null ? (
@@ -541,7 +564,7 @@ export function CompletionScreen() {
               size="lg"
               onClick={runSubmission}
             >
-              Save & See My Results
+              {tr("Save & See My Results")}
               <ArrowRight className="size-4 text-accent" aria-hidden="true" />
             </PremiumButton>
           </motion.div>
@@ -554,7 +577,7 @@ export function CompletionScreen() {
             to="/"
             className="text-[0.85rem] font-medium text-muted-foreground hover:text-primary"
           >
-            Back to Homepage
+            {tr("Back to Homepage")}
           </Link>
           <span className="hidden text-border sm:inline">·</span>
           <button
@@ -562,7 +585,7 @@ export function CompletionScreen() {
             onClick={restart}
             className="text-[0.85rem] font-medium text-muted-foreground hover:text-primary"
           >
-            Start over
+            {tr("Start over")}
           </button>
         </motion.div>
       )}

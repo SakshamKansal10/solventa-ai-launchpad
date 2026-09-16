@@ -7,6 +7,8 @@ import { LANGUAGE_LIBRARY, type SkillEntry } from "@/lib/onboarding-types";
 import { getCurrencyForCountry } from "@/lib/country-currency";
 import { useOnboarding } from "@/lib/onboarding-store";
 import { getStageTheme } from "@/lib/onboarding-themes";
+import { useLocale } from "@/lib/i18n/LocaleProvider";
+import { translateOnboardingText } from "@/lib/i18n/onboarding-dictionary";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -50,6 +52,8 @@ function isExcludedFromSelectAll(option: string): boolean {
 
 export function QuestionRenderer({ step }: { step: QuestionStep }) {
   const { answers, setAnswer, goNext, skip } = useOnboarding();
+  const { locale } = useLocale();
+  const tr = (s?: string) => translateOnboardingText(s, locale);
   const theme = getStageTheme(step.section);
   const value = answers[step.id];
   const [localText, setLocalText] = useState(typeof value === "string" ? value : "");
@@ -84,11 +88,11 @@ export function QuestionRenderer({ step }: { step: QuestionStep }) {
     <div className="flex w-full flex-col gap-10">
       <div className="text-center">
         <h2 className="font-display text-[clamp(1.7rem,3.6vw,2.5rem)] font-semibold leading-[1.25] text-primary">
-          {step.label}
+          {tr(step.label)}
         </h2>
         {step.helper && (
           <p className="mx-auto mt-3 max-w-[46ch] text-[0.98rem] leading-[1.7] text-muted-foreground">
-            {step.helper}
+            {tr(step.helper)}
           </p>
         )}
       </div>
@@ -117,7 +121,7 @@ export function QuestionRenderer({ step }: { step: QuestionStep }) {
                   pendingChoice && !selected && "opacity-50",
                 )}
               >
-                {option}
+                {tr(option)}
                 <AnimatePresence>
                   {selected && (
                     <motion.span
@@ -164,7 +168,7 @@ export function QuestionRenderer({ step }: { step: QuestionStep }) {
                     !active && "border-border bg-card text-foreground hover:border-primary/30",
                   )}
                 >
-                  {option}
+                  {tr(option)}
                   <AnimatePresence>
                     {active && (
                       <motion.span
@@ -205,7 +209,7 @@ export function QuestionRenderer({ step }: { step: QuestionStep }) {
                   )}
                 >
                   <Sparkles className="size-4 text-gold" aria-hidden="true" />
-                  All of the above
+                  {tr("All of the above")}
                   {allSelected && <Check className="size-4 text-gold" aria-hidden="true" />}
                 </motion.button>
               );
@@ -217,7 +221,7 @@ export function QuestionRenderer({ step }: { step: QuestionStep }) {
         <Input
           autoFocus
           value={localText}
-          placeholder={step.placeholder}
+          placeholder={tr(step.placeholder)}
           onChange={(e) => setLocalText(e.target.value)}
           onKeyDown={(e) => {
             if (e.key === "Enter" && (localText.trim() || step.optional))
@@ -233,7 +237,7 @@ export function QuestionRenderer({ step }: { step: QuestionStep }) {
           type="number"
           inputMode="numeric"
           value={localText}
-          placeholder={step.placeholder}
+          placeholder={tr(step.placeholder)}
           onChange={(e) => setLocalText(e.target.value)}
           onKeyDown={(e) => {
             if (e.key === "Enter" && (localText.trim() || step.optional))
@@ -246,7 +250,7 @@ export function QuestionRenderer({ step }: { step: QuestionStep }) {
       {step.input === "currency" && (
         <CurrencyInput
           value={typeof value === "string" ? value : undefined}
-          placeholder={step.placeholder}
+          placeholder={tr(step.placeholder)}
           currencyCode={currency.code}
           currencySymbol={currency.symbol}
           onChange={(raw) => setAnswer(step.id, raw as never)}
@@ -269,12 +273,12 @@ export function QuestionRenderer({ step }: { step: QuestionStep }) {
           onValueChange={(v) => setAnswer(step.id, v as never)}
         >
           <SelectTrigger className="h-14 rounded-xl border-border bg-card px-5 text-base shadow-sm">
-            <SelectValue placeholder="Choose one…" />
+            <SelectValue placeholder={tr("Choose one…")} />
           </SelectTrigger>
           <SelectContent>
             {options.map((option) => (
               <SelectItem key={option} value={option}>
-                {option}
+                {tr(option)}
               </SelectItem>
             ))}
           </SelectContent>
@@ -286,7 +290,7 @@ export function QuestionRenderer({ step }: { step: QuestionStep }) {
           options={options ?? []}
           value={typeof value === "string" ? value : undefined}
           onChange={(next) => setAnswer(step.id, next as never)}
-          placeholder="Search…"
+          placeholder={tr("Search…")}
         />
       )}
 
@@ -346,7 +350,7 @@ export function QuestionRenderer({ step }: { step: QuestionStep }) {
                       selected ? "font-semibold text-primary" : "font-medium text-muted-foreground",
                     )}
                   >
-                    {option}
+                    {tr(option)}
                   </span>
                 </button>
               );
@@ -367,10 +371,10 @@ export function QuestionRenderer({ step }: { step: QuestionStep }) {
                   className="text-[0.72rem] font-bold uppercase tracking-[0.1em]"
                   style={{ color: theme.color }}
                 >
-                  {value}
+                  {tr(value)}
                 </p>
                 <p className="mt-1.5 text-[0.9rem] leading-[1.7] text-foreground">
-                  {SPECTRUM_INTERPRETATIONS[value]}
+                  {tr(SPECTRUM_INTERPRETATIONS[value])}
                 </p>
               </motion.div>
             )}
@@ -418,7 +422,7 @@ export function QuestionRenderer({ step }: { step: QuestionStep }) {
                   }
                 }}
               >
-                Continue
+                {tr("Continue")}
                 <ArrowRight className="size-4 text-accent" aria-hidden="true" />
               </PremiumButton>
             )}
@@ -428,7 +432,7 @@ export function QuestionRenderer({ step }: { step: QuestionStep }) {
               onClick={skip}
               className="text-[0.85rem] font-medium text-muted-foreground underline-offset-4 hover:text-primary hover:underline"
             >
-              Skip this one
+              {tr("Skip this one")}
             </button>
           )}
         </div>
