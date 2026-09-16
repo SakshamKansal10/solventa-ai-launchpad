@@ -41,15 +41,22 @@ function SheetFlow({
   }, []);
 
   useEffect(() => {
-    if (currentStep.kind !== "question") return;
-    const inRow = row.stepIds.includes(currentStep.id);
+    const inRow = currentStep.kind === "question" && row.stepIds.includes(currentStep.id);
     if (inRow) {
       setEntered(true);
       return;
     }
     if (!entered) return; // hasn't reached the row's first step yet — ignore
     // Stepped past the last id in this row's subsequence -> the founder
-    // just completed it. Extract only the fields this row owns.
+    // just completed it. This must fire regardless of what kind of step
+    // comes next — a row whose last question is also the last question
+    // in its onboarding section (e.g. Risk Appetite, the last question
+    // in Section 4) steps into a section-intro/thinking screen next, not
+    // another question; bailing out here whenever currentStep.kind !==
+    // "question" (the previous version of this check) meant onDone would
+    // never fire for those rows, leaving the sheet spinning forever with
+    // no way to close except the X button. Extract only the fields this
+    // row owns.
     const patch: Partial<OnboardingAnswers> = {};
     for (const id of row.stepIds) {
       if (id in answers) {
