@@ -21,6 +21,7 @@ import { signOut } from "@/lib/actions/auth";
 import { formatMoney } from "@/lib/country-currency";
 import type { NormalizedProfile } from "@/lib/profile/normalize";
 import type { OnboardingAnswers } from "@/lib/onboarding-types";
+import { useLocale } from "@/lib/i18n/LocaleProvider";
 
 export const Route = createFileRoute("/dashboard/settings")({
   beforeLoad: requireAuthLoader,
@@ -142,6 +143,7 @@ function SettingsPage() {
     queryFn: () => getLatestBusinessDna(),
   });
 
+  const { locale } = useLocale();
   const [editingRow, setEditingRow] = useState<FounderProfileRow | null>(null);
   const [profileChanged, setProfileChanged] = useState(false);
   const [reanalyzing, setReanalyzing] = useState(false);
@@ -171,7 +173,7 @@ function SettingsPage() {
   async function handleReanalyze() {
     setReanalyzing(true);
     try {
-      await reanalyzeFromCurrentProfile();
+      await reanalyzeFromCurrentProfile({ data: { locale } });
       await queryClient.invalidateQueries({ queryKey: ["dashboard"] });
       setProfileChanged(false);
       toast.success("Sol is generating new directions from your updated profile.");

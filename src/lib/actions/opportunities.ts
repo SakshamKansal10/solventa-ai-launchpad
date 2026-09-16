@@ -132,35 +132,40 @@ async function persistOpportunityPackage(
  * exactly like the initial 3 now. None of them are made active
  * automatically — the founder is already on a path; exploring more
  * doesn't silently switch it. */
-export const exploreMoreOpportunities = createServerFn({ method: "POST" }).handler(async () => {
-  const { supabase, user } = await requireUser();
-  const dna = await loadLatestBusinessDna(supabase, user.id);
-  const profile = dna.normalized_signals as unknown as NormalizedProfile;
+export const exploreMoreOpportunities = createServerFn({ method: "POST" })
+  .validator(z.object({ locale: z.enum(["en", "hi"]).optional() }).optional())
+  .handler(async ({ data: input }) => {
+    const { supabase, user } = await requireUser();
+    const dna = await loadLatestBusinessDna(supabase, user.id);
+    const profile = dna.normalized_signals as unknown as NormalizedProfile;
 
-  const { data: existing, error } = await supabase
-    .from("opportunities")
-    .select("title, status, dismiss_reason, batch_number")
-    .eq("business_dna_id", dna.id);
-  if (error) throw new Error(error.message);
+    const { data: existing, error } = await supabase
+      .from("opportunities")
+      .select("title, status, dismiss_reason, batch_number")
+      .eq("business_dna_id", dna.id);
+    if (error) throw new Error(error.message);
 
-  const excludeTitles = (existing ?? []).map((o) => o.title);
-  const dismissedNotes = (existing ?? [])
-    .filter((o) => o.status === "dismissed" && o.dismiss_reason)
-    .map((o) => `"${o.title}" was dismissed because: ${o.dismiss_reason}`);
-  const nextBatch = Math.max(1, ...(existing ?? []).map((o) => o.batch_number)) + 1;
+    const excludeTitles = (existing ?? []).map((o) => o.title);
+    const dismissedNotes = (existing ?? [])
+      .filter((o) => o.status === "dismissed" && o.dismiss_reason)
+      .map((o) => `"${o.title}" was dismissed because: ${o.dismiss_reason}`);
+    const nextBatch = Math.max(1, ...(existing ?? []).map((o) => o.batch_number)) + 1;
 
-  const batch = await generateOpportunityPackageBatch(profile, {
-    excludeTitles,
-    dismissedNotes,
-    count: CANDIDATES_PER_BATCH,
+    const batch = await generateOpportunityPackageBatch(profile, {
+      excludeTitles,
+      dismissedNotes,
+      count: CANDIDATES_PER_BATCH,
+      locale: input?.locale,
+    });
+
+    const rows = [];
+    for (const pkg of batch.opportunities) {
+      rows.push(
+        await persistOpportunityPackage(supabase, user.id, dna.id, profile, pkg, nextBatch),
+      );
+    }
+    return rows.sort((a, b) => b.fit_score - a.fit_score);
   });
-
-  const rows = [];
-  for (const pkg of batch.opportunities) {
-    rows.push(await persistOpportunityPackage(supabase, user.id, dna.id, profile, pkg, nextBatch));
-  }
-  return rows.sort((a, b) => b.fit_score - a.fit_score);
-});
 
 export const getOpportunities = createServerFn({ method: "GET" }).handler(async () => {
   const { supabase, user } = await requireUser();
@@ -389,7 +394,9 @@ export const switchSelectedOpportunity = createServerFn({ method: "POST" })
  * instead of being regenerated — a founder revisiting a previous
  * direction never pays for it twice. */
 export const buildRoadmapForOpportunity = createServerFn({ method: "POST" })
-  .validator(z.object({ opportunityId: z.string().uuid() }))
+  .validator(
+    z.object({ opportunityId: z.string().uuid(), locale: z.enum(["en", "hi"]).optional() }),
+  )
   .handler(async ({ data }) => {
     const { supabase, user } = await requireUser();
 
@@ -447,7 +454,7 @@ export const buildRoadmapForOpportunity = createServerFn({ method: "POST" })
       // empty active week. Every week after Week 1 is generated later,
       // just-in-time, when it actually unlocks (see updateTaskStatus) —
       // never all up front.
-      const skeleton = await generateRoadmapSkeleton(profile, opportunityPackage);
+      const skeleton = await generateRoadmapSkeleton(profile, opportunityPackage, data.locale);
       const { firstWeek } = await createRoadmapFromSkeleton(
         supabase,
         user.id,
@@ -465,14 +472,19 @@ export const buildRoadmapForOpportunity = createServerFn({ method: "POST" })
       // email must never claim tasks exist that haven't generated yet.
       let missionCount: number | null = null;
       try {
-        const weekDetail = await generateWeekDetail(profile, opportunityPackage, {
-          phaseTitle: firstWeek.phaseTitle,
-          phaseDescription: firstWeek.phaseDescription,
-          weekTitle: firstWeek.title,
-          weekObjective: firstWeek.objective,
-          weekNumber: firstWeek.weekNumber,
-          priorWeek: null,
-        });
+        const weekDetail = await generateWeekDetail(
+          profile,
+          opportunityPackage,
+          {
+            phaseTitle: firstWeek.phaseTitle,
+            phaseDescription: firstWeek.phaseDescription,
+            weekTitle: firstWeek.title,
+            weekObjective: firstWeek.objective,
+            weekNumber: firstWeek.weekNumber,
+            priorWeek: null,
+          },
+          data.locale,
+        );
         await persistWeekDetail(
           supabase,
           user.id,

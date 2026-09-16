@@ -104,7 +104,7 @@ function BuildingPage() {
   const [attempt, setAttempt] = useState(0);
 
   const mutation = useMutation({
-    mutationFn: () => buildRoadmapForOpportunity({ data: { opportunityId } }),
+    mutationFn: () => buildRoadmapForOpportunity({ data: { opportunityId, locale } }),
     onSuccess: () => {
       setStageIndex(STAGES.length - 1);
       setLeaving(true);

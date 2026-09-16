@@ -9,7 +9,12 @@ import {
   type OpportunityPackage,
   type OpportunityPackageBatch,
 } from "@/lib/ai/schemas";
-import { formatProfileForPrompt, PLAIN_LANGUAGE_RULE } from "@/lib/ai/prompts/shared";
+import {
+  formatProfileForPrompt,
+  PLAIN_LANGUAGE_RULE,
+  buildLanguageRule,
+  type GenerationLocale,
+} from "@/lib/ai/prompts/shared";
 import type { NormalizedProfile } from "@/lib/profile/normalize";
 import { formatAmbitionContextForPrompt, type AmbitionCalibration } from "@/lib/profile/ambition";
 
@@ -214,6 +219,7 @@ const IDEA_PACKAGE_JSON_CONTRACT = `{
 export async function generateIntelligencePackage(
   profile: NormalizedProfile,
   ambition: AmbitionCalibration,
+  locale: GenerationLocale = "en",
 ): Promise<SolventiaIntelligencePackage> {
   const prompt = `Founder profile:\n${formatProfileForPrompt(profile)}
 
@@ -226,7 +232,7 @@ Produce this founder's initial Solventia workspace in one response:
 2. Exactly 3 opportunities (opportunityIndex 0, 1, 2) — genuinely different strategic options (never the same idea worded three ways), each grounded in this founder's real skills, resources, time, risk tolerance, motivation, and constraints. Never suggest anything that conflicts with a stated constraint. Each "whyThisFounder" reason must cite a specific real signal from their profile, not a generic trait. "whyNow" must be a real, specific timing reason — never generic hype like "the market is booming".
 
 Respond with ONLY a single JSON object — no markdown fences, no commentary before or after — matching this exact shape:
-${IDEA_PACKAGE_JSON_CONTRACT}`;
+${IDEA_PACKAGE_JSON_CONTRACT}${buildLanguageRule(locale)}`;
 
   const flat = await generateJSON(FlatIntelligencePackageSchema, {
     systemInstruction: SYSTEM_INSTRUCTION,
@@ -280,6 +286,7 @@ interface ExploreMoreOptions {
   excludeTitles: string[];
   dismissedNotes: string[];
   count: number;
+  locale?: GenerationLocale;
 }
 
 /** The one explicit, user-triggered Gemini call behind "Explore More
@@ -308,7 +315,7 @@ export async function generateOpportunityPackageBatch(
 Generate ${options.count} new, distinct business opportunity candidates (opportunityIndex 0${options.count > 1 ? `-${options.count - 1}` : ""}) for THIS founder, each with complete detail.
 
 Respond with ONLY a single JSON object — no markdown fences, no commentary before or after — matching this exact shape:
-${jsonContract}`;
+${jsonContract}${buildLanguageRule(options.locale ?? "en")}`;
 
   const flat = await generateJSON(flatSchema, {
     systemInstruction: EXPLORE_SYSTEM_INSTRUCTION,

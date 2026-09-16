@@ -491,7 +491,7 @@ function GeneratingWeekState({ weekId, onDone }: { weekId: string; onDone: () =>
   const { locale } = useLocale();
   const tr = (s: string) => translateDashboardText(s, locale) ?? s;
   const mutation = useMutation({
-    mutationFn: () => generateActiveWeekDetail({ data: { weekId } }),
+    mutationFn: () => generateActiveWeekDetail({ data: { weekId, locale } }),
     onSuccess: onDone,
     onError: (err) => {
       console.error("[roadmap] week detail generation failed:", err);
@@ -750,7 +750,12 @@ function RoadmapPage() {
   const toggleTaskMutation = useMutation({
     mutationFn: (vars: { taskId: string; status: "pending" | "done"; reflection?: string }) =>
       updateTaskStatus({
-        data: { taskId: vars.taskId, status: vars.status, weekReflection: vars.reflection },
+        data: {
+          taskId: vars.taskId,
+          status: vars.status,
+          weekReflection: vars.reflection,
+          locale,
+        },
       }),
     onMutate: async (vars) => {
       await queryClient.cancelQueries({ queryKey: ["roadmap"] });

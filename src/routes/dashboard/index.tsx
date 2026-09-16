@@ -106,7 +106,7 @@ function DashboardHome() {
   async function handleExploreMore() {
     setExploring(true);
     try {
-      await exploreMoreOpportunities();
+      await exploreMoreOpportunities({ data: { locale } });
       await refresh();
       toast.success("Sol found a few more directions worth considering.");
     } catch (err) {
@@ -154,9 +154,7 @@ function DashboardHome() {
   if (!data) {
     return (
       <DashboardShell>
-        <p className="text-dashboard-body">
-          {tr("Something went wrong loading your dashboard.")}
-        </p>
+        <p className="text-dashboard-body">{tr("Something went wrong loading your dashboard.")}</p>
       </DashboardShell>
     );
   }

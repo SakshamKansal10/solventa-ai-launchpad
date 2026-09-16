@@ -12,6 +12,8 @@ import {
   formatProfileForPrompt,
   formatGenomeAndAmbitionForPrompt,
   PLAIN_LANGUAGE_RULE,
+  buildLanguageRule,
+  type GenerationLocale,
 } from "@/lib/ai/prompts/shared";
 import type { NormalizedProfile } from "@/lib/profile/normalize";
 
@@ -108,6 +110,7 @@ const SKELETON_JSON_CONTRACT = `{
 export async function generateRoadmapSkeleton(
   profile: NormalizedProfile,
   opportunity: OpportunityPackage,
+  locale: GenerationLocale = "en",
 ): Promise<RoadmapSkeletonPlan> {
   const prompt = `Founder profile:\n${formatProfileForPrompt(profile)}
 
@@ -125,7 +128,7 @@ Revenue path: ${opportunity.revenuePath}
 Design the long-term shape only — North Star, phase and week titles/objectives, no tasks. This founder has ${profile.time.weeklyHours} hrs/week realistically available; phase/week LENGTH (how many weeks a phase takes) should reflect that, not a generic timeline. Calibrate scope and ambition to the Founder Genome and Ambition Calibration above — never a ceiling-scraping venture plan for a resource-limited beginner, and never an unrealistically small plan for a highly capable, well-resourced founder.
 
 Respond with ONLY a single JSON object — no markdown fences, no commentary before or after — matching this exact shape:
-${SKELETON_JSON_CONTRACT}`;
+${SKELETON_JSON_CONTRACT}${buildLanguageRule(locale)}`;
 
   return generateJSON(RoadmapSkeletonSchema, {
     systemInstruction: SKELETON_SYSTEM_INSTRUCTION,
@@ -169,6 +172,7 @@ export async function generateWeekDetail(
   profile: NormalizedProfile,
   opportunity: OpportunityPackage,
   context: WeekGenerationContext,
+  locale: GenerationLocale = "en",
 ): Promise<RoadmapWeekDetailPlan> {
   const priorWeekSection = context.priorWeek
     ? `\nPrevious week ("${context.priorWeek.title}") — what actually happened: completed: ${context.priorWeek.completedTasks.join("; ") || "nothing recorded"}. Founder's own reflection: "${context.priorWeek.reflection ?? "none given"}". Let this genuinely inform this week — adjust pace, address anything the reflection raises, don't just continue a frozen plan.`
@@ -192,7 +196,7 @@ ${priorWeekSection}
 Generate this week's real detail now. deadlineDaysFromStart values must be 0-6 (days into THIS week, day 0 = the day it unlocked) and reflect ${profile.time.weeklyHours} hrs/week.
 
 Respond with ONLY a single JSON object — no markdown fences, no commentary before or after — matching this exact shape:
-${WEEK_DETAIL_JSON_CONTRACT}`;
+${WEEK_DETAIL_JSON_CONTRACT}${buildLanguageRule(locale)}`;
 
   return generateJSON(RoadmapWeekDetailSchema, {
     systemInstruction: WEEK_DETAIL_SYSTEM_INSTRUCTION,

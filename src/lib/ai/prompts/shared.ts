@@ -5,6 +5,26 @@ import { computeAmbitionCalibration, formatAmbitionContextForPrompt } from "@/li
 
 export const PLAIN_LANGUAGE_RULE = `Never use unexplained jargon (SaaS, B2B, B2C, TAM, CAC, LTV, go-to-market, vertical integration, product-market fit, acquisition funnel, infrastructure layer). If a concept is needed, explain it in one plain clause the same sentence. Write for someone who has never studied business. Never say a business idea is "validated" unless real evidence justifies that — prefer "strong signal", "early signal", "emerging", "needs validation", or "limited evidence". Never invent statistics, customer counts, testimonials, or sources. If you don't know something, say so plainly instead of guessing confidently.`;
 
+/** The product's selected-language surface — currently English and Hindi
+ * (see src/lib/i18n/dictionary.ts's Locale type, which this deliberately
+ * mirrors rather than imports, since this file must stay usable from
+ * server-only code with zero risk of pulling client i18n state in). */
+export type GenerationLocale = "en" | "hi";
+
+/** Empty for English (the model's own default needs no extra instruction).
+ * For Hindi, this is deliberately explicit about WHICH fields change and
+ * which never do — enum values, booleans, and numbers are part of the
+ * app's typed contract (difficulty, riskLevel, motivationAlignment,
+ * minLevel, currency codes) and would break validation or silently
+ * confuse downstream code if translated; only prose meant for the founder
+ * to read changes language. Appended to each call's own `prompt` string,
+ * never baked into a shared SYSTEM_INSTRUCTION constant, so it never
+ * leaks into a request made for a different founder's chosen language. */
+export function buildLanguageRule(locale: GenerationLocale): string {
+  if (locale !== "hi") return "";
+  return `\n\nLANGUAGE: Write every field meant for the founder to read (titles, summaries, descriptions, reasons, task/mission text, everything prose) in natural, professional Hindi (Devanagari script) — write as a fluent Hindi business document would, never a stiff word-for-word translation from English. Common English business/technical terms that are normally used as-is in professional Hindi (e.g. "SaaS", "founder", product/technology names) may stay in English within Hindi sentences where that reads naturally. NEVER translate: any enum value (difficulty must stay exactly "Beginner-friendly"/"Moderate"/"Challenging"; riskLevel must stay exactly "cautious"/"balanced"/"experimental"; motivationAlignment must stay exactly "high"/"medium"/"low"; minLevel must stay exactly "never_tried"/"beginner"/"comfortable"/"advanced"), any boolean or numeric field, any currency code, or any JSON key name. Only the prose content of string fields changes language.`;
+}
+
 export function formatProfileForPrompt(profile: NormalizedProfile): string {
   const lines: string[] = [];
   const money = (amount: number) => formatMoney(amount, profile.identity.currency);

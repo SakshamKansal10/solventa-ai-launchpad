@@ -419,7 +419,7 @@ export function CompletionScreen() {
       // convergence animation — the decorative intro overlaps real work
       // instead of adding to it.
       const resultPromise = completeConsultation({
-        data: { answers: answers as Record<string, unknown> },
+        data: { answers: answers as Record<string, unknown>, locale },
       });
       await new Promise((resolve) => setTimeout(resolve, 1300));
 
