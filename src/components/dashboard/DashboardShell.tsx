@@ -371,13 +371,15 @@ export function DashboardShell({
             </div>
           </header>
 
-          {/* Right padding at lg is deliberately wider than left (96px vs
-              48px) — the fixed Ask Sol trigger below reserves an 88px-wide
-              strip at the viewport's bottom-right (28px offset + 60px
-              button), and content that fills the full column width would
-              otherwise render text underneath it whenever that row's
-              vertical position happens to land in the trigger's zone. */}
-          <main className="mx-auto flex w-full max-w-[1440px] flex-1 flex-col gap-0 px-[18px] py-9 sm:px-6 sm:pr-10 lg:pl-12 lg:pr-24 lg:py-14">
+          {/* Right padding is always wider than left — the fixed Ask Sol
+              trigger below reserves a viewport-corner strip (offset + button
+              size) that content would otherwise render underneath whenever a
+              row's vertical position happens to land in the trigger's zone.
+              The trigger is deliberately smaller on mobile (44px vs 60px) so
+              this reservation stays proportionate instead of eating a large
+              chunk of a narrow screen — 56px covers its 12px+44px mobile
+              footprint exactly; 96px covers its 28px+60px desktop one. */}
+          <main className="mx-auto flex w-full max-w-[1440px] flex-1 flex-col gap-0 pl-[18px] pr-14 py-9 sm:px-6 sm:pr-10 lg:pl-12 lg:pr-24 lg:py-14">
             {children}
           </main>
         </div>
@@ -398,13 +400,20 @@ export function DashboardShell({
         </Sheet>
 
         {/* ===== FLOATING ASK SOL TRIGGER — the ONLY Ask Sol entry point;
-         * no separate nav item, no separate large CTA card ===== */}
+         * no separate nav item, no separate large CTA card =====
+         * Smaller and closer to the corner on mobile (44px, the accessible
+         * touch-target minimum, at bottom-4/right-3) than on desktop (60px
+         * at bottom-7/right-7) — a real screen-width tradeoff, not just a
+         * cosmetic shrink: <main>'s pr-14 above reserves exactly this
+         * mobile footprint, so content can never render underneath it,
+         * without reserving anywhere near the ~90px a same-size-everywhere
+         * button would have required on a 390px-wide screen. */}
         {!mentorOpen && (
           <button
             type="button"
             onClick={() => setMentorOpen(true)}
             aria-label="Ask Sol"
-            className="group fixed bottom-7 right-7 z-30 flex size-[60px] items-center justify-center rounded-full transition-transform duration-150 hover:scale-[1.04]"
+            className="group fixed bottom-4 right-3 z-30 flex size-11 items-center justify-center rounded-full transition-transform duration-150 hover:scale-[1.04] sm:bottom-7 sm:right-7 sm:size-[60px]"
             style={{
               background: "linear-gradient(135deg, var(--sol-violet), var(--sol-champagne))",
               boxShadow: "0 12px 32px rgba(86,62,183,.24)",
@@ -415,7 +424,7 @@ export function DashboardShell({
               alt=""
               width={298}
               height={436}
-              className="h-7 w-auto transition-transform duration-150 group-hover:rotate-[4deg]"
+              className="h-5 w-auto transition-transform duration-150 group-hover:rotate-[4deg] sm:h-7"
             />
           </button>
         )}
