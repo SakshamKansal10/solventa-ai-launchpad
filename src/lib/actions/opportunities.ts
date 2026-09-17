@@ -93,6 +93,12 @@ async function persistOpportunityPackage(
   profile: NormalizedProfile,
   pkg: OpportunityPackage,
   batchNumber: number,
+  /** This opportunity's position (0/1/2) in the AI's own original
+   * response array — 0 is the model's designated flagship. Null for
+   * Explore More batches, which have no single flagship among them. See
+   * migrations/0009_opportunity_index and getDashboard's primary
+   * resolution, which prefers this over fit_score when present. */
+  opportunityIndex: number | null,
 ) {
   const score = computeFitScore(profile, pkg.fitSignals);
 
@@ -114,6 +120,27 @@ async function persistOpportunityPackage(
     .select("*")
     .single();
   if (oppError || !oppRow) throw new Error(oppError?.message ?? "Failed to save opportunity");
+
+  // Best-effort, separate from the insert above and never fatal — a
+  // founder on a database that hasn't had migration 0009 applied yet
+  // still gets a complete, working result (getDashboard's fit_score
+  // fallback covers a null opportunity_index exactly as it always has).
+  if (opportunityIndex !== null) {
+    try {
+      const { error: indexError } = await supabase
+        .from("opportunities")
+        .update({ opportunity_index: opportunityIndex })
+        .eq("id", oppRow.id);
+      if (indexError) {
+        console.error(
+          "[opportunities] opportunity_index persistence failed (non-fatal):",
+          indexError,
+        );
+      }
+    } catch (err) {
+      console.error("[opportunities] opportunity_index persistence threw (non-fatal):", err);
+    }
+  }
 
   const { error: detailError } = await supabase.from("opportunity_details").insert({
     opportunity_id: oppRow.id,
@@ -161,7 +188,11 @@ export const exploreMoreOpportunities = createServerFn({ method: "POST" })
     const rows = [];
     for (const pkg of batch.opportunities) {
       rows.push(
-        await persistOpportunityPackage(supabase, user.id, dna.id, profile, pkg, nextBatch),
+        // null — an Explore More batch has no single designated flagship
+        // among its own opportunities (unlike the original 3 from a
+        // consultation); getDashboard falls back to fit_score ordering
+        // for these regardless.
+        await persistOpportunityPackage(supabase, user.id, dna.id, profile, pkg, nextBatch, null),
       );
     }
     return rows.sort((a, b) => b.fit_score - a.fit_score);

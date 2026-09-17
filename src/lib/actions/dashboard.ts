@@ -100,28 +100,41 @@ export const getDashboard = createServerFn({ method: "GET" })
       dnaData = latest.data;
     }
     const latestBusinessDnaId = dnaData?.id ?? null;
-    // The passive fallback (no explicit selection, no active roadmap yet)
-    // must only ever consider the MOST RECENT consultation's ideas — without
-    // this, a founder who redoes onboarding with new answers would keep
-    // seeing an old idea from a previous consultation just because it
-    // happened to score higher, since old opportunities are never deleted
-    // or touched by completing a new consultation (see profile.ts).
-    const latestOpportunities = latestBusinessDnaId
+    // THE DEFAULT DASHBOARD MUST NEVER MIX CONSULTATIONS. Every candidate
+    // for `primary`/`alternatives` below — the passive fallback, an
+    // explicit `selected` status, and an active roadmap — is scoped to
+    // ONLY the consultation being viewed (the pinned `consultationId`, or
+    // true-latest when none is pinned). A founder who selected an idea
+    // (or built its roadmap) from an OLDER consultation, then later ran a
+    // brand-new one, must see the NEW consultation's 3 ideas by default —
+    // the old selection/roadmap is real founder intent, but it belongs to
+    // history, never silently overriding what the default dashboard shows
+    // for a consultation the founder hasn't acted on yet. (Previously
+    // `selected`/`activeRoadmapOpportunity` searched the full, unscoped
+    // `opportunities` list across every consultation ever — the exact bug
+    // that let an old flagship leak into a new consultation's dashboard.)
+    const viewedOpportunities = latestBusinessDnaId
       ? opportunities.filter((o) => o.business_dna_id === latestBusinessDnaId)
       : [];
-    const activeLatest = latestOpportunities.filter((o) => o.status === "active");
-    // An explicit `selected` status is real founder intent and wins
-    // regardless of which consultation it came from — a founder switching
-    // back to an old idea via history should never be silently overridden
-    // by a newer, never-acted-on consultation.
-    const selected = opportunities.find((o) => o.status === "selected") ?? null;
-    const saved = opportunities.filter((o) => o.status === "saved");
+    const activeLatest = viewedOpportunities.filter((o) => o.status === "active");
+    const selected = viewedOpportunities.find((o) => o.status === "selected") ?? null;
+    const saved = viewedOpportunities.filter((o) => o.status === "saved");
 
     const activeRoadmapOpportunityId = activeRoadmapRes.data?.opportunity_id ?? null;
     const activeRoadmapOpportunity = activeRoadmapOpportunityId
-      ? (opportunities.find((o) => o.id === activeRoadmapOpportunityId) ?? null)
+      ? (viewedOpportunities.find((o) => o.id === activeRoadmapOpportunityId) ?? null)
       : null;
-    const primary = selected ?? activeRoadmapOpportunity ?? activeLatest[0] ?? null;
+    // Passive fallback (no explicit selection, no active roadmap yet)
+    // prefers the AI's own designated flagship (opportunity_index === 0)
+    // over fit_score ordering when it's known — fit_score is a real but
+    // SEPARATE deterministic score, not the same signal as the model's
+    // own "this is the single strongest, most worthy recommendation"
+    // ranking. Falls back to fit_score ordering for older rows (null
+    // opportunity_index) and for Explore-More-added opportunities, which
+    // have no single designated flagship among their own batch.
+    const designatedFlagship = activeLatest.find((o) => o.opportunity_index === 0) ?? null;
+    const primary =
+      selected ?? activeRoadmapOpportunity ?? designatedFlagship ?? activeLatest[0] ?? null;
     const alternatives = activeLatest.filter((o) => o.id !== primary?.id).slice(0, 2);
 
     let roadmap: {

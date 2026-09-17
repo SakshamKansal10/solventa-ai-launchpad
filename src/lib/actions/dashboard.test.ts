@@ -7,12 +7,14 @@ import { describe, it, expect, vi } from "vitest";
  *    Opportunities can add a higher-scoring opportunity without activating
  *    its roadmap (deliberate — exploring more must never silently switch
  *    the founder's current path).
- * 2. Never falls back to an opportunity from an OLDER consultation just
- *    because it happens to score higher than the founder's latest one —
- *    completing a new consultation must show the new ideas, not resurrect
- *    an old one, unless the founder explicitly selected it or it has a
- *    real active roadmap (both real founder actions, honored regardless
- *    of which consultation produced them).
+ * 2. The DEFAULT dashboard never mixes consultations. `selected`, an
+ *    active roadmap's opportunity, and the passive fit_score fallback are
+ *    ALL scoped to only the consultation being viewed (latest, or a
+ *    pinned deep link) — a selection or roadmap from an older consultation
+ *    is real founder intent, but it belongs to History, never silently
+ *    overriding a newer consultation's ideas on the default dashboard.
+ * 3. Prefers the AI's own designated flagship (opportunity_index === 0)
+ *    over fit_score ordering for the passive fallback, when known.
  *
  * Everything Supabase is mocked; this makes no live database call.
  */
@@ -258,16 +260,16 @@ describe("getDashboard primary-opportunity selection", () => {
     expect(dashboard.alternatives.map((o) => o.id)).not.toContain("opp-old-high-score");
   });
 
-  it("REGRESSION: explicitly re-selecting an idea from an OLD consultation still wins over the latest one", async () => {
+  it("REGRESSION: a selection (or active roadmap) from an OLD consultation must NEVER override the default dashboard once a newer consultation exists — old work is reachable only through History or an explicit deep link", async () => {
     const opportunities: Row[] = [
       {
-        id: "opp-old-reselected",
+        id: "opp-old-selected",
         user_id: FAKE_USER.id,
         business_dna_id: "dna-1-old",
         status: "selected",
         fit_score: 40,
         created_at: "2026-01-01T00:00:00Z",
-        title: "Founder deliberately switched back to this old idea",
+        title: "Founder selected this in an old consultation, days ago",
       },
       {
         id: "opp-new-primary",
@@ -277,6 +279,141 @@ describe("getDashboard primary-opportunity selection", () => {
         fit_score: 90,
         created_at: "2026-02-01T00:00:00Z",
         title: "New idea from the latest consultation",
+      },
+    ];
+    const roadmaps: Row[] = [
+      // The old selection also has a real, active roadmap — still must
+      // not win. Old work stays reachable via History/a deep link; it
+      // just can't be what the DEFAULT dashboard resolves to.
+      { opportunity_id: "opp-old-selected", user_id: FAKE_USER.id, status: "active", id: "rm-old" },
+    ];
+    const supabase = createFakeSupabase({
+      profiles: [],
+      opportunities,
+      business_dna: [
+        LATEST_DNA_ROW,
+        { id: "dna-1-old", user_id: FAKE_USER.id, created_at: "2026-01-01T00:00:00Z" },
+      ],
+      roadmaps,
+    });
+    requireUserMock.mockResolvedValue({ supabase, user: FAKE_USER } as never);
+
+    const dashboard = await getDashboard();
+
+    expect(dashboard.primary?.id).toBe("opp-new-primary");
+    expect(dashboard.primary?.id).not.toBe("opp-old-selected");
+  });
+
+  it("REGRESSION (exact reported scenario): Consultation A (A0 selected, roadmap built) must never leak into Consultation B's dashboard — B0/B1/B2 all belong to B, never A0/B1/B2", async () => {
+    const opportunities: Row[] = [
+      {
+        id: "A0",
+        user_id: FAKE_USER.id,
+        business_dna_id: "dna-A",
+        status: "selected",
+        fit_score: 99,
+        opportunity_index: 0,
+        created_at: "2026-01-01T00:00:00Z",
+        title: "Consultation A's flagship — selected, has a roadmap",
+      },
+      {
+        id: "A1",
+        user_id: FAKE_USER.id,
+        business_dna_id: "dna-A",
+        status: "active",
+        fit_score: 85,
+        opportunity_index: 1,
+        created_at: "2026-01-01T00:00:01Z",
+      },
+      {
+        id: "A2",
+        user_id: FAKE_USER.id,
+        business_dna_id: "dna-A",
+        status: "active",
+        fit_score: 80,
+        opportunity_index: 2,
+        created_at: "2026-01-01T00:00:02Z",
+      },
+      {
+        id: "B0",
+        user_id: FAKE_USER.id,
+        business_dna_id: LATEST_DNA_ID,
+        status: "active",
+        fit_score: 60,
+        opportunity_index: 0,
+        created_at: "2026-02-01T00:00:00Z",
+        title:
+          "Consultation B's flagship — the model's own designated pick, lower fit_score than A0",
+      },
+      {
+        id: "B1",
+        user_id: FAKE_USER.id,
+        business_dna_id: LATEST_DNA_ID,
+        status: "active",
+        fit_score: 70,
+        opportunity_index: 1,
+        created_at: "2026-02-01T00:00:01Z",
+      },
+      {
+        id: "B2",
+        user_id: FAKE_USER.id,
+        business_dna_id: LATEST_DNA_ID,
+        status: "active",
+        fit_score: 55,
+        opportunity_index: 2,
+        created_at: "2026-02-01T00:00:02Z",
+      },
+    ];
+    const roadmaps: Row[] = [
+      { opportunity_id: "A0", user_id: FAKE_USER.id, status: "active", id: "rm-A0" },
+    ];
+    const supabase = createFakeSupabase({
+      profiles: [],
+      opportunities,
+      business_dna: [
+        LATEST_DNA_ROW,
+        { id: "dna-A", user_id: FAKE_USER.id, created_at: "2026-01-01T00:00:00Z" },
+      ],
+      roadmaps,
+    });
+    requireUserMock.mockResolvedValue({ supabase, user: FAKE_USER } as never);
+
+    const dashboard = await getDashboard();
+
+    expect(dashboard.primary?.id).toBe("B0");
+    expect(new Set(dashboard.alternatives.map((o) => o.id))).toEqual(new Set(["B1", "B2"]));
+    const shown = [dashboard.primary?.id, ...dashboard.alternatives.map((o) => o.id)];
+    expect(shown).not.toContain("A0");
+    expect(shown).not.toContain("A1");
+    expect(shown).not.toContain("A2");
+    // Every opportunity shown together on the default dashboard must
+    // belong to the same (latest) consultation.
+    for (const id of shown) {
+      const opp = opportunities.find((o) => o.id === id);
+      expect(opp?.business_dna_id).toBe(LATEST_DNA_ID);
+    }
+  });
+
+  it("prefers the AI's own designated flagship (opportunity_index === 0) over fit_score ordering when nothing is explicitly selected", async () => {
+    const opportunities: Row[] = [
+      {
+        id: "opp-index-0",
+        user_id: FAKE_USER.id,
+        business_dna_id: LATEST_DNA_ID,
+        status: "active",
+        fit_score: 55,
+        opportunity_index: 0,
+        created_at: "2026-02-01T00:00:00Z",
+        title: "The model's designated flagship, despite a lower fit_score",
+      },
+      {
+        id: "opp-index-1-higher-score",
+        user_id: FAKE_USER.id,
+        business_dna_id: LATEST_DNA_ID,
+        status: "active",
+        fit_score: 95,
+        opportunity_index: 1,
+        created_at: "2026-02-01T00:00:01Z",
       },
     ];
     const supabase = createFakeSupabase({
@@ -289,7 +426,7 @@ describe("getDashboard primary-opportunity selection", () => {
 
     const dashboard = await getDashboard();
 
-    expect(dashboard.primary?.id).toBe("opp-old-reselected");
+    expect(dashboard.primary?.id).toBe("opp-index-0");
   });
 
   it("REGRESSION: a consultationId deep link (e.g. from the ideas-ready email) pins the dashboard to THAT consultation, even when a newer one exists", async () => {
