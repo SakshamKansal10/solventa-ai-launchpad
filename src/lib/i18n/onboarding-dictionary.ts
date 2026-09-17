@@ -332,15 +332,29 @@ export const ONBOARDING_DICTIONARY: Record<string, string> = {
   "Every answer helps me understand your entrepreneurial profile.":
     "हर जवाब मुझे आपकी उद्यमी प्रोफ़ाइल समझने में मदद करता है।",
   "Let’s Begin": "चलिए शुरू करते हैं",
-  "Reading your founder profile": "आपकी फाउंडर प्रोफ़ाइल पढ़ी जा रही है",
-  "Mapping your constraints": "आपकी सीमाओं का मानचित्रण हो रहा है",
-  "Finding opportunity spaces": "अवसर के क्षेत्र खोजे जा रहे हैं",
-  "Scoring founder fit": "फाउंडर फ़िट स्कोर किया जा रहा है",
-  "Preparing your strongest directions": "आपकी सबसे मज़बूत दिशाएं तैयार की जा रही हैं",
-  "Bringing everything together…": "सब कुछ एक साथ लाया जा रहा है…",
-  "Sol is building your strategy": "Sol आपकी रणनीति बना रहा है",
-  "This usually takes under a minute. Your answers are already saved — safe even if you leave this page.":
-    "आमतौर पर इसमें एक मिनट से कम लगता है। आपके जवाब पहले से सहेजे जा चुके हैं — इस पेज से जाने पर भी सुरक्षित।",
+  "Understanding Your Profile": "आपकी प्रोफ़ाइल को समझा जा रहा है",
+  "Reading through your skills, resources, and goals.":
+    "आपके कौशल, संसाधनों और लक्ष्यों को पढ़ा जा रहा है।",
+  "Setting Your Scale": "आपका पैमाना तय किया जा रहा है",
+  "Calibrating the right size of opportunity for where you are right now.":
+    "अभी आप जहां हैं, उसके अनुसार सही आकार का अवसर तय किया जा रहा है।",
+  "Exploring Directions": "दिशाओं की खोज की जा रही है",
+  "Considering multiple business directions worth testing.":
+    "आज़माने लायक कई बिज़नेस दिशाओं पर विचार किया जा रहा है।",
+  "Pressure-Testing": "बारीकी से जांच की जा रही है",
+  "Checking each direction against your real time, capital, and constraints.":
+    "हर दिशा को आपके वास्तविक समय, पूंजी और सीमाओं के आधार पर जांचा जा रहा है।",
+  "Choosing Your Best Three": "आपके लिए सर्वश्रेष्ठ तीन चुने जा रहे हैं",
+  "Narrowing everything down to the three strongest opportunities for you.":
+    "आपके लिए सबसे मज़बूत तीन अवसरों तक सब कुछ संक्षिप्त किया जा रहा है।",
+  "Still working — this part takes a little longer…":
+    "अभी भी काम जारी है — इस हिस्से में थोड़ा ज़्यादा समय लगता है…",
+  "Weighing tradeoffs across each direction…": "हर दिशा के फ़ायदे-नुकसान तौले जा रहे हैं…",
+  "Double-checking fit against your real constraints…":
+    "आपकी वास्तविक सीमाओं के हिसाब से फिर से जांच की जा रही है…",
+  "Finalizing your strongest three…": "आपके सर्वश्रेष्ठ तीन अंतिम रूप दिए जा रहे हैं…",
+  "Your answers are already saved — safe even if you leave this page.":
+    "आपके जवाब पहले से सहेजे जा चुके हैं — इस पेज से जाने पर भी सुरक्षित।",
   "Your Business DNA is complete.": "आपका बिज़नेस DNA तैयार है।",
   "Your Founder Profile is complete.": "आपकी फाउंडर प्रोफ़ाइल पूरी हो गई।",
   "3 opportunities identified": "3 अवसर पहचाने गए",
