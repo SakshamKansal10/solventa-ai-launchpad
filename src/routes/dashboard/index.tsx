@@ -6,15 +6,13 @@ import { z } from "zod";
 import { ArrowRight, Compass, Loader2 } from "lucide-react";
 import { DashboardShell } from "@/components/dashboard/DashboardShell";
 import { FounderFitOrbit } from "@/components/dashboard/FounderFitOrbit";
-import { FounderGenomeCardV2 } from "@/components/dashboard/FounderGenomeRadar";
-import { BusinessDnaQuadrant } from "@/components/dashboard/BusinessDnaPanel";
 import { SolventiaLoadingState } from "@/components/dashboard/SolventiaLoadingState";
 import { PremiumButton } from "@/components/solventia/PremiumButton";
 import { Button } from "@/components/ui/button";
 import { requireAuthLoader } from "@/lib/route-guards";
 import { getDashboard } from "@/lib/actions/dashboard";
 import { exploreMoreOpportunities, switchSelectedOpportunity } from "@/lib/actions/opportunities";
-import { getFitFactors, getWhyReasons } from "@/lib/opportunity-display";
+import { getFitFactors, getFlagshipEssentials } from "@/lib/opportunity-display";
 import { getConstraintWarnings, type FitScoreResult } from "@/lib/profile/scoring";
 import type { OpportunityCandidate, OpportunityPackage } from "@/lib/ai/schemas";
 import { cn } from "@/lib/utils";
@@ -173,8 +171,7 @@ function DashboardHome() {
       : [];
   const ideaMetrics =
     primaryCandidate && fitFactors ? getIdeaMetrics(primaryCandidate, fitFactors.riskLevel) : [];
-  const topReason = primaryCandidate ? getWhyReasons(primaryCandidate)[0] : null;
-  const whyNow = primaryCandidate && "whyNow" in primaryCandidate ? primaryCandidate.whyNow : null;
+  const essentials = primaryCandidate ? getFlagshipEssentials(primaryCandidate) : null;
   const primaryScore = primary?.score_breakdown
     ? (primary.score_breakdown as unknown as FitScoreResult)
     : null;
@@ -262,10 +259,41 @@ function DashboardHome() {
                   <h2 className="mt-4 max-w-xl font-display text-[clamp(1.9rem,3.4vw,2.6rem)] font-semibold leading-[1.12] text-sol-ink">
                     {primary.title}
                   </h2>
-                  {(topReason || primary.one_liner) && (
-                    <p className="mt-4 max-w-xl text-[0.98rem] leading-relaxed text-sol-secondary">
-                      {topReason ?? primary.one_liner}
+                  {primary.one_liner && (
+                    <p className="mt-4 max-w-xl text-[1.02rem] leading-relaxed text-sol-secondary">
+                      {primary.one_liner}
                     </p>
+                  )}
+
+                  {essentials && (
+                    <div className="mt-6 grid max-w-xl gap-4 sm:grid-cols-3">
+                      <div>
+                        <p className="text-[11px] font-semibold uppercase tracking-[0.1em] text-sol-muted">
+                          {tr("Who Pays")}
+                        </p>
+                        <p className="mt-1.5 text-[0.9rem] leading-snug text-sol-ink">
+                          {essentials.whoPays}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-[11px] font-semibold uppercase tracking-[0.1em] text-sol-muted">
+                          {tr("Start With")}
+                        </p>
+                        <p className="mt-1.5 text-[0.9rem] leading-snug text-sol-ink">
+                          {essentials.startWith}
+                        </p>
+                      </div>
+                      {essentials.howItGrows && (
+                        <div>
+                          <p className="text-[11px] font-semibold uppercase tracking-[0.1em] text-sol-muted">
+                            {tr("How It Grows")}
+                          </p>
+                          <p className="mt-1.5 text-[0.9rem] leading-snug text-sol-ink">
+                            {essentials.howItGrows}
+                          </p>
+                        </div>
+                      )}
+                    </div>
                   )}
 
                   {ideaMetrics.length > 0 && (
@@ -290,13 +318,6 @@ function DashboardHome() {
                     <div className="mt-5 max-w-xl rounded-xl border border-sol-champagne/30 bg-sol-champagne-soft/40 px-4 py-3">
                       <p className="text-[0.85rem] text-sol-ink">{constraintWarnings[0]}</p>
                     </div>
-                  )}
-
-                  {whyNow && (
-                    <p className="mt-5 max-w-xl text-[0.92rem] leading-relaxed text-sol-secondary">
-                      <span className="font-semibold text-sol-violet-deep">{tr("Why now — ")}</span>
-                      {whyNow}
-                    </p>
                   )}
 
                   <div className="mt-8">
@@ -481,19 +502,6 @@ function DashboardHome() {
               {tr("Explore More Opportunities")}
             </button>
           </section>
-
-          {/* ===== FOUNDER INTELLIGENCE ===== */}
-          {data.businessDna && (
-            <div className="mt-9 grid gap-6 lg:grid-cols-2 lg:items-start">
-              {data.genome && (
-                <FounderGenomeCardV2 genome={data.genome} persona={data.persona ?? undefined} />
-              )}
-              <BusinessDnaQuadrant
-                analysis={data.businessDna.analysis}
-                signals={data.businessDna.signals}
-              />
-            </div>
-          )}
         </>
       )}
     </DashboardShell>
