@@ -94,8 +94,10 @@ export function FounderFitOrbit({
             type="button"
             onMouseEnter={() => setActiveIndex(i)}
             onMouseLeave={() => setActiveIndex(null)}
+            onFocus={() => setActiveIndex(i)}
+            onBlur={() => setActiveIndex(null)}
             onClick={() => setActiveIndex(isActive ? null : i)}
-            className="absolute flex -translate-x-1/2 -translate-y-1/2 flex-col items-center gap-1 outline-none"
+            className="absolute flex -translate-x-1/2 -translate-y-1/2 flex-col items-center gap-1 rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sol-violet focus-visible:ring-offset-2"
             style={{ left: x, top: y }}
           >
             <span
