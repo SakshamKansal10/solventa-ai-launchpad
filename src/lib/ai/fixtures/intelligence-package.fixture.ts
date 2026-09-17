@@ -82,6 +82,10 @@ export const FIXTURE_INTELLIGENCE_PACKAGE: SolventiaIntelligencePackage = {
         "Most small local businesses lose customers who search online and find nothing, but can't justify hiring an agency.",
       solution:
         "Offer fixed-price, fast-turnaround websites built on a simple template you customize per client.",
+      problemHeadline: "No website, losing online customers",
+      solutionHeadline: "Fixed-price template websites",
+      customerHeadline: "Local shops without a website",
+      moneyHeadline: "Flat fee per website built",
       whyThisFounder: [
         "Your web development skill directly produces the deliverable — no new skill needed to start",
         "10-20 hrs/week is enough for 1-2 client projects per month at a realistic pace",
@@ -146,6 +150,10 @@ export const FIXTURE_INTELLIGENCE_PACKAGE: SolventiaIntelligencePackage = {
       problem:
         "Many new freelancers waste weeks rebuilding the same basic pages (portfolio, invoice, proposal) from zero.",
       solution: "Package a polished, reusable template set and sell it once, download-and-use.",
+      problemHeadline: "Freelancers rebuild basics from scratch",
+      solutionHeadline: "Ready-made freelancer template pack",
+      customerHeadline: "Junior freelance developers and designers",
+      moneyHeadline: "One-time purchase per template pack",
       whyThisFounder: [
         "Your web development skill lets you build genuinely usable templates, not generic ones",
         "A digital product needs almost no ongoing weekly hours once built, fitting your limited time",
@@ -209,6 +217,10 @@ export const FIXTURE_INTELLIGENCE_PACKAGE: SolventiaIntelligencePackage = {
         "Local job seekers waste hours checking multiple sites and miss openings that get filled fast.",
       solution:
         "Curate and summarize the best local openings weekly, plus practical application advice, in one email.",
+      problemHeadline: "Job listings scattered across platforms",
+      solutionHeadline: "Weekly curated local job digest",
+      customerHeadline: "City job seekers, tired of searching",
+      moneyHeadline: "Paid monthly tier for early access",
       whyThisFounder: [
         "Requires almost no technical build — mostly research and writing, testing a different muscle than your day job",
         "Fits your limited weekly hours since curation is a bounded, repeatable task",

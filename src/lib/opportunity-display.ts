@@ -50,6 +50,14 @@ export interface OpportunityDisplayDetail {
   customer: string;
   problem: string;
   solution: string;
+  // Short scannable phrases for the Overview blocks — a row saved before
+  // these fields existed falls back to its own full sentence rather than
+  // a truncated, grammatically-broken guess (see toDisplayDetail); the UI
+  // detects that case and simply doesn't duplicate the sentence below it.
+  problemHeadline: string;
+  solutionHeadline: string;
+  customerHeadline: string;
+  moneyHeadline: string;
   whyThisFounder: string[];
   businessModel: string;
   startingCapital: string;
@@ -82,6 +90,10 @@ export function toDisplayDetail(
       customer: detail.customer,
       problem: detail.problem,
       solution: detail.solution,
+      problemHeadline: detail.problemHeadline || detail.problem,
+      solutionHeadline: detail.solutionHeadline || detail.solution,
+      customerHeadline: detail.customerHeadline || detail.customer,
+      moneyHeadline: detail.moneyHeadline || detail.businessModelPlainEnglish,
       whyThisFounder: detail.whyThisFounder,
       businessModel: detail.businessModelPlainEnglish,
       startingCapital: detail.startingCapital,
@@ -107,6 +119,10 @@ export function toDisplayDetail(
     customer: detail.whoItIsFor,
     problem: detail.theProblem,
     solution: detail.theOpportunity,
+    problemHeadline: detail.theProblem,
+    solutionHeadline: detail.theOpportunity,
+    customerHeadline: detail.whoItIsFor,
+    moneyHeadline: detail.howItCanMakeMoney,
     whyThisFounder: detail.whyThisFitsYou,
     businessModel: detail.howItCanMakeMoney,
     startingCapital: detail.startingRequirements.capital,

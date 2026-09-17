@@ -61,22 +61,35 @@ const SECTION_NAV = [
   { id: "evidence", label: "Proof" },
 ];
 
-function FlowStep({ label, value, isLast }: { label: string; value: string; isLast?: boolean }) {
+/** One scannable overview block — a small label, a large 3-7 word
+ * headline phrase (the AI's own problemHeadline/solutionHeadline/etc, see
+ * opportunity-display.ts), and the full sentence as a smaller supporting
+ * line underneath. No connecting arrows between blocks — the 2x2 grid
+ * itself already reads as one shape; an arrow said nothing an adjacent
+ * block didn't already say.
+ *
+ * An opportunity saved before the headline fields existed has headline
+ * === detail (toDisplayDetail's fallback) — shown once, at the larger
+ * size, rather than repeating the same sentence twice. */
+function OverviewBlock({
+  label,
+  headline,
+  detail,
+}: {
+  label: string;
+  headline: string;
+  detail: string;
+}) {
   return (
-    <div className="flex flex-1 flex-col items-center gap-2 sm:flex-row sm:items-stretch">
-      <div className="flex w-full flex-col items-center rounded-xl border border-sol-border bg-sol-surface px-4 py-4 text-center">
-        <p className="text-[0.65rem] font-semibold uppercase tracking-wide text-sol-muted">
-          {label}
-        </p>
-        <p className="mt-1.5 text-[0.98rem] font-medium leading-snug text-sol-ink">{value}</p>
-      </div>
-      {!isLast && (
-        <div className="flex items-center justify-center py-1 sm:py-0">
-          <ArrowRight
-            className="size-4 rotate-90 text-sol-champagne-deep sm:rotate-0"
-            aria-hidden="true"
-          />
-        </div>
+    <div className="rounded-xl border border-sol-border bg-sol-surface px-5 py-4">
+      <p className="text-[0.68rem] font-semibold uppercase tracking-[0.1em] text-sol-muted">
+        {label}
+      </p>
+      <p className="mt-1.5 font-display text-[1.15rem] font-semibold leading-snug text-sol-ink">
+        {headline}
+      </p>
+      {detail !== headline && (
+        <p className="mt-1.5 text-[0.88rem] leading-relaxed text-sol-secondary">{detail}</p>
       )}
     </div>
   );
@@ -336,14 +349,30 @@ function OpportunityDetailPage() {
         ))}
       </nav>
 
-      {/* ===== 1. OVERVIEW — what this is ===== */}
+      {/* ===== 1. OVERVIEW — what this is, in 4 scannable blocks ===== */}
       <section id="overview" className="scroll-mt-24 pt-8">
         <h2 className="font-display text-[1.2rem] font-semibold text-sol-ink">{tr("Overview")}</h2>
-        <div className="mt-4 flex flex-col gap-2 sm:flex-row sm:gap-3">
-          <FlowStep label={tr("Problem")} value={detail.problem} />
-          <FlowStep label={tr("Your Service")} value={detail.solution} />
-          <FlowStep label={tr("Customer")} value={detail.customer} />
-          <FlowStep label={tr("Revenue")} value={detail.revenuePath} isLast />
+        <div className="mt-4 grid gap-3 sm:grid-cols-2">
+          <OverviewBlock
+            label={tr("Problem")}
+            headline={detail.problemHeadline}
+            detail={detail.problem}
+          />
+          <OverviewBlock
+            label={tr("Solution")}
+            headline={detail.solutionHeadline}
+            detail={detail.solution}
+          />
+          <OverviewBlock
+            label={tr("Customer")}
+            headline={detail.customerHeadline}
+            detail={detail.customer}
+          />
+          <OverviewBlock
+            label={tr("Money")}
+            headline={detail.moneyHeadline}
+            detail={detail.businessModel}
+          />
         </div>
       </section>
 
