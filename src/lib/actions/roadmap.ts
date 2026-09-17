@@ -95,7 +95,20 @@ export const getRoadmap = createServerFn({ method: "GET" })
       .limit(1)
       .maybeSingle();
     if (error) throw new Error(error.message);
-    if (!roadmapRow) return null;
+    if (!roadmapRow) {
+      // "No active roadmap row yet" is NOT the same thing as "nothing to
+      // build" — a founder who just clicked Build My Roadmap (still
+      // generating, or interrupted by a refresh/impatient nav before it
+      // finished), or who navigated here directly via the sidebar before
+      // ever building one, must never dead-end on a bare "No roadmap, go
+      // to Dashboard". Only the current/latest-consultation lookup (no
+      // explicit opportunityId) resolves this — an opportunityId-specific
+      // lookup genuinely means "this one has no roadmap", which stays a
+      // real null (e.g. an alternative the founder hasn't committed to).
+      if (data.opportunityId) return null;
+      const needsBuild = await findOpportunityNeedingRoadmap(supabase, user.id);
+      return needsBuild ? { needsBuild } : null;
+    }
 
     const { opportunities, ...roadmap } =
       roadmapRow as unknown as Database["public"]["Tables"]["roadmaps"]["Row"] & {
@@ -141,6 +154,55 @@ export const getRoadmap = createServerFn({ method: "GET" })
       founderSummary,
     };
   });
+
+/** Resolves "the opportunity Build My Roadmap should build for" when no
+ * active roadmap row exists yet — using the EXACT same consultation-scoped
+ * precedence as getDashboard's primary resolution (selected explicit choice,
+ * else the AI's own designated flagship, else highest fit_score), scoped to
+ * only the founder's latest consultation. Returns null only when there is
+ * genuinely nothing to build (no consultation completed yet) — that's the
+ * one case where a "no roadmap" empty state is honest rather than a dead
+ * end. */
+async function findOpportunityNeedingRoadmap(
+  supabase: Awaited<ReturnType<typeof requireUser>>["supabase"],
+  userId: string,
+): Promise<{ opportunityId: string; title: string } | null> {
+  const [{ data: dnaData }, { data: opportunities, error }] = await Promise.all([
+    supabase
+      .from("business_dna")
+      .select("id")
+      .eq("user_id", userId)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle(),
+    // select("*") deliberately, not an explicit column list — this must
+    // keep working on a database that hasn't had migration 0009 applied
+    // yet, and naming opportunity_index explicitly here would make
+    // PostgREST error the whole query with "column does not exist" on
+    // such a database instead of degrading to the fit_score fallback
+    // (exactly the same reasoning as getDashboard's opportunities query).
+    supabase
+      .from("opportunities")
+      .select("*")
+      .eq("user_id", userId)
+      .order("fit_score", { ascending: false })
+      .order("created_at", { ascending: true }),
+  ]);
+  if (error) throw new Error(error.message);
+
+  const latestBusinessDnaId = dnaData?.id ?? null;
+  if (!latestBusinessDnaId) return null;
+
+  const viewedOpportunities = (opportunities ?? []).filter(
+    (o) => o.business_dna_id === latestBusinessDnaId,
+  );
+  const activeLatest = viewedOpportunities.filter((o) => o.status === "active");
+  const selected = viewedOpportunities.find((o) => o.status === "selected") ?? null;
+  const designatedFlagship = activeLatest.find((o) => o.opportunity_index === 0) ?? null;
+  const target = selected ?? designatedFlagship ?? activeLatest[0] ?? null;
+
+  return target ? { opportunityId: target.id, title: target.title } : null;
+}
 
 export const updateTaskStatus = createServerFn({ method: "POST" })
   .validator(
