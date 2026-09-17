@@ -2,10 +2,10 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "sonner";
+import { z } from "zod";
 import { ArrowRight, Compass, Loader2 } from "lucide-react";
 import { DashboardShell } from "@/components/dashboard/DashboardShell";
 import { FounderFitOrbit } from "@/components/dashboard/FounderFitOrbit";
-import { FounderPathJourney } from "@/components/dashboard/FounderPathJourney";
 import { FounderGenomeCardV2 } from "@/components/dashboard/FounderGenomeRadar";
 import { BusinessDnaQuadrant } from "@/components/dashboard/BusinessDnaPanel";
 import { SolventiaLoadingState } from "@/components/dashboard/SolventiaLoadingState";
@@ -18,10 +18,17 @@ import { getFitFactors, getWhyReasons } from "@/lib/opportunity-display";
 import { getConstraintWarnings, type FitScoreResult } from "@/lib/profile/scoring";
 import type { OpportunityCandidate, OpportunityPackage } from "@/lib/ai/schemas";
 import { cn } from "@/lib/utils";
+import { useLocale } from "@/lib/i18n/LocaleProvider";
+import { translateDashboardText } from "@/lib/i18n/dashboard-dictionary";
 
 export const Route = createFileRoute("/dashboard/")({
   beforeLoad: requireAuthLoader,
   component: DashboardHome,
+  // Set only by a deep link to one specific consultation's ideas (e.g.
+  // the "ideas ready" email) — pins the dashboard to THAT consultation
+  // instead of always-latest, so a founder who ran a newer consultation
+  // before clicking an older email still sees what that email described.
+  validateSearch: z.object({ consultation: z.string().uuid().optional() }),
   head: () => ({
     meta: [{ title: "Dashboard — Solventia" }, { name: "robots", content: "noindex" }],
   }),
@@ -58,21 +65,6 @@ function getIdeaMetrics(
   return metrics;
 }
 
-/** Idea -> Proof -> Offer -> First Users -> Repeatability -> Growth,
- * derived from real state, never asserted. No roadmap yet = still at
- * "Idea". Once a roadmap exists, position scales with how far through
- * its phases the founder actually is. */
-function deriveActiveStage(
-  hasRoadmap: boolean,
-  phases: { isCurrent: boolean }[] | undefined,
-): number {
-  if (!hasRoadmap || !phases || phases.length === 0) return 0;
-  const currentIndex = phases.findIndex((p) => p.isCurrent);
-  if (currentIndex === -1) return 5; // every phase done
-  const ratio = phases.length <= 1 ? 1 : currentIndex / (phases.length - 1);
-  return 1 + Math.round(ratio * 4);
-}
-
 /** A small SVG orbit motif — the flagship card's only decoration, built
  * from plain circles/arcs (never stock imagery), positioned to sit behind
  * the fit orbit without competing with the real content. */
@@ -97,9 +89,15 @@ function FlagshipOrbitMotif() {
 function DashboardHome() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const dashboardQuery = useQuery({ queryKey: ["dashboard"], queryFn: () => getDashboard() });
+  const { consultation } = Route.useSearch();
+  const dashboardQuery = useQuery({
+    queryKey: ["dashboard", consultation ?? null],
+    queryFn: () => getDashboard({ data: { consultationId: consultation } }),
+  });
   const [exploring, setExploring] = useState(false);
   const [switching, setSwitching] = useState<string | null>(null);
+  const { locale } = useLocale();
+  const tr = (s: string) => translateDashboardText(s, locale) ?? s;
 
   async function refresh() {
     await queryClient.invalidateQueries({ queryKey: ["dashboard"] });
@@ -108,7 +106,7 @@ function DashboardHome() {
   async function handleExploreMore() {
     setExploring(true);
     try {
-      await exploreMoreOpportunities();
+      await exploreMoreOpportunities({ data: { locale } });
       await refresh();
       toast.success("Sol found a few more directions worth considering.");
     } catch (err) {
@@ -146,7 +144,7 @@ function DashboardHome() {
     return (
       <DashboardShell>
         <div className="flex min-h-[50vh] items-center justify-center">
-          <SolventiaLoadingState message="Opening your workspace…" />
+          <SolventiaLoadingState message={tr("Opening your workspace…")} />
         </div>
       </DashboardShell>
     );
@@ -156,7 +154,7 @@ function DashboardHome() {
   if (!data) {
     return (
       <DashboardShell>
-        <p className="text-dashboard-body">Something went wrong loading your dashboard.</p>
+        <p className="text-dashboard-body">{tr("Something went wrong loading your dashboard.")}</p>
       </DashboardShell>
     );
   }
@@ -180,7 +178,6 @@ function DashboardHome() {
   const primaryScore = primary?.score_breakdown
     ? (primary.score_breakdown as unknown as FitScoreResult)
     : null;
-  const activeStage = deriveActiveStage(Boolean(data.roadmap), data.roadmap?.phases);
   const currentPhase = data.roadmap?.phases.find((p) => p.isCurrent) ?? null;
   const missionProgress =
     currentPhase && currentPhase.totalTasks > 0
@@ -210,22 +207,22 @@ function DashboardHome() {
       {/* ===== HEADER — small label, then a real headline, then one line ===== */}
       <div className="flex flex-col gap-2">
         <p className="text-[16px] font-semibold uppercase tracking-[0.1em] text-sol-champagne-deep">
-          {greeting()}, {displayName}
+          {tr(greeting())}, {displayName}
         </p>
         <h1 className="font-display text-[clamp(2rem,3.6vw,2.75rem)] font-semibold leading-[1.08] text-sol-ink">
-          {headline}
+          {tr(headline)}
         </h1>
-        <p className="max-w-2xl text-[1.02rem] text-sol-secondary">{subheading}</p>
+        <p className="max-w-2xl text-[1.02rem] text-sol-secondary">{tr(subheading)}</p>
       </div>
 
       {!primary && !data.selected ? (
         <section className="mt-10 rounded-[24px] border border-sol-border bg-sol-surface px-8 py-14 text-center">
           <Compass className="mx-auto size-9 text-sol-champagne-deep" aria-hidden="true" />
           <h2 className="mt-5 font-display text-[1.4rem] font-semibold text-sol-ink">
-            We haven&rsquo;t found a strong enough match yet.
+            {tr("We haven't found a strong enough match yet.")}
           </h2>
           <p className="mx-auto mt-2.5 max-w-md text-[1rem] text-sol-secondary">
-            Let&rsquo;s explore a wider set of possibilities, or refine your profile.
+            {tr("Let's explore a wider set of possibilities, or refine your profile.")}
           </p>
           <div className="mt-7 flex justify-center gap-3">
             <PremiumButton
@@ -236,10 +233,10 @@ function DashboardHome() {
               disabled={exploring}
             >
               {exploring && <Loader2 className="size-4 animate-spin" aria-hidden="true" />}
-              Explore More Ideas
+              {tr("Explore More Ideas")}
             </PremiumButton>
             <Button asChild variant="outline">
-              <Link to="/consultation">Refine My Profile</Link>
+              <Link to="/consultation">{tr("Refine My Profile")}</Link>
             </Button>
           </div>
         </section>
@@ -260,7 +257,7 @@ function DashboardHome() {
               <div className="relative flex flex-col gap-8 lg:flex-row lg:items-start lg:justify-between">
                 <div className="min-w-0 flex-1">
                   <p className="text-[12px] font-semibold uppercase tracking-[0.12em] text-sol-champagne-deep">
-                    Your Strongest Founder Match
+                    {tr("Your Strongest Founder Match")}
                   </p>
                   <h2 className="mt-4 max-w-xl font-display text-[clamp(1.9rem,3.4vw,2.6rem)] font-semibold leading-[1.12] text-sol-ink">
                     {primary.title}
@@ -281,7 +278,8 @@ function DashboardHome() {
                             </span>
                           )}
                           <span className="text-[0.85rem] text-sol-secondary">
-                            <span className="font-semibold text-sol-ink">{m.value}</span> {m.label}
+                            <span className="font-semibold text-sol-ink">{m.value}</span>{" "}
+                            {tr(m.label)}
                           </span>
                         </span>
                       ))}
@@ -296,7 +294,7 @@ function DashboardHome() {
 
                   {whyNow && (
                     <p className="mt-5 max-w-xl text-[0.92rem] leading-relaxed text-sol-secondary">
-                      <span className="font-semibold text-sol-violet-deep">Why now — </span>
+                      <span className="font-semibold text-sol-violet-deep">{tr("Why now — ")}</span>
                       {whyNow}
                     </p>
                   )}
@@ -307,7 +305,7 @@ function DashboardHome() {
                       params={{ id: primary.id }}
                       className="inline-flex items-center gap-2 rounded-xl bg-sol-navy px-6 py-3.5 text-[0.92rem] font-semibold text-white transition-colors hover:bg-sol-navy-soft"
                     >
-                      View Full Opportunity
+                      {tr("View Full Opportunity")}
                       <ArrowRight className="size-4 text-sol-champagne" aria-hidden="true" />
                     </Link>
                   </div>
@@ -326,21 +324,22 @@ function DashboardHome() {
           {primary && !data.roadmap && (
             <section className="mt-6 rounded-[18px] border border-sol-border bg-sol-surface p-6 text-center sm:p-7">
               <p className="text-[12px] font-semibold uppercase tracking-[0.12em] text-sol-champagne-deep">
-                Ready to Execute
+                {tr("Ready to Execute")}
               </p>
               <h3 className="mt-2.5 font-display text-[1.35rem] font-semibold text-sol-ink">
-                Turn this into a week-by-week plan.
+                {tr("Turn this into a week-by-week plan.")}
               </h3>
               <p className="mx-auto mt-2 max-w-md text-[0.92rem] leading-relaxed text-sol-secondary">
-                Sol designs it around your real time and capital — it unlocks one week at a time as
-                you make progress.
+                {tr(
+                  "Sol designs it around your real time and capital — it unlocks one week at a time as you make progress.",
+                )}
               </p>
               <button
                 type="button"
                 className="mt-5 inline-flex items-center gap-2 rounded-xl bg-sol-navy px-6 py-3 text-[0.9rem] font-semibold text-white transition-colors hover:bg-sol-navy-soft"
                 onClick={() => handleBuildRoadmap(primary.id)}
               >
-                Build My Roadmap
+                {tr("Build My Roadmap")}
                 <ArrowRight className="size-4 text-sol-champagne" aria-hidden="true" />
               </button>
             </section>
@@ -354,7 +353,7 @@ function DashboardHome() {
             >
               <div className="min-w-0">
                 <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-sol-champagne">
-                  This Week
+                  {tr("This Week")}
                 </p>
                 <h3 className="mt-3 max-w-xl font-display text-[1.5rem] font-semibold leading-snug text-white sm:text-[1.7rem]">
                   {data.roadmap.currentWeek.title}
@@ -396,7 +395,7 @@ function DashboardHome() {
                   to="/dashboard/roadmap"
                   className="inline-flex items-center gap-1.5 whitespace-nowrap text-[0.92rem] font-semibold text-sol-champagne hover:text-white"
                 >
-                  Continue {data.roadmap.currentWeek.title}
+                  {tr("Continue")} {data.roadmap.currentWeek.title}
                   <ArrowRight className="size-4" aria-hidden="true" />
                 </Link>
               </div>
@@ -407,7 +406,7 @@ function DashboardHome() {
           {alternatives.length > 0 && (
             <section className="mt-9">
               <p className="text-[12px] font-semibold uppercase tracking-[0.12em] text-sol-muted">
-                Alternative Founder Paths
+                {tr("Alternative Founder Paths")}
               </p>
               <div className="mt-4 grid gap-4 sm:grid-cols-2">
                 {alternatives.map((opp) => {
@@ -439,7 +438,7 @@ function DashboardHome() {
                       <div className="flex gap-2">
                         <Button asChild variant="outline" size="sm" className="flex-1">
                           <Link to="/dashboard/opportunities/$id" params={{ id: opp.id }}>
-                            Explore
+                            {tr("Explore")}
                           </Link>
                         </Button>
                         <button
@@ -451,7 +450,7 @@ function DashboardHome() {
                           {switching === opp.id && (
                             <Loader2 className="size-3.5 animate-spin" aria-hidden="true" />
                           )}
-                          Choose Direction
+                          {tr("Choose Direction")}
                         </button>
                       </div>
                     </div>
@@ -461,38 +460,31 @@ function DashboardHome() {
             </section>
           )}
 
-          <section className="mt-6 text-center">
+          <section className="mt-8 flex flex-col items-center gap-3 text-center">
+            <p className="text-[0.9rem] text-sol-secondary">
+              {tr("Not seeing yourself in these?")}
+            </p>
             <button
               type="button"
               onClick={handleExploreMore}
               disabled={exploring}
               className={cn(
-                "text-[0.85rem] font-medium text-sol-secondary hover:text-sol-ink",
-                exploring && "opacity-60",
+                "inline-flex items-center gap-2 rounded-full border border-sol-violet/35 bg-sol-violet-mist/70 px-6 py-3 text-[0.92rem] font-semibold text-sol-violet-deep shadow-[0_6px_20px_-10px_rgba(114,87,216,.45)] transition-all duration-200 hover:-translate-y-px hover:border-sol-violet/55 hover:bg-sol-violet-mist hover:shadow-[0_10px_26px_-10px_rgba(114,87,216,.55)]",
+                exploring && "pointer-events-none opacity-60",
               )}
             >
-              {exploring && (
-                <Loader2 className="mr-1.5 inline size-3.5 animate-spin" aria-hidden="true" />
+              {exploring ? (
+                <Loader2 className="size-4 animate-spin" aria-hidden="true" />
+              ) : (
+                <Compass className="size-4" aria-hidden="true" />
               )}
-              Not seeing yourself in these? Explore More Opportunities
+              {tr("Explore More Opportunities")}
             </button>
           </section>
 
-          {/* ===== PROGRESS JOURNEY ===== */}
-          {primary && (
-            <section className="mt-9 rounded-[24px] border border-sol-border bg-sol-surface p-6 sm:p-8">
-              <p className="text-[12px] font-semibold uppercase tracking-[0.12em] text-sol-muted">
-                Progress Journey
-              </p>
-              <div className="mt-6 overflow-x-auto">
-                <FounderPathJourney activeStage={activeStage} />
-              </div>
-            </section>
-          )}
-
           {/* ===== FOUNDER INTELLIGENCE ===== */}
           {data.businessDna && (
-            <div className="mt-6 grid gap-6 lg:grid-cols-2 lg:items-start">
+            <div className="mt-9 grid gap-6 lg:grid-cols-2 lg:items-start">
               {data.genome && (
                 <FounderGenomeCardV2 genome={data.genome} persona={data.persona ?? undefined} />
               )}

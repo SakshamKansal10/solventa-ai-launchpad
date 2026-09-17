@@ -14,6 +14,7 @@ import {
 import mark from "@/assets/solventia-mark.png";
 import { useActiveSection, scrollToSection } from "@/hooks/use-active-section";
 import { SignInDialog } from "./SignInDialog";
+import { LanguageSwitcher } from "./LanguageSwitcher";
 import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import {
   DropdownMenu,
@@ -23,15 +24,16 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { getCurrentUser, signOut } from "@/lib/actions/auth";
+import { useLocale } from "@/lib/i18n/LocaleProvider";
 
 /** Exactly four items, exactly these anchors — PRODUCT and HOW IT WORKS
  * are same-page scrolls (only meaningful on "/"), FOR ORGANIZATIONS and
  * ABOUT are real routes. No "Explore Ideas" (Solventia isn't a public
  * idea catalogue) and no top-level "Roadmaps" (roadmaps live inside
  * Product / How It Works). */
-const SCROLL_NAV: { label: string; id: string }[] = [
-  { label: "Product", id: "founder-signal" },
-  { label: "How It Works", id: "how-it-works" },
+const SCROLL_NAV: { labelKey: string; id: string }[] = [
+  { labelKey: "nav.product", id: "founder-signal" },
+  { labelKey: "nav.howItWorks", id: "how-it-works" },
 ];
 const SCROLL_IDS = SCROLL_NAV.map((item) => item.id);
 
@@ -39,9 +41,28 @@ function initials(email: string | null): string {
   return email ? email[0].toUpperCase() : "S";
 }
 
-export function Header() {
+interface HeaderProps {
+  /** A sanitized, same-origin destination carried in via `?next=` — set
+   * only when a signed-out visitor was bounced here from a protected
+   * route (e.g. a dashboard link from an email). When present, the
+   * sign-in dialog opens automatically instead of waiting for a click,
+   * and successful sign-in returns them there instead of the dashboard
+   * default. Only the homepage route reads and passes this. */
+  pendingNext?: string | null;
+}
+
+export function Header({ pendingNext }: HeaderProps = {}) {
+  const { t } = useLocale();
   const [scrolled, setScrolled] = useState(false);
+  // Separate, higher threshold — the background/border reveal (12px) and
+  // the shadow (20px) are deliberately not the same trigger, so the
+  // shadow never shows right at the top of the page.
+  const [scrolledPastShadowThreshold, setScrolledPastShadowThreshold] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+  // Only ever initialized true once, from the URL this page loaded with —
+  // deliberately NOT re-derived on every render, so dismissing the
+  // auto-opened dialog (without signing in) doesn't keep reopening it.
+  const [nextPromptOpen, setNextPromptOpen] = useState(() => Boolean(pendingNext));
   const activeId = useActiveSection(SCROLL_IDS);
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -51,10 +72,22 @@ export function Header() {
   const isSignedIn = Boolean(currentUser.data);
 
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 12);
+    const onScroll = () => {
+      setScrolled(window.scrollY > 12);
+      setScrolledPastShadowThreshold(window.scrollY > 20);
+    };
     onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
+  // Strip `?next=` from the address bar once it's been used to open the
+  // prompt — a manual refresh afterward should land on a clean homepage,
+  // not silently reopen a dialog the visitor already dismissed.
+  useEffect(() => {
+    if (!pendingNext) return;
+    window.history.replaceState(null, "", "/");
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   function handleScrollNav(id: string) {
@@ -79,9 +112,12 @@ export function Header() {
     <header
       className={`fixed inset-x-0 top-0 z-50 h-[68px] transition-all duration-500 md:h-[84px] ${
         scrolled || !isHome
-          ? "border-b border-[rgba(229,221,209,0.70)] bg-[rgba(255,253,249,0.88)] backdrop-blur-[18px]"
+          ? "border-b border-[rgba(228,221,212,0.72)] bg-[rgba(252,250,247,0.88)] backdrop-blur-[18px] backdrop-saturate-[1.05]"
           : "border-b border-transparent"
       }`}
+      style={
+        scrolledPastShadowThreshold ? { boxShadow: "0 6px 28px rgba(23,32,61,0.045)" } : undefined
+      }
     >
       <div className="mx-auto grid h-full max-w-[1920px] grid-cols-[auto_1fr_auto] items-center gap-6 px-[18px] sm:px-6 lg:px-10">
         <Link
@@ -119,34 +155,35 @@ export function Header() {
               className={`relative text-[14px] font-[550] uppercase tracking-[0.04em] transition-colors duration-300 ${
                 isHome && activeId === item.id
                   ? "text-sol-ink"
-                  : "text-sol-ink/80 hover:text-sol-ink"
+                  : "text-sol-ink/80 hover:text-sol-navy"
               }`}
             >
-              {item.label}
+              {t(item.labelKey)}
               <span
-                className={`absolute -bottom-1.5 left-0 h-px bg-sol-champagne transition-all duration-300 ${
-                  isHome && activeId === item.id ? "w-full" : "w-0"
+                className={`absolute -bottom-1.5 left-[-2px] h-[1.5px] w-[calc(100%+4px)] origin-center bg-sol-champagne transition-transform duration-[180ms] ${
+                  isHome && activeId === item.id ? "scale-x-100" : "scale-x-0"
                 }`}
               />
             </button>
           ))}
           <Link
             to="/for-organizations"
-            className="text-[14px] font-[550] uppercase tracking-[0.04em] text-sol-ink/80 transition-colors duration-300 hover:text-sol-ink"
+            className="text-[14px] font-[550] uppercase tracking-[0.04em] text-sol-ink/80 transition-colors duration-300 hover:text-sol-navy"
             activeProps={{ className: "text-sol-ink" }}
           >
-            For Organizations
+            {t("nav.forOrganizations")}
           </Link>
           <Link
             to="/about"
-            className="text-[14px] font-[550] uppercase tracking-[0.04em] text-sol-ink/80 transition-colors duration-300 hover:text-sol-ink"
+            className="text-[14px] font-[550] uppercase tracking-[0.04em] text-sol-ink/80 transition-colors duration-300 hover:text-sol-navy"
             activeProps={{ className: "text-sol-ink" }}
           >
-            About
+            {t("nav.about")}
           </Link>
         </nav>
 
         <div className="flex items-center gap-3">
+          <LanguageSwitcher className="hidden text-[13px] font-medium text-sol-ink/70 transition-colors hover:text-sol-navy sm:inline-flex sm:items-center sm:gap-1" />
           {isSignedIn ? (
             <>
               <button
@@ -154,7 +191,7 @@ export function Header() {
                 onClick={() => navigate({ to: "/dashboard" })}
                 className="hidden h-12 items-center gap-2 rounded-full bg-sol-navy px-[22px] text-[15px] font-semibold text-white transition-all duration-[180ms] hover:-translate-y-px hover:shadow-[0_10px_30px_rgba(23,32,61,.13)] sm:inline-flex"
               >
-                Continue Dashboard
+                {t("nav.continueDashboard")}
                 <ArrowRight className="size-4 text-sol-champagne" aria-hidden="true" />
               </button>
               <DropdownMenu>
@@ -181,25 +218,25 @@ export function Header() {
                   <DropdownMenuItem asChild>
                     <Link to="/consultation" className="cursor-pointer">
                       <Sparkles className="size-4" aria-hidden="true" />
-                      Start New Consultation
+                      {t("nav.startNewConsultation")}
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
                     <Link to="/dashboard/history" className="cursor-pointer">
                       <History className="size-4" aria-hidden="true" />
-                      History
+                      {t("nav.history")}
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
                     <Link to="/dashboard/settings" className="cursor-pointer">
                       <Settings className="size-4" aria-hidden="true" />
-                      Settings
+                      {t("nav.settings")}
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={handleSignOut} className="cursor-pointer">
                     <LogOut className="size-4" aria-hidden="true" />
-                    Sign Out
+                    {t("nav.signOut")}
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
@@ -212,16 +249,19 @@ export function Header() {
                     type="button"
                     className="hidden text-[15px] font-semibold text-sol-ink transition-colors hover:text-sol-violet-deep sm:inline-flex"
                   >
-                    Sign In
+                    {t("nav.signIn")}
                   </button>
                 }
+                nextPath={pendingNext}
+                open={nextPromptOpen}
+                onOpenChange={setNextPromptOpen}
               />
               <button
                 type="button"
                 onClick={() => navigate({ to: "/consultation" })}
                 className="hidden h-12 items-center gap-2 rounded-full bg-sol-navy px-[22px] text-[15px] font-semibold text-white transition-all duration-[180ms] hover:-translate-y-px hover:shadow-[0_10px_30px_rgba(23,32,61,.13)] sm:inline-flex"
               >
-                Find My Business Idea
+                {t("nav.findMyBusinessIdea")}
                 <ArrowRight className="size-4 text-sol-champagne" aria-hidden="true" />
               </button>
             </>
@@ -251,7 +291,7 @@ export function Header() {
                         : "text-sol-secondary hover:bg-sol-ivory hover:text-sol-ink"
                     }`}
                   >
-                    {item.label}
+                    {t(item.labelKey)}
                   </button>
                 ))}
                 <Link
@@ -259,15 +299,18 @@ export function Header() {
                   onClick={() => setMobileOpen(false)}
                   className="rounded-lg px-3 py-3 text-left text-base font-medium text-sol-secondary transition-colors hover:bg-sol-ivory hover:text-sol-ink"
                 >
-                  For Organizations
+                  {t("nav.forOrganizations")}
                 </Link>
                 <Link
                   to="/about"
                   onClick={() => setMobileOpen(false)}
                   className="rounded-lg px-3 py-3 text-left text-base font-medium text-sol-secondary transition-colors hover:bg-sol-ivory hover:text-sol-ink"
                 >
-                  About
+                  {t("nav.about")}
                 </Link>
+                <div className="px-3 py-3">
+                  <LanguageSwitcher />
+                </div>
               </nav>
               <div className="mt-8 flex flex-col gap-3">
                 {isSignedIn ? (
@@ -280,7 +323,7 @@ export function Header() {
                       }}
                       className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-sol-navy text-[15px] font-semibold text-white"
                     >
-                      Continue Dashboard
+                      {t("nav.continueDashboard")}
                       <ArrowRight className="size-4 text-sol-champagne" aria-hidden="true" />
                     </button>
                     <button
@@ -291,7 +334,7 @@ export function Header() {
                       }}
                       className="inline-flex h-12 w-full items-center justify-center rounded-xl border border-sol-border text-[15px] font-semibold text-sol-ink"
                     >
-                      Start New Consultation
+                      {t("nav.startNewConsultation")}
                     </button>
                     <button
                       type="button"
@@ -301,7 +344,7 @@ export function Header() {
                       }}
                       className="text-center text-[0.82rem] font-medium text-sol-secondary hover:text-sol-ink"
                     >
-                      Sign Out
+                      {t("nav.signOut")}
                     </button>
                   </>
                 ) : (
@@ -313,9 +356,10 @@ export function Header() {
                           onClick={() => setMobileOpen(false)}
                           className="inline-flex h-12 w-full items-center justify-center rounded-xl border border-sol-border text-[15px] font-semibold text-sol-ink"
                         >
-                          Sign In
+                          {t("nav.signIn")}
                         </button>
                       }
+                      nextPath={pendingNext}
                     />
                     <button
                       type="button"
@@ -325,7 +369,7 @@ export function Header() {
                       }}
                       className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-sol-navy text-[15px] font-semibold text-white"
                     >
-                      Find My Business Idea
+                      {t("nav.findMyBusinessIdea")}
                       <ArrowRight className="size-4 text-sol-champagne" aria-hidden="true" />
                     </button>
                   </>

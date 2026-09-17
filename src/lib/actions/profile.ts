@@ -38,7 +38,17 @@ function hashProfile(profile: NormalizedProfile): string {
  * any circumstance.
  */
 export const completeConsultation = createServerFn({ method: "POST" })
-  .validator(z.object({ answers: onboardingAnswersSchema }))
+  .validator(
+    z.object({
+      answers: onboardingAnswersSchema,
+      // The founder's product-language choice at submit time — threaded
+      // through to the one Gemini call below so generated founderDNA/
+      // opportunity text comes back written directly in that language.
+      // Optional/defaulted so an older client build (or a direct API
+      // call) still works exactly as before, in English.
+      locale: z.enum(["en", "hi"]).optional(),
+    }),
+  )
   .handler(async ({ data }) => {
     const { supabase, user } = await requireUser();
     const answers = data.answers as Parameters<typeof normalizeProfile>[0];
@@ -80,7 +90,7 @@ export const completeConsultation = createServerFn({ method: "POST" })
     const overallStart = Date.now();
     let pkg: Awaited<ReturnType<typeof generateIntelligencePackage>>;
     try {
-      pkg = await generateIntelligencePackage(normalized, ambition);
+      pkg = await generateIntelligencePackage(normalized, ambition, data.locale ?? "en");
     } catch (err) {
       // Dev-diagnostic detail only — the category never reaches the user,
       // who always sees the same calm "couldn't complete your analysis"
@@ -222,12 +232,29 @@ export const completeConsultation = createServerFn({ method: "POST" })
       throw err;
     }
 
-    if (user.email) void sendIdeasReadyEmail(user.email, scored[0].opp.title);
+    if (user.email) {
+      const fullName = (user.user_metadata?.full_name as string | undefined) ?? null;
+      void sendIdeasReadyEmail(user.email, fullName, {
+        businessDnaId: dnaRow.id,
+        primary: {
+          title: scored[0].opp.title,
+          oneLiner: scored[0].opp.plainEnglishSummary,
+          fitScore: scored[0].score.total,
+          weeklyTime: scored[0].opp.weeklyTime ?? null,
+        },
+        alternatives: scored
+          .slice(1)
+          .map((s) => ({ title: s.opp.title, oneLiner: s.opp.plainEnglishSummary })),
+      });
+    }
     void notifyFounder(supabase, user.id, {
       type: "ideas_ready",
       title: "Your ideas are ready",
       body: `Sol found ${scored.length} directions for you — ${scored[0].opp.title} is the strongest match.`,
-      link: "/dashboard",
+      // Pinned to THIS consultation — see dashboard.ts's consultationId
+      // param — never a bare "/dashboard" that could show a different,
+      // later consultation's ideas by the time this notification is read.
+      link: `/dashboard?consultation=${dnaRow.id}`,
     });
 
     return { businessDnaId: dnaRow.id as string, founderDNA: pkg.founderDNA };
@@ -302,19 +329,24 @@ export const updateFounderProfileAnswers = createServerFn({ method: "POST" })
  * default dashboard view (see getDashboard's "latest consultation" rule)
  * and remain reachable from Idea History.
  */
-export const reanalyzeFromCurrentProfile = createServerFn({ method: "POST" }).handler(async () => {
-  const { supabase, user } = await requireUser();
-  const { data: latest, error } = await supabase
-    .from("business_dna")
-    .select("onboarding_answers")
-    .eq("user_id", user.id)
-    .order("created_at", { ascending: false })
-    .limit(1)
-    .maybeSingle();
-  if (error) throw new Error(error.message);
-  if (!latest) throw new Error("No consultation found to re-analyze.");
+export const reanalyzeFromCurrentProfile = createServerFn({ method: "POST" })
+  .validator(z.object({ locale: z.enum(["en", "hi"]).optional() }).optional())
+  .handler(async ({ data }) => {
+    const { supabase, user } = await requireUser();
+    const { data: latest, error } = await supabase
+      .from("business_dna")
+      .select("onboarding_answers")
+      .eq("user_id", user.id)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    if (error) throw new Error(error.message);
+    if (!latest) throw new Error("No consultation found to re-analyze.");
 
-  return completeConsultation({
-    data: { answers: latest.onboarding_answers as Record<string, unknown> },
+    return completeConsultation({
+      data: {
+        answers: latest.onboarding_answers as Record<string, unknown>,
+        locale: data?.locale,
+      },
+    });
   });
-});

@@ -204,11 +204,16 @@ export const RoadmapPhaseSkeletonSchema = z.object({
 export type RoadmapPhaseSkeletonPlan = z.infer<typeof RoadmapPhaseSkeletonSchema>;
 
 export const RoadmapSkeletonSchema = z.object({
+  // One sentence a founder can hold onto for the whole roadmap — never
+  // essay-length, never restated per phase.
+  northStar: z.string().describe("One sentence: what this whole roadmap is building toward."),
   phases: z
     .array(RoadmapPhaseSkeletonSchema)
     .min(4)
     .max(8)
-    .describe("Together should span roughly 40-52 weeks of realistic founder progress."),
+    .describe(
+      "Aim for 6-8 phases for most businesses; together should span roughly 26-52 weeks of realistic founder progress depending on this specific business and founder's real capacity — never a fixed length.",
+    ),
 });
 export type RoadmapSkeletonPlan = z.infer<typeof RoadmapSkeletonSchema>;
 

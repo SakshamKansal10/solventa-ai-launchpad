@@ -39,21 +39,25 @@ export const sendMentorMessage = createServerFn({ method: "POST" })
 
     const conversationId = await getOrCreateConversation(supabase, user.id, data.opportunityId);
 
-    const { data: history, error: historyError } = await supabase
-      .from("mentor_messages")
-      .select("role, content")
-      .eq("conversation_id", conversationId)
-      .order("created_at", { ascending: true })
-      .limit(20);
+    // Neither of these depends on the other's result — only on
+    // conversationId/user.id, both already known — so they run as one
+    // round trip instead of two sequential ones.
+    const [{ data: history, error: historyError }, dnaRow] = await Promise.all([
+      supabase
+        .from("mentor_messages")
+        .select("role, content")
+        .eq("conversation_id", conversationId)
+        .order("created_at", { ascending: true })
+        .limit(20),
+      supabase
+        .from("business_dna")
+        .select("normalized_signals")
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .single(),
+    ]);
     if (historyError) throw new Error(historyError.message);
-
-    const dnaRow = await supabase
-      .from("business_dna")
-      .select("normalized_signals")
-      .eq("user_id", user.id)
-      .order("created_at", { ascending: false })
-      .limit(1)
-      .single();
     if (dnaRow.error || !dnaRow.data)
       throw new Error("Complete the consultation before talking to Sol.");
     const profile = dnaRow.data.normalized_signals as unknown as NormalizedProfile;
@@ -63,21 +67,20 @@ export const sendMentorMessage = createServerFn({ method: "POST" })
     let currentWeek: { title: string; mission: string | null } | null = null;
     let nextTaskWhat: string | null = null;
     if (data.opportunityId) {
-      const opp = await supabase
-        .from("opportunities")
-        .select("title")
-        .eq("id", data.opportunityId)
-        .single();
+      // Same reasoning — both only need data.opportunityId, already known.
+      const [opp, roadmap] = await Promise.all([
+        supabase.from("opportunities").select("title").eq("id", data.opportunityId).single(),
+        supabase
+          .from("roadmaps")
+          .select(
+            "id, roadmap_phases(title, order_index, roadmap_weeks(title, mission, status), roadmap_tasks(what, status, required, order_index))",
+          )
+          .eq("opportunity_id", data.opportunityId)
+          .eq("status", "active")
+          .maybeSingle(),
+      ]);
       opportunityTitle = opp.data?.title ?? null;
 
-      const roadmap = await supabase
-        .from("roadmaps")
-        .select(
-          "id, roadmap_phases(title, order_index, roadmap_weeks(title, mission, status), roadmap_tasks(what, status, required, order_index))",
-        )
-        .eq("opportunity_id", data.opportunityId)
-        .eq("status", "active")
-        .maybeSingle();
       const phases = (
         roadmap.data as unknown as {
           roadmap_phases: {

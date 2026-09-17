@@ -21,11 +21,32 @@ import {
   getPasswordSignInErrorMessage,
 } from "@/lib/auth-error-messages";
 import { OTP_MAX_LENGTH, sanitizeOtpInput, isOtpLengthPlausible } from "@/lib/otp";
+import { useLocale } from "@/lib/i18n/LocaleProvider";
 
 const RESEND_COOLDOWN_SECONDS = 30;
 
-export function SignInDialog({ trigger }: { trigger: ReactNode }) {
-  const [open, setOpen] = useState(false);
+interface SignInDialogProps {
+  trigger: ReactNode;
+  /** Sanitized, same-origin destination to return to after signing in
+   * (e.g. a dashboard deep link from an email) — falls back to
+   * "/dashboard" when absent. Never trusted as-is by this component; the
+   * caller (Header, via sanitizeNextPath) is responsible for validating
+   * it before it ever reaches here. */
+  nextPath?: string | null;
+  /** Lets a caller force this dialog open (e.g. Header auto-opening it
+   * when the URL carries a `next` redirect target) instead of only ever
+   * opening via its own trigger. Uncontrolled — manages its own open
+   * state — when omitted. */
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+}
+
+export function SignInDialog({ trigger, nextPath, open, onOpenChange }: SignInDialogProps) {
+  const { t } = useLocale();
+  const [internalOpen, setInternalOpen] = useState(false);
+  const isControlled = open !== undefined;
+  const dialogOpen = isControlled ? open : internalOpen;
+  const setDialogOpen = isControlled ? (onOpenChange ?? (() => {})) : setInternalOpen;
   const [mode, setMode] = useState<"password" | "otp">("password");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -35,6 +56,9 @@ export function SignInDialog({ trigger }: { trigger: ReactNode }) {
   const [resendCooldown, setResendCooldown] = useState(0);
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const googleRedirectPath = nextPath
+    ? `/auth/callback?next=${encodeURIComponent(nextPath)}`
+    : "/auth/callback";
 
   function tickCooldown() {
     setResendCooldown(RESEND_COOLDOWN_SECONDS);
@@ -53,7 +77,15 @@ export function SignInDialog({ trigger }: { trigger: ReactNode }) {
     // A different account may be signing in on a tab that still has a
     // previous account's cached data — never show it to the new user.
     queryClient.clear();
-    setOpen(false);
+    setDialogOpen(false);
+    if (nextPath) {
+      // nextPath can carry its own query string (e.g. a specific
+      // consultation id) — a full navigation via the browser handles that
+      // correctly without needing it to be a typed, known-at-build-time
+      // route, unlike the router's own `navigate({ to })`.
+      window.location.assign(nextPath);
+      return;
+    }
     navigate({ to: "/dashboard" });
   }
 
@@ -129,9 +161,9 @@ export function SignInDialog({ trigger }: { trigger: ReactNode }) {
 
   return (
     <Dialog
-      open={open}
+      open={dialogOpen}
       onOpenChange={(next) => {
-        setOpen(next);
+        setDialogOpen(next);
         if (!next) {
           setMode("password");
           setCode("");
@@ -145,7 +177,7 @@ export function SignInDialog({ trigger }: { trigger: ReactNode }) {
           <>
             <DialogHeader>
               <DialogTitle className="font-display text-2xl text-primary">
-                Check your email for a code
+                {t("signin.checkEmail")}
               </DialogTitle>
               <DialogDescription>
                 We sent a verification code to <span className="text-foreground">{email}</span>.
@@ -176,7 +208,7 @@ export function SignInDialog({ trigger }: { trigger: ReactNode }) {
                 disabled={loading || !isOtpLengthPlausible(code)}
               >
                 {loading && <Loader2 className="size-4 animate-spin" aria-hidden="true" />}
-                Verify & sign in
+                {t("signin.verify")}
               </PremiumButton>
               <div className="flex items-center justify-between text-[0.8rem]">
                 <button
@@ -188,7 +220,7 @@ export function SignInDialog({ trigger }: { trigger: ReactNode }) {
                   }}
                   className="text-muted-foreground hover:text-primary"
                 >
-                  Back
+                  {t("signin.back")}
                 </button>
                 <button
                   type="button"
@@ -196,7 +228,9 @@ export function SignInDialog({ trigger }: { trigger: ReactNode }) {
                   onClick={requestCode}
                   className="font-medium text-primary disabled:text-muted-foreground"
                 >
-                  {resendCooldown > 0 ? `Resend code (${resendCooldown}s)` : "Resend code"}
+                  {resendCooldown > 0
+                    ? `${t("signin.resendCode")} (${resendCooldown}s)`
+                    : t("signin.resendCode")}
                 </button>
               </div>
             </form>
@@ -204,20 +238,24 @@ export function SignInDialog({ trigger }: { trigger: ReactNode }) {
         ) : (
           <>
             <DialogHeader>
-              <DialogTitle className="font-display text-2xl text-primary">Welcome back</DialogTitle>
-              <DialogDescription>Sign in to continue building with Solventia.</DialogDescription>
+              <DialogTitle className="font-display text-2xl text-primary">
+                {t("signin.welcomeBack")}
+              </DialogTitle>
+              <DialogDescription>
+                {nextPath ? "Sign in to pick up exactly where you left off." : t("signin.subhead")}
+              </DialogDescription>
             </DialogHeader>
             <div className="mt-2">
-              <GoogleSignInButton redirectPath="/auth/callback" />
+              <GoogleSignInButton redirectPath={googleRedirectPath} />
             </div>
             <div className="my-3 flex items-center gap-3">
               <div className="h-px flex-1 bg-border" />
-              <span className="text-[0.75rem] text-muted-foreground">or</span>
+              <span className="text-[0.75rem] text-muted-foreground">{t("signin.or")}</span>
               <div className="h-px flex-1 bg-border" />
             </div>
             <form onSubmit={handlePasswordSubmit} className="flex flex-col gap-4">
               <div className="flex flex-col gap-1.5">
-                <Label htmlFor="signin-email">Email</Label>
+                <Label htmlFor="signin-email">{t("signin.email")}</Label>
                 <Input
                   id="signin-email"
                   type="email"
@@ -228,7 +266,7 @@ export function SignInDialog({ trigger }: { trigger: ReactNode }) {
                 />
               </div>
               <div className="flex flex-col gap-1.5">
-                <Label htmlFor="signin-password">Password</Label>
+                <Label htmlFor="signin-password">{t("signin.password")}</Label>
                 <Input
                   id="signin-password"
                   type="password"
@@ -248,7 +286,7 @@ export function SignInDialog({ trigger }: { trigger: ReactNode }) {
                 disabled={loading}
               >
                 {loading && <Loader2 className="size-4 animate-spin" aria-hidden="true" />}
-                Sign In
+                {t("signin.submit")}
               </PremiumButton>
               <button
                 type="button"
@@ -256,7 +294,7 @@ export function SignInDialog({ trigger }: { trigger: ReactNode }) {
                 onClick={requestCode}
                 className="text-center text-[0.8rem] text-muted-foreground hover:text-primary disabled:opacity-50"
               >
-                Forgot your password? Sign in with a code instead
+                {t("signin.forgotPassword")}
               </button>
             </form>
           </>

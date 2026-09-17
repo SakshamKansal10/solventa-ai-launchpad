@@ -153,6 +153,7 @@ export interface Database {
           status: "available" | "active" | "archived";
           ai_model: string | null;
           activated_at: string | null;
+          north_star: string | null;
           created_at: string;
           updated_at: string;
         };

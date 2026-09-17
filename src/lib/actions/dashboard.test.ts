@@ -18,9 +18,18 @@ import { describe, it, expect, vi } from "vitest";
  */
 
 vi.mock("@tanstack/react-start", () => {
-  const handler = (fn: (args?: { data: unknown }) => unknown) => (args?: { data: unknown }) =>
-    fn(args);
-  return { createServerFn: () => ({ handler }) };
+  // Mirrors the real runtime, which always invokes a server function's
+  // handler with a fully-formed context object — `getDashboard()` with no
+  // arguments still reaches the handler as `{ data: undefined }`, never a
+  // bare `undefined`.
+  const handler = (fn: (args: { data: unknown }) => unknown) => (args?: { data: unknown }) =>
+    fn(args ?? { data: undefined });
+  return {
+    createServerFn: () => ({
+      handler,
+      validator: () => ({ handler }),
+    }),
+  };
 });
 vi.mock("@/lib/supabase/server", () => ({ requireUser: vi.fn() }));
 
@@ -281,5 +290,67 @@ describe("getDashboard primary-opportunity selection", () => {
     const dashboard = await getDashboard();
 
     expect(dashboard.primary?.id).toBe("opp-old-reselected");
+  });
+
+  it("REGRESSION: a consultationId deep link (e.g. from the ideas-ready email) pins the dashboard to THAT consultation, even when a newer one exists", async () => {
+    const opportunities: Row[] = [
+      {
+        id: "opp-emailed",
+        user_id: FAKE_USER.id,
+        business_dna_id: "dna-emailed",
+        status: "active",
+        fit_score: 82,
+        created_at: "2026-01-15T00:00:00Z",
+        title: "The idea the email actually described",
+      },
+      // A consultation run AFTER the email was sent but BEFORE it was
+      // clicked — without pinning, this would silently win as "latest".
+      {
+        id: "opp-newer",
+        user_id: FAKE_USER.id,
+        business_dna_id: LATEST_DNA_ID,
+        status: "active",
+        fit_score: 95,
+        created_at: "2026-02-01T00:00:00Z",
+        title: "A different, newer consultation's idea",
+      },
+    ];
+    const supabase = createFakeSupabase({
+      profiles: [],
+      opportunities,
+      business_dna: [LATEST_DNA_ROW, { id: "dna-emailed", user_id: FAKE_USER.id }],
+      roadmaps: [],
+    });
+    requireUserMock.mockResolvedValue({ supabase, user: FAKE_USER } as never);
+
+    const dashboard = await getDashboard({ data: { consultationId: "dna-emailed" } });
+
+    expect(dashboard.primary?.id).toBe("opp-emailed");
+    expect(dashboard.primary?.id).not.toBe("opp-newer");
+  });
+
+  it("REGRESSION: a consultationId that no longer resolves (e.g. a deleted consultation) falls back to the latest one instead of erroring", async () => {
+    const opportunities: Row[] = [
+      {
+        id: "opp-latest",
+        user_id: FAKE_USER.id,
+        business_dna_id: LATEST_DNA_ID,
+        status: "active",
+        fit_score: 70,
+        created_at: "2026-02-01T00:00:00Z",
+        title: "Latest consultation's idea",
+      },
+    ];
+    const supabase = createFakeSupabase({
+      profiles: [],
+      opportunities,
+      business_dna: [LATEST_DNA_ROW],
+      roadmaps: [],
+    });
+    requireUserMock.mockResolvedValue({ supabase, user: FAKE_USER } as never);
+
+    const dashboard = await getDashboard({ data: { consultationId: "dna-does-not-exist" } });
+
+    expect(dashboard.primary?.id).toBe("opp-latest");
   });
 });

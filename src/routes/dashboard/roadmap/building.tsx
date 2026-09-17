@@ -6,6 +6,8 @@ import { z } from "zod";
 import mark from "@/assets/solventia-mark.png";
 import { requireAuthLoader } from "@/lib/route-guards";
 import { buildRoadmapForOpportunity } from "@/lib/actions/opportunities";
+import { useLocale } from "@/lib/i18n/LocaleProvider";
+import { translateDashboardText } from "@/lib/i18n/dashboard-dictionary";
 
 export const Route = createFileRoute("/dashboard/roadmap/building")({
   beforeLoad: requireAuthLoader,
@@ -91,6 +93,8 @@ function BuildingPage() {
   const { opportunityId } = Route.useSearch();
   const navigate = useNavigate();
   const reduceMotion = useReducedMotion();
+  const { locale } = useLocale();
+  const tr = (s: string) => translateDashboardText(s, locale) ?? s;
   const [stageIndex, setStageIndex] = useState(0);
   const [microIndex, setMicroIndex] = useState(0);
   const [leaving, setLeaving] = useState(false);
@@ -100,7 +104,7 @@ function BuildingPage() {
   const [attempt, setAttempt] = useState(0);
 
   const mutation = useMutation({
-    mutationFn: () => buildRoadmapForOpportunity({ data: { opportunityId } }),
+    mutationFn: () => buildRoadmapForOpportunity({ data: { opportunityId, locale } }),
     onSuccess: () => {
       setStageIndex(STAGES.length - 1);
       setLeaving(true);
@@ -173,11 +177,12 @@ function BuildingPage() {
               className="h-[72px] w-auto opacity-70"
             />
             <h1 className="mt-8 font-display text-[32px] font-semibold leading-[1.1] text-sol-ink sm:text-[40px]">
-              We couldn&rsquo;t finish this mission yet.
+              {tr("We couldn't finish this mission yet.")}
             </h1>
             <p className="mt-4 max-w-[560px] text-[17px] leading-[27px] text-sol-secondary">
-              Nothing about your selection or your profile was lost — Sol just couldn&rsquo;t finish
-              building the roadmap this time.
+              {tr(
+                "Nothing about your selection or your profile was lost — Sol just couldn't finish building the roadmap this time.",
+              )}
             </p>
             <div className="mt-8 flex items-center gap-3">
               <button
@@ -185,7 +190,7 @@ function BuildingPage() {
                 onClick={handleRetry}
                 className="inline-flex h-[54px] items-center gap-2 rounded-2xl bg-sol-navy px-7 text-[15px] font-semibold text-white transition-colors hover:bg-sol-navy-soft"
               >
-                Try Again
+                {tr("Try Again")}
               </button>
               <button
                 type="button"
@@ -197,7 +202,7 @@ function BuildingPage() {
                 }
                 className="inline-flex h-[54px] items-center rounded-2xl border border-sol-border px-7 text-[15px] font-semibold text-sol-ink transition-colors hover:border-sol-champagne/50"
               >
-                Back to Opportunity
+                {tr("Back to Opportunity")}
               </button>
             </div>
           </>
@@ -205,10 +210,10 @@ function BuildingPage() {
           <>
             <OrbitLoader />
             <h1 className="mt-8 font-display text-[36px] font-semibold leading-[1.1] text-sol-ink sm:text-[40px] lg:text-[46px]">
-              Building your first founder mission.
+              {tr("Building your first founder mission.")}
             </h1>
             <p className="mt-4 max-w-[560px] text-[17px] leading-[27px] text-sol-secondary">
-              Your long-term direction is mapped. We&rsquo;re making Week 1 specific.
+              {tr("Your long-term direction is mapped. We're making Week 1 specific.")}
             </p>
 
             <ol className="mt-10 flex w-full max-w-[440px] flex-col gap-2.5">
@@ -237,7 +242,7 @@ function BuildingPage() {
                         color: isDone || isActive ? "var(--sol-ink)" : "var(--sol-muted)",
                       }}
                     >
-                      {stage}
+                      {tr(stage)}
                     </span>
                     {isActive && stageIndex >= ACTIVE_HOLD_INDEX && (
                       <motion.span
@@ -247,7 +252,7 @@ function BuildingPage() {
                         transition={{ duration: 0.4 }}
                         className="ml-auto whitespace-nowrap text-[12px] text-sol-secondary"
                       >
-                        {MICRO_STATUS[microIndex]}
+                        {tr(MICRO_STATUS[microIndex])}
                       </motion.span>
                     )}
                   </li>

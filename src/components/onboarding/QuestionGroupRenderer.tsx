@@ -5,6 +5,8 @@ import type { QuestionGroupStep } from "@/lib/onboarding-steps";
 import { useOnboarding } from "@/lib/onboarding-store";
 import { getStageTheme } from "@/lib/onboarding-themes";
 import { PremiumButton } from "@/components/solventia/PremiumButton";
+import { useLocale } from "@/lib/i18n/LocaleProvider";
+import { translateOnboardingText } from "@/lib/i18n/onboarding-dictionary";
 
 /** Several short, related chip questions on one screen — the actual
  * mechanism behind "group similar MCQs together." Each sub-question is
@@ -12,6 +14,8 @@ import { PremiumButton } from "@/components/solventia/PremiumButton";
  * Continue button, gated on every item having an answer. */
 export function QuestionGroupRenderer({ step }: { step: QuestionGroupStep }) {
   const { answers, setAnswer, goNext } = useOnboarding();
+  const { locale } = useLocale();
+  const tr = (s?: string) => translateOnboardingText(s, locale);
   const theme = getStageTheme(step.section);
 
   const allAnswered = step.items.every((item) => answers[item.id] !== undefined);
@@ -20,11 +24,11 @@ export function QuestionGroupRenderer({ step }: { step: QuestionGroupStep }) {
     <div className="flex w-full flex-col gap-9">
       <div className="text-center">
         <h2 className="font-display text-[clamp(1.7rem,3.6vw,2.5rem)] font-semibold leading-[1.25] text-primary">
-          {step.title}
+          {tr(step.title)}
         </h2>
         {step.helper && (
           <p className="mx-auto mt-3 max-w-[46ch] text-[0.98rem] leading-[1.7] text-muted-foreground">
-            {step.helper}
+            {tr(step.helper)}
           </p>
         )}
       </div>
@@ -34,7 +38,7 @@ export function QuestionGroupRenderer({ step }: { step: QuestionGroupStep }) {
           const value = answers[item.id];
           return (
             <div key={item.id} className="flex flex-col gap-3">
-              <p className="text-[0.9rem] font-semibold text-foreground">{item.label}</p>
+              <p className="text-[0.9rem] font-semibold text-foreground">{tr(item.label)}</p>
               <div className="grid gap-2.5 sm:grid-cols-2">
                 {item.options.map((option) => {
                   const selected = value === option;
@@ -57,7 +61,7 @@ export function QuestionGroupRenderer({ step }: { step: QuestionGroupStep }) {
                           "border-border bg-card text-foreground hover:border-primary/30",
                       )}
                     >
-                      {option}
+                      {tr(option)}
                       <AnimatePresence>
                         {selected && (
                           <motion.span
@@ -91,7 +95,7 @@ export function QuestionGroupRenderer({ step }: { step: QuestionGroupStep }) {
           disabled={!allAnswered}
           onClick={goNext}
         >
-          Continue
+          {tr("Continue")}
           <ArrowRight className="size-4 text-accent" aria-hidden="true" />
         </PremiumButton>
       </div>

@@ -103,24 +103,28 @@ export const getRoadmap = createServerFn({ method: "GET" })
       };
     const opportunity = opportunities;
 
-    const { data: phases, error: phasesError } = await supabase
-      .from("roadmap_phases")
-      .select("*, roadmap_weeks(*, roadmap_tasks(*)), roadmap_tasks(*)")
-      .eq("roadmap_id", roadmap.id)
-      .order("order_index");
+    // Neither of these depends on the other — phases only needs
+    // roadmap.id (already resolved above), dnaRow only needs user.id —
+    // so they run as one round trip instead of two sequential ones.
+    const [{ data: phases, error: phasesError }, dnaRow] = await Promise.all([
+      supabase
+        .from("roadmap_phases")
+        .select("*, roadmap_weeks(*, roadmap_tasks(*)), roadmap_tasks(*)")
+        .eq("roadmap_id", roadmap.id)
+        .order("order_index"),
+      // Read-only — a compact founder summary for the roadmap header's
+      // "built around your Xh/week and ₹Y capital" line. Never used to
+      // generate or recompute anything, just to display real,
+      // already-stored numbers instead of a generic subtitle.
+      supabase
+        .from("business_dna")
+        .select("normalized_signals")
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle(),
+    ]);
     if (phasesError) throw new Error(phasesError.message);
-
-    // Read-only — a compact founder summary for the roadmap header's "built
-    // around your Xh/week and ₹Y capital" line. Never used to generate or
-    // recompute anything, just to display real, already-stored numbers
-    // instead of a generic subtitle.
-    const dnaRow = await supabase
-      .from("business_dna")
-      .select("normalized_signals")
-      .eq("user_id", user.id)
-      .order("created_at", { ascending: false })
-      .limit(1)
-      .maybeSingle();
     const signals = dnaRow.data?.normalized_signals as unknown as NormalizedProfile | undefined;
     const founderSummary = signals
       ? {
@@ -150,6 +154,10 @@ export const updateTaskStatus = createServerFn({ method: "POST" })
        * (see generateWeekDetail). Always optional; a founder should never
        * be blocked from finishing a task just to write a reflection. */
       weekReflection: z.string().optional(),
+      /** The founder's product-language choice — read here (not just on
+       * roadmap build) because finishing a week's last task is exactly
+       * where the NEXT week's real detail gets generated server-side. */
+      locale: z.enum(["en", "hi"]).optional(),
     }),
   )
   .handler(async ({ data }) => {
@@ -201,11 +209,17 @@ export const updateTaskStatus = createServerFn({ method: "POST" })
             link: "/dashboard/roadmap",
           });
           try {
-            await generateAndPersistWeekDetail(supabase, user.id, result.nextWeek, {
-              title: result.completedWeekTitle,
-              completedTasks: result.completedTaskWhats,
-              reflection: data.weekReflection ?? null,
-            });
+            await generateAndPersistWeekDetail(
+              supabase,
+              user.id,
+              result.nextWeek,
+              {
+                title: result.completedWeekTitle,
+                completedTasks: result.completedTaskWhats,
+                reflection: data.weekReflection ?? null,
+              },
+              data.locale,
+            );
           } catch (err) {
             console.error("[roadmap] next-week detail generation failed after unlock:", err);
           }
@@ -235,6 +249,7 @@ async function generateAndPersistWeekDetail(
     phaseDescription: string;
   },
   priorWeek: { title: string; completedTasks: string[]; reflection: string | null } | null,
+  locale?: "en" | "hi",
 ): Promise<void> {
   const { data: phaseRow, error: phaseError } = await supabase
     .from("roadmap_phases")
@@ -268,14 +283,19 @@ async function generateAndPersistWeekDetail(
   const profile = dnaRow.normalized_signals as unknown as NormalizedProfile;
   const opportunity = opportunityRow.candidate as unknown as OpportunityPackage;
 
-  const detail = await generateWeekDetail(profile, opportunity, {
-    phaseTitle: week.phaseTitle,
-    phaseDescription: week.phaseDescription,
-    weekTitle: week.title,
-    weekObjective: week.objective,
-    weekNumber: week.weekNumber,
-    priorWeek,
-  });
+  const detail = await generateWeekDetail(
+    profile,
+    opportunity,
+    {
+      phaseTitle: week.phaseTitle,
+      phaseDescription: week.phaseDescription,
+      weekTitle: week.title,
+      weekObjective: week.objective,
+      weekNumber: week.weekNumber,
+      priorWeek,
+    },
+    locale,
+  );
 
   await persistWeekDetail(supabase, userId, week.id, week.phaseId, detail, new Date());
 }
@@ -287,7 +307,7 @@ async function generateAndPersistWeekDetail(
  * (returns immediately) if the week already has tasks, so a duplicate
  * click can never generate two conflicting sets of tasks for one week. */
 export const generateActiveWeekDetail = createServerFn({ method: "POST" })
-  .validator(z.object({ weekId: z.string().uuid() }))
+  .validator(z.object({ weekId: z.string().uuid(), locale: z.enum(["en", "hi"]).optional() }))
   .handler(async ({ data }) => {
     const { supabase, user } = await requireUser();
 
@@ -355,6 +375,7 @@ export const generateActiveWeekDetail = createServerFn({ method: "POST" })
             reflection: prevWeek.founder_reflection,
           }
         : null,
+      data.locale,
     );
 
     return { ok: true, alreadyGenerated: false };

@@ -28,6 +28,8 @@ import { NotificationBell } from "@/components/dashboard/NotificationBell";
 import { FeedbackDialog } from "@/components/dashboard/FeedbackDialog";
 import { getCurrentUser, signOut } from "@/lib/actions/auth";
 import { cn } from "@/lib/utils";
+import { useLocale } from "@/lib/i18n/LocaleProvider";
+import { translateDashboardText } from "@/lib/i18n/dashboard-dictionary";
 
 /** Lets any page rendered inside DashboardShell trigger the mentor panel
  * (e.g. a page-level "Ask Sol" section), without lifting mentorOpen state
@@ -132,6 +134,8 @@ function NavLink({
   currentPath: string;
   onNavigate: () => void;
 }) {
+  const { locale } = useLocale();
+  const tr = (s: string) => translateDashboardText(s, locale) ?? s;
   const Icon = item.icon;
   const isActive =
     item.isRealDestination && item.to !== undefined && !item.hash && currentPath === item.to;
@@ -140,10 +144,10 @@ function NavLink({
     return (
       <div
         className="group relative flex h-12 cursor-default items-center gap-3 rounded-xl px-3.5 text-[15px] font-medium text-[#9B95A2]"
-        title="Build your roadmap after selecting a direction."
+        title={tr("Build your roadmap after selecting a direction.")}
       >
         <Lock className="size-[18px] shrink-0" aria-hidden="true" strokeWidth={1.75} />
-        <span>{item.label}</span>
+        <span>{tr(item.label)}</span>
       </div>
     );
   }
@@ -167,7 +171,7 @@ function NavLink({
         />
       )}
       <Icon className="size-[18px] shrink-0" aria-hidden="true" strokeWidth={1.75} />
-      <span>{item.label}</span>
+      <span>{tr(item.label)}</span>
     </Link>
   );
 }
@@ -198,6 +202,8 @@ function SidebarContent({
   const navItems = useNavItems(opportunityId, hasRoadmap);
   const currentPath = useRouterState({ select: (s) => s.location.pathname });
   const currentUser = useQuery({ queryKey: ["current-user"], queryFn: () => getCurrentUser() });
+  const { locale } = useLocale();
+  const tr = (s: string) => translateDashboardText(s, locale) ?? s;
 
   return (
     <div className="relative flex h-full flex-col">
@@ -244,7 +250,7 @@ function SidebarContent({
                   {firstNameFromEmail(currentUser.data?.email)}
                 </span>
                 <span className="flex items-center gap-0.5 text-[0.72rem] text-sol-secondary">
-                  View profile
+                  {tr("View profile")}
                   <ChevronRight className="size-3" aria-hidden="true" />
                 </span>
               </span>
@@ -254,7 +260,7 @@ function SidebarContent({
             <DropdownMenuItem asChild>
               <Link to="/dashboard/settings" onClick={onNavigate} className="cursor-pointer">
                 <Settings className="size-4" aria-hidden="true" />
-                Settings
+                {tr("Settings")}
               </Link>
             </DropdownMenuItem>
             <DropdownMenuItem onClick={onOpenFeedback} className="cursor-pointer">
@@ -264,7 +270,7 @@ function SidebarContent({
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={onSignOut} className="cursor-pointer">
               <LogOut className="size-4" aria-hidden="true" />
-              Sign Out
+              {tr("Sign Out")}
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
@@ -286,6 +292,8 @@ export function DashboardShell({
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const currentPath = useRouterState({ select: (s) => s.location.pathname });
+  const { locale } = useLocale();
+  const tr = (s: string) => translateDashboardText(s, locale) ?? s;
 
   async function handleSignOut() {
     try {
@@ -355,7 +363,7 @@ export function DashboardShell({
            * never a second nav ===== */}
           <header className="sticky top-0 z-30 hidden h-[72px] shrink-0 items-center justify-between border-b border-sol-border bg-[rgba(247,243,236,0.90)] px-8 backdrop-blur-xl lg:flex lg:px-12">
             <p className="text-[0.95rem] font-semibold text-sol-ink">
-              {pageTitleFromPath(currentPath, pageTitle)}
+              {tr(pageTitleFromPath(currentPath, pageTitle))}
             </p>
             <NotificationBell />
           </header>
@@ -381,7 +389,15 @@ export function DashboardShell({
             </div>
           </header>
 
-          <main className="mx-auto flex w-full max-w-[1440px] flex-1 flex-col gap-0 px-[18px] py-9 sm:px-6 lg:px-12 lg:py-14">
+          {/* Right padding is always wider than left — the fixed Ask Sol
+              trigger below reserves a viewport-corner strip (offset + button
+              size) that content would otherwise render underneath whenever a
+              row's vertical position happens to land in the trigger's zone.
+              The trigger is deliberately smaller on mobile (44px vs 60px) so
+              this reservation stays proportionate instead of eating a large
+              chunk of a narrow screen — 56px covers its 12px+44px mobile
+              footprint exactly; 96px covers its 28px+60px desktop one. */}
+          <main className="mx-auto flex w-full max-w-[1440px] flex-1 flex-col gap-0 pl-[18px] pr-14 py-9 sm:px-6 sm:pr-10 lg:pl-12 lg:pr-24 lg:py-14">
             {children}
           </main>
         </div>
@@ -408,13 +424,20 @@ export function DashboardShell({
         <FeedbackDialog open={feedbackOpen} onOpenChange={setFeedbackOpen} />
 
         {/* ===== FLOATING ASK SOL TRIGGER — the ONLY Ask Sol entry point;
-         * no separate nav item, no separate large CTA card ===== */}
+         * no separate nav item, no separate large CTA card =====
+         * Smaller and closer to the corner on mobile (44px, the accessible
+         * touch-target minimum, at bottom-4/right-3) than on desktop (60px
+         * at bottom-7/right-7) — a real screen-width tradeoff, not just a
+         * cosmetic shrink: <main>'s pr-14 above reserves exactly this
+         * mobile footprint, so content can never render underneath it,
+         * without reserving anywhere near the ~90px a same-size-everywhere
+         * button would have required on a 390px-wide screen. */}
         {!mentorOpen && (
           <button
             type="button"
             onClick={() => setMentorOpen(true)}
             aria-label="Ask Sol"
-            className="group fixed bottom-7 right-7 z-30 flex size-[60px] items-center justify-center rounded-full transition-transform duration-150 hover:scale-[1.04]"
+            className="group fixed bottom-4 right-3 z-30 flex size-11 items-center justify-center rounded-full transition-transform duration-150 hover:scale-[1.04] sm:bottom-7 sm:right-7 sm:size-[60px]"
             style={{
               background: "linear-gradient(135deg, var(--sol-violet), var(--sol-champagne))",
               boxShadow: "0 12px 32px rgba(86,62,183,.24)",
@@ -425,7 +448,7 @@ export function DashboardShell({
               alt=""
               width={298}
               height={436}
-              className="h-7 w-auto transition-transform duration-150 group-hover:rotate-[4deg]"
+              className="h-5 w-auto transition-transform duration-150 group-hover:rotate-[4deg] sm:h-7"
             />
           </button>
         )}

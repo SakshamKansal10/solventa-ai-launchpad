@@ -23,6 +23,10 @@ dist-ssr
 # Vercel
 .vercel/
 
+# Dev-tool script output (e.g. scripts/test-master-prompt-fresh.ts) — real
+# QA data from a live run, never build artifacts or product code.
+scripts/_output/
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
