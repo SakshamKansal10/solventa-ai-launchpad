@@ -108,10 +108,10 @@ function DashboardHome() {
     try {
       await exploreMoreOpportunities({ data: { locale } });
       await refresh();
-      toast.success("Sol found a few more directions worth considering.");
+      toast.success(tr("Sol found a few more directions worth considering."));
     } catch (err) {
       console.error("[dashboard] explore more failed:", err);
-      toast.error("Sol couldn't find more opportunities right now — try again in a moment.");
+      toast.error(tr("Sol couldn't find more opportunities right now — try again in a moment."));
     } finally {
       setExploring(false);
     }
@@ -123,11 +123,13 @@ function DashboardHome() {
       await switchSelectedOpportunity({ data: { opportunityId } });
       await refresh();
       toast.success(
-        "Set as your primary direction. Your previous roadmap, if any, has been archived — you can revisit it anytime.",
+        tr(
+          "Set as your primary direction. Your previous roadmap, if any, has been archived — you can revisit it anytime.",
+        ),
       );
     } catch (err) {
       console.error("[dashboard] switch opportunity failed:", err);
-      toast.error("Couldn't switch opportunities — try again.");
+      toast.error(tr("Couldn't switch opportunities — try again."));
     } finally {
       setSwitching(null);
     }

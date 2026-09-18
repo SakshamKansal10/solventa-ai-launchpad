@@ -4,6 +4,8 @@ import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 import { QuestionRenderer } from "@/components/onboarding/QuestionRenderer";
 import { OnboardingProvider, useOnboarding } from "@/lib/onboarding-store";
 import type { OnboardingAnswers } from "@/lib/onboarding-types";
+import { useLocale } from "@/lib/i18n/LocaleProvider";
+import { translateDashboardText } from "@/lib/i18n/dashboard-dictionary";
 
 export interface FounderProfileRow {
   key: string;
@@ -96,6 +98,9 @@ export function FounderProfileEditSheet({
   currentAnswers: OnboardingAnswers;
   onSaved: (patch: Partial<OnboardingAnswers>) => void;
 }) {
+  const { locale } = useLocale();
+  const tr = (s: string) => translateDashboardText(s, locale) ?? s;
+
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent
@@ -103,7 +108,7 @@ export function FounderProfileEditSheet({
         className="flex w-full flex-col gap-0 border-sol-border bg-sol-surface p-[28px] sm:max-w-[440px]"
       >
         <SheetTitle className="font-display text-[1.15rem] font-semibold text-sol-ink">
-          Edit {row?.label ?? ""}
+          {tr("Edit")} {row ? tr(row.label) : ""}
         </SheetTitle>
         {open && row && (
           <OnboardingProvider key={row.key} initialAnswers={currentAnswers}>

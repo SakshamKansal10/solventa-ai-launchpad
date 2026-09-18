@@ -7,10 +7,25 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { getNotifications, markAllNotificationsRead } from "@/lib/actions/notifications";
+import { useLocale } from "@/lib/i18n/LocaleProvider";
+import { translateDashboardText } from "@/lib/i18n/dashboard-dictionary";
+import type { Locale } from "@/lib/i18n/dictionary";
 
-function timeAgo(iso: string): string {
+/** A templated ("5m ago") string, not a fixed UI label — handled directly
+ * per-locale rather than through the fixed-string dictionary lookup every
+ * other label in this file uses (translateDashboardText can't translate a
+ * string it's never seen a literal match for). */
+function timeAgo(iso: string, locale: Locale): string {
   const ms = Date.now() - new Date(iso).getTime();
   const mins = Math.round(ms / 60000);
+  if (locale === "hi") {
+    if (mins < 1) return "अभी";
+    if (mins < 60) return `${mins} मिनट पहले`;
+    const hours = Math.round(mins / 60);
+    if (hours < 24) return `${hours} घंटे पहले`;
+    const days = Math.round(hours / 24);
+    return `${days} दिन पहले`;
+  }
   if (mins < 1) return "Just now";
   if (mins < 60) return `${mins}m ago`;
   const hours = Math.round(mins / 60);
@@ -25,6 +40,8 @@ function timeAgo(iso: string): string {
  * written by the server action that caused it (see notifications.ts). */
 export function NotificationBell() {
   const queryClient = useQueryClient();
+  const { locale } = useLocale();
+  const tr = (s: string) => translateDashboardText(s, locale) ?? s;
   const query = useQuery({
     queryKey: ["founder-notifications"],
     queryFn: () => getNotifications(),
@@ -45,7 +62,7 @@ export function NotificationBell() {
       <DropdownMenuTrigger asChild>
         <button
           type="button"
-          aria-label="Notifications"
+          aria-label={tr("Notifications")}
           className="relative flex size-9 items-center justify-center rounded-full text-sol-ink transition-colors hover:bg-sol-violet-mist/60"
         >
           <Bell className="size-[18px]" aria-hidden="true" strokeWidth={1.75} />
@@ -56,12 +73,12 @@ export function NotificationBell() {
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-80 p-0">
         <div className="border-b border-sol-border px-4 py-3">
-          <p className="text-[0.85rem] font-semibold text-sol-ink">Notifications</p>
+          <p className="text-[0.85rem] font-semibold text-sol-ink">{tr("Notifications")}</p>
         </div>
         <div className="max-h-[360px] overflow-y-auto">
           {notifications.length === 0 ? (
             <p className="px-4 py-6 text-center text-[0.85rem] text-sol-muted">
-              Nothing yet — real updates about your ideas and roadmap will show up here.
+              {tr("Nothing yet — real updates about your ideas and roadmap will show up here.")}
             </p>
           ) : (
             notifications.map((n) => {
@@ -79,7 +96,9 @@ export function NotificationBell() {
                   <p className="mt-0.5 text-[0.8rem] leading-relaxed text-sol-secondary">
                     {n.body}
                   </p>
-                  <p className="mt-1 text-[0.7rem] text-sol-muted">{timeAgo(n.created_at)}</p>
+                  <p className="mt-1 text-[0.7rem] text-sol-muted">
+                    {timeAgo(n.created_at, locale)}
+                  </p>
                 </div>
               );
               return n.link ? (

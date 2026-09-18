@@ -6,6 +6,8 @@ import type { NormalizedProfile } from "@/lib/profile/normalize";
 import { toDisplayFounderDNA } from "@/lib/founder-dna-display";
 import { formatCompactMoney } from "@/lib/country-currency";
 import { cn } from "@/lib/utils";
+import { useLocale } from "@/lib/i18n/LocaleProvider";
+import { translateDashboardText } from "@/lib/i18n/dashboard-dictionary";
 
 interface BusinessDnaPanelProps {
   analysis: FounderDNA | FounderAnalysis | null;
@@ -48,9 +50,11 @@ function DnaBlock({ label, items }: { label: string; items: string[] }) {
 export function BusinessDnaPanel({ analysis, signals }: BusinessDnaPanelProps) {
   const [expanded, setExpanded] = useState(false);
   const dna = toDisplayFounderDNA(analysis);
+  const { locale } = useLocale();
+  const tr = (s: string) => translateDashboardText(s, locale) ?? s;
 
   const resourceChips = [
-    `${signals.time.weeklyHours} hrs/week`,
+    `${signals.time.weeklyHours} ${tr("hrs/week")}`,
     `~${formatCompactMoney(signals.resources.capitalAmount, signals.identity.currency)}`,
     ...(dna?.resources.slice(0, 2) ?? signals.resources.assets.slice(0, 2)),
   ].filter(Boolean);
@@ -64,26 +68,26 @@ export function BusinessDnaPanel({ analysis, signals }: BusinessDnaPanelProps) {
       className="scroll-mt-24 rounded-[1.75rem] border border-border/70 bg-card/70 p-6 sm:p-8"
     >
       <div className="flex items-center justify-between">
-        <p className="eyebrow text-gold">Your Business DNA</p>
+        <p className="eyebrow text-gold">{tr("Your Business DNA")}</p>
         <Link
           to="/consultation"
           className="text-[0.8rem] font-medium text-dashboard-muted hover:text-dashboard-heading"
         >
-          Update
+          {tr("Update")}
         </Link>
       </div>
 
       <div className="mt-6 grid gap-6 sm:grid-cols-2">
-        {dna && <DnaBlock label="Your Edge" items={dna.strengths.slice(0, 3)} />}
-        <DnaBlock label="Your Resources" items={resourceChips} />
-        {dna && <DnaBlock label="Your Constraints" items={dna.constraints.slice(0, 3)} />}
-        <DnaBlock label="Your Direction" items={directionChips} />
+        {dna && <DnaBlock label={tr("Your Edge")} items={dna.strengths.slice(0, 3)} />}
+        <DnaBlock label={tr("Your Resources")} items={resourceChips} />
+        {dna && <DnaBlock label={tr("Your Constraints")} items={dna.constraints.slice(0, 3)} />}
+        <DnaBlock label={tr("Your Direction")} items={directionChips} />
       </div>
 
       {solNote && (
         <div className="mt-6 rounded-xl border border-violet/18 bg-violet/5 p-4">
           <p className="text-[0.7rem] font-semibold uppercase tracking-wide text-violet">
-            Sol Noticed
+            {tr("Sol Noticed")}
           </p>
           <p className="mt-1.5 text-[0.9rem] leading-relaxed text-dashboard-body">{solNote}</p>
         </div>
@@ -100,7 +104,7 @@ export function BusinessDnaPanel({ analysis, signals }: BusinessDnaPanelProps) {
               className={cn("size-3.5 transition-transform", expanded && "rotate-180")}
               aria-hidden="true"
             />
-            {expanded ? "Hide full analysis" : "View full analysis"}
+            {expanded ? tr("Hide full analysis") : tr("View full analysis")}
           </button>
 
           {expanded && (
@@ -114,7 +118,7 @@ export function BusinessDnaPanel({ analysis, signals }: BusinessDnaPanelProps) {
                 {dna.workStyle && (
                   <div>
                     <dt className="text-[0.7rem] font-semibold uppercase tracking-wide text-dashboard-muted">
-                      Work Style
+                      {tr("Work Style")}
                     </dt>
                     <dd className="mt-1 text-[0.87rem] text-dashboard-body">{dna.workStyle}</dd>
                   </div>
@@ -122,11 +126,13 @@ export function BusinessDnaPanel({ analysis, signals }: BusinessDnaPanelProps) {
                 {(dna.riskProfile || signals.risk.appetite) && (
                   <div>
                     <dt className="text-[0.7rem] font-semibold uppercase tracking-wide text-dashboard-muted">
-                      Risk Profile
+                      {tr("Risk Profile")}
                     </dt>
                     <dd className="mt-1 text-[0.87rem] text-dashboard-body">
                       {dna.riskProfile ??
-                        (signals.risk.appetite ? RISK_LABEL[signals.risk.appetite] : "Unknown")}
+                        (signals.risk.appetite
+                          ? tr(RISK_LABEL[signals.risk.appetite])
+                          : tr("Unknown"))}
                     </dd>
                   </div>
                 )}
@@ -134,7 +140,7 @@ export function BusinessDnaPanel({ analysis, signals }: BusinessDnaPanelProps) {
               {dna.strategicSignals.length > 1 && (
                 <div>
                   <p className="text-[0.7rem] font-semibold uppercase tracking-wide text-dashboard-muted">
-                    More From Sol
+                    {tr("More From Sol")}
                   </p>
                   <ul className="mt-2 flex flex-col gap-1.5">
                     {dna.strategicSignals.slice(1).map((s) => (
@@ -168,9 +174,11 @@ const QUADRANTS: { key: "edge" | "resources" | "constraint" | "ambition"; label:
  * layout this quadrant intentionally leaves out. */
 export function BusinessDnaQuadrant({ analysis, signals }: BusinessDnaPanelProps) {
   const dna = toDisplayFounderDNA(analysis);
+  const { locale } = useLocale();
+  const tr = (s: string) => translateDashboardText(s, locale) ?? s;
 
   const resourceChips = [
-    `${signals.time.weeklyHours} hrs/week`,
+    `${signals.time.weeklyHours} ${tr("hrs/week")}`,
     `~${formatCompactMoney(signals.resources.capitalAmount, signals.identity.currency)}`,
     ...(dna?.resources.slice(0, 2) ?? signals.resources.assets.slice(0, 2)),
   ].filter(Boolean);
@@ -190,20 +198,20 @@ export function BusinessDnaQuadrant({ analysis, signals }: BusinessDnaPanelProps
     >
       <div className="flex items-center justify-between">
         <p className="text-[12px] font-semibold uppercase tracking-[0.12em] text-sol-champagne-deep">
-          Business DNA
+          {tr("Business DNA")}
         </p>
         <Link
           to="/consultation"
           className="text-[0.78rem] font-medium text-sol-secondary hover:text-sol-ink"
         >
-          Update
+          {tr("Update")}
         </Link>
       </div>
       <div className="mt-5 grid grid-cols-2 gap-x-6 gap-y-6">
         {QUADRANTS.map((q) => (
           <div key={q.key}>
             <p className="text-[0.68rem] font-semibold uppercase tracking-[0.1em] text-sol-muted">
-              {q.label}
+              {tr(q.label)}
             </p>
             <div className="mt-2 flex flex-col gap-1">
               {content[q.key].length > 0 ? (

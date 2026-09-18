@@ -7,6 +7,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { getMentorConversation, sendMentorMessage } from "@/lib/actions/mentor";
 import { cn } from "@/lib/utils";
+import { useLocale } from "@/lib/i18n/LocaleProvider";
+import { translateDashboardText } from "@/lib/i18n/dashboard-dictionary";
 
 interface MentorPanelProps {
   open: boolean;
@@ -47,6 +49,8 @@ export function MentorPanel({
   opportunityTitle,
 }: MentorPanelProps) {
   const queryClient = useQueryClient();
+  const { locale } = useLocale();
+  const tr = (s: string) => translateDashboardText(s, locale) ?? s;
   const conversationQuery = useQuery({
     queryKey: ["mentor-conversation", opportunityId],
     queryFn: () => getMentorConversation({ data: { opportunityId } }),
@@ -95,7 +99,10 @@ export function MentorPanel({
       console.error("[mentor] send failed:", err);
       setLocalMessages((prev) => [
         ...prev,
-        { role: "assistant", content: "Sol couldn't respond just now — try again in a moment." },
+        {
+          role: "assistant",
+          content: tr("Sol couldn't respond just now — try again in a moment."),
+        },
       ]);
     } finally {
       setSending(false);
@@ -128,13 +135,15 @@ export function MentorPanel({
                 <p className="font-display text-[1.05rem] font-semibold text-dashboard-heading">
                   Ask Sol
                 </p>
-                <p className="text-[0.72rem] text-dashboard-muted">Your founder assistant</p>
+                <p className="text-[0.72rem] text-dashboard-muted">
+                  {tr("Your founder assistant")}
+                </p>
               </div>
             </div>
             <button
               type="button"
               onClick={() => onOpenChange(false)}
-              aria-label="Close"
+              aria-label={tr("Close")}
               className="flex size-8 items-center justify-center rounded-full text-dashboard-muted transition-colors hover:bg-secondary hover:text-dashboard-heading"
             >
               <X className="size-4" aria-hidden="true" />
@@ -143,25 +152,25 @@ export function MentorPanel({
 
           <div ref={scrollRef} className="flex-1 overflow-y-auto px-6 py-5">
             {conversationQuery.isLoading ? (
-              <p className="text-sm text-dashboard-muted">Loading your conversation…</p>
+              <p className="text-sm text-dashboard-muted">{tr("Loading your conversation…")}</p>
             ) : localMessages.length === 0 ? (
               <div className="flex flex-col gap-6">
                 <div>
                   <p className="text-[0.95rem] font-medium leading-snug text-dashboard-heading">
                     {opportunityTitle
-                      ? `Working with you on ${opportunityTitle}.`
-                      : "Working with you on your business search."}
+                      ? `${tr("Working with you on")} ${opportunityTitle}.`
+                      : tr("Working with you on your business search.")}
                   </p>
                   <p className="mt-1.5 text-[0.82rem] leading-relaxed text-dashboard-muted">
                     {opportunityTitle
-                      ? "Sol knows your profile, this opportunity, and your roadmap progress."
-                      : "Sol knows your full profile and progress so far."}
+                      ? tr("Sol knows your profile, this opportunity, and your roadmap progress.")
+                      : tr("Sol knows your full profile and progress so far.")}
                   </p>
                 </div>
 
                 <div>
                   <p className="text-[0.68rem] font-semibold uppercase tracking-[0.1em] text-dashboard-muted">
-                    What can I help with?
+                    {tr("What can I help with?")}
                   </p>
                   <div className="mt-2.5 flex flex-col gap-2">
                     {(opportunityId
@@ -171,11 +180,11 @@ export function MentorPanel({
                       <button
                         key={prompt}
                         type="button"
-                        onClick={() => handleSend(prompt)}
+                        onClick={() => handleSend(tr(prompt))}
                         disabled={sending}
                         className="rounded-xl border border-sol-border px-4 py-2.5 text-left text-[0.9rem] font-medium text-dashboard-body transition-colors hover:border-sol-violet/40 hover:bg-sol-violet-mist/40 disabled:opacity-50"
                       >
-                        {prompt}
+                        {tr(prompt)}
                       </button>
                     ))}
                   </div>
@@ -199,7 +208,7 @@ export function MentorPanel({
                 {sending && (
                   <div className="flex items-center gap-2 text-dashboard-muted">
                     <Loader2 className="size-3.5 animate-spin" aria-hidden="true" />
-                    <span className="text-[0.8rem]">Sol is thinking…</span>
+                    <span className="text-[0.8rem]">{tr("Sol is thinking…")}</span>
                   </div>
                 )}
               </div>
@@ -216,7 +225,7 @@ export function MentorPanel({
                   handleSend();
                 }
               }}
-              placeholder="Ask Sol something specific…"
+              placeholder={tr("Ask Sol something specific…")}
               className="min-h-[44px] flex-1 resize-none"
             />
             <Button size="icon" onClick={() => handleSend()} disabled={sending || !draft.trim()}>

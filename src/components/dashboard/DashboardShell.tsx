@@ -265,7 +265,7 @@ function SidebarContent({
             </DropdownMenuItem>
             <DropdownMenuItem onClick={onOpenFeedback} className="cursor-pointer">
               <MessageSquarePlus className="size-4" aria-hidden="true" />
-              Share Feedback
+              {tr("Share Feedback")}
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={onSignOut} className="cursor-pointer">
@@ -407,7 +407,7 @@ export function DashboardShell({
             side="left"
             className="w-[280px] border-sol-border bg-sol-pearl p-0 text-sol-ink [&_button]:text-sol-ink"
           >
-            <SheetTitle className="sr-only">Navigation</SheetTitle>
+            <SheetTitle className="sr-only">{tr("Navigation")}</SheetTitle>
             <SidebarContent
               opportunityId={opportunityId}
               hasRoadmap={hasRoadmap}

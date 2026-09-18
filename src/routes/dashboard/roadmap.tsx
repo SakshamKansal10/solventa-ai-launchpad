@@ -221,7 +221,7 @@ function TaskRow({
       await onReplanNeeded();
     } catch (err) {
       console.error("[roadmap] replan failed:", err);
-      toast.error("Sol couldn't replan your roadmap right now — try again.");
+      toast.error(tr("Sol couldn't replan your roadmap right now — try again."));
     } finally {
       setBusy(false);
     }
@@ -787,7 +787,7 @@ function RoadmapPage() {
     onError: (err, _vars, context) => {
       console.error("[roadmap] update task failed:", err);
       if (context?.previous) queryClient.setQueryData(["roadmap"], context.previous);
-      toast.error("Couldn't update that task — try again.");
+      toast.error(tr("Couldn't update that task — try again."));
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ["roadmap"] });

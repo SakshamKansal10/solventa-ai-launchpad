@@ -122,11 +122,11 @@ function OpportunityDetailPage() {
     mutationFn: () => refreshMarketEvidence({ data: { opportunityId: id } }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["opportunity", id] });
-      toast.success("Market evidence refreshed.");
+      toast.success(tr("Market evidence refreshed."));
     },
     onError: (err) => {
       console.error("[opportunity] refresh evidence failed:", err);
-      toast.error("Couldn't refresh market evidence — try again.");
+      toast.error(tr("Couldn't refresh market evidence — try again."));
     },
   });
 
@@ -142,7 +142,7 @@ function OpportunityDetailPage() {
       await queryClient.invalidateQueries({ queryKey: ["dashboard"] });
     } catch (err) {
       console.error("[opportunity] feedback failed:", err);
-      toast.error("Couldn't save your feedback — try again.");
+      toast.error(tr("Couldn't save your feedback — try again."));
     } finally {
       setBusy(null);
     }
@@ -160,11 +160,13 @@ function OpportunityDetailPage() {
       await queryClient.invalidateQueries({ queryKey: ["dashboard"] });
       await queryClient.invalidateQueries({ queryKey: ["opportunity", id] });
       toast.success(
-        "Set as your primary direction. Your previous roadmap, if any, has been archived — you can revisit it anytime.",
+        tr(
+          "Set as your primary direction. Your previous roadmap, if any, has been archived — you can revisit it anytime.",
+        ),
       );
     } catch (err) {
       console.error("[opportunity] select failed:", err);
-      toast.error("Sol couldn't select this opportunity right now — try again.");
+      toast.error(tr("Sol couldn't select this opportunity right now — try again."));
     } finally {
       setBusy(null);
     }

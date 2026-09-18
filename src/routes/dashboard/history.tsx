@@ -5,6 +5,8 @@ import { DashboardShell } from "@/components/dashboard/DashboardShell";
 import { SolventiaLoadingState } from "@/components/dashboard/SolventiaLoadingState";
 import { requireAuthLoader } from "@/lib/route-guards";
 import { getConsultationHistory, getSettingsData } from "@/lib/actions/dashboard";
+import { useLocale } from "@/lib/i18n/LocaleProvider";
+import { translateDashboardText } from "@/lib/i18n/dashboard-dictionary";
 
 export const Route = createFileRoute("/dashboard/history")({
   beforeLoad: requireAuthLoader,
@@ -32,6 +34,8 @@ function HistoryPage() {
   // locked/unlocked state consistent across every dashboard page.
   const settingsQuery = useQuery({ queryKey: ["settings-data"], queryFn: () => getSettingsData() });
   const hasRoadmap = settingsQuery.data ? settingsQuery.data.hasActiveRoadmap : undefined;
+  const { locale } = useLocale();
+  const tr = (s: string) => translateDashboardText(s, locale) ?? s;
 
   return (
     <DashboardShell hasRoadmap={hasRoadmap} pageTitle="History">
@@ -39,25 +43,26 @@ function HistoryPage() {
         <History className="size-6 text-sol-champagne-deep" aria-hidden="true" />
         <div>
           <h1 className="font-display text-[clamp(1.8rem,3.2vw,2.3rem)] font-semibold text-sol-ink">
-            Idea History
+            {tr("Idea History")}
           </h1>
           <p className="mt-1 text-[0.92rem] text-sol-secondary">
-            How your direction has evolved over time. Your latest consultation is always the current
-            dashboard view.
+            {tr(
+              "How your direction has evolved over time. Your latest consultation is always the current dashboard view.",
+            )}
           </p>
         </div>
       </div>
 
       {query.isLoading && (
         <div className="mt-10 flex justify-center">
-          <SolventiaLoadingState message="Gathering your past consultations…" />
+          <SolventiaLoadingState message={tr("Gathering your past consultations…")} />
         </div>
       )}
 
       {query.data && query.data.length === 0 && (
         <div className="mt-10 rounded-[18px] border border-sol-border bg-sol-surface px-8 py-14 text-center">
           <p className="text-[0.95rem] text-sol-secondary">
-            You don&rsquo;t have any past consultations yet — this is your first one.
+            {tr("You don't have any past consultations yet — this is your first one.")}
           </p>
         </div>
       )}
@@ -80,7 +85,7 @@ function HistoryPage() {
                 <span className="size-1.5 rounded-full bg-sol-champagne" />
               </span>
               <p className="text-[0.72rem] font-semibold uppercase tracking-[0.1em] text-sol-muted">
-                Consultation — {formatDate(entry.createdAt)}
+                {tr("Consultation")} — {formatDate(entry.createdAt)}
               </p>
               <section className="mt-3 rounded-[18px] border border-sol-border bg-sol-surface p-6">
                 <div className="flex flex-col divide-y divide-sol-border">
@@ -96,7 +101,7 @@ function HistoryPage() {
                           </h3>
                           {opp.status === "selected" && (
                             <span className="rounded-full border border-econ-green-active/30 bg-econ-green-soft px-2 py-0.5 text-[0.68rem] font-semibold text-econ-green-active">
-                              Previously selected
+                              {tr("Previously selected")}
                             </span>
                           )}
                         </div>
@@ -113,7 +118,7 @@ function HistoryPage() {
                           params={{ id: opp.id }}
                           className="rounded-full border border-sol-border px-3.5 py-1.5 text-[0.78rem] font-medium text-sol-ink hover:border-sol-champagne/50"
                         >
-                          View
+                          {tr("View")}
                         </Link>
                       </div>
                     </div>

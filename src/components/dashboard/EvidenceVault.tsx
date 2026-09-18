@@ -138,7 +138,7 @@ export function EvidenceVault({ opportunityId }: { opportunityId: string }) {
     },
     onError: (err) => {
       console.error("[evidence] add failed:", err);
-      toast.error("Couldn't save that — try again.");
+      toast.error(tr("Couldn't save that — try again."));
     },
   });
 
@@ -147,7 +147,7 @@ export function EvidenceVault({ opportunityId }: { opportunityId: string }) {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["evidence", opportunityId] }),
     onError: (err) => {
       console.error("[evidence] delete failed:", err);
-      toast.error("Couldn't remove that — try again.");
+      toast.error(tr("Couldn't remove that — try again."));
     },
   });
 
