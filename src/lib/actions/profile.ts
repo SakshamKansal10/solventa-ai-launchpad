@@ -180,8 +180,21 @@ export const completeConsultation = createServerFn({ method: "POST" })
       console.error("[profile] ambition calibration persistence threw (non-fatal):", err);
     }
 
+    // originalIndex is captured BEFORE the fit_score sort below — pkg
+    // .opportunities arrives in the AI's own original 0/1/2 order (see
+    // reconstructPackage in intelligence-package.ts), and that ranking
+    // (0 = the model's designated flagship, "the single strongest, most
+    // worthy recommendation") is a genuinely different signal than
+    // fit_score (the app's own deterministic scorer) — persisting it
+    // lets getDashboard resolve "the flagship idea" from the model's
+    // actual recommendation rather than a proxy. See migrations/
+    // 0009_opportunity_index.
     const scored = pkg.opportunities
-      .map((opp) => ({ opp, score: computeFitScore(normalized, opp.fitSignals) }))
+      .map((opp, originalIndex) => ({
+        opp,
+        originalIndex,
+        score: computeFitScore(normalized, opp.fitSignals),
+      }))
       .sort((a, b) => b.score.total - a.score.total);
 
     // Supabase's REST API gives each insert below its own transaction —
@@ -194,7 +207,7 @@ export const completeConsultation = createServerFn({ method: "POST" })
     // so the user always sees either a complete analysis or none at all.
     try {
       for (let i = 0; i < scored.length; i++) {
-        const { opp, score } = scored[i];
+        const { opp, score, originalIndex } = scored[i];
         const { data: oppRow, error: oppError } = await supabase
           .from("opportunities")
           .insert({
@@ -213,6 +226,27 @@ export const completeConsultation = createServerFn({ method: "POST" })
           .select("id")
           .single();
         if (oppError || !oppRow) throw new Error(oppError?.message ?? "Failed to save opportunity");
+
+        // Best-effort, separate from the insert above and never fatal —
+        // same pattern as the ambition-calibration persistence above,
+        // specifically so a founder on a database that hasn't had
+        // migration 0009 applied yet still gets a complete, working
+        // consultation (getDashboard's fit_score fallback covers a null
+        // opportunity_index exactly as it always has).
+        try {
+          const { error: indexError } = await supabase
+            .from("opportunities")
+            .update({ opportunity_index: originalIndex })
+            .eq("id", oppRow.id);
+          if (indexError) {
+            console.error(
+              "[profile] opportunity_index persistence failed (non-fatal):",
+              indexError,
+            );
+          }
+        } catch (err) {
+          console.error("[profile] opportunity_index persistence threw (non-fatal):", err);
+        }
 
         // Detail is folded directly into `candidate` now, but also mirrored
         // here so getOpportunity's existing "read opportunity_details, fall

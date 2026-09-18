@@ -329,7 +329,7 @@ export function QuestionRenderer({ step }: { step: QuestionStep }) {
                   key={option}
                   type="button"
                   onClick={() => setAnswer(step.id, option as never)}
-                  className="relative z-10 flex flex-1 flex-col items-center gap-3 outline-none"
+                  className="relative z-10 flex flex-1 flex-col items-center gap-3 rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2"
                 >
                   <motion.span
                     animate={selected ? { scale: 1.2 } : { scale: 1 }}

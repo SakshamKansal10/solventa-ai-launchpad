@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
@@ -25,13 +25,15 @@ import {
   getRoadmap,
   updateTaskStatus,
   replanRoadmap,
+  type RoadmapPhaseWithTasks,
 } from "@/lib/actions/roadmap";
+import type { Database } from "@/lib/supabase/types";
 import { formatCompactMoney } from "@/lib/country-currency";
 import { cn } from "@/lib/utils";
 import { useLocale } from "@/lib/i18n/LocaleProvider";
 import { translateDashboardText } from "@/lib/i18n/dashboard-dictionary";
 
-export const Route = createFileRoute("/dashboard/roadmap")({
+export const Route = createFileRoute("/dashboard/roadmap/")({
   beforeLoad: requireAuthLoader,
   component: RoadmapPage,
   head: () => ({
@@ -737,16 +739,43 @@ function AskSolStageButton() {
 
 function RoadmapPage() {
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
   const query = useQuery({ queryKey: ["roadmap"], queryFn: () => getRoadmap({ data: {} }) });
   const [focusedIndex, setFocusedIndex] = useState<number | null>(null);
   const { locale } = useLocale();
   const tr = (s: string) => translateDashboardText(s, locale) ?? s;
 
+  // "No active roadmap row yet" now arrives as one of two genuinely
+  // different shapes (see getRoadmap): `{ needsBuild }` means there IS a
+  // real opportunity to build for — the founder just hasn't triggered (or
+  // finished) generation yet — and must never render as a dead end; only
+  // a bare `null` means there is truly nothing to build (no consultation
+  // completed at all).
+  const needsBuild = query.data && "needsBuild" in query.data ? query.data.needsBuild : null;
+
+  useEffect(() => {
+    if (!needsBuild) return;
+    navigate({
+      to: "/dashboard/roadmap/building",
+      search: { opportunityId: needsBuild.opportunityId },
+      replace: true,
+    });
+  }, [needsBuild, navigate]);
+
   // Optimistic task completion — the checkbox, progress bar, and stage
   // status must all update the instant the founder clicks, not after a
   // round trip. The mutation still persists and still rolls back on a
   // real failure; the founder just never has to wait to see it happen.
-  type RoadmapQueryData = NonNullable<typeof query.data>;
+  // Built explicitly rather than extracted from typeof query.data — the
+  // server function's return type unions needsBuild/null/full-data
+  // branches, and this is only ever the full-data shape (the one
+  // getQueryData/setQueryData actually manipulate for optimistic updates).
+  type RoadmapQueryData = {
+    roadmap: Database["public"]["Tables"]["roadmaps"]["Row"];
+    opportunity: { title: string; one_liner: string } | null;
+    phases: RoadmapPhaseWithTasks[];
+    founderSummary: { weeklyHours: number; capitalAmount: number; currency: string } | null;
+  };
   const toggleTaskMutation = useMutation({
     mutationFn: (vars: { taskId: string; status: "pending" | "done"; reflection?: string }) =>
       updateTaskStatus({
@@ -802,7 +831,7 @@ function RoadmapPage() {
   // becomes newly completed while they're looking at it, so finishing a
   // stage visibly advances rather than leaving the view stuck on a done
   // stage forever.
-  const phasesForEffect = query.data?.phases;
+  const phasesForEffect = query.data && "phases" in query.data ? query.data.phases : undefined;
   useEffect(() => {
     if (focusedIndex === null || !phasesForEffect) return;
     const sorted = [...phasesForEffect].sort((a, b) => a.order_index - b.order_index);
@@ -828,7 +857,22 @@ function RoadmapPage() {
     );
   }
 
-  if (!query.data) {
+  if (!query.data || "needsBuild" in query.data) {
+    if (query.data && "needsBuild" in query.data) {
+      // The redirect effect above is already navigating to the building
+      // flow — this is just the brief loading frame before that lands,
+      // never a dead end (there IS a real opportunity to build for).
+      return (
+        <DashboardShell>
+          <div className="flex min-h-[50vh] items-center justify-center">
+            <SolventiaLoadingState message={tr("Opening your roadmap…")} />
+          </div>
+        </DashboardShell>
+      );
+    }
+    // Genuinely nothing to build — no consultation completed yet. The
+    // only honest empty state left: findOpportunityNeedingRoadmap (see
+    // getRoadmap) already covers every other case with needsBuild above.
     return (
       <DashboardShell hasRoadmap={false}>
         <div className="mt-10 rounded-[24px] border border-sol-border bg-sol-surface px-8 py-12 text-center">
@@ -838,7 +882,7 @@ function RoadmapPage() {
           </h2>
           <p className="mx-auto mt-2 max-w-md text-[0.95rem] text-sol-secondary">
             {tr(
-              "Select an opportunity from your dashboard and Sol will build a roadmap around it.",
+              "Complete a consultation and Sol will build a roadmap around your strongest direction.",
             )}
           </p>
           <Button asChild className="mt-6">

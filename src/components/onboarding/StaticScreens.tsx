@@ -4,14 +4,13 @@ import { ArrowRight, Check, Clock, RotateCcw, Sparkles } from "lucide-react";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { PremiumButton } from "@/components/solventia/PremiumButton";
-import { clearStoredOnboarding, useOnboarding } from "@/lib/onboarding-store";
+import { useOnboarding } from "@/lib/onboarding-store";
 import type { SectionIntroStep } from "@/lib/onboarding-steps";
 import { getStageTheme } from "@/lib/onboarding-themes";
 import { StageIllustration } from "@/components/onboarding/StageIllustration";
 import { AccountGate } from "@/components/onboarding/AccountGate";
 import { getCurrentUser } from "@/lib/actions/auth";
 import { completeConsultation } from "@/lib/actions/profile";
-import { STAGE_THEMES } from "@/lib/onboarding-themes";
 import { cn } from "@/lib/utils";
 import mark from "@/assets/solventia-mark.png";
 import { useLocale } from "@/lib/i18n/LocaleProvider";
@@ -220,83 +219,78 @@ export function SectionIntroScreen({ step }: { step: SectionIntroStep }) {
   );
 }
 
-type SubmitPhase = "idle" | "converging" | "generating" | "done" | "error";
+type SubmitPhase = "idle" | "generating" | "done" | "error";
 
-const STAGE_ORDER = [1, 2, 3, 4, 5, 6, 7];
-
-/** Named stages of the single real Gemini request — advances on a timer
- * for visual storytelling, but deliberately STOPS and holds on the final
- * stage rather than looping back to the start. A real generation takes
- * anywhere from ~10s to ~70s: looping would eventually show an
- * already-"done" step reappearing as pending, which reads as regression,
- * not progress. Holding on the last stage with its dot still pulsing
- * carries no false claim of completion — it just keeps admitting real,
- * ongoing work until the actual response resolves (see runSubmission). */
-const GENERATION_STAGES = [
-  "Reading your founder profile",
-  "Mapping your constraints",
-  "Finding opportunity spaces",
-  "Scoring founder fit",
-  "Preparing your strongest directions",
+/** The five scenes of the Solventia Intelligence Sequence — replaces the
+ * old five-item checklist, which visibly finished four items in ~10s and
+ * then sat "in progress" on the fifth for the remaining ~20-60s of the
+ * real Gemini call. That read as broken, not busy. Scenes 0-3 advance on
+ * a timer because they're genuinely quick, real setup narration; scene 4
+ * ("Choosing Your Best Three") is the actual long-running call and never
+ * fake-completes — it just holds, honestly, with a rotating (but always
+ * true) status line once it runs long, until the real response lands. */
+const SCENES = [
+  {
+    title: "Understanding Your Profile",
+    copy: "Reading through your skills, resources, and goals.",
+  },
+  {
+    title: "Setting Your Scale",
+    copy: "Calibrating the right size of opportunity for where you are right now.",
+  },
+  {
+    title: "Exploring Directions",
+    copy: "Considering multiple business directions worth testing.",
+  },
+  {
+    title: "Pressure-Testing",
+    copy: "Checking each direction against your real time, capital, and constraints.",
+  },
+  {
+    title: "Choosing Your Best Three",
+    copy: "Narrowing everything down to the three strongest opportunities for you.",
+  },
 ];
 
-/** The seven-signal convergence — purely a visual transition, never gates
- * real work: saveOnboarding is already in flight underneath it (see
- * runSubmission), so this doesn't add wall-clock time on top of the real
- * ~20s wait, it just gives the first second of it real meaning instead of
- * a blank screen. */
-function SignalConvergence() {
-  const { locale } = useLocale();
-  const tr = (s: string) => translateOnboardingText(s, locale) ?? s;
-  return (
-    <motion.div
-      key="converging"
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      className="flex flex-col items-center gap-6"
-    >
-      <div className="flex flex-wrap items-center justify-center gap-3">
-        {STAGE_ORDER.map((section, i) => {
-          const theme = STAGE_THEMES[section];
-          const Icon = theme.icon;
-          return (
-            <motion.span
-              key={section}
-              initial={{ opacity: 0, scale: 0.4, y: 10 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              transition={{ delay: i * 0.09, duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-              className="flex size-10 items-center justify-center rounded-full border"
-              style={{ borderColor: theme.color, backgroundColor: theme.colorSoft }}
-            >
-              <Icon className="size-4" style={{ color: theme.color }} aria-hidden="true" />
-            </motion.span>
-          );
-        })}
-      </div>
-      <motion.p
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.75, duration: 0.4 }}
-        className="text-[0.88rem] text-muted-foreground"
-      >
-        {tr("Bringing everything together…")}
-      </motion.p>
-    </motion.div>
-  );
-}
+const FINAL_SCENE_INDEX = SCENES.length - 1;
 
-function SolWorkingVisual() {
+const MICRO_STATUS = [
+  "Still working — this part takes a little longer…",
+  "Weighing tradeoffs across each direction…",
+  "Double-checking fit against your real constraints…",
+  "Finalizing your strongest three…",
+];
+
+function SolventiaIntelligenceSequence() {
   const { locale } = useLocale();
   const tr = (s: string) => translateOnboardingText(s, locale) ?? s;
-  const [stageIndex, setStageIndex] = useState(0);
+  const [sceneIndex, setSceneIndex] = useState(0);
+  const [microIndex, setMicroIndex] = useState(0);
+
+  // Scenes 0-3 advance every ~4.2s regardless of the real call's actual
+  // progress (there's no partial progress to report mid-call) — this is
+  // honest narration of what Sol is conceptually doing, not a claim about
+  // backend state. Scene 4 never auto-advances; only the real response
+  // resolving moves the founder past it (see CompletionScreen).
+  useEffect(() => {
+    if (sceneIndex >= FINAL_SCENE_INDEX) return;
+    const timer = window.setTimeout(
+      () => setSceneIndex((i) => Math.min(i + 1, FINAL_SCENE_INDEX)),
+      4200,
+    );
+    return () => window.clearTimeout(timer);
+  }, [sceneIndex]);
 
   useEffect(() => {
-    const interval = setInterval(() => {
-      setStageIndex((i) => Math.min(i + 1, GENERATION_STAGES.length - 1));
-    }, 2600);
-    return () => clearInterval(interval);
-  }, []);
+    if (sceneIndex !== FINAL_SCENE_INDEX) return;
+    const interval = window.setInterval(() => {
+      setMicroIndex((i) => (i + 1) % MICRO_STATUS.length);
+    }, 3400);
+    return () => window.clearInterval(interval);
+  }, [sceneIndex]);
+
+  const scene = SCENES[sceneIndex];
+  const isFinal = sceneIndex === FINAL_SCENE_INDEX;
 
   return (
     <motion.div
@@ -304,81 +298,41 @@ function SolWorkingVisual() {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="flex flex-col items-center gap-9"
+      className="flex flex-col items-center gap-8"
     >
-      <div className="relative flex items-center justify-center">
-        <AIOrb />
-        {/* Three faint paths gently emerging around the orb — a quiet nod
-         * to the three opportunities taking shape, never claiming any one
-         * of them is actually finished yet. */}
-        {[0, 1, 2].map((i) => (
-          <motion.span
-            key={i}
-            aria-hidden="true"
-            className="absolute size-1.5 rounded-full bg-accent/70"
-            style={{
-              transform: `rotate(${i * 120}deg) translateY(-58px)`,
-            }}
-            animate={{ opacity: [0.15, 0.75, 0.15] }}
-            transition={{
-              duration: 2.6,
-              repeat: Infinity,
-              ease: "easeInOut",
-              delay: i * 0.5,
-            }}
-          />
-        ))}
-      </div>
-      <div>
-        <p className="eyebrow text-center text-accent">{tr("Sol is building your strategy")}</p>
-        <ul className="mt-5 flex flex-col gap-3">
-          {GENERATION_STAGES.map((label, i) => {
-            const isDone = i < stageIndex;
-            const isCurrent = i === stageIndex;
-            return (
-              <li key={label} className="flex items-center gap-3">
-                <span
-                  className={cn(
-                    "flex size-5 shrink-0 items-center justify-center rounded-full border transition-colors duration-500",
-                    isDone
-                      ? "border-accent bg-accent text-primary"
-                      : isCurrent
-                        ? "border-accent"
-                        : "border-border",
-                  )}
-                >
-                  {isDone ? (
-                    <Check className="size-3" aria-hidden="true" />
-                  ) : isCurrent ? (
-                    <motion.span
-                      aria-hidden="true"
-                      className="size-2 rounded-full bg-accent"
-                      animate={{ opacity: [0.4, 1, 0.4] }}
-                      transition={{ duration: 1.3, repeat: Infinity, ease: "easeInOut" }}
-                    />
-                  ) : null}
-                </span>
-                <span
-                  className={cn(
-                    "text-[0.98rem] transition-colors duration-500",
-                    isDone
-                      ? "text-muted-foreground line-through decoration-accent/40"
-                      : isCurrent
-                        ? "font-medium text-primary"
-                        : "text-muted-foreground/50",
-                  )}
-                >
-                  {tr(label)}
-                </span>
-              </li>
-            );
-          })}
-        </ul>
+      <AIOrb />
+      <div className="flex min-h-[7.5rem] flex-col items-center">
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={sceneIndex}
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -8 }}
+            transition={{ duration: 0.4 }}
+            className="flex flex-col items-center gap-2.5"
+          >
+            <p className="eyebrow text-center text-accent">{tr(scene.title)}</p>
+            <p className="max-w-sm text-center text-[0.98rem] leading-relaxed text-foreground">
+              {tr(scene.copy)}
+            </p>
+          </motion.div>
+        </AnimatePresence>
+        {isFinal && (
+          <AnimatePresence mode="wait">
+            <motion.p
+              key={microIndex}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.4 }}
+              className="mt-3 text-[0.8rem] text-muted-foreground"
+            >
+              {tr(MICRO_STATUS[microIndex])}
+            </motion.p>
+          </AnimatePresence>
+        )}
       </div>
       <p className="max-w-xs text-center text-[0.78rem] leading-relaxed text-muted-foreground/70">
-        {tr(
-          "This usually takes under a minute. Your answers are already saved — safe even if you leave this page.",
-        )}
+        {tr("Your answers are already saved — safe even if you leave this page.")}
       </p>
     </motion.div>
   );
@@ -413,19 +367,11 @@ export function CompletionScreen() {
     if (submittingRef.current) return;
     submittingRef.current = true;
     setErrorMessage(null);
-    setPhase("converging");
+    setPhase("generating");
     try {
-      // The ONE real Gemini request, kicked off immediately underneath the
-      // convergence animation — the decorative intro overlaps real work
-      // instead of adding to it.
-      const resultPromise = completeConsultation({
+      await completeConsultation({
         data: { answers: answers as Record<string, unknown>, locale },
       });
-      await new Promise((resolve) => setTimeout(resolve, 1300));
-
-      setPhase("generating");
-      await resultPromise;
-      clearStoredOnboarding();
 
       setPhase("done");
       // Let the checkmarks register before leaving — the work is genuinely
@@ -442,20 +388,18 @@ export function CompletionScreen() {
     }
   }
 
-  const isSubmitting = phase === "converging" || phase === "generating" || phase === "done";
-  const isConverging = phase === "converging";
+  const isSubmitting = phase === "generating" || phase === "done";
   const isGenerating = phase === "generating";
-  const isFullScreenWait = isConverging || isGenerating;
 
-  // The real-work wait (converging → generating) takes over the entire
-  // viewport — no header, no exit button, no progress-bar chrome from
-  // ConsultationShell competing for attention. This is deliberately the
-  // one moment in the whole flow that isn't boxed into the small content
-  // column: a founder waiting ~10-70s for their actual business ideas
-  // should feel like Solventia is seriously working, not stuck inside a
-  // form. `phase === "done"` intentionally falls through to the normal
-  // boxed layout below — the checkmark summary is a quick beat, not a wait.
-  if (isFullScreenWait) {
+  // The real-work wait takes over the entire viewport — no header, no
+  // exit button, no progress-bar chrome from ConsultationShell competing
+  // for attention. This is deliberately the one moment in the whole flow
+  // that isn't boxed into the small content column: a founder waiting
+  // ~10-70s for their actual business ideas should feel like Solventia is
+  // seriously working, not stuck inside a form. `phase === "done"`
+  // intentionally falls through to the normal boxed layout below — the
+  // checkmark summary is a quick beat, not a wait.
+  if (isGenerating) {
     return (
       <div className="fixed inset-0 z-40 flex flex-col items-center justify-center gap-10 bg-background px-6">
         <div
@@ -473,9 +417,7 @@ export function CompletionScreen() {
           height={436}
           className="relative h-9 w-auto opacity-90 drop-shadow-[0_1px_2px_rgba(10,25,47,0.18)]"
         />
-        <AnimatePresence mode="wait">
-          {isConverging ? <SignalConvergence /> : <SolWorkingVisual />}
-        </AnimatePresence>
+        <SolventiaIntelligenceSequence />
       </div>
     );
   }

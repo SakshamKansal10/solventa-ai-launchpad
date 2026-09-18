@@ -10,17 +10,6 @@ const fadeUp = {
   show: { opacity: 1, y: 0 },
 };
 
-/** Fixed, hand-placed positions — never Math.random(), which would
- * desync between server and client render and break hydration. */
-const PARTICLES = [
-  { top: "10%", left: "56%", size: 3, delay: 0 },
-  { top: "20%", left: "74%", size: 2, delay: 1.2 },
-  { top: "33%", left: "48%", size: 2.5, delay: 2.4 },
-  { top: "46%", left: "82%", size: 3, delay: 0.6 },
-  { top: "58%", left: "60%", size: 2, delay: 1.8 },
-  { top: "68%", left: "44%", size: 2.5, delay: 3 },
-];
-
 /** The three minimal Solventia intelligence indicators — real product
  * concepts (fit score, evidence, execution), never the generic "Market
  * Opportunity / AI Validation / Roadmap Generated" placeholders this
@@ -112,236 +101,35 @@ function SignalCard({ card }: { card: (typeof SIGNAL_CARDS)[number] }) {
   );
 }
 
-/** Atmospheric orbital structure behind the hero copy — never a graph,
- * never labeled, never surrounding the headline like a target. Two
- * incomplete (dashed) elliptical curves suggesting Solventia's
- * intelligence path, with one slow highlight segment traveling around
- * the outer curve. Everything else stays static. */
-function HeroOrbitGraphic() {
-  const reduceMotion = useReducedMotion();
+/** The hero background — a plain warm ivory/pearl gradient with subtle
+ * violet ambience and a touch of champagne, nothing else. Earlier
+ * versions of this hero used an animated SVG "intelligence field" (a
+ * node-and-line network) plus a dashed orbital path graphic behind the
+ * copy; both were removed as arbitrary decoration unrelated to anything
+ * Solventia actually does — an on-brand color palette doesn't need a
+ * fake network diagram to justify it. The three real signal cards below
+ * (Founder Fit / Proof Signal / Week 01) are the one genuinely
+ * product-derived visual this hero keeps. */
+function HeroBackground() {
   return (
-    <svg
-      className="pointer-events-none absolute -left-[130px] top-[90px] hidden lg:block"
-      width={760}
-      height={590}
-      viewBox="0 0 760 590"
-      fill="none"
+    <div
+      className="absolute inset-0"
       aria-hidden="true"
-    >
-      <ellipse
-        cx={430}
-        cy={300}
-        rx={330}
-        ry={230}
-        stroke="rgba(114,87,216,.13)"
-        strokeWidth={1}
-        strokeDasharray="220 90"
-        transform="rotate(-8 430 300)"
-      />
-      <ellipse
-        cx={400}
-        cy={260}
-        rx={230}
-        ry={160}
-        stroke="rgba(197,163,106,.11)"
-        strokeWidth={1}
-        strokeDasharray="160 70"
-        transform="rotate(6 400 260)"
-      />
-      {!reduceMotion && (
-        <motion.ellipse
-          cx={430}
-          cy={300}
-          rx={330}
-          ry={230}
-          stroke="rgba(114,87,216,.55)"
-          strokeWidth={1.5}
-          strokeDasharray="40 2560"
-          strokeLinecap="round"
-          transform="rotate(-8 430 300)"
-          animate={{ strokeDashoffset: [0, -2600], opacity: [0, 0.55, 0] }}
-          transition={{ duration: 16, repeat: Infinity, ease: "linear" }}
-        />
-      )}
-    </svg>
+      style={{
+        background:
+          "radial-gradient(ellipse 640px 520px at 78% 18%, rgba(114,87,216,.09), transparent 62%), radial-gradient(ellipse 520px 440px at 92% 62%, rgba(197,163,106,.08), transparent 64%), linear-gradient(100deg, #F8F5EF 0%, #F7F3EC 55%, #F4EEE2 100%)",
+      }}
+    />
   );
 }
 
-/** Fixed, hand-placed node positions (never Math.random — see PARTICLES
- * above for why) for the hero's intelligence-field visual: a founder's
- * scattered signals (skills, capital, time, goals) resolving into a
- * connected plan. Concentrated in the right ~40% of the viewport, where
- * the old photo was actually visible past the text-side scrim. */
-const FIELD_NODES = [
-  { x: 66, y: 14, r: 3, tone: "champagne" as const },
-  { x: 74, y: 9, r: 2, tone: "violet" as const },
-  { x: 82, y: 18, r: 2.5, tone: "champagne" as const },
-  { x: 61, y: 27, r: 2, tone: "violet" as const },
-  { x: 90, y: 12, r: 6, tone: "hub" as const },
-  { x: 70, y: 34, r: 2.5, tone: "champagne" as const },
-  { x: 86, y: 30, r: 3, tone: "violet" as const },
-  { x: 78, y: 44, r: 7, tone: "hub" as const },
-  { x: 94, y: 40, r: 2, tone: "champagne" as const },
-  { x: 63, y: 48, r: 2.5, tone: "violet" as const },
-  { x: 68, y: 60, r: 2, tone: "champagne" as const },
-  { x: 84, y: 58, r: 3, tone: "violet" as const },
-  { x: 91, y: 66, r: 5, tone: "hub" as const },
-  { x: 74, y: 70, r: 2.5, tone: "champagne" as const },
-  { x: 60, y: 76, r: 2, tone: "violet" as const },
-  { x: 80, y: 82, r: 3, tone: "champagne" as const },
-  { x: 92, y: 86, r: 2, tone: "violet" as const },
-  { x: 68, y: 90, r: 2.5, tone: "champagne" as const },
-];
-
-// Hand-picked pairs among FIELD_NODES above — a connected topology, not
-// every node linked to every other, so it reads as a real network rather
-// than a scatter plot.
-const FIELD_LINKS: [number, number][] = [
-  [0, 1],
-  [1, 2],
-  [0, 3],
-  [1, 4],
-  [2, 4],
-  [4, 6],
-  [3, 5],
-  [5, 7],
-  [6, 7],
-  [7, 8],
-  [7, 9],
-  [9, 10],
-  [7, 11],
-  [11, 12],
-  [8, 12],
-  [10, 13],
-  [11, 13],
-  [13, 14],
-  [13, 15],
-  [12, 16],
-  [15, 16],
-  [14, 17],
-  [15, 17],
-];
-
-const FIELD_TONE_COLOR: Record<"champagne" | "violet" | "hub", string> = {
-  champagne: "var(--sol-champagne)",
-  violet: "var(--sol-violet)",
-  hub: "var(--sol-violet)",
-};
-
-/** Replaces the old stock horizon photo — an abstract, on-brand
- * "signals resolving into a plan" network instead of a generic
- * landscape/skyline image unrelated to what Solventia actually does.
- * Built entirely from SVG/CSS (no external asset), in the same
- * violet/champagne language as the orbit graphic and signal cards, so
- * it reads as one system rather than a decorative photo behind them. */
-function HeroIntelligenceField() {
-  const reduceMotion = useReducedMotion();
-  return (
-    <div className="absolute inset-0" aria-hidden="true">
-      <div
-        className="absolute inset-0"
-        style={{
-          background:
-            "radial-gradient(ellipse 900px 700px at 82% 45%, rgba(114,87,216,.10), transparent 60%), radial-gradient(ellipse 700px 600px at 95% 15%, rgba(197,163,106,.09), transparent 62%), linear-gradient(100deg, #F8F5EF 0%, #F8F5EF 42%, #F5F0E6 62%, #F1EBE0 100%)",
-        }}
-      />
-      <svg
-        className="absolute inset-0 h-full w-full"
-        viewBox="0 0 100 100"
-        preserveAspectRatio="none"
-        fill="none"
-      >
-        {FIELD_LINKS.map(([a, b], i) => {
-          const from = FIELD_NODES[a];
-          const to = FIELD_NODES[b];
-          const touchesHub = from.tone === "hub" || to.tone === "hub";
-          return (
-            <line
-              key={i}
-              x1={from.x}
-              y1={from.y}
-              x2={to.x}
-              y2={to.y}
-              stroke={touchesHub ? "rgba(114,87,216,.42)" : "rgba(114,87,216,.24)"}
-              strokeWidth={touchesHub ? 0.22 : 0.16}
-            />
-          );
-        })}
-        {FIELD_NODES.map((n, i) => (
-          <circle
-            key={i}
-            cx={n.x}
-            cy={n.y}
-            r={n.tone === "hub" ? n.r * 0.22 : n.r * 0.24}
-            fill={FIELD_TONE_COLOR[n.tone]}
-            opacity={n.tone === "hub" ? 0.7 : 0.55}
-          />
-        ))}
-        {!reduceMotion &&
-          FIELD_NODES.filter((n) => n.tone === "hub").map((n, i) => (
-            <motion.circle
-              key={`pulse-${i}`}
-              cx={n.x}
-              cy={n.y}
-              fill="none"
-              stroke="var(--sol-violet)"
-              strokeWidth={0.1}
-              initial={{ r: n.r * 0.16, opacity: 0.4 }}
-              animate={{ r: [n.r * 0.16, n.r * 0.5], opacity: [0.4, 0] }}
-              transition={{ duration: 3.6, repeat: Infinity, delay: i * 1.1, ease: "easeOut" }}
-            />
-          ))}
-      </svg>
-      {/* Calmer left side for text — the exact spec gradient, warm
-          sol-page tones rather than a gray scrim. */}
-      <div
-        className="absolute inset-0"
-        style={{
-          background:
-            "linear-gradient(90deg, rgba(248,245,239,0.98) 0%, rgba(248,245,239,0.93) 30%, rgba(248,245,239,0.54) 55%, rgba(248,245,239,0.05) 78%)",
-        }}
-      />
-    </div>
-  );
-}
-
-/** Very subtle vertical connector suggesting the three intelligence
- * signals are one system, not three unrelated floating widgets — never
- * literally edge-to-edge. */
-function HeroCardConnector() {
-  return (
-    <svg
-      className="pointer-events-none absolute right-[9%] top-[30%] hidden h-[46%] w-[80px] xl:block"
-      viewBox="0 0 80 320"
-      fill="none"
-      preserveAspectRatio="none"
-      aria-hidden="true"
-    >
-      <defs>
-        <linearGradient id="hero-card-connector" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="var(--sol-champagne)" />
-          <stop offset="100%" stopColor="var(--sol-violet)" />
-        </linearGradient>
-      </defs>
-      <path
-        d="M 20,0 C 60,60 0,140 40,180 C 70,210 20,270 30,320"
-        stroke="url(#hero-card-connector)"
-        strokeWidth={1}
-        opacity={0.22}
-      />
-    </svg>
-  );
-}
-
-/** The hero — an on-brand, code-rendered intelligence field (signals
- * resolving into a plan) instead of the old generic stock landscape
- * photo, recomposed per the homepage reconstruction spec: calmer left
- * side for text, three minimal intelligence signals instead of four
- * generic floating cards, no people-bubble social proof, no
+/** The hero — a plain warm background (see HeroBackground above) instead
+ * of the old generic stock landscape photo or, later, an animated SVG
+ * network graphic, recomposed per the homepage reconstruction spec:
+ * calmer left side for text, three minimal intelligence signals instead
+ * of four generic floating cards, no people-bubble social proof, no
  * Discover/Validate/Plan/Launch strip underneath (How It Works now owns
- * that story, once, not twice). Violet ambience + an orbital path
- * graphic fill what would otherwise be an empty upper-left/upper-middle
- * region, without adding another card or paragraph. */
+ * that story, once, not twice). */
 export function Hero() {
   const navigate = useNavigate();
   const { t, locale } = useLocale();
@@ -353,28 +141,12 @@ export function Hero() {
   return (
     <section
       className="relative mt-[68px] h-[calc(100vh-68px)] w-full overflow-hidden md:mt-[84px] md:h-[calc(100vh-84px)]"
-      style={{ minHeight: 720, maxHeight: 860 }}
+      style={{ minHeight: 640, maxHeight: 860 }}
     >
-      <div className="absolute inset-0" aria-hidden="true">
-        <HeroIntelligenceField />
-
-        {PARTICLES.map((p, i) => (
-          <span
-            key={i}
-            className="particle-drift absolute rounded-full bg-sol-champagne"
-            style={{
-              top: p.top,
-              left: p.left,
-              width: p.size,
-              height: p.size,
-              animationDelay: `${p.delay}s`,
-            }}
-          />
-        ))}
-      </div>
+      <HeroBackground />
 
       {/* Restored Solventia violet ambience — light, not paint. Sits above
-          the image/scrim and below the copy/cards. */}
+          the background and below the copy/cards. */}
       <div
         className="pointer-events-none absolute inset-0 z-[5]"
         style={{
@@ -383,9 +155,6 @@ export function Hero() {
         }}
         aria-hidden="true"
       />
-
-      <HeroOrbitGraphic />
-      <HeroCardConnector />
 
       {/* Floating intelligence signals — desktop only. On mobile the text
           column fills nearly the full width, so absolute-positioned cards
@@ -397,10 +166,10 @@ export function Hero() {
         ))}
       </div>
 
-      <div
-        className="relative z-20 mx-auto flex h-full max-w-[1920px] flex-col overflow-y-auto px-6 pb-8 lg:overflow-visible lg:px-10"
-        style={{ paddingTop: "clamp(150px, 19vh, 190px)" }}
-      >
+      {/* Vertically centered, not pinned by a large fixed top offset —
+          the previous ~170-190px top padding left excess dead space above
+          the headline on common desktop viewports. */}
+      <div className="relative z-20 mx-auto flex h-full max-w-[1920px] flex-col justify-center overflow-y-auto px-6 py-8 lg:overflow-visible lg:px-10">
         <motion.div
           initial="hidden"
           animate="show"

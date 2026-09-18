@@ -24,9 +24,9 @@ import { Route as TermsRouteImport } from './routes/terms'
 import { Route as AuthCallbackRouteImport } from './routes/auth/callback'
 import { Route as DashboardIndexRouteImport } from './routes/dashboard/index'
 import { Route as DashboardHistoryRouteImport } from './routes/dashboard/history'
-import { Route as DashboardRoadmapRouteImport } from './routes/dashboard/roadmap'
 import { Route as DashboardSettingsRouteImport } from './routes/dashboard/settings'
 import { Route as DashboardOpportunitiesIdRouteImport } from './routes/dashboard/opportunities/$id'
+import { Route as DashboardRoadmapIndexRouteImport } from './routes/dashboard/roadmap/index'
 import { Route as DashboardRoadmapBuildingRouteImport } from './routes/dashboard/roadmap/building'
 
 const IndexRoute = IndexRouteImport.update({
@@ -104,11 +104,6 @@ const DashboardHistoryRoute = DashboardHistoryRouteImport.update({
   path: '/dashboard/history',
   getParentRoute: () => rootRouteImport,
 } as any)
-const DashboardRoadmapRoute = DashboardRoadmapRouteImport.update({
-  id: '/dashboard/roadmap',
-  path: '/dashboard/roadmap',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const DashboardSettingsRoute = DashboardSettingsRouteImport.update({
   id: '/dashboard/settings',
   path: '/dashboard/settings',
@@ -120,11 +115,16 @@ const DashboardOpportunitiesIdRoute =
     path: '/dashboard/opportunities/$id',
     getParentRoute: () => rootRouteImport,
   } as any)
+const DashboardRoadmapIndexRoute = DashboardRoadmapIndexRouteImport.update({
+  id: '/dashboard/roadmap/',
+  path: '/dashboard/roadmap/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const DashboardRoadmapBuildingRoute =
   DashboardRoadmapBuildingRouteImport.update({
-    id: '/building',
-    path: '/building',
-    getParentRoute: () => DashboardRoadmapRoute,
+    id: '/dashboard/roadmap/building',
+    path: '/dashboard/roadmap/building',
+    getParentRoute: () => rootRouteImport,
   } as any)
 
 export interface FileRoutesByFullPath {
@@ -142,11 +142,11 @@ export interface FileRoutesByFullPath {
   '/terms': typeof TermsRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/dashboard/history': typeof DashboardHistoryRoute
-  '/dashboard/roadmap': typeof DashboardRoadmapRouteWithChildren
   '/dashboard/settings': typeof DashboardSettingsRoute
   '/dashboard/': typeof DashboardIndexRoute
   '/dashboard/opportunities/$id': typeof DashboardOpportunitiesIdRoute
   '/dashboard/roadmap/building': typeof DashboardRoadmapBuildingRoute
+  '/dashboard/roadmap/': typeof DashboardRoadmapIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -163,11 +163,11 @@ export interface FileRoutesByTo {
   '/terms': typeof TermsRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/dashboard/history': typeof DashboardHistoryRoute
-  '/dashboard/roadmap': typeof DashboardRoadmapRouteWithChildren
   '/dashboard/settings': typeof DashboardSettingsRoute
   '/dashboard': typeof DashboardIndexRoute
   '/dashboard/opportunities/$id': typeof DashboardOpportunitiesIdRoute
   '/dashboard/roadmap/building': typeof DashboardRoadmapBuildingRoute
+  '/dashboard/roadmap': typeof DashboardRoadmapIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -185,11 +185,11 @@ export interface FileRoutesById {
   '/terms': typeof TermsRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/dashboard/history': typeof DashboardHistoryRoute
-  '/dashboard/roadmap': typeof DashboardRoadmapRouteWithChildren
   '/dashboard/settings': typeof DashboardSettingsRoute
   '/dashboard/': typeof DashboardIndexRoute
   '/dashboard/opportunities/$id': typeof DashboardOpportunitiesIdRoute
   '/dashboard/roadmap/building': typeof DashboardRoadmapBuildingRoute
+  '/dashboard/roadmap/': typeof DashboardRoadmapIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -208,11 +208,11 @@ export interface FileRouteTypes {
     | '/terms'
     | '/auth/callback'
     | '/dashboard/history'
-    | '/dashboard/roadmap'
     | '/dashboard/settings'
     | '/dashboard/'
     | '/dashboard/opportunities/$id'
     | '/dashboard/roadmap/building'
+    | '/dashboard/roadmap/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -229,11 +229,11 @@ export interface FileRouteTypes {
     | '/terms'
     | '/auth/callback'
     | '/dashboard/history'
-    | '/dashboard/roadmap'
     | '/dashboard/settings'
     | '/dashboard'
     | '/dashboard/opportunities/$id'
     | '/dashboard/roadmap/building'
+    | '/dashboard/roadmap'
   id:
     | '__root__'
     | '/'
@@ -250,11 +250,11 @@ export interface FileRouteTypes {
     | '/terms'
     | '/auth/callback'
     | '/dashboard/history'
-    | '/dashboard/roadmap'
     | '/dashboard/settings'
     | '/dashboard/'
     | '/dashboard/opportunities/$id'
     | '/dashboard/roadmap/building'
+    | '/dashboard/roadmap/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -272,10 +272,11 @@ export interface RootRouteChildren {
   TermsRoute: typeof TermsRoute
   AuthCallbackRoute: typeof AuthCallbackRoute
   DashboardHistoryRoute: typeof DashboardHistoryRoute
-  DashboardRoadmapRoute: typeof DashboardRoadmapRouteWithChildren
   DashboardSettingsRoute: typeof DashboardSettingsRoute
   DashboardIndexRoute: typeof DashboardIndexRoute
   DashboardOpportunitiesIdRoute: typeof DashboardOpportunitiesIdRoute
+  DashboardRoadmapBuildingRoute: typeof DashboardRoadmapBuildingRoute
+  DashboardRoadmapIndexRoute: typeof DashboardRoadmapIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -385,13 +386,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardHistoryRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/dashboard/roadmap': {
-      id: '/dashboard/roadmap'
-      path: '/dashboard/roadmap'
-      fullPath: '/dashboard/roadmap'
-      preLoaderRoute: typeof DashboardRoadmapRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/dashboard/settings': {
       id: '/dashboard/settings'
       path: '/dashboard/settings'
@@ -406,26 +400,22 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardOpportunitiesIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/dashboard/roadmap/': {
+      id: '/dashboard/roadmap/'
+      path: '/dashboard/roadmap'
+      fullPath: '/dashboard/roadmap/'
+      preLoaderRoute: typeof DashboardRoadmapIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/dashboard/roadmap/building': {
       id: '/dashboard/roadmap/building'
-      path: '/building'
+      path: '/dashboard/roadmap/building'
       fullPath: '/dashboard/roadmap/building'
       preLoaderRoute: typeof DashboardRoadmapBuildingRouteImport
-      parentRoute: typeof DashboardRoadmapRoute
+      parentRoute: typeof rootRouteImport
     }
   }
 }
-
-interface DashboardRoadmapRouteChildren {
-  DashboardRoadmapBuildingRoute: typeof DashboardRoadmapBuildingRoute
-}
-
-const DashboardRoadmapRouteChildren: DashboardRoadmapRouteChildren = {
-  DashboardRoadmapBuildingRoute: DashboardRoadmapBuildingRoute,
-}
-
-const DashboardRoadmapRouteWithChildren =
-  DashboardRoadmapRoute._addFileChildren(DashboardRoadmapRouteChildren)
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
@@ -442,10 +432,11 @@ const rootRouteChildren: RootRouteChildren = {
   TermsRoute: TermsRoute,
   AuthCallbackRoute: AuthCallbackRoute,
   DashboardHistoryRoute: DashboardHistoryRoute,
-  DashboardRoadmapRoute: DashboardRoadmapRouteWithChildren,
   DashboardSettingsRoute: DashboardSettingsRoute,
   DashboardIndexRoute: DashboardIndexRoute,
   DashboardOpportunitiesIdRoute: DashboardOpportunitiesIdRoute,
+  DashboardRoadmapBuildingRoute: DashboardRoadmapBuildingRoute,
+  DashboardRoadmapIndexRoute: DashboardRoadmapIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

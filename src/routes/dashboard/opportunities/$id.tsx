@@ -49,39 +49,50 @@ const DISMISS_REASONS = [
   "Other",
 ];
 
-// Four views, exactly: Overview / Founder Fit / Market / Proof. Only the
-// active one renders at a time (real tabs, not an anchor-scroll jump nav)
-// — DashboardShell's own "Proof" nav item still links here via `#evidence`,
-// so on first load we read that hash to pick the initial tab, then keep
-// switching client-side without a full navigation.
+// Four views, exactly: Overview / Founder Fit / Market / Proof.
+// Still a single scrolling page with a sticky jump nav (not hide/show
+// tabs) — DashboardShell's own "Proof" nav item already links here via
+// `#evidence`, so the Proof view keeps that exact id rather than
+// introducing a second, disconnected id for the same destination.
 const SECTION_NAV = [
-  {
-    id: "overview",
-    label: "Overview",
-    dot: "bg-sol-champagne",
-    active: "bg-sol-champagne-soft text-sol-champagne-deep",
-  },
-  {
-    id: "founder-fit",
-    label: "Founder Fit",
-    dot: "bg-sol-violet",
-    active: "bg-sol-violet-mist text-sol-violet-deep",
-  },
-  { id: "market", label: "Market", dot: "bg-sol-navy", active: "bg-sol-navy text-white" },
-  {
-    id: "evidence",
-    label: "Proof",
-    dot: "bg-econ-green",
-    active: "bg-econ-green-soft text-econ-green-deep",
-  },
-] as const;
+  { id: "overview", label: "Overview" },
+  { id: "founder-fit", label: "Founder Fit" },
+  { id: "market", label: "Market" },
+  { id: "evidence", label: "Proof" },
+];
 
-type SectionId = (typeof SECTION_NAV)[number]["id"];
-
-function initialTabFromHash(): SectionId {
-  if (typeof window === "undefined") return "overview";
-  const hash = window.location.hash.replace("#", "");
-  return SECTION_NAV.some((s) => s.id === hash) ? (hash as SectionId) : "overview";
+/** One scannable overview block — a small label, a large 3-7 word
+ * headline phrase (the AI's own problemHeadline/solutionHeadline/etc, see
+ * opportunity-display.ts), and the full sentence as a smaller supporting
+ * line underneath. No connecting arrows between blocks — the 2x2 grid
+ * itself already reads as one shape; an arrow said nothing an adjacent
+ * block didn't already say.
+ *
+ * An opportunity saved before the headline fields existed has headline
+ * === detail (toDisplayDetail's fallback) — shown once, at the larger
+ * size, rather than repeating the same sentence twice. */
+function OverviewBlock({
+  label,
+  headline,
+  detail,
+}: {
+  label: string;
+  headline: string;
+  detail: string;
+}) {
+  return (
+    <div className="rounded-xl border border-sol-border bg-sol-surface px-5 py-4">
+      <p className="text-[0.68rem] font-semibold uppercase tracking-[0.1em] text-sol-muted">
+        {label}
+      </p>
+      <p className="mt-1.5 font-display text-[1.15rem] font-semibold leading-snug text-sol-ink">
+        {headline}
+      </p>
+      {detail !== headline && (
+        <p className="mt-1.5 text-[0.88rem] leading-relaxed text-sol-secondary">{detail}</p>
+      )}
+    </div>
+  );
 }
 
 function BulletList({ items }: { items: string[] }) {
@@ -109,12 +120,6 @@ function OpportunityDetailPage() {
 
   const [showReasons, setShowReasons] = useState(false);
   const [busy, setBusy] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<SectionId>(initialTabFromHash);
-
-  function selectTab(tabId: SectionId) {
-    setActiveTab(tabId);
-    window.history.replaceState(null, "", `#${tabId}`);
-  }
   const { locale } = useLocale();
   const tr = (s: string) => translateDashboardText(s, locale) ?? s;
 
@@ -330,214 +335,196 @@ function OpportunityDetailPage() {
         </div>
       )}
 
-      {/* ===== 4 REAL TABS — Overview / Founder Fit / Market / Proof.
-       * Only one section renders below at a time; clicking a pill swaps
-       * it, it's never all shown at once. Colors match each pill's active
-       * state so the section you land in visually matches the button you
-       * clicked. DashboardShell's own Proof nav item still links straight
-       * to #evidence — initialTabFromHash() reads that on first render. ===== */}
-      <nav className="sticky top-[69px] z-10 -mx-5 mt-8 flex gap-2 overflow-x-auto border-b border-sol-border bg-sol-pearl/95 px-5 py-2.5 backdrop-blur-xl sm:-mx-8 sm:px-8 lg:sticky lg:top-0 lg:-mx-12 lg:px-12">
+      {/* ===== 5-VIEW JUMP NAV — Overview / Founder Fit / Market /
+       * Economics / Proof, exactly. Still one scrolling page (not
+       * hide/show tabs) so DashboardShell's own Proof nav item, which
+       * links straight to #evidence, keeps working unchanged. ===== */}
+      <nav className="sticky top-[69px] z-10 -mx-5 mt-8 flex gap-1 overflow-x-auto border-b border-sol-border bg-sol-pearl/95 px-5 py-2 backdrop-blur-xl sm:-mx-8 sm:px-8 lg:sticky lg:top-0 lg:-mx-12 lg:px-12">
         {SECTION_NAV.map((s) => (
-          <button
+          <a
             key={s.id}
-            type="button"
-            onClick={() => selectTab(s.id)}
-            className={cn(
-              "shrink-0 rounded-full px-4 py-1.5 text-[0.82rem] font-semibold transition-colors",
-              activeTab === s.id
-                ? s.active
-                : "text-sol-secondary hover:bg-sol-ivory hover:text-sol-ink",
-            )}
+            href={`#${s.id}`}
+            className="shrink-0 rounded-full px-3.5 py-1.5 text-[0.82rem] font-medium text-sol-secondary transition-colors hover:bg-sol-violet-mist hover:text-sol-violet-deep"
           >
             {tr(s.label)}
-          </button>
+          </a>
         ))}
       </nav>
 
-      {/* ===== 1. OVERVIEW — what this is, in plain words ===== */}
-      {activeTab === "overview" && (
-        <section className="pt-8">
-          <h2 className="font-display text-[1.2rem] font-semibold text-sol-ink">
-            {tr("Overview")}
-          </h2>
-          <ul className="mt-4 flex flex-col gap-4">
-            {[
-              { label: "Problem", value: detail.problem, dot: "bg-sol-champagne" },
-              { label: "Your Service", value: detail.solution, dot: "bg-sol-violet" },
-              { label: "Customer", value: detail.customer, dot: "bg-sol-navy" },
-              { label: "Revenue", value: detail.revenuePath, dot: "bg-econ-green" },
-            ].map((row) => (
-              <li key={row.label} className="flex gap-3">
-                <span
-                  className={cn("mt-2 size-2.5 shrink-0 rounded-full", row.dot)}
-                  aria-hidden="true"
-                />
-                <p className="text-[1rem] leading-relaxed text-sol-ink">
-                  <span className="font-semibold">{tr(row.label)}:</span> {row.value}
-                </p>
-              </li>
-            ))}
-          </ul>
-        </section>
-      )}
+      {/* ===== 1. OVERVIEW — what this is, in 4 scannable blocks ===== */}
+      <section id="overview" className="scroll-mt-24 pt-8">
+        <h2 className="font-display text-[1.2rem] font-semibold text-sol-ink">{tr("Overview")}</h2>
+        <div className="mt-4 grid gap-3 sm:grid-cols-2">
+          <OverviewBlock
+            label={tr("Problem")}
+            headline={detail.problemHeadline}
+            detail={detail.problem}
+          />
+          <OverviewBlock
+            label={tr("Solution")}
+            headline={detail.solutionHeadline}
+            detail={detail.solution}
+          />
+          <OverviewBlock
+            label={tr("Customer")}
+            headline={detail.customerHeadline}
+            detail={detail.customer}
+          />
+          <OverviewBlock
+            label={tr("Money")}
+            headline={detail.moneyHeadline}
+            detail={detail.businessModel}
+          />
+        </div>
+      </section>
 
       {/* ===== 2. FOUNDER FIT — why this fits you specifically ===== */}
-      {activeTab === "founder-fit" && (
-        <section className="pt-8">
-          <h2 className="font-display text-[1.2rem] font-semibold text-sol-ink">
-            {tr("Founder Fit")}
-          </h2>
-          <div className="mt-4 flex flex-col gap-6 rounded-2xl border border-sol-border bg-sol-surface p-6 sm:flex-row sm:items-start sm:gap-10">
-            <div className="flex shrink-0 flex-col items-center gap-2 sm:items-start">
-              <FitRing score={opportunity.fit_score} size={112} />
-              <span className="text-[0.68rem] font-semibold uppercase tracking-[0.14em] text-sol-champagne-deep">
-                {fitQualitativeLabel(opportunity.fit_score)}
-              </span>
-            </div>
-            <div className="w-full sm:border-l sm:border-sol-border sm:pl-10">
-              <FitScoreMatrix breakdown={score.breakdown} />
-            </div>
+      <section id="founder-fit" className="scroll-mt-24 border-t border-sol-border pt-8 mt-8">
+        <h2 className="font-display text-[1.2rem] font-semibold text-sol-ink">
+          {tr("Founder Fit")}
+        </h2>
+        <div className="mt-4 flex flex-col gap-6 rounded-2xl border border-sol-border bg-sol-surface p-6 sm:flex-row sm:items-start sm:gap-10">
+          <div className="flex shrink-0 flex-col items-center gap-2 sm:items-start">
+            <FitRing score={opportunity.fit_score} size={112} />
+            <span className="text-[0.68rem] font-semibold uppercase tracking-[0.14em] text-sol-champagne-deep">
+              {fitQualitativeLabel(opportunity.fit_score)}
+            </span>
           </div>
+          <div className="w-full sm:border-l sm:border-sol-border sm:pl-10">
+            <FitScoreMatrix breakdown={score.breakdown} />
+          </div>
+        </div>
 
-          {matchRows.length > 0 && (
-            <div className="mt-5 overflow-hidden rounded-2xl border border-sol-border">
-              <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-2 bg-sol-ivory px-4 py-2 text-[0.65rem] font-semibold uppercase tracking-wide text-sol-muted sm:gap-4">
-                <span>You</span>
-                <span />
-                <span className="text-right">This Business</span>
-              </div>
-              {matchRows.map((row, i) => (
-                <div
-                  key={i}
-                  className="grid grid-cols-[1fr_auto_1fr] items-center gap-2 border-t border-sol-border px-4 py-3 text-[0.85rem] sm:gap-4"
-                >
-                  <span className="text-sol-ink">{row.you}</span>
-                  <span
-                    className={cn(
-                      "flex size-5 shrink-0 items-center justify-center rounded-full text-[0.7rem] font-bold",
-                      row.match === "yes"
-                        ? "bg-econ-green-active/15 text-econ-green-active"
-                        : "bg-sol-champagne/15 text-sol-champagne-deep",
-                    )}
-                  >
-                    {row.match === "yes" ? "✓" : "△"}
-                  </span>
-                  <span className="text-right text-sol-secondary">{row.needs}</span>
-                </div>
-              ))}
+        {matchRows.length > 0 && (
+          <div className="mt-5 overflow-hidden rounded-2xl border border-sol-border">
+            <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-2 bg-sol-ivory px-4 py-2 text-[0.65rem] font-semibold uppercase tracking-wide text-sol-muted sm:gap-4">
+              <span>You</span>
+              <span />
+              <span className="text-right">This Business</span>
             </div>
-          )}
-          <div className="mt-5">
-            <BulletList items={detail.whyThisFounder} />
+            {matchRows.map((row, i) => (
+              <div
+                key={i}
+                className="grid grid-cols-[1fr_auto_1fr] items-center gap-2 border-t border-sol-border px-4 py-3 text-[0.85rem] sm:gap-4"
+              >
+                <span className="text-sol-ink">{row.you}</span>
+                <span
+                  className={cn(
+                    "flex size-5 shrink-0 items-center justify-center rounded-full text-[0.7rem] font-bold",
+                    row.match === "yes"
+                      ? "bg-econ-green-active/15 text-econ-green-active"
+                      : "bg-sol-champagne/15 text-sol-champagne-deep",
+                  )}
+                >
+                  {row.match === "yes" ? "✓" : "△"}
+                </span>
+                <span className="text-right text-sol-secondary">{row.needs}</span>
+              </div>
+            ))}
           </div>
-        </section>
-      )}
+        )}
+        <div className="mt-5">
+          <BulletList items={detail.whyThisFounder} />
+        </div>
+      </section>
 
       {/* ===== 3. MARKET — real external signal, never invented ===== */}
-      {activeTab === "market" && (
-        <section className="pt-8">
-          <div className="flex items-center justify-between">
-            <h2 className="font-display text-[1.2rem] font-semibold text-sol-ink">
-              {tr("Market")}
-            </h2>
-            <button
-              type="button"
-              onClick={() => refreshEvidenceMutation.mutate()}
-              disabled={refreshEvidenceMutation.isPending}
-              className="flex items-center gap-1.5 text-[0.78rem] font-medium text-sol-violet-deep hover:underline disabled:opacity-50"
-            >
-              {refreshEvidenceMutation.isPending ? (
-                <Loader2 className="size-3.5 animate-spin" aria-hidden="true" />
-              ) : (
-                <RefreshCw className="size-3.5" aria-hidden="true" />
-              )}
-              {tr("Refresh Market Evidence")}
-            </button>
-          </div>
-          <div className="mt-4 flex flex-col gap-2.5">
-            {evidence.length === 0 && (
-              <p className="text-[0.85rem] text-sol-secondary">
-                {locale === "hi"
-                  ? `अभी तक कोई बाहरी प्रमाण नहीं है — असली संकेत खोजने के लिए "${tr("Refresh Market Evidence")}" पर क्लिक करें।`
-                  : 'No external evidence yet — click "Refresh Market Evidence" to have Sol search for real signals.'}
-              </p>
+      <section id="market" className="scroll-mt-24 border-t border-sol-border pt-8 mt-8">
+        <div className="flex items-center justify-between">
+          <h2 className="font-display text-[1.2rem] font-semibold text-sol-ink">{tr("Market")}</h2>
+          <button
+            type="button"
+            onClick={() => refreshEvidenceMutation.mutate()}
+            disabled={refreshEvidenceMutation.isPending}
+            className="flex items-center gap-1.5 text-[0.78rem] font-medium text-sol-violet-deep hover:underline disabled:opacity-50"
+          >
+            {refreshEvidenceMutation.isPending ? (
+              <Loader2 className="size-3.5 animate-spin" aria-hidden="true" />
+            ) : (
+              <RefreshCw className="size-3.5" aria-hidden="true" />
             )}
-            {evidence.map((item) => {
-              const tone = EVIDENCE_TONE[item.label];
-              return (
-                <div key={item.id} className="rounded-xl border border-sol-border p-3.5">
-                  <div className="flex items-start gap-2.5">
-                    <span
-                      className={cn("mt-1.5 size-1.5 shrink-0 rounded-full", tone.dot)}
-                      aria-hidden="true"
-                    />
-                    <div className="min-w-0 flex-1">
-                      <p className="text-[0.68rem] font-semibold uppercase tracking-wide text-sol-muted">
-                        {tr(tone.label)}
-                      </p>
-                      <p className="mt-0.5 text-[0.88rem] text-sol-ink">{item.claim}</p>
-                      {item.source_url && (
-                        <a
-                          href={item.source_url}
-                          target="_blank"
-                          rel="noreferrer noopener"
-                          className="mt-1 inline-block text-[0.76rem] text-sol-violet-deep hover:underline"
-                        >
-                          {item.source_title ?? item.source_url}
-                        </a>
-                      )}
-                    </div>
+            {tr("Refresh Market Evidence")}
+          </button>
+        </div>
+        <div className="mt-4 flex flex-col gap-2.5">
+          {evidence.length === 0 && (
+            <p className="text-[0.85rem] text-sol-secondary">
+              {locale === "hi"
+                ? `अभी तक कोई बाहरी प्रमाण नहीं है — असली संकेत खोजने के लिए "${tr("Refresh Market Evidence")}" पर क्लिक करें।`
+                : 'No external evidence yet — click "Refresh Market Evidence" to have Sol search for real signals.'}
+            </p>
+          )}
+          {evidence.map((item) => {
+            const tone = EVIDENCE_TONE[item.label];
+            return (
+              <div key={item.id} className="rounded-xl border border-sol-border p-3.5">
+                <div className="flex items-start gap-2.5">
+                  <span
+                    className={cn("mt-1.5 size-1.5 shrink-0 rounded-full", tone.dot)}
+                    aria-hidden="true"
+                  />
+                  <div className="min-w-0 flex-1">
+                    <p className="text-[0.68rem] font-semibold uppercase tracking-wide text-sol-muted">
+                      {tr(tone.label)}
+                    </p>
+                    <p className="mt-0.5 text-[0.88rem] text-sol-ink">{item.claim}</p>
+                    {item.source_url && (
+                      <a
+                        href={item.source_url}
+                        target="_blank"
+                        rel="noreferrer noopener"
+                        className="mt-1 inline-block text-[0.76rem] text-sol-violet-deep hover:underline"
+                      >
+                        {item.source_title ?? item.source_url}
+                      </a>
+                    )}
                   </div>
                 </div>
-              );
-            })}
-          </div>
-        </section>
-      )}
+              </div>
+            );
+          })}
+        </div>
+      </section>
 
       {/* ===== 4. PROOF — is this actually working / what's the risk ===== */}
-      {activeTab === "evidence" && (
-        <section className="pt-8">
-          <h2 className="font-display text-[1.2rem] font-semibold text-sol-ink">
-            {tr("Proof & What Still Needs Validation")}
-          </h2>
-          <div className="mt-4 grid gap-5 sm:grid-cols-2">
-            {detail.risks.length > 0 && (
-              <div>
-                <p className="text-[0.7rem] font-semibold uppercase tracking-wide text-sol-muted">
-                  {tr("Risks")}
-                </p>
-                <div className="mt-2">
-                  <BulletList items={detail.risks} />
-                </div>
+      <section id="evidence" className="scroll-mt-24 border-t border-sol-border pt-8 mt-8">
+        <h2 className="font-display text-[1.2rem] font-semibold text-sol-ink">
+          {tr("Proof & What Still Needs Validation")}
+        </h2>
+        <div className="mt-4 grid gap-5 sm:grid-cols-2">
+          {detail.risks.length > 0 && (
+            <div>
+              <p className="text-[0.7rem] font-semibold uppercase tracking-wide text-sol-muted">
+                {tr("Risks")}
+              </p>
+              <div className="mt-2">
+                <BulletList items={detail.risks} />
               </div>
-            )}
-            {detail.validationNeeded.length > 0 && (
-              <div>
-                <p className="text-[0.7rem] font-semibold uppercase tracking-wide text-sol-muted">
-                  {tr("Needs Validation")}
-                </p>
-                <div className="mt-2">
-                  <BulletList items={detail.validationNeeded} />
-                </div>
+            </div>
+          )}
+          {detail.validationNeeded.length > 0 && (
+            <div>
+              <p className="text-[0.7rem] font-semibold uppercase tracking-wide text-sol-muted">
+                {tr("Needs Validation")}
+              </p>
+              <div className="mt-2">
+                <BulletList items={detail.validationNeeded} />
               </div>
-            )}
-          </div>
+            </div>
+          )}
+        </div>
 
-          <div className="mt-6 rounded-[18px] border border-sol-champagne/25 bg-sol-champagne-soft/40 p-6 sm:p-7">
-            <p className="text-[0.78rem] font-semibold uppercase tracking-wide text-sol-champagne-deep">
-              {tr("Your First Experiment")}
-            </p>
-            <p className="mt-2 text-[1rem] leading-relaxed text-sol-ink">
-              {detail.firstExperiment}
-            </p>
-          </div>
+        <div className="mt-6 rounded-[18px] border border-sol-champagne/25 bg-sol-champagne-soft/40 p-6 sm:p-7">
+          <p className="text-[0.78rem] font-semibold uppercase tracking-wide text-sol-champagne-deep">
+            {tr("Your First Experiment")}
+          </p>
+          <p className="mt-2 text-[1rem] leading-relaxed text-sol-ink">{detail.firstExperiment}</p>
+        </div>
 
-          <div className="mt-6">
-            <EvidenceVault opportunityId={id} />
-          </div>
-        </section>
-      )}
+        <div className="mt-6">
+          <EvidenceVault opportunityId={id} />
+        </div>
+      </section>
 
       <div className="mt-8 flex flex-col items-center gap-3 text-center">
         <p className="text-[0.85rem] text-sol-secondary">

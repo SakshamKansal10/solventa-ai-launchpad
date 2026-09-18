@@ -17,6 +17,30 @@ export function getWhyReasons(candidate: OpportunityPackage | OpportunityCandida
   return "whyThisFounder" in candidate ? candidate.whyThisFounder : candidate.whyYou;
 }
 
+/** The three facts that answer "what is this, concretely" in one glance —
+ * who actually pays, the first real step, and how revenue grows past the
+ * first customer. Pre-migration candidates never captured a revenue path
+ * at all (howItGrows degrades to null, not a guess), and used a 3-step
+ * plan instead of a single first move (its first step stands in here). */
+export interface FlagshipEssentials {
+  whoPays: string;
+  startWith: string;
+  howItGrows: string | null;
+}
+
+export function getFlagshipEssentials(
+  candidate: OpportunityPackage | OpportunityCandidate,
+): FlagshipEssentials {
+  if ("customer" in candidate) {
+    return {
+      whoPays: candidate.customer,
+      startWith: candidate.firstExperiment,
+      howItGrows: candidate.revenuePath,
+    };
+  }
+  return { whoPays: candidate.whoFor, startWith: candidate.howToStart[0], howItGrows: null };
+}
+
 /** A single shape the UI renders from, regardless of whether the
  * underlying stored data is a new one-call OpportunityPackage or a
  * pre-migration OpportunityDetail — see profile.ts / opportunities.ts for
@@ -26,6 +50,14 @@ export interface OpportunityDisplayDetail {
   customer: string;
   problem: string;
   solution: string;
+  // Short scannable phrases for the Overview blocks — a row saved before
+  // these fields existed falls back to its own full sentence rather than
+  // a truncated, grammatically-broken guess (see toDisplayDetail); the UI
+  // detects that case and simply doesn't duplicate the sentence below it.
+  problemHeadline: string;
+  solutionHeadline: string;
+  customerHeadline: string;
+  moneyHeadline: string;
   whyThisFounder: string[];
   businessModel: string;
   startingCapital: string;
@@ -58,6 +90,10 @@ export function toDisplayDetail(
       customer: detail.customer,
       problem: detail.problem,
       solution: detail.solution,
+      problemHeadline: detail.problemHeadline || detail.problem,
+      solutionHeadline: detail.solutionHeadline || detail.solution,
+      customerHeadline: detail.customerHeadline || detail.customer,
+      moneyHeadline: detail.moneyHeadline || detail.businessModelPlainEnglish,
       whyThisFounder: detail.whyThisFounder,
       businessModel: detail.businessModelPlainEnglish,
       startingCapital: detail.startingCapital,
@@ -83,6 +119,10 @@ export function toDisplayDetail(
     customer: detail.whoItIsFor,
     problem: detail.theProblem,
     solution: detail.theOpportunity,
+    problemHeadline: detail.theProblem,
+    solutionHeadline: detail.theOpportunity,
+    customerHeadline: detail.whoItIsFor,
+    moneyHeadline: detail.howItCanMakeMoney,
     whyThisFounder: detail.whyThisFitsYou,
     businessModel: detail.howItCanMakeMoney,
     startingCapital: detail.startingRequirements.capital,

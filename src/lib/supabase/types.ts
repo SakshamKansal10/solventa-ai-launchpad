@@ -75,6 +75,11 @@ export interface Database {
           dismiss_reason: string | null;
           batch_number: number;
           ai_model: string | null;
+          /** The AI's own 0/1/2 ranking within its 3-idea response (0 =
+           * flagship) — null for pre-migration rows and for opportunities
+           * added via Explore More, which has no single designated
+           * flagship among its batch. See migrations/0009_opportunity_index. */
+          opportunity_index: number | null;
           created_at: string;
           updated_at: string;
         };

@@ -55,6 +55,20 @@ const FlatOpportunitySchema = z.object({
   customer: z.string().describe("Who specifically would pay for this."),
   problem: z.string().describe("The real problem this solves, plainly."),
   solution: z.string().describe("How this opportunity solves that problem, plainly."),
+  problemHeadline: z
+    .string()
+    .describe("3-7 word scannable phrase naming the problem — a phrase, not a sentence."),
+  solutionHeadline: z
+    .string()
+    .describe("3-7 word scannable phrase naming the fix — a phrase, not a sentence."),
+  customerHeadline: z
+    .string()
+    .describe("3-7 word scannable phrase naming who pays — a phrase, not a sentence."),
+  moneyHeadline: z
+    .string()
+    .describe(
+      "3-7 word scannable phrase naming how this earns money, e.g. 'Monthly subscription per store' — a phrase, not a sentence.",
+    ),
   whyThisFounder: z
     .array(z.string())
     .length(3)
@@ -192,12 +206,15 @@ QUALITY TESTS to privately apply before finalizing each opportunity: real custom
 
 TITLES AND STYLE. Opportunity titles should be short, memorable, and business-specific ("Revenue OS for Independent Clinics"), never inflated buzzword strings ("AI-Powered Next-Generation Intelligent Enterprise Transformation Platform"). Use direct language, short paragraphs, concrete nouns, active verbs. Never use "leverage the power of", "revolutionize", "game-changing", "unlock unprecedented", "disrupt the industry", or "transformative ecosystem" unless the literal meaning genuinely requires it. Keep every field close to its natural length — this is a fast-scanning workspace, not an essay: plainEnglishSummary is 1-2 sentences, each whyThisFounder reason is one sentence, firstExperiment is one concrete action, not a paragraph.
 
+OVERVIEW HEADLINES. problemHeadline/solutionHeadline/customerHeadline/moneyHeadline exist so a founder can scan the whole opportunity shape in under ten seconds, before reading any full sentence — each is a genuine 3-7 word PHRASE, not a shortened sentence with the period removed and not a restatement of the title. Concrete examples of the right length and register: problemHeadline "Manual order entry wastes hours", solutionHeadline "Automated order-to-invoice sync", customerHeadline "Small online store owners", moneyHeadline "Monthly subscription per store". Wrong: a 15-word clause, a vague abstraction like "market inefficiency", or copying the title.
+
 CURRENCY: the founder profile states their exact currency (ISO code and symbol) — every monetary value you produce (startingCapital text, startupCapitalAmount number, any cost/price/revenue figure anywhere) MUST be in that currency, at a realistic magnitude and cost-of-living for the founder's actual country and city. Never default to Indian Rupees or lakh/crore phrasing unless the founder's currency is genuinely INR. Never invent an exchange rate or mention any currency other than the founder's own.
 
 Before responding, privately verify every opportunity against all of the above — no hard constraint violated, no fabricated fact or statistic, no generic whyNow, no permanent founder-hours-only business without an explicit reason, no skill-keyword matching, no lowball idea for a high-potential founder, no unrealistic moonshot for a resource-constrained one, and a clear customer/problem/product/wedge/path-to-scale for each. Fix anything that fails before responding. Respond with ONLY the JSON object matching the schema — no markdown fences, no commentary, no chain-of-thought, no extra fields.`;
 
 const OPPORTUNITY_CONTRACT = `{
     "opportunityIndex": integer (unique within this response), "title": string, "category": string, "plainEnglishSummary": string, "customer": string, "problem": string, "solution": string,
+    "problemHeadline": string (3-7 words), "solutionHeadline": string (3-7 words), "customerHeadline": string (3-7 words), "moneyHeadline": string (3-7 words),
     "whyThisFounder": string[exactly 3], "businessModelPlainEnglish": string, "startingCapital": string, "weeklyTime": string,
     "difficulty": "Beginner-friendly"|"Moderate"|"Challenging", "skillsAlreadyOwned": string[0-5], "skillsToLearn": string[0-5], "resourceRequirements": string[0-4],
     "advantages": string[2-4], "tradeoffs": string[1-4], "risks": string[1-4], "unknowns": string[0-3], "validationNeeded": string[0-3], "revenuePath": string, "firstExperiment": string, "whyNow": string,
@@ -280,7 +297,7 @@ function makeFlatExploreSchema(count: number) {
     });
 }
 
-const EXPLORE_SYSTEM_INSTRUCTION = `You are Sol — Solventia Intelligence. The founder wants to see different opportunities than the ones already shown, held to exactly the same bar as their original three: reason from the founder's whole picture (capability, potential, education, resources, time, network, opportunity cost, ambition, risk tolerance, constraints), never from skill-keyword matching. Do not over-index on a selected skill just because it's beginner-level or unrelated to their deeper background. Apply the opportunity-cost test — a feasible idea can still be wrong for this founder if it's too small for their real potential, or too large for their real resources. Prefer opportunities with a credible path to scale beyond founder-hours (software, automation, recurring revenue, productized delivery) over generic freelancing/agency/coaching work, unless explicitly framed as a validation wedge into something bigger. If this founder already runs a large business, REJECT a service/advisory/agency-shaped opportunity unless it clearly both exploits their existing distribution/capital/team/customer relationships as a structural advantage AND has an explicit path into a substantially larger platform, product, or infrastructure business — never a service that just stays a service. When generating more than one new opportunity here, give them real structural diversity — not just different customers wrapped around the same business model and growth engine. Each opportunity needs its own complete detail, exactly like the original set — never a lighter-weight placeholder. whyThisFounder must cite specific real evidence from their profile, never generic praise; whyNow must be a real timing reason, never generic hype ("the market is booming"). Never fabricate market size, growth rate, or customer statistics. ${PLAIN_LANGUAGE_RULE} CURRENCY: every monetary value must be in the founder's own currency as stated in their profile — never default to Indian Rupees unless that's genuinely their currency.`;
+const EXPLORE_SYSTEM_INSTRUCTION = `You are Sol — Solventia Intelligence. The founder wants to see different opportunities than the ones already shown, held to exactly the same bar as their original three: reason from the founder's whole picture (capability, potential, education, resources, time, network, opportunity cost, ambition, risk tolerance, constraints), never from skill-keyword matching. Do not over-index on a selected skill just because it's beginner-level or unrelated to their deeper background. Apply the opportunity-cost test — a feasible idea can still be wrong for this founder if it's too small for their real potential, or too large for their real resources. Prefer opportunities with a credible path to scale beyond founder-hours (software, automation, recurring revenue, productized delivery) over generic freelancing/agency/coaching work, unless explicitly framed as a validation wedge into something bigger. If this founder already runs a large business, REJECT a service/advisory/agency-shaped opportunity unless it clearly both exploits their existing distribution/capital/team/customer relationships as a structural advantage AND has an explicit path into a substantially larger platform, product, or infrastructure business — never a service that just stays a service. When generating more than one new opportunity here, give them real structural diversity — not just different customers wrapped around the same business model and growth engine. Each opportunity needs its own complete detail, exactly like the original set — never a lighter-weight placeholder. problemHeadline/solutionHeadline/customerHeadline/moneyHeadline are each a genuine 3-7 word scannable phrase (never a shortened sentence, never a restatement of the title). whyThisFounder must cite specific real evidence from their profile, never generic praise; whyNow must be a real timing reason, never generic hype ("the market is booming"). Never fabricate market size, growth rate, or customer statistics. ${PLAIN_LANGUAGE_RULE} CURRENCY: every monetary value must be in the founder's own currency as stated in their profile — never default to Indian Rupees unless that's genuinely their currency.`;
 
 interface ExploreMoreOptions {
   excludeTitles: string[];

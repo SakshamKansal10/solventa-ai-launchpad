@@ -318,6 +318,23 @@ export const OpportunityPackageSchema = z.object({
   customer: z.string().describe("Who specifically would pay for this."),
   problem: z.string().describe("The real problem this solves, plainly."),
   solution: z.string().describe("How this opportunity solves that problem, plainly."),
+  // The overview blocks on the opportunity page scan in seconds, not
+  // paragraphs — each headline is a short phrase, never a restatement of
+  // the full sentence above it in fewer words with punctuation stripped.
+  problemHeadline: z
+    .string()
+    .describe("3-7 word scannable phrase naming the problem — a phrase, not a sentence."),
+  solutionHeadline: z
+    .string()
+    .describe("3-7 word scannable phrase naming the fix — a phrase, not a sentence."),
+  customerHeadline: z
+    .string()
+    .describe("3-7 word scannable phrase naming who pays — a phrase, not a sentence."),
+  moneyHeadline: z
+    .string()
+    .describe(
+      "3-7 word scannable phrase naming how this earns money, e.g. 'Monthly subscription per store' — a phrase, not a sentence.",
+    ),
   whyThisFounder: z
     .array(z.string())
     .length(3)
