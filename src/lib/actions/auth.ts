@@ -30,9 +30,19 @@ export const signOut = createServerFn({ method: "POST" }).handler(async () => {
 });
 
 export const getCurrentUser = createServerFn({ method: "GET" }).handler(async () => {
-  const { user } = await getOptionalUser();
+  const { supabase, user } = await getOptionalUser();
   if (!user) return null;
-  return { id: user.id, email: user.email ?? null };
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("full_name, avatar_url")
+    .eq("id", user.id)
+    .maybeSingle();
+  return {
+    id: user.id,
+    email: user.email ?? null,
+    fullName: profile?.full_name ?? null,
+    avatarUrl: profile?.avatar_url ?? null,
+  };
 });
 
 /** The one side effect that used to live inside the server-side

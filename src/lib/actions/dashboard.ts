@@ -265,7 +265,7 @@ export const getSettingsData = createServerFn({ method: "GET" }).handler(async (
     await Promise.all([
       supabase
         .from("profiles")
-        .select("full_name, email, created_at")
+        .select("full_name, email, avatar_url, created_at")
         .eq("id", user.id)
         .maybeSingle(),
       supabase
@@ -297,6 +297,7 @@ export const getSettingsData = createServerFn({ method: "GET" }).handler(async (
   return {
     fullName: profileRes.data?.full_name ?? null,
     email: profileRes.data?.email ?? user.email ?? null,
+    avatarUrl: profileRes.data?.avatar_url ?? null,
     memberSince: profileRes.data?.created_at ?? null,
     currentStatus: signals?.identity.currentStatus ?? null,
     ideaCount: opportunitiesCountRes.count ?? 0,

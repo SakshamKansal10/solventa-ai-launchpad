@@ -17,6 +17,11 @@ export interface Database {
           id: string;
           full_name: string | null;
           email: string | null;
+          // Added by migration 0009_avatar_upload.sql — a public URL into
+          // the `avatars` storage bucket, nullable since most rows (and
+          // every row on a database that hasn't had that migration
+          // applied yet) simply have no uploaded picture.
+          avatar_url: string | null;
           created_at: string;
           updated_at: string;
         };
