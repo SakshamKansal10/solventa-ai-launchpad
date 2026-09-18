@@ -6,7 +6,17 @@
       "Bash(grep -rn 'opportunities/$id' src/)",
       "Bash(grep -rn 'opportunities/\\\\$id\\\\|opportunities/\"' src/)",
       "Bash(grep -i 'opportunities/$id\\\\|opportunities/id')",
-      "Bash(grep -n -i \"title\\\\|solventia\" /Users/anushkashah744/solventa-ai-launchpad-1/src/routes/dashboard/opportunities/\\\\$id.tsx | head -20)"
+      "Bash(grep -n -i \"title\\\\|solventia\" /Users/anushkashah744/solventa-ai-launchpad-1/src/routes/dashboard/opportunities/\\\\$id.tsx | head -20)",
+      "Bash(grep -n \"toast\\\\.\\\\\\(success\\\\|error\\\\\\)\\(\" src/routes/consultation.tsx src/routes/dashboard/index.tsx src/routes/dashboard/opportunities/\\\\$id.tsx src/routes/dashboard/roadmap.tsx | head -40)",
+      "Bash(grep -n \"translateDashboardText\\\\|useLocale\\\\|from \\\\\"@/lib/i18n\" src/routes/dashboard/index.tsx src/routes/dashboard/opportunities/\\\\$id.tsx src/routes/dashboard/roadmap.tsx src/routes/dashboard/history.tsx src/routes/consultation.tsx)",
+      "Bash(grep -noE '\"[A-Z][a-zA-Z ,.\\\\x27?!—:]{2,60}\"' /Users/anushkashah744/solventa-ai-launchpad-1/src/components/dashboard/FounderProfileEditSheet.tsx)",
+      "Bash(grep -n \"tr\\(\\\\|toast\\\\.\\\\|translateDashboardText\\\\|useLocale\" /Users/anushkashah744/solventa-ai-launchpad-1/src/routes/dashboard/opportunities/\\\\$id.tsx | head -40)",
+      "Bash(awk 'NR==790{print NR\": \"$0} /^function /{print NR\": \"$0}' /Users/anushkashah744/solventa-ai-launchpad-1/src/routes/dashboard/roadmap.tsx)",
+      "Bash(awk -F: '{print}')",
+      "Bash(awk '$1<=790')",
+      "Bash(awk '/^function /{print NR\": \"$0}' /Users/anushkashah744/solventa-ai-launchpad-1/src/components/dashboard/DashboardShell.tsx)",
+      "Bash(grep -rn '^\\\\s*\"[A-Z][^\"]*\",$' routes/dashboard components/dashboard)",
+      "Bash(echo \"EXIT:$?\")"
     ]
   }
 }
