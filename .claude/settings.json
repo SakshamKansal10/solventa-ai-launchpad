@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(sed -n '820,900p' src/routes/dashboard/roadmap.tsx; echo \"=== opportunities/\\\\$id.tsx head ===\"; sed -n '1,40p' src/routes/dashboard/opportunities/\\\\$id.tsx)",
+      "Read(//Users/anushkashah744/solventa-ai-launchpad-1/src/routes/dashboard/opportunities/**)",
+      "Bash(grep -rn 'opportunities/$id' src/)",
+      "Bash(grep -rn 'opportunities/\\\\$id\\\\|opportunities/\"' src/)",
+      "Bash(grep -i 'opportunities/$id\\\\|opportunities/id')",
+      "Bash(grep -n -i \"title\\\\|solventia\" /Users/anushkashah744/solventa-ai-launchpad-1/src/routes/dashboard/opportunities/\\\\$id.tsx | head -20)"
+    ]
+  }
+}
