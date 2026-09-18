@@ -8,8 +8,16 @@ import { useLocale } from "@/lib/i18n/LocaleProvider";
  * signal validation", or "direct connections to mentors & NGOs" — none
  * of that is real, running infrastructure yet). Only what the product
  * actually does. */
-const GENERIC = ["One-off advice", "No execution memory", "No proof loop"];
-const SOLVENTIA = ["Living founder profile", "Real-world evidence", "Adaptive weekly execution"];
+const GENERIC = [
+  "whySolventia.generic1",
+  "whySolventia.generic2",
+  "whySolventia.generic3",
+] as const;
+const SOLVENTIA = [
+  "whySolventia.solventia1",
+  "whySolventia.solventia2",
+  "whySolventia.solventia3",
+] as const;
 
 export function WhySolventia() {
   const { t } = useLocale();
@@ -34,7 +42,7 @@ export function WhySolventia() {
         >
           <div className="flex flex-col justify-center bg-[oklch(0.9649_0.0045_78.3)] px-8 py-10 lg:px-12">
             <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-sol-muted">
-              Generic AI
+              {t("whySolventia.genericLabel")}
             </p>
             <ul className="mt-7 flex flex-col gap-5">
               {GENERIC.map((row, i) => (
@@ -50,7 +58,7 @@ export function WhySolventia() {
                   className="flex items-start gap-3"
                 >
                   <X className="mt-0.5 size-4 shrink-0 text-sol-muted" aria-hidden="true" />
-                  <span className="text-[15px] leading-[24px] text-sol-secondary">{row}</span>
+                  <span className="text-[15px] leading-[24px] text-sol-secondary">{t(row)}</span>
                 </motion.li>
               ))}
             </ul>
@@ -80,7 +88,7 @@ export function WhySolventia() {
                   className="flex items-start gap-3"
                 >
                   <Check className="mt-0.5 size-4 shrink-0 text-sol-champagne" aria-hidden="true" />
-                  <span className="text-[15px] leading-[24px] text-white/90">{row}</span>
+                  <span className="text-[15px] leading-[24px] text-white/90">{t(row)}</span>
                 </motion.li>
               ))}
             </ul>

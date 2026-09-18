@@ -8,21 +8,32 @@ import { useLocale } from "@/lib/i18n/LocaleProvider";
  * anonymous visitor) and deliberately not a real institution name by
  * default, per the spec's own warning against defaulting to one. */
 const SIGNALS = [
-  { label: "Education", value: "Computer Science Graduate" },
-  { label: "Capital", value: "$20K" },
-  { label: "Time", value: "15 hrs/week" },
-  { label: "Strength", value: "Technical Builder" },
-  { label: "Ambition", value: "Scalable Venture" },
-];
+  { labelKey: "founderSignal.signal.education", valueKey: "founderSignal.value.education" },
+  { labelKey: "founderSignal.signal.capital", valueKey: "founderSignal.value.capital" },
+  { labelKey: "founderSignal.signal.time", valueKey: "founderSignal.value.time" },
+  { labelKey: "founderSignal.signal.strength", valueKey: "founderSignal.value.strength" },
+  { labelKey: "founderSignal.signal.ambition", valueKey: "founderSignal.value.ambition" },
+] as const;
 
-const GENOME_NODES = ["Skill", "Capital", "Time", "Risk", "Ambition", "Access"];
+const GENOME_NODES = [
+  "founderSignal.node.skill",
+  "founderSignal.node.capital",
+  "founderSignal.node.time",
+  "founderSignal.node.risk",
+  "founderSignal.node.ambition",
+  "founderSignal.node.access",
+] as const;
 
 const DIRECTIONS = [
-  { title: "AI Workflow Infrastructure", fit: 92 },
-  { title: "Developer Tooling SaaS", fit: 81 },
-];
+  { titleKey: "founderSignal.direction1", fit: 92 },
+  { titleKey: "founderSignal.direction2", fit: 81 },
+] as const;
 
-const FLOW = ["Select", "Prove", "Week 01"];
+const FLOW = [
+  "founderSignal.flow.select",
+  "founderSignal.flow.prove",
+  "founderSignal.flow.week01",
+] as const;
 
 // Left-column row connector start points and the orbit center, expressed
 // as percentages of the canvas box — lets one 0-100 viewBox (non-uniform
@@ -110,12 +121,12 @@ export function FounderSignal() {
           {/* LEFT — Founder Signals (27%) */}
           <div className="lg:w-[27%] lg:pr-6">
             <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-sol-muted">
-              Founder Signals
+              {t("founderSignal.founderSignalsLabel")}
             </p>
             <div className="mt-4 flex flex-col">
               {SIGNALS.map((row, i) => (
                 <motion.div
-                  key={row.label}
+                  key={row.labelKey}
                   initial={{ opacity: 0, x: -10 }}
                   animate={entered ? { opacity: 1, x: 0 } : {}}
                   transition={{
@@ -126,9 +137,9 @@ export function FounderSignal() {
                   className="flex min-h-[58px] flex-col justify-center border-b border-sol-border/70 last:border-b-0"
                 >
                   <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-sol-muted">
-                    {row.label}
+                    {t(row.labelKey)}
                   </p>
-                  <p className="mt-0.5 text-[17px] font-medium text-sol-ink">{row.value}</p>
+                  <p className="mt-0.5 text-[17px] font-medium text-sol-ink">{t(row.valueKey)}</p>
                 </motion.div>
               ))}
             </div>
@@ -216,25 +227,25 @@ export function FounderSignal() {
                   );
                 })}
               </svg>
-              {GENOME_NODES.map((label, i) => {
+              {GENOME_NODES.map((labelKey, i) => {
                 const p = orbitPoint(i, GENOME_NODES.length, 130);
                 return (
                   <span
-                    key={label}
+                    key={labelKey}
                     className="absolute -translate-x-1/2 -translate-y-1/2 whitespace-nowrap text-[11px] font-semibold uppercase tracking-[0.05em] text-[#5E5B67]"
                     style={{ left: `${p.x}%`, top: `${p.y}%` }}
                   >
-                    {label}
+                    {t(labelKey)}
                   </span>
                 );
               })}
               <div className="relative flex flex-col items-center gap-2 text-center">
                 <img src={mark} alt="" width={298} height={436} className="h-[26px] w-auto" />
                 <p className="font-display text-[18px] font-semibold leading-tight text-sol-ink">
-                  Technical Builder
+                  {t("founderSignal.value.strength")}
                 </p>
                 <p className="text-[11px] font-semibold uppercase tracking-[0.11em] text-sol-muted">
-                  Founder Genome
+                  {t("founderSignal.genomeLabel")}
                 </p>
               </div>
             </motion.div>
@@ -243,7 +254,7 @@ export function FounderSignal() {
           {/* RIGHT — 3 Directions (37%) */}
           <div className="lg:w-[37%] lg:pl-6">
             <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-sol-muted">
-              3 Directions
+              {t("founderSignal.threeDirections")}
             </p>
             <motion.div
               initial={{ opacity: 0, x: 12 }}
@@ -261,11 +272,11 @@ export function FounderSignal() {
               }}
             >
               <p className="text-[11px] font-semibold uppercase tracking-[0.1em] text-sol-champagne">
-                01 · Strongest Match
+                {t("founderSignal.strongestMatch")}
               </p>
               <div className="mt-2 flex items-center justify-between gap-3">
                 <p className="max-w-[65%] font-display text-[20px] font-semibold leading-[1.15]">
-                  {DIRECTIONS[0]?.title}
+                  {DIRECTIONS[0] && t(DIRECTIONS[0].titleKey)}
                 </p>
                 <div className="relative flex size-16 shrink-0 items-center justify-center">
                   <svg width={64} height={64} viewBox="0 0 64 64" className="-rotate-90">
@@ -293,14 +304,14 @@ export function FounderSignal() {
                 </div>
               </div>
               <p className="absolute bottom-6 left-6 text-[12px] text-white/60">
-                $20K Capital · 15 hrs/wk · Moderate Difficulty
+                {t("founderSignal.directionMeta")}
               </p>
             </motion.div>
 
             <div className="mt-3 flex flex-col gap-3">
               {DIRECTIONS.slice(1).map((d, i) => (
                 <motion.div
-                  key={d.title}
+                  key={d.titleKey}
                   initial={{ opacity: 0, x: 12 }}
                   animate={entered ? { opacity: 1, x: 0 } : {}}
                   transition={{
@@ -310,7 +321,7 @@ export function FounderSignal() {
                   }}
                   className="flex h-[92px] items-center justify-between rounded-[18px] border border-sol-border bg-sol-surface px-5"
                 >
-                  <span className="text-[17px] font-medium text-sol-ink">{d.title}</span>
+                  <span className="text-[17px] font-medium text-sol-ink">{t(d.titleKey)}</span>
                   <span className="text-[15px] font-semibold text-sol-champagne-deep">
                     {d.fit}/100
                   </span>
@@ -337,7 +348,7 @@ export function FounderSignal() {
                       background: i % 2 === 0 ? "var(--sol-champagne)" : "var(--sol-violet)",
                     }}
                   />
-                  <span className="text-[13px] font-medium text-sol-secondary">{step}</span>
+                  <span className="text-[13px] font-medium text-sol-secondary">{t(step)}</span>
                 </div>
                 {i < FLOW.length - 1 && <span className="h-px w-10 bg-sol-border sm:w-16" />}
               </div>

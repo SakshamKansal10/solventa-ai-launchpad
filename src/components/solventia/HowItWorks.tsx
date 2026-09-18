@@ -7,10 +7,25 @@ import { useLocale } from "@/lib/i18n/LocaleProvider";
  * individual advertising; what matters publicly is the shape of the
  * whole journey, not a chapter-by-chapter inventory. */
 const STAGES = [
-  { n: "01", icon: Compass, title: "Understand", body: "Founder Genome forms from your reality." },
-  { n: "02", icon: Sparkles, title: "Discover", body: "Three directions calibrated to you." },
-  { n: "03", icon: FlaskConical, title: "Prove", body: "Test assumptions with real evidence." },
-  { n: "04", icon: Map, title: "Build", body: "Your next week adapts as you learn." },
+  {
+    n: "01",
+    icon: Compass,
+    titleKey: "howItWorks.stage1.title",
+    bodyKey: "howItWorks.stage1.body",
+  },
+  {
+    n: "02",
+    icon: Sparkles,
+    titleKey: "howItWorks.stage2.title",
+    bodyKey: "howItWorks.stage2.body",
+  },
+  {
+    n: "03",
+    icon: FlaskConical,
+    titleKey: "howItWorks.stage3.title",
+    bodyKey: "howItWorks.stage3.body",
+  },
+  { n: "04", icon: Map, titleKey: "howItWorks.stage4.title", bodyKey: "howItWorks.stage4.body" },
 ];
 
 const VIEW_WIDTH = 1000;
@@ -143,9 +158,11 @@ export function HowItWorks() {
                   </div>
                   <div>
                     <h3 className="font-display text-[18px] font-semibold leading-[26px] text-sol-ink">
-                      {stage.title}
+                      {t(stage.titleKey)}
                     </h3>
-                    <p className="mt-1.5 text-[16px] leading-[24px] text-[#66616A]">{stage.body}</p>
+                    <p className="mt-1.5 text-[16px] leading-[24px] text-[#66616A]">
+                      {t(stage.bodyKey)}
+                    </p>
                   </div>
                 </motion.li>
               );

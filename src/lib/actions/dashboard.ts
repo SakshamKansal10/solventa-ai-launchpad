@@ -274,7 +274,7 @@ export interface ConsultationHistoryEntry {
 export const getSettingsData = createServerFn({ method: "GET" }).handler(async () => {
   const { supabase, user } = await requireUser();
 
-  const [profileRes, dnaRes, opportunitiesCountRes, roadmapCountRes, activeRoadmapRes] =
+  const [profileRes, dnaRes, opportunitiesCountRes, roadmapCountRes, activeRoadmapRes, selectedRes] =
     await Promise.all([
       supabase
         .from("profiles")
@@ -299,9 +299,19 @@ export const getSettingsData = createServerFn({ method: "GET" }).handler(async (
       // existed.
       supabase
         .from("roadmaps")
-        .select("id")
+        .select("id, opportunity_id")
         .eq("user_id", user.id)
         .eq("status", "active")
+        .maybeSingle(),
+      // A founder can have explicitly picked an idea before ever building
+      // its roadmap — that's still "the founder's current opportunity" for
+      // nav purposes, so it's checked ahead of (never instead of) the active
+      // roadmap below.
+      supabase
+        .from("opportunities")
+        .select("id")
+        .eq("user_id", user.id)
+        .eq("status", "selected")
         .maybeSingle(),
     ]);
 
@@ -316,6 +326,11 @@ export const getSettingsData = createServerFn({ method: "GET" }).handler(async (
     ideaCount: opportunitiesCountRes.count ?? 0,
     roadmapCount: roadmapCountRes.count ?? 0,
     hasActiveRoadmap: Boolean(activeRoadmapRes.data),
+    // The founder's currently-active opportunity, if any — lets pages that
+    // otherwise have no opportunity in scope (Settings, History) still send
+    // the sidebar's Ideas/Proof nav items to the real thing instead of
+    // falling back to Command Center.
+    activeOpportunityId: selectedRes.data?.id ?? activeRoadmapRes.data?.opportunity_id ?? null,
   };
 });
 

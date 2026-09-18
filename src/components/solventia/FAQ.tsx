@@ -9,26 +9,11 @@ import { useLocale } from "@/lib/i18n/LocaleProvider";
 /** Exactly five — the remaining questions from the old ten-item list
  * move to /about rather than disappearing outright. */
 const FAQS = [
-  {
-    q: "What exactly does Solventia do?",
-    a: "Solventia turns your background, skills, capital, and time into a small set of business directions matched to you specifically — then gives you a week-by-week roadmap to actually test and build one.",
-  },
-  {
-    q: "How personalized are the recommendations?",
-    a: "Every direction is generated from your own answers, not a shared list. Two people with different profiles get different results, and the fit score behind each one is computed from your real, stored profile.",
-  },
-  {
-    q: "Do I need business experience?",
-    a: "No. The consultation starts from where you actually are today — your skills, time, and resources — not from an assumed baseline of prior experience.",
-  },
-  {
-    q: "What happens after I choose an idea?",
-    a: "Solventia builds a roadmap for it, broken into weeks. Only the current week is ever fully detailed — the next one is generated once you've actually made progress on the one before it.",
-  },
-  {
-    q: "Is my information private?",
-    a: "The details you share are used to personalize your recommendations and roadmap, not sold to third parties. Full details are in our privacy policy.",
-  },
+  { qKey: "faq.q1.q", aKey: "faq.q1.a" },
+  { qKey: "faq.q2.q", aKey: "faq.q2.a" },
+  { qKey: "faq.q3.q", aKey: "faq.q3.a" },
+  { qKey: "faq.q4.q", aKey: "faq.q4.a" },
+  { qKey: "faq.q5.q", aKey: "faq.q5.a" },
 ];
 
 export function FAQ() {
@@ -46,12 +31,12 @@ export function FAQ() {
         <div className="mt-10 rounded-[24px] border border-sol-border bg-sol-hp-faq-panel px-6 lg:px-10">
           <Accordion type="single" collapsible className="w-full">
             {FAQS.map((item, i) => (
-              <AccordionItem key={item.q} value={`item-${i}`} className="border-sol-border">
+              <AccordionItem key={item.qKey} value={`item-${i}`} className="border-sol-border">
                 <AccordionTrigger className="min-h-[70px] rounded-[10px] px-3.5 py-5 text-left text-[16px] font-medium text-sol-ink transition-colors duration-[180ms] hover:bg-[rgba(247,244,255,.50)] hover:no-underline [&[data-state=open]]:rounded-b-none">
-                  {item.q}
+                  {t(item.qKey)}
                 </AccordionTrigger>
                 <AccordionContent className="max-w-[700px] px-3.5 text-[16px] leading-[26px] text-sol-secondary">
-                  {item.a}
+                  {t(item.aKey)}
                 </AccordionContent>
               </AccordionItem>
             ))}

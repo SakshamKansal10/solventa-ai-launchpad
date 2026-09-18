@@ -34,11 +34,12 @@ function HistoryPage() {
   // locked/unlocked state consistent across every dashboard page.
   const settingsQuery = useQuery({ queryKey: ["settings-data"], queryFn: () => getSettingsData() });
   const hasRoadmap = settingsQuery.data ? settingsQuery.data.hasActiveRoadmap : undefined;
+  const opportunityId = settingsQuery.data?.activeOpportunityId ?? null;
   const { locale } = useLocale();
   const tr = (s: string) => translateDashboardText(s, locale) ?? s;
 
   return (
-    <DashboardShell hasRoadmap={hasRoadmap} pageTitle="History">
+    <DashboardShell hasRoadmap={hasRoadmap} opportunityId={opportunityId} pageTitle="History">
       <div className="flex items-center gap-3">
         <History className="size-6 text-sol-champagne-deep" aria-hidden="true" />
         <div>

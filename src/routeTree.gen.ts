@@ -122,9 +122,9 @@ const DashboardRoadmapIndexRoute = DashboardRoadmapIndexRouteImport.update({
 } as any)
 const DashboardRoadmapBuildingRoute =
   DashboardRoadmapBuildingRouteImport.update({
-    id: '/dashboard/roadmap/building',
-    path: '/dashboard/roadmap/building',
-    getParentRoute: () => rootRouteImport,
+    id: '/building',
+    path: '/building',
+    getParentRoute: () => DashboardRoadmapRoute,
   } as any)
 
 export interface FileRoutesByFullPath {
@@ -275,7 +275,6 @@ export interface RootRouteChildren {
   DashboardSettingsRoute: typeof DashboardSettingsRoute
   DashboardIndexRoute: typeof DashboardIndexRoute
   DashboardOpportunitiesIdRoute: typeof DashboardOpportunitiesIdRoute
-  DashboardRoadmapBuildingRoute: typeof DashboardRoadmapBuildingRoute
   DashboardRoadmapIndexRoute: typeof DashboardRoadmapIndexRoute
 }
 
@@ -409,10 +408,10 @@ declare module '@tanstack/react-router' {
     }
     '/dashboard/roadmap/building': {
       id: '/dashboard/roadmap/building'
-      path: '/dashboard/roadmap/building'
+      path: '/building'
       fullPath: '/dashboard/roadmap/building'
       preLoaderRoute: typeof DashboardRoadmapBuildingRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof DashboardRoadmapRoute
     }
   }
 }
@@ -435,7 +434,6 @@ const rootRouteChildren: RootRouteChildren = {
   DashboardSettingsRoute: DashboardSettingsRoute,
   DashboardIndexRoute: DashboardIndexRoute,
   DashboardOpportunitiesIdRoute: DashboardOpportunitiesIdRoute,
-  DashboardRoadmapBuildingRoute: DashboardRoadmapBuildingRoute,
   DashboardRoadmapIndexRoute: DashboardRoadmapIndexRoute,
 }
 export const routeTree = rootRouteImport

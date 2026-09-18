@@ -16,7 +16,20 @@
       "Bash(awk '$1<=790')",
       "Bash(awk '/^function /{print NR\": \"$0}' /Users/anushkashah744/solventa-ai-launchpad-1/src/components/dashboard/DashboardShell.tsx)",
       "Bash(grep -rn '^\\\\s*\"[A-Z][^\"]*\",$' routes/dashboard components/dashboard)",
-      "Bash(echo \"EXIT:$?\")"
+      "Bash(echo \"EXIT:$?\")",
+      "Bash(git merge *)",
+      "Bash(grep -n *)",
+      "Bash(grep -n \"SectionId\\\\|initialTabFromHash\\\\|OverviewBlock\" /Users/anushkashah744/solventa-ai-launchpad-1/src/routes/dashboard/opportunities/\\\\$id.tsx)",
+      "Bash(git show *)",
+      "Bash(echo \"TSC_EXIT:$?\")",
+      "Bash(echo \"TSC:$?\")",
+      "Bash(grep -n -i \"proof\" src/components/solventia/Hero.tsx src/components/solventia/AdaptiveRoadmap.tsx src/components/dashboard/EvidenceVault.tsx src/components/dashboard/DashboardShell.tsx src/lib/profile/ambition.ts src/lib/i18n/dashboard-dictionary.ts src/lib/i18n/dictionary.ts src/routes/dashboard/opportunities/\\\\$id.tsx src/routes/dashboard/roadmap/building.tsx)",
+      "Bash(grep -n \"evidence\\\\|hash\\\\|scrollIntoView\\\\|scroll-mt\" src/routes/dashboard/opportunities/\\\\$id.tsx)",
+      "Bash(sed -n '1,40p' src/routes/dashboard/opportunities/\\\\$id.tsx)",
+      "Bash(sed -n '95,140p' src/routes/dashboard/opportunities/\\\\$id.tsx)",
+      "Bash(sed -n '425,500p' src/routes/dashboard/opportunities/\\\\$id.tsx)",
+      "Bash(grep -n -i \"proof\\\\|evidence\\\\|hash\" /Users/anushkashah744/solventa-ai-launchpad-1/src/routes/dashboard/opportunities/\\\\$id.tsx | head -60)",
+      "Bash(grep -n \"SECTION_NAV\\\\|useLocation\\\\|window.location\\\\|scrollIntoView\\\\|hash\" /Users/anushkashah744/solventa-ai-launchpad-1/src/routes/dashboard/opportunities/\\\\$id.tsx)"
     ]
   }
 }

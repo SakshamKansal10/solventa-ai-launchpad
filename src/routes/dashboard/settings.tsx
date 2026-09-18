@@ -196,6 +196,7 @@ function SettingsPage() {
   // undefined while loading (nav stays in its normal, un-locked state until
   // we actually know) — never a false "locked" flash before data arrives.
   const hasRoadmap = data ? data.hasActiveRoadmap : undefined;
+  const opportunityId = data?.activeOpportunityId ?? null;
 
   if (query.isLoading) {
     return (
@@ -208,7 +209,7 @@ function SettingsPage() {
   }
 
   return (
-    <DashboardShell hasRoadmap={hasRoadmap} pageTitle={tr("Settings")}>
+    <DashboardShell hasRoadmap={hasRoadmap} opportunityId={opportunityId} pageTitle={tr("Settings")}>
       <div className="mx-auto flex w-full max-w-[1120px] flex-col">
         <div className="flex items-center gap-4">
           <AvatarUploader

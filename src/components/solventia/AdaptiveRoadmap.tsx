@@ -5,12 +5,16 @@ import mark from "@/assets/solventia-mark.png";
 import { useLocale } from "@/lib/i18n/LocaleProvider";
 
 const WEEK_1_TASKS = [
-  "Draft your 8-question interview script",
-  "Recruit 8 people who fit your target customer",
-  "Log every answer in your evidence vault",
-];
+  "adaptiveRoadmap.task1",
+  "adaptiveRoadmap.task2",
+  "adaptiveRoadmap.task3",
+] as const;
 
-const FUTURE_WEEKS = ["Week 03", "Week 04", "Stage II"];
+const FUTURE_WEEKS = [
+  "adaptiveRoadmap.week03",
+  "adaptiveRoadmap.week04",
+  "adaptiveRoadmap.stage2",
+] as const;
 
 const TARGET_COUNT = 6;
 const EVIDENCE_TOTAL = 8;
@@ -74,13 +78,13 @@ export function AdaptiveRoadmap() {
     <section className="bg-sol-hp-pearl px-[18px] py-[96px] sm:px-6 lg:px-9 lg:py-[120px]">
       <div className="mx-auto max-w-[1180px]">
         <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-sol-champagne-deep">
-          Adaptive Execution
+          {t("adaptiveRoadmap.eyebrow")}
         </p>
         <h2 className="mt-4 max-w-[600px] font-display text-[32px] font-semibold leading-[1.15] text-sol-ink sm:text-[40px] sm:leading-[46px]">
           {t("adaptiveRoadmap.headline")}
         </h2>
         <p className="mt-4 max-w-[600px] text-[17px] leading-[27px] text-sol-secondary">
-          Solventia generates the next mission from what you actually learn.
+          {t("adaptiveRoadmap.subhead")}
         </p>
 
         <motion.div
@@ -98,20 +102,20 @@ export function AdaptiveRoadmap() {
             }}
           >
             <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-sol-violet-deep">
-              Week 01
+              {t("adaptiveRoadmap.week01")}
             </p>
             <p className="mt-1 text-[13px] font-semibold uppercase tracking-[0.1em] text-sol-secondary">
-              Prove the Problem
+              {t("adaptiveRoadmap.proveTheProblem")}
             </p>
             <p className="mt-4 font-display text-[26px] font-semibold leading-tight text-sol-ink">
-              Interview 8 customers.
+              {t("adaptiveRoadmap.interview8")}
             </p>
 
             <div className="mt-5 flex flex-col gap-2.5">
               {WEEK_1_TASKS.map((task) => (
                 <div key={task} className="flex items-center gap-2.5">
                   <span className="flex size-4 shrink-0 items-center justify-center rounded-full border border-sol-violet/50" />
-                  <span className="text-[14px] text-sol-ink">{task}</span>
+                  <span className="text-[14px] text-sol-ink">{t(task)}</span>
                 </div>
               ))}
             </div>
@@ -119,7 +123,7 @@ export function AdaptiveRoadmap() {
             <div className="mt-6">
               <div className="flex items-center justify-between text-[13px] font-medium text-sol-secondary">
                 <span>
-                  {count} / {EVIDENCE_TOTAL} interviews
+                  {count} / {EVIDENCE_TOTAL} {t("adaptiveRoadmap.interviews")}
                 </span>
                 <span>{Math.round((count / EVIDENCE_TOTAL) * 100)}%</span>
               </div>
@@ -140,7 +144,7 @@ export function AdaptiveRoadmap() {
                 transition={{ duration: 0.3 }}
                 className="mt-4 text-[13px] font-semibold text-sol-violet-deep"
               >
-                5+ report the same pain — signal reached.
+                {t("adaptiveRoadmap.signalReached")}
               </motion.p>
             )}
           </div>
@@ -180,10 +184,10 @@ export function AdaptiveRoadmap() {
               </span>
             </div>
             <p className="text-center text-[11px] font-semibold uppercase tracking-[0.08em] text-sol-violet-deep">
-              Solventia Adapts
+              {t("adaptiveRoadmap.adapts")}
             </p>
             <p className="max-w-[124px] text-center text-[13px] leading-tight text-sol-secondary">
-              Evidence changed the plan.
+              {t("adaptiveRoadmap.evidenceChanged")}
             </p>
           </div>
 
@@ -201,10 +205,10 @@ export function AdaptiveRoadmap() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-sol-champagne-deep">
-                    Week 02
+                    {t("adaptiveRoadmap.week02")}
                   </p>
                   <p className="mt-1 text-[13px] font-semibold uppercase tracking-[0.1em] text-sol-secondary">
-                    Test Willingness to Pay
+                    {t("adaptiveRoadmap.testWillingnessToPay")}
                   </p>
                 </div>
                 {!unlocked && <Lock className="size-4 text-sol-muted" aria-hidden="true" />}
@@ -216,8 +220,8 @@ export function AdaptiveRoadmap() {
               </div>
               <p className="mt-3 text-[15px] leading-[24px] text-sol-secondary">
                 {unlocked
-                  ? "Generated from what Week 01 actually found — not the original template."
-                  : "Unlocks once Week 01's evidence threshold is reached."}
+                  ? t("adaptiveRoadmap.generatedFromWeek01")
+                  : t("adaptiveRoadmap.unlocksOnceThreshold")}
               </p>
             </motion.div>
 
@@ -228,15 +232,12 @@ export function AdaptiveRoadmap() {
                   className="flex items-center justify-between rounded-xl border border-dashed px-4 py-3"
                   style={{ background: "rgba(255,253,249,.58)", borderColor: "#D8D0C6" }}
                 >
-                  <span className="text-[14px] text-[#8A858D]">{label}</span>
+                  <span className="text-[14px] text-[#8A858D]">{t(label)}</span>
                   <Lock className="size-3.5 text-[#8A858D]" aria-hidden="true" />
                 </div>
               ))}
             </div>
-            <p className="mt-4 text-[12px] text-sol-muted">
-              Product demonstration — future weeks are generated only once the week before them is
-              actually complete.
-            </p>
+            <p className="mt-4 text-[12px] text-sol-muted">{t("adaptiveRoadmap.productDemo")}</p>
           </div>
         </motion.div>
       </div>
