@@ -16,8 +16,8 @@ export const Route = createFileRoute("/dashboard/history")({
   }),
 });
 
-function formatDate(iso: string): string {
-  return new Date(iso).toLocaleDateString(undefined, {
+function formatDate(iso: string, locale: string): string {
+  return new Date(iso).toLocaleDateString(locale === "hi" ? "hi-IN" : "en-US", {
     year: "numeric",
     month: "long",
     day: "numeric",
@@ -86,7 +86,7 @@ function HistoryPage() {
                 <span className="size-1.5 rounded-full bg-sol-champagne" />
               </span>
               <p className="text-[0.72rem] font-semibold uppercase tracking-[0.1em] text-sol-muted">
-                {tr("Consultation")} — {formatDate(entry.createdAt)}
+                {tr("Consultation")} — {formatDate(entry.createdAt, locale)}
               </p>
               <section className="mt-3 rounded-[18px] border border-sol-border bg-sol-surface p-6">
                 <div className="flex flex-col divide-y divide-sol-border">

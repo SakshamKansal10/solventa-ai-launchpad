@@ -4,6 +4,7 @@ import { ArrowRight } from "lucide-react";
 import { scrollToSection } from "@/hooks/use-active-section";
 import { useLocale } from "@/lib/i18n/LocaleProvider";
 import { cn } from "@/lib/utils";
+import heroPhoto from "@/assets/image.png";
 
 const fadeUp = {
   hidden: { opacity: 0, y: 24 },
@@ -101,35 +102,34 @@ function SignalCard({ card }: { card: (typeof SIGNAL_CARDS)[number] }) {
   );
 }
 
-/** The hero background — a plain warm ivory/pearl gradient with subtle
- * violet ambience and a touch of champagne, nothing else. Earlier
- * versions of this hero used an animated SVG "intelligence field" (a
- * node-and-line network) plus a dashed orbital path graphic behind the
- * copy; both were removed as arbitrary decoration unrelated to anything
- * Solventia actually does — an on-brand color palette doesn't need a
- * fake network diagram to justify it. The three real signal cards below
- * (Founder Fit / Proof Signal / Week 01) are the one genuinely
- * product-derived visual this hero keeps. */
+/** The hero background — a photographic backdrop with an ivory fade over
+ * the left side so the headline/copy column stays legible, plus the
+ * violet/champagne ambience layered on top. */
 function HeroBackground() {
   return (
-    <div
-      className="absolute inset-0"
-      aria-hidden="true"
-      style={{
-        background:
-          "radial-gradient(ellipse 640px 520px at 78% 18%, rgba(114,87,216,.09), transparent 62%), radial-gradient(ellipse 520px 440px at 92% 62%, rgba(197,163,106,.08), transparent 64%), linear-gradient(100deg, #F8F5EF 0%, #F7F3EC 55%, #F4EEE2 100%)",
-      }}
-    />
+    <div className="absolute inset-0" aria-hidden="true">
+      <img
+        src={heroPhoto}
+        alt=""
+        className="absolute inset-0 h-full w-full object-cover"
+      />
+      <div
+        className="absolute inset-0"
+        style={{
+          background:
+            "linear-gradient(100deg, #F8F5EF 0%, rgba(248,245,239,0.94) 32%, rgba(247,243,236,0.55) 52%, rgba(244,238,226,0.12) 72%, transparent 88%)",
+        }}
+      />
+    </div>
   );
 }
 
-/** The hero — a plain warm background (see HeroBackground above) instead
- * of the old generic stock landscape photo or, later, an animated SVG
- * network graphic, recomposed per the homepage reconstruction spec:
- * calmer left side for text, three minimal intelligence signals instead
- * of four generic floating cards, no people-bubble social proof, no
- * Discover/Validate/Plan/Launch strip underneath (How It Works now owns
- * that story, once, not twice). */
+/** The hero — photographic background (see HeroBackground above),
+ * recomposed per the homepage reconstruction spec: calmer left side for
+ * text, three minimal intelligence signals instead of four generic
+ * floating cards, no people-bubble social proof, no Discover/Validate/
+ * Plan/Launch strip underneath (How It Works now owns that story, once,
+ * not twice). */
 export function Hero() {
   const navigate = useNavigate();
   const { t, locale } = useLocale();
