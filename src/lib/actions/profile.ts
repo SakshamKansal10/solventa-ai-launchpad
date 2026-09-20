@@ -222,6 +222,7 @@ export const completeConsultation = createServerFn({ method: "POST" })
             status: "active",
             batch_number: 1,
             ai_model: MODEL,
+            origin_locale: data.locale ?? "en",
           })
           .select("id")
           .single();

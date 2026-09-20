@@ -29,7 +29,18 @@
       "Bash(sed -n '95,140p' src/routes/dashboard/opportunities/\\\\$id.tsx)",
       "Bash(sed -n '425,500p' src/routes/dashboard/opportunities/\\\\$id.tsx)",
       "Bash(grep -n -i \"proof\\\\|evidence\\\\|hash\" /Users/anushkashah744/solventa-ai-launchpad-1/src/routes/dashboard/opportunities/\\\\$id.tsx | head -60)",
-      "Bash(grep -n \"SECTION_NAV\\\\|useLocation\\\\|window.location\\\\|scrollIntoView\\\\|hash\" /Users/anushkashah744/solventa-ai-launchpad-1/src/routes/dashboard/opportunities/\\\\$id.tsx)"
+      "Bash(grep -n \"SECTION_NAV\\\\|useLocation\\\\|window.location\\\\|scrollIntoView\\\\|hash\" /Users/anushkashah744/solventa-ai-launchpad-1/src/routes/dashboard/opportunities/\\\\$id.tsx)",
+      "Bash(node -e ' *)",
+      "Bash(npm root *)",
+      "Bash(NODE_PATH=$\\(npm root -g\\) node -e \"require.resolve\\('playwright'\\)\")",
+      "Bash(PLAYWRIGHT_BROWSERS_PATH=0 npx --yes playwright@1.63.0 --help)",
+      "Bash(node --input-type=commonjs -e ' *)",
+      "Bash(npx --yes playwright screenshot --wait-for-timeout=2000 --viewport-size=1440,900 http://localhost:8084/ /private/tmp/claude-501/-Users-anushkashah744-solventa-ai-launchpad-1/8227c437-bcc6-4019-b3d8-32139fe2bb1f/scratchpad/hero.png)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\\\\n\" http://localhost:8084/src/assets/image.png)",
+      "Bash(npx --yes playwright screenshot --wait-for-timeout=2500 --viewport-size=1440,900 http://localhost:8084/ /private/tmp/claude-501/-Users-anushkashah744-solventa-ai-launchpad-1/8227c437-bcc6-4019-b3d8-32139fe2bb1f/scratchpad/hero-before.png)",
+      "Bash(sed -n '1,80p' src/routes/dashboard/opportunities/'$id.tsx' | grep -n \"evidence\\\\|hash\\\\|Proof\\\\|Ideas\" -i)",
+      "Bash(git log *)",
+      "Bash(node -e \"console.log\\(Object.keys\\(require\\('@tanstack/router-generator'\\)\\)\\)\")"
     ]
   }
 }

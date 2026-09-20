@@ -80,6 +80,10 @@ export interface Database {
            * added via Explore More, which has no single designated
            * flagship among its batch. See migrations/0009_opportunity_index. */
           opportunity_index: number | null;
+          // Added by migration 0010_opportunity_translations.sql — the
+          // language title/one_liner/who_for/candidate were actually
+          // generated in. Defaults to 'en' for every pre-existing row.
+          origin_locale: string;
           created_at: string;
           updated_at: string;
         };
@@ -110,6 +114,32 @@ export interface Database {
           detail: Json;
         };
         Update: Partial<Database["public"]["Tables"]["opportunity_details"]["Row"]>;
+        Relationships: [];
+      };
+      // Added by migration 0010_opportunity_translations.sql — on-demand
+      // translation cache. One row per (opportunity, locale) once that
+      // combination has ever been translated; never re-translated after.
+      opportunity_translations: {
+        Row: {
+          id: string;
+          opportunity_id: string;
+          user_id: string;
+          locale: string;
+          title: string;
+          one_liner: string;
+          who_for: string | null;
+          candidate: Json;
+          created_at: string;
+        };
+        Insert: Partial<Database["public"]["Tables"]["opportunity_translations"]["Row"]> & {
+          opportunity_id: string;
+          user_id: string;
+          locale: string;
+          title: string;
+          one_liner: string;
+          candidate: Json;
+        };
+        Update: Partial<Database["public"]["Tables"]["opportunity_translations"]["Row"]>;
         Relationships: [];
       };
       opportunity_evidence: {

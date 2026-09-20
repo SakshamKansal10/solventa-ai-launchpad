@@ -5,6 +5,7 @@ import { requireUser } from "@/lib/supabase/server";
 import type { FounderAnalysis, FounderDNA } from "@/lib/ai/schemas";
 import type { NormalizedProfile } from "@/lib/profile/normalize";
 import { computeFounderGenome, computeFounderPersona } from "@/lib/profile/founder-genome";
+import { translateOpportunityRows } from "@/lib/actions/opportunity-translation.server";
 
 interface RoadmapPhaseSummary {
   key: string;
@@ -29,10 +30,23 @@ interface CurrentWeekSummary {
 }
 
 export const getDashboard = createServerFn({ method: "GET" })
-  .validator(z.object({ consultationId: z.string().uuid().optional() }).optional())
+  .validator(
+    z
+      .object({
+        consultationId: z.string().uuid().optional(),
+        // The founder's currently-selected UI locale — used only to
+        // translate already-generated opportunity text on the fly (see
+        // translateOpportunityRows below) when it differs from the
+        // locale that text was originally generated in. Omitted (or a
+        // locale that matches origin_locale) is a pure no-op.
+        locale: z.enum(["en", "hi"]).optional(),
+      })
+      .optional(),
+  )
   .handler(async ({ data }) => {
     const { supabase, user } = await requireUser();
     const consultationId = data?.consultationId;
+    const locale = data?.locale;
 
     const [profileRes, opportunitiesRes, dnaRes, activeRoadmapRes] = await Promise.all([
       supabase.from("profiles").select("full_name, email").eq("id", user.id).maybeSingle(),
@@ -113,9 +127,19 @@ export const getDashboard = createServerFn({ method: "GET" })
     // `selected`/`activeRoadmapOpportunity` searched the full, unscoped
     // `opportunities` list across every consultation ever — the exact bug
     // that let an old flagship leak into a new consultation's dashboard.)
-    const viewedOpportunities = latestBusinessDnaId
+    const viewedOpportunitiesRaw = latestBusinessDnaId
       ? opportunities.filter((o) => o.business_dna_id === latestBusinessDnaId)
       : [];
+    // Translated once, up front, so every derived slice below (primary,
+    // alternatives, selected, saved) already carries the founder's current
+    // locale — a no-op per row once cached, and a total no-op whenever
+    // `locale` is unset or already matches that row's origin_locale.
+    const viewedOpportunities = await translateOpportunityRows(
+      supabase,
+      user.id,
+      viewedOpportunitiesRaw,
+      locale,
+    );
     const activeLatest = viewedOpportunities.filter((o) => o.status === "active");
     const selected = viewedOpportunities.find((o) => o.status === "selected") ?? null;
     const saved = viewedOpportunities.filter((o) => o.status === "saved");

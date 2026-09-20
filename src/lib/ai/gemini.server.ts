@@ -131,6 +131,7 @@ export type GeminiCallPurpose =
   | "WEEK_DETAIL"
   | "ROADMAP_REPLAN"
   | "REANALYZE"
+  | "TRANSLATE_OPPORTUNITY"
   | "LEGACY_FALLBACK";
 
 type ThinkingLevel = "minimal" | "low" | "medium" | "high";

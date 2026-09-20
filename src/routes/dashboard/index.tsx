@@ -88,13 +88,13 @@ function DashboardHome() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { consultation } = Route.useSearch();
+  const { locale } = useLocale();
   const dashboardQuery = useQuery({
-    queryKey: ["dashboard", consultation ?? null],
-    queryFn: () => getDashboard({ data: { consultationId: consultation } }),
+    queryKey: ["dashboard", consultation ?? null, locale],
+    queryFn: () => getDashboard({ data: { consultationId: consultation, locale } }),
   });
   const [exploring, setExploring] = useState(false);
   const [switching, setSwitching] = useState<string | null>(null);
-  const { locale } = useLocale();
   const tr = (s: string) => translateDashboardText(s, locale) ?? s;
 
   async function refresh() {

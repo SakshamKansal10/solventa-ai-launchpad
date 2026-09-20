@@ -6,8 +6,10 @@ import { ArrowRight, Loader2, RefreshCw } from "lucide-react";
 import { DashboardShell } from "@/components/dashboard/DashboardShell";
 import { SolventiaLoadingState } from "@/components/dashboard/SolventiaLoadingState";
 import { FitRing, FitScoreMatrix, fitQualitativeLabel } from "@/components/dashboard/FitScore";
-import { EvidenceVault } from "@/components/dashboard/EvidenceVault";
 import { PremiumButton } from "@/components/solventia/PremiumButton";
+// EvidenceVault and the risks/validation/first-experiment "Proof" content
+// now live on their own dedicated route — see $id_.proof.tsx — not inline
+// on this page.
 import { Button } from "@/components/ui/button";
 import { requireAuthLoader } from "@/lib/route-guards";
 import {
@@ -49,16 +51,13 @@ const DISMISS_REASONS = [
   "Other",
 ];
 
-// Four views, exactly: Overview / Founder Fit / Market / Proof.
-// Still a single scrolling page with a sticky jump nav (not hide/show
-// tabs) — DashboardShell's own "Proof" nav item already links here via
-// `#evidence`, so the Proof view keeps that exact id rather than
-// introducing a second, disconnected id for the same destination.
+// Three views, exactly: Overview / Founder Fit / Market. Proof has its own
+// dedicated route (see $id_.proof.tsx) — DashboardShell's "Proof" nav item
+// links there directly rather than to an anchor on this page.
 const SECTION_NAV = [
   { id: "overview", label: "Overview" },
   { id: "founder-fit", label: "Founder Fit" },
   { id: "market", label: "Market" },
-  { id: "evidence", label: "Proof" },
 ];
 
 /** One scannable overview block — a small label, a large 3-7 word
@@ -113,14 +112,14 @@ function OpportunityDetailPage() {
   const { id } = Route.useParams();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const { locale } = useLocale();
   const query = useQuery({
-    queryKey: ["opportunity", id],
-    queryFn: () => getOpportunity({ data: { id } }),
+    queryKey: ["opportunity", id, locale],
+    queryFn: () => getOpportunity({ data: { id, locale } }),
   });
 
   const [showReasons, setShowReasons] = useState(false);
   const [busy, setBusy] = useState<string | null>(null);
-  const { locale } = useLocale();
   const tr = (s: string) => translateDashboardText(s, locale) ?? s;
 
   const refreshEvidenceMutation = useMutation({
@@ -335,10 +334,8 @@ function OpportunityDetailPage() {
         </div>
       )}
 
-      {/* ===== 5-VIEW JUMP NAV — Overview / Founder Fit / Market /
-       * Economics / Proof, exactly. Still one scrolling page (not
-       * hide/show tabs) so DashboardShell's own Proof nav item, which
-       * links straight to #evidence, keeps working unchanged. ===== */}
+      {/* ===== JUMP NAV — Overview / Founder Fit / Market, exactly. Still
+       * one scrolling page (not hide/show tabs). ===== */}
       <nav className="sticky top-[69px] z-10 -mx-5 mt-8 flex gap-1 overflow-x-auto border-b border-sol-border bg-sol-pearl/95 px-5 py-2 backdrop-blur-xl sm:-mx-8 sm:px-8 lg:sticky lg:top-0 lg:-mx-12 lg:px-12">
         {SECTION_NAV.map((s) => (
           <a
@@ -483,46 +480,6 @@ function OpportunityDetailPage() {
               </div>
             );
           })}
-        </div>
-      </section>
-
-      {/* ===== 4. PROOF — is this actually working / what's the risk ===== */}
-      <section id="evidence" className="scroll-mt-24 border-t border-sol-border pt-8 mt-8">
-        <h2 className="font-display text-[1.2rem] font-semibold text-sol-ink">
-          {tr("Proof & What Still Needs Validation")}
-        </h2>
-        <div className="mt-4 grid gap-5 sm:grid-cols-2">
-          {detail.risks.length > 0 && (
-            <div>
-              <p className="text-[0.7rem] font-semibold uppercase tracking-wide text-sol-muted">
-                {tr("Risks")}
-              </p>
-              <div className="mt-2">
-                <BulletList items={detail.risks} />
-              </div>
-            </div>
-          )}
-          {detail.validationNeeded.length > 0 && (
-            <div>
-              <p className="text-[0.7rem] font-semibold uppercase tracking-wide text-sol-muted">
-                {tr("Needs Validation")}
-              </p>
-              <div className="mt-2">
-                <BulletList items={detail.validationNeeded} />
-              </div>
-            </div>
-          )}
-        </div>
-
-        <div className="mt-6 rounded-[18px] border border-sol-champagne/25 bg-sol-champagne-soft/40 p-6 sm:p-7">
-          <p className="text-[0.78rem] font-semibold uppercase tracking-wide text-sol-champagne-deep">
-            {tr("Your First Experiment")}
-          </p>
-          <p className="mt-2 text-[1rem] leading-relaxed text-sol-ink">{detail.firstExperiment}</p>
-        </div>
-
-        <div className="mt-6">
-          <EvidenceVault opportunityId={id} />
         </div>
       </section>
 

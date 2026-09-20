@@ -13,6 +13,7 @@ import { researchMarketEvidence } from "@/lib/ai/prompts/market-research";
 import { MODEL } from "@/lib/ai/gemini.server";
 import { sendRoadmapReadyEmail } from "@/lib/actions/email.server";
 import { notifyFounder } from "@/lib/actions/notifications";
+import { translateOpportunityRow } from "@/lib/actions/opportunity-translation.server";
 import {
   activateRoadmap,
   archiveActiveRoadmap,
@@ -99,6 +100,11 @@ async function persistOpportunityPackage(
    * migrations/0009_opportunity_index and getDashboard's primary
    * resolution, which prefers this over fit_score when present. */
   opportunityIndex: number | null,
+  /** The language `pkg`'s prose was actually generated in — persisted so a
+   * later locale switch knows whether translation is even needed (see
+   * opportunity-translation.server.ts). Defaults to "en" to match the
+   * generation call's own default when no locale was requested. */
+  originLocale: "en" | "hi" = "en",
 ) {
   const score = computeFitScore(profile, pkg.fitSignals);
 
@@ -116,6 +122,7 @@ async function persistOpportunityPackage(
       status: "active" as const,
       batch_number: batchNumber,
       ai_model: MODEL,
+      origin_locale: originLocale,
     })
     .select("*")
     .single();
@@ -192,7 +199,16 @@ export const exploreMoreOpportunities = createServerFn({ method: "POST" })
         // among its own opportunities (unlike the original 3 from a
         // consultation); getDashboard falls back to fit_score ordering
         // for these regardless.
-        await persistOpportunityPackage(supabase, user.id, dna.id, profile, pkg, nextBatch, null),
+        await persistOpportunityPackage(
+          supabase,
+          user.id,
+          dna.id,
+          profile,
+          pkg,
+          nextBatch,
+          null,
+          input?.locale ?? "en",
+        ),
       );
     }
     return rows.sort((a, b) => b.fit_score - a.fit_score);
@@ -212,7 +228,7 @@ export const getOpportunities = createServerFn({ method: "GET" }).handler(async 
 });
 
 export const getOpportunity = createServerFn({ method: "GET" })
-  .validator(z.object({ id: z.string().uuid() }))
+  .validator(z.object({ id: z.string().uuid(), locale: z.enum(["en", "hi"]).optional() }))
   .handler(async ({ data }) => {
     const { supabase, user } = await requireUser();
 
@@ -294,9 +310,27 @@ export const getOpportunity = createServerFn({ method: "GET" })
       riskAppetite: profile.risk.appetite,
     };
 
-    return {
+    const translatedOpportunity = await translateOpportunityRow(
+      supabase,
+      user.id,
       opportunity,
-      detail: detailRow.detail,
+      data.locale,
+    );
+    // Under the one-call architecture, opportunity_details.detail is a
+    // straight mirror of opportunities.candidate at creation time (see
+    // persistOpportunityPackage/profile.ts) — reusing the already-translated
+    // candidate here avoids a second, redundant Gemini call for content
+    // that's identical either way. Only the legacy lazy-generation branch
+    // above can produce a genuinely different `detail` shape, which this
+    // translator doesn't recognize and leaves as-is.
+    const translatedDetail =
+      translatedOpportunity.candidate === opportunity.candidate
+        ? detailRow.detail
+        : translatedOpportunity.candidate;
+
+    return {
+      opportunity: translatedOpportunity,
+      detail: translatedDetail,
       evidence: evidenceRes.data ?? [],
       founderSummary,
       hasRoadmap: Boolean(roadmapRes.data),

@@ -68,7 +68,6 @@ interface NavItem {
   label: string;
   icon: typeof Compass;
   to?: string;
-  hash?: string;
   /** Whether this item currently points at a real, distinct destination —
    * Ideas/Proof fall back to /dashboard when there's no opportunityId
    * yet, and shouldn't compete with Command Center for the active
@@ -103,8 +102,7 @@ function useNavItems(opportunityId: string | null, hasRoadmap?: boolean): NavIte
     {
       label: "Proof",
       icon: FlaskConical,
-      to: opportunityId ? `/dashboard/opportunities/${opportunityId}` : "/dashboard",
-      hash: opportunityId ? "evidence" : undefined,
+      to: opportunityId ? `/dashboard/opportunities/${opportunityId}/proof` : "/dashboard",
       isRealDestination: opportunityId !== null,
     },
     { label: "History", icon: History, to: "/dashboard/history", isRealDestination: true },
@@ -118,7 +116,9 @@ function useNavItems(opportunityId: string | null, hasRoadmap?: boolean): NavIte
 function pageTitleFromPath(pathname: string, explicit?: string): string {
   if (explicit) return explicit;
   if (pathname === "/dashboard") return "Command Center";
-  if (pathname.startsWith("/dashboard/opportunities/")) return "Ideas";
+  if (pathname.startsWith("/dashboard/opportunities/")) {
+    return pathname.endsWith("/proof") ? "Proof" : "Ideas";
+  }
   if (pathname === "/dashboard/roadmap") return "Roadmap";
   if (pathname === "/dashboard/history") return "History";
   if (pathname === "/dashboard/settings") return "Settings";
@@ -137,8 +137,7 @@ function NavLink({
   const { locale } = useLocale();
   const tr = (s: string) => translateDashboardText(s, locale) ?? s;
   const Icon = item.icon;
-  const isActive =
-    item.isRealDestination && item.to !== undefined && !item.hash && currentPath === item.to;
+  const isActive = item.isRealDestination && item.to !== undefined && currentPath === item.to;
 
   if (item.locked) {
     return (
@@ -155,7 +154,6 @@ function NavLink({
   return (
     <Link
       to={item.to}
-      hash={item.hash}
       onClick={onNavigate}
       className={cn(
         "relative flex h-12 items-center gap-3 rounded-xl px-3.5 text-[15px] font-medium transition-colors duration-150",
