@@ -143,7 +143,7 @@ function DashboardHome() {
   if (dashboardQuery.isLoading) {
     return (
       <DashboardShell>
-        <div className="flex min-h-[50vh] items-center justify-center">
+        <div className="flex flex-1 items-center justify-center">
           <SolventiaLoadingState message={tr("Opening your workspace…")} />
         </div>
       </DashboardShell>
@@ -201,7 +201,6 @@ function DashboardHome() {
       opportunityId={data.selected?.id ?? primary?.id ?? null}
       opportunityTitle={primary?.title ?? null}
       hasRoadmap={primary ? Boolean(data.roadmap) : undefined}
-      pageTitle="Command Center"
     >
       {/* ===== HEADER — small label, then a real headline, then one line ===== */}
       <div className="flex flex-col gap-2">

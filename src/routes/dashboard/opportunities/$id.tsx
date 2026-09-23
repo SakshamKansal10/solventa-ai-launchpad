@@ -4,6 +4,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { ArrowRight, Loader2, RefreshCw } from "lucide-react";
 import { DashboardShell } from "@/components/dashboard/DashboardShell";
+import { PageEyebrow } from "@/components/dashboard/PageEyebrow";
 import { SolventiaLoadingState } from "@/components/dashboard/SolventiaLoadingState";
 import { FitRing, FitScoreMatrix, fitQualitativeLabel } from "@/components/dashboard/FitScore";
 import { PremiumButton } from "@/components/solventia/PremiumButton";
@@ -248,10 +249,10 @@ function OpportunityDetailPage() {
   return (
     <DashboardShell opportunityId={id} opportunityTitle={candidate.title} hasRoadmap={hasRoadmap}>
       {/* ===== TOP ===== */}
-      <p className="text-[12px] font-semibold uppercase tracking-[0.12em] text-sol-champagne-deep">
-        {candidate.category}
-      </p>
-      <h1 className="mt-2 font-display text-[clamp(1.9rem,3.4vw,2.5rem)] font-semibold leading-tight text-sol-ink">
+      <PageEyebrow>
+        {tr("Opportunity")} · {tr("Fit")} {opportunity.fit_score}/100
+      </PageEyebrow>
+      <h1 className="font-display text-[clamp(1.9rem,3.4vw,2.5rem)] font-semibold leading-tight text-sol-ink">
         {opportunity.title}
       </h1>
       <p className="mt-2.5 max-w-2xl text-[1.02rem] leading-relaxed text-sol-secondary">

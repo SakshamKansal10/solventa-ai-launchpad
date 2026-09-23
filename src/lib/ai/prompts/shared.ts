@@ -22,7 +22,7 @@ export type GenerationLocale = "en" | "hi";
  * leaks into a request made for a different founder's chosen language. */
 export function buildLanguageRule(locale: GenerationLocale): string {
   if (locale !== "hi") return "";
-  return `\n\nLANGUAGE: Write every field meant for the founder to read (titles, summaries, descriptions, reasons, task/mission text, everything prose) in natural, professional Hindi (Devanagari script) — write as a fluent Hindi business document would, never a stiff word-for-word translation from English. Common English business/technical terms that are normally used as-is in professional Hindi (e.g. "SaaS", "founder", product/technology names) may stay in English within Hindi sentences where that reads naturally. NEVER translate: any enum value (difficulty must stay exactly "Beginner-friendly"/"Moderate"/"Challenging"; riskLevel must stay exactly "cautious"/"balanced"/"experimental"; motivationAlignment must stay exactly "high"/"medium"/"low"; minLevel must stay exactly "never_tried"/"beginner"/"comfortable"/"advanced"), any boolean or numeric field, any currency code, or any JSON key name. Only the prose content of string fields changes language.`;
+  return `\n\nLANGUAGE: Write every field meant for the founder to read (titles, summaries, descriptions, reasons, task/mission text, everything prose) in natural, professional Hindi (Devanagari script) — write as a fluent Hindi business document would, never a stiff word-for-word translation from English. Common English business/technical terms that are normally used as-is in professional Hindi (e.g. "SaaS", "founder") may stay in English within Hindi sentences where that reads naturally. EXCEPTION — the "title" field: it must be entirely one language, either fully natural Hindi or fully English, never a mix of Hindi and English words within the same title (e.g. never "कॉर्पोरेट डेस्क Ergonomic Organiser" — pick one language for the whole title). NEVER translate: any enum value (difficulty must stay exactly "Beginner-friendly"/"Moderate"/"Challenging"; riskLevel must stay exactly "cautious"/"balanced"/"experimental"; motivationAlignment must stay exactly "high"/"medium"/"low"; minLevel must stay exactly "never_tried"/"beginner"/"comfortable"/"advanced"), any boolean or numeric field, any currency code, or any JSON key name. Only the prose content of string fields changes language.`;
 }
 
 export function formatProfileForPrompt(profile: NormalizedProfile): string {
@@ -43,6 +43,12 @@ export function formatProfileForPrompt(profile: NormalizedProfile): string {
     lines.push(
       `Already runs a business/freelance practice — revenue: ${profile.identity.currentBusiness.revenueBracket ?? "not shared"}, customers: ${profile.identity.currentBusiness.customers ?? "not shared"}. Consider whether extending this existing business fits better than starting something unrelated.`,
     );
+  }
+  if (profile.identity.industry) {
+    lines.push(`Industry they work in: ${profile.identity.industry}.`);
+  }
+  if (profile.identity.major) {
+    lines.push(`Field of study: ${profile.identity.major}.`);
   }
 
   if (profile.skills.length > 0) {

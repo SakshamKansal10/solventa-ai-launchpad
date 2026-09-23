@@ -31,6 +31,13 @@ export interface NormalizedProfile {
     /** Business Owner / Freelancer branch only — null for every other
      * founder, not "no revenue". */
     currentBusiness: { revenueBracket: string | null; customers: string | null } | null;
+    /** Working Professional / Business Owner / Freelancer branch only —
+     * without this, two founders who differ mainly by industry reach the
+     * AI as identical profiles and converge on the same flagship idea. */
+    industry: string | null;
+    /** College Student branch only — same reasoning as industry above, for
+     * founders who haven't entered the workforce yet. */
+    major: string | null;
     /** ISO 4217, derived from country — INR when country is unset (the
      * product's original, still-dominant market). Every monetary value in
      * this profile (and every opportunity fit-signal it's compared
@@ -206,6 +213,14 @@ export function normalizeProfile(answers: OnboardingAnswers): NormalizedProfile 
                 : null,
             }
           : null,
+      industry:
+        answers.industry === "Other" && answers.industryOther
+          ? answers.industryOther
+          : (answers.industry ?? null),
+      major:
+        answers.major === "Other" && answers.majorOther
+          ? answers.majorOther
+          : (answers.major ?? null),
       currency: currency.code,
       currencySymbol: currency.symbol,
     },

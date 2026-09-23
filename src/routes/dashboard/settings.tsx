@@ -4,6 +4,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Bell, History, Loader2, LogOut, Map, PencilLine, Sparkles, UserRound } from "lucide-react";
 import { DashboardShell } from "@/components/dashboard/DashboardShell";
+import { PageEyebrow } from "@/components/dashboard/PageEyebrow";
 import { SolventiaLoadingState } from "@/components/dashboard/SolventiaLoadingState";
 import { AvatarUploader } from "@/components/dashboard/AvatarUploader";
 import {
@@ -209,7 +210,7 @@ function SettingsPage() {
   }
 
   return (
-    <DashboardShell hasRoadmap={hasRoadmap} opportunityId={opportunityId} pageTitle={tr("Settings")}>
+    <DashboardShell hasRoadmap={hasRoadmap} opportunityId={opportunityId}>
       <div className="mx-auto flex w-full max-w-[1120px] flex-col">
         <div className="flex items-center gap-4">
           <AvatarUploader
@@ -218,6 +219,9 @@ function SettingsPage() {
             email={data?.email ?? null}
           />
           <div>
+            <PageEyebrow>
+              {tr("Settings")} · {tr("Profile")}
+            </PageEyebrow>
             <h1 className="font-display text-[clamp(1.8rem,3.2vw,2.3rem)] font-semibold text-sol-ink">
               {data?.fullName || tr("Your Profile")}
             </h1>

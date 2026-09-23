@@ -85,7 +85,7 @@ export const getRoadmap = createServerFn({ method: "GET" })
     // already fully built and sitting in the database.
     let query = supabase
       .from("roadmaps")
-      .select("*, opportunities(title, one_liner)")
+      .select("*, opportunities(title, one_liner, candidate)")
       .eq("user_id", user.id);
     query = data.opportunityId
       ? query.eq("opportunity_id", data.opportunityId)
@@ -112,9 +112,15 @@ export const getRoadmap = createServerFn({ method: "GET" })
 
     const { opportunities, ...roadmap } =
       roadmapRow as unknown as Database["public"]["Tables"]["roadmaps"]["Row"] & {
-        opportunities: { title: string; one_liner: string } | null;
+        opportunities: { title: string; one_liner: string; candidate: unknown } | null;
       };
-    const opportunity = opportunities;
+    const opportunity = opportunities
+      ? {
+          title: opportunities.title,
+          one_liner: opportunities.one_liner,
+          category: (opportunities.candidate as OpportunityPackage | undefined)?.category,
+        }
+      : null;
 
     // Neither of these depends on the other — phases only needs
     // roadmap.id (already resolved above), dnaRow only needs user.id —

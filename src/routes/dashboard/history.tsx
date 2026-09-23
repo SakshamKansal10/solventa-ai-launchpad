@@ -2,6 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { History } from "lucide-react";
 import { DashboardShell } from "@/components/dashboard/DashboardShell";
+import { PageEyebrow } from "@/components/dashboard/PageEyebrow";
 import { SolventiaLoadingState } from "@/components/dashboard/SolventiaLoadingState";
 import { requireAuthLoader } from "@/lib/route-guards";
 import { getConsultationHistory, getSettingsData } from "@/lib/actions/dashboard";
@@ -39,10 +40,16 @@ function HistoryPage() {
   const tr = (s: string) => translateDashboardText(s, locale) ?? s;
 
   return (
-    <DashboardShell hasRoadmap={hasRoadmap} opportunityId={opportunityId} pageTitle="History">
+    <DashboardShell hasRoadmap={hasRoadmap} opportunityId={opportunityId}>
       <div className="flex items-center gap-3">
         <History className="size-6 text-sol-champagne-deep" aria-hidden="true" />
         <div>
+          <PageEyebrow>
+            {tr("History")}
+            {query.data
+              ? ` · ${query.data.length} ${tr(query.data.length === 1 ? "consultation" : "consultations")}`
+              : ""}
+          </PageEyebrow>
           <h1 className="font-display text-[clamp(1.8rem,3.2vw,2.3rem)] font-semibold text-sol-ink">
             {tr("Idea History")}
           </h1>

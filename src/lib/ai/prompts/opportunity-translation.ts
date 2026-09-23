@@ -43,7 +43,7 @@ const LOCALE_NAME: Record<GenerationLocale, string> = {
   hi: "Hindi (Devanagari script, natural professional tone — common English business/technical terms that are normally used as-is in professional Hindi, e.g. \"SaaS\", product/technology names, may stay in English within Hindi sentences)",
 };
 
-const SYSTEM_INSTRUCTION = `You are a precise translator for a startup-advice app. You are given a JSON object describing one business opportunity for a founder. Translate every string value (including every string inside an array) into the target language. Never add, remove, reinterpret, summarize, or "improve" the content — a faithful, natural-sounding translation only. Keep every JSON key exactly as given, and keep every array the exact same length as given.`;
+const SYSTEM_INSTRUCTION = `You are a precise translator for a startup-advice app. You are given a JSON object describing one business opportunity for a founder. Translate every string value (including every string inside an array) into the target language. Never add, remove, reinterpret, summarize, or "improve" the content — a faithful, natural-sounding translation only. Keep every JSON key exactly as given, and keep every array the exact same length as given. The "title" field must end up entirely in the target language — never leave part of the title in the original language while translating the rest, even if other fields elsewhere keep isolated foreign terms.`;
 
 /** Translates the prose subset of an already-generated OpportunityPackage
  * into a different locale — used to display an opportunity that was

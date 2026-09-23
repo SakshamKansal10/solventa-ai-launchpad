@@ -40,7 +40,18 @@
       "Bash(npx --yes playwright screenshot --wait-for-timeout=2500 --viewport-size=1440,900 http://localhost:8084/ /private/tmp/claude-501/-Users-anushkashah744-solventa-ai-launchpad-1/8227c437-bcc6-4019-b3d8-32139fe2bb1f/scratchpad/hero-before.png)",
       "Bash(sed -n '1,80p' src/routes/dashboard/opportunities/'$id.tsx' | grep -n \"evidence\\\\|hash\\\\|Proof\\\\|Ideas\" -i)",
       "Bash(git log *)",
-      "Bash(node -e \"console.log\\(Object.keys\\(require\\('@tanstack/router-generator'\\)\\)\\)\")"
+      "Bash(node -e \"console.log\\(Object.keys\\(require\\('@tanstack/router-generator'\\)\\)\\)\")",
+      "Bash(python3 -c \"import json,sys; d=json.load\\(sys.stdin\\); print\\(json.dumps\\(d['scripts'], indent=2\\)\\)\")",
+      "Bash(grep -n \"Build My Roadmap\\\\|Build Roadmap\\\\|buildRoadmap\\\\|generateRoadmap\\\\|/dashboard/roadmap/building\" src/routes/dashboard/opportunities/\\\\$id.tsx src/routes/dashboard/index.tsx src/routes/dashboard/roadmap/building.tsx)",
+      "Bash(python3 -c ' *)",
+      "Bash(curl -s 'https://dcnurhuxgdzxruqsjglx.supabase.co/rest/v1/roadmap_phases?roadmap_id=eq.1e05d70e-dcf3-4c03-910e-558e2bb10c5b&select=id,order_index,key,title' -H 'apikey: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRjbnVyaHV4Z2R6eHJ1cXNqZ2x4Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4NTQwNDU4NywiZXhwIjoyMTAwOTgwNTg3fQ.dLT0m_X3_P_EndMgrWaIdba1TmWWQW1qUUzo4jAA7ew' -H 'Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRjbnVyaHV4Z2R6eHJ1cXNqZ2x4Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4NTQwNDU4NywiZXhwIjoyMTAwOTgwNTg3fQ.dLT0m_X3_P_EndMgrWaIdba1TmWWQW1qUUzo4jAA7ew')",
+      "Bash(curl -s 'https://dcnurhuxgdzxruqsjglx.supabase.co/rest/v1/roadmap_weeks?phase_id=eq.434ef0f0-76b8-478e-8ea5-e6e4bde05d89&select=id,phase_id,status,week_number,mission' -H 'apikey: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRjbnVyaHV4Z2R6eHJ1cXNqZ2x4Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4NTQwNDU4NywiZXhwIjoyMTAwOTgwNTg3fQ.dLT0m_X3_P_EndMgrWaIdba1TmWWQW1qUUzo4jAA7ew' -H 'Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRjbnVyaHV4Z2R6eHJ1cXNqZ2x4Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4NTQwNDU4NywiZXhwIjoyMTAwOTgwNTg3fQ.dLT0m_X3_P_EndMgrWaIdba1TmWWQW1qUUzo4jAA7ew')",
+      "Bash(grep -n \"candidate\\\\.\" src/routes/dashboard/opportunities/\\\\$id.tsx | head -20)",
+      "Bash(grep -n \"candidate.category\\\\|opportunity.category\\\\|\\\\.category\\\\b\" src/routes/dashboard/index.tsx src/routes/dashboard/opportunities/\\\\$id_.proof.tsx)",
+      "Bash(grep -n \"candidate\" src/routes/dashboard/opportunities/\\\\$id_.proof.tsx)",
+      "Bash(grep -n \"category\\\\|import.*DashboardShell\" /Users/anushkashah744/solventa-ai-launchpad-1/src/routes/dashboard/opportunities/\\\\$id.tsx | head -10)",
+      "Bash(grep -n \"const tr =\" /Users/anushkashah744/solventa-ai-launchpad-1/src/routes/dashboard/opportunities/\\\\$id.tsx)",
+      "Bash(grep -n \"econ-green\" /Users/anushkashah744/solventa-ai-launchpad-1/src/routes/dashboard/opportunities/\\\\$id.tsx)"
     ]
   }
 }

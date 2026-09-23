@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { DashboardShell } from "@/components/dashboard/DashboardShell";
+import { PageEyebrow } from "@/components/dashboard/PageEyebrow";
 import { SolventiaLoadingState } from "@/components/dashboard/SolventiaLoadingState";
 import { EvidenceVault } from "@/components/dashboard/EvidenceVault";
 import { requireAuthLoader } from "@/lib/route-guards";
@@ -64,10 +65,10 @@ function OpportunityProofPage() {
 
   return (
     <DashboardShell opportunityId={id} opportunityTitle={candidate.title} hasRoadmap={hasRoadmap}>
-      <p className="text-[12px] font-semibold uppercase tracking-[0.12em] text-sol-champagne-deep">
-        {candidate.category}
-      </p>
-      <h1 className="mt-2 font-display text-[clamp(1.9rem,3.4vw,2.5rem)] font-semibold leading-tight text-sol-ink">
+      <PageEyebrow>
+        {tr("Opportunity")} · {tr("Proof")}
+      </PageEyebrow>
+      <h1 className="font-display text-[clamp(1.9rem,3.4vw,2.5rem)] font-semibold leading-tight text-sol-ink">
         {tr("Proof & What Still Needs Validation")}
       </h1>
       <p className="mt-2.5 max-w-2xl text-[1.02rem] leading-relaxed text-sol-secondary">

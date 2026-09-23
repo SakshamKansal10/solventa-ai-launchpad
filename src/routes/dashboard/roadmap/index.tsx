@@ -1,21 +1,38 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { toast } from "sonner";
 import {
   AlertTriangle,
+  ArrowLeft,
   ArrowRight,
+  BarChart3,
+  Briefcase,
+  Calendar,
+  Camera,
   Check,
+  CheckCircle2,
   ChevronDown,
-  ChevronRight,
+  Clock,
+  Dumbbell,
+  Flag,
+  GraduationCap,
+  Home,
+  Laptop,
+  Leaf,
   Lock,
   Loader2,
   MapPin,
-  ShieldAlert,
+  Palette,
+  ShoppingBag,
   Sparkles,
-  Target,
+  Store,
+  Truck,
+  Utensils,
+  Wrench,
 } from "lucide-react";
 import { DashboardShell, useOpenMentor } from "@/components/dashboard/DashboardShell";
+import { PageEyebrow } from "@/components/dashboard/PageEyebrow";
 import { SolventiaLoadingState } from "@/components/dashboard/SolventiaLoadingState";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -28,7 +45,6 @@ import {
   type RoadmapPhaseWithTasks,
 } from "@/lib/actions/roadmap";
 import type { Database } from "@/lib/supabase/types";
-import { formatCompactMoney } from "@/lib/country-currency";
 import { cn } from "@/lib/utils";
 import { useLocale } from "@/lib/i18n/LocaleProvider";
 import { translateDashboardText } from "@/lib/i18n/dashboard-dictionary";
@@ -97,21 +113,45 @@ interface Week {
   tasks: Task[];
 }
 
-/** A pre-migration or otherwise incomplete business_dna row can have a
- * missing/zero capitalAmount or currency — formatting that through
- * Intl.NumberFormat literally renders "undefined"/"NaN" to the founder
- * instead of failing closed. Degrades to just the hours clause (still
- * genuinely useful) rather than showing broken currency text. */
-function buildFounderSummaryLine(summary: {
-  weeklyHours: number;
-  capitalAmount: number;
-  currency: string;
-}): string {
-  const hours = summary.weeklyHours ? `${summary.weeklyHours} hrs/week` : "available time";
-  const hasCapital =
-    Number.isFinite(summary.capitalAmount) && summary.capitalAmount > 0 && summary.currency;
-  if (!hasCapital) return `Built around your ${hours}.`;
-  return `Built around your ${hours} and ${formatCompactMoney(summary.capitalAmount, summary.currency)} starting capital.`;
+/** Keyword → icon lookup for the small category badge next to the roadmap
+ * title. Purely decorative visual context (no real product photos exist
+ * for an idea), so a best-effort keyword match with a generic fallback is
+ * enough — never worth a real classification model for this. */
+const CATEGORY_ICONS: { keywords: string[]; icon: typeof Briefcase }[] = [
+  { keywords: ["software", "app", "saas", "tech", "ai", "platform", "web"], icon: Laptop },
+  { keywords: ["food", "restaurant", "cafe", "kitchen", "catering", "snack"], icon: Utensils },
+  { keywords: ["retail", "store", "shop", "product", "goods", "ecommerce"], icon: Store },
+  { keywords: ["fashion", "clothing", "design", "art", "craft"], icon: Palette },
+  { keywords: ["delivery", "logistics", "transport", "supply"], icon: Truck },
+  { keywords: ["fitness", "gym", "wellness", "health", "sport"], icon: Dumbbell },
+  { keywords: ["education", "tutor", "course", "learning", "training"], icon: GraduationCap },
+  { keywords: ["home", "furniture", "interior", "real estate", "property"], icon: Home },
+  {
+    keywords: [
+      "repair",
+      "maintenance",
+      "service",
+      "manufacturing",
+      "desk",
+      "organiser",
+      "organizer",
+    ],
+    icon: Wrench,
+  },
+  { keywords: ["photography", "media", "content", "video"], icon: Camera },
+  { keywords: ["farm", "agriculture", "sustainab", "eco"], icon: Leaf },
+  { keywords: ["fashion accessories", "bag", "gift"], icon: ShoppingBag },
+];
+
+function CategoryIcon({ category, title }: { category: string | null; title: string | null }) {
+  const haystack = `${category ?? ""} ${title ?? ""}`.toLowerCase();
+  const match = CATEGORY_ICONS.find((c) => c.keywords.some((k) => haystack.includes(k)));
+  const Icon = match?.icon ?? Briefcase;
+  return (
+    <span className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-sol-violet-mist/70 text-sol-violet-deep">
+      <Icon className="size-5" aria-hidden="true" />
+    </span>
+  );
 }
 
 /** dependsOn is supposed to be a prior task's exact human-readable "what"
@@ -123,30 +163,101 @@ function isDisplayableDependency(value: string): boolean {
   return !/^\d+([.\-_]\d+)*$/.test(value.trim());
 }
 
-/** Splits "1. Do X 2. Do Y" / "Do X. Then do Y." style free text into a
- * short numbered list where possible, falling back to the original text
- * as a single line — the model returns `how` as prose, but a founder
- * scans a 2-4 step list far faster than a paragraph. */
-function splitHowSteps(how: string): string[] {
-  const numbered = how.match(/\d+[.)]\s*[^0-9]+/g);
+/** Splits a paragraph of prose into short bullet-friendly chunks —
+ * numbered steps if the text already has them ("1. ... 2. ..."), otherwise
+ * its sentences. Used anywhere a block of AI-written prose (mission,
+ * evidence, "how", etc.) needs to render as a scannable list instead of
+ * a dense paragraph. */
+function splitIntoBullets(text: string): string[] {
+  const numbered = text.match(/\d+[.)]\s*[^0-9]+/g);
   if (numbered && numbered.length > 1) {
     return numbered.map((s) => s.replace(/^\d+[.)]\s*/, "").trim()).filter(Boolean);
   }
-  const sentences = how
+  const sentences = text
     .split(/(?<=[.!?])\s+/)
     .map((s) => s.trim())
     .filter(Boolean);
-  return sentences.length > 1 ? sentences.slice(0, 4) : [how];
+  return sentences.length > 1 ? sentences.slice(0, 4) : [text];
+}
+
+/** A small color-coded panel that always shows its full content — one
+ * of the three fixed week callouts (worked-if / evidence / avoid), each
+ * with its own accent color so the three read as distinct signal types
+ * at a glance instead of three identical gray boxes. */
+function InfoBox({
+  icon,
+  label,
+  text,
+  items,
+  tone,
+  className,
+}: {
+  icon: ReactNode;
+  label: string;
+  /** Prose to split into sentences/steps. Ignored when `items` is given. */
+  text?: string;
+  /** Already-discrete list items (e.g. mistakes_to_avoid) — used as-is,
+   * never re-split. */
+  items?: string[];
+  tone: "green" | "blue" | "danger";
+  className?: string;
+}) {
+  const bullets = items ?? splitIntoBullets(text ?? "");
+  return (
+    <div
+      className={cn(
+        "rounded-lg border px-4 py-3.5",
+        className,
+        tone === "green" && "border-econ-green/25 bg-econ-green-soft",
+        tone === "blue" && "border-blue-200 bg-blue-50",
+        tone === "danger" && "border-sol-danger/25 bg-sol-danger/[0.06]",
+      )}
+    >
+      <p
+        className={cn(
+          "flex items-center gap-1.5 text-[0.66rem] font-bold uppercase tracking-wide",
+          tone === "green" && "text-econ-green-deep",
+          tone === "blue" && "text-blue-700",
+          tone === "danger" && "text-sol-danger",
+        )}
+      >
+        {icon}
+        {label}
+        {items && items.length > 1 && (
+          <span className="normal-case tracking-normal opacity-70">({items.length})</span>
+        )}
+      </p>
+      <div className="mt-2 flex flex-col gap-1.5 text-[0.85rem] leading-relaxed text-sol-ink">
+        {bullets.map((b, i) =>
+          items ? (
+            <div key={i} className="flex gap-2">
+              <span className="mt-1.5 size-1 shrink-0 rounded-full bg-current opacity-40" />
+              {b}
+            </div>
+          ) : (
+            <p key={i}>{b}</p>
+          ),
+        )}
+      </div>
+    </div>
+  );
 }
 
 function TaskRow({
   task,
+  index,
   roadmapId,
   isLastInWeek,
   onToggle,
   onReplanNeeded,
 }: {
   task: Task;
+  /** This task's 1-based position within its week — shown in the circle
+   * in place of a blank checkbox, so the list reads as an ordered plan
+   * rather than an unordered checklist (the circle still toggles done on
+   * click, same as before, just showing "3" instead of nothing until
+   * it's checked off). */
+  index: number;
   roadmapId: string;
   /** True when completing this task would finish every task in its week
    * — completing it triggers unlocking (and generating) the next week,
@@ -260,34 +371,82 @@ function TaskRow({
           onClick={markDone}
           disabled={busy}
           className={cn(
-            "mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full border transition-colors",
-            isDone ? "border-sol-champagne bg-sol-champagne text-white" : "border-sol-border",
+            "mt-0.5 flex size-6 shrink-0 items-center justify-center rounded-full border text-[0.7rem] font-semibold transition-colors",
+            isDone
+              ? "border-sol-champagne bg-sol-champagne text-white"
+              : "border-sol-violet/40 text-sol-violet-deep hover:border-sol-violet",
           )}
           aria-label={isDone ? "Mark as not done" : "Mark complete"}
         >
-          {isDone && <Check className="size-3" aria-hidden="true" />}
+          {isDone ? <Check className="size-3" aria-hidden="true" /> : index}
         </button>
         <div className="flex-1">
+          {expanded && (
+            <div className="mb-1.5 flex items-center gap-2">
+              <span
+                className={cn(
+                  "rounded-full px-2.5 py-1 text-[0.66rem] font-bold uppercase tracking-wide",
+                  isDone
+                    ? "bg-econ-green-soft text-econ-green-deep"
+                    : "bg-sol-violet-mist text-sol-violet-deep",
+                )}
+              >
+                {tr(isDone ? "Completed" : "In progress")} • {tr("Step")} {index}
+              </span>
+            </div>
+          )}
           <button
             type="button"
             onClick={() => setExpanded((v) => !v)}
-            className="flex flex-wrap items-center gap-2 text-left"
+            className="flex w-full items-start justify-between gap-2 text-left"
           >
-            <p className="text-[0.95rem] font-medium text-sol-ink">{task.what}</p>
-            {!task.required && (
-              <span className="rounded-full bg-sol-ivory px-2 py-0.5 text-[0.68rem] font-medium text-sol-muted">
-                {tr("Optional")}
-              </span>
-            )}
+            <span className="flex flex-wrap items-center gap-2">
+              <p className="line-clamp-2 text-[0.95rem] font-medium text-sol-ink">{task.what}</p>
+              {!task.required && (
+                <span className="rounded-full bg-sol-ivory px-2 py-0.5 text-[0.68rem] font-medium text-sol-muted">
+                  {tr("Optional")}
+                </span>
+              )}
+            </span>
+            <span className="flex size-6 shrink-0 items-center justify-center rounded-full border border-sol-violet/40 bg-white text-sol-violet-deep">
+              <ChevronDown
+                className={cn("size-3.5 transition-transform", expanded && "rotate-180")}
+                aria-hidden="true"
+              />
+            </span>
           </button>
           {!expanded && (
-            <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-[0.78rem] text-sol-secondary">
-              {task.time_estimate && <span>{task.time_estimate}</span>}
-              {task.required && <span>{tr("Required")}</span>}
+            <div className="mt-2 flex flex-wrap items-center gap-1.5">
+              {task.time_estimate && (
+                <span className="inline-flex items-center gap-1 rounded-full bg-sol-ivory px-2 py-0.5 text-[0.76rem] text-sol-secondary">
+                  <Clock className="size-3" aria-hidden="true" />
+                  {task.time_estimate}
+                </span>
+              )}
               {task.deadline && (
-                <span>
+                <span className="inline-flex items-center gap-1 rounded-full bg-sol-ivory px-2 py-0.5 text-[0.76rem] text-sol-secondary">
+                  <Calendar className="size-3" aria-hidden="true" />
                   {tr("Due")} {task.deadline}
                 </span>
+              )}
+              {task.required && (
+                <span className="rounded-full bg-sol-champagne-soft px-2 py-0.5 text-[0.66rem] font-semibold uppercase tracking-wide text-sol-champagne-deep">
+                  {tr("Required")}
+                </span>
+              )}
+              {!isDone && (
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    markDone();
+                  }}
+                  disabled={busy}
+                  className="ml-auto inline-flex items-center gap-1 rounded-full border border-econ-green/30 bg-econ-green-soft px-2.5 py-1 text-[0.72rem] font-semibold text-econ-green-deep transition-colors hover:bg-econ-green/15"
+                >
+                  <Check className="size-3" aria-hidden="true" />
+                  {tr("Complete")}
+                </button>
               )}
             </div>
           )}
@@ -297,24 +456,32 @@ function TaskRow({
             </p>
           )}
           {task.depends_on && isDisplayableDependency(task.depends_on) && (
-            <p className="mt-1 text-[0.78rem] text-sol-secondary">
-              {tr("Depends on:")} <span className="text-sol-ink">{task.depends_on}</span>
-            </p>
+            <div className="mt-2 rounded-md border-l-2 border-sol-border-strong bg-sol-ivory/70 py-1.5 pl-3 pr-2 text-[0.78rem] text-sol-secondary">
+              <span className="font-semibold text-sol-ink">{tr("Depends on:")}</span>{" "}
+              {task.depends_on}
+            </div>
           )}
           {expanded && (
-            <div className="mt-3 flex flex-col gap-3 text-[0.95rem] text-sol-secondary">
+            <div className="mt-4 flex flex-col gap-4 text-[0.95rem] text-sol-secondary">
               <div>
-                <p className="text-[0.7rem] font-semibold uppercase tracking-wide text-sol-muted">
+                <span className="inline-block rounded-md bg-sol-violet-mist px-2 py-1 text-[0.7rem] font-bold uppercase tracking-wide text-sol-violet-deep">
                   {tr("Why this matters")}
-                </p>
-                <p className="mt-1 leading-relaxed text-sol-ink">{task.why}</p>
+                </span>
+                <ul className="mt-2 flex flex-col gap-2">
+                  {splitIntoBullets(task.why).map((point, i) => (
+                    <li key={i} className="flex gap-2 leading-relaxed text-sol-ink">
+                      <span className="mt-1.5 size-1 shrink-0 rounded-full bg-sol-muted" />
+                      {point}
+                    </li>
+                  ))}
+                </ul>
               </div>
               <div>
-                <p className="text-[0.7rem] font-semibold uppercase tracking-wide text-sol-muted">
+                <span className="inline-block rounded-md bg-sol-champagne-soft px-2 py-1 text-[0.7rem] font-bold uppercase tracking-wide text-sol-champagne-deep">
                   {tr("How")}
-                </p>
-                <ol className="mt-1.5 flex flex-col gap-1">
-                  {splitHowSteps(task.how).map((step, i) => (
+                </span>
+                <ol className="mt-2 flex flex-col gap-2">
+                  {splitIntoBullets(task.how).map((step, i) => (
                     <li key={i} className="flex gap-2 leading-relaxed text-sol-ink">
                       <span className="shrink-0 text-sol-violet-deep">{i + 1}.</span>
                       {step}
@@ -324,22 +491,35 @@ function TaskRow({
               </div>
               {task.resource && (
                 <div>
-                  <p className="text-[0.7rem] font-semibold uppercase tracking-wide text-sol-muted">
+                  <span className="inline-block rounded-md bg-sol-violet-mist px-2 py-1 text-[0.7rem] font-bold uppercase tracking-wide text-sol-violet-deep">
                     {tr("Resource")}
-                  </p>
-                  <p className="mt-1 text-sol-ink">{task.resource}</p>
+                  </span>
+                  <p className="mt-2 leading-relaxed text-sol-ink">{task.resource}</p>
                 </div>
               )}
               <div>
-                <p className="text-[0.7rem] font-semibold uppercase tracking-wide text-sol-muted">
+                <span className="inline-block rounded-md bg-sol-champagne-soft px-2 py-1 text-[0.7rem] font-bold uppercase tracking-wide text-sol-champagne-deep">
                   {tr("Done when")}
-                </p>
-                <p className="mt-1 text-sol-ink">{task.done_when}</p>
+                </span>
+                <ul className="mt-2 flex flex-col gap-2">
+                  {splitIntoBullets(task.done_when).map((point, i) => (
+                    <li key={i} className="flex gap-2 leading-relaxed text-sol-ink">
+                      <span className="mt-1.5 size-1 shrink-0 rounded-full bg-sol-muted" />
+                      {point}
+                    </li>
+                  ))}
+                </ul>
               </div>
-              <div className="flex items-center gap-3 text-[0.78rem]">
-                {task.time_estimate && <span>{task.time_estimate}</span>}
+              <div className="flex flex-wrap items-center gap-1.5">
+                {task.time_estimate && (
+                  <span className="inline-flex items-center gap-1 rounded-full bg-sol-ivory px-2 py-0.5 text-[0.76rem] text-sol-secondary">
+                    <Clock className="size-3" aria-hidden="true" />
+                    {task.time_estimate}
+                  </span>
+                )}
                 {task.deadline && (
-                  <span>
+                  <span className="inline-flex items-center gap-1 rounded-full bg-sol-ivory px-2 py-0.5 text-[0.76rem] text-sol-secondary">
+                    <Calendar className="size-3" aria-hidden="true" />
                     {tr("Due")} {task.deadline}
                   </span>
                 )}
@@ -350,16 +530,19 @@ function TaskRow({
                   onClick={markDone}
                   disabled={busy}
                   className={cn(
-                    "self-start rounded-full px-3.5 py-1.5 text-[0.72rem] font-semibold uppercase tracking-[0.06em] transition-colors",
+                    "inline-flex shrink-0 items-center gap-1.5 self-start rounded-full px-4 py-2 text-[0.78rem] font-semibold transition-colors",
                     isDone
-                      ? "bg-sol-ivory text-sol-muted"
-                      : "bg-sol-navy text-white hover:bg-sol-navy-soft",
+                      ? "bg-sol-ivory text-sol-muted hover:bg-sol-border"
+                      : "bg-econ-green text-white shadow-sm hover:bg-econ-green-deep",
                   )}
                 >
-                  {busy && (
-                    <Loader2 className="mr-1 inline size-3 animate-spin" aria-hidden="true" />
+                  {busy ? (
+                    <Loader2 className="size-3.5 animate-spin" aria-hidden="true" />
+                  ) : (
+                    !isDone && <Check className="size-3.5" aria-hidden="true" />
                   )}
-                  {tr(isDone ? "Mark Not Done" : "Mark Complete")}
+                  {isDone ? tr("Mark Not Done") : tr("Mark Complete & Next")}
+                  {!isDone && !busy && <ArrowRight className="size-3.5" aria-hidden="true" />}
                 </button>
                 {!isDone && (
                   <button
@@ -526,11 +709,12 @@ function GeneratingWeekState({ weekId, onDone }: { weekId: string; onDone: () =>
   );
 }
 
-/** One week within the focused phase. Locked weeks show only their
- * objective — no tasks, nothing interactive — so a founder knows what's
- * coming without being able to jump ahead. Active weeks are fully
- * expanded by default; completed weeks collapse to a quiet summary line
- * but can be reopened to review past work, same spirit as a done TaskRow. */
+/** The single week the main workspace renders (see focusedWeek in
+ * RoadmapPage) — a plain "Tasks for week N" list, no chrome around it,
+ * since there's never more than one week on screen at a time any more
+ * (see the Week Flow panel for where the rest live). A completed week
+ * being reviewed keeps the same clean shape, plus its founder reflection
+ * at the bottom. */
 function WeekBlock({
   week,
   roadmapId,
@@ -544,175 +728,227 @@ function WeekBlock({
   onReplanNeeded: () => Promise<void>;
   onWeekReady: () => void;
 }) {
-  const [expanded, setExpanded] = useState(week.status === "active");
   const { locale } = useLocale();
   const tr = (s: string) => translateDashboardText(s, locale) ?? s;
+  const [filter, setFilter] = useState<"all" | "pending" | "done">("all");
   const doneCount = week.tasks.filter((t) => t.status === "done").length;
-  const remainingCount = week.tasks.length - doneCount;
+  const pendingCount = week.tasks.length - doneCount;
+  const remainingCount = pendingCount;
   const stillGenerating = week.status === "active" && week.tasks.length === 0 && !week.mission;
-
-  if (week.status === "locked") {
-    return (
-      <div className="flex items-start gap-3 rounded-xl border border-dashed border-sol-border px-4 py-3.5 opacity-70">
-        <Lock className="mt-0.5 size-4 shrink-0 text-sol-muted" aria-hidden="true" />
-        <div>
-          <p className="text-[0.85rem] font-medium text-sol-secondary">
-            {tr("Week")} {week.week_number} — {week.title}
-          </p>
-          <p className="mt-0.5 text-[0.78rem] text-sol-muted">{week.objective}</p>
-        </div>
-      </div>
-    );
-  }
+  const hasMoreDetails =
+    week.status === "active" &&
+    (week.success_threshold || week.evidence_required || (week.mistakes_to_avoid?.length ?? 0) > 0);
+  const visibleTasks = week.tasks.filter((t) =>
+    filter === "all" ? true : filter === "done" ? t.status === "done" : t.status !== "done",
+  );
 
   return (
-    <div
-      className={cn(
-        "rounded-xl border px-4 py-3.5",
-        week.status === "active"
-          ? "border-sol-violet/30 bg-sol-violet-mist/50"
-          : "border-sol-border bg-sol-surface",
-      )}
-    >
-      <button
-        type="button"
-        onClick={() => setExpanded((v) => !v)}
-        className="flex w-full items-center justify-between gap-3 text-left"
-      >
-        <div className="flex items-center gap-2.5">
-          {week.status === "completed" ? (
-            <span className="flex size-5 shrink-0 items-center justify-center rounded-full bg-sol-champagne text-white">
-              <Check className="size-3" aria-hidden="true" />
+    <div className="flex flex-col gap-5">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h2 className="flex items-center gap-2 font-display text-[1.3rem] font-bold text-sol-ink">
+            {tr("Tasks for week")} {week.week_number}
+            <span className="rounded-full bg-sol-ivory px-2 py-0.5 text-[0.7rem] font-semibold text-sol-muted">
+              {week.tasks.length} {tr("total")}
             </span>
-          ) : (
-            <span className="flex size-5 shrink-0 items-center justify-center rounded-full border border-sol-violet text-[0.65rem] font-semibold text-sol-violet-deep ring-4 ring-sol-violet/15">
-              {week.week_number}
-            </span>
-          )}
-          <div>
-            <p className="text-[0.85rem] font-medium text-sol-ink">
-              {tr("Week")} {week.week_number} — {week.title}
+          </h2>
+          {week.objective && (
+            <p className="mt-1.5 text-[0.85rem] leading-relaxed text-sol-secondary">
+              {week.objective}
             </p>
-            {(!expanded || week.status === "completed") && !stillGenerating && (
-              <p className="text-[0.72rem] text-sol-muted">
-                {doneCount}/{week.tasks.length} {tr("done")}
-              </p>
-            )}
-          </div>
+          )}
         </div>
-        <ChevronDown
-          className={cn(
-            "size-4 shrink-0 text-sol-muted transition-transform",
-            expanded && "rotate-180",
-          )}
-          aria-hidden="true"
-        />
-      </button>
-      {expanded && (
-        <>
-          <p className="mt-2 pl-[1.85rem] text-[0.78rem] text-sol-secondary">{week.objective}</p>
-
-          {stillGenerating && <GeneratingWeekState weekId={week.id} onDone={onWeekReady} />}
-
-          {/* The active week's premium workspace — 64/36 on desktop: left
-              is the mission plus the tasks that make it up, right is
-              everything that supports the mission without being work
-              itself (threshold/evidence/what-goes-wrong). A completed
-              week being reviewed later doesn't need this weight — it
-              falls through to the plain stacked list below instead. */}
-          {!stillGenerating && week.mission && week.status === "active" && (
-            <div className="mt-3 grid gap-4 pl-0 sm:pl-[1.85rem] lg:grid-cols-[1.78fr_1fr] lg:pl-0">
-              <div className="flex flex-col gap-2.5 lg:pl-[1.85rem]">
-                <div className="rounded-lg border border-sol-champagne/30 bg-sol-champagne-soft/40 px-3.5 py-3">
-                  <p className="flex items-center gap-1.5 text-[0.68rem] font-semibold uppercase tracking-wide text-sol-champagne-deep">
-                    <Target className="size-3.5" aria-hidden="true" />
-                    {tr("Mission")}
-                  </p>
-                  <p className="mt-1 text-[0.95rem] leading-relaxed text-sol-ink">{week.mission}</p>
-                </div>
-                <div className="flex flex-col gap-2.5">
-                  {week.tasks.map((task) => (
-                    <TaskRow
-                      key={task.id}
-                      task={task}
-                      roadmapId={roadmapId}
-                      isLastInWeek={task.status !== "done" && remainingCount === 1}
-                      onToggle={onToggle}
-                      onReplanNeeded={onReplanNeeded}
-                    />
-                  ))}
-                </div>
-              </div>
-              <div className="flex flex-col gap-2.5">
-                {week.success_threshold && (
-                  <div className="rounded-lg border border-sol-border bg-sol-surface px-3.5 py-3">
-                    <p className="text-[0.66rem] font-semibold uppercase tracking-wide text-sol-muted">
-                      {tr("This week worked if…")}
-                    </p>
-                    <p className="mt-1 text-[0.95rem] leading-relaxed text-sol-ink">
-                      {week.success_threshold}
-                    </p>
-                  </div>
+        {!stillGenerating && week.tasks.length > 0 && (
+          <div className="flex shrink-0 items-center gap-1 rounded-full border border-sol-border bg-sol-surface p-1">
+            {(
+              [
+                ["all", tr("All"), week.tasks.length],
+                ["pending", tr("Pending"), pendingCount],
+                ["done", tr("Completed"), doneCount],
+              ] as const
+            ).map(([value, label, count]) => (
+              <button
+                key={value}
+                type="button"
+                onClick={() => setFilter(value)}
+                className={cn(
+                  "rounded-full px-3 py-1 text-[0.76rem] font-medium transition-colors",
+                  filter === value
+                    ? "bg-sol-ink text-white"
+                    : "text-sol-secondary hover:bg-sol-ivory",
                 )}
-                {week.evidence_required && (
-                  <div className="rounded-lg border border-sol-border bg-sol-surface px-3.5 py-3">
-                    <p className="text-[0.66rem] font-semibold uppercase tracking-wide text-sol-muted">
-                      {tr("Evidence to capture")}
-                    </p>
-                    <p className="mt-1 text-[0.95rem] leading-relaxed text-sol-ink">
-                      {week.evidence_required}
-                    </p>
-                  </div>
-                )}
-                {week.mistakes_to_avoid && week.mistakes_to_avoid.length > 0 && (
-                  <div>
-                    <p className="flex items-center gap-1.5 text-[0.66rem] font-semibold uppercase tracking-wide text-sol-champagne-deep">
-                      <ShieldAlert className="size-3.5" aria-hidden="true" />
-                      {tr("Avoid")}
-                    </p>
-                    <div className="mt-1.5 flex flex-col gap-2">
-                      {week.mistakes_to_avoid.map((m, i) => (
-                        <div
-                          key={i}
-                          className="shrink-0 rounded-xl border border-sol-champagne/30 bg-sol-ivory px-3.5 py-3"
-                        >
-                          <p className="text-[0.85rem] leading-relaxed text-sol-ink">{m}</p>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
+              >
+                {label} ({count})
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
 
-          {!stillGenerating && !(week.mission && week.status === "active") && (
-            <div className="mt-3 flex flex-col gap-2.5 pl-0 sm:pl-[1.85rem]">
-              {week.tasks.map((task) => (
-                <TaskRow
-                  key={task.id}
-                  task={task}
-                  roadmapId={roadmapId}
-                  isLastInWeek={task.status !== "done" && remainingCount === 1}
-                  onToggle={onToggle}
-                  onReplanNeeded={onReplanNeeded}
-                />
-              ))}
-            </div>
-          )}
+      {stillGenerating && <GeneratingWeekState weekId={week.id} onDone={onWeekReady} />}
 
-          {week.status === "completed" && week.founder_reflection && (
-            <div className="mt-3 rounded-lg border border-sol-border bg-sol-surface px-3.5 py-3 sm:ml-[1.85rem]">
-              <p className="text-[0.66rem] font-semibold uppercase tracking-wide text-sol-muted">
-                {tr("Your reflection")}
-              </p>
-              <p className="mt-1 text-[0.9rem] italic leading-relaxed text-sol-ink">
-                “{week.founder_reflection}”
-              </p>
-            </div>
+      {!stillGenerating && (
+        <div className="flex flex-col gap-3">
+          {visibleTasks.length === 0 && (
+            <p className="rounded-xl border border-dashed border-sol-border px-4 py-6 text-center text-[0.85rem] text-sol-muted">
+              {tr("Nothing here.")}
+            </p>
           )}
-        </>
+          {visibleTasks.map((task) => (
+            <TaskRow
+              key={task.id}
+              index={week.tasks.findIndex((t) => t.id === task.id) + 1}
+              task={task}
+              roadmapId={roadmapId}
+              isLastInWeek={task.status !== "done" && remainingCount === 1}
+              onToggle={onToggle}
+              onReplanNeeded={onReplanNeeded}
+            />
+          ))}
+        </div>
       )}
+
+      {!stillGenerating && hasMoreDetails && (
+        <div className="grid gap-2.5 sm:grid-cols-2">
+          {week.success_threshold && (
+            <InfoBox
+              icon={<CheckCircle2 className="size-3.5" aria-hidden="true" />}
+              label={tr("This week worked if…")}
+              text={week.success_threshold}
+              tone="green"
+            />
+          )}
+          {week.evidence_required && (
+            <InfoBox
+              icon={<Flag className="size-3.5" aria-hidden="true" />}
+              label={tr("Evidence to capture")}
+              text={week.evidence_required}
+              tone="blue"
+            />
+          )}
+          {week.mistakes_to_avoid && week.mistakes_to_avoid.length > 0 && (
+            <InfoBox
+              icon={<AlertTriangle className="size-3.5" aria-hidden="true" />}
+              label={tr("Avoid")}
+              items={week.mistakes_to_avoid}
+              tone="danger"
+              // Spans both columns — its list is usually longer than the
+              // other two, so pairing it beside one of them cramps it.
+              className="sm:col-span-2"
+            />
+          )}
+        </div>
+      )}
+
+      {week.status === "completed" && week.founder_reflection && (
+        <div className="rounded-lg border border-sol-border bg-sol-surface px-4 py-3.5">
+          <p className="text-[0.66rem] font-semibold uppercase tracking-wide text-sol-muted">
+            {tr("Your reflection")}
+          </p>
+          <p className="mt-2 text-[0.9rem] italic leading-relaxed text-sol-ink">
+            “{week.founder_reflection}”
+          </p>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/** The right-rail counterpart to hiding every other week from the main
+ * workspace (see focusedWeek in RoadmapPage) — a vertical stepper of
+ * every week in the current stage, so "how many weeks are left" and
+ * "what's coming" stay visible even though only one week's full content
+ * is ever on screen at a time. Clicking a completed week reviews it in
+ * the main workspace in place of the current week; clicking the current
+ * week (or the back link that appears while reviewing) returns to it.
+ * Locked weeks are shown but not clickable — nothing to look at yet. */
+function WeekFlowPanel({
+  weeks,
+  focusedWeekId,
+  onSelectWeek,
+}: {
+  weeks: Week[];
+  focusedWeekId: string | null;
+  onSelectWeek: (weekId: string | null) => void;
+}) {
+  const { locale } = useLocale();
+  const tr = (s: string) => translateDashboardText(s, locale) ?? s;
+  const sorted = [...weeks].sort((a, b) => a.order_index - b.order_index);
+  const doneWeeks = sorted.filter((w) => w.status === "completed").length;
+  const weeksLeft = sorted.length - doneWeeks;
+
+  return (
+    <div className="rounded-xl border border-sol-border bg-sol-surface p-4">
+      <div className="flex items-center justify-between gap-2">
+        <p className="text-[0.68rem] font-bold uppercase tracking-wide text-sol-muted">
+          {tr("Week Flow")}
+        </p>
+        <span className="rounded-full bg-sol-violet-mist px-2 py-0.5 text-[0.72rem] font-bold text-sol-violet-deep">
+          {doneWeeks} / {sorted.length}
+        </span>
+      </div>
+      <div className="mt-2.5 h-1.5 w-full overflow-hidden rounded-full bg-sol-border">
+        <div
+          className="h-full rounded-full bg-sol-violet transition-[width]"
+          style={{ width: `${sorted.length > 0 ? (doneWeeks / sorted.length) * 100 : 0}%` }}
+        />
+      </div>
+      <p className="mt-2 text-[0.72rem] text-sol-muted">
+        {weeksLeft > 0
+          ? `~${weeksLeft} ${tr(weeksLeft === 1 ? "week left in this stage" : "weeks left in this stage")}`
+          : tr("This stage is complete.")}
+      </p>
+      <div className="mt-3 flex flex-col gap-1">
+        {sorted.map((week) => {
+          const isFocused = week.id === focusedWeekId;
+          const isDone = week.status === "completed";
+          const isLocked = week.status === "locked";
+          const isActive = week.status === "active";
+          return (
+            <button
+              key={week.id}
+              type="button"
+              disabled={isLocked}
+              onClick={() => onSelectWeek(week.status === "active" ? null : week.id)}
+              className={cn(
+                "flex items-center gap-2.5 rounded-lg px-2 py-2 text-left transition-colors",
+                isLocked ? "cursor-default opacity-60" : "hover:bg-sol-ivory",
+                isFocused && "bg-sol-violet-mist/60 hover:bg-sol-violet-mist/60",
+              )}
+            >
+              <span
+                className={cn(
+                  "flex size-7 shrink-0 items-center justify-center rounded-full border text-[0.72rem] font-bold",
+                  isDone
+                    ? "border-sol-champagne bg-sol-champagne text-white"
+                    : isActive
+                      ? "border-sol-violet bg-sol-violet text-white"
+                      : "border-sol-border bg-sol-ivory text-sol-muted",
+                )}
+              >
+                {isDone ? (
+                  <Check className="size-3.5" aria-hidden="true" />
+                ) : isLocked ? (
+                  <Lock className="size-3" aria-hidden="true" />
+                ) : (
+                  week.week_number
+                )}
+              </span>
+              <span className="min-w-0 flex-1">
+                <span
+                  className={cn(
+                    "block truncate text-[0.82rem] font-semibold",
+                    isFocused ? "text-sol-violet-deep" : "text-sol-ink",
+                  )}
+                >
+                  {tr("Week")} {week.week_number}
+                </span>
+                <span className="block truncate text-[0.72rem] text-sol-muted">{week.title}</span>
+              </span>
+            </button>
+          );
+        })}
+      </div>
     </div>
   );
 }
@@ -741,7 +977,11 @@ function RoadmapPage() {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const query = useQuery({ queryKey: ["roadmap"], queryFn: () => getRoadmap({ data: {} }) });
-  const [focusedIndex, setFocusedIndex] = useState<number | null>(null);
+  // Which week the main workspace shows — null means "the current active
+  // week" (the default, and the only thing on screen until it's done).
+  // Set only by deliberately clicking a completed week in the Week Flow
+  // panel to review past work.
+  const [reviewWeekId, setReviewWeekId] = useState<string | null>(null);
   const { locale } = useLocale();
   const tr = (s: string) => translateDashboardText(s, locale) ?? s;
 
@@ -824,24 +1064,6 @@ function RoadmapPage() {
     },
   });
 
-  // A phase the founder is deliberately REVIEWING (clicked in the stage
-  // rail) is distinct from the TRUE active phase — section 24. Viewing an
-  // old completed phase must never force the founder back to "current";
-  // it only auto-releases the view if the phase they were reviewing
-  // becomes newly completed while they're looking at it, so finishing a
-  // stage visibly advances rather than leaving the view stuck on a done
-  // stage forever.
-  const phasesForEffect = query.data && "phases" in query.data ? query.data.phases : undefined;
-  useEffect(() => {
-    if (focusedIndex === null || !phasesForEffect) return;
-    const sorted = [...phasesForEffect].sort((a, b) => a.order_index - b.order_index);
-    const focused = sorted[focusedIndex];
-    if (!focused) return;
-    const isFocusedPhaseDone =
-      focused.roadmap_tasks.length > 0 && focused.roadmap_tasks.every((t) => t.status === "done");
-    if (isFocusedPhaseDone) setFocusedIndex(null);
-  }, [phasesForEffect, focusedIndex]);
-
   async function refresh() {
     await queryClient.invalidateQueries({ queryKey: ["roadmap"] });
     await queryClient.invalidateQueries({ queryKey: ["dashboard"] });
@@ -877,7 +1099,7 @@ function RoadmapPage() {
       <DashboardShell hasRoadmap={false}>
         <div className="mt-10 rounded-[24px] border border-sol-border bg-sol-surface px-8 py-12 text-center">
           <MapPin className="mx-auto size-8 text-sol-champagne-deep" aria-hidden="true" />
-          <h2 className="mt-4 font-display text-xl font-semibold text-sol-ink">
+          <h2 className="mt-4 font-display text-xl font-bold text-sol-ink">
             {tr("No roadmap yet.")}
           </h2>
           <p className="mx-auto mt-2 max-w-md text-[0.95rem] text-sol-secondary">
@@ -893,7 +1115,7 @@ function RoadmapPage() {
     );
   }
 
-  const { roadmap, opportunity, phases, founderSummary } = query.data;
+  const { roadmap, opportunity, phases } = query.data;
   const sortedPhases = [...phases].sort((a, b) => a.order_index - b.order_index);
 
   const phasesWithTasks = sortedPhases.map((phase) => ({
@@ -914,33 +1136,23 @@ function RoadmapPage() {
   );
   const effectiveCurrentIndex =
     currentPhaseIndex === -1 ? phasesWithTasks.length - 1 : currentPhaseIndex;
-  const activeIndex = focusedIndex ?? effectiveCurrentIndex;
-  const isViewingNonCurrent = activeIndex !== effectiveCurrentIndex;
 
-  const allTasks = phasesWithTasks.flatMap((p) => p.tasks);
-  const totalDone = allTasks.filter((t) => t.status === "done").length;
-  const overallProgress = allTasks.length > 0 ? Math.round((totalDone / allTasks.length) * 100) : 0;
-  const allWeeks = phasesWithTasks.flatMap((p) => p.weeks);
-  // deadline_days_from_start is WEEK-relative (0-6) since just-in-time
-  // generation — every week's tasks reset to day 0 when THAT week
-  // unlocks, not day 0 of the whole roadmap (see roadmap-persistence
-  // .server.ts). So the real "how long is this path" answer is the
-  // skeleton's actual week COUNT, not a days-based estimate — that
-  // stopped meaning anything the moment deadlines became per-week. Only
-  // a legacy pre-JIT roadmap (allWeeks empty, flat tasks with genuinely
-  // roadmap-relative days) still uses the old days-based estimate.
-  const estimatedWeeks =
-    allWeeks.length > 0
-      ? allWeeks.length
-      : Math.max(1, Math.ceil(Math.max(0, ...allTasks.map((t) => t.deadline_days_from_start)) / 7));
-  const activePhase = phasesWithTasks[activeIndex];
-  // "Due this week" is literally the active week's own pending tasks now
-  // — under JIT generation there is only ever one unlocked week with
-  // pending work at a time, so this is exact, not a days-based guess.
-  const activeWeekTasks = allWeeks.find((w) => w.status === "active")?.tasks;
-  const dueThisWeek = activeWeekTasks
-    ? activeWeekTasks.filter((t) => t.status !== "done").length
-    : allTasks.filter((t) => t.status !== "done" && t.deadline_days_from_start <= 7).length;
+  const activePhase = phasesWithTasks[effectiveCurrentIndex];
+  // The single week the main workspace actually renders — the phase's
+  // current active week by default, or whichever completed week the
+  // founder deliberately picked in the Week Flow panel to review. Never
+  // both, and never the full list — that's the whole point of this.
+  const currentWeekInPhase = activePhase?.weeks.find((w) => w.status === "active") ?? null;
+  // A past stage being previewed via the stage rail has no active week at
+  // all (every week in it is completed) — default to its last completed
+  // week instead of the locked-message fallback, so previewing a finished
+  // stage shows real past work, not a dead end.
+  const completedWeeksInPhase = activePhase?.weeks.filter((w) => w.status === "completed") ?? [];
+  const defaultFocusWeek =
+    currentWeekInPhase ?? completedWeeksInPhase[completedWeeksInPhase.length - 1] ?? null;
+  const focusedWeek = reviewWeekId
+    ? (activePhase?.weeks.find((w) => w.id === reviewWeekId) ?? defaultFocusWeek)
+    : defaultFocusWeek;
   const nextTask = phasesWithTasks
     .flatMap((p) => p.tasks)
     .find((t) => t.status !== "done" && t.required);
@@ -950,142 +1162,65 @@ function RoadmapPage() {
       opportunityId={roadmap.opportunity_id}
       opportunityTitle={opportunity?.title ?? null}
       hasRoadmap
-      pageTitle="Roadmap"
     >
       {/* ===== TOP: EXECUTION ROADMAP HEADER ===== */}
-      <p className="text-[12px] font-semibold uppercase tracking-[0.12em] text-sol-champagne-deep">
-        {tr("Execution Roadmap")}
-      </p>
-      <h1 className="mt-2 font-display text-[clamp(1.9rem,3.4vw,2.5rem)] font-semibold text-sol-ink">
-        {opportunity?.title ?? tr("Your Roadmap")}
-      </h1>
-      {/* North Star — the one-sentence "what this is building toward,"
-          generated once alongside the skeleton. Absent for a roadmap
-          built before this existed; the line simply doesn't render. */}
-      {roadmap.north_star && (
-        <p className="mt-2 max-w-2xl font-display text-[1.05rem] italic leading-snug text-sol-ink">
-          {roadmap.north_star}
-        </p>
-      )}
-      <p className="mt-2 max-w-xl text-[0.98rem] text-sol-secondary">
-        {founderSummary
-          ? buildFounderSummaryLine(founderSummary)
-          : (opportunity?.one_liner ?? tr("Your personalized execution plan."))}
-      </p>
-
-      <div className="mt-6 grid grid-cols-2 gap-px overflow-hidden rounded-2xl border border-sol-border bg-sol-border sm:grid-cols-4">
-        {[
-          { label: "Phase", value: `${effectiveCurrentIndex + 1} / ${phasesWithTasks.length}` },
-          { label: "Progress", value: `${overallProgress}%` },
-          { label: "This Week", value: `${dueThisWeek} task${dueThisWeek === 1 ? "" : "s"}` },
-          { label: "Estimated Path", value: `~${estimatedWeeks} wks` },
-        ].map((cell) => (
-          <div key={cell.label} className="bg-sol-surface px-5 py-4">
-            <p className="text-[0.62rem] font-semibold uppercase tracking-[0.1em] text-sol-muted">
-              {tr(cell.label)}
-            </p>
-            <p className="mt-1 font-display text-[1.35rem] font-semibold text-sol-ink">
-              {cell.value}
-            </p>
+      <div className="flex flex-wrap items-start justify-between gap-4">
+        <div className="flex items-center gap-3">
+          <CategoryIcon
+            category={opportunity?.category ?? null}
+            title={opportunity?.title ?? null}
+          />
+          <div>
+            {focusedWeek && (
+              <PageEyebrow>
+                {tr("Roadmap")} · {tr("Week")} {focusedWeek.week_number} {tr("of")}{" "}
+                {activePhase?.weeks.length ?? focusedWeek.week_number}
+              </PageEyebrow>
+            )}
+            <h1 className="font-display text-[clamp(1.6rem,2.8vw,2.1rem)] font-bold text-sol-ink">
+              {opportunity?.title ?? tr("Your Roadmap")}
+            </h1>
           </div>
-        ))}
+        </div>
+        <Link
+          to="/dashboard/roadmap/progress"
+          className="mt-6 inline-flex shrink-0 items-center gap-1.5 rounded-full bg-sol-violet px-3.5 py-1.5 text-[0.75rem] font-semibold text-white shadow-sm transition-colors hover:bg-sol-violet-deep"
+        >
+          <BarChart3 className="size-8" aria-hidden="true" />
+          {tr("View Progress")}
+        </Link>
       </div>
 
       {nextTask && (
-        <div className="mt-4 flex items-center gap-2 text-[0.85rem] text-sol-secondary">
-          <span className="size-1.5 shrink-0 rounded-full bg-sol-champagne" />
-          {tr("Next milestone:")} <span className="font-medium text-sol-ink">{nextTask.what}</span>
+        <div className="mt-5 flex items-center gap-3 rounded-xl border border-sol-border bg-sol-surface px-4 py-3">
+          <span className="shrink-0 rounded-full bg-sol-violet-mist px-2.5 py-1 text-[0.66rem] font-bold uppercase tracking-wide text-sol-violet-deep">
+            {tr("Up next")}
+          </span>
+          <span className="text-[0.85rem] text-sol-ink">{nextTask.what}</span>
         </div>
       )}
 
-      {/* ===== HORIZONTAL STAGE/PHASE NAVIGATOR — one strip, every
-          breakpoint. Violet = current, champagne = completed, neutral
-          border/text = future. Never green. Scrolls horizontally on
-          narrow screens instead of collapsing into a second, different
-          mobile layout. Clicking a future phase only changes which
-          phase's skeleton is previewed below — it never triggers
-          generation; that only ever happens when a week actually
-          unlocks (see updateTaskStatus / generateActiveWeekDetail). ===== */}
-      <nav className="mt-9 -mx-1 flex gap-2 overflow-x-auto px-1 pb-1" aria-label="Roadmap phases">
-        {phasesWithTasks.map((phase, i) => {
-          const done = phase.tasks.filter((t) => t.status === "done").length;
-          const isDone = phase.tasks.length > 0 && done === phase.tasks.length;
-          const isTrueCurrent = i === effectiveCurrentIndex;
-          const isFocused = i === activeIndex;
-          return (
-            <button
-              key={phase.id}
-              type="button"
-              onClick={() => setFocusedIndex(i)}
-              className={cn(
-                "flex shrink-0 items-center gap-2.5 rounded-full border px-4 py-2.5 text-left transition-colors",
-                isFocused
-                  ? "border-sol-violet bg-sol-violet-mist/60"
-                  : "border-sol-border bg-sol-surface hover:border-sol-violet/30",
-              )}
-            >
-              <span
-                className={cn(
-                  "flex size-5 shrink-0 items-center justify-center rounded-full border text-[0.65rem] font-semibold",
-                  isDone
-                    ? "border-sol-champagne bg-sol-champagne text-white"
-                    : isTrueCurrent
-                      ? "border-sol-violet text-sol-violet-deep ring-4 ring-sol-violet/15"
-                      : "border-sol-border text-sol-muted",
-                )}
-              >
-                {isDone ? <Check className="size-3" aria-hidden="true" /> : i + 1}
-              </span>
-              <span className="flex flex-col">
-                <span
-                  className={cn(
-                    "whitespace-nowrap text-[0.85rem] font-medium leading-tight",
-                    isFocused || isTrueCurrent ? "text-sol-ink" : "text-sol-secondary",
-                  )}
-                >
-                  {phase.title}
-                </span>
-                {isTrueCurrent && (
-                  <span className="text-[0.62rem] font-semibold uppercase tracking-wide text-sol-violet-deep">
-                    {tr("Current")}
-                  </span>
-                )}
-              </span>
-            </button>
-          );
-        })}
-      </nav>
-
       {/* ===== FOCUSED PHASE WORKSPACE + CONTEXT ===== */}
-      <div className="mt-6 grid gap-8 lg:grid-cols-[1fr_220px]">
+      <div className="mt-9 grid gap-8 lg:grid-cols-[1fr_220px]">
         {activePhase && (
           <section>
-            {isViewingNonCurrent && (
-              <div className="mb-3 flex items-center gap-2 rounded-lg bg-sol-ivory px-3 py-2 text-[0.8rem] text-sol-secondary">
-                <ChevronRight className="size-3.5 shrink-0" aria-hidden="true" />
-                {locale === "hi"
-                  ? `एक ${activeIndex < effectiveCurrentIndex ? "पूरा हो चुका" : "आगामी"} चरण देखा जा रहा है — आपका मौजूदा चरण ऊपर नेविगेटर में चिह्नित रहता है।`
-                  : `Previewing a ${activeIndex < effectiveCurrentIndex ? "completed" : "upcoming"} stage — your current stage stays marked in the navigator above.`}
-              </div>
-            )}
-            <div className="flex items-center gap-3">
-              <h2 className="font-display text-xl font-semibold text-sol-ink">
-                {activePhase.title}
-              </h2>
-              <span className="text-[0.8rem] text-sol-secondary">
-                {activePhase.tasks.filter((t) => t.status === "done").length}/
-                {activePhase.tasks.length} {tr("done")}
-              </span>
-            </div>
-            {activePhase.description && (
-              <p className="mt-1.5 text-[0.92rem] text-sol-secondary">{activePhase.description}</p>
-            )}
-            <div className="mt-4 flex flex-col gap-2.5">
-              {activePhase.weeks.length > 0
-                ? activePhase.weeks.map((week) => (
+            <div className="flex flex-col gap-3.5">
+              {activePhase.weeks.length > 0 ? (
+                focusedWeek ? (
+                  <>
+                    {currentWeekInPhase && focusedWeek.id !== currentWeekInPhase.id && (
+                      <button
+                        type="button"
+                        onClick={() => setReviewWeekId(null)}
+                        className="flex items-center gap-1.5 self-start text-[0.78rem] font-medium text-sol-violet-deep hover:underline"
+                      >
+                        <ArrowLeft className="size-3.5" aria-hidden="true" />
+                        {tr("Back to current week")}
+                      </button>
+                    )}
                     <WeekBlock
-                      key={week.id}
-                      week={week}
+                      key={focusedWeek.id}
+                      week={focusedWeek}
                       roadmapId={roadmap.id}
                       onToggle={(taskId, status, reflection) =>
                         toggleTaskMutation.mutate({ taskId, status, reflection })
@@ -1093,17 +1228,25 @@ function RoadmapPage() {
                       onReplanNeeded={refresh}
                       onWeekReady={refresh}
                     />
-                  ))
-                : activePhase.tasks.map((task) => (
-                    <TaskRow
-                      key={task.id}
-                      task={task}
-                      roadmapId={roadmap.id}
-                      isLastInWeek={false}
-                      onToggle={(taskId, status) => toggleTaskMutation.mutate({ taskId, status })}
-                      onReplanNeeded={refresh}
-                    />
-                  ))}
+                  </>
+                ) : (
+                  <p className="text-[0.85rem] text-sol-secondary">
+                    {tr("Every week in this stage is locked until an earlier one finishes.")}
+                  </p>
+                )
+              ) : (
+                activePhase.tasks.map((task, i) => (
+                  <TaskRow
+                    key={task.id}
+                    index={i + 1}
+                    task={task}
+                    roadmapId={roadmap.id}
+                    isLastInWeek={false}
+                    onToggle={(taskId, status) => toggleTaskMutation.mutate({ taskId, status })}
+                    onReplanNeeded={refresh}
+                  />
+                ))
+              )}
             </div>
           </section>
         )}
@@ -1112,6 +1255,13 @@ function RoadmapPage() {
             the extra scroll on a narrow screen where it's already one tap
             away via Ask Sol in the header) ===== */}
         <aside className="hidden flex-col gap-4 lg:flex">
+          {activePhase && activePhase.weeks.length > 0 && (
+            <WeekFlowPanel
+              weeks={activePhase.weeks}
+              focusedWeekId={focusedWeek?.id ?? null}
+              onSelectWeek={setReviewWeekId}
+            />
+          )}
           {nextTask && (
             <div className="rounded-xl border border-sol-border bg-sol-surface p-4">
               <p className="text-[0.68rem] font-semibold uppercase tracking-wide text-sol-muted">
@@ -1120,16 +1270,6 @@ function RoadmapPage() {
               <p className="mt-1.5 text-[0.9rem] leading-relaxed text-sol-ink">{nextTask.what}</p>
             </div>
           )}
-          <div className="rounded-xl border border-sol-border bg-sol-surface p-4">
-            <p className="text-[0.68rem] font-semibold uppercase tracking-wide text-sol-muted">
-              {tr("This Week")}
-            </p>
-            <p className="mt-1.5 text-[0.9rem] text-sol-ink">
-              {locale === "hi"
-                ? `${dueThisWeek} काम बाकी`
-                : `${dueThisWeek} task${dueThisWeek === 1 ? "" : "s"} due`}
-            </p>
-          </div>
           <AskSolStageButton />
         </aside>
       </div>

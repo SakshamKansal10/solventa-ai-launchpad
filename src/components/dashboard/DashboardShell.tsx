@@ -59,9 +59,6 @@ interface DashboardShellProps {
    * `false` renders it visibly locked instead of a normal clickable item
    * that would otherwise just land on an empty state. */
   hasRoadmap?: boolean;
-  /** Short label shown in the top header for the current page —
-   * "page context", never a duplicate of the sidebar nav. */
-  pageTitle?: string;
 }
 
 interface NavItem {
@@ -110,29 +107,32 @@ function useNavItems(opportunityId: string | null, hasRoadmap?: boolean): NavIte
   ];
 }
 
-/** Maps the current route to the top header's page-context label —
- * computed once here rather than requiring every page to pass its own
- * title, so no page can silently end up without one. */
-function pageTitleFromPath(pathname: string, explicit?: string): string {
-  if (explicit) return explicit;
-  if (pathname === "/dashboard") return "Command Center";
-  if (pathname.startsWith("/dashboard/opportunities/")) {
-    return pathname.endsWith("/proof") ? "Proof" : "Ideas";
-  }
-  if (pathname === "/dashboard/roadmap") return "Roadmap";
-  if (pathname === "/dashboard/history") return "History";
-  if (pathname === "/dashboard/settings") return "Settings";
-  return "Solventia";
+/** Label text next to a nav icon — on the desktop rail (collapsible=true)
+ * it's collapsed to zero width by default and only grows/fades in while
+ * the rail itself is hovered (see the `group` on its expanding ancestor
+ * in DashboardShell), so the rail can sit icon-only at rest, Supabase-
+ * style. The mobile drawer (collapsible=false) always shows it — there's
+ * no hover on a touch drawer, so collapsing there would just hide it
+ * permanently. */
+function NavLabel({ collapsible, children }: { collapsible: boolean; children: ReactNode }) {
+  if (!collapsible) return <span className="whitespace-nowrap">{children}</span>;
+  return (
+    <span className="max-w-0 overflow-hidden whitespace-nowrap opacity-0 transition-all duration-200 ease-out group-hover:max-w-[160px] group-hover:opacity-100">
+      {children}
+    </span>
+  );
 }
 
 function NavLink({
   item,
   currentPath,
   onNavigate,
+  collapsible,
 }: {
   item: NavItem;
   currentPath: string;
   onNavigate: () => void;
+  collapsible: boolean;
 }) {
   const { locale } = useLocale();
   const tr = (s: string) => translateDashboardText(s, locale) ?? s;
@@ -142,11 +142,11 @@ function NavLink({
   if (item.locked) {
     return (
       <div
-        className="group relative flex h-12 cursor-default items-center gap-3 rounded-xl px-3.5 text-[15px] font-medium text-[#9B95A2]"
+        className="relative flex h-12 cursor-default items-center gap-3 rounded-xl px-3.5 text-[15px] font-medium text-[#9B95A2]"
         title={tr("Build your roadmap after selecting a direction.")}
       >
         <Lock className="size-[18px] shrink-0" aria-hidden="true" strokeWidth={1.75} />
-        <span>{tr(item.label)}</span>
+        <NavLabel collapsible={collapsible}>{tr(item.label)}</NavLabel>
       </div>
     );
   }
@@ -155,6 +155,7 @@ function NavLink({
     <Link
       to={item.to}
       onClick={onNavigate}
+      title={collapsible ? tr(item.label) : undefined}
       className={cn(
         "relative flex h-12 items-center gap-3 rounded-xl px-3.5 text-[15px] font-medium transition-colors duration-150",
         isActive
@@ -169,7 +170,7 @@ function NavLink({
         />
       )}
       <Icon className="size-[18px] shrink-0" aria-hidden="true" strokeWidth={1.75} />
-      <span>{tr(item.label)}</span>
+      <NavLabel collapsible={collapsible}>{tr(item.label)}</NavLabel>
     </Link>
   );
 }
@@ -190,12 +191,19 @@ function SidebarContent({
   onNavigate,
   onSignOut,
   onOpenFeedback,
+  collapsible = false,
 }: {
   opportunityId: string | null;
   hasRoadmap?: boolean;
   onNavigate: () => void;
   onSignOut: () => void;
   onOpenFeedback: () => void;
+  /** True only for the desktop rail, which sits icon-only at rest and
+   * expands on hover (see the `group` + width transition on its
+   * containing panel in DashboardShell) — the mobile drawer always
+   * passes false since it already shows full labels with no hover to
+   * expand on. */
+  collapsible?: boolean;
 }) {
   const navItems = useNavItems(opportunityId, hasRoadmap);
   const currentPath = useRouterState({ select: (s) => s.location.pathname });
@@ -217,11 +225,17 @@ function SidebarContent({
 
       <div className="relative flex h-[118px] items-center gap-3 px-[22px]">
         <img src={mark} alt="" width={298} height={436} className="h-8 w-auto shrink-0" />
-        <div className="flex flex-col leading-none">
-          <span className="font-display text-[1.05rem] font-semibold tracking-[0.14em] text-sol-ink">
+        <div
+          className={cn(
+            "flex flex-col leading-none",
+            collapsible &&
+              "max-w-0 overflow-hidden opacity-0 transition-all duration-200 ease-out group-hover:max-w-[180px] group-hover:opacity-100",
+          )}
+        >
+          <span className="whitespace-nowrap font-display text-[1.05rem] font-semibold tracking-[0.14em] text-sol-ink">
             SOLVENTIA
           </span>
-          <span className="mt-1.5 text-[0.6rem] font-medium tracking-[0.28em] text-sol-champagne-deep">
+          <span className="mt-1.5 whitespace-nowrap text-[0.6rem] font-medium tracking-[0.28em] text-sol-champagne-deep">
             VALIDATE • BUILD • ELEVATE
           </span>
         </div>
@@ -229,7 +243,13 @@ function SidebarContent({
 
       <nav className="relative flex flex-1 flex-col gap-1 px-3">
         {navItems.map((item) => (
-          <NavLink key={item.label} item={item} currentPath={currentPath} onNavigate={onNavigate} />
+          <NavLink
+            key={item.label}
+            item={item}
+            currentPath={currentPath}
+            onNavigate={onNavigate}
+            collapsible={collapsible}
+          />
         ))}
       </nav>
 
@@ -238,16 +258,23 @@ function SidebarContent({
           <DropdownMenuTrigger asChild>
             <button
               type="button"
+              title={collapsible ? firstNameFromEmail(currentUser.data?.email) : undefined}
               className="flex w-full items-center gap-3 rounded-xl px-2 py-2 text-left transition-colors hover:bg-[#F1ECFA]"
             >
               <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-sol-champagne to-sol-violet text-[0.8rem] font-semibold text-white">
                 {initials(currentUser.data?.email)}
               </span>
-              <span className="min-w-0 flex-1">
+              <span
+                className={cn(
+                  "min-w-0 flex-1",
+                  collapsible &&
+                    "max-w-0 overflow-hidden opacity-0 transition-all duration-200 ease-out group-hover:max-w-[160px] group-hover:opacity-100",
+                )}
+              >
                 <span className="block truncate text-[0.88rem] font-medium text-sol-ink">
                   {firstNameFromEmail(currentUser.data?.email)}
                 </span>
-                <span className="flex items-center gap-0.5 text-[0.72rem] text-sol-secondary">
+                <span className="flex items-center gap-0.5 whitespace-nowrap text-[0.72rem] text-sol-secondary">
                   {tr("View profile")}
                   <ChevronRight className="size-3" aria-hidden="true" />
                 </span>
@@ -282,14 +309,12 @@ export function DashboardShell({
   opportunityId = null,
   opportunityTitle = null,
   hasRoadmap,
-  pageTitle,
 }: DashboardShellProps) {
   const [mentorOpen, setMentorOpen] = useState(false);
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const [feedbackOpen, setFeedbackOpen] = useState(false);
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const currentPath = useRouterState({ select: (s) => s.location.pathname });
   const { locale } = useLocale();
   const tr = (s: string) => translateDashboardText(s, locale) ?? s;
 
@@ -320,28 +345,37 @@ export function DashboardShell({
        * main workspace column does, so the sidebar is simply never in a
        * scrolling context to begin with. */}
       <div className="flex h-dvh w-full overflow-hidden bg-sol-pearl text-sol-ink">
-        {/* ===== DESKTOP SIDEBAR — fixed, never scrolls with content =====
-         * Pearl/ivory with a soft violet corner ambience, matching the
-         * homepage's own identity — the earlier dark-navy "workspace"
-         * treatment read as a generic dark app shell disconnected from
-         * Solventia's brand, not a deliberate premium choice. The dark
-         * navy tokens stay in use elsewhere (the flagship opportunity
-         * hero, the mission strip), just not for this persistent,
-         * always-visible surface. */}
-        <aside
-          className="hidden h-dvh w-[248px] shrink-0 overflow-y-auto border-r border-sol-border lg:block"
-          style={{
-            background:
-              "linear-gradient(180deg, oklch(0.9653 0.0102 81.8 / 98%), oklch(0.9798 0.0086 84.6 / 98%))",
-          }}
-        >
-          <SidebarContent
-            opportunityId={opportunityId}
-            hasRoadmap={hasRoadmap}
-            onNavigate={() => {}}
-            onSignOut={handleSignOut}
-            onOpenFeedback={() => setFeedbackOpen(true)}
-          />
+        {/* ===== DESKTOP SIDEBAR — icon-only rail at rest, expands on
+         * hover (Supabase-style), never scrolls with content =====
+         * The outer <aside> only reserves a constant 76px of layout
+         * space — the main workspace column never reflows on hover. The
+         * inner panel is what actually expands, absolutely positioned so
+         * it overlays the workspace instead of pushing it, with a shadow
+         * to read as "floating over" rather than "part of the layout"
+         * while expanded. Pearl/ivory with a soft violet corner ambience,
+         * matching the homepage's own identity — the earlier dark-navy
+         * "workspace" treatment read as a generic dark app shell
+         * disconnected from Solventia's brand, not a deliberate premium
+         * choice. The dark navy tokens stay in use elsewhere (the
+         * flagship opportunity hero, the mission strip), just not for
+         * this persistent, always-visible surface. */}
+        <aside className="relative hidden h-dvh w-[76px] shrink-0 lg:block">
+          <div
+            className="group absolute inset-y-0 left-0 z-40 h-dvh w-[76px] overflow-hidden border-r border-sol-border shadow-none transition-[width] duration-200 ease-out hover:w-[248px] hover:overflow-y-auto hover:shadow-2xl"
+            style={{
+              background:
+                "linear-gradient(180deg, oklch(0.9653 0.0102 81.8 / 98%), oklch(0.9798 0.0086 84.6 / 98%))",
+            }}
+          >
+            <SidebarContent
+              opportunityId={opportunityId}
+              hasRoadmap={hasRoadmap}
+              onNavigate={() => {}}
+              onSignOut={handleSignOut}
+              onOpenFeedback={() => setFeedbackOpen(true)}
+              collapsible
+            />
+          </div>
         </aside>
 
         {/* ===== MAIN WORKSPACE COLUMN — the only scrolling region =====
@@ -357,14 +391,15 @@ export function DashboardShell({
             mentorOpen && "min-[1440px]:mr-[420px] max-[1439px]:lg:mr-[360px]",
           )}
         >
-          {/* ===== DESKTOP TOP HEADER — page context + the Founder Inbox,
-           * never a second nav ===== */}
-          <header className="sticky top-0 z-30 hidden h-[72px] shrink-0 items-center justify-between border-b border-sol-border bg-[rgba(247,243,236,0.90)] px-8 backdrop-blur-xl lg:flex lg:px-12">
-            <p className="text-[0.95rem] font-semibold text-sol-ink">
-              {tr(pageTitleFromPath(currentPath, pageTitle))}
-            </p>
+          {/* ===== DESKTOP FOUNDER INBOX — the full-width header this used
+           * to live in was mostly empty space (just a page-title label
+           * that already duplicates the highlighted sidebar item, and this
+           * bell) on every single page, so it's gone; the bell now floats
+           * in the corner instead, and the page content starts right at
+           * the top of the scroll area. ===== */}
+          <div className="fixed right-8 top-6 z-30 hidden lg:block">
             <NotificationBell />
-          </header>
+          </div>
 
           {/* ===== MOBILE TOP BAR ===== */}
           <header className="sticky top-0 z-30 flex shrink-0 items-center justify-between gap-4 border-b border-sol-border bg-sol-pearl/90 px-5 py-4 backdrop-blur-xl lg:hidden">
@@ -395,7 +430,7 @@ export function DashboardShell({
               this reservation stays proportionate instead of eating a large
               chunk of a narrow screen — 56px covers its 12px+44px mobile
               footprint exactly; 96px covers its 28px+60px desktop one. */}
-          <main className="mx-auto flex w-full max-w-[1440px] flex-1 flex-col gap-0 pl-[18px] pr-14 py-9 sm:px-6 sm:pr-10 lg:pl-12 lg:pr-24 lg:py-14">
+          <main className="mx-auto flex w-full max-w-[1180px] flex-1 flex-col gap-0 pl-[18px] pr-14 pb-9 pt-6 sm:px-6 sm:pr-10 lg:pb-14 lg:pl-16 lg:pr-28 lg:pt-8">
             {children}
           </main>
         </div>
