@@ -1,7 +1,11 @@
 import { generateStructured } from "@/lib/ai/gemini.server";
 import { env } from "@/lib/env.server";
 import { MentorResponseSchema, type MentorResponse } from "@/lib/ai/schemas";
-import { formatProfileForPrompt, PLAIN_LANGUAGE_RULE } from "@/lib/ai/prompts/shared";
+import {
+  formatProfileForPrompt,
+  PLAIN_LANGUAGE_RULE,
+  type GenerationLocale,
+} from "@/lib/ai/prompts/shared";
 import { computeFounderGenome, computeFounderPersona } from "@/lib/profile/founder-genome";
 import type { NormalizedProfile } from "@/lib/profile/normalize";
 
@@ -24,12 +28,15 @@ interface MentorContext {
   currentWeek: { title: string; mission: string | null } | null;
   /** The next not-done required task's plain "what" text, if any. */
   nextTaskWhat: string | null;
+  /** Where the critical assumptions stand — real recorded evidence only. */
+  proofSummary?: string | null;
   recentHistory: { role: "user" | "assistant"; content: string }[];
 }
 
 export async function generateMentorReply(
   ctx: MentorContext,
   userMessage: string,
+  locale: GenerationLocale = "en",
 ): Promise<MentorResponse> {
   const history = ctx.recentHistory
     .slice(-10)
@@ -53,13 +60,18 @@ Current opportunity: ${ctx.opportunityTitle ?? "none selected yet"}
 Current roadmap phase: ${ctx.currentPhase ?? "none yet"}
 Current week: ${ctx.currentWeek ? `"${ctx.currentWeek.title}"${ctx.currentWeek.mission ? ` — mission: ${ctx.currentWeek.mission}` : ""}` : "no active roadmap week yet"}
 Next pending task: ${ctx.nextTaskWhat ?? "none — either done for now or no roadmap yet"}
+Proof status (recorded evidence only — never assume evidence that isn't listed): ${ctx.proofSummary ?? "no assumptions tracked yet"}
 
 Recent conversation:
 ${history || "(this is the first message)"}
 
 Founder just said: "${userMessage}"
 
-Reply as Sol. Be specific to their ACTUAL current week and next task when relevant — if they mention progress or a blocker, reason against what their real current mission/task actually is, never a generic "how's business going". Be specific to their real situation — never generic. If useful, give up to 3 concrete next actions; omit nextActions entirely if a list isn't actually helpful here.`;
+Reply as Sol. Be specific to their ACTUAL current week and next task when relevant — if they mention progress or a blocker, reason against what their real current mission/task actually is, never a generic "how's business going". Be specific to their real situation — never generic. If useful, give up to 3 concrete next actions; omit nextActions entirely if a list isn't actually helpful here.${
+    locale === "hi"
+      ? "\n\nLANGUAGE: Write the message and every next action in natural, conversational Hindi (Devanagari), as a fluent Hindi speaker would — never a stiff translation. Common business/technical terms normally used in English (SaaS, founder, startup, MVP, ROI…) may stay in English. Keep numbers and currency exactly as-is. Do NOT change any JSON key or the boolean isRecommendation."
+      : ""
+  }`;
 
   return generateStructured(MentorResponseSchema, {
     systemInstruction: SYSTEM_INSTRUCTION,

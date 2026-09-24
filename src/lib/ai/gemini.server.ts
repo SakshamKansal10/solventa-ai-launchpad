@@ -26,7 +26,15 @@ export const FALLBACK_MODEL = env.GEMINI_FALLBACK_MODEL ?? null;
 let client: GoogleGenAI | null = null;
 
 function getClient(): GoogleGenAI {
-  if (!client) client = new GoogleGenAI({ apiKey: env.GEMINI_API_KEY });
+  if (!client) {
+    // GEMINI_API_BASE_URL is unset in production. The E2E harness points it at
+    // a local fake so browser tests never spend real quota.
+    const baseUrl = env.GEMINI_API_BASE_URL;
+    client = new GoogleGenAI({
+      apiKey: env.GEMINI_API_KEY,
+      ...(baseUrl ? { httpOptions: { baseUrl } } : {}),
+    });
+  }
   return client;
 }
 
@@ -131,6 +139,8 @@ export type GeminiCallPurpose =
   | "WEEK_DETAIL"
   | "ROADMAP_REPLAN"
   | "REANALYZE"
+  | "PROOF_ASSUMPTIONS"
+  | "CONTENT_TRANSLATION"
   | "LEGACY_FALLBACK";
 
 type ThinkingLevel = "minimal" | "low" | "medium" | "high";

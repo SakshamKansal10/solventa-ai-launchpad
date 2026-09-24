@@ -337,7 +337,15 @@ export const getLatestBusinessDna = createServerFn({ method: "GET" }).handler(as
  * a single-field edit has nothing to do with.
  */
 export const updateFounderProfileAnswers = createServerFn({ method: "POST" })
-  .validator(z.object({ answers: z.record(z.string(), z.unknown()) }))
+  .validator(
+    z.object({
+      answers: z.record(z.string(), z.unknown()),
+      /** Replace the stored answers instead of merging. The Settings edit sheets
+       * start from the full stored answers, so what they send back is the whole
+       * truth — including answers a branch change legitimately cleared. */
+      replace: z.boolean().optional(),
+    }),
+  )
   .handler(async ({ data }) => {
     const { supabase, user } = await requireUser();
     const { data: latest, error: latestError } = await supabase
@@ -350,10 +358,15 @@ export const updateFounderProfileAnswers = createServerFn({ method: "POST" })
     if (latestError) throw new Error(latestError.message);
     if (!latest) throw new Error("No consultation found to edit — complete one first.");
 
-    const mergedAnswers = {
-      ...(latest.onboarding_answers as Record<string, unknown>),
-      ...data.answers,
-    };
+    if (data.replace && data.answers.v !== 2) {
+      throw new Error("Replacing a profile requires the current answer schema.");
+    }
+    const mergedAnswers = data.replace
+      ? { ...data.answers }
+      : {
+          ...(latest.onboarding_answers as Record<string, unknown>),
+          ...data.answers,
+        };
     const normalized = normalizeProfile(mergedAnswers as Parameters<typeof normalizeProfile>[0]);
 
     const { error: updateError } = await supabase
@@ -361,6 +374,9 @@ export const updateFounderProfileAnswers = createServerFn({ method: "POST" })
       .update({
         onboarding_answers: mergedAnswers as unknown as Json,
         normalized_signals: normalized as unknown as Json,
+        // No DB trigger maintains this column; Settings compares it with
+        // created_at to know the profile changed after the directions.
+        updated_at: new Date().toISOString(),
       })
       .eq("id", latest.id);
     if (updateError) throw new Error(updateError.message);

@@ -4,6 +4,7 @@ import { z } from "zod";
 import { requireUser } from "@/lib/supabase/server";
 import type { NormalizedProfile } from "@/lib/profile/normalize";
 import { generateMentorReply } from "@/lib/ai/prompts/mentor";
+import { loadProofOverview } from "@/lib/actions/proof";
 
 async function getOrCreateConversation(
   supabase: Awaited<ReturnType<typeof requireUser>>["supabase"],
@@ -32,7 +33,11 @@ async function getOrCreateConversation(
 
 export const sendMentorMessage = createServerFn({ method: "POST" })
   .validator(
-    z.object({ opportunityId: z.string().uuid().nullable(), message: z.string().min(1).max(4000) }),
+    z.object({
+      opportunityId: z.string().uuid().nullable(),
+      message: z.string().min(1).max(4000),
+      locale: z.enum(["en", "hi"]).optional(),
+    }),
   )
   .handler(async ({ data }) => {
     const { supabase, user } = await requireUser();
@@ -66,7 +71,20 @@ export const sendMentorMessage = createServerFn({ method: "POST" })
     let currentPhase: string | null = null;
     let currentWeek: { title: string; mission: string | null } | null = null;
     let nextTaskWhat: string | null = null;
+    let proofSummary: string | null = null;
     if (data.opportunityId) {
+      // Ownership of the context is checked by the same user-scoped query below
+      // (RLS + .eq user); proof is read best-effort so Ask Sol never fails on it.
+      try {
+        const overview = await loadProofOverview(supabase, user.id, data.opportunityId);
+        if (overview.available && overview.assumptions.length > 0) {
+          proofSummary = overview.assumptions
+            .map((a) => `"${a.title}" — ${a.state} (${a.evidence.length} evidence)`)
+            .join("; ");
+        }
+      } catch {
+        proofSummary = null;
+      }
       // Same reasoning — both only need data.opportunityId, already known.
       const [opp, roadmap] = await Promise.all([
         supabase.from("opportunities").select("title").eq("id", data.opportunityId).single(),
@@ -124,9 +142,11 @@ export const sendMentorMessage = createServerFn({ method: "POST" })
         currentPhase,
         currentWeek,
         nextTaskWhat,
+        proofSummary,
         recentHistory: (history ?? []).map((m) => ({ role: m.role, content: m.content })),
       },
       data.message,
+      data.locale ?? "en",
     );
 
     const { error: insertError } = await supabase.from("mentor_messages").insert([

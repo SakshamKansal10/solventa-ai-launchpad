@@ -9,6 +9,8 @@ const fieldSchemas = {
    * model name in a prompt file. Defaults to a stable Flash-class model
    * confirmed available on this project's free tier. */
   GEMINI_MODEL: z.string().min(1).default("gemini-3.6-flash"),
+  /** Test-only: route Gemini calls to a local fake. Never set in production. */
+  GEMINI_API_BASE_URL: z.string().url().optional(),
   /** Optional secondary model tried exactly once, only when the primary
    * model fails with a transient/provider-side error (503 overload, 429
    * quota, network/timeout) — never for a 400 (bad request) or 401/403
@@ -76,6 +78,9 @@ export const env = {
   },
   get GEMINI_MODEL() {
     return readField("GEMINI_MODEL");
+  },
+  get GEMINI_API_BASE_URL() {
+    return readField("GEMINI_API_BASE_URL");
   },
   get GEMINI_FALLBACK_MODEL() {
     return readField("GEMINI_FALLBACK_MODEL");

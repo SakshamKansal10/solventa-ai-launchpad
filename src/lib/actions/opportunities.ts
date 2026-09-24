@@ -5,20 +5,24 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { requireUser } from "@/lib/supabase/server";
 import type { Database, Json } from "@/lib/supabase/types";
 import type { NormalizedProfile } from "@/lib/profile/normalize";
-import { computeFitScore } from "@/lib/profile/scoring";
+import { computeFitScore, getConstraintWarnings } from "@/lib/profile/scoring";
+import { computeFitMatrix, type FitMatrix } from "@/lib/fit/matrix";
 import { generateOpportunityPackageBatch } from "@/lib/ai/prompts/intelligence-package";
 import { generateOpportunityDetail } from "@/lib/ai/prompts/opportunity-detail";
-import { generateRoadmapSkeleton, generateWeekDetail } from "@/lib/ai/prompts/roadmap-generation";
 import { researchMarketEvidence } from "@/lib/ai/prompts/market-research";
 import { MODEL } from "@/lib/ai/gemini.server";
-import { sendRoadmapReadyEmail } from "@/lib/actions/email.server";
-import { notifyFounder } from "@/lib/actions/notifications";
 import {
-  activateRoadmap,
-  archiveActiveRoadmap,
-  createRoadmapFromSkeleton,
-  persistWeekDetail,
-} from "@/lib/actions/roadmap-persistence.server";
+  archiveActiveRoadmapsExcept,
+  selectOpportunityRow,
+  setActivePointer,
+} from "@/lib/actions/direction.server";
+import { loadFounderState, type OpportunityBrief } from "@/lib/actions/founder";
+import { loadProofSummary, type ProofSummary } from "@/lib/actions/proof";
+import {
+  getFitFactors,
+  toDisplayDetail,
+  type OpportunityDisplayDetail,
+} from "@/lib/opportunity-display";
 import type {
   OpportunityCandidate,
   OpportunityPackage,
@@ -28,12 +32,8 @@ import type {
 const CANDIDATES_PER_BATCH = 3;
 const RESEARCH_CACHE_TTL_MS = 30 * 24 * 60 * 60 * 1000; // 30 days
 
-/** Two different founders can land on near-identical business ideas — the
- * underlying market question ("is there demand for X") doesn't change
- * per-user, so it's cached here across everyone rather than re-run per
- * opportunity. Exact-match on category+title only (no fuzzy matching), so
- * this is a real but modest hit rate — still strictly better than never
- * reusing anything. */
+/** The underlying market question doesn't change per-user, so it is cached
+ * across everyone. Exact-match on category+title only (no fuzzy matching). */
 async function getOrFetchMarketEvidence(
   supabase: SupabaseClient<Database>,
   title: string,
@@ -65,9 +65,6 @@ async function getOrFetchMarketEvidence(
 }
 
 async function loadLatestBusinessDna(supabase: SupabaseClient<Database>, userId: string) {
-  // Only id/normalized_signals are ever read by this call's one caller
-  // (exploreMoreOpportunities) — business_dna also carries the much
-  // larger founder_analysis/onboarding_answers JSON blobs, not needed here.
   const { data, error } = await supabase
     .from("business_dna")
     .select("id, normalized_signals")
@@ -76,16 +73,13 @@ async function loadLatestBusinessDna(supabase: SupabaseClient<Database>, userId:
     .limit(1)
     .maybeSingle();
   if (error) throw new Error(error.message);
-  if (!data) throw new Error("No Business DNA found — complete the consultation first.");
+  if (!data) throw new Error("No founder profile found — complete the consultation first.");
   return data;
 }
 
-/** Persists one full opportunity package: the opportunities row (candidate
- * = the complete package, detail included) and a mirrored
- * opportunity_details row (see profile.ts for why). No roadmap and no
- * Gemini call happens in here — a roadmap is only ever generated later,
- * on-demand, for whichever single opportunity the founder actually
- * selects (see buildRoadmapForOpportunity below). */
+/** Persists one full opportunity package (the candidate JSON carries the
+ * complete detail; opportunity_details mirrors it). No roadmap and no second
+ * AI call happens here. */
 async function persistOpportunityPackage(
   supabase: SupabaseClient<Database>,
   userId: string,
@@ -93,12 +87,6 @@ async function persistOpportunityPackage(
   profile: NormalizedProfile,
   pkg: OpportunityPackage,
   batchNumber: number,
-  /** This opportunity's position (0/1/2) in the AI's own original
-   * response array — 0 is the model's designated flagship. Null for
-   * Explore More batches, which have no single flagship among them. See
-   * migrations/0009_opportunity_index and getDashboard's primary
-   * resolution, which prefers this over fit_score when present. */
-  opportunityIndex: number | null,
 ) {
   const score = computeFitScore(profile, pkg.fitSignals);
 
@@ -121,27 +109,6 @@ async function persistOpportunityPackage(
     .single();
   if (oppError || !oppRow) throw new Error(oppError?.message ?? "Failed to save opportunity");
 
-  // Best-effort, separate from the insert above and never fatal — a
-  // founder on a database that hasn't had migration 0009 applied yet
-  // still gets a complete, working result (getDashboard's fit_score
-  // fallback covers a null opportunity_index exactly as it always has).
-  if (opportunityIndex !== null) {
-    try {
-      const { error: indexError } = await supabase
-        .from("opportunities")
-        .update({ opportunity_index: opportunityIndex })
-        .eq("id", oppRow.id);
-      if (indexError) {
-        console.error(
-          "[opportunities] opportunity_index persistence failed (non-fatal):",
-          indexError,
-        );
-      }
-    } catch (err) {
-      console.error("[opportunities] opportunity_index persistence threw (non-fatal):", err);
-    }
-  }
-
   const { error: detailError } = await supabase.from("opportunity_details").insert({
     opportunity_id: oppRow.id,
     user_id: userId,
@@ -153,15 +120,12 @@ async function persistOpportunityPackage(
   return oppRow;
 }
 
-/** The one explicit, user-triggered Gemini call behind "Explore More
- * Opportunities" (never automatic — see item 3/64/66). Each newly
- * explored opportunity gets its full detail up front but no roadmap —
- * exactly like the initial 3 now. None of them are made active
- * automatically — the founder is already on a path; exploring more
- * doesn't silently switch it. */
+/** "Explore More Opportunities" — the one explicit, user-triggered AI call for
+ * more directions. None is made active automatically: exploring more never
+ * silently switches a direction the founder is already on. */
 export const exploreMoreOpportunities = createServerFn({ method: "POST" })
   .validator(z.object({ locale: z.enum(["en", "hi"]).optional() }).optional())
-  .handler(async ({ data: input }) => {
+  .handler(async ({ data: input }): Promise<{ added: number }> => {
     const { supabase, user } = await requireUser();
     const dna = await loadLatestBusinessDna(supabase, user.id);
     const profile = dna.normalized_signals as unknown as NormalizedProfile;
@@ -185,35 +149,47 @@ export const exploreMoreOpportunities = createServerFn({ method: "POST" })
       locale: input?.locale,
     });
 
-    const rows = [];
+    let added = 0;
     for (const pkg of batch.opportunities) {
-      rows.push(
-        // null — an Explore More batch has no single designated flagship
-        // among its own opportunities (unlike the original 3 from a
-        // consultation); getDashboard falls back to fit_score ordering
-        // for these regardless.
-        await persistOpportunityPackage(supabase, user.id, dna.id, profile, pkg, nextBatch, null),
-      );
+      await persistOpportunityPackage(supabase, user.id, dna.id, profile, pkg, nextBatch);
+      added += 1;
     }
-    return rows.sort((a, b) => b.fit_score - a.fit_score);
+    return { added };
   });
 
-export const getOpportunities = createServerFn({ method: "GET" }).handler(async () => {
-  const { supabase, user } = await requireUser();
-  // Same deterministic tie-break as getDashboard — see its comment.
-  const { data, error } = await supabase
-    .from("opportunities")
-    .select("*")
-    .eq("user_id", user.id)
-    .order("fit_score", { ascending: false })
-    .order("created_at", { ascending: true });
-  if (error) throw new Error(error.message);
-  return data;
-});
+export interface FitDetail {
+  matrix: FitMatrix;
+  /** Founder-specific reasons this fits (from the generated package). */
+  advantages: string[];
+  /** Named gaps: skills to learn plus tradeoffs. */
+  gaps: string[];
+  warnings: string[];
+  currency: string;
+  capital: number;
+  weeklyHours: number;
+}
 
-export const getOpportunity = createServerFn({ method: "GET" })
+export interface OpportunityDetailDTO {
+  brief: OpportunityBrief;
+  detail: OpportunityDisplayDetail;
+  fit: FitDetail;
+  /** Sources from a cited market search, if the founder ran one. */
+  sources: {
+    id: string;
+    claim: string;
+    label: MarketEvidenceItem["label"];
+    sourceTitle: string | null;
+    sourceUrl: string | null;
+  }[];
+  proof: ProofSummary;
+  isSelected: boolean;
+  isCurrentConsultation: boolean;
+  roadmapStatus: "none" | "building" | "active" | "completed" | "failed" | "archived";
+}
+
+export const getOpportunityDetail = createServerFn({ method: "GET" })
   .validator(z.object({ id: z.string().uuid() }))
-  .handler(async ({ data }) => {
+  .handler(async ({ data }): Promise<OpportunityDetailDTO> => {
     const { supabase, user } = await requireUser();
 
     const { data: opportunity, error } = await supabase
@@ -224,48 +200,36 @@ export const getOpportunity = createServerFn({ method: "GET" })
       .single();
     if (error || !opportunity) throw new Error(error?.message ?? "Opportunity not found");
 
-    // None of these four depend on each other — only on `opportunity`
-    // above — so they run as one round trip instead of four sequential
-    // ones.
-    const [dnaRow, detailRes, evidenceRes, roadmapRes] = await Promise.all([
+    // None of these depend on each other — only on `opportunity` above.
+    const [dnaRow, detailRes, evidenceRes, roadmapRes, state, proof] = await Promise.all([
       supabase
         .from("business_dna")
-        .select("normalized_signals")
+        .select("normalized_signals, ambition_band")
         .eq("id", opportunity.business_dna_id)
         .single(),
-      // Every opportunity generated by the one-call architecture already
-      // has its detail mirrored here at creation time (see profile.ts /
-      // persistOpportunityPackage) — the lazy-generate branch below only
-      // fires for pre-migration rows that predate that change.
       supabase
         .from("opportunity_details")
         .select("detail")
         .eq("opportunity_id", opportunity.id)
         .maybeSingle(),
-      // Market evidence is READ-ONLY here — no Gemini call on navigation.
-      // Fetching/refreshing it is a separate, explicit action (see
-      // refreshMarketEvidence below), matching every other page in the
-      // workspace: viewing already-persisted data never costs an AI call.
       supabase.from("opportunity_evidence").select("*").eq("opportunity_id", opportunity.id),
-      // Scoped to THIS opportunity specifically — the Roadmap nav item
-      // must stay locked while viewing an opportunity that has no
-      // roadmap of its own, even if some OTHER opportunity's roadmap
-      // happens to be active (e.g. browsing an alternative idea before
-      // switching to it).
       supabase
         .from("roadmaps")
-        .select("id")
+        .select("status")
         .eq("opportunity_id", opportunity.id)
-        .eq("status", "active")
+        .eq("user_id", user.id)
         .maybeSingle(),
+      loadFounderState(supabase, user.id, null),
+      loadProofSummary(supabase, user.id, opportunity.id),
     ]);
     if (dnaRow.error || !dnaRow.data)
-      throw new Error("Business DNA not found for this opportunity");
+      throw new Error("Founder profile not found for this opportunity");
     const profile = dnaRow.data.normalized_signals as unknown as NormalizedProfile;
 
     let detailRow = detailRes.data;
     if (!detailRow) {
-      const detail = await generateOpportunityDetail(
+      // Only pre-one-call rows ever reach this: newer ones mirror their detail at creation.
+      const generated = await generateOpportunityDetail(
         profile,
         opportunity.candidate as unknown as OpportunityCandidate,
       );
@@ -274,7 +238,7 @@ export const getOpportunity = createServerFn({ method: "GET" })
         .insert({
           opportunity_id: opportunity.id,
           user_id: user.id,
-          detail: detail as unknown as Json,
+          detail: generated as unknown as Json,
           ai_model: MODEL,
         })
         .select("detail")
@@ -283,30 +247,48 @@ export const getOpportunity = createServerFn({ method: "GET" })
       detailRow = inserted.data;
     }
 
-    // Read-only, compact — powers the "Why You" founder<->business match
-    // visualization with real stored signals instead of re-deriving
-    // anything or fabricating a comparison.
-    const founderSummary = {
-      weeklyHours: profile.time.weeklyHours,
-      capitalAmount: profile.resources.capitalAmount,
-      currency: profile.identity.currency,
-      skills: profile.skills.map((s) => s.name),
-      riskAppetite: profile.risk.appetite,
-    };
+    const display = toDisplayDetail(detailRow.detail as unknown as OpportunityPackage);
+    const factors = getFitFactors(opportunity.candidate as unknown as OpportunityPackage);
+    const warnings = getConstraintWarnings(profile, factors);
+    const matrix = computeFitMatrix(profile, factors, dnaRow.data.ambition_band, warnings.length);
 
+    const gaps = [...display.skillsToLearn.map((s) => s), ...display.tradeoffs].slice(0, 3);
+
+    const brief = state.briefs[opportunity.id];
     return {
-      opportunity,
-      detail: detailRow.detail,
-      evidence: evidenceRes.data ?? [],
-      founderSummary,
-      hasRoadmap: Boolean(roadmapRes.data),
+      brief,
+      detail: display,
+      fit: {
+        matrix,
+        advantages: (display.whyThisFounder.length > 0
+          ? display.whyThisFounder
+          : display.advantages
+        ).slice(0, 4),
+        gaps,
+        warnings,
+        currency: profile.identity.currency,
+        capital: profile.resources.capitalAmount,
+        weeklyHours: profile.time.weeklyHours,
+      },
+      sources: (evidenceRes.data ?? []).map((e) => ({
+        id: e.id,
+        claim: e.claim,
+        label: e.label,
+        sourceTitle: e.source_title,
+        sourceUrl: e.source_url,
+      })),
+      proof,
+      isSelected: opportunity.status === "selected",
+      isCurrentConsultation: opportunity.business_dna_id === state.direction.consultationId,
+      roadmapStatus: (roadmapRes.data?.status === "available"
+        ? "archived"
+        : (roadmapRes.data?.status ?? "none")) as OpportunityDetailDTO["roadmapStatus"],
     };
   });
 
-/** The ONLY way opportunity_evidence ever gets a live Gemini call — an
- * explicit "Refresh Market Evidence" click, never navigation. Cached
- * globally per category+title for 30 days (see getOrFetchMarketEvidence),
- * so most calls of this across different founders are cache hits anyway. */
+/** Cited market research — the only path that ever makes a live search call,
+ * and only on an explicit click. Never runs on navigation. Cached globally
+ * per category+title for 30 days. */
 export const refreshMarketEvidence = createServerFn({ method: "POST" })
   .validator(z.object({ opportunityId: z.string().uuid() }))
   .handler(async ({ data }) => {
@@ -327,8 +309,7 @@ export const refreshMarketEvidence = createServerFn({ method: "POST" })
       (opportunity.candidate as unknown as OpportunityCandidate).category,
     );
 
-    // Replace rather than accumulate — a refresh should reflect the latest
-    // research, not pile duplicate claims on top of stale ones.
+    // Replace rather than accumulate.
     await supabase.from("opportunity_evidence").delete().eq("opportunity_id", opportunity.id);
     const rows = items.map((item) => ({
       opportunity_id: opportunity.id,
@@ -338,214 +319,22 @@ export const refreshMarketEvidence = createServerFn({ method: "POST" })
       source_title: item.sourceTitle,
       source_url: item.sourceUrl,
     }));
-    const inserted = await supabase.from("opportunity_evidence").insert(rows).select("*");
-    if (inserted.error) throw new Error(inserted.error.message);
-
-    return { evidence: inserted.data };
-  });
-
-export const submitIdeaFeedback = createServerFn({ method: "POST" })
-  .validator(
-    z.object({
-      opportunityId: z.string().uuid(),
-      feedback: z.enum(["interested", "maybe_later", "not_for_me", "saved"]),
-      reason: z.string().optional(),
-    }),
-  )
-  .handler(async ({ data }) => {
-    const { supabase, user } = await requireUser();
-
-    const { error: feedbackError } = await supabase.from("idea_feedback").insert({
-      user_id: user.id,
-      opportunity_id: data.opportunityId,
-      feedback: data.feedback,
-      reason: data.reason ?? null,
-    });
-    if (feedbackError) throw new Error(feedbackError.message);
-
-    if (data.feedback === "not_for_me" || data.feedback === "saved") {
-      const { error: statusError } = await supabase
-        .from("opportunities")
-        .update({
-          status: data.feedback === "not_for_me" ? "dismissed" : "saved",
-          dismiss_reason: data.feedback === "not_for_me" ? (data.reason ?? null) : null,
-        })
-        .eq("id", data.opportunityId)
-        .eq("user_id", user.id);
-      if (statusError) throw new Error(statusError.message);
+    if (rows.length > 0) {
+      const inserted = await supabase.from("opportunity_evidence").insert(rows);
+      if (inserted.error) throw new Error(inserted.error.message);
     }
-
-    return { ok: true };
+    return { count: rows.length };
   });
 
-/** Marks exactly one opportunity 'selected' (clearing any previous
- * selection back to 'active') — shared by switchSelectedOpportunity and
- * buildRoadmapForOpportunity so both can be called safely regardless of
- * which one the UI reaches first. */
-async function selectOpportunity(
-  supabase: SupabaseClient<Database>,
-  userId: string,
-  opportunityId: string,
-): Promise<void> {
-  const { error: clearError } = await supabase
-    .from("opportunities")
-    .update({ status: "active" })
-    .eq("user_id", userId)
-    .eq("status", "selected");
-  if (clearError) throw new Error(clearError.message);
-
-  const { error: selectError } = await supabase
-    .from("opportunities")
-    .update({ status: "selected" })
-    .eq("id", opportunityId)
-    .eq("user_id", userId);
-  if (selectError) throw new Error(selectError.message);
-}
-
-/** Choosing an idea costs ZERO Gemini calls — it only flips which
- * opportunity is 'selected' and archives whichever roadmap was active
- * (preserving its progress/history so it can be revisited later, never
- * deleted). It does NOT build a roadmap for the newly selected idea —
- * that's a separate, on-demand call the founder triggers explicitly via
- * "Build My Roadmap" (see buildRoadmapForOpportunity), so switching ideas
- * never spends AI cost on a direction the founder might not even build. */
-export const switchSelectedOpportunity = createServerFn({ method: "POST" })
+/** Choosing a direction costs ZERO AI calls: it selects the opportunity,
+ * archives (never deletes) any other active roadmap, and records the explicit
+ * choice. The roadmap itself is a separate, explicit step (buildRoadmap). */
+export const chooseDirection = createServerFn({ method: "POST" })
   .validator(z.object({ opportunityId: z.string().uuid() }))
   .handler(async ({ data }) => {
     const { supabase, user } = await requireUser();
-    await selectOpportunity(supabase, user.id, data.opportunityId);
-    await archiveActiveRoadmap(supabase, user.id);
-    return { ok: true };
-  });
-
-/** The on-demand Gemini call behind "Build My Roadmap" — fires only when
- * the founder explicitly commits to one opportunity. If this opportunity
- * already has a roadmap from an earlier build (the founder switched away
- * and is now switching back), it's reactivated with zero Gemini cost
- * instead of being regenerated — a founder revisiting a previous
- * direction never pays for it twice. */
-export const buildRoadmapForOpportunity = createServerFn({ method: "POST" })
-  .validator(
-    z.object({ opportunityId: z.string().uuid(), locale: z.enum(["en", "hi"]).optional() }),
-  )
-  .handler(async ({ data }) => {
-    const { supabase, user } = await requireUser();
-
-    const { data: opportunity, error: oppError } = await supabase
-      .from("opportunities")
-      .select("id, title, candidate, business_dna_id, status")
-      .eq("id", data.opportunityId)
-      .eq("user_id", user.id)
-      .single();
-    if (oppError || !opportunity) throw new Error(oppError?.message ?? "Opportunity not found");
-
-    if (opportunity.status !== "selected") {
-      await selectOpportunity(supabase, user.id, data.opportunityId);
-    }
-
-    const { data: existingRoadmap, error: roadmapLookupError } = await supabase
-      .from("roadmaps")
-      .select("id")
-      .eq("opportunity_id", data.opportunityId)
-      .eq("user_id", user.id)
-      .order("created_at", { ascending: false })
-      .limit(1)
-      .maybeSingle();
-    if (roadmapLookupError) throw new Error(roadmapLookupError.message);
-
-    await archiveActiveRoadmap(supabase, user.id);
-
-    if (existingRoadmap) {
-      // A revisit — reactivating a roadmap the founder already made
-      // progress on, possibly well past Week 1. "Your roadmap is ready,
-      // start Week 01" would be false here, so this path deliberately
-      // sends no email (a distinct "welcome back" email is a real product
-      // idea, just not one this call site should half-build) — the
-      // in-app notification alone, worded generically, is enough.
-      await activateRoadmap(supabase, user.id, existingRoadmap.id);
-      void notifyFounder(supabase, user.id, {
-        type: "roadmap_ready",
-        title: "Roadmap reactivated",
-        body: `Your roadmap for ${opportunity.title} is active again — pick up where you left off.`,
-        link: "/dashboard/roadmap",
-      });
-    } else {
-      const dnaRow = await supabase
-        .from("business_dna")
-        .select("normalized_signals")
-        .eq("id", opportunity.business_dna_id)
-        .single();
-      if (dnaRow.error || !dnaRow.data) throw new Error("Business DNA not found");
-      const profile = dnaRow.data.normalized_signals as unknown as NormalizedProfile;
-      const opportunityPackage = opportunity.candidate as unknown as OpportunityPackage;
-
-      // Two Gemini calls, not one: a lightweight skeleton (the long-term
-      // shape, no task detail) persisted immediately, then Week 1's real
-      // detail generated right away so the founder never lands on an
-      // empty active week. Every week after Week 1 is generated later,
-      // just-in-time, when it actually unlocks (see updateTaskStatus) —
-      // never all up front.
-      const skeleton = await generateRoadmapSkeleton(profile, opportunityPackage, data.locale);
-      const { firstWeek } = await createRoadmapFromSkeleton(
-        supabase,
-        user.id,
-        data.opportunityId,
-        skeleton,
-      );
-
-      // The roadmap itself (skeleton, phases, weeks) already exists and is
-      // active at this point — that's the real, meaningful success. If
-      // generating Week 1's detail specifically fails, don't throw and
-      // undo all of that from the founder's perspective: let them land on
-      // the roadmap page, where an active week with no tasks yet is a
-      // known, self-healing state (see generateActiveWeekDetail) rather
-      // than a dead end. Mission count stays null in that case — the
-      // email must never claim tasks exist that haven't generated yet.
-      let missionCount: number | null = null;
-      try {
-        const weekDetail = await generateWeekDetail(
-          profile,
-          opportunityPackage,
-          {
-            phaseTitle: firstWeek.phaseTitle,
-            phaseDescription: firstWeek.phaseDescription,
-            weekTitle: firstWeek.title,
-            weekObjective: firstWeek.objective,
-            weekNumber: firstWeek.weekNumber,
-            priorWeek: null,
-          },
-          data.locale,
-        );
-        await persistWeekDetail(
-          supabase,
-          user.id,
-          firstWeek.id,
-          firstWeek.phaseId,
-          weekDetail,
-          new Date(),
-        );
-        missionCount = weekDetail.tasks.length;
-      } catch (err) {
-        console.error("[roadmap] week 1 detail generation failed after skeleton succeeded:", err);
-      }
-
-      if (user.email) {
-        const fullName = (user.user_metadata?.full_name as string | undefined) ?? null;
-        void sendRoadmapReadyEmail(user.email, fullName, {
-          opportunityTitle: opportunity.title,
-          week1Title: firstWeek.title,
-          week1Objective: firstWeek.objective,
-          missionCount,
-          weeklyTimeCommitment: opportunityPackage.weeklyTime ?? null,
-        });
-      }
-      void notifyFounder(supabase, user.id, {
-        type: "roadmap_ready",
-        title: "Your roadmap is ready",
-        body: `${firstWeek.title} of your roadmap for ${opportunity.title} is ready to start.`,
-        link: "/dashboard/roadmap",
-      });
-    }
-
-    return { ok: true };
+    await selectOpportunityRow(supabase, user.id, data.opportunityId);
+    await archiveActiveRoadmapsExcept(supabase, user.id, data.opportunityId);
+    await setActivePointer(supabase, user.id, data.opportunityId);
+    return { ok: true as const };
   });

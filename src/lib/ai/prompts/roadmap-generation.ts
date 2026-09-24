@@ -145,10 +145,12 @@ Give this week 2-5 concrete actions (tasks) that realistically fit this founder'
 
 const WEEK_DETAIL_JSON_CONTRACT = `{
   "mission": string (short and concrete, 5-14 words — more specific than the objective already shown, not a restatement of it),
-  "tasks": [ 2-5 objects, each: { "what": string (8-18 words), "why": string, "how": string, "resource": string|null, "timeEstimate": string, "deadlineDaysFromStart": number, "doneWhen": string, "required": boolean, "dependsOn": the exact "what" text of a prior task THIS WEEK, or null if it can start independently — NEVER an index, number, or ID } ],
+  "tasks": [ 3-5 objects, each: { "what": string (mission title, 4-10 words), "why": string, "how": string, "steps": string[2-4] (each under 12 words — the bullets shown on the mission card, e.g. "Find 8 matching customers", "Ask the same core questions", "Do not pitch yet"), "resource": string|null, "timeEstimate": string (e.g. "~2 hrs"), "deadlineDaysFromStart": number, "doneWhen": string, "required": boolean, "evidenceRequired": boolean (true when this mission should leave behind recorded evidence), "assumptionCategory": "problem"|"willingness_to_pay"|"distribution"|"delivery"|"retention"|"pricing"|"competition"|"other"|null, "dependsOn": the exact "what" text of a prior task THIS WEEK, or null if it can start independently — NEVER an index, number, or ID } ],
   "mistakesToAvoid": string[1-3] (each 8-16 words),
   "evidenceRequired": string,
-  "successThreshold": string (one measurable statement)
+  "successThreshold": string (one measurable statement, e.g. "5 of 8 customers independently describe the same pain"),
+  "evidenceTarget": integer|null (how many separate pieces of evidence this week aims to capture, e.g. 8; null for a pure-execution week),
+  "adaptationNote": string|null (ONE plain sentence on how this week changed because of what happened last week — null for Week 1 or if nothing changed)
 }`;
 
 export interface WeekGenerationContext {
@@ -165,6 +167,14 @@ export interface WeekGenerationContext {
      * the real "evidence" that makes week 2+ genuinely adaptive instead
      * of following a plan frozen at roadmap creation. */
     reflection: string | null;
+    /** Structured close-out from the week-review form. */
+    outcome?: "stronger" | "as_expected" | "weaker" | "mixed" | null;
+    blocker?: string | null;
+    /** What the founder actually RECORDED as evidence (counts by signal and
+     * the most recent summaries) — real data, never invented. */
+    evidenceSummary?: string | null;
+    /** Where the critical assumptions stand right now. */
+    assumptionStates?: string | null;
   } | null;
 }
 
@@ -175,7 +185,7 @@ export async function generateWeekDetail(
   locale: GenerationLocale = "en",
 ): Promise<RoadmapWeekDetailPlan> {
   const priorWeekSection = context.priorWeek
-    ? `\nPrevious week ("${context.priorWeek.title}") — what actually happened: completed: ${context.priorWeek.completedTasks.join("; ") || "nothing recorded"}. Founder's own reflection: "${context.priorWeek.reflection ?? "none given"}". Let this genuinely inform this week — adjust pace, address anything the reflection raises, don't just continue a frozen plan.`
+    ? `\nPrevious week ("${context.priorWeek.title}") — what actually happened: completed missions: ${context.priorWeek.completedTasks.join("; ") || "nothing recorded"}. Outcome the founder reported: ${context.priorWeek.outcome ?? "not stated"}. Biggest blocker: ${context.priorWeek.blocker ?? "none named"}. Founder's own words: "${context.priorWeek.reflection ?? "none given"}". Evidence actually recorded: ${context.priorWeek.evidenceSummary ?? "none recorded"}. Assumption status: ${context.priorWeek.assumptionStates ?? "not tracked yet"}. Let this genuinely inform this week — adjust pace, address the blocker, follow the evidence (never claim evidence that was not recorded), and don't just continue a frozen plan. If the plan changes because of it, say so in adaptationNote.`
     : "\nThis is Week 1 — nothing precedes it.";
 
   const prompt = `Founder profile:\n${formatProfileForPrompt(profile)}

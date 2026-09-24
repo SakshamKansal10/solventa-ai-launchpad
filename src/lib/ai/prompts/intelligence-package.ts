@@ -222,7 +222,8 @@ const OPPORTUNITY_CONTRACT = `{
     "advantages": string[2-4], "tradeoffs": string[1-4], "risks": string[1-4], "unknowns": string[0-3], "validationNeeded": string[0-3], "revenuePath": string, "firstExperiment": string, "whyNow": string,
     "fitSignals": { "requiredSkills": [{"name": string, "minLevel": "never_tried"|"beginner"|"comfortable"|"advanced"}], "startupCapitalAmount": number, "weeklyHoursNeeded": number,
       "riskLevel": "cautious"|"balanced"|"experimental", "motivationAlignment": "high"|"medium"|"low", "requiresLeadership": boolean, "requiresSales": boolean, "soloFriendly": boolean,
-      "relevantExperienceYears": number, "requiresDigitalAssets": boolean, "locationFlexible": boolean }
+      "relevantExperienceYears": number, "requiresDigitalAssets": boolean, "locationFlexible": boolean,
+      "ceiling": "income"|"national"|"venture" (the realistic ceiling of THIS business if it works) }
   }`;
 
 const IDEA_PACKAGE_JSON_CONTRACT = `{

@@ -136,6 +136,13 @@ create policy "content_translations_all_own" on public.content_translations
   for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
 
 -- ============================================================
+-- founder_notifications — structured params so a notification is rendered in
+-- the reader's language at display time (the stored title/body stay as the
+-- English fallback).
+-- ============================================================
+alter table public.founder_notifications add column if not exists params jsonb;
+
+-- ============================================================
 -- Proof: the critical assumptions a business must satisfy, and the
 -- evidence a founder records against each. State (untested / weak signal /
 -- mixed / supported / contradicted) is DERIVED from the evidence rows by
@@ -331,6 +338,8 @@ alter table public.roadmap_weeks add column if not exists reflection_blocker tex
 alter table public.roadmap_weeks add column if not exists reflection_note text;
 alter table public.roadmap_weeks add column if not exists closed_at timestamptz;
 alter table public.roadmap_weeks add column if not exists evidence_target int;
+-- One plain sentence on how this week changed because of what happened last week.
+alter table public.roadmap_weeks add column if not exists adaptation_note text;
 
 do $$
 begin

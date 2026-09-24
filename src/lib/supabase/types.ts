@@ -238,6 +238,7 @@ export interface Database {
           reflection_note: string | null;
           closed_at: string | null;
           evidence_target: number | null;
+          adaptation_note: string | null;
         };
         Insert: Partial<Database["public"]["Tables"]["roadmap_weeks"]["Row"]> & {
           phase_id: string;
@@ -362,6 +363,8 @@ export interface Database {
           title: string;
           body: string;
           link: string | null;
+          /** Structured values (week number, title…) for localized rendering. */
+          params: Json | null;
           read_at: string | null;
           created_at: string;
         };
