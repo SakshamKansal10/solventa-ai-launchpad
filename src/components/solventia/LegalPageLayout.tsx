@@ -30,7 +30,7 @@ export function LegalPageLayout({
   return (
     <div className="min-h-screen bg-sol-page">
       <Header />
-      <main className="pt-[68px] md:pt-[84px]">
+      <main className="pt-[76px]">
         <div className="mx-auto max-w-[1100px] px-[18px] pb-24 pt-12 sm:px-6 lg:px-10">
           <PageBreadcrumb page={pageLabel} />
 

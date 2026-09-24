@@ -10,11 +10,7 @@ import { PremiumButton } from "@/components/solventia/PremiumButton";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
-import {
-  getOtpSendErrorMessage,
-  getOtpVerifyErrorMessage,
-  getPasswordSignInErrorMessage,
-} from "@/lib/auth-error-messages";
+import { authErrorKey } from "@/lib/auth-error-messages";
 import { OTP_MAX_LENGTH, sanitizeOtpInput, isOtpLengthPlausible } from "@/lib/otp";
 import { sanitizeNextPath } from "@/lib/safe-redirect";
 import { useLocale } from "@/lib/i18n/LocaleProvider";
@@ -84,13 +80,13 @@ function SignInPage() {
       const { error: signInError } = await supabase.auth.signInWithPassword({ email, password });
       if (signInError) {
         console.error("[sign-in-page] failed:", signInError);
-        setError(getPasswordSignInErrorMessage(signInError));
+        setError(t(authErrorKey("password", signInError)));
         return;
       }
       finishSignIn();
     } catch (err) {
       console.error("[sign-in-page] failed:", err);
-      setError(getPasswordSignInErrorMessage(err));
+      setError(t(authErrorKey("password", err)));
     } finally {
       setLoading(false);
     }
@@ -107,14 +103,14 @@ function SignInPage() {
       });
       if (otpError) {
         console.error("[sign-in-page] sending code failed:", otpError);
-        setError(getOtpSendErrorMessage(otpError));
+        setError(t(authErrorKey("otp-send", otpError)));
         return;
       }
       setMode("otp");
       tickCooldown();
     } catch (err) {
       console.error("[sign-in-page] sending code failed:", err);
-      setError(getOtpSendErrorMessage(err));
+      setError(t(authErrorKey("otp-send", err)));
     } finally {
       setLoading(false);
     }
@@ -133,13 +129,13 @@ function SignInPage() {
       });
       if (verifyError) {
         console.error("[sign-in-page] code verification failed:", verifyError);
-        setError(getOtpVerifyErrorMessage(verifyError));
+        setError(t(authErrorKey("otp-verify", verifyError)));
         return;
       }
       finishSignIn();
     } catch (err) {
       console.error("[sign-in-page] code verification failed:", err);
-      setError(getOtpVerifyErrorMessage(err));
+      setError(t(authErrorKey("otp-verify", err)));
     } finally {
       setLoading(false);
     }
@@ -148,19 +144,21 @@ function SignInPage() {
   return (
     <div className="min-h-screen bg-sol-page">
       <Header />
-      <main className="flex min-h-screen items-center justify-center px-[18px] pt-[68px] sm:px-6 md:pt-[84px]">
+      <main className="flex min-h-screen items-center justify-center px-[18px] pt-[76px] sm:px-6">
         <div className="w-full max-w-[400px] rounded-2xl border border-sol-border bg-sol-surface px-6 py-8 sm:px-8">
           {mode === "otp" ? (
             <>
               <h1 className="font-display text-2xl font-semibold text-sol-ink">
                 {t("signin.checkEmail")}
               </h1>
-              <p className="mt-1.5 text-[0.85rem] text-sol-secondary">
-                We sent a verification code to <span className="text-sol-ink">{email}</span>.
+              <p className="mt-1.5 text-[1rem] text-sol-secondary">
+                {t("auth.otp.bodyShort", { email })}
               </p>
               <form onSubmit={handleVerify} className="mt-5 flex flex-col gap-4">
                 <div className="flex flex-col gap-1.5">
-                  <Label htmlFor="page-signin-otp">Verification code</Label>
+                  <Label htmlFor="page-signin-otp" className="text-[0.9375rem]">
+                    {t("auth.otp.label")}
+                  </Label>
                   <Input
                     id="page-signin-otp"
                     autoFocus
@@ -169,11 +167,15 @@ function SignInPage() {
                     required
                     value={code}
                     onChange={(e) => setCode(sanitizeOtpInput(e.target.value))}
-                    placeholder="Enter your code"
+                    placeholder={t("auth.otp.placeholder")}
                     className="text-center text-[1.2rem] font-semibold tracking-[0.4em]"
                   />
                 </div>
-                {error && <p className="text-[0.82rem] text-destructive">{error}</p>}
+                {error && (
+                  <p role="alert" className="text-[0.9375rem] font-medium text-destructive">
+                    {error}
+                  </p>
+                )}
                 <PremiumButton
                   type="submit"
                   tone="solid"
@@ -185,7 +187,7 @@ function SignInPage() {
                   {loading && <Loader2 className="size-4 animate-spin" aria-hidden="true" />}
                   {t("signin.verify")}
                 </PremiumButton>
-                <div className="flex items-center justify-between text-[0.8rem]">
+                <div className="flex items-center justify-between text-[0.9375rem]">
                   <button
                     type="button"
                     onClick={() => {
@@ -204,7 +206,7 @@ function SignInPage() {
                     className="font-medium text-sol-violet-deep disabled:text-sol-muted"
                   >
                     {resendCooldown > 0
-                      ? `${t("signin.resendCode")} (${resendCooldown}s)`
+                      ? t("auth.otp.resendIn", { s: resendCooldown })
                       : t("signin.resendCode")}
                   </button>
                 </div>
@@ -215,31 +217,35 @@ function SignInPage() {
               <h1 className="font-display text-2xl font-semibold text-sol-ink">
                 {t("signin.welcomeBack")}
               </h1>
-              <p className="mt-1.5 text-[0.85rem] text-sol-secondary">
-                {nextPath ? "Sign in to pick up exactly where you left off." : t("signin.subhead")}
+              <p className="mt-1.5 text-[1rem] text-sol-secondary">
+                {nextPath ? t("auth.signin.nextSubhead") : t("signin.subhead")}
               </p>
               <div className="mt-5">
                 <GoogleSignInButton redirectPath={googleRedirectPath} />
               </div>
               <div className="my-4 flex items-center gap-3">
                 <div className="h-px flex-1 bg-sol-border" />
-                <span className="text-[0.75rem] text-sol-muted">{t("signin.or")}</span>
+                <span className="text-[0.875rem] text-sol-muted">{t("signin.or")}</span>
                 <div className="h-px flex-1 bg-sol-border" />
               </div>
               <form onSubmit={handlePasswordSubmit} className="flex flex-col gap-4">
                 <div className="flex flex-col gap-1.5">
-                  <Label htmlFor="page-signin-email">{t("signin.email")}</Label>
+                  <Label htmlFor="page-signin-email" className="text-[0.9375rem]">
+                    {t("signin.email")}
+                  </Label>
                   <Input
                     id="page-signin-email"
                     type="email"
-                    placeholder="you@example.com"
+                    placeholder={t("auth.emailPlaceholder")}
                     required
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                   />
                 </div>
                 <div className="flex flex-col gap-1.5">
-                  <Label htmlFor="page-signin-password">{t("signin.password")}</Label>
+                  <Label htmlFor="page-signin-password" className="text-[0.9375rem]">
+                    {t("signin.password")}
+                  </Label>
                   <Input
                     id="page-signin-password"
                     type="password"
@@ -249,7 +255,11 @@ function SignInPage() {
                     onChange={(e) => setPassword(e.target.value)}
                   />
                 </div>
-                {error && <p className="text-[0.82rem] text-destructive">{error}</p>}
+                {error && (
+                  <p role="alert" className="text-[0.9375rem] font-medium text-destructive">
+                    {error}
+                  </p>
+                )}
                 <PremiumButton
                   type="submit"
                   tone="solid"
@@ -265,7 +275,7 @@ function SignInPage() {
                   type="button"
                   disabled={!email || loading}
                   onClick={requestCode}
-                  className="text-center text-[0.8rem] text-sol-secondary hover:text-sol-ink disabled:opacity-50"
+                  className="text-center text-[0.9375rem] text-sol-secondary hover:text-sol-ink disabled:opacity-50"
                 >
                   {t("signin.forgotPassword")}
                 </button>

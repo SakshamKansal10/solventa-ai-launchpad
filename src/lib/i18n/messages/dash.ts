@@ -5,7 +5,7 @@ const en = {
   "cc.none.body": "Tell us about yourself and we'll find the direction worth building.",
   "cc.none.cardTitle": "Start with a short consultation",
   "cc.none.cardBody":
-    "About fifteen minutes. Solventia finds three business directions that fit what you actually have — your skills, time, money and access.",
+    "About ten to fifteen minutes. Solventia finds three business directions that fit what you actually have — your skills, time, money and access.",
 
   // ── State A: directions ready, none chosen ─────────────────────────────
   "cc.a.title": "Your directions are ready",
@@ -235,7 +235,7 @@ const hi: Record<keyof typeof en, string> = {
   "cc.none.body": "अपने बारे में बताइए, हम वह दिशा खोजेंगे जिसे बनाना सार्थक है।",
   "cc.none.cardTitle": "एक छोटी कंसल्टेशन से शुरू करें",
   "cc.none.cardBody":
-    "लगभग पंद्रह मिनट। Solventia आपके पास जो कुछ सच में है — कौशल, समय, पैसा और पहुंच — उसके हिसाब से तीन बिज़नेस दिशाएं खोजता है।",
+    "लगभग दस से पंद्रह मिनट। Solventia आपके पास जो कुछ सच में है — कौशल, समय, पैसा और पहुंच — उसके हिसाब से तीन बिज़नेस दिशाएं खोजता है।",
 
   "cc.a.title": "आपकी दिशाएं तैयार हैं",
   "cc.a.subtitle": "जिसे सबसे पहले परखना है, उसे चुनिए। बाकी सुरक्षित रहेंगी।",

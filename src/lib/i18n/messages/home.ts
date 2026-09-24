@@ -136,6 +136,33 @@ const en = {
   "signin.verify": "Verify & sign in",
   "signin.back": "Back",
   "signin.resendCode": "Resend code",
+
+  "adaptiveRoadmap.subhead":
+    "Solventia writes each next week from what actually happened — not from a template.",
+  "adaptiveRoadmap.demoNote": "Illustrative example — not a real founder's data.",
+  "adaptiveRoadmap.m1": "Write the interview script",
+  "adaptiveRoadmap.m2": "Find eight people who fit your customer",
+  "adaptiveRoadmap.m3": "Interview them and record what they say",
+  "adaptiveRoadmap.m4": "Summarise what repeated",
+  "adaptiveRoadmap.reason":
+    "Five of eight repeated the same pain, so Week 02 tests whether they would pay to fix it.",
+  "adaptiveRoadmap.lockedNow": "Locked until Week 01's evidence is in.",
+  "whySolventia.solventia": "Solventia",
+  "faq.q1": "What exactly does Solventia do?",
+  "faq.a1":
+    "Solventia turns your background, skills, money and time into three business directions that fit you specifically, then gives you a week-by-week roadmap to test and build one.",
+  "faq.q2": "How personalized are the recommendations?",
+  "faq.a2":
+    "Every direction is generated from your own answers, not from a shared list. Two people with different profiles get different directions, and each one shows honestly where you are strong and where you are not yet.",
+  "faq.q3": "Do I need business experience?",
+  "faq.a3":
+    "No. The consultation starts from where you are today — your skills, time and resources — not from an assumed baseline of experience.",
+  "faq.q4": "What happens after I choose a direction?",
+  "faq.a4":
+    "Solventia builds a roadmap in phases and weeks. Only the current week is written in detail; the next one is written after you finish this one, from the evidence you recorded.",
+  "faq.q5": "Is my information private?",
+  "faq.a5":
+    "What you share is used to personalize your directions and roadmap, and is not sold to third parties. Full details are in our privacy policy.",
 } as const;
 
 const hi: Record<keyof typeof en, string> = {
@@ -274,6 +301,33 @@ const hi: Record<keyof typeof en, string> = {
   "signin.verify": "सत्यापित करें और साइन इन करें",
   "signin.back": "वापस",
   "signin.resendCode": "कोड फिर से भेजें",
+
+  "adaptiveRoadmap.subhead":
+    "Solventia हर अगला सप्ताह इस आधार पर लिखता है कि सच में क्या हुआ — किसी टेम्पलेट से नहीं।",
+  "adaptiveRoadmap.demoNote": "उदाहरण के लिए — किसी असली फाउंडर का डेटा नहीं।",
+  "adaptiveRoadmap.m1": "इंटरव्यू की स्क्रिप्ट लिखें",
+  "adaptiveRoadmap.m2": "अपने ग्राहक जैसे आठ लोग खोजें",
+  "adaptiveRoadmap.m3": "उनसे बात करें और जो वे कहें उसे दर्ज करें",
+  "adaptiveRoadmap.m4": "जो बात बार-बार आई उसका सार लिखें",
+  "adaptiveRoadmap.reason":
+    "आठ में से पांच ने वही परेशानी दोहराई, इसलिए सप्ताह 02 परखता है कि क्या वे उसे सुलझाने के लिए पैसे देंगे।",
+  "adaptiveRoadmap.lockedNow": "सप्ताह 01 का प्रमाण आने तक बंद।",
+  "whySolventia.solventia": "Solventia",
+  "faq.q1": "Solventia असल में क्या करता है?",
+  "faq.a1":
+    "Solventia आपकी पृष्ठभूमि, कौशल, पैसे और समय को तीन ऐसी बिज़नेस दिशाओं में बदलता है जो खास आपके लिए ठीक बैठती हैं, फिर उनमें से एक को परखने और बनाने के लिए सप्ताह-दर-सप्ताह रोडमैप देता है।",
+  "faq.q2": "सिफ़ारिशें कितनी व्यक्तिगत होती हैं?",
+  "faq.a2":
+    "हर दिशा आपके अपने जवाबों से बनती है, किसी साझा सूची से नहीं। अलग प्रोफ़ाइल वाले दो लोगों को अलग दिशाएं मिलती हैं, और हर दिशा ईमानदारी से बताती है कि आप कहां मज़बूत हैं और कहां अभी नहीं।",
+  "faq.q3": "क्या मुझे बिज़नेस का अनुभव चाहिए?",
+  "faq.a3":
+    "नहीं। कंसल्टेशन वहीं से शुरू होती है जहां आप आज हैं — आपके कौशल, समय और संसाधन — किसी मान लिए गए अनुभव के स्तर से नहीं।",
+  "faq.q4": "दिशा चुनने के बाद क्या होता है?",
+  "faq.a4":
+    "Solventia चरणों और सप्ताहों में एक रोडमैप बनाता है। केवल मौजूदा सप्ताह विस्तार से लिखा जाता है; अगला सप्ताह आपके यह सप्ताह पूरा करने के बाद, आपके दर्ज किए साक्ष्य से लिखा जाता है।",
+  "faq.q5": "क्या मेरी जानकारी निजी रहती है?",
+  "faq.a5":
+    "आप जो साझा करते हैं वह आपकी दिशाओं और रोडमैप को व्यक्तिगत बनाने में काम आता है, और तीसरे पक्षों को बेचा नहीं जाता। पूरा ब्योरा हमारी गोपनीयता नीति में है।",
 };
 
 export default { en, hi };

@@ -3,6 +3,7 @@ import { motion, useReducedMotion } from "motion/react";
 import { ArrowRight } from "lucide-react";
 import { scrollToSection } from "@/hooks/use-active-section";
 import { useLocale } from "@/lib/i18n/LocaleProvider";
+import type { MessageKey } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 
 const fadeUp = {
@@ -10,13 +11,13 @@ const fadeUp = {
   show: { opacity: 1, y: 0 },
 };
 
-/** The three minimal Solventia intelligence indicators — real product
- * concepts (fit score, evidence, execution), never the generic "Market
- * Opportunity / AI Validation / Roadmap Generated" placeholders this
- * replaces. Card C is hidden on mobile per spec (only two shown there). */
+/** The three minimal Solventia indicators — real product concepts (founder
+ * fit, proof, this week), each a plain WORD, never a number: a made-up score
+ * on a marketing page reads as a claim about a real person. Card B is hidden
+ * on mobile (only two shown there). */
 const SIGNAL_CARDS: {
-  label: string;
-  value: string;
+  labelKey: MessageKey;
+  valueKey: MessageKey;
   className: string;
   width: number;
   duration: number;
@@ -25,29 +26,29 @@ const SIGNAL_CARDS: {
   hideOnMobile?: boolean;
 }[] = [
   {
-    label: "Founder Fit",
-    value: "92",
+    labelKey: "hero.card.fit",
+    valueKey: "hero.card.fitValue",
     className: "right-[2.5%] top-[28%]",
-    width: 156,
+    width: 196,
     duration: 9,
     delay: 0,
     dot: "champagne",
   },
   {
-    label: "Proof Signal",
-    value: "Strong",
+    labelKey: "hero.card.proof",
+    valueKey: "hero.card.proofValue",
     className: "right-[12%] top-[52%]",
-    width: 160,
+    width: 204,
     duration: 11,
     delay: 1.4,
     dot: "violet",
     hideOnMobile: true,
   },
   {
-    label: "Week 01",
-    value: "Ready",
+    labelKey: "hero.card.week",
+    valueKey: "hero.card.weekValue",
     className: "right-[3.5%] top-[73%]",
-    width: 150,
+    width: 176,
     duration: 8,
     delay: 0.8,
     dot: "gradient",
@@ -73,6 +74,7 @@ function StatusDot({ tone }: { tone: "champagne" | "violet" | "gradient" }) {
 
 function SignalCard({ card }: { card: (typeof SIGNAL_CARDS)[number] }) {
   const reduceMotion = useReducedMotion();
+  const { t } = useLocale();
   return (
     <motion.div
       initial={{ opacity: 0, y: 16 }}
@@ -87,14 +89,14 @@ function SignalCard({ card }: { card: (typeof SIGNAL_CARDS)[number] }) {
         transition={{
           y: { duration: card.duration, repeat: Infinity, ease: "easeInOut" },
         }}
-        className="flex h-[62px] w-full items-center gap-2.5 rounded-[17px] border border-[rgba(214,203,190,0.78)] bg-[rgba(255,253,250,0.91)] px-4 shadow-[0_12px_34px_rgba(23,32,61,0.075)] backdrop-blur-[14px] transition-colors duration-[180ms] group-hover:border-[rgba(114,87,216,0.28)]"
+        className="flex h-[68px] w-full items-center gap-2.5 rounded-[17px] border border-[rgba(214,203,190,0.78)] bg-[rgba(255,253,250,0.91)] px-4 shadow-[0_12px_34px_rgba(23,32,61,0.075)] backdrop-blur-[14px] transition-colors duration-[180ms] group-hover:border-[rgba(114,87,216,0.28)]"
       >
         <StatusDot tone={card.dot} />
         <div className="min-w-0">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.1em] text-sol-secondary">
-            {card.label}
+          <p className="text-[14px] font-semibold leading-tight text-sol-secondary">
+            {t(card.labelKey)}
           </p>
-          <p className="mt-0.5 text-[16px] font-bold leading-none text-sol-ink">{card.value}</p>
+          <p className="mt-1 text-[17px] font-bold leading-none text-sol-ink">{t(card.valueKey)}</p>
         </div>
       </motion.div>
     </motion.div>
@@ -140,7 +142,7 @@ export function Hero() {
 
   return (
     <section
-      className="relative mt-[68px] h-[calc(100vh-68px)] w-full overflow-hidden md:mt-[84px] md:h-[calc(100vh-84px)]"
+      className="relative mt-[76px] h-[calc(100vh-76px)] w-full overflow-hidden"
       style={{ minHeight: 640, maxHeight: 860 }}
     >
       <HeroBackground />
@@ -162,7 +164,7 @@ export function Hero() {
           document flow below the CTAs instead (see mobile block below). */}
       <div className="pointer-events-none absolute inset-0 z-10 hidden sm:block">
         {SIGNAL_CARDS.map((card) => (
-          <SignalCard key={card.label} card={card} />
+          <SignalCard key={card.labelKey} card={card} />
         ))}
       </div>
 
@@ -179,7 +181,7 @@ export function Hero() {
           <motion.p
             variants={fadeUp}
             transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
-            className="text-[12px] font-semibold uppercase tracking-[0.15em] text-sol-champagne-deep"
+            className="text-[14px] font-semibold uppercase tracking-[0.14em] text-sol-champagne-deep"
           >
             {t("hero.eyebrow")}
           </motion.p>
@@ -242,16 +244,16 @@ export function Hero() {
           >
             {SIGNAL_CARDS.filter((c) => !c.hideOnMobile).map((card) => (
               <div
-                key={card.label}
-                className="flex h-[58px] w-[136px] items-center gap-2 rounded-[17px] border border-[rgba(214,203,190,0.78)] bg-[rgba(255,253,250,0.94)] px-3.5 shadow-[0_12px_34px_rgba(23,32,61,0.075)]"
+                key={card.labelKey}
+                className="flex h-[64px] min-w-[10.5rem] items-center gap-2 rounded-[17px] border border-[rgba(214,203,190,0.78)] bg-[rgba(255,253,250,0.94)] px-3.5 shadow-[0_12px_34px_rgba(23,32,61,0.075)]"
               >
                 <StatusDot tone={card.dot} />
                 <div className="min-w-0">
-                  <p className="text-[10px] font-semibold uppercase tracking-[0.08em] text-sol-secondary">
-                    {card.label}
+                  <p className="text-[14px] font-semibold leading-tight text-sol-secondary">
+                    {t(card.labelKey)}
                   </p>
-                  <p className="mt-0.5 text-[15px] font-bold leading-none text-sol-ink">
-                    {card.value}
+                  <p className="mt-1 text-[16px] font-bold leading-none text-sol-ink">
+                    {t(card.valueKey)}
                   </p>
                 </div>
               </div>

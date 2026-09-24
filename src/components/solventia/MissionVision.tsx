@@ -1,31 +1,39 @@
 import { motion } from "motion/react";
 import { Target, Telescope } from "lucide-react";
 
-const PANELS = [
+import type { MessageKey } from "@/lib/i18n";
+import { useLocale } from "@/lib/i18n/LocaleProvider";
+
+const PANELS: {
+  icon: typeof Target;
+  eyebrow: MessageKey;
+  statement: MessageKey;
+  body: MessageKey;
+}[] = [
   {
     icon: Target,
-    eyebrow: "Our Mission",
-    statement:
-      "Give every ambitious person the intelligence, validation, and support once reserved for founders with the right connections.",
-    body: "A good idea should only need to be good — not well-connected. Solventia pairs each founder with structured discovery, real market validation, and a step-by-step roadmap, so ambition is never the limiting factor.",
+    eyebrow: "mv.mission.eyebrow",
+    statement: "mv.mission.statement",
+    body: "mv.mission.body",
   },
   {
     icon: Telescope,
-    eyebrow: "Our Vision",
-    statement: "A world where opportunity is distributed by ambition, not geography or background.",
-    body: "We're building toward a future where anyone with a real idea — in a metro city or a small town — can validate it, build it, and watch it create impact.",
+    eyebrow: "mv.vision.eyebrow",
+    statement: "mv.vision.statement",
+    body: "mv.vision.body",
   },
 ];
 
-/** Moved here from the homepage — this is company/mission content, not
- * the product demonstration the homepage now leads with. */
+/** Company / mission content — kept off the homepage, which leads with the
+ * product demonstration. */
 export function MissionVision() {
+  const { t } = useLocale();
   return (
     <section className="mx-auto max-w-[1180px] px-[18px] py-16 sm:px-6 lg:px-10">
       <div className="flex items-center gap-6">
         <Target className="size-5 text-sol-champagne-deep" aria-hidden="true" />
         <h2 className="shrink-0 text-[26px] font-semibold tracking-[-0.01em] text-sol-ink">
-          Mission &amp; Vision
+          {t("mv.title")}
         </h2>
         <span className="h-px flex-1 bg-linear-to-r from-sol-champagne/40 to-transparent" />
       </div>
@@ -49,14 +57,14 @@ export function MissionVision() {
             <span className="relative flex size-12 items-center justify-center rounded-full border border-sol-champagne/25 bg-sol-page">
               <panel.icon className="size-5 text-sol-champagne-deep" aria-hidden="true" />
             </span>
-            <p className="relative mt-6 text-[11px] font-semibold uppercase tracking-[0.14em] text-sol-champagne-deep">
-              {panel.eyebrow}
+            <p className="relative mt-6 text-[14px] font-semibold uppercase tracking-[0.14em] text-sol-champagne-deep">
+              {t(panel.eyebrow)}
             </p>
-            <p className="relative mt-4 font-display text-[1.5rem] font-medium leading-[1.35] text-sol-ink lg:text-[1.65rem]">
-              {panel.statement}
+            <p className="relative mt-4 font-display text-[1.5rem] font-medium leading-[1.4] text-sol-ink lg:text-[1.65rem]">
+              {t(panel.statement)}
             </p>
-            <p className="relative mt-5 text-[0.92rem] leading-[1.9] text-sol-secondary">
-              {panel.body}
+            <p className="relative mt-5 text-[1.0625rem] leading-[1.8] text-sol-secondary">
+              {t(panel.body)}
             </p>
           </motion.div>
         ))}

@@ -8,6 +8,7 @@ import dash from "./messages/dash";
 import proof from "./messages/proof";
 import roadmap from "./messages/roadmap";
 import settings from "./messages/settings";
+import pages from "./messages/pages";
 import { type Locale } from "./locale";
 
 /** Every domain module exports `{ en, hi }` with `hi` typed as
@@ -24,6 +25,7 @@ const modules = [
   proof,
   roadmap,
   settings,
+  pages,
 ] as const;
 
 type Module = (typeof modules)[number];

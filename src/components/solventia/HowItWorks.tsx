@@ -1,155 +1,155 @@
 import { useState } from "react";
 import { motion, useReducedMotion } from "motion/react";
-import { Compass, FlaskConical, Map, Sparkles } from "lucide-react";
-import { useLocale } from "@/lib/i18n/LocaleProvider";
+import { Compass, FlaskConical, Map, Sparkles, type LucideIcon } from "lucide-react";
 
-/** Four stages only — the seven internal onboarding chapters don't need
- * individual advertising; what matters publicly is the shape of the
- * whole journey, not a chapter-by-chapter inventory. */
-const STAGES = [
-  { n: "01", icon: Compass, title: "Understand", body: "Founder Genome forms from your reality." },
-  { n: "02", icon: Sparkles, title: "Discover", body: "Three directions calibrated to you." },
-  { n: "03", icon: FlaskConical, title: "Prove", body: "Test assumptions with real evidence." },
-  { n: "04", icon: Map, title: "Build", body: "Your next week adapts as you learn." },
+import type { MessageKey } from "@/lib/i18n";
+import { useLocale } from "@/lib/i18n/LocaleProvider";
+import { cn } from "@/lib/utils";
+
+/** Four steps only — the seven consultation stages are not advertised one by
+ * one; what matters publicly is the shape of the whole journey. */
+const STEPS: { n: string; icon: LucideIcon; title: MessageKey; body: MessageKey }[] = [
+  { n: "01", icon: Compass, title: "howItWorks.step1.title", body: "howItWorks.step1.body" },
+  { n: "02", icon: Sparkles, title: "howItWorks.step2.title", body: "howItWorks.step2.body" },
+  { n: "03", icon: FlaskConical, title: "howItWorks.step3.title", body: "howItWorks.step3.body" },
+  { n: "04", icon: Map, title: "howItWorks.step4.title", body: "howItWorks.step4.body" },
 ];
 
-const VIEW_WIDTH = 1000;
-const NODE_Y = 20;
-function nodeX(i: number) {
-  return (VIEW_WIDTH / (STAGES.length - 1)) * i + 30;
-}
-/** A shallow sine-based dip so the path reads as one real curved journey
- * rather than a ruled line with dots on it. */
-function nodeYAt(i: number) {
-  return NODE_Y + Math.sin((i / (STAGES.length - 1)) * Math.PI) * -8;
-}
-function curvePath(): string {
-  const points = STAGES.map((_, i) => ({ x: nodeX(i), y: nodeYAt(i) }));
-  let d = `M ${points[0].x},${points[0].y}`;
-  for (let i = 1; i < points.length; i++) {
-    const prev = points[i - 1];
-    const curr = points[i];
-    const midX = (prev.x + curr.x) / 2;
-    d += ` C ${midX},${prev.y} ${midX},${curr.y} ${curr.x},${curr.y}`;
-  }
-  return d;
-}
-const PATH_D = curvePath();
-const DRAW_DURATION = 1.2;
+/** The trajectory rises left to right: each node sits at the horizontal centre
+ * of its column (12.5% / 37.5% / 62.5% / 87.5%) and a little higher than the
+ * last. One viewBox is stretched across the row, and the path passes exactly
+ * through every node. */
+const VIEW_W = 1000;
+const VIEW_H = 120;
+const NODES = STEPS.map((_, i) => ({
+  x: ((i * 2 + 1) / (STEPS.length * 2)) * VIEW_W,
+  y: 100 - i * 27,
+}));
+const PATH = NODES.reduce((d, p, i) => {
+  if (i === 0) return `M ${p.x},${p.y}`;
+  const prev = NODES[i - 1];
+  const mid = (prev.x + p.x) / 2;
+  return `${d} C ${mid},${prev.y} ${mid},${p.y} ${p.x},${p.y}`;
+}, "");
+const DRAW_SECONDS = 1.3;
 
-/** One continuous journey — a shallow curved path drawn once across all
- * four nodes as the section scrolls into view, each node briefly lighting
- * violet as the path reaches it before settling to champagne — replacing
- * the old seven isolated circle-plus-paragraph grid, which read as a list
- * rather than a transformation. */
 export function HowItWorks() {
-  const { t } = useLocale();
+  const { t, locale } = useLocale();
   const reduceMotion = useReducedMotion();
   const [entered, setEntered] = useState(false);
 
   return (
     <section
       id="how-it-works"
-      className="scroll-mt-[84px] bg-sol-hp-ivory px-[18px] py-[96px] sm:px-6 lg:px-9 lg:pb-[104px] lg:pt-[96px]"
+      className="scroll-mt-[76px] bg-sol-hp-ivory px-[18px] py-[88px] sm:px-6 lg:px-9 lg:py-[112px]"
     >
       <div className="mx-auto max-w-[1180px]">
-        <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-sol-champagne-deep">
+        <p className="text-[14px] font-semibold uppercase tracking-[0.14em] text-sol-champagne-deep">
           {t("howItWorks.eyebrow")}
         </p>
-        <h2 className="mt-4 font-display text-[32px] font-semibold leading-[1.15] text-sol-ink sm:text-[40px] sm:leading-[46px]">
+        <h2
+          className={cn(
+            "mt-4 max-w-[18ch] font-display text-[30px] font-semibold text-sol-ink sm:text-[36px] lg:text-[44px]",
+            locale === "hi" ? "leading-[1.35]" : "leading-[1.12]",
+          )}
+        >
           {t("howItWorks.headline")}
         </h2>
-        <p className="mt-4 max-w-[560px] text-[17px] leading-[27px] text-sol-secondary">
+        <p className="mt-4 max-w-[580px] text-[17px] leading-[28px] text-sol-secondary">
           {t("howItWorks.subhead")}
         </p>
 
         <motion.div
           onViewportEnter={() => setEntered(true)}
           viewport={{ once: true, margin: "-100px" }}
-          className="relative mt-16"
+          className="relative mt-14"
+          data-testid="how-it-works-steps"
         >
-          <svg
-            viewBox={`0 0 ${VIEW_WIDTH + 60} 40`}
-            className="pointer-events-none absolute inset-x-0 top-[26px] hidden h-[40px] w-full lg:block"
-            preserveAspectRatio="none"
-            aria-hidden="true"
-          >
-            <defs>
-              <linearGradient id="how-it-works-path" x1="0" y1="0" x2="1" y2="0">
-                <stop offset="0%" stopColor="var(--sol-champagne)" />
-                <stop offset="50%" stopColor="var(--sol-violet)" />
-                <stop offset="100%" stopColor="var(--sol-champagne)" />
-              </linearGradient>
-            </defs>
-            <path d={PATH_D} fill="none" stroke="rgba(197,163,106,.34)" strokeWidth={1.4} />
-            <motion.path
-              d={PATH_D}
-              fill="none"
-              stroke="url(#how-it-works-path)"
-              strokeWidth={2}
-              strokeLinecap="round"
-              initial={{ pathLength: 0 }}
-              animate={entered ? { pathLength: 1 } : {}}
-              transition={{ duration: reduceMotion ? 0 : DRAW_DURATION, ease: [0.22, 1, 0.36, 1] }}
-            />
-          </svg>
+          {/* Desktop trajectory: one curve rising through all four steps. */}
+          <div className="relative hidden h-[120px] lg:block" aria-hidden="true">
+            <svg
+              viewBox={`0 0 ${VIEW_W} ${VIEW_H}`}
+              preserveAspectRatio="none"
+              className="absolute inset-0 h-full w-full"
+            >
+              <defs>
+                <linearGradient id="hiw-trajectory" x1="0" y1="0" x2="1" y2="0">
+                  <stop offset="0%" stopColor="var(--sol-champagne)" />
+                  <stop offset="100%" stopColor="var(--sol-violet)" />
+                </linearGradient>
+              </defs>
+              <path
+                d={PATH}
+                fill="none"
+                stroke="rgba(195,160,100,.3)"
+                strokeWidth={2}
+                vectorEffect="non-scaling-stroke"
+              />
+              <motion.path
+                d={PATH}
+                fill="none"
+                stroke="url(#hiw-trajectory)"
+                strokeWidth={3}
+                strokeLinecap="round"
+                vectorEffect="non-scaling-stroke"
+                initial={{ pathLength: 0 }}
+                animate={entered ? { pathLength: 1 } : {}}
+                transition={{ duration: reduceMotion ? 0 : DRAW_SECONDS, ease: [0.22, 1, 0.36, 1] }}
+              />
+            </svg>
+            {NODES.map((node, i) => (
+              <motion.span
+                key={i}
+                initial={{ scale: 0.6, opacity: 0 }}
+                animate={entered ? { scale: 1, opacity: 1 } : {}}
+                transition={{
+                  duration: reduceMotion ? 0 : 0.35,
+                  delay: reduceMotion ? 0 : (i / (STEPS.length - 1)) * DRAW_SECONDS * 0.85,
+                  ease: [0.22, 1, 0.36, 1],
+                }}
+                className="absolute flex size-4 -translate-x-1/2 -translate-y-1/2 rounded-full border-[3px] border-sol-hp-ivory bg-sol-violet shadow-[0_0_0_1px_rgba(112,88,215,.4)]"
+                style={{ left: `${(node.x / VIEW_W) * 100}%`, top: `${(node.y / VIEW_H) * 100}%` }}
+              />
+            ))}
+          </div>
 
-          <ol className="relative grid gap-10 sm:grid-cols-2 lg:grid-cols-4">
-            {STAGES.map((stage, i) => {
-              // When the drawing path reaches this node, in seconds.
-              const reachDelay = reduceMotion ? 0 : (i / (STAGES.length - 1)) * DRAW_DURATION;
-              return (
-                <motion.li
-                  key={stage.n}
-                  initial={{ opacity: 0, y: 16 }}
-                  animate={entered ? { opacity: 1, y: 0 } : {}}
-                  transition={{
-                    duration: reduceMotion ? 0 : 0.5,
-                    delay: reduceMotion ? 0 : 0.15 + i * 0.1,
-                    ease: [0.22, 1, 0.36, 1],
-                  }}
-                  className="flex max-w-[255px] flex-col gap-4"
-                >
-                  <div className="flex items-center gap-3">
-                    <span className="text-[12px] font-semibold text-sol-champagne-deep">
-                      {stage.n}
-                    </span>
-                    <motion.span
-                      className="flex size-12 items-center justify-center rounded-full"
-                      style={{
-                        border: "1px solid rgba(197,163,106,.45)",
-                        background: "rgba(255,253,249,.86)",
-                      }}
-                      animate={
-                        entered && !reduceMotion
-                          ? {
-                              borderColor: [
-                                "rgba(197,163,106,.45)",
-                                "rgba(114,87,216,.9)",
-                                "rgba(197,163,106,.45)",
-                              ],
-                              boxShadow: [
-                                "0 0 0 0px rgba(114,87,216,0)",
-                                "0 0 0 7px rgba(114,87,216,.055)",
-                                "0 0 0 0px rgba(114,87,216,0)",
-                              ],
-                            }
-                          : undefined
-                      }
-                      transition={{ duration: 0.35, delay: reachDelay, ease: "easeOut" }}
-                    >
-                      <stage.icon className="size-[18px] text-sol-violet-deep" aria-hidden="true" />
-                    </motion.span>
-                  </div>
-                  <div>
-                    <h3 className="font-display text-[18px] font-semibold leading-[26px] text-sol-ink">
-                      {stage.title}
-                    </h3>
-                    <p className="mt-1.5 text-[16px] leading-[24px] text-[#66616A]">{stage.body}</p>
-                  </div>
-                </motion.li>
-              );
-            })}
+          <ol className="relative grid gap-5 lg:mt-2 lg:grid-cols-4 lg:gap-6">
+            {/* Mobile trajectory: a vertical line down the left edge. */}
+            <span
+              aria-hidden="true"
+              className="absolute bottom-10 left-[27px] top-10 w-px bg-gradient-to-b from-sol-champagne/60 via-sol-violet/40 to-sol-champagne/60 lg:hidden"
+            />
+            {STEPS.map((step, i) => (
+              <motion.li
+                key={step.n}
+                initial={{ opacity: 0, y: 18 }}
+                animate={entered ? { opacity: 1, y: 0 } : {}}
+                transition={{
+                  duration: reduceMotion ? 0 : 0.5,
+                  delay: reduceMotion ? 0 : 0.1 + i * 0.12,
+                  ease: [0.22, 1, 0.36, 1],
+                }}
+                className="relative flex gap-5 rounded-3xl border border-sol-hp-border bg-sol-hp-surface p-6 shadow-[0_14px_40px_rgba(23,26,39,0.05)] lg:min-h-[260px] lg:flex-col lg:gap-6 lg:p-8"
+                data-testid={`how-step-${i + 1}`}
+              >
+                <div className="flex shrink-0 flex-col items-center gap-2 lg:flex-row lg:gap-4">
+                  <span className="flex size-[54px] items-center justify-center rounded-full border border-sol-champagne/50 bg-sol-champagne-soft">
+                    <step.icon className="size-6 text-sol-violet-deep" aria-hidden="true" />
+                  </span>
+                  <span className="font-display text-[30px] font-semibold leading-none text-sol-champagne-deep lg:text-[44px]">
+                    {step.n}
+                  </span>
+                </div>
+                <div className="min-w-0">
+                  <h3 className="font-display text-[22px] font-semibold leading-[1.25] text-sol-ink lg:text-[26px]">
+                    {t(step.title)}
+                  </h3>
+                  <p className="mt-2 text-[17px] leading-[28px] text-sol-secondary">
+                    {t(step.body)}
+                  </p>
+                </div>
+              </motion.li>
+            ))}
           </ol>
         </motion.div>
       </div>

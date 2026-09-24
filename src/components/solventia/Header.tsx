@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useRouterState, Link } from "@tanstack/react-router";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
 import { motion } from "motion/react";
 import {
   ArrowRight,
@@ -12,6 +12,7 @@ import {
   Sparkles,
 } from "lucide-react";
 import mark from "@/assets/solventia-mark.png";
+import { Avatar } from "@/components/founder/Avatar";
 import { useActiveSection, scrollToSection } from "@/hooks/use-active-section";
 import { SignInDialog } from "./SignInDialog";
 import { LanguageSwitcher } from "./LanguageSwitcher";
@@ -23,7 +24,8 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { getCurrentUser, signOut } from "@/lib/actions/auth";
+import { signOut } from "@/lib/actions/auth";
+import { useCurrentUserQuery } from "@/lib/queries";
 import { useLocale } from "@/lib/i18n/LocaleProvider";
 import type { MessageKey } from "@/lib/i18n";
 
@@ -37,10 +39,6 @@ const SCROLL_NAV: { labelKey: MessageKey; id: string }[] = [
   { labelKey: "nav.howItWorks", id: "how-it-works" },
 ];
 const SCROLL_IDS = SCROLL_NAV.map((item) => item.id);
-
-function initials(email: string | null): string {
-  return email ? email[0].toUpperCase() : "S";
-}
 
 interface HeaderProps {
   /** A sanitized, same-origin destination carried in via `?next=` — set
@@ -69,7 +67,7 @@ export function Header({ pendingNext }: HeaderProps = {}) {
   const queryClient = useQueryClient();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const isHome = pathname === "/";
-  const currentUser = useQuery({ queryKey: ["current-user"], queryFn: () => getCurrentUser() });
+  const currentUser = useCurrentUserQuery();
   const isSignedIn = Boolean(currentUser.data);
 
   useEffect(() => {
@@ -111,7 +109,7 @@ export function Header({ pendingNext }: HeaderProps = {}) {
 
   return (
     <header
-      className={`fixed inset-x-0 top-0 z-50 h-[68px] transition-all duration-500 md:h-[84px] ${
+      className={`fixed inset-x-0 top-0 z-50 h-[76px] transition-all duration-500 ${
         scrolled || !isHome
           ? "border-b border-[rgba(228,221,212,0.72)] bg-[rgba(252,250,247,0.88)] backdrop-blur-[18px] backdrop-saturate-[1.05]"
           : "border-b border-transparent"
@@ -124,12 +122,12 @@ export function Header({ pendingNext }: HeaderProps = {}) {
         <Link
           to="/"
           className="flex shrink-0 items-center gap-4"
-          aria-label="Solventia home"
+          aria-label={t("nav.homeAria")}
           onClick={() => setMobileOpen(false)}
         >
           <motion.img
             src={mark}
-            alt="Solventia logo"
+            alt="Solventia"
             width={298}
             height={436}
             initial={{ opacity: 0 }}
@@ -199,21 +197,21 @@ export function Header({ pendingNext }: HeaderProps = {}) {
                 <DropdownMenuTrigger asChild>
                   <button
                     type="button"
-                    aria-label="Account menu"
-                    className="hidden size-10 items-center justify-center rounded-full text-[0.85rem] font-semibold text-white sm:flex"
-                    style={{
-                      background:
-                        "linear-gradient(135deg, var(--sol-champagne), var(--sol-violet))",
-                    }}
+                    aria-label={t("nav.accountMenu")}
+                    className="hidden size-10 items-center justify-center rounded-full sm:flex"
                   >
-                    {initials(currentUser.data?.email ?? null)}
+                    <Avatar
+                      url={currentUser.data?.avatar.url ?? null}
+                      initials={currentUser.data?.initials ?? "S"}
+                      size={40}
+                    />
                   </button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-56">
                   <DropdownMenuItem asChild>
                     <Link to="/dashboard" className="cursor-pointer">
                       <LayoutDashboard className="size-4" aria-hidden="true" />
-                      Dashboard
+                      {t("nav.dashboard")}
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
@@ -272,14 +270,14 @@ export function Header({ pendingNext }: HeaderProps = {}) {
             <SheetTrigger asChild>
               <button
                 type="button"
-                aria-label="Open menu"
+                aria-label={t("nav.openMenu")}
                 className="flex size-10 items-center justify-center rounded-full border border-sol-border text-sol-ink transition-colors hover:border-sol-champagne/50 xl:hidden"
               >
                 <Menu className="size-5" aria-hidden="true" />
               </button>
             </SheetTrigger>
             <SheetContent side="right" className="w-[85vw] max-w-sm border-sol-border bg-sol-page">
-              <SheetTitle className="font-display text-xl text-sol-ink">Menu</SheetTitle>
+              <SheetTitle className="font-display text-xl text-sol-ink">{t("nav.menu")}</SheetTitle>
               <nav className="mt-8 flex flex-col gap-1">
                 {SCROLL_NAV.map((item) => (
                   <button

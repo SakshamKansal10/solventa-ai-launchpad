@@ -87,11 +87,10 @@ export const Route = createFileRoute("/")({
   },
 });
 
-/** Exactly eight sections, one continuous product story — see the
- * homepage reconstruction spec this implements. Nothing here is a
- * generic marketing filler section; every block earns its place in the
- * HERO -> FOUNDER SIGNAL -> HOW IT WORKS -> ADAPTIVE ROADMAP -> WHY
- * SOLVENTIA -> BRAND MOMENT -> CTA -> FAQ narrative. */
+/** The homepage is one continuous product story, in this order: Hero →
+ * Founder Intelligence demonstration → How Solventia Works → Adaptive Roadmap
+ * demonstration → Solventia vs a chatbot → closing CTA (the brand statement is
+ * merged into it) → FAQ → Footer. Nothing here is generic marketing filler. */
 function Index() {
   const { next } = Route.useSearch();
   const pendingNext = sanitizeNextPath(next);

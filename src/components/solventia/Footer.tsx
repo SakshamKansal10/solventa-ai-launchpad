@@ -4,8 +4,7 @@ import mark from "@/assets/solventia-mark.png";
 import { scrollToSection } from "@/hooks/use-active-section";
 import { useLocale } from "@/lib/i18n/LocaleProvider";
 import type { MessageKey } from "@/lib/i18n";
-
-const CONTACT_EMAIL = "solventia.in@gmail.com";
+import { CONTACT_EMAIL } from "@/lib/contact";
 
 const FOOTER_LINKS: {
   labelKey: MessageKey;
@@ -59,7 +58,7 @@ export function Footer() {
               <p className="font-display text-[1rem] font-semibold tracking-[0.1em] text-sol-ink">
                 SOLVENTIA
               </p>
-              <p className="mt-0.5 text-[0.62rem] font-medium tracking-[0.28em] text-sol-champagne-deep">
+              <p className="mt-0.5 text-[0.75rem] font-medium tracking-[0.24em] text-sol-champagne-deep">
                 {t("footer.tagline")}
               </p>
             </div>
@@ -74,7 +73,7 @@ export function Footer() {
                   onClick={() =>
                     isHome ? scrollToSection(link.id!) : navigate({ to: "/", hash: link.id })
                   }
-                  className="text-[0.85rem] font-medium text-sol-secondary transition-colors hover:text-sol-ink"
+                  className="text-[0.9375rem] font-medium text-sol-secondary transition-colors hover:text-sol-ink"
                 >
                   {t(link.labelKey)}
                 </button>
@@ -82,7 +81,7 @@ export function Footer() {
                 <Link
                   key={link.labelKey}
                   to={link.to!}
-                  className="text-[0.85rem] font-medium text-sol-secondary transition-colors hover:text-sol-ink"
+                  className="text-[0.9375rem] font-medium text-sol-secondary transition-colors hover:text-sol-ink"
                 >
                   {t(link.labelKey)}
                 </Link>
@@ -91,10 +90,10 @@ export function Footer() {
           </nav>
 
           <div className="flex flex-col gap-1.5 sm:items-end sm:text-right">
-            <p className="text-[0.78rem] text-sol-secondary">{t("footer.contactPrompt")}</p>
+            <p className="text-[0.9375rem] text-sol-secondary">{t("footer.contactPrompt")}</p>
             <a
               href={`mailto:${CONTACT_EMAIL}`}
-              className="flex items-center gap-2 text-[0.88rem] font-medium text-sol-ink transition-colors hover:text-sol-violet-deep sm:justify-end"
+              className="flex items-center gap-2 text-[1rem] font-medium text-sol-ink transition-colors hover:text-sol-violet-deep sm:justify-end"
             >
               <Mail className="size-4" aria-hidden="true" />
               {CONTACT_EMAIL}
@@ -102,7 +101,7 @@ export function Footer() {
           </div>
         </div>
 
-        <div className="mt-9 flex flex-col items-center gap-3 border-t border-sol-border pt-6 text-[0.78rem] text-sol-muted sm:flex-row sm:justify-between">
+        <div className="mt-9 flex flex-col items-center gap-3 border-t border-sol-border pt-6 text-[0.875rem] text-sol-muted sm:flex-row sm:justify-between">
           <p>
             © {new Date().getFullYear()} Solventia. {t("footer.rights")}
           </p>

@@ -55,7 +55,7 @@ function DataDeletionPage() {
   return (
     <div className="min-h-screen bg-sol-page">
       <Header />
-      <main className="pt-[68px] md:pt-[84px]">
+      <main className="pt-[76px]">
         <section className="mx-auto max-w-[720px] px-[18px] py-20 sm:px-6 lg:px-10">
           <PageBreadcrumb page="Delete Your Data" />
           <h1 className="font-display text-[2rem] font-semibold leading-[1.15] text-sol-ink sm:text-[2.5rem]">

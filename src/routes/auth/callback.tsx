@@ -51,12 +51,20 @@ function AuthCallback() {
   const { t } = useLocale();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const [error, setError] = useState<string | null>(error_description ?? null);
+  // A provider-supplied `error_description` comes from the URL, so it is logged
+  // and replaced by our own localized message — never rendered as-is.
+  const [error, setError] = useState<string | null>(
+    error_description ? t("auth.callback.generic") : null,
+  );
   const [resuming, setResuming] = useState(false);
   const ranRef = useRef(false);
 
   useEffect(() => {
-    if (error_description || ranRef.current) return;
+    if (error_description) {
+      console.error("[auth-callback] provider returned an error:", error_description);
+      return;
+    }
+    if (ranRef.current) return;
     if (!code) {
       setError(t("auth.callback.missingCode"));
       return;
@@ -66,7 +74,8 @@ function AuthCallback() {
     (async () => {
       const result = await exchangeCodeForSession({ data: { code } });
       if (!result.ok) {
-        setError(result.error);
+        console.error("[auth-callback] code exchange failed:", result.error);
+        setError(t("auth.callback.generic"));
         return;
       }
       // A different account may be completing OAuth on a tab that still holds
