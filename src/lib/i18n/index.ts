@@ -3,12 +3,28 @@ import home from "./messages/home";
 import consult from "./messages/consult";
 import skills from "./messages/skills";
 import auth from "./messages/auth";
+import shell from "./messages/shell";
+import dash from "./messages/dash";
+import proof from "./messages/proof";
+import roadmap from "./messages/roadmap";
+import settings from "./messages/settings";
 import { type Locale } from "./locale";
 
 /** Every domain module exports `{ en, hi }` with `hi` typed as
  * `Record<keyof en, string>` — completeness is enforced by the compiler.
  * Add a module here and its keys become valid `MessageKey`s everywhere. */
-const modules = [common, home, consult, skills, auth] as const;
+const modules = [
+  common,
+  home,
+  consult,
+  skills,
+  auth,
+  shell,
+  dash,
+  proof,
+  roadmap,
+  settings,
+] as const;
 
 type Module = (typeof modules)[number];
 type UnionToIntersection<U> = (U extends unknown ? (k: U) => void : never) extends (

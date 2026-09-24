@@ -1,0 +1,215 @@
+/** Proof: assumptions, evidence, and the deterministic state each one is in. */
+const en = {
+  "pf.title": "Proof",
+  "pf.subtitle":
+    "What has to be true for this business to work — and what you've learned about each.",
+  "pf.noDirection.title": "Choose a direction first",
+  "pf.noDirection.body": "Proof tracks the assumptions behind the direction you're building.",
+  "pf.unavailable.title": "Proof isn't ready yet",
+  "pf.unavailable.body":
+    "This workspace is still being updated. Your evidence isn't lost — try again in a little while.",
+  "pf.generating": "Writing the assumptions worth testing…",
+  "pf.generateError.title": "We couldn't write your assumptions",
+  "pf.generateError.body": "Your direction is safe. Please try again.",
+
+  "pf.filters.aria": "Filter assumptions by state",
+  "pf.filters.emptyTitle": "Nothing in this state",
+  "pf.filters.emptyBody": "Choose another filter to see the rest of your assumptions.",
+  "pf.evidenceCount": "Evidence ({n})",
+  "pf.nextTest": "Next test",
+  "pf.addEvidence": "Add evidence",
+  "pf.linked": "Evidence linked.",
+  "pf.saved": "Evidence saved.",
+  "pf.saved.changed": "Evidence saved. This assumption moved from {from} to {to}.",
+  "pf.saveError": "We couldn't save that. Your draft is kept — please try again.",
+  "pf.deleteTitle": "Delete this evidence?",
+  "pf.deleteBody":
+    "It will be removed and the assumption's state will be recalculated. This can't be undone.",
+  "pf.deleteError": "We couldn't delete that. Please try again.",
+  "pf.deleted": "Evidence deleted.",
+  "pf.link": "Open link",
+  "pf.fromMission": "From mission: {title}",
+
+  "pf.unassigned.title": "Notes without an assumption",
+  "pf.unassigned.body":
+    "These notes came from missions. Link each to the assumption it tests so it counts.",
+  "pf.unassigned.link": "Link to assumption",
+
+  "pf.state.untested": "Untested",
+  "pf.state.weak": "Weak signal",
+  "pf.state.mixed": "Mixed",
+  "pf.state.supported": "Supported",
+  "pf.state.contradicted": "Contradicted",
+
+  "pf.signal.supports": "Supports it",
+  "pf.signal.neutral": "Neutral",
+  "pf.signal.contradicts": "Contradicts it",
+
+  "pf.type.interview": "Interview",
+  "pf.type.quote": "Quote or message",
+  "pf.type.payment": "Payment or commitment",
+  "pf.type.observation": "Observation",
+  "pf.type.experiment": "Experiment",
+  "pf.type.analytics": "Analytics",
+  "pf.type.document": "Document",
+  "pf.type.other": "Other",
+
+  "pf.category.problem": "Problem",
+  "pf.category.willingness_to_pay": "Willingness to pay",
+  "pf.category.distribution": "Reaching customers",
+  "pf.category.delivery": "Delivery",
+  "pf.category.retention": "Retention",
+  "pf.category.pricing": "Pricing",
+  "pf.category.competition": "Competition",
+  "pf.category.other": "Other",
+
+  "pf.reason.no_evidence": "You haven't recorded any evidence for this yet.",
+  "pf.reason.only_neutral":
+    "Everything recorded so far ({n}) is neutral — nothing yet points either way.",
+  "pf.reason.few_supporters":
+    "{n} independent source supports it; it takes {t} to call it supported.",
+  "pf.reason.supported_threshold":
+    "{n} independent sources support it (the bar is {t}), and nothing outweighs them.",
+  "pf.reason.contradictions_outweigh":
+    "{c} independent sources contradict it and only {s} support it. Rethink this assumption.",
+  "pf.reason.conflicting":
+    "{s} sources support it and {c} contradict it. The evidence disagrees with itself.",
+  "pf.reason.weak_negative":
+    "{c} source contradicts it. One is a warning, not a verdict — look for more.",
+
+  "pf.detail.aria": "Assumption details",
+  "pf.detail.whyState": "Why it's in this state",
+  "pf.detail.whyMatters": "Why it matters",
+  "pf.detail.timeline": "Evidence",
+  "pf.detail.noEvidence": "No evidence yet. Add the first thing you learned.",
+  "pf.detail.history": "How its state changed",
+  "pf.detail.nextTest": "Suggested next test",
+
+  "pf.dialog.title": "Add evidence",
+  "pf.dialog.editTitle": "Edit evidence",
+  "pf.dialog.body":
+    "Record what actually happened — a conversation, a payment, a result. Real is better than flattering.",
+  "pf.dialog.assumption": "Assumption",
+  "pf.dialog.type": "What kind of evidence is it?",
+  "pf.dialog.person": "Who or where it came from",
+  "pf.dialog.personPlaceholder": "e.g. a clinic owner in Pune",
+  "pf.dialog.what": "What happened?",
+  "pf.dialog.whatPlaceholder": "Say exactly what you saw or heard.",
+  "pf.dialog.signal": "What does it say about the assumption?",
+  "pf.dialog.url": "Link",
+  "pf.dialog.file": "Attach a file",
+  "pf.dialog.chooseFile": "Choose a file",
+  "pf.file.hint": "JPG, PNG, WEBP, PDF or a text file, up to 10 MB.",
+  "pf.file.type": "That file type isn't supported. Use JPG, PNG, WEBP, PDF or text.",
+  "pf.file.size": "That file is larger than 10 MB.",
+  "pf.file.open": "Open attachment",
+  "pf.file.unavailable": "We couldn't open that file. Please try again.",
+};
+
+const hi: Record<keyof typeof en, string> = {
+  "pf.title": "प्रमाण",
+  "pf.subtitle":
+    "इस बिज़नेस के चलने के लिए क्या सच होना चाहिए — और हर बात के बारे में आपने क्या सीखा।",
+  "pf.noDirection.title": "पहले एक दिशा चुनें",
+  "pf.noDirection.body": "प्रमाण उस दिशा की धारणाओं को दर्ज करता है जिस पर आप काम कर रहे हैं।",
+  "pf.unavailable.title": "प्रमाण अभी तैयार नहीं है",
+  "pf.unavailable.body":
+    "यह वर्कस्पेस अभी अपडेट हो रहा है। आपके साक्ष्य खोए नहीं हैं — थोड़ी देर बाद फिर कोशिश करें।",
+  "pf.generating": "परखने लायक धारणाएं लिखी जा रही हैं…",
+  "pf.generateError.title": "हम आपकी धारणाएं नहीं लिख पाए",
+  "pf.generateError.body": "आपकी दिशा सुरक्षित है। कृपया फिर कोशिश करें।",
+
+  "pf.filters.aria": "स्थिति के अनुसार धारणाएं छांटें",
+  "pf.filters.emptyTitle": "इस स्थिति में कुछ नहीं",
+  "pf.filters.emptyBody": "बाकी धारणाएं देखने के लिए कोई और फ़िल्टर चुनें।",
+  "pf.evidenceCount": "साक्ष्य ({n})",
+  "pf.nextTest": "अगला परीक्षण",
+  "pf.addEvidence": "साक्ष्य जोड़ें",
+  "pf.linked": "साक्ष्य जोड़ दिया गया।",
+  "pf.saved": "साक्ष्य सहेजा गया।",
+  "pf.saved.changed": "साक्ष्य सहेजा गया। यह धारणा {from} से {to} में बदल गई।",
+  "pf.saveError": "यह सहेज नहीं पाए। आपका ड्राफ़्ट सुरक्षित है — कृपया फिर कोशिश करें।",
+  "pf.deleteTitle": "क्या यह साक्ष्य हटाएं?",
+  "pf.deleteBody":
+    "यह हटा दिया जाएगा और धारणा की स्थिति फिर से आंकी जाएगी। इसे वापस नहीं लाया जा सकता।",
+  "pf.deleteError": "यह हटा नहीं पाए। कृपया फिर कोशिश करें।",
+  "pf.deleted": "साक्ष्य हटा दिया गया।",
+  "pf.link": "लिंक खोलें",
+  "pf.fromMission": "मिशन से: {title}",
+
+  "pf.unassigned.title": "बिना धारणा वाले नोट",
+  "pf.unassigned.body":
+    "ये नोट मिशनों से आए हैं। हर एक को उस धारणा से जोड़ें जिसे वह परखता है, ताकि वह गिना जाए।",
+  "pf.unassigned.link": "धारणा से जोड़ें",
+
+  "pf.state.untested": "परखी नहीं",
+  "pf.state.weak": "कमज़ोर संकेत",
+  "pf.state.mixed": "मिला-जुला",
+  "pf.state.supported": "पुष्ट",
+  "pf.state.contradicted": "खंडित",
+
+  "pf.signal.supports": "पक्ष में",
+  "pf.signal.neutral": "तटस्थ",
+  "pf.signal.contradicts": "विरोध में",
+
+  "pf.type.interview": "इंटरव्यू",
+  "pf.type.quote": "उद्धरण या संदेश",
+  "pf.type.payment": "भुगतान या प्रतिबद्धता",
+  "pf.type.observation": "अवलोकन",
+  "pf.type.experiment": "प्रयोग",
+  "pf.type.analytics": "एनालिटिक्स",
+  "pf.type.document": "दस्तावेज़",
+  "pf.type.other": "अन्य",
+
+  "pf.category.problem": "समस्या",
+  "pf.category.willingness_to_pay": "भुगतान की इच्छा",
+  "pf.category.distribution": "ग्राहकों तक पहुंच",
+  "pf.category.delivery": "डिलीवरी",
+  "pf.category.retention": "ग्राहकों का टिकना",
+  "pf.category.pricing": "कीमत",
+  "pf.category.competition": "प्रतिस्पर्धा",
+  "pf.category.other": "अन्य",
+
+  "pf.reason.no_evidence": "आपने अभी तक इसके लिए कोई साक्ष्य दर्ज नहीं किया है।",
+  "pf.reason.only_neutral":
+    "अब तक जो दर्ज हुआ ({n}) सब तटस्थ है — अभी कुछ भी किसी ओर इशारा नहीं करता।",
+  "pf.reason.few_supporters":
+    "{n} स्वतंत्र स्रोत इसके पक्ष में है; इसे पुष्ट कहने के लिए {t} चाहिए।",
+  "pf.reason.supported_threshold":
+    "{n} स्वतंत्र स्रोत इसके पक्ष में हैं (कसौटी {t} है), और कुछ भी इन्हें काटता नहीं।",
+  "pf.reason.contradictions_outweigh":
+    "{c} स्वतंत्र स्रोत इसके विरोध में हैं और केवल {s} पक्ष में। इस धारणा पर दोबारा सोचें।",
+  "pf.reason.conflicting":
+    "{s} स्रोत पक्ष में हैं और {c} विरोध में। साक्ष्य आपस में सहमत नहीं हैं।",
+  "pf.reason.weak_negative": "{c} स्रोत इसके विरोध में है। एक चेतावनी है, फ़ैसला नहीं — और खोजें।",
+
+  "pf.detail.aria": "धारणा का विवरण",
+  "pf.detail.whyState": "यह इस स्थिति में क्यों है",
+  "pf.detail.whyMatters": "यह क्यों मायने रखती है",
+  "pf.detail.timeline": "साक्ष्य",
+  "pf.detail.noEvidence": "अभी कोई साक्ष्य नहीं। आपने जो पहली बात सीखी, उसे जोड़ें।",
+  "pf.detail.history": "इसकी स्थिति कैसे बदली",
+  "pf.detail.nextTest": "सुझाया गया अगला परीक्षण",
+
+  "pf.dialog.title": "साक्ष्य जोड़ें",
+  "pf.dialog.editTitle": "साक्ष्य संपादित करें",
+  "pf.dialog.body":
+    "जो सच में हुआ उसे दर्ज करें — बातचीत, भुगतान, नतीजा। खरा होना, चापलूसी से बेहतर है।",
+  "pf.dialog.assumption": "धारणा",
+  "pf.dialog.type": "यह किस तरह का साक्ष्य है?",
+  "pf.dialog.person": "किससे या कहां से मिला",
+  "pf.dialog.personPlaceholder": "जैसे पुणे के एक क्लिनिक मालिक",
+  "pf.dialog.what": "क्या हुआ?",
+  "pf.dialog.whatPlaceholder": "ठीक वही लिखें जो आपने देखा या सुना।",
+  "pf.dialog.signal": "यह धारणा के बारे में क्या कहता है?",
+  "pf.dialog.url": "लिंक",
+  "pf.dialog.file": "फ़ाइल जोड़ें",
+  "pf.dialog.chooseFile": "फ़ाइल चुनें",
+  "pf.file.hint": "JPG, PNG, WEBP, PDF या टेक्स्ट फ़ाइल, अधिकतम 10 MB।",
+  "pf.file.type": "यह फ़ाइल प्रकार समर्थित नहीं है। JPG, PNG, WEBP, PDF या टेक्स्ट चुनें।",
+  "pf.file.size": "यह फ़ाइल 10 MB से बड़ी है।",
+  "pf.file.open": "अटैचमेंट खोलें",
+  "pf.file.unavailable": "वह फ़ाइल नहीं खोल पाए। कृपया फिर कोशिश करें।",
+};
+
+export default { en, hi };

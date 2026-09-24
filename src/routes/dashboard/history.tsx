@@ -1,129 +1,224 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
-import { History } from "lucide-react";
-import { DashboardShell } from "@/components/dashboard/DashboardShell";
-import { SolventiaLoadingState } from "@/components/dashboard/SolventiaLoadingState";
-import { requireAuthLoader } from "@/lib/route-guards";
-import { getConsultationHistory, getSettingsData } from "@/lib/actions/dashboard";
+import { useState } from "react";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import { toast } from "sonner";
+
+import { FitPill } from "@/components/founder/OpportunityCards";
+import {
+  Button,
+  Card,
+  EmptyState,
+  ErrorPanel,
+  LinkButton,
+  PageHeader,
+  PageSkeleton,
+  Pill,
+} from "@/components/founder/ui";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { getDecisionHistory, restoreDirection, type HistoryEntry } from "@/lib/actions/history";
+import { formatMoney } from "@/lib/country-currency";
+import { statusIdFromEnglish } from "@/components/consultation/labels";
+import { useLocale } from "@/lib/i18n/LocaleProvider";
+import { qk, useFounderState, useInvalidateFounder } from "@/lib/queries";
+import { formatDate } from "@/components/founder/proof/bits";
 
 export const Route = createFileRoute("/dashboard/history")({
-  beforeLoad: requireAuthLoader,
   component: HistoryPage,
   head: () => ({
-    meta: [{ title: "Idea History — Solventia" }, { name: "robots", content: "noindex" }],
+    meta: [{ title: "History — Solventia" }, { name: "robots", content: "noindex" }],
   }),
 });
 
-function formatDate(iso: string): string {
-  return new Date(iso).toLocaleDateString(undefined, {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  });
-}
-
 function HistoryPage() {
+  const { t } = useLocale();
   const query = useQuery({
-    queryKey: ["consultation-history"],
-    queryFn: () => getConsultationHistory(),
+    queryKey: qk.history,
+    queryFn: () => getDecisionHistory(),
+    staleTime: 15_000,
   });
-  // Same "settings-data" query key Settings itself uses — often already
-  // warm from navigating between the two, and keeps the Roadmap nav's
-  // locked/unlocked state consistent across every dashboard page.
-  const settingsQuery = useQuery({ queryKey: ["settings-data"], queryFn: () => getSettingsData() });
-  const hasRoadmap = settingsQuery.data ? settingsQuery.data.hasActiveRoadmap : undefined;
+  const founder = useFounderState();
+  const [restoring, setRestoring] = useState<HistoryEntry | null>(null);
+  const invalidate = useInvalidateFounder();
+  const navigate = useNavigate();
+
+  const restore = useMutation({
+    mutationFn: (opportunityId: string) => restoreDirection({ data: { opportunityId } }),
+    onSuccess: async () => {
+      await invalidate();
+      toast.success(t("hist.restored"));
+      setRestoring(null);
+      void navigate({ to: "/dashboard" });
+    },
+    onError: (err) => {
+      console.error("[history] restore failed:", err);
+      toast.error(t("hist.restoreError"));
+    },
+  });
+
+  if (query.isPending) return <PageSkeleton label={t("shell.skeleton.loading")} />;
+  if (query.isError || !query.data) {
+    return <ErrorPanel onRetry={() => void query.refetch()} retrying={query.isFetching} />;
+  }
+  const currentTitle = founder.data?.direction.selectedId
+    ? founder.data.briefs[founder.data.direction.selectedId]?.title
+    : null;
 
   return (
-    <DashboardShell hasRoadmap={hasRoadmap} pageTitle="History">
-      <div className="flex items-center gap-3">
-        <History className="size-6 text-sol-champagne-deep" aria-hidden="true" />
+    <div className="flex flex-col gap-8" data-testid="history-page">
+      <PageHeader title={t("hist.title")} subtitle={t("hist.subtitle")} />
+
+      {query.data.length === 0 ? (
+        <EmptyState
+          title={t("hist.emptyTitle")}
+          body={t("hist.emptyBody")}
+          action={
+            <LinkButton to="/consultation" variant="primary" size="lg">
+              {t("nav.findMyBusinessIdea")}
+            </LinkButton>
+          }
+        />
+      ) : (
+        <ol className="flex flex-col gap-5">
+          {query.data.map((entry) => (
+            <li key={entry.consultationId}>
+              <EntryCard entry={entry} onRestore={() => setRestoring(entry)} />
+            </li>
+          ))}
+        </ol>
+      )}
+
+      <AlertDialog
+        open={Boolean(restoring)}
+        onOpenChange={(open) => !open && !restore.isPending && setRestoring(null)}
+      >
+        <AlertDialogContent data-testid="restore-dialog">
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t("hist.restoreTitle")}</AlertDialogTitle>
+            <AlertDialogDescription>
+              {restoring?.selected
+                ? t("hist.restoreBody", { title: restoring.selected.title })
+                : t("hist.restoreBodyGeneric")}
+              {currentTitle ? ` ${t("hist.restoreArchive", { current: currentTitle })}` : ""}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={restore.isPending}>{t("common.cancel")}</AlertDialogCancel>
+            <AlertDialogAction
+              data-testid="confirm-restore"
+              disabled={restore.isPending}
+              onClick={(e) => {
+                e.preventDefault();
+                if (restoring?.selected) restore.mutate(restoring.selected.id);
+              }}
+            >
+              {restore.isPending ? t("common.saving") : t("hist.restoreConfirm")}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </div>
+  );
+}
+
+function EntryCard({ entry, onRestore }: { entry: HistoryEntry; onRestore: () => void }) {
+  const { t, td, locale } = useLocale();
+  const p = entry.profile;
+  const statusId = p.status ? statusIdFromEnglish(p.status) : null;
+  const facts = [
+    statusId ? td(`opt.status.${statusId}`, undefined, p.status ?? "") : p.status,
+    p.age ? t("hist.age", { n: p.age }) : null,
+    [p.state, p.country].filter(Boolean).join(", ") || null,
+    p.weeklyHours ? t("common.hoursPerWeek", { n: p.weeklyHours }) : null,
+    p.capitalAmount && p.currency ? formatMoney(p.capitalAmount, p.currency) : null,
+  ].filter(Boolean);
+
+  const roadmapTone =
+    entry.roadmapStatus === "active"
+      ? "violet"
+      : entry.roadmapStatus === "completed"
+        ? "champagne"
+        : entry.roadmapStatus === "failed"
+          ? "warning"
+          : "neutral";
+
+  return (
+    <Card
+      as="article"
+      className="flex flex-col gap-5 p-6 sm:p-7"
+      data-testid="history-entry"
+      data-current={entry.isCurrent}
+    >
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <h2 className="sol-h3">{formatDate(entry.createdAt, locale)}</h2>
+        {entry.isCurrent && <Pill tone="violet">{t("hist.current")}</Pill>}
+      </div>
+
+      {facts.length > 0 && (
+        <p
+          className="text-[1.0625rem] leading-snug text-sol-secondary"
+          data-testid="history-profile"
+        >
+          {facts.join(" · ")}
+        </p>
+      )}
+
+      <div className="grid gap-5 md:grid-cols-2">
         <div>
-          <h1 className="font-display text-[clamp(1.8rem,3.2vw,2.3rem)] font-semibold text-sol-ink">
-            Idea History
-          </h1>
-          <p className="mt-1 text-[0.92rem] text-sol-secondary">
-            How your direction has evolved over time. Your latest consultation is always the current
-            dashboard view.
-          </p>
+          <p className="sol-eyebrow">{t("hist.generated", { n: entry.directions.length })}</p>
+          <ul className="mt-2 flex flex-col gap-2">
+            {entry.directions.map((d) => (
+              <li
+                key={d.id}
+                className="flex items-start justify-between gap-3 text-[1.0625rem] text-sol-ink"
+              >
+                <span className={d.id === entry.selected?.id ? "font-semibold" : undefined}>
+                  {d.title}
+                </span>
+                <FitPill fit={d.fit} />
+              </li>
+            ))}
+          </ul>
+        </div>
+        <div className="flex flex-col gap-3">
+          <div>
+            <p className="sol-eyebrow">{t("hist.selected")}</p>
+            <p className="mt-2 text-[1.0625rem] font-semibold text-sol-ink">
+              {entry.selected?.title ?? t("hist.noneSelected")}
+            </p>
+          </div>
+          <div>
+            <p className="sol-eyebrow">{t("hist.roadmap")}</p>
+            <div className="mt-2">
+              <Pill tone={roadmapTone}>{t(`hist.roadmap.${entry.roadmapStatus}` as const)}</Pill>
+            </div>
+          </div>
         </div>
       </div>
 
-      {query.isLoading && (
-        <div className="mt-10 flex justify-center">
-          <SolventiaLoadingState message="Gathering your past consultations…" />
-        </div>
-      )}
-
-      {query.data && query.data.length === 0 && (
-        <div className="mt-10 rounded-[18px] border border-sol-border bg-sol-surface px-8 py-14 text-center">
-          <p className="text-[0.95rem] text-sol-secondary">
-            You don&rsquo;t have any past consultations yet — this is your first one.
-          </p>
-        </div>
-      )}
-
-      {query.data && query.data.length > 0 && (
-        <div className="relative mt-10 flex flex-col gap-10">
-          {/* The connecting timeline rail — one continuous line behind every
-           * consultation's dot, so the page reads as a single evolving path
-           * rather than a stack of unrelated cards. */}
-          <div
-            className="absolute left-[7px] top-2 bottom-2 w-px bg-sol-border"
-            aria-hidden="true"
-          />
-          {query.data.map((entry) => (
-            <div key={entry.businessDnaId} className="relative pl-9">
-              <span
-                className="absolute left-0 top-1.5 flex size-[15px] items-center justify-center rounded-full border-2 border-sol-champagne bg-sol-surface"
-                aria-hidden="true"
-              >
-                <span className="size-1.5 rounded-full bg-sol-champagne" />
-              </span>
-              <p className="text-[0.72rem] font-semibold uppercase tracking-[0.1em] text-sol-muted">
-                Consultation — {formatDate(entry.createdAt)}
-              </p>
-              <section className="mt-3 rounded-[18px] border border-sol-border bg-sol-surface p-6">
-                <div className="flex flex-col divide-y divide-sol-border">
-                  {entry.opportunities.map((opp) => (
-                    <div
-                      key={opp.id}
-                      className="flex flex-col gap-2 py-3.5 sm:flex-row sm:items-center sm:justify-between"
-                    >
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <h3 className="font-display text-[1rem] font-semibold text-sol-ink">
-                            {opp.title}
-                          </h3>
-                          {opp.status === "selected" && (
-                            <span className="rounded-full border border-econ-green-active/30 bg-econ-green-soft px-2 py-0.5 text-[0.68rem] font-semibold text-econ-green-active">
-                              Previously selected
-                            </span>
-                          )}
-                        </div>
-                        <p className="mt-0.5 line-clamp-1 text-[0.82rem] text-sol-secondary">
-                          {opp.oneLiner}
-                        </p>
-                      </div>
-                      <div className="flex shrink-0 items-center gap-3">
-                        <span className="text-[0.8rem] font-semibold text-sol-champagne-deep">
-                          {opp.fitScore}/100
-                        </span>
-                        <Link
-                          to="/dashboard/opportunities/$id"
-                          params={{ id: opp.id }}
-                          className="rounded-full border border-sol-border px-3.5 py-1.5 text-[0.78rem] font-medium text-sol-ink hover:border-sol-champagne/50"
-                        >
-                          View
-                        </Link>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </section>
-            </div>
-          ))}
-        </div>
-      )}
-    </DashboardShell>
+      <div className="flex flex-wrap gap-3">
+        <LinkButton
+          to="/dashboard"
+          search={entry.isCurrent ? {} : { consultation: entry.consultationId }}
+          variant="secondary"
+          data-testid="history-review"
+        >
+          {t("hist.review")}
+        </LinkButton>
+        {entry.canRestore && (
+          <Button variant="soft" onClick={onRestore} data-testid="history-restore">
+            {t("hist.restore")}
+          </Button>
+        )}
+      </div>
+    </Card>
   );
 }

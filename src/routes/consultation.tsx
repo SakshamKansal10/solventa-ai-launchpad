@@ -1,9 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
+import { Loader2 } from "lucide-react";
 import { z } from "zod";
 
 import { ConsultationShell } from "@/components/consultation/ConsultationShell";
-import { SolventiaLoadingState } from "@/components/dashboard/SolventiaLoadingState";
 import { getLatestBusinessDna } from "@/lib/actions/profile";
 import { ConsultationProvider } from "@/lib/consultation/store";
 import { isLegacyAnswers, legacyToV2 } from "@/lib/consultation/migrate";
@@ -39,7 +39,14 @@ function ConsultationPage() {
   if (edit === true && prior.isLoading) {
     return (
       <div className="flex min-h-dvh w-full items-center justify-center bg-sol-pearl">
-        <SolventiaLoadingState message={t("common.loading")} />
+        <div
+          role="status"
+          aria-live="polite"
+          className="flex flex-col items-center gap-4 text-sol-secondary"
+        >
+          <Loader2 className="size-8 animate-spin text-sol-violet" aria-hidden="true" />
+          <p className="text-[1.0625rem]">{t("common.loading")}</p>
+        </div>
       </div>
     );
   }

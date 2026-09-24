@@ -1,6 +1,7 @@
 import { useMemo } from "react";
 
 import { useLocale } from "@/lib/i18n/LocaleProvider";
+import { MESSAGES } from "@/lib/i18n";
 import { countryCodeFromName } from "@/lib/location-data";
 import { LANGUAGE_CODES, optionKey, skillSlug } from "@/lib/consultation/options";
 import type { Locale } from "@/lib/i18n/locale";
@@ -91,4 +92,21 @@ export function useLabels() {
     }),
     [td, locale],
   );
+}
+
+/** Maps a canonical English status label ("College student" / legacy
+ * "College Student") back to its option id so History and Settings can show it
+ * in the reader's language. Returns null for a founder's own free-text status. */
+export function statusIdFromEnglish(label: string): string | null {
+  const wanted = label.trim().toLowerCase();
+  for (const [key, value] of Object.entries(MESSAGES.en)) {
+    if (key.startsWith("opt.status.") && value.toLowerCase() === wanted) {
+      return key.slice("opt.status.".length);
+    }
+  }
+  const legacy: Record<string, string> = {
+    unemployed: "not_working",
+    "career break": "career_break",
+  };
+  return legacy[wanted] ?? null;
 }
