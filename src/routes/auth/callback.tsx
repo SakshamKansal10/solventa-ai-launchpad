@@ -3,71 +3,62 @@ import { useEffect, useRef, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Loader2 } from "lucide-react";
 import { z } from "zod";
-import { PremiumButton } from "@/components/solventia/PremiumButton";
+
 import { exchangeCodeForSession } from "@/lib/actions/auth";
-import { completeConsultation, getLatestBusinessDna } from "@/lib/actions/profile";
+import { CONSULTATION_STORAGE_KEY } from "@/lib/consultation/store";
+import { useLocale } from "@/lib/i18n/LocaleProvider";
 import { sanitizeNextPath } from "@/lib/safe-redirect";
 
 export const Route = createFileRoute("/auth/callback")({
   validateSearch: z.object({
     code: z.string().optional(),
     error_description: z.string().optional(),
-    // Carried through from SignInDialog/GoogleSignInButton when the
-    // founder was bounced here from a protected route (e.g. a dashboard
-    // link from an email) — re-validated below, never trusted as-is.
+    // Carried through from SignInDialog / GoogleSignInButton when the founder
+    // was bounced here from a protected route (e.g. a dashboard link from an
+    // email). Re-validated below — never trusted as-is.
     next: z.string().optional(),
   }),
   component: AuthCallback,
   head: () => ({ meta: [{ name: "robots", content: "noindex" }] }),
 });
 
-const ONBOARDING_STORAGE_KEY = "solventia-onboarding-v1";
-
-/** Google sign-in redirects the whole page away to Google and back —
- * unlike email sign-up/sign-in, which never leaves this page, so
- * `runSubmission` in CompletionScreen never gets to run. The consultation
- * answers survive the round trip in localStorage (onboarding-store.tsx
- * already persists them there); this picks that up and finishes the
- * submission here instead, but only if there's no Business DNA yet — a
- * returning user signing in from the homepage must never get a duplicate
- * one generated from stale localStorage. */
-async function resumePendingConsultation(onStatus: (text: string) => void): Promise<void> {
-  const raw = window.localStorage.getItem(ONBOARDING_STORAGE_KEY);
-  if (!raw) return;
-
-  let answers: Record<string, unknown> | null = null;
+/** A founder who finished every question signed-out and then signed in with
+ * Google left the page entirely (Google → back here), so the in-page submit
+ * never ran. Their answers survive in localStorage at the submit step; when
+ * that's the case we send them straight back to /consultation?submit=1, where
+ * the now-signed-in page starts the analysis visibly — with the same
+ * idempotency guard as any other submit — instead of generating invisibly
+ * behind a spinner here. */
+function hasPendingSubmit(): boolean {
   try {
-    const parsed = JSON.parse(raw) as { answers?: Record<string, unknown> };
-    answers = parsed.answers ?? null;
+    const raw = window.localStorage.getItem(CONSULTATION_STORAGE_KEY);
+    if (!raw) return false;
+    const parsed = JSON.parse(raw) as {
+      answers?: Record<string, unknown>;
+      screenKey?: string | null;
+    };
+    return parsed.screenKey === "submit" && Object.keys(parsed.answers ?? {}).length > 0;
   } catch {
-    return;
+    return false;
   }
-  if (!answers || Object.keys(answers).length === 0) return;
-
-  const existing = await getLatestBusinessDna();
-  if (existing) return;
-
-  onStatus("Building your Business DNA and finding opportunities…");
-  await completeConsultation({ data: { answers } });
 }
 
-/** Every Supabase auth email (signup confirmation, password recovery,
- * magic link) and every OAuth provider (Google) points here with a
- * one-time `code` — this exchanges it for a real session. Without this
- * route the link/redirect just looks broken. */
+/** Every OAuth provider redirect (Google) lands here with a one-time `code`;
+ * this exchanges it for a real session, then returns the founder to exactly
+ * where they were headed. */
 function AuthCallback() {
   const { code, error_description, next } = Route.useSearch();
+  const { t } = useLocale();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [error, setError] = useState<string | null>(error_description ?? null);
-  const [analysisFailed, setAnalysisFailed] = useState(false);
-  const [statusText, setStatusText] = useState("Confirming your account…");
+  const [resuming, setResuming] = useState(false);
   const ranRef = useRef(false);
 
   useEffect(() => {
     if (error_description || ranRef.current) return;
     if (!code) {
-      setError("This confirmation link is missing its code. Try requesting a new one.");
+      setError(t("auth.callback.missingCode"));
       return;
     }
     ranRef.current = true;
@@ -78,74 +69,56 @@ function AuthCallback() {
         setError(result.error);
         return;
       }
-      // Same reasoning as the email sign-in paths — a different account
-      // may be completing OAuth on a tab that still has stale cached data.
+      // A different account may be completing OAuth on a tab that still holds
+      // the previous account's cached data.
       queryClient.clear();
 
-      try {
-        await resumePendingConsultation(setStatusText);
-      } catch (err) {
-        // The session is real, but the analysis isn't — routing to
-        // /dashboard here would strand the user on the empty "no match
-        // yet" state with no way back to a retry. Their answers are still
-        // in localStorage (never cleared on failure), so resuming the
-        // consultation from /consultation will pick up right here.
-        console.error("[auth-callback] resuming consultation failed:", err);
-        setAnalysisFailed(true);
+      const safeNext = sanitizeNextPath(next);
+      // A pending finished consultation wins over a generic `next`, except
+      // when `next` already IS the consultation resume link.
+      if (hasPendingSubmit() && !(safeNext ?? "").startsWith("/consultation")) {
+        setResuming(true);
+        window.location.assign("/consultation?submit=1");
         return;
       }
-
-      // A pending consultation (handled above) always wins — it can only
-      // exist for a founder who just finished onboarding signed-out, a
-      // different situation than a `next` redirect (which only ever comes
-      // from a protected route bouncing a signed-out visitor here). Outside
-      // that case, honor `next` when it's a real, sanitized destination —
-      // a full navigation, since it can carry a query string a typed
-      // router `navigate({ to })` isn't built to pass through dynamically.
-      const safeNext = sanitizeNextPath(next);
       if (safeNext) {
+        // A full navigation — `next` can carry a query string (a specific
+        // consultation or week) a typed router navigate isn't built to pass.
         window.location.assign(safeNext);
         return;
       }
       navigate({ to: "/dashboard" });
-    })().catch(() => setError("Something went wrong confirming your account."));
-  }, [code, error_description, next, navigate, queryClient]);
+    })().catch(() => setError(t("auth.callback.generic")));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [code, error_description, next]);
 
   if (error) {
     return (
-      <div className="flex min-h-screen flex-col items-center justify-center gap-4 bg-background px-6 text-center">
-        <p className="font-display text-xl font-semibold text-primary">
-          This link didn&rsquo;t work.
+      <div className="flex min-h-dvh flex-col items-center justify-center gap-4 bg-sol-pearl px-6 text-center">
+        <h1 className="sol-h2">{t("auth.callback.linkFailedTitle")}</h1>
+        <p role="alert" className="max-w-sm text-[1.0625rem] text-sol-ink">
+          {error}
         </p>
-        <p className="max-w-sm text-[0.9rem] text-muted-foreground">{error}</p>
-        <PremiumButton tone="solid" shape="rounded" size="sm" href="/">
-          Back to Homepage
-        </PremiumButton>
-      </div>
-    );
-  }
-
-  if (analysisFailed) {
-    return (
-      <div className="flex min-h-screen flex-col items-center justify-center gap-4 bg-background px-6 text-center">
-        <p className="font-display text-xl font-semibold text-primary">
-          Sol couldn&rsquo;t complete your analysis.
+        <p className="max-w-sm text-[1rem] text-sol-secondary">
+          {t("auth.callback.linkFailedBody")}
         </p>
-        <p className="max-w-sm text-[0.9rem] text-muted-foreground">
-          Your account is set up and your consultation answers are safely saved. Retry the analysis
-          to get your opportunities and roadmap.
-        </p>
-        <PremiumButton tone="solid" shape="rounded" size="sm" href="/consultation">
-          Retry Analysis
-        </PremiumButton>
+        <a
+          href="/"
+          className="inline-flex h-12 items-center rounded-2xl bg-sol-navy px-6 text-[1rem] font-semibold text-white hover:bg-sol-navy-soft"
+        >
+          {t("auth.callback.backHome")}
+        </a>
       </div>
     );
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center gap-2 bg-background text-muted-foreground">
+    <div
+      role="status"
+      className="flex min-h-dvh items-center justify-center gap-2 bg-sol-pearl text-[1.0625rem] text-sol-secondary"
+    >
       <Loader2 className="size-5 animate-spin" aria-hidden="true" />
-      {statusText}
+      {resuming ? t("auth.callback.resuming") : t("auth.callback.confirming")}
     </div>
   );
 }

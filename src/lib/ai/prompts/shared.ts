@@ -25,7 +25,105 @@ export function buildLanguageRule(locale: GenerationLocale): string {
   return `\n\nLANGUAGE: Write every field meant for the founder to read (titles, summaries, descriptions, reasons, task/mission text, everything prose) in natural, professional Hindi (Devanagari script) — write as a fluent Hindi business document would, never a stiff word-for-word translation from English. Common English business/technical terms that are normally used as-is in professional Hindi (e.g. "SaaS", "founder", product/technology names) may stay in English within Hindi sentences where that reads naturally. NEVER translate: any enum value (difficulty must stay exactly "Beginner-friendly"/"Moderate"/"Challenging"; riskLevel must stay exactly "cautious"/"balanced"/"experimental"; motivationAlignment must stay exactly "high"/"medium"/"low"; minLevel must stay exactly "never_tried"/"beginner"/"comfortable"/"advanced"), any boolean or numeric field, any currency code, or any JSON key name. Only the prose content of string fields changes language.`;
 }
 
+/** Profile block for founders who completed the rebuilt (v2) consultation.
+ * Same purpose as the legacy block below, but it states each signal's TRUE
+ * weight: skills carry their declared level and whether they were ever used
+ * for real, execution evidence outranks self-description, interests are soft,
+ * and the minimum-income answer is a constraint — never a target size. */
+function formatProfileV2ForPrompt(profile: NormalizedProfile): string {
+  const v2 = profile.v2!;
+  const money = (amount: number) => formatMoney(amount, profile.identity.currency);
+  const lines: string[] = [];
+
+  const status =
+    profile.identity.currentStatus === "Other" && profile.identity.currentStatusDetail
+      ? profile.identity.currentStatusDetail
+      : (v2.status ?? "status unknown");
+  lines.push(
+    `Identity: ${profile.identity.age ?? "unknown"} years old, ${status}, based in ${[profile.identity.city, profile.identity.state, profile.identity.country].filter(Boolean).join(", ") || "unknown location"}. Languages: ${profile.identity.languages.join(", ") || "unknown"} (not a founder-potential signal).`,
+  );
+  lines.push(
+    `Currency: every monetary figure below, and every monetary figure you generate for this founder, must be in ${profile.identity.currency} (${profile.identity.currencySymbol}) — never rupees/lakh/crore unless that is genuinely their currency.`,
+  );
+
+  const edu = [
+    v2.education.level,
+    v2.education.major,
+    v2.education.institution,
+    v2.education.studyYear,
+  ]
+    .filter(Boolean)
+    .join(" · ");
+  lines.push(
+    `Education: ${edu || "not stated"} (completion level only — never institution prestige).`,
+  );
+
+  const business = v2.position.business;
+  if (business) {
+    lines.push(
+      `ESTABLISHED OPERATOR — already runs a business in ${business.sector ?? "an unstated sector"} with annual turnover ${business.turnoverLabel ?? "unstated"} and a team of ${business.teamLabel ?? "unstated size"}. Recommend opportunities that use this business's distribution, capital, team, brand or customer access; never a tiny owner-operated side business, and never treat this founder as a first-time starter.`,
+    );
+  } else if (v2.position.annualIncomeLabel) {
+    lines.push(
+      `Current annual income: ${v2.position.annualIncomeLabel} — this is their opportunity cost. An idea below what they could realistically earn elsewhere must justify itself as a validation wedge into something larger.`,
+    );
+  }
+
+  if (profile.skills.length > 0) {
+    lines.push(
+      `Skills (declared level · used on a real project/job?): ${profile.skills
+        .map(
+          (s) =>
+            `${s.name} (${s.declaredLevel ?? s.level} · ${s.usedInReal ? "used for real" : "not used in real work yet"})`,
+        )
+        .join(", ")}. A basic/unused skill is a weak signal and must not anchor an idea.`,
+    );
+  } else {
+    lines.push(
+      "Skills: none listed — do not assume competence, but do not treat this as disqualifying.",
+    );
+  }
+  if (v2.domains.length > 0) lines.push(`Experience domains: ${v2.domains.join(", ")}.`);
+  lines.push(
+    `Execution evidence (what they have actually done — outranks self-description): ${v2.executionSignals.join(", ") || "nothing yet"}. Estimated relevant experience ≈ ${profile.experienceYears} years (derived from age, status and the evidence above).`,
+  );
+
+  lines.push(
+    `Resources: about ${money(profile.resources.capitalAmount)} available to start (${profile.resources.capitalBracket ?? "range not stated"}). Access: ${v2.access.join(", ") || "none listed"}.`,
+  );
+  lines.push(`Time: about ${profile.time.weeklyHours} hours/week realistically available.`);
+  lines.push(
+    `Risk tolerance: ${v2.execution.riskTolerance ?? "unknown"}. Early-stage roles they can realistically handle: ${v2.execution.roles.join(", ") || "not stated"}. Team preference: ${v2.execution.teamPreference ?? "not stated"}.`,
+  );
+
+  if (v2.commitment) lines.push(`What would keep them committed for years: ${v2.commitment}.`);
+  if (v2.interests.length > 0) {
+    lines.push(
+      `Areas of interest (SOFT signal only — never reason "likes X, therefore an X business"; choose the strongest opportunity for this founder's capability, resources and ambition, and treat interest as a minor tiebreaker at most): ${v2.interests.join(", ")}.`,
+    );
+  }
+
+  const constraints = [
+    ...profile.constraints.industryRestrictions.map((r) => `refuses to enter: ${r}`),
+    profile.constraints.relocation ? `relocation: ${profile.constraints.relocation}` : null,
+    ...v2.hardConstraints,
+  ].filter(Boolean);
+  if (constraints.length > 0) {
+    lines.push(
+      `Hard constraints that MUST be respected — never suggest anything that conflicts with these: ${constraints.join("; ")}.`,
+    );
+  }
+
+  const a = v2.ambition;
+  lines.push(
+    `Ambition: wants ${a.scale ?? "scale not stated"}; will give a serious opportunity ${a.horizon ?? "an unstated time horizon"}; ultimately hoping for ${a.hope ?? "not stated"}.${a.minimumMonthlyIncome ? ` Needs at least ~${money(a.minimumMonthlyIncome)}/month of personal income within 12 months — a CONSTRAINT on the plan, never the target size of the company.` : ""}`,
+  );
+
+  return lines.join("\n");
+}
+
 export function formatProfileForPrompt(profile: NormalizedProfile): string {
+  if (profile.v2) return formatProfileV2ForPrompt(profile);
   const lines: string[] = [];
   const money = (amount: number) => formatMoney(amount, profile.identity.currency);
 

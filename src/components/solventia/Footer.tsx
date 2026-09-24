@@ -3,11 +3,12 @@ import { Mail } from "lucide-react";
 import mark from "@/assets/solventia-mark.png";
 import { scrollToSection } from "@/hooks/use-active-section";
 import { useLocale } from "@/lib/i18n/LocaleProvider";
+import type { MessageKey } from "@/lib/i18n";
 
 const CONTACT_EMAIL = "solventia.in@gmail.com";
 
 const FOOTER_LINKS: {
-  labelKey: string;
+  labelKey: MessageKey;
   id?: string;
   to?:
     | "/find-my-business-idea"

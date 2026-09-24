@@ -1,4 +1,4 @@
-import type { Locale } from "./dictionary";
+import type { Locale } from "./locale";
 
 /** Same raw-English-string-as-key pattern as onboarding-dictionary.ts,
  * applied to the dashboard/opportunity/roadmap UI chrome — navigation,

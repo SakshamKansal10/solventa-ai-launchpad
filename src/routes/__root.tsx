@@ -7,27 +7,37 @@ import {
   HeadContent,
   Scripts,
 } from "@tanstack/react-router";
+import { MotionConfig } from "motion/react";
 import type { ReactNode } from "react";
 
 import appCss from "../styles.css?url";
 import { Toaster } from "@/components/ui/sonner";
-import { LocaleProvider } from "@/lib/i18n/LocaleProvider";
+import { getInitialLocale } from "@/lib/actions/locale";
+import { LocaleProvider, useTranslator } from "@/lib/i18n/LocaleProvider";
+import { DEFAULT_LOCALE, readLocaleFromCookieString, type Locale } from "@/lib/i18n/locale";
+
+/** SSR reads the language cookie on the server; client-side navigations read
+ * document.cookie. Either way the very first paint is already in the reader's
+ * language — no flash of English for a Hindi reader. */
+async function resolveLocale(): Promise<Locale> {
+  if (typeof window === "undefined") return (await getInitialLocale()) ?? DEFAULT_LOCALE;
+  return readLocaleFromCookieString(document.cookie) ?? DEFAULT_LOCALE;
+}
 
 function NotFoundComponent() {
+  const t = useTranslator();
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background px-4">
+    <div className="flex min-h-dvh items-center justify-center bg-sol-pearl px-4">
       <div className="max-w-md text-center">
-        <h1 className="text-7xl font-bold text-foreground">404</h1>
-        <h2 className="mt-4 text-xl font-semibold text-foreground">Page not found</h2>
-        <p className="mt-2 text-sm text-muted-foreground">
-          The page you're looking for doesn't exist or has been moved.
-        </p>
+        <p className="font-display text-7xl font-semibold text-sol-ink">404</p>
+        <h1 className="sol-h2 mt-4">{t("common.notFoundTitle")}</h1>
+        <p className="mt-2 text-[1.0625rem] text-sol-secondary">{t("common.notFoundBody")}</p>
         <div className="mt-6">
           <Link
             to="/"
-            className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
+            className="inline-flex h-12 items-center justify-center rounded-2xl bg-sol-navy px-6 text-[1rem] font-semibold text-white transition-colors hover:bg-sol-navy-soft"
           >
-            Go home
+            {t("common.goHome")}
           </Link>
         </div>
       </div>
@@ -38,31 +48,29 @@ function NotFoundComponent() {
 function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
   console.error(error);
   const router = useRouter();
+  const t = useTranslator();
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background px-4">
+    <div className="flex min-h-dvh items-center justify-center bg-sol-pearl px-4">
       <div className="max-w-md text-center">
-        <h1 className="text-xl font-semibold tracking-tight text-foreground">
-          This page didn't load
-        </h1>
-        <p className="mt-2 text-sm text-muted-foreground">
-          Something went wrong on our end. You can try refreshing or head back home.
-        </p>
-        <div className="mt-6 flex flex-wrap justify-center gap-2">
+        <h1 className="sol-h2">{t("common.pageDidntLoad")}</h1>
+        <p className="mt-2 text-[1.0625rem] text-sol-secondary">{t("common.pageDidntLoadBody")}</p>
+        <div className="mt-6 flex flex-wrap justify-center gap-3">
           <button
+            type="button"
             onClick={() => {
               router.invalidate();
               reset();
             }}
-            className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
+            className="inline-flex h-12 items-center justify-center rounded-2xl bg-sol-navy px-6 text-[1rem] font-semibold text-white transition-colors hover:bg-sol-navy-soft"
           >
-            Try again
+            {t("common.retry")}
           </button>
           <a
             href="/"
-            className="inline-flex items-center justify-center rounded-md border border-input bg-background px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-accent"
+            className="inline-flex h-12 items-center justify-center rounded-2xl border border-sol-border bg-sol-surface px-6 text-[1rem] font-semibold text-sol-ink transition-colors hover:border-sol-violet/45"
           >
-            Go home
+            {t("common.goHome")}
           </a>
         </div>
       </div>
@@ -71,6 +79,7 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
 }
 
 export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()({
+  beforeLoad: async () => ({ locale: await resolveLocale() }),
   head: () => ({
     meta: [
       { charSet: "utf-8" },
@@ -91,7 +100,9 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
       {
         rel: "stylesheet",
-        href: "https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,600&family=Manrope:wght@400;500;600;700&family=Dancing+Script:wght@600;700&display=swap",
+        // Latin display + UI faces, plus Devanagari serif/sans so Hindi text
+        // never falls back to an arbitrary system font.
+        href: "https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,600&family=Manrope:wght@400;500;600;700&family=Noto+Sans+Devanagari:wght@400;500;600;700&family=Noto+Serif+Devanagari:wght@500;600;700&family=Dancing+Script:wght@600;700&display=swap",
       },
       // ICO first (the classic default browsers fall back to), then the
       // exact square PNG sizes Google's own favicon guidelines ask for —
@@ -113,8 +124,9 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
 });
 
 function RootShell({ children }: { children: ReactNode }) {
+  const { locale } = Route.useRouteContext();
   return (
-    <html lang="en">
+    <html lang={locale ?? DEFAULT_LOCALE}>
       <head>
         <HeadContent />
       </head>
@@ -127,14 +139,17 @@ function RootShell({ children }: { children: ReactNode }) {
 }
 
 function RootComponent() {
-  const { queryClient } = Route.useRouteContext();
+  const { queryClient, locale } = Route.useRouteContext();
 
   return (
     <QueryClientProvider client={queryClient}>
-      <LocaleProvider>
-        {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
-        <Outlet />
-        <Toaster position="bottom-right" />
+      <LocaleProvider initialLocale={locale}>
+        {/* Honour the OS "reduce motion" setting for every motion() animation. */}
+        <MotionConfig reducedMotion="user">
+          {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
+          <Outlet />
+          <Toaster position="bottom-right" />
+        </MotionConfig>
       </LocaleProvider>
     </QueryClientProvider>
   );

@@ -9,7 +9,6 @@ import { FounderSignal } from "@/components/solventia/FounderSignal";
 import { HowItWorks } from "@/components/solventia/HowItWorks";
 import { AdaptiveRoadmap } from "@/components/solventia/AdaptiveRoadmap";
 import { WhySolventia } from "@/components/solventia/WhySolventia";
-import { BrandMoment } from "@/components/solventia/BrandMoment";
 import { FinalCTA } from "@/components/solventia/FinalCTA";
 import { FAQ } from "@/components/solventia/FAQ";
 import { Footer } from "@/components/solventia/Footer";
@@ -119,7 +118,6 @@ function Index() {
         <AdaptiveRoadmap />
         <SectionTransition from="#FCFAF7" to="#F5EFE6" />
         <WhySolventia />
-        <BrandMoment />
         <SectionTransition from="#F7F2EA" to="#17203D" line="violet" />
         <FinalCTA />
         <FAQ />

@@ -4,9 +4,10 @@ import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
 import { cn } from "@/lib/utils";
 import { useLocale } from "@/lib/i18n/LocaleProvider";
 
+/** Google's four-colour "G" — used unmodified, per Google's branding rules. */
 function GoogleGlyph() {
   return (
-    <svg viewBox="0 0 24 24" className="size-4 shrink-0" aria-hidden="true">
+    <svg viewBox="0 0 24 24" className="size-5 shrink-0" aria-hidden="true">
       <path
         fill="#4285F4"
         d="M23.52 12.27c0-.85-.08-1.67-.22-2.45H12v4.64h6.48c-.28 1.5-1.13 2.78-2.4 3.63v3.02h3.87c2.27-2.09 3.57-5.17 3.57-8.84z"
@@ -28,18 +29,19 @@ function GoogleGlyph() {
 }
 
 interface GoogleSignInButtonProps {
-  /** Just the path (e.g. "/auth/callback") — `window.location.origin` is
-   * resolved here, inside the click handler, never at render time. Reading
-   * `window` while building a prop in a parent's render body crashes SSR
-   * (React falls back to client-only rendering for the whole page to
-   * recover from it) since `window` doesn't exist server-side. */
+  /** Just the path (e.g. "/auth/callback?next=…") — `window.location.origin`
+   * is resolved inside the click handler, never at render time (reading
+   * `window` while rendering crashes SSR). Any `next` value inside it has
+   * already been through sanitizeNextPath by the caller, and the callback
+   * re-validates it again before navigating. */
   redirectPath: string;
   className?: string;
 }
 
-/** A real OAuth trigger, not a decorative button — clicking this redirects
- * the whole page to Google's own consent screen via Supabase Auth, then
- * back to /auth/callback to complete the session. */
+/** A real OAuth trigger: clicking redirects the whole page to Google's
+ * consent screen via Supabase Auth, then back to /auth/callback. Styled to
+ * Google's "Sign in with Google" light-theme guidelines (white fill, 1px
+ * neutral border, #1F1F1F medium-weight label, unmodified four-colour G). */
 export function GoogleSignInButton({ redirectPath, className }: GoogleSignInButtonProps) {
   const { t } = useLocale();
   const [loading, setLoading] = useState(false);
@@ -56,13 +58,13 @@ export function GoogleSignInButton({ redirectPath, className }: GoogleSignInButt
       });
       if (oauthError) {
         console.error("[google-signin] failed:", oauthError);
-        setError("Couldn't start Google sign-in — try again.");
+        setError(t("auth.google.error"));
         setLoading(false);
       }
-      // On success the browser is already navigating to Google; nothing left to do here.
+      // On success the browser is already navigating to Google.
     } catch (err) {
       console.error("[google-signin] failed:", err);
-      setError("Couldn't start Google sign-in — try again.");
+      setError(t("auth.google.error"));
       setLoading(false);
     }
   }
@@ -73,15 +75,20 @@ export function GoogleSignInButton({ redirectPath, className }: GoogleSignInButt
         type="button"
         onClick={handleClick}
         disabled={loading}
+        data-testid="google-signin"
         className={cn(
-          "inline-flex w-full items-center justify-center gap-2.5 rounded-xl border border-border bg-card px-4 py-3 text-[0.88rem] font-medium text-foreground transition-colors hover:bg-secondary disabled:pointer-events-none disabled:opacity-60",
+          "inline-flex h-12 w-full items-center justify-center gap-3 rounded-full border border-[#747775] bg-white px-4 text-[0.9375rem] font-medium text-[#1F1F1F] transition-colors hover:bg-[#F8F9FA] focus-visible:ring-2 focus-visible:ring-sol-violet/40 disabled:pointer-events-none disabled:opacity-60",
           className,
         )}
       >
-        {loading ? <Loader2 className="size-4 animate-spin" aria-hidden="true" /> : <GoogleGlyph />}
-        {t("signin.continueWithGoogle")}
+        {loading ? <Loader2 className="size-5 animate-spin" aria-hidden="true" /> : <GoogleGlyph />}
+        {t("auth.google.continue")}
       </button>
-      {error && <p className="text-center text-[0.78rem] text-destructive">{error}</p>}
+      {error && (
+        <p role="alert" className="text-center text-[0.9375rem] text-sol-warning">
+          {error}
+        </p>
+      )}
     </div>
   );
 }

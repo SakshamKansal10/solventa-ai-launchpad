@@ -1,4 +1,4 @@
-import type { Locale } from "./dictionary";
+import type { Locale } from "./locale";
 
 /** English -> natural Hindi, for the consultation flow specifically.
  * Keyed by the EXACT English string already used as a question's `label`/

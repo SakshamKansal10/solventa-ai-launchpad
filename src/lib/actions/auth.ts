@@ -29,11 +29,75 @@ export const signOut = createServerFn({ method: "POST" }).handler(async () => {
   return { ok: true as const };
 });
 
-export const getCurrentUser = createServerFn({ method: "GET" }).handler(async () => {
-  const { user } = await getOptionalUser();
-  if (!user) return null;
-  return { id: user.id, email: user.email ?? null };
-});
+export interface CurrentUserDTO {
+  id: string;
+  email: string | null;
+  fullName: string | null;
+  /** Stored language preference — null until the founder has ever chosen one. */
+  locale: "en" | "hi" | null;
+  avatar: { url: string | null; source: "custom" | "google" | "initials" };
+  initials: string;
+}
+
+function initialsFor(fullName: string | null, email: string | null): string {
+  const source = (fullName?.trim() || email?.split("@")[0] || "S").trim();
+  const parts = source.split(/[s._-]+/).filter(Boolean);
+  const letters = (parts.length > 1 ? parts[0][0] + parts[1][0] : source.slice(0, 2)).toUpperCase();
+  return letters || "S";
+}
+
+/** One call gives every screen everything it needs about the signed-in
+ * founder — identity, language, avatar — so the shell never fans out into
+ * several round trips. Avatar priority: custom upload → Google account photo
+ * → initials. Reads the profile with select("*") so it keeps working on a
+ * database where migration 0010 (locale/avatar columns) hasn't run yet. */
+export const getCurrentUser = createServerFn({ method: "GET" }).handler(
+  async (): Promise<CurrentUserDTO | null> => {
+    const { supabase, user } = await getOptionalUser();
+    if (!user) return null;
+
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("*")
+      .eq("id", user.id)
+      .maybeSingle();
+
+    const meta = (user.user_metadata ?? {}) as Record<string, unknown>;
+    const fullName =
+      profile?.full_name ??
+      (typeof meta.full_name === "string" ? meta.full_name : null) ??
+      (typeof meta.name === "string" ? meta.name : null);
+
+    let avatar: CurrentUserDTO["avatar"] = { url: null, source: "initials" };
+    const customPath = (profile as { avatar_path?: string | null } | null)?.avatar_path;
+    if (customPath) {
+      const { data } = supabase.storage.from("avatars").getPublicUrl(customPath);
+      const stamp = (profile as { avatar_updated_at?: string | null } | null)?.avatar_updated_at;
+      avatar = {
+        url: stamp ? `${data.publicUrl}?v=${encodeURIComponent(stamp)}` : data.publicUrl,
+        source: "custom",
+      };
+    } else {
+      const google =
+        typeof meta.avatar_url === "string"
+          ? meta.avatar_url
+          : typeof meta.picture === "string"
+            ? meta.picture
+            : null;
+      if (google) avatar = { url: google, source: "google" };
+    }
+
+    const storedLocale = (profile as { locale?: string | null } | null)?.locale;
+    return {
+      id: user.id,
+      email: user.email ?? null,
+      fullName,
+      locale: storedLocale === "en" || storedLocale === "hi" ? storedLocale : null,
+      avatar,
+      initials: initialsFor(fullName, user.email ?? null),
+    };
+  },
+);
 
 /** The one side effect that used to live inside the server-side
  * verifyOtpCode handler and now needs a home of its own: the browser

@@ -1,58 +1,23 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
-import { AnimatePresence, motion } from "motion/react";
-import { useState } from "react";
+import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { ArrowLeft, Sparkles, X } from "lucide-react";
 import { z } from "zod";
-import mark from "@/assets/solventia-mark.png";
-import { OnboardingProvider, useOnboarding } from "@/lib/onboarding-store";
-import { Progress } from "@/components/ui/progress";
-import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
-import {
-  WelcomeScreen,
-  AIIntroScreen,
-  SectionIntroScreen,
-  CompletionScreen,
-} from "@/components/onboarding/StaticScreens";
+
+import { ConsultationShell } from "@/components/consultation/ConsultationShell";
 import { SolventiaLoadingState } from "@/components/dashboard/SolventiaLoadingState";
-import { ThinkingScreen } from "@/components/onboarding/ThinkingScreen";
-import { QuestionRenderer } from "@/components/onboarding/QuestionRenderer";
-import { QuestionGroupRenderer } from "@/components/onboarding/QuestionGroupRenderer";
-import { FounderProfilePanel } from "@/components/onboarding/FounderProfilePanel";
-import { StageAtmosphere } from "@/components/onboarding/StageAtmosphere";
-import type { InputKind, Step } from "@/lib/onboarding-steps";
-import type { OnboardingAnswers } from "@/lib/onboarding-types";
-import { getStageTheme } from "@/lib/onboarding-themes";
 import { getLatestBusinessDna } from "@/lib/actions/profile";
+import { ConsultationProvider } from "@/lib/consultation/store";
+import { isLegacyAnswers, legacyToV2 } from "@/lib/consultation/migrate";
+import type { ConsultationAnswers } from "@/lib/consultation/model";
 import { useLocale } from "@/lib/i18n/LocaleProvider";
-import { translateOnboardingText } from "@/lib/i18n/onboarding-dictionary";
-import { LanguageSwitcher } from "@/components/solventia/LanguageSwitcher";
-
-/** Simple, single-focus questions get an open canvas (question, input,
- * button, and generous whitespace — no card boundary). Everything with
- * more moving parts (grids, pickers, multi-select) keeps the card, which
- * gives those controls a defined edge to sit inside. */
-const OPEN_CANVAS_INPUTS = new Set<InputKind>(["choice", "number", "currency", "text"]);
-
-/** Which of the seven chapter atmospheres is "current" — question and
- * section-intro screens use their own section; a thinking pause keeps
- * showing the chapter it's reflecting on; the welcome/intro screens open
- * on chapter one; completion settles into the final, gold chapter. */
-function getActiveSection(step: Step): number {
-  if (step.kind === "question" || step.kind === "section-intro" || step.kind === "question-group")
-    return step.section;
-  if (step.kind === "thinking") return step.afterSection;
-  if (step.kind === "complete") return 7;
-  return 1;
-}
 
 export const Route = createFileRoute("/consultation")({
   validateSearch: z.object({
-    // Set by Settings → "Edit Founder Profile" — pre-fills every question
-    // with the founder's most recent answers instead of starting blank.
-    // Everything else about the flow (including completeConsultation on
-    // submit) is completely unchanged.
+    // Set by Settings → Edit Founder Profile: pre-fills every question from
+    // the founder's last completed consultation instead of starting blank.
     edit: z.boolean().optional(),
+    // Set by the Google OAuth round trip: the founder finished every
+    // question signed-out, so once the session exists we submit straight away.
+    submit: z.number().optional(),
   }),
   component: ConsultationPage,
   head: () => ({
@@ -60,228 +25,34 @@ export const Route = createFileRoute("/consultation")({
   }),
 });
 
-/** Fixed, hand-placed positions — never Math.random(), which would desync
- * between server and client render and break hydration. Spread across a
- * single viewport since the wrapper is fixed (stays put behind the whole
- * scrollable flow, not just the landing screen). */
-const BACKDROP_PARTICLES = [
-  { top: "14%", left: "38%", size: 2, delay: 0 },
-  { top: "24%", left: "82%", size: 2.5, delay: 1.6 },
-  { top: "42%", left: "16%", size: 2, delay: 0.8 },
-  { top: "58%", left: "68%", size: 3, delay: 2.4 },
-  { top: "72%", left: "30%", size: 2, delay: 1.2 },
-  { top: "85%", left: "88%", size: 2.5, delay: 3.1 },
-  { top: "12%", left: "62%", size: 2, delay: 2 },
-  { top: "66%", left: "6%", size: 2.5, delay: 0.4 },
-];
-
 function ConsultationPage() {
-  const { edit } = Route.useSearch();
+  const { edit, submit } = Route.useSearch();
+  const { t } = useLocale();
 
-  // Only fetch when actually editing — a fresh consultation never makes
-  // this request at all, so the normal flow's load time is untouched.
-  const priorAnswers = useQuery({
+  // Only fetched when editing — a fresh consultation never makes this request.
+  const prior = useQuery({
     queryKey: ["latest-business-dna-for-edit"],
     queryFn: () => getLatestBusinessDna(),
     enabled: edit === true,
   });
 
-  if (edit === true && priorAnswers.isLoading) {
+  if (edit === true && prior.isLoading) {
     return (
-      <div className="flex min-h-screen w-full items-center justify-center bg-background">
-        <SolventiaLoadingState message="Loading your founder profile…" />
+      <div className="flex min-h-dvh w-full items-center justify-center bg-sol-pearl">
+        <SolventiaLoadingState message={t("common.loading")} />
       </div>
     );
   }
 
-  const initialAnswers =
-    edit === true
-      ? ((priorAnswers.data?.onboarding_answers as OnboardingAnswers | undefined) ?? undefined)
-      : undefined;
+  let initialAnswers: ConsultationAnswers | undefined;
+  if (edit === true && prior.data?.onboarding_answers) {
+    const raw = prior.data.onboarding_answers as unknown;
+    initialAnswers = isLegacyAnswers(raw) ? legacyToV2(raw) : (raw as ConsultationAnswers);
+  }
 
   return (
-    <OnboardingProvider initialAnswers={initialAnswers}>
-      <ConsultationShell editMode={edit === true} />
-    </OnboardingProvider>
-  );
-}
-
-function ConsultationShell({ editMode = false }: { editMode?: boolean }) {
-  const { currentStep, stepIndex, goBack, progress } = useOnboarding();
-  const { locale } = useLocale();
-  const tr = (s: string) => translateOnboardingText(s, locale) ?? s;
-  const [mobileProfileOpen, setMobileProfileOpen] = useState(false);
-
-  const isIntroLike =
-    currentStep.kind === "welcome" ||
-    currentStep.kind === "ai-intro" ||
-    currentStep.kind === "complete";
-  const showProfile = !isIntroLike;
-  const showBack = !isIntroLike && stepIndex > 0;
-  const activeSection = getActiveSection(currentStep);
-  const theme = getStageTheme(activeSection);
-
-  return (
-    <div className="relative min-h-screen w-full bg-background text-foreground">
-      {/* Fixed ambient backdrop — anchored to the viewport, not the page, so
-          the atmosphere, texture, and particles stay present behind every
-          question, not just the landing screen. Same light, pearl-white
-          foundation as the homepage; the color is the current chapter's. */}
-      <div className="fixed inset-0 z-0 overflow-hidden" aria-hidden="true">
-        <div className="surface-grid absolute inset-0 text-primary opacity-[0.05]" />
-        <StageAtmosphere activeSection={activeSection} />
-        {BACKDROP_PARTICLES.map((p, i) => (
-          <span
-            key={i}
-            className="particle-drift absolute rounded-full bg-accent"
-            style={{
-              top: p.top,
-              left: p.left,
-              width: p.size,
-              height: p.size,
-              animationDelay: `${p.delay}s`,
-            }}
-          />
-        ))}
-      </div>
-
-      <header className="sticky top-0 z-30 flex items-center justify-between gap-4 border-b border-border/60 bg-background/80 px-6 py-6 backdrop-blur-xl lg:px-10">
-        <Link to="/" className="flex items-center gap-3" aria-label="Solventia home">
-          <img
-            src={mark}
-            alt=""
-            width={298}
-            height={436}
-            className="h-11 w-auto drop-shadow-[0_1px_2px_rgba(10,25,47,0.18)]"
-          />
-          <span className="hidden leading-none sm:block">
-            <span className="block font-display text-[1.3rem] font-semibold tracking-[0.22em] text-primary">
-              SOLVENTIA
-            </span>
-            <span className="mt-1.5 block text-[0.55rem] font-medium tracking-[0.34em] text-accent/80">
-              VALIDATE • BUILD • ELEVATE
-            </span>
-          </span>
-        </Link>
-
-        {!isIntroLike && (
-          <div className="mx-6 hidden max-w-md flex-1 items-center gap-3 sm:flex">
-            <Progress
-              value={progress}
-              className="h-1.5 bg-secondary"
-              indicatorColor={theme.color}
-            />
-            <span className="relative w-9 shrink-0 text-[0.78rem] font-semibold text-muted-foreground">
-              <AnimatePresence mode="popLayout">
-                <motion.span
-                  key={progress}
-                  initial={{ opacity: 0, y: -4 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: 4 }}
-                  transition={{ duration: 0.3 }}
-                  className="absolute inset-0"
-                >
-                  {progress}%
-                </motion.span>
-              </AnimatePresence>
-            </span>
-          </div>
-        )}
-
-        <div className="flex items-center gap-3">
-          <LanguageSwitcher className="inline-flex items-center gap-1 text-[0.78rem] font-medium text-muted-foreground transition-colors hover:text-primary" />
-          {showProfile && (
-            <Sheet open={mobileProfileOpen} onOpenChange={setMobileProfileOpen}>
-              <SheetTrigger asChild>
-                <button
-                  type="button"
-                  className="flex items-center gap-1.5 rounded-full border border-border px-3.5 py-2 text-[0.78rem] font-semibold text-foreground/80 2xl:hidden"
-                >
-                  <Sparkles className="size-3.5 text-accent" aria-hidden="true" />
-                  {tr("Profile")}
-                </button>
-              </SheetTrigger>
-              <SheetContent
-                side="right"
-                className="w-[88vw] max-w-sm border-border bg-background p-6"
-              >
-                <SheetTitle className="text-primary">{tr("Your Founder Profile")}</SheetTitle>
-                <div className="mt-6">
-                  <FounderProfilePanel activeSection={activeSection} />
-                </div>
-              </SheetContent>
-            </Sheet>
-          )}
-          <Link
-            to="/"
-            aria-label="Exit consultation"
-            className="flex size-9 items-center justify-center rounded-full border border-border text-muted-foreground transition-colors hover:border-primary/30 hover:text-primary"
-          >
-            <X className="size-4" aria-hidden="true" />
-          </Link>
-        </div>
-      </header>
-
-      {showBack && (
-        <button
-          type="button"
-          onClick={goBack}
-          className="relative z-20 ml-6 mt-6 flex items-center gap-1.5 text-[0.82rem] font-medium text-muted-foreground hover:text-primary lg:ml-10"
-        >
-          <ArrowLeft className="size-3.5" aria-hidden="true" />
-          {tr("Back")}
-        </button>
-      )}
-
-      <main className="relative z-10 mx-auto w-full max-w-[1200px] px-6 py-12 lg:px-10 lg:py-16">
-        <div className="mx-auto flex min-h-[60vh] max-w-[680px] items-center justify-center">
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={stepIndex}
-              initial={{ opacity: 0, x: 16 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -16 }}
-              transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
-              className="w-full"
-            >
-              {currentStep.kind === "welcome" && <WelcomeScreen editMode={editMode} />}
-              {currentStep.kind === "ai-intro" && <AIIntroScreen />}
-              {currentStep.kind === "section-intro" && <SectionIntroScreen step={currentStep} />}
-              {currentStep.kind === "thinking" && <ThinkingScreen step={currentStep} />}
-              {currentStep.kind === "question" &&
-                (OPEN_CANVAS_INPUTS.has(currentStep.input) ? (
-                  <div className="w-full px-2 py-6">
-                    <QuestionRenderer step={currentStep} />
-                  </div>
-                ) : (
-                  <div className="card-breathe w-full rounded-[2rem] border border-border/70 bg-card/90 px-6 py-10 shadow-[0_30px_80px_-45px_oklch(0.245_0.055_268_/_0.22)] backdrop-blur-xl sm:px-12 sm:py-14">
-                    <QuestionRenderer step={currentStep} />
-                  </div>
-                ))}
-              {currentStep.kind === "question-group" && (
-                <div className="card-breathe w-full rounded-[2rem] border border-border/70 bg-card/90 px-6 py-10 shadow-[0_30px_80px_-45px_oklch(0.245_0.055_268_/_0.22)] backdrop-blur-xl sm:px-12 sm:py-14">
-                  <QuestionGroupRenderer step={currentStep} />
-                </div>
-              )}
-              {currentStep.kind === "complete" && <CompletionScreen />}
-            </motion.div>
-          </AnimatePresence>
-        </div>
-
-        {showProfile && (
-          <motion.div
-            initial={{ opacity: 0, x: 16 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.5, delay: 0.2, ease: [0.22, 1, 0.36, 1] }}
-            className="hidden 2xl:fixed 2xl:right-10 2xl:top-32 2xl:block 2xl:w-[300px]"
-          >
-            <FounderProfilePanel
-              activeSection={activeSection}
-              className="max-h-[75vh] overflow-y-auto"
-            />
-          </motion.div>
-        )}
-      </main>
-    </div>
+    <ConsultationProvider initialAnswers={initialAnswers}>
+      <ConsultationShell editMode={edit === true} autoSubmit={submit === 1 && edit !== true} />
+    </ConsultationProvider>
   );
 }

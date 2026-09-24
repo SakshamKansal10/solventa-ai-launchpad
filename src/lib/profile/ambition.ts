@@ -81,10 +81,15 @@ function technicalDepthScore(profile: NormalizedProfile): number {
     );
     return category && TECHNICAL_CATEGORIES.includes(category.label);
   });
-  if (technicalSkills.length === 0) return 12;
+  // v2: having actually shipped software/product is direct evidence of depth
+  // that no skill tick-box can substitute for.
+  const shipped = (profile.v2?.executionSignals ?? []).filter((e) =>
+    ["Built or shipped a product", "Written production software"].includes(e),
+  ).length;
+  if (technicalSkills.length === 0) return clamp01to100(12 + shipped * 20);
   const avgLevel =
     technicalSkills.reduce((sum, s) => sum + s.levelScore, 0) / (technicalSkills.length * 3);
-  return clamp01to100(avgLevel * 70 + Math.min(technicalSkills.length, 5) * (30 / 5));
+  return clamp01to100(avgLevel * 70 + Math.min(technicalSkills.length, 5) * (30 / 5) + shipped * 8);
 }
 
 function experienceScore(profile: NormalizedProfile): number {
@@ -99,7 +104,15 @@ const LEADERSHIP_SCORE: Record<string, number> = {
 };
 
 function leadershipScore(profile: NormalizedProfile): number {
-  return LEADERSHIP_SCORE[profile.workStyle.leadership ?? ""] ?? 40;
+  const base = LEADERSHIP_SCORE[profile.workStyle.leadership ?? ""] ?? 40;
+  // v2: leading a real organisation is the strongest leadership evidence.
+  const teamTier = profile.v2?.position.business?.teamTier;
+  if (typeof teamTier === "number") {
+    if (teamTier >= 3) return 100;
+    if (teamTier >= 2) return Math.max(base, 85);
+    if (teamTier >= 1) return Math.max(base, 70);
+  }
+  return base;
 }
 
 /** Position within this founder's OWN currency brackets — never a raw
@@ -113,12 +126,37 @@ function bracketPosition(brackets: { label: string }[], label: string | null): n
 }
 
 function earningPotentialScore(profile: NormalizedProfile): number {
+  // v2: a business owner's opportunity cost is set by the scale of what they
+  // already run (turnover tier), a professional's by their income tier. A
+  // ₹100-crore operator must never read like a first-time side-hustler.
+  const business = profile.v2?.position.business;
+  if (business && typeof business.turnoverTier === "number") {
+    return clamp01to100((business.turnoverTier / 5) * 100);
+  }
+  const v2 = profile.v2;
+  if (v2 && typeof v2.position.annualIncomeTier === "number") {
+    return clamp01to100(
+      (v2.position.annualIncomeTier / Math.max(1, v2.position.annualIncomeTierCount - 1)) * 100,
+    );
+  }
+  if (v2) return 40;
   const brackets = getAnnualIncomeBrackets(profile.identity.currency);
   const label = brackets.find((b) => b.value === profile.resources.annualIncomeAmount)?.label;
   return bracketPosition(brackets, label ?? null);
 }
 
+/** v2 replaces the retired "what monthly income would feel like a win"
+ * anchor with the founder's stated SCALE ambition. */
+const SCALE_AMBITION: Record<string, number> = {
+  profitable: 45,
+  national: 72,
+  global: 95,
+  expand_existing: 80,
+  not_sure: 40,
+};
+
 function incomeAmbitionScore(profile: NormalizedProfile): number {
+  if (profile.v2) return SCALE_AMBITION[profile.v2.ambition.scaleId ?? ""] ?? 40;
   const brackets = getMonthlyIncomeGoalBrackets(profile.identity.currency);
   const label = brackets.find((b) => b.value === profile.direction.monthlyIncomeGoalAmount)?.label;
   return bracketPosition(brackets, label ?? null);
@@ -131,8 +169,15 @@ function executionAbilityScore(profile: NormalizedProfile): number {
   const ratedSkills = profile.skills.filter((s) => s.levelScore >= 2).length;
   const skillComponent = clamp01to100(ratedSkills * 12);
   const experienceComponent = clamp01to100((profile.experienceYears / 8) * 100);
-  const businessBonus = profile.identity.currentBusiness ? 20 : 0;
-  return clamp01to100(skillComponent * 0.45 + experienceComponent * 0.35 + businessBonus);
+  const turnoverTier = profile.v2?.position.business?.turnoverTier;
+  // Running a business is real proof; running a BIG one is proportionally more.
+  const businessBonus = profile.identity.currentBusiness
+    ? 20 + (typeof turnoverTier === "number" ? turnoverTier * 10 : 0)
+    : 0;
+  const executionEvidence = clamp01to100((profile.v2?.executionSignals.length ?? 0) * 12);
+  return clamp01to100(
+    skillComponent * 0.35 + experienceComponent * 0.3 + executionEvidence * 0.15 + businessBonus,
+  );
 }
 
 /**

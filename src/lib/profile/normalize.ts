@@ -1,4 +1,6 @@
 import type { OnboardingAnswers, SkillLevel } from "@/lib/onboarding-types";
+import type { ConsultationAnswers } from "@/lib/consultation/model";
+import { normalizeV2 } from "@/lib/profile/normalize-v2";
 import {
   getAnnualIncomeBrackets,
   getCurrencyForCountry,
@@ -12,7 +14,63 @@ export type RiskLevel = "cautious" | "balanced" | "experimental";
 export interface NormalizedSkill {
   name: string;
   level: SkillLevel;
+  /** Effective strength. Fractional for v2 profiles: a skill never used on a
+   * real project counts half a level less (see skillLevelScore). */
   levelScore: number;
+  /** v2 only — what the founder actually declared, and whether they have used
+   * the skill on a real project/job. */
+  declaredLevel?: string;
+  usedInReal?: boolean;
+}
+
+/** Signals only the rebuilt (v2) consultation collects. Absent on profiles
+ * generated before the rebuild, which keep flowing through the original,
+ * untouched normalization path. Every string here is canonical English. */
+export interface NormalizedProfileV2 {
+  status: string | null;
+  education: {
+    level: string | null;
+    major: string | null;
+    institution: string | null;
+    studyYear: string | null;
+  };
+  domains: string[];
+  executionSignals: string[];
+  access: string[];
+  capitalTier: number | null;
+  capitalTierCount: number;
+  position: {
+    annualIncomeTier: number | null;
+    annualIncomeTierCount: number;
+    annualIncomeLabel: string | null;
+    business: {
+      sector: string | null;
+      turnoverAmount: number | null;
+      turnoverTier: number | null;
+      turnoverLabel: string | null;
+      teamSize: number | null;
+      teamTier: number | null;
+      teamLabel: string | null;
+    } | null;
+  };
+  execution: {
+    riskTolerance: string | null;
+    roles: string[];
+    teamPreference: string | null;
+  };
+  commitment: string | null;
+  /** SOFT signals — never a reason to pick an industry. */
+  interests: string[];
+  hardConstraints: string[];
+  ambition: {
+    scale: string | null;
+    scaleId: string | null;
+    horizon: string | null;
+    /** A CONSTRAINT on the next 12 months, not the target size of the company. */
+    minimumMonthlyIncome: number | null;
+    minimumMonthlyIncomeLabel: string | null;
+    hope: string | null;
+  };
 }
 
 export interface NormalizedProfile {
@@ -87,6 +145,8 @@ export interface NormalizedProfile {
     /** Employee branch only — null for every other founder. */
     willingToLeaveJob: string | null;
   };
+  /** Present only for profiles built from the v2 consultation. */
+  v2?: NormalizedProfileV2;
 }
 
 export const SKILL_LEVEL_SCORE: Record<SkillLevel, number> = {
@@ -151,7 +211,16 @@ function bracketValue(brackets: { label: string; value: number }[], label: strin
  * numeric/enum signals the deterministic scoring engine and AI prompts can
  * both consume without re-parsing bracket strings themselves.
  */
-export function normalizeProfile(answers: OnboardingAnswers): NormalizedProfile {
+export function normalizeProfile(
+  answers: OnboardingAnswers | ConsultationAnswers,
+): NormalizedProfile {
+  // v2 answers (language-neutral ids) go through their own path; anything
+  // else is a pre-rebuild consultation and is normalized EXACTLY as before.
+  if ((answers as ConsultationAnswers).v === 2) return normalizeV2(answers as ConsultationAnswers);
+  return normalizeLegacy(answers as OnboardingAnswers);
+}
+
+function normalizeLegacy(answers: OnboardingAnswers): NormalizedProfile {
   const currency = getCurrencyForCountry(answers.country);
   const investmentBrackets = getInvestmentBrackets(currency.code);
   const annualIncomeBrackets = getAnnualIncomeBrackets(currency.code);

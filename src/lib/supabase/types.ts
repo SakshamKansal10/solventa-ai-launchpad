@@ -17,6 +17,16 @@ export interface Database {
           id: string;
           full_name: string | null;
           email: string | null;
+          /** Added by migration 0010 — null = never chosen. */
+          locale: "en" | "hi" | null;
+          /** Storage path of the custom avatar inside the "avatars" bucket. */
+          avatar_path: string | null;
+          avatar_updated_at: string | null;
+          notification_prefs: Json;
+          /** Set only by an explicit Choose/Restore Direction — honoured only
+           * while newer than the latest consultation (see direction.ts). */
+          active_opportunity_id: string | null;
+          active_opportunity_set_at: string | null;
           created_at: string;
           updated_at: string;
         };
@@ -155,10 +165,12 @@ export interface Database {
           id: string;
           user_id: string;
           opportunity_id: string;
-          status: "available" | "active" | "archived";
+          status: "available" | "building" | "active" | "completed" | "failed" | "archived";
           ai_model: string | null;
           activated_at: string | null;
           north_star: string | null;
+          build_error: string | null;
+          completed_at: string | null;
           created_at: string;
           updated_at: string;
         };
@@ -212,6 +224,20 @@ export interface Database {
           /** The founder's own short reflection on finishing this week —
            * the real signal fed into generating the NEXT week's detail. */
           founder_reflection: string | null;
+          // Added by migration 0010.
+          roadmap_id: string | null;
+          /** 1-based position across the WHOLE roadmap (week_number is only
+           * unique within a phase in older data). */
+          global_number: number | null;
+          generation_status: "idle" | "generating" | "ready" | "failed";
+          generation_started_at: string | null;
+          generation_attempts: number;
+          generation_error: string | null;
+          reflection_outcome: "stronger" | "as_expected" | "weaker" | "mixed" | null;
+          reflection_blocker: string | null;
+          reflection_note: string | null;
+          closed_at: string | null;
+          evidence_target: number | null;
         };
         Insert: Partial<Database["public"]["Tables"]["roadmap_weeks"]["Row"]> & {
           phase_id: string;
@@ -243,6 +269,12 @@ export interface Database {
           done_when: string;
           status: "pending" | "in_progress" | "done" | "blocked";
           blocked_reason: string | null;
+          // Added by migration 0010.
+          steps: Json | null;
+          evidence_required: boolean;
+          assumption_category: string | null;
+          started_at: string | null;
+          completed_at: string | null;
           created_at: string;
           updated_at: string;
         };
@@ -340,6 +372,115 @@ export interface Database {
           body: string;
         };
         Update: Partial<Database["public"]["Tables"]["founder_notifications"]["Row"]>;
+        Relationships: [];
+      };
+      consultation_drafts: {
+        Row: {
+          user_id: string;
+          answers: Json;
+          screen_key: string | null;
+          stage: number | null;
+          schema_version: number;
+          locale: string | null;
+          updated_at: string;
+        };
+        Insert: Partial<Database["public"]["Tables"]["consultation_drafts"]["Row"]> & {
+          user_id: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["consultation_drafts"]["Row"]>;
+        Relationships: [];
+      };
+      content_translations: {
+        Row: {
+          id: string;
+          user_id: string;
+          entity_type: string;
+          entity_id: string;
+          locale: "en" | "hi";
+          source_hash: string;
+          payload_json: Json;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: Partial<Database["public"]["Tables"]["content_translations"]["Row"]> & {
+          user_id: string;
+          entity_type: string;
+          entity_id: string;
+          locale: "en" | "hi";
+          source_hash: string;
+          payload_json: Json;
+        };
+        Update: Partial<Database["public"]["Tables"]["content_translations"]["Row"]>;
+        Relationships: [];
+      };
+      proof_assumptions: {
+        Row: {
+          id: string;
+          user_id: string;
+          opportunity_id: string;
+          position: number;
+          title: string;
+          category:
+            | "problem"
+            | "willingness_to_pay"
+            | "distribution"
+            | "delivery"
+            | "retention"
+            | "pricing"
+            | "competition"
+            | "other";
+          why_it_matters: string | null;
+          next_test: string | null;
+          success_threshold: number;
+          origin: "ai" | "template" | "user";
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: Partial<Database["public"]["Tables"]["proof_assumptions"]["Row"]> & {
+          user_id: string;
+          opportunity_id: string;
+          position: number;
+          title: string;
+          category: Database["public"]["Tables"]["proof_assumptions"]["Row"]["category"];
+        };
+        Update: Partial<Database["public"]["Tables"]["proof_assumptions"]["Row"]>;
+        Relationships: [];
+      };
+      proof_evidence: {
+        Row: {
+          id: string;
+          user_id: string;
+          opportunity_id: string;
+          assumption_id: string | null;
+          evidence_type:
+            | "interview"
+            | "quote"
+            | "payment"
+            | "observation"
+            | "experiment"
+            | "analytics"
+            | "document"
+            | "other";
+          source_person: string | null;
+          occurred_on: string;
+          summary: string;
+          signal: "supports" | "neutral" | "contradicts";
+          url: string | null;
+          file_path: string | null;
+          file_name: string | null;
+          task_id: string | null;
+          week_id: string | null;
+          legacy_evidence_id: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: Partial<Database["public"]["Tables"]["proof_evidence"]["Row"]> & {
+          user_id: string;
+          opportunity_id: string;
+          evidence_type: Database["public"]["Tables"]["proof_evidence"]["Row"]["evidence_type"];
+          summary: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["proof_evidence"]["Row"]>;
         Relationships: [];
       };
       research_cache: {

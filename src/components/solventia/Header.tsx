@@ -25,13 +25,14 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { getCurrentUser, signOut } from "@/lib/actions/auth";
 import { useLocale } from "@/lib/i18n/LocaleProvider";
+import type { MessageKey } from "@/lib/i18n";
 
 /** Exactly four items, exactly these anchors — PRODUCT and HOW IT WORKS
  * are same-page scrolls (only meaningful on "/"), FOR ORGANIZATIONS and
  * ABOUT are real routes. No "Explore Ideas" (Solventia isn't a public
  * idea catalogue) and no top-level "Roadmaps" (roadmaps live inside
  * Product / How It Works). */
-const SCROLL_NAV: { labelKey: string; id: string }[] = [
+const SCROLL_NAV: { labelKey: MessageKey; id: string }[] = [
   { labelKey: "nav.product", id: "founder-signal" },
   { labelKey: "nav.howItWorks", id: "how-it-works" },
 ];

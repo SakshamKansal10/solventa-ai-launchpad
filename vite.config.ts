@@ -24,6 +24,10 @@ export default defineConfig({
   vite: {
     server: {
       allowedHosts: ["lagged-catching-prayer.ngrok-free.dev"],
+      // Playwright writes traces/screenshots inside the project; without this
+      // the dev server treats every artifact as a source change and hot-reloads
+      // the page in the middle of an E2E run.
+      watch: { ignored: ["**/e2e-results/**", "**/e2e-report/**", "**/.e2e-tmp/**"] },
     },
   },
 });

@@ -18,6 +18,19 @@ import type { Json } from "@/lib/supabase/types";
 // the real interpretation.
 const onboardingAnswersSchema = z.record(z.string(), z.unknown());
 
+/** The consultation is now a real, saved analysis — its in-progress server
+ * draft has done its job. Best-effort: a leftover draft is harmless. */
+async function clearConsultationDraft(
+  supabase: Awaited<ReturnType<typeof requireUser>>["supabase"],
+  userId: string,
+) {
+  try {
+    await supabase.from("consultation_drafts").delete().eq("user_id", userId);
+  } catch {
+    // Table missing (migration 0010 not applied) or transient — ignore.
+  }
+}
+
 function hashProfile(profile: NormalizedProfile): string {
   return crypto.createHash("sha256").update(JSON.stringify(profile)).digest("hex");
 }
@@ -71,6 +84,7 @@ export const completeConsultation = createServerFn({ method: "POST" })
       .eq("profile_hash", profileHash)
       .maybeSingle();
     if (existingDna) {
+      await clearConsultationDraft(supabase, user.id);
       return {
         businessDnaId: existingDna.id as string,
         founderDNA: existingDna.founder_analysis as unknown as Awaited<
@@ -135,6 +149,7 @@ export const completeConsultation = createServerFn({ method: "POST" })
     // committed. Converge on its row rather than surface an error after a
     // Gemini call that (in this one narrow case) turned out to be wasted.
     if (dnaError?.code === "23505") {
+      await clearConsultationDraft(supabase, user.id);
       const { data: winner, error: winnerError } = await supabase
         .from("business_dna")
         .select("id, founder_analysis")
@@ -291,6 +306,7 @@ export const completeConsultation = createServerFn({ method: "POST" })
       link: `/dashboard?consultation=${dnaRow.id}`,
     });
 
+    await clearConsultationDraft(supabase, user.id);
     return { businessDnaId: dnaRow.id as string, founderDNA: pkg.founderDNA };
   });
 
