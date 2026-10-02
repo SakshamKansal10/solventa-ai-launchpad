@@ -48,6 +48,18 @@ test.describe("consultation — seven stages", () => {
     await expect(rail).toContainText("College student");
     await expect(rail).toContainText("10–20 hrs");
     await expect(rail).toContainText("₹5 lakh – ₹10 lakh");
+    // A living panel, not a static receipt: it says what it's for.
+    await expect(rail).toContainText("These signals shape your opportunities.");
+  });
+
+  test("a newly confirmed fact briefly highlights in the Founder Signal panel, then settles", async ({
+    page,
+  }) => {
+    await page.getByTestId("input-age").fill("21");
+    await page.getByTestId("opt-status-college_student").click();
+    const statusFact = page.getByTestId("profile-fact-status");
+    await expect(statusFact).toHaveAttribute("data-just-arrived", "true");
+    await expect(statusFact).not.toHaveAttribute("data-just-arrived", "true", { timeout: 2000 });
   });
 
   test("Back always works and keeps answers", async ({ page }) => {

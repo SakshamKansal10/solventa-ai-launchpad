@@ -21,6 +21,7 @@ import { getProofOverview } from "@/lib/actions/proof";
 import { getRoadmapView, type CloseWeekResult } from "@/lib/actions/roadmap";
 import { useLocale } from "@/lib/i18n/LocaleProvider";
 import { qk, useFounderState } from "@/lib/queries";
+import { useTranslatedTitle } from "@/lib/use-translation";
 
 const TABS = ["week", "plan", "progress"] as const;
 type Tab = (typeof TABS)[number];
@@ -153,6 +154,7 @@ function RoadmapWorkspace({
     view?.weeks.filter((w) => w.state === "completed").at(-1) ??
     null;
   const text = useRoadmapText(view, shownWeek);
+  const opportunityTitle = useTranslatedTitle(opportunityId, view?.roadmap.opportunityTitle);
 
   if (query.isPending) return <PageSkeleton label={t("shell.skeleton.loading")} />;
   if (query.isError || !view) {
@@ -161,6 +163,9 @@ function RoadmapWorkspace({
 
   const tab: Tab = search.tab ?? "week";
   const currentPhase = view.phases.find((p) => p.id === view.currentPhaseId) ?? null;
+  const currentPhaseNumber = currentPhase
+    ? view.phases.findIndex((p) => p.id === currentPhase.id) + 1
+    : null;
   const selectedPhase = view.phases.find((p) => p.id === search.phase) ?? null;
   const setSearch = (
     patch: Partial<{ tab: Tab; week: number | undefined; phase: string | undefined }>,
@@ -188,7 +193,7 @@ function RoadmapWorkspace({
       <header className="flex flex-wrap items-end justify-between gap-6">
         <div className="min-w-0">
           <Eyebrow>{t("rm.subtitle")}</Eyebrow>
-          <h1 className="sol-page-title mt-2 max-w-[24ch]">{view.roadmap.opportunityTitle}</h1>
+          <h1 className="sol-page-title mt-2 max-w-[24ch]">{opportunityTitle}</h1>
           {view.roadmap.northStar && (
             <p className="sol-body sol-prose mt-3 text-sol-secondary" data-testid="north-star">
               <span className="font-semibold text-sol-ink">{t("rm.northStar")}: </span>
@@ -197,28 +202,41 @@ function RoadmapWorkspace({
           )}
         </div>
         <dl
-          className="flex gap-6 rounded-2xl border border-sol-border bg-sol-surface px-5 py-3"
+          className="grid min-w-[16rem] max-w-[24rem] gap-4 rounded-2xl border border-sol-border bg-sol-surface px-5 py-4 sm:grid-cols-2"
           data-testid="roadmap-now"
         >
-          <div>
-            <dt className="text-[0.875rem] font-semibold text-sol-secondary">
-              {t("rm.currentWeek")}
+          <div className="min-w-0">
+            <dt className="text-[0.8125rem] font-bold uppercase tracking-[0.1em] text-sol-secondary">
+              {t("rm.header.current")}
             </dt>
             <dd
-              className="text-[1.25rem] font-semibold text-sol-ink"
+              className="mt-1 text-[1.125rem] font-semibold leading-snug text-sol-ink"
               data-testid="current-week-number"
             >
-              {currentWeek
-                ? t("common.weekN", { n: String(currentWeek.number).padStart(2, "0") })
+              {currentWeek && currentPhaseNumber
+                ? t("rm.header.currentValue", {
+                    phase: currentPhaseNumber,
+                    week: String(currentWeek.number).padStart(2, "0"),
+                  })
                 : "—"}
             </dd>
+            <dd className="truncate text-[0.9375rem] text-sol-secondary">
+              {currentPhase ? text.phaseTitle(currentPhase.id, currentPhase.title) : ""}
+            </dd>
           </div>
-          <div className="min-w-0">
-            <dt className="text-[0.875rem] font-semibold text-sol-secondary">
-              {t("rm.currentPhase")}
+          <div className="min-w-0" data-testid="next-checkpoint">
+            <dt className="text-[0.8125rem] font-bold uppercase tracking-[0.1em] text-sol-secondary">
+              {t("rm.header.checkpoint")}
             </dt>
-            <dd className="max-w-[16rem] truncate text-[1.25rem] font-semibold text-sol-ink">
-              {currentPhase ? text.phaseTitle(currentPhase.id, currentPhase.title) : "—"}
+            <dd className="mt-1 text-[1.125rem] font-semibold leading-snug text-sol-ink">
+              {currentWeek ? t("rm.header.checkpointReview", { n: currentWeek.number }) : "—"}
+            </dd>
+            <dd className="line-clamp-2 text-[0.9375rem] text-sol-secondary">
+              {currentWeek
+                ? shownWeek?.id === currentWeek.id
+                  ? text.detail.successThreshold(currentWeek.successThreshold)
+                  : currentWeek.successThreshold
+                : ""}
             </dd>
           </div>
         </dl>
@@ -246,7 +264,7 @@ function RoadmapWorkspace({
               key={key}
               value={key}
               data-testid={`tab-${key}`}
-              className="min-h-11 flex-1 rounded-xl px-6 text-[1rem] font-semibold uppercase tracking-[0.05em] data-[state=active]:bg-sol-surface data-[state=active]:text-sol-violet-deep data-[state=active]:shadow-sm sm:flex-none"
+              className="min-h-11 flex-1 rounded-xl px-2 text-[0.9375rem] font-semibold uppercase tracking-[0.02em] sm:px-6 sm:text-[1rem] sm:tracking-[0.05em] text-sol-secondary data-[state=active]:bg-sol-surface data-[state=active]:text-sol-violet-deep data-[state=active]:shadow-sm sm:flex-none"
             >
               {t(`rm.tab.${key}` as const)}
             </TabsTrigger>

@@ -188,7 +188,9 @@
   --sol-violet-mist: var(--sol-violet-soft);
   --sol-violet-ultralight: oklch(0.9726 0.0149 298.6); /* #F7F4FF */
   --sol-champagne: oklch(0.7242 0.0883 80.1); /* #C3A064 */
-  --sol-champagne-deep: oklch(0.5978 0.0868 81.1); /* #9A7A3F — text-safe on ivory */
+  --sol-champagne-deep: oklch(
+    0.5108 0.0882 82.7
+  ); /* #7F6122 — 5.5:1 on pearl, 4.8:1 on champagne-soft */
   --sol-champagne-soft: oklch(0.9373 0.0251 81.1); /* #F3E9D8 */
   --sol-border: oklch(0.9003 0.0155 77.1); /* #E4DDD3 */
   --sol-border-strong: oklch(0.8455 0.0251 71.4); /* #D7CABB */
@@ -196,7 +198,7 @@
   --sol-warning-soft: oklch(0.9457 0.0163 46.6); /* #F7EAE4 */
   --sol-danger: var(--sol-warning);
   /* Darkened from #85808A: important text must never be faint grey. */
-  --sol-muted: oklch(0.5329 0.0194 304.5); /* #6F6A76 */
+  --sol-muted: oklch(0.5049 0.0197 304.5); /* #67626E — 4.9:1 on the deepest ivory */
 
   /* Motion tokens — one easing, three durations. No bounce. */
   --sol-ease: cubic-bezier(0.22, 1, 0.36, 1);
@@ -333,6 +335,17 @@
     font-family: var(--font-display);
   }
 
+  /* Cormorant's default figures are old-style (a "1" reads as a small capital
+     I, a "5" drops below the line). Numbers are data here — weeks, amounts,
+     counts — so every display face uses lining figures. */
+  h1,
+  h2,
+  h3,
+  h4,
+  .font-display {
+    font-variant-numeric: lining-nums proportional-nums;
+  }
+
   /* Devanagari carries tall shirorekha + matras: give Hindi more leading so
      lines never collide, and keep long words from overflowing narrow cards. */
   :lang(hi) {
@@ -447,6 +460,8 @@
 }
 
 @utility sol-eyebrow {
+  /* Always the UI face, even when the label is an <h2>/<h3> (which default to the serif). */
+  font-family: var(--font-sans);
   font-size: 0.875rem;
   font-weight: 700;
   letter-spacing: 0.12em;

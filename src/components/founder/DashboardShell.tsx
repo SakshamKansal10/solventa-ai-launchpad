@@ -1,6 +1,6 @@
 import { createContext, useCallback, useContext, useMemo, useState, type ReactNode } from "react";
 import { Link, useNavigate, useParams, useRouterState } from "@tanstack/react-router";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   Compass,
   FlaskConical,
@@ -26,12 +26,14 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { signOut } from "@/lib/actions/auth";
+import { getRoadmapView } from "@/lib/actions/roadmap";
 import { useMediaQuery } from "@/hooks/use-media-query";
 import { useLocale } from "@/lib/i18n/LocaleProvider";
 import type { MessageKey } from "@/lib/i18n";
-import { useCurrentUserQuery, useFounderState } from "@/lib/queries";
+import { qk, useCurrentUserQuery, useFounderState } from "@/lib/queries";
+import { useTranslatedTitle } from "@/lib/use-translation";
 import { cn } from "@/lib/utils";
-import { AskSolPanel } from "./AskSol";
+import { AskSolPanel, type AskSolRoute } from "./AskSol";
 import { Avatar } from "./Avatar";
 import { NotificationBell } from "./NotificationBell";
 
@@ -76,7 +78,10 @@ function titleKeyFor(pathname: string): MessageKey {
 }
 
 interface AskSolContextValue {
-  open: () => void;
+  /** Opens Ask Sol, optionally handing it a question to send straight away. */
+  open: (question?: string) => void;
+  /** Tells Ask Sol which assumption the founder has open in Proof (or none). */
+  setAssumption: (title: string | null) => void;
 }
 const AskSolContext = createContext<AskSolContextValue | null>(null);
 
@@ -219,7 +224,10 @@ export function DashboardShell({ children }: { children: ReactNode }) {
   // Ask Sol's context: the opportunity being viewed, else the founder's direction.
   const viewingId = pathname.startsWith("/dashboard/opportunities/") ? (params.id ?? null) : null;
   const contextId = viewingId ?? founder.data?.direction.selectedId ?? null;
-  const contextTitle = contextId ? (founder.data?.briefs[contextId]?.title ?? null) : null;
+  const contextTitle = useTranslatedTitle(
+    contextId,
+    contextId ? (founder.data?.briefs[contextId]?.title ?? null) : null,
+  );
   const hasRoadmap = Boolean(
     founder.data &&
     ["roadmap_active", "roadmap_building", "roadmap_completed"].includes(
@@ -227,9 +235,43 @@ export function DashboardShell({ children }: { children: ReactNode }) {
     ),
   );
 
-  const openAsk = useCallback(() => setAskOpen(true), []);
+  // Ask Sol's context header (spec: "this visually demonstrates that Sol
+  // knows where the founder currently is") — only fetched when a roadmap
+  // actually exists; reuses the exact query every roadmap page already
+  // populates, so it's usually already cached and free.
+  const roadmapId =
+    founder.data?.direction.roadmap?.status === "active" ||
+    founder.data?.direction.roadmap?.status === "completed"
+      ? (founder.data.direction.roadmap.id ?? null)
+      : null;
+  const roadmapView = useQuery({
+    queryKey: qk.roadmap(roadmapId),
+    queryFn: () => getRoadmapView({ data: { roadmapId: roadmapId! } }),
+    enabled: Boolean(roadmapId),
+    staleTime: 15_000,
+  });
+  const currentWeek = roadmapView.data?.weeks.find((w) => w.id === roadmapView.data?.currentWeekId);
+  const currentPhase = roadmapView.data?.phases.find(
+    (p) => p.id === roadmapView.data?.currentPhaseId,
+  );
+  const currentMission = currentWeek?.missions.find((m) => m.state === "in_progress");
+
+  const [pendingQuestion, setPendingQuestion] = useState<string | null>(null);
+  const [assumptionTitle, setAssumptionTitle] = useState<string | null>(null);
+  const openAsk = useCallback((question?: string) => {
+    if (typeof question === "string" && question.trim()) setPendingQuestion(question);
+    setAskOpen(true);
+  }, []);
   const closeAsk = useCallback(() => setAskOpen(false), []);
-  const askValue = useMemo(() => ({ open: openAsk }), [openAsk]);
+  const clearQuestion = useCallback(() => setPendingQuestion(null), []);
+  const askValue = useMemo(() => ({ open: openAsk, setAssumption: setAssumptionTitle }), [openAsk]);
+  const askRoute: AskSolRoute = pathname.startsWith("/dashboard/proof")
+    ? "proof"
+    : pathname.startsWith("/dashboard/roadmap")
+      ? "roadmap"
+      : pathname.startsWith("/dashboard/opportunities/")
+        ? "opportunity"
+        : "dashboard";
 
   async function handleSignOut() {
     try {
@@ -282,7 +324,7 @@ export function DashboardShell({ children }: { children: ReactNode }) {
               </p>
             </div>
             <div className="flex items-center gap-2 sm:gap-3">
-              <LanguageSwitcher />
+              <LanguageSwitcher compact />
               <NotificationBell />
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
@@ -360,6 +402,13 @@ export function DashboardShell({ children }: { children: ReactNode }) {
                   opportunityId={contextId}
                   opportunityTitle={contextTitle}
                   hasRoadmap={hasRoadmap}
+                  route={askRoute}
+                  assumptionTitle={askRoute === "proof" ? assumptionTitle : null}
+                  initialQuestion={pendingQuestion}
+                  onQuestionConsumed={clearQuestion}
+                  weekNumber={currentWeek?.number ?? null}
+                  phaseTitle={currentPhase?.title ?? null}
+                  missionTitle={currentMission?.title ?? null}
                   onClose={closeAsk}
                 />
               )}
@@ -382,6 +431,13 @@ export function DashboardShell({ children }: { children: ReactNode }) {
               opportunityId={contextId}
               opportunityTitle={contextTitle}
               hasRoadmap={hasRoadmap}
+              route={askRoute}
+              assumptionTitle={askRoute === "proof" ? assumptionTitle : null}
+              initialQuestion={pendingQuestion}
+              onQuestionConsumed={clearQuestion}
+              weekNumber={currentWeek?.number ?? null}
+              phaseTitle={currentPhase?.title ?? null}
+              missionTitle={currentMission?.title ?? null}
               onClose={closeAsk}
             />
           </SheetContent>
@@ -401,7 +457,7 @@ export function DashboardShell({ children }: { children: ReactNode }) {
       {!askOpen && (
         <button
           type="button"
-          onClick={openAsk}
+          onClick={() => openAsk()}
           aria-label={t("askSol.open")}
           data-testid="ask-sol-launcher"
           className="fixed bottom-5 right-4 z-30 flex h-14 items-center gap-2 rounded-full bg-sol-navy px-5 text-[1rem] font-semibold text-white shadow-[0_12px_32px_rgba(24,33,61,.28)] transition-transform duration-[180ms] hover:-translate-y-0.5 sm:right-7"

@@ -11,6 +11,10 @@ import {
   templateAssumptions,
   type ProofAssumptionPlan,
 } from "@/lib/ai/prompts/proof-assumptions";
+import {
+  interpretEvidence,
+  type EvidenceInterpretation,
+} from "@/lib/ai/prompts/evidence-interpretation";
 import { getSchemaCapabilities } from "@/lib/schema-capabilities.server";
 import {
   DEFAULT_SUCCESS_THRESHOLD,
@@ -29,6 +33,9 @@ export const EVIDENCE_TYPES = [
   "experiment",
   "analytics",
   "document",
+  "url",
+  "screenshot",
+  "survey",
   "other",
 ] as const;
 
@@ -36,6 +43,8 @@ export interface EvidenceDTO {
   id: string;
   assumptionId: string | null;
   type: EvidenceType;
+  /** Optional short headline the founder gave it. */
+  title: string | null;
   sourcePerson: string | null;
   occurredOn: string;
   summary: string;
@@ -80,6 +89,8 @@ export interface ProofOverview {
   unassigned: EvidenceDTO[];
   needsGeneration: boolean;
   counts: Record<ProofState, number>;
+  /** Whether evidence can carry a title on this database (migration 0012). */
+  titleSupported: boolean;
 }
 
 type Db = SupabaseClient<Database>;
@@ -99,6 +110,7 @@ function toEvidenceDTO(row: EvidenceRow, taskTitles: Map<string, string>): Evide
     id: row.id,
     assumptionId: row.assumption_id,
     type: row.evidence_type,
+    title: row.title ?? null,
     sourcePerson: row.source_person,
     occurredOn: row.occurred_on,
     summary: row.summary,
@@ -198,6 +210,7 @@ export async function loadProofOverview(
       unassigned: [],
       needsGeneration: false,
       counts: { ...EMPTY_COUNTS },
+      titleSupported: false,
     };
   }
 
@@ -228,6 +241,7 @@ export async function loadProofOverview(
     unassigned: evidence.filter((e) => !e.assumption_id).map((e) => toEvidenceDTO(e, taskTitles)),
     needsGeneration: assumptions.length === 0,
     counts: summarizeStates(assumptions.map((a) => a.state)),
+    titleSupported: caps.evidenceTitle,
   };
 }
 
@@ -307,6 +321,7 @@ const evidenceInput = z.object({
   opportunityId: z.string().uuid(),
   assumptionId: z.string().uuid(),
   evidenceType: z.enum(EVIDENCE_TYPES),
+  title: z.string().trim().max(120).optional(),
   sourcePerson: z.string().trim().max(120).optional(),
   occurredOn: z
     .string()
@@ -399,6 +414,7 @@ export const addProofEvidence = createServerFn({ method: "POST" })
           opportunity_id: data.opportunityId,
           assumption_id: data.assumptionId,
           evidence_type: data.evidenceType,
+          ...(caps.evidenceTitle && data.title ? { title: data.title } : {}),
           source_person: data.sourcePerson || null,
           occurred_on: data.occurredOn ?? new Date().toISOString().slice(0, 10),
           summary: data.summary,
@@ -429,6 +445,7 @@ export const updateProofEvidence = createServerFn({ method: "POST" })
       id: z.string().uuid(),
       assumptionId: z.string().uuid().optional(),
       evidenceType: z.enum(EVIDENCE_TYPES).optional(),
+      title: z.string().trim().max(120).nullable().optional(),
       sourcePerson: z.string().trim().max(120).nullable().optional(),
       occurredOn: z
         .string()
@@ -441,6 +458,7 @@ export const updateProofEvidence = createServerFn({ method: "POST" })
   )
   .handler(async ({ data }) => {
     const { supabase, user } = await requireUser();
+    const caps = await getSchemaCapabilities(supabase);
     const { data: current } = await supabase
       .from("proof_evidence")
       .select("id, opportunity_id")
@@ -465,6 +483,7 @@ export const updateProofEvidence = createServerFn({ method: "POST" })
     };
     if (data.assumptionId) patch.assumption_id = data.assumptionId;
     if (data.evidenceType) patch.evidence_type = data.evidenceType;
+    if (caps.evidenceTitle && data.title !== undefined) patch.title = data.title || null;
     if (data.sourcePerson !== undefined) patch.source_person = data.sourcePerson || null;
     if (data.occurredOn) patch.occurred_on = data.occurredOn;
     if (data.summary) patch.summary = data.summary;
@@ -478,6 +497,45 @@ export const updateProofEvidence = createServerFn({ method: "POST" })
       .eq("user_id", user.id);
     if (error) throw new Error(error.message);
     return { ok: true as const };
+  });
+
+/** A second opinion on which way ONE piece of evidence points. It only ever
+ * suggests: the founder confirms the signal themselves before anything is
+ * saved, and nothing here writes to the database. */
+export const interpretProofEvidence = createServerFn({ method: "POST" })
+  .validator(
+    z.object({
+      opportunityId: z.string().uuid(),
+      assumptionId: z.string().uuid(),
+      evidenceType: z.enum(EVIDENCE_TYPES),
+      sourcePerson: z.string().trim().max(120).optional(),
+      summary: z.string().trim().min(1).max(2000),
+      locale: z.enum(["en", "hi"]).optional(),
+    }),
+  )
+  .handler(async ({ data }): Promise<EvidenceInterpretation> => {
+    const { supabase, user } = await requireUser();
+    const caps = await getSchemaCapabilities(supabase);
+    if (!caps.proof) throw new Error("PROOF_UNAVAILABLE");
+    await ownedOpportunity(supabase, user.id, data.opportunityId);
+    const { data: assumption } = await supabase
+      .from("proof_assumptions")
+      .select("title, why_it_matters")
+      .eq("id", data.assumptionId)
+      .eq("opportunity_id", data.opportunityId)
+      .eq("user_id", user.id)
+      .maybeSingle();
+    if (!assumption) throw new Error("Assumption not found");
+    return interpretEvidence(
+      {
+        assumption: assumption.title,
+        whyItMatters: assumption.why_it_matters,
+        evidenceType: data.evidenceType,
+        sourcePerson: data.sourcePerson,
+        summary: data.summary,
+      },
+      data.locale ?? "en",
+    );
   });
 
 export const deleteProofEvidence = createServerFn({ method: "POST" })

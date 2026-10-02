@@ -271,4 +271,48 @@ describe("completeConsultation idempotency (mocked Supabase + Gemini, no live ca
     expect(second.businessDnaId).not.toBe(first.businessDnaId);
     expect(businessDnaRows).toHaveLength(2);
   });
+
+  it("Gemini failing (even after its own internal retries) persists nothing — no partial business_dna row", async () => {
+    const { supabase, businessDnaRows } = createFakeSupabase();
+    requireUserMock.mockResolvedValue({ supabase, user: FAKE_USER } as never);
+    generateIntelligencePackageMock.mockRejectedValue(
+      Object.assign(new Error("Gemini request failed after retry: malformed JSON"), {
+        category: "GEMINI_MALFORMED_JSON",
+      }),
+    );
+
+    await expect(
+      completeConsultation({
+        data: { answers: FIXTURE_PROFILE_ANSWERS as unknown as Record<string, unknown> },
+      }),
+    ).rejects.toThrow("Gemini request failed after retry");
+
+    expect(businessDnaRows).toHaveLength(0);
+  });
+
+  it("a retried submission after a Gemini failure succeeds normally and creates exactly one row (no duplicate from the failed attempt)", async () => {
+    const { supabase, businessDnaRows } = createFakeSupabase();
+    requireUserMock.mockResolvedValue({ supabase, user: FAKE_USER } as never);
+    generateIntelligencePackageMock
+      .mockRejectedValueOnce(
+        Object.assign(new Error("Gemini request failed after retry: malformed JSON"), {
+          category: "GEMINI_MALFORMED_JSON",
+        }),
+      )
+      .mockImplementationOnce(async () => fakePackage() as never);
+
+    await expect(
+      completeConsultation({
+        data: { answers: FIXTURE_PROFILE_ANSWERS as unknown as Record<string, unknown> },
+      }),
+    ).rejects.toThrow();
+
+    const retried = await completeConsultation({
+      data: { answers: FIXTURE_PROFILE_ANSWERS as unknown as Record<string, unknown> },
+    });
+
+    expect(generateIntelligencePackageMock).toHaveBeenCalledTimes(2);
+    expect(businessDnaRows).toHaveLength(1);
+    expect(retried.businessDnaId).toBe(businessDnaRows[0].id);
+  });
 });

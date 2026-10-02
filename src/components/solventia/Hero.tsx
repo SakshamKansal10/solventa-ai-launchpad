@@ -1,3 +1,4 @@
+import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { motion, useReducedMotion } from "motion/react";
 import { ArrowRight } from "lucide-react";
@@ -5,16 +6,39 @@ import { scrollToSection } from "@/hooks/use-active-section";
 import { useLocale } from "@/lib/i18n/LocaleProvider";
 import type { MessageKey } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
+import heroImage from "@/assets/hero-founder-workspace.png";
+import { HeroIntelligenceNetwork } from "./HeroIntelligenceNetwork";
 
 const fadeUp = {
   hidden: { opacity: 0, y: 24 },
   show: { opacity: 1, y: 0 },
 };
 
-/** The three minimal Solventia indicators — real product concepts (founder
- * fit, proof, this week), each a plain WORD, never a number: a made-up score
- * on a marketing page reads as a claim about a real person. Card B is hidden
- * on mobile (only two shown there). */
+/** The three headline lines, revealed one after another from behind a mask.
+ * "Your Dream." stays warm white, "Our Intelligence." takes a restrained violet
+ * (a lightened tint of the brand violet so it reads on the dark photograph) and
+ * "Real Impact." takes champagne. */
+const HEADLINE_LINES: {
+  key: MessageKey;
+  className?: string;
+  style?: React.CSSProperties;
+}[] = [
+  { key: "hero.headline1", className: "text-white" },
+  { key: "hero.headline2", style: { color: "oklch(0.74 0.12 287.3)" } },
+  { key: "hero.headline3", className: "text-sol-champagne" },
+];
+
+/** Three product-demo signal cards over the photograph — illustrative, not a
+ * claim about the visitor (see spec item 148). Real product concepts
+ * (Founder Fit / Proof Signal / this week), each a plain word, never a
+ * fabricated number. Max 3 visible at once; the middle one hides on mobile
+ * so only 2 compete with the headline there.
+ *
+ * All three are positioned in the clear sky/skyline band (top ~10-34%) —
+ * the photo's own laptop occupies roughly the bottom 60% of the right
+ * half, and an earlier pass placed cards there, producing a confusing
+ * overlap with the laptop's own baked-in fake screen UI. Never place a
+ * card below ~top-35% on the right side of this specific image. */
 const SIGNAL_CARDS: {
   labelKey: MessageKey;
   valueKey: MessageKey;
@@ -28,18 +52,18 @@ const SIGNAL_CARDS: {
   {
     labelKey: "hero.card.fit",
     valueKey: "hero.card.fitValue",
-    className: "right-[2.5%] top-[28%]",
-    width: 196,
-    duration: 9,
+    className: "right-[3%] top-[11%]",
+    width: 200,
+    duration: 10,
     delay: 0,
     dot: "champagne",
   },
   {
     labelKey: "hero.card.proof",
     valueKey: "hero.card.proofValue",
-    className: "right-[12%] top-[52%]",
-    width: 204,
-    duration: 11,
+    className: "right-[30%] top-[11%]",
+    width: 208,
+    duration: 12,
     delay: 1.4,
     dot: "violet",
     hideOnMobile: true,
@@ -47,9 +71,9 @@ const SIGNAL_CARDS: {
   {
     labelKey: "hero.card.week",
     valueKey: "hero.card.weekValue",
-    className: "right-[3.5%] top-[73%]",
-    width: 176,
-    duration: 8,
+    className: "right-[3%] top-[26%]",
+    width: 180,
+    duration: 8.5,
     delay: 0.8,
     dot: "gradient",
   },
@@ -72,158 +96,199 @@ function StatusDot({ tone }: { tone: "champagne" | "violet" | "gradient" }) {
   );
 }
 
-function SignalCard({ card }: { card: (typeof SIGNAL_CARDS)[number] }) {
+/** Glass per the spec's exact recipe: translucent white (not warm cream —
+ * the card now floats over the photograph itself, not a flat pearl
+ * background), 14–20px blur, thin border, 14–18px radius. */
+function SignalCard({
+  card,
+  parallax,
+}: {
+  card: (typeof SIGNAL_CARDS)[number];
+  parallax: { x: number; y: number };
+}) {
   const reduceMotion = useReducedMotion();
   const { t } = useLocale();
   return (
     <motion.div
       initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.9, delay: 0.6 + card.delay * 0.15, ease: [0.22, 1, 0.36, 1] }}
+      transition={{ duration: 0.9, delay: 1.7 + card.delay * 0.15, ease: [0.22, 1, 0.36, 1] }}
       className={`group absolute ${card.className} ${card.hideOnMobile ? "hidden sm:block" : ""}`}
-      style={{ width: card.width }}
+      style={{
+        width: card.width,
+        transform: `translate3d(${parallax.x * 2}px, ${parallax.y * 2}px, 0)`,
+      }}
     >
       <motion.div
-        animate={reduceMotion ? undefined : { y: [-3, 3, -3] }}
+        animate={
+          reduceMotion ? undefined : { y: [-4, 4, -4], x: [-2, 2, -2], rotate: [-0.5, 0.5, -0.5] }
+        }
         whileHover={{ y: -2 }}
         transition={{
           y: { duration: card.duration, repeat: Infinity, ease: "easeInOut" },
+          x: { duration: card.duration * 1.15, repeat: Infinity, ease: "easeInOut" },
+          rotate: { duration: card.duration * 1.3, repeat: Infinity, ease: "easeInOut" },
         }}
-        className="flex h-[68px] w-full items-center gap-2.5 rounded-[17px] border border-[rgba(214,203,190,0.78)] bg-[rgba(255,253,250,0.91)] px-4 shadow-[0_12px_34px_rgba(23,32,61,0.075)] backdrop-blur-[14px] transition-colors duration-[180ms] group-hover:border-[rgba(114,87,216,0.28)]"
+        className="flex h-[66px] w-full items-center gap-2.5 rounded-[16px] border border-white/20 bg-white/[0.12] px-4 shadow-[0_12px_34px_rgba(8,10,20,0.28)] backdrop-blur-[16px] transition-colors duration-[180ms] group-hover:border-white/35"
       >
         <StatusDot tone={card.dot} />
         <div className="min-w-0">
-          <p className="text-[14px] font-semibold leading-tight text-sol-secondary">
+          <p className="text-[13.5px] font-semibold leading-tight text-white/75">
             {t(card.labelKey)}
           </p>
-          <p className="mt-1 text-[17px] font-bold leading-none text-sol-ink">{t(card.valueKey)}</p>
+          <p className="mt-1 text-[16.5px] font-bold leading-none text-white">{t(card.valueKey)}</p>
         </div>
       </motion.div>
     </motion.div>
   );
 }
 
-/** The hero background — a plain warm ivory/pearl gradient with subtle
- * violet ambience and a touch of champagne, nothing else. Earlier
- * versions of this hero used an animated SVG "intelligence field" (a
- * node-and-line network) plus a dashed orbital path graphic behind the
- * copy; both were removed as arbitrary decoration unrelated to anything
- * Solventia actually does — an on-brand color palette doesn't need a
- * fake network diagram to justify it. The three real signal cards below
- * (Founder Fit / Proof Signal / Week 01) are the one genuinely
- * product-derived visual this hero keeps. */
-function HeroBackground() {
-  return (
-    <div
-      className="absolute inset-0"
-      aria-hidden="true"
-      style={{
-        background:
-          "radial-gradient(ellipse 640px 520px at 78% 18%, rgba(114,87,216,.09), transparent 62%), radial-gradient(ellipse 520px 440px at 92% 62%, rgba(197,163,106,.08), transparent 64%), linear-gradient(100deg, #F8F5EF 0%, #F7F3EC 55%, #F4EEE2 100%)",
-      }}
-    />
-  );
+/** Desktop-only pointer parallax — background shifts ~3-4px, cards ~6-10px
+ * (handled by the ×2 multiplier in SignalCard), network ~2-4px. Off on
+ * touch devices and under reduced-motion. */
+function useHeroParallax() {
+  const [pos, setPos] = useState({ x: 0, y: 0 });
+  const reduceMotion = useReducedMotion();
+  const ref = useRef({
+    enabled: typeof window !== "undefined" && window.matchMedia("(pointer: fine)").matches,
+  });
+
+  useEffect(() => {
+    if (reduceMotion || !ref.current.enabled) return;
+    function onMove(e: MouseEvent) {
+      const x = (e.clientX / window.innerWidth - 0.5) * 2;
+      const y = (e.clientY / window.innerHeight - 0.5) * 2;
+      setPos({ x, y });
+    }
+    window.addEventListener("mousemove", onMove, { passive: true });
+    return () => window.removeEventListener("mousemove", onMove);
+  }, [reduceMotion]);
+
+  return pos;
 }
 
-/** The hero — a plain warm background (see HeroBackground above) instead
- * of the old generic stock landscape photo or, later, an animated SVG
- * network graphic, recomposed per the homepage reconstruction spec:
- * calmer left side for text, three minimal intelligence signals instead
- * of four generic floating cards, no people-bubble social proof, no
- * Discover/Validate/Plan/Launch strip underneath (How It Works now owns
- * that story, once, not twice). */
 export function Hero() {
   const navigate = useNavigate();
   const { t, locale } = useLocale();
-  // Devanagari's taller vertical metrics (shirorekha + matras) clip
-  // against the tight Latin-display leading below — give Hindi more
-  // breathing room instead of reusing the same value for both scripts.
   const isHindi = locale === "hi";
+  const pointer = useHeroParallax();
+  const reduceMotion = useReducedMotion();
 
   return (
     <section
-      className="relative mt-[76px] h-[calc(100vh-76px)] w-full overflow-hidden"
-      style={{ minHeight: 640, maxHeight: 860 }}
+      className="relative h-[100svh] min-h-[640px] w-full overflow-hidden bg-[#0A0D17]"
+      style={{ maxHeight: 960 }}
     >
-      <HeroBackground />
+      {/* The approved photograph — the entire first visual environment, not
+          a right-side image beside a text card. */}
+      <motion.img
+        src={heroImage}
+        alt=""
+        aria-hidden="true"
+        initial={{ scale: 1.025, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        transition={{ duration: 0.9, ease: [0.22, 1, 0.36, 1] }}
+        className="absolute inset-0 h-full w-full object-cover"
+        style={{
+          transform: reduceMotion
+            ? undefined
+            : `translate3d(${pointer.x * -3.5}px, ${pointer.y * -3.5}px, 0) scale(1.03)`,
+        }}
+      />
 
-      {/* Restored Solventia violet ambience — light, not paint. Sits above
-          the background and below the copy/cards. */}
+      {/* Cinematic left-to-right readability gradient — not a full-photo
+          darken, and not an opaque text card. */}
       <div
-        className="pointer-events-none absolute inset-0 z-[5]"
+        className="pointer-events-none absolute inset-0"
         style={{
           background:
-            "radial-gradient(ellipse 520px 420px at 15% 22%, rgba(114,87,216,0.13), rgba(114,87,216,0.055) 42%, transparent 72%), radial-gradient(ellipse 420px 320px at 62% 10%, rgba(197,163,106,0.07), transparent 72%)",
+            "linear-gradient(100deg, rgba(10,13,23,.88) 0%, rgba(10,13,23,.62) 32%, rgba(10,13,23,.22) 58%, transparent 78%)",
+        }}
+        aria-hidden="true"
+      />
+      {/* Lower-depth gradient so the floating cards and bottom content stay
+          readable against sky/city highlights. */}
+      <div
+        className="pointer-events-none absolute inset-0"
+        style={{
+          background: "linear-gradient(to top, rgba(8,10,20,.55) 0%, transparent 38%)",
+        }}
+        aria-hidden="true"
+      />
+      {/* Extremely restrained violet ambience right at the gradient's own
+          transition region — never consciously obvious. */}
+      <div
+        className="pointer-events-none absolute inset-0"
+        style={{
+          background:
+            "radial-gradient(ellipse 560px 460px at 42% 38%, rgba(114,87,216,0.12), transparent 70%)",
         }}
         aria-hidden="true"
       />
 
-      {/* Floating intelligence signals — desktop only. On mobile the text
-          column fills nearly the full width, so absolute-positioned cards
-          would sit on top of the headline/buttons; those render in normal
-          document flow below the CTAs instead (see mobile block below). */}
+      <HeroIntelligenceNetwork />
+
       <div className="pointer-events-none absolute inset-0 z-10 hidden sm:block">
         {SIGNAL_CARDS.map((card) => (
-          <SignalCard key={card.labelKey} card={card} />
+          <SignalCard key={card.labelKey} card={card} parallax={pointer} />
         ))}
       </div>
 
-      {/* Vertically centered, not pinned by a large fixed top offset —
-          the previous ~170-190px top padding left excess dead space above
-          the headline on common desktop viewports. */}
-      <div className="relative z-20 mx-auto flex h-full max-w-[1920px] flex-col justify-center overflow-y-auto px-6 py-8 lg:overflow-visible lg:px-10">
-        <motion.div
-          initial="hidden"
-          animate="show"
-          transition={{ staggerChildren: 0.12, delayChildren: 0.05 }}
-          className="max-w-[760px]"
-        >
+      <div className="relative z-20 mx-auto flex h-full max-w-[1920px] flex-col justify-center px-6 pb-10 pt-[76px] lg:px-10">
+        <motion.div initial="hidden" animate="show" className="max-w-[640px]">
           <motion.p
             variants={fadeUp}
-            transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
-            className="text-[14px] font-semibold uppercase tracking-[0.14em] text-sol-champagne-deep"
+            transition={{ duration: 0.7, delay: 0.25, ease: [0.22, 1, 0.36, 1] }}
+            className="text-[13.5px] font-bold uppercase tracking-[0.14em] text-sol-champagne"
           >
             {t("hero.eyebrow")}
           </motion.p>
 
-          <motion.h1
-            variants={fadeUp}
-            transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
+          <h1
             className={cn(
-              "mt-[28px] max-w-[670px] text-[46px] font-semibold tracking-[-0.025em] text-sol-ink sm:text-[56px] lg:text-[72px]",
-              isHindi ? "leading-[1.3] lg:leading-[1.22]" : "leading-[1.04] lg:leading-[0.98]",
+              "mt-[26px] max-w-[600px] text-[46px] font-semibold tracking-[-0.025em] text-white sm:text-[58px] lg:text-[74px]",
+              isHindi ? "leading-[1.28] lg:leading-[1.2]" : "leading-[1.02] lg:leading-[0.98]",
             )}
           >
-            {t("hero.headline1")}
-            <br />
-            {t("hero.headline2")}
-            <br />
-            <span className="text-shimmer-gold text-[1.02em] font-bold italic">
-              {t("hero.headline3")}
-            </span>
-          </motion.h1>
+            {HEADLINE_LINES.map((line, i) => (
+              <span key={line.key} className="-my-[0.12em] block overflow-hidden py-[0.12em]">
+                <motion.span
+                  className={cn("block", line.className)}
+                  style={line.style}
+                  initial={{ y: reduceMotion ? 0 : "115%", opacity: reduceMotion ? 1 : 0 }}
+                  animate={{ y: 0, opacity: 1 }}
+                  transition={{ duration: 0.85, delay: 0.4 + i * 0.14, ease: [0.22, 1, 0.36, 1] }}
+                >
+                  {t(line.key)}
+                </motion.span>
+              </span>
+            ))}
+          </h1>
 
           <motion.p
             variants={fadeUp}
-            transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
-            className="mt-[28px] max-w-[520px] text-[17px] leading-[28px] text-sol-secondary"
+            transition={{ duration: 0.7, delay: 1.0, ease: [0.22, 1, 0.36, 1] }}
+            className="mt-[26px] max-w-[480px] text-[17px] leading-[27px] text-white/80"
           >
             {t("hero.subhead")}
           </motion.p>
 
           <motion.div
             variants={fadeUp}
-            transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
-            className="mt-[30px] flex flex-wrap items-center gap-3.5"
+            transition={{ duration: 0.7, delay: 1.2, ease: [0.22, 1, 0.36, 1] }}
+            className="mt-[28px] flex flex-wrap items-center gap-3.5"
           >
             <button
               type="button"
               onClick={() => navigate({ to: "/consultation" })}
-              className="group inline-flex h-[54px] items-center gap-2.5 rounded-2xl bg-sol-navy px-[26px] text-[15px] font-semibold text-white transition-all duration-[180ms] hover:-translate-y-px hover:shadow-[0_10px_30px_rgba(23,32,61,.13)]"
+              className="group inline-flex h-[56px] items-center gap-3 rounded-2xl px-[32px] text-[15.5px] font-bold text-sol-navy shadow-[0_14px_36px_rgba(0,0,0,.32)] transition-all duration-[180ms] hover:-translate-y-px hover:shadow-[0_18px_44px_rgba(0,0,0,.4)]"
+              style={{
+                background: "linear-gradient(135deg, #FFFDFB 0%, #F2ECE2 55%, #DCC08B 100%)",
+              }}
             >
               {t("hero.cta.primary")}
               <ArrowRight
-                className="size-4 text-sol-champagne transition-transform duration-300 group-hover:translate-x-1"
+                className="size-[18px] text-sol-violet-deep transition-transform duration-300 group-hover:translate-x-[5px]"
                 aria-hidden="true"
               />
             </button>
@@ -231,28 +296,45 @@ export function Hero() {
             <button
               type="button"
               onClick={() => scrollToSection("how-it-works")}
-              className="inline-flex h-[54px] items-center gap-2 rounded-2xl border border-sol-border bg-[rgba(255,253,249,0.6)] px-[26px] text-[15px] font-semibold text-sol-ink transition-colors hover:border-sol-champagne/50"
+              className="inline-flex h-[56px] items-center gap-2 rounded-2xl border border-white/25 bg-white/[0.05] px-[26px] text-[14.5px] font-semibold text-white/85 backdrop-blur-sm transition-colors hover:border-white/45 hover:text-white"
             >
               {t("hero.cta.secondary")}
             </button>
           </motion.div>
 
+          {/* Plain-text signal trio — never cards (item 140). */}
+          <motion.p
+            variants={fadeUp}
+            transition={{ duration: 0.7, delay: 1.4, ease: [0.22, 1, 0.36, 1] }}
+            className="mt-6 flex flex-wrap items-center gap-x-3 gap-y-1.5 text-[14px] font-medium text-white/65"
+          >
+            <span>{t("hero.signal.personalized")}</span>
+            <span aria-hidden="true" className="text-white/30">
+              ·
+            </span>
+            <span>{t("hero.signal.realityChecked")}</span>
+            <span aria-hidden="true" className="text-white/30">
+              ·
+            </span>
+            <span>{t("hero.signal.adaptive")}</span>
+          </motion.p>
+
           <motion.div
             variants={fadeUp}
-            transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
+            transition={{ duration: 0.7, delay: 1.5, ease: [0.22, 1, 0.36, 1] }}
             className="mt-6 flex flex-wrap gap-3 sm:hidden"
           >
             {SIGNAL_CARDS.filter((c) => !c.hideOnMobile).map((card) => (
               <div
                 key={card.labelKey}
-                className="flex h-[64px] min-w-[10.5rem] items-center gap-2 rounded-[17px] border border-[rgba(214,203,190,0.78)] bg-[rgba(255,253,250,0.94)] px-3.5 shadow-[0_12px_34px_rgba(23,32,61,0.075)]"
+                className="flex h-[62px] min-w-[10rem] items-center gap-2 rounded-[16px] border border-white/20 bg-white/[0.12] px-3.5 shadow-[0_12px_34px_rgba(8,10,20,0.28)] backdrop-blur-[16px]"
               >
                 <StatusDot tone={card.dot} />
                 <div className="min-w-0">
-                  <p className="text-[14px] font-semibold leading-tight text-sol-secondary">
+                  <p className="text-[13.5px] font-semibold leading-tight text-white/75">
                     {t(card.labelKey)}
                   </p>
-                  <p className="mt-1 text-[16px] font-bold leading-none text-sol-ink">
+                  <p className="mt-1 text-[15.5px] font-bold leading-none text-white">
                     {t(card.valueKey)}
                   </p>
                 </div>
@@ -261,6 +343,14 @@ export function Hero() {
           </motion.div>
         </motion.div>
       </div>
+
+      {/* Exit: fade subtly toward the page background rather than an
+          abrupt photograph-to-flat-pearl cut. */}
+      <div
+        className="pointer-events-none absolute inset-x-0 bottom-0 h-28"
+        style={{ background: "linear-gradient(to bottom, transparent, var(--sol-hp-pearl))" }}
+        aria-hidden="true"
+      />
     </section>
   );
 }

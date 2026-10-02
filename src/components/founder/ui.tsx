@@ -236,10 +236,10 @@ export function EmptyState({
 export function Fact({ label, children }: { label: string; children: ReactNode }) {
   return (
     <div className="min-w-0">
-      <p className="text-[0.875rem] font-bold uppercase tracking-[0.1em] text-sol-champagne-deep">
+      <dt className="text-[0.875rem] font-bold uppercase tracking-[0.1em] text-sol-champagne-deep">
         {label}
-      </p>
-      <div className="mt-1.5 text-[1.0625rem] leading-snug text-sol-ink">{children}</div>
+      </dt>
+      <dd className="mt-1.5 text-[1.0625rem] leading-snug text-sol-ink">{children}</dd>
     </div>
   );
 }

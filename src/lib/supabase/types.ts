@@ -449,6 +449,28 @@ export interface Database {
         Update: Partial<Database["public"]["Tables"]["proof_assumptions"]["Row"]>;
         Relationships: [];
       };
+      opportunity_economics: {
+        Row: {
+          id: string;
+          user_id: string;
+          opportunity_id: string;
+          revenue_model: string | null;
+          currency: string;
+          price_per_customer: number | null;
+          direct_cost_per_customer: number | null;
+          customer_acquisition_note: string | null;
+          fixed_monthly_costs: number | null;
+          starting_budget: number | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: Partial<Database["public"]["Tables"]["opportunity_economics"]["Row"]> & {
+          user_id: string;
+          opportunity_id: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["opportunity_economics"]["Row"]>;
+        Relationships: [];
+      };
       proof_evidence: {
         Row: {
           id: string;
@@ -463,7 +485,11 @@ export interface Database {
             | "experiment"
             | "analytics"
             | "document"
+            | "url"
+            | "screenshot"
+            | "survey"
             | "other";
+          title: string | null;
           source_person: string | null;
           occurred_on: string;
           summary: string;

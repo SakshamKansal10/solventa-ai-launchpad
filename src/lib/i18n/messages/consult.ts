@@ -44,6 +44,21 @@ const en = {
   "consult.panel.skillsCount.other": "{n} skills",
   "consult.panel.accessCount.one": "{n} resource",
   "consult.panel.accessCount.other": "{n} resources",
+  "consult.panel.footerNote": "These signals shape your opportunities.",
+
+  "consult.group.domainsTech": "Technology & product",
+  "consult.group.domainsBiz": "Business & functions",
+  "consult.group.domainsIndustry": "Industry & society",
+  "consult.group.conCommit": "Commitments",
+  "consult.group.conPlace": "Place & travel",
+  "consult.group.conMoney": "Money & business",
+  "consult.search.domains": "Search your fields of experience",
+  "consult.scale.pick": "Choose a point on the scale",
+  "consult.scale.riskLow": "Protect what I have",
+  "consult.scale.riskHigh": "Bet on the upside",
+  "consult.scale.relocLow": "Open to moving",
+  "consult.scale.relocHigh": "Staying put",
+  "consult.signalAdded": "Added to your Founder Signals",
 
   // ---------- submit / account ----------
   "consult.submit.title": "One last step",
@@ -52,7 +67,7 @@ const en = {
   "consult.submit.signedInBody":
     "Everything is captured. Solventia will now find your three strongest directions.",
   "consult.submit.cta": "Find my directions",
-  "consult.generating.title": "Finding your directions",
+  "consult.generating.title": "Finding your strongest directions",
   "consult.generating.saved": "Your answers are saved. You can leave this page safely.",
   "consult.generating.s1": "Reading your profile…",
   "consult.generating.s2": "Sizing the right scale for you…",
@@ -425,6 +440,21 @@ const hi: Record<keyof typeof en, string> = {
   "consult.panel.skillsCount.other": "{n} कौशल",
   "consult.panel.accessCount.one": "{n} संसाधन",
   "consult.panel.accessCount.other": "{n} संसाधन",
+  "consult.panel.footerNote": "ये संकेत आपके अवसर तय करने में मदद करते हैं।",
+
+  "consult.group.domainsTech": "टेक्नोलॉजी और प्रोडक्ट",
+  "consult.group.domainsBiz": "बिज़नेस और कार्य-क्षेत्र",
+  "consult.group.domainsIndustry": "उद्योग और समाज",
+  "consult.group.conCommit": "ज़िम्मेदारियां",
+  "consult.group.conPlace": "स्थान और यात्रा",
+  "consult.group.conMoney": "पैसा और बिज़नेस",
+  "consult.search.domains": "अपने अनुभव के क्षेत्र खोजें",
+  "consult.scale.pick": "पैमाने पर एक बिंदु चुनें",
+  "consult.scale.riskLow": "जो है उसे सुरक्षित रखूं",
+  "consult.scale.riskHigh": "बड़ी संभावना पर दांव लगाऊं",
+  "consult.scale.relocLow": "जाने को तैयार",
+  "consult.scale.relocHigh": "यहीं रहना है",
+  "consult.signalAdded": "आपके Founder Signals में जुड़ गया",
 
   // ---------- submit / account ----------
   "consult.submit.title": "बस एक आख़िरी कदम",
@@ -433,7 +463,7 @@ const hi: Record<keyof typeof en, string> = {
   "consult.submit.signedInBody":
     "सब कुछ दर्ज हो चुका है। अब Solventia आपकी तीन सबसे मज़बूत दिशाएं खोजेगा।",
   "consult.submit.cta": "मेरी दिशाएं खोजें",
-  "consult.generating.title": "आपकी दिशाएं खोजी जा रही हैं",
+  "consult.generating.title": "आपकी सबसे मज़बूत दिशाएं खोजी जा रही हैं",
   "consult.generating.saved": "आपके जवाब सहेजे जा चुके हैं। आप यह पेज बेफ़िक्र छोड़ सकते हैं।",
   "consult.generating.s1": "आपकी प्रोफ़ाइल पढ़ी जा रही है…",
   "consult.generating.s2": "आपके लिए सही पैमाना तय हो रहा है…",

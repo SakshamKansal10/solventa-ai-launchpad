@@ -5,7 +5,14 @@ import { useLocale } from "@/lib/i18n/LocaleProvider";
  * that language, so it is always readable to the person who needs it. The
  * choice persists (cookie for SSR, localStorage fallback, and the profile
  * once signed in) — see LocaleProvider. */
-export function LanguageSwitcher({ className }: { className?: string }) {
+export function LanguageSwitcher({
+  className,
+  compact = false,
+}: {
+  className?: string;
+  /** Icon only on phones (the label returns from the `sm` breakpoint up). */
+  compact?: boolean;
+}) {
   const { locale, setLocale, t } = useLocale();
   return (
     <button
@@ -19,7 +26,9 @@ export function LanguageSwitcher({ className }: { className?: string }) {
       }
     >
       <Languages className="size-4" aria-hidden="true" />
-      {locale === "en" ? t("lang.switchToHindi") : t("lang.switchToEnglish")}
+      <span className={compact ? "hidden sm:inline" : undefined}>
+        {locale === "en" ? t("lang.switchToHindi") : t("lang.switchToEnglish")}
+      </span>
     </button>
   );
 }

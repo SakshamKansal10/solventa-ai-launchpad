@@ -14,10 +14,10 @@ import type { useRoadmapText } from "./text";
 
 type RoadmapText = ReturnType<typeof useRoadmapText>;
 
-const PHASE_STYLE: Record<PhaseDTO["state"], string> = {
-  current: "border-sol-violet bg-sol-violet-soft text-sol-ink",
-  completed: "border-sol-champagne/60 bg-sol-champagne-soft text-sol-ink",
-  future: "border-sol-border bg-sol-ivory text-sol-secondary",
+const NODE_STYLE: Record<PhaseDTO["state"], string> = {
+  current: "border-sol-violet bg-sol-violet text-white shadow-[0_0_0_5px_rgba(114,87,216,0.18)]",
+  completed: "border-sol-champagne bg-sol-champagne text-sol-ink",
+  future: "border-sol-border-strong bg-sol-surface text-sol-secondary",
 };
 
 const weekTone = (w: WeekDTO) =>
@@ -40,11 +40,25 @@ export function PhaseStrip({
   const { t } = useLocale();
   return (
     <nav aria-label={t("rm.phases.aria")} data-testid="phase-strip">
-      <ol className="flex snap-x gap-3 overflow-x-auto pb-2">
+      <ol className="flex snap-x snap-mandatory overflow-x-auto pb-2">
         {view.phases.map((p, i) => {
           const selected = selectedId === p.id;
+          const last = i === view.phases.length - 1;
           return (
-            <li key={p.id} className="min-w-[10.5rem] flex-1 snap-start">
+            <li key={p.id} className="relative min-w-[10.5rem] flex-1 snap-start">
+              {!last && (
+                <span
+                  aria-hidden="true"
+                  className={cn(
+                    "absolute left-[calc(50%+1.5rem)] right-[calc(-50%+1.5rem)] top-[1.2rem] h-[3px] rounded-full",
+                    p.state === "completed"
+                      ? "bg-sol-champagne"
+                      : p.state === "current"
+                        ? "bg-gradient-to-r from-sol-violet to-sol-border"
+                        : "bg-sol-border",
+                  )}
+                />
+              )}
               <button
                 type="button"
                 data-testid={`phase-${i + 1}`}
@@ -53,27 +67,32 @@ export function PhaseStrip({
                 aria-pressed={selected}
                 onClick={() => onSelect(selected || p.state === "current" ? null : p.id)}
                 className={cn(
-                  "flex h-full w-full flex-col gap-1 rounded-2xl border px-4 py-3.5 text-left transition-colors duration-[180ms]",
-                  PHASE_STYLE[p.state],
-                  selected && "ring-2 ring-sol-violet/40",
-                  "hover:border-sol-violet/60",
+                  "group relative flex h-full w-full flex-col items-center gap-2 rounded-2xl px-3 pb-3 pt-0 text-center outline-none transition-colors duration-[180ms] focus-visible:ring-2 focus-visible:ring-sol-violet/50",
+                  selected && "bg-sol-violet-soft/60",
                 )}
               >
-                <span className="flex items-center gap-1.5 font-display text-[1.375rem] font-semibold leading-none">
+                <span
+                  className={cn(
+                    "relative z-10 flex size-10 items-center justify-center rounded-full border-2 font-display text-[1.125rem] font-semibold transition-transform duration-200 group-hover:scale-105",
+                    NODE_STYLE[p.state],
+                  )}
+                >
                   {p.state === "completed" ? (
-                    <Check
-                      className="size-5 text-sol-champagne-deep"
-                      strokeWidth={3}
-                      aria-hidden="true"
-                    />
-                  ) : null}
-                  {String(i + 1).padStart(2, "0")}
+                    <Check className="size-5" strokeWidth={3} aria-hidden="true" />
+                  ) : (
+                    String(i + 1).padStart(2, "0")
+                  )}
                 </span>
-                <span className="line-clamp-2 text-[0.9375rem] font-semibold leading-snug">
+                <span
+                  className={cn(
+                    "line-clamp-2 text-[0.9375rem] font-semibold leading-snug",
+                    p.state === "future" ? "text-sol-secondary" : "text-sol-ink",
+                  )}
+                >
                   {text.phaseTitle(p.id, p.title)}
                 </span>
                 {p.range && (
-                  <span className="text-[0.875rem] text-sol-secondary">
+                  <span className="text-[0.8125rem] text-sol-secondary">
                     {t("common.weeksRange", { from: p.range.first, to: p.range.last })}
                   </span>
                 )}
@@ -198,14 +217,7 @@ export function PlanTab({
   const defaultOpen = openPhaseId ?? view.currentPhaseId ?? view.phases[0]?.id;
   return (
     <div className="flex flex-col gap-6" data-testid="plan-tab">
-      {view.roadmap.northStar && (
-        <div>
-          <p className="sol-eyebrow">{t("rm.northStar")}</p>
-          <p className="mt-1 max-w-[46ch] font-display text-[1.5rem] font-semibold leading-snug text-sol-ink">
-            {text.northStar(view.roadmap.northStar)}
-          </p>
-        </div>
-      )}
+      {/* The North star is already in the roadmap header on every tab. */}
       <Accordion
         type="multiple"
         defaultValue={defaultOpen ? [defaultOpen] : []}
@@ -222,9 +234,9 @@ export function PlanTab({
               className="sol-card overflow-hidden border-b-0 px-2"
             >
               <AccordionTrigger className="px-4 py-5 text-left hover:no-underline">
-                <span className="flex min-w-0 flex-1 flex-wrap items-center gap-x-4 gap-y-1">
+                <span className="flex min-w-0 flex-1 flex-wrap items-center gap-x-4 gap-y-1 font-sans">
                   <span className="sol-eyebrow">{t("rm.phase.n", { n: i + 1 })}</span>
-                  <span className="min-w-0 text-[1.25rem] font-semibold leading-snug text-sol-ink">
+                  <span className="min-w-0 font-display text-[1.375rem] font-semibold leading-snug text-sol-ink">
                     {text.phaseTitle(p.id, p.title)}
                   </span>
                   {p.range && (

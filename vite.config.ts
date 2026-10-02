@@ -19,7 +19,14 @@ export default defineConfig({
   // some build contexts — hard-pinning removes that ambiguity entirely.
   // Does not affect `vite dev` (localhost/ngrok): this preset only
   // applies to `vite build`.
-  nitro: { preset: "vercel" },
+  //
+  // The one exception: the E2E harness builds a local Node server from this
+  // same code (E2E_BUILD=1) so browser tests run against a real production
+  // bundle. That build never runs on Vercel and never sets this variable there.
+  nitro:
+    process.env.E2E_BUILD === "1"
+      ? { preset: "node-server", output: { dir: ".e2e-tmp/output" } }
+      : { preset: "vercel" },
 
   vite: {
     server: {

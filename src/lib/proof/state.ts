@@ -29,6 +29,9 @@ export type EvidenceType =
   | "experiment"
   | "analytics"
   | "document"
+  | "url"
+  | "screenshot"
+  | "survey"
   | "other";
 
 export interface EvidenceLike {
@@ -48,8 +51,11 @@ export const EVIDENCE_STRENGTH: Record<EvidenceType, 1 | 2 | 3> = {
   quote: 2,
   experiment: 2,
   analytics: 2,
+  survey: 2,
   observation: 1,
   document: 1,
+  url: 1,
+  screenshot: 1,
   other: 1,
 };
 

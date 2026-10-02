@@ -30,6 +30,7 @@ import { statusIdFromEnglish } from "@/components/consultation/labels";
 import { useLocale } from "@/lib/i18n/LocaleProvider";
 import { qk, useFounderState, useInvalidateFounder } from "@/lib/queries";
 import { formatDate } from "@/components/founder/proof/bits";
+import { useTranslatedTitle } from "@/lib/use-translation";
 
 export const Route = createFileRoute("/dashboard/history")({
   component: HistoryPage,
@@ -37,6 +38,11 @@ export const Route = createFileRoute("/dashboard/history")({
     meta: [{ title: "History — Solventia" }, { name: "robots", content: "noindex" }],
   }),
 });
+
+/** A direction's name in the reader's language (translated once, then cached). */
+function TranslatedTitle({ id, title }: { id: string; title: string }) {
+  return <>{useTranslatedTitle(id, title)}</>;
+}
 
 function HistoryPage() {
   const { t } = useLocale();
@@ -49,6 +55,13 @@ function HistoryPage() {
   const [restoring, setRestoring] = useState<HistoryEntry | null>(null);
   const invalidate = useInvalidateFounder();
   const navigate = useNavigate();
+  const restoringTitle = useTranslatedTitle(restoring?.selected?.id, restoring?.selected?.title);
+  const currentDirectionTitle = useTranslatedTitle(
+    founder.data?.direction.selectedId,
+    founder.data?.direction.selectedId
+      ? founder.data.briefs[founder.data.direction.selectedId]?.title
+      : null,
+  );
 
   const restore = useMutation({
     mutationFn: (opportunityId: string) => restoreDirection({ data: { opportunityId } }),
@@ -68,9 +81,7 @@ function HistoryPage() {
   if (query.isError || !query.data) {
     return <ErrorPanel onRetry={() => void query.refetch()} retrying={query.isFetching} />;
   }
-  const currentTitle = founder.data?.direction.selectedId
-    ? founder.data.briefs[founder.data.direction.selectedId]?.title
-    : null;
+  const currentTitle = currentDirectionTitle;
 
   return (
     <div className="flex flex-col gap-8" data-testid="history-page">
@@ -105,7 +116,7 @@ function HistoryPage() {
             <AlertDialogTitle>{t("hist.restoreTitle")}</AlertDialogTitle>
             <AlertDialogDescription>
               {restoring?.selected
-                ? t("hist.restoreBody", { title: restoring.selected.title })
+                ? t("hist.restoreBody", { title: restoringTitle ?? restoring.selected.title })
                 : t("hist.restoreBodyGeneric")}
               {currentTitle ? ` ${t("hist.restoreArchive", { current: currentTitle })}` : ""}
             </AlertDialogDescription>
@@ -181,7 +192,7 @@ function EntryCard({ entry, onRestore }: { entry: HistoryEntry; onRestore: () =>
                 className="flex items-start justify-between gap-3 text-[1.0625rem] text-sol-ink"
               >
                 <span className={d.id === entry.selected?.id ? "font-semibold" : undefined}>
-                  {d.title}
+                  <TranslatedTitle id={d.id} title={d.title} />
                 </span>
                 <FitPill fit={d.fit} />
               </li>
@@ -192,7 +203,11 @@ function EntryCard({ entry, onRestore }: { entry: HistoryEntry; onRestore: () =>
           <div>
             <p className="sol-eyebrow">{t("hist.selected")}</p>
             <p className="mt-2 text-[1.0625rem] font-semibold text-sol-ink">
-              {entry.selected?.title ?? t("hist.noneSelected")}
+              {entry.selected ? (
+                <TranslatedTitle id={entry.selected.id} title={entry.selected.title} />
+              ) : (
+                t("hist.noneSelected")
+              )}
             </p>
           </div>
           <div>

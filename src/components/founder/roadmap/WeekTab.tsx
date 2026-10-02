@@ -91,7 +91,11 @@ export function WeekTab({
     onError: (err, _v, ctx) => {
       console.error("[roadmap] mission update failed:", err);
       if (ctx?.previous) queryClient.setQueryData(roadmapKey, ctx.previous);
-      toast.error(t("rm.mission.error"));
+      toast.error(
+        err instanceof Error && err.message.includes("EVIDENCE_REQUIRED")
+          ? t("rm.mission.needEvidenceError")
+          : t("rm.mission.error"),
+      );
     },
     onSettled: () => {
       void invalidate();
@@ -115,6 +119,14 @@ export function WeekTab({
   const pad = String(week.number).padStart(2, "0");
   const detail = text.detail;
   const missionsLocked = week.state === "completed" || !isCurrent;
+
+  // The one mission that starts open: whatever is in progress, otherwise the
+  // first required mission still waiting, otherwise the first one left.
+  const activeMissionId =
+    week.missions.find((m) => m.state === "in_progress")?.id ??
+    week.missions.find((m) => m.state === "not_started" && m.required)?.id ??
+    week.missions.find((m) => m.state !== "completed")?.id ??
+    null;
 
   const assumptionFor = (category: string | null) =>
     proof?.assumptions.find((a) => a.category === category)?.id ?? proof?.assumptions[0]?.id;
@@ -209,7 +221,7 @@ export function WeekTab({
                 </Button>
               </Card>
             )}
-            <ol className="flex flex-col gap-5" aria-label={t("rm.missions.aria")}>
+            <ol className="flex flex-col gap-3" aria-label={t("rm.missions.aria")}>
               {week.missions.map((m, i) => (
                 <li key={m.id}>
                   <MissionCard
@@ -221,6 +233,7 @@ export function WeekTab({
                     assumptionId={assumptionFor(m.assumptionCategory)}
                     busy={setState.isPending && setState.variables?.taskId === m.id}
                     locked={missionsLocked}
+                    defaultOpen={m.id === activeMissionId && !missionsLocked}
                     onState={(state) => setState.mutate({ taskId: m.id, state })}
                   />
                 </li>
@@ -303,7 +316,7 @@ export function WeekTab({
             variant="soft"
             size="sm"
             className="self-start"
-            onClick={askSol.open}
+            onClick={() => askSol.open()}
             data-testid="rail-ask-sol"
           >
             {t("askSol.open")}

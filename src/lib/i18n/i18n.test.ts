@@ -54,7 +54,6 @@ describe("i18n catalogues", () => {
       "English",
       "VALIDATE • BUILD • ELEVATE",
       "Solventia Intelligence",
-      "hero.headline3",
     ]);
     const leaked = Object.keys(MESSAGES.en).filter((k) => {
       const en = MESSAGES.en[k];

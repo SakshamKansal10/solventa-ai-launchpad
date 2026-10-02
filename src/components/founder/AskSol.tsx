@@ -5,6 +5,7 @@ import { Loader2, Send, X } from "lucide-react";
 import mark from "@/assets/solventia-mark.png";
 import { getMentorConversation, sendMentorMessage } from "@/lib/actions/mentor";
 import { useLocale } from "@/lib/i18n/LocaleProvider";
+import type { MessageKey } from "@/lib/i18n";
 import { qk } from "@/lib/queries";
 import { cn } from "@/lib/utils";
 
@@ -17,15 +18,36 @@ interface ChatMessage {
 /** The conversation itself. Rendered inside a docked aside (≥1280px, where it
  * resizes the page grid and covers nothing) or a Sheet drawer (smaller).
  * Conversations persist per opportunity, so each direction has its own thread. */
+export type AskSolRoute = "dashboard" | "opportunity" | "roadmap" | "proof";
+
 export function AskSolPanel({
   opportunityId,
   opportunityTitle,
   hasRoadmap,
+  route = "dashboard",
+  assumptionTitle = null,
+  initialQuestion = null,
+  onQuestionConsumed,
+  weekNumber = null,
+  phaseTitle = null,
+  missionTitle = null,
   onClose,
 }: {
   opportunityId: string | null;
   opportunityTitle: string | null;
   hasRoadmap: boolean;
+  /** Which part of the product the founder is in — suggestions follow it. */
+  route?: AskSolRoute;
+  /** The assumption currently open in Proof, when there is one. */
+  assumptionTitle?: string | null;
+  /** A question handed over by a button elsewhere ("Ask Sol what this changes"). */
+  initialQuestion?: string | null;
+  onQuestionConsumed?: () => void;
+  /** Current roadmap context, when one exists — shown in the header so the
+   * founder can see Sol already knows where they are (spec CF). */
+  weekNumber?: number | null;
+  phaseTitle?: string | null;
+  missionTitle?: string | null;
   onClose: () => void;
 }) {
   const { t, locale } = useLocale();
@@ -74,29 +96,91 @@ export function AskSolPanel({
     }
   }
 
-  const prompts = opportunityId
-    ? hasRoadmap
-      ? ([
-          "askSol.prompt.today",
-          "askSol.prompt.explain",
-          "askSol.prompt.proof",
+  // A question handed over from elsewhere is sent once the thread has loaded —
+  // sending earlier would be overwritten when the saved conversation arrives.
+  const handedOver = useRef<string | null>(null);
+  useEffect(() => {
+    if (!initialQuestion || conversation.isLoading || handedOver.current === initialQuestion)
+      return;
+    handedOver.current = initialQuestion;
+    void send(initialQuestion);
+    onQuestionConsumed?.();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialQuestion, conversation.isLoading]);
+
+  const prompts: readonly MessageKey[] = !opportunityId
+    ? ["askSol.prompt.today", "askSol.prompt.pick"]
+    : route === "proof"
+      ? [
+          "askSol.prompt.changes",
+          "askSol.prompt.nextTest",
+          "askSol.prompt.weakest",
           "askSol.prompt.stuck",
-        ] as const)
-      : (["askSol.prompt.today", "askSol.prompt.proof", "askSol.prompt.stuck"] as const)
-    : (["askSol.prompt.today", "askSol.prompt.pick"] as const);
+        ]
+      : route === "roadmap" && hasRoadmap
+        ? [
+            "askSol.prompt.today",
+            "askSol.prompt.explain",
+            "askSol.prompt.interviews",
+            "askSol.prompt.proof",
+          ]
+        : route === "opportunity"
+          ? [
+              "askSol.prompt.fit",
+              "askSol.prompt.risks",
+              "askSol.prompt.firstTest",
+              "askSol.prompt.stuck",
+            ]
+          : hasRoadmap
+            ? [
+                "askSol.prompt.today",
+                "askSol.prompt.explain",
+                "askSol.prompt.proof",
+                "askSol.prompt.stuck",
+              ]
+            : ["askSol.prompt.today", "askSol.prompt.proof", "askSol.prompt.stuck"];
 
   return (
     <div className="flex h-full min-h-0 flex-col" data-testid="ask-sol-panel">
-      <div className="flex items-center justify-between border-b border-sol-border bg-sol-violet-soft/50 px-5 py-4">
-        <div className="flex items-center gap-3">
-          <span className="flex size-10 items-center justify-center rounded-full bg-gradient-to-br from-sol-champagne to-sol-violet">
+      <div className="flex items-start justify-between gap-3 border-b border-sol-border bg-sol-violet-soft/50 px-5 py-4">
+        <div className="flex min-w-0 items-start gap-3">
+          <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-sol-champagne to-sol-violet">
             <img src={mark} alt="" width={298} height={436} className="h-5 w-auto" />
           </span>
-          <div className="leading-tight">
+          <div className="min-w-0 leading-tight">
             <h2 className="font-display text-[1.25rem] font-semibold text-sol-ink">
               {t("askSol.title")}
             </h2>
-            <p className="text-[0.875rem] text-sol-secondary">{t("askSol.tagline")}</p>
+            {/* The context stack a founder actually sees Sol already knows —
+                each line present only when real (spec CF): opportunity,
+                then week/phase, then the mission in progress. Never a
+                generic tagline once there's real context to show instead. */}
+            {opportunityTitle ? (
+              <div className="mt-1 flex flex-col gap-0.5" data-testid="ask-sol-context">
+                <p className="truncate text-[0.875rem] font-semibold text-sol-ink">
+                  {opportunityTitle}
+                </p>
+                {weekNumber != null && (
+                  <p className="truncate text-[0.8125rem] text-sol-secondary">
+                    {t("common.weekN", { n: String(weekNumber) })}
+                    {phaseTitle ? ` · ${phaseTitle}` : ""}
+                  </p>
+                )}
+                {missionTitle && (
+                  <p className="truncate text-[0.8125rem] text-sol-secondary">{missionTitle}</p>
+                )}
+                {assumptionTitle && (
+                  <p
+                    className="truncate text-[0.8125rem] text-sol-secondary"
+                    data-testid="ask-sol-assumption"
+                  >
+                    {t("askSol.assumptionLine", { title: assumptionTitle })}
+                  </p>
+                )}
+              </div>
+            ) : (
+              <p className="text-[0.875rem] text-sol-secondary">{t("askSol.tagline")}</p>
+            )}
           </div>
         </div>
         <button
@@ -161,7 +245,7 @@ export function AskSolPanel({
                 <span className="sr-only">
                   {m.role === "user" ? t("askSol.you") : t("askSol.sol")}:{" "}
                 </span>
-                {m.content}
+                {m.failed ? <span role="alert">{m.content}</span> : m.content}
                 {m.failed && lastFailed && i === messages.length - 1 && (
                   <button
                     type="button"

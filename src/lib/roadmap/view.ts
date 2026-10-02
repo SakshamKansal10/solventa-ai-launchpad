@@ -29,6 +29,8 @@ export interface RawTask {
   evidence_required: boolean | null;
   assumption_category: string | null;
   status: DbTaskStatus;
+  /** Present once migration 0008+ is applied; absent on older databases. */
+  completed_at?: string | null;
 }
 
 export interface RawWeek {
@@ -91,6 +93,8 @@ export interface MissionDTO {
   deadline: string | null;
   state: MissionState;
   evidenceCount: number;
+  /** When the founder marked it done (ISO); null while open. */
+  completedAt: string | null;
 }
 
 export interface WeekDTO {
@@ -219,6 +223,7 @@ export function buildRoadmapView(input: {
           deadline: t.deadline,
           state: missionStateFromDb(t.status),
           evidenceCount: evidenceByTask.get(t.id) ?? 0,
+          completedAt: t.completed_at ?? null,
         })),
       });
     }
@@ -280,7 +285,15 @@ export function applyMissionState(
 ): RoadmapView {
   const weeks = view.weeks.map((w) => {
     if (!w.missions.some((m) => m.id === taskId)) return w;
-    const missions = w.missions.map((m) => (m.id === taskId ? { ...m, state } : m));
+    const missions = w.missions.map((m) =>
+      m.id === taskId
+        ? {
+            ...m,
+            state,
+            completedAt: state === "completed" ? new Date().toISOString() : null,
+          }
+        : m,
+    );
     const like = missions.map((m) => ({
       status: (m.state === "completed"
         ? "done"

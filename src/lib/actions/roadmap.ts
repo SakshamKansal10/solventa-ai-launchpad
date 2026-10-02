@@ -112,6 +112,24 @@ export const setMissionState = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     const { supabase, user } = await requireUser();
     const caps = await getSchemaCapabilities(supabase);
+    // A mission that asks for evidence cannot be marked done without any: the
+    // evidence is the point of the mission, not a formality after it.
+    if (data.state === "completed" && caps.proof) {
+      const { data: task } = await supabase
+        .from("roadmap_tasks")
+        .select("evidence_required")
+        .eq("id", data.taskId)
+        .eq("user_id", user.id)
+        .maybeSingle();
+      if (task?.evidence_required) {
+        const { count } = await supabase
+          .from("proof_evidence")
+          .select("id", { count: "exact", head: true })
+          .eq("task_id", data.taskId)
+          .eq("user_id", user.id);
+        if (!count) throw new Error("EVIDENCE_REQUIRED");
+      }
+    }
     const now = new Date().toISOString();
     const patch: Database["public"]["Tables"]["roadmap_tasks"]["Update"] = {
       status: missionStateToDb(data.state),

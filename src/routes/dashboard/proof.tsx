@@ -8,6 +8,9 @@ import { Loader2 } from "lucide-react";
 import { AssumptionSheet } from "@/components/founder/proof/AssumptionSheet";
 import { formatDate, StateBadge } from "@/components/founder/proof/bits";
 import { EvidenceDialog } from "@/components/founder/proof/EvidenceDialog";
+import { EvidenceMap } from "@/components/founder/proof/EvidenceMap";
+import { EvidenceStream } from "@/components/founder/proof/EvidenceStream";
+import { useAskSol } from "@/components/founder/DashboardShell";
 import {
   Button,
   Card,
@@ -29,7 +32,7 @@ import {
 import { useLocale } from "@/lib/i18n/LocaleProvider";
 import { PROOF_STATES, type ProofState } from "@/lib/proof/state";
 import { qk, useFounderState, useInvalidateFounder } from "@/lib/queries";
-import { useTranslatedEntity } from "@/lib/use-translation";
+import { useTranslatedEntity, useTranslatedTitle } from "@/lib/use-translation";
 import { cn } from "@/lib/utils";
 
 const FILTERS = ["all", ...PROOF_STATES] as const;
@@ -43,6 +46,9 @@ export const Route = createFileRoute("/dashboard/proof")({
     /** Open the evidence dialog immediately — prefilled from a roadmap mission. */
     add: z.boolean().optional(),
     assumption: z.string().uuid().optional(),
+    /** The mission's assumption category — used to preselect an assumption when
+     * the assumptions are only just being written (first visit). */
+    category: z.string().optional(),
     mission: z.string().uuid().optional(),
     week: z.string().uuid().optional(),
   }),
@@ -91,6 +97,7 @@ function ProofWorkspace({ opportunityId }: { opportunityId: string }) {
   const search = Route.useSearch();
   const navigate = useNavigate();
   const invalidate = useInvalidateFounder();
+  const askSol = useAskSol();
 
   const overview = useQuery({
     queryKey: qk.proof(opportunityId),
@@ -103,6 +110,7 @@ function ProofWorkspace({ opportunityId }: { opportunityId: string }) {
     String(overview.data?.assumptions.length ?? 0),
   );
 
+  const opportunityTitle = useTranslatedTitle(opportunityId, overview.data?.opportunity?.title);
   const [detailId, setDetailId] = useState<string | null>(search.assumption ?? null);
   const [dialog, setDialog] = useState<{
     open: boolean;
@@ -126,6 +134,14 @@ function ProofWorkspace({ opportunityId }: { opportunityId: string }) {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [needsGeneration]);
+
+  // Ask Sol shows which assumption is open, so its suggestions are about that one.
+  const openAssumptionTitle =
+    overview.data?.assumptions.find((a) => a.id === detailId)?.title ?? null;
+  useEffect(() => {
+    askSol.setAssumption(openAssumptionTitle);
+    return () => askSol.setAssumption(null);
+  }, [openAssumptionTitle, askSol]);
 
   if (overview.isPending) return <PageSkeleton label={t("shell.skeleton.loading")} />;
   if (overview.isError || !overview.data) {
@@ -171,9 +187,16 @@ function ProofWorkspace({ opportunityId }: { opportunityId: string }) {
   return (
     <div className="flex flex-col gap-8" data-testid="proof-page">
       <PageHeader
-        title={t("pf.title")}
+        eyebrow={t("pf.title")}
+        title={opportunityTitle ?? t("pf.title")}
         subtitle={t("pf.subtitle")}
-        eyebrow={data.opportunity?.title}
+        action={
+          assumptions.length > 0 ? (
+            <Button size="lg" onClick={() => openAdd(null)} data-testid="add-evidence-global">
+              {t("pf.addEvidenceCta")}
+            </Button>
+          ) : undefined
+        }
       />
 
       {generate.isPending || (needsGeneration && !generate.isError) ? (
@@ -195,6 +218,8 @@ function ProofWorkspace({ opportunityId }: { opportunityId: string }) {
 
       {assumptions.length > 0 && (
         <>
+          <EvidenceMap assumptions={assumptions} onSelect={setDetailId} />
+
           <div
             role="group"
             aria-label={t("pf.filters.aria")}
@@ -273,6 +298,17 @@ function ProofWorkspace({ opportunityId }: { opportunityId: string }) {
         </>
       )}
 
+      {assumptions.length > 0 && (
+        <EvidenceStream
+          assumptions={assumptions}
+          onOpenAssumption={setDetailId}
+          onAdd={() => openAdd(null)}
+          onAskSol={({ summary }) =>
+            askSol.open(t("askSol.q.whatChanges", { summary: summary.slice(0, 240) }))
+          }
+        />
+      )}
+
       {data.unassigned.length > 0 && (
         <UnassignedNotes evidence={data.unassigned} assumptions={assumptions} locale={locale} />
       )}
@@ -285,7 +321,9 @@ function ProofWorkspace({ opportunityId }: { opportunityId: string }) {
       />
 
       <EvidenceDialog
-        open={dialog.open}
+        // Never show an empty form: on a first visit (arriving from a mission) the
+        // dialog waits until the assumptions exist, then opens preselected.
+        open={dialog.open && assumptions.length > 0}
         onOpenChange={(open) => {
           setDialog((d) => ({ ...d, open }));
           if (!open && (search.add || search.mission)) {
@@ -298,8 +336,13 @@ function ProofWorkspace({ opportunityId }: { opportunityId: string }) {
         }}
         opportunityId={opportunityId}
         assumptions={assumptions}
-        presetAssumptionId={dialog.assumptionId}
+        presetAssumptionId={
+          dialog.assumptionId ??
+          (search.category ? assumptions.find((a) => a.category === search.category)?.id : null) ??
+          null
+        }
         editing={dialog.editing}
+        titleSupported={data.titleSupported}
         taskId={search.mission ?? null}
         weekId={search.week ?? null}
       />

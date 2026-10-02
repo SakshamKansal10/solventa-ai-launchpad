@@ -108,6 +108,7 @@ function useRowSummary() {
     if (row.key === "limits") {
       const n = (a.constraints ?? []).filter((c) => c !== "none").length + (a.refuse ?? []).length;
       if (n > 0) parts.push(tp("set.founder.constraintsCount", n));
+      else if ((a.constraints ?? []).includes("none")) parts.push(t("common.none"));
     }
     return parts.length > 0 ? parts.join(" · ") : t("set.founder.notSet");
   };

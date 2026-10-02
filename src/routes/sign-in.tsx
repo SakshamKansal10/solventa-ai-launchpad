@@ -9,6 +9,7 @@ import { GoogleSignInButton } from "@/components/solventia/GoogleSignInButton";
 import { PremiumButton } from "@/components/solventia/PremiumButton";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { getSiteUrl } from "@/lib/actions/site-url.server";
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
 import { authErrorKey } from "@/lib/auth-error-messages";
 import { OTP_MAX_LENGTH, sanitizeOtpInput, isOtpLengthPlausible } from "@/lib/otp";
@@ -26,12 +27,15 @@ const RESEND_COOLDOWN_SECONDS = 30;
 export const Route = createFileRoute("/sign-in")({
   validateSearch: z.object({ next: z.string().optional() }),
   component: SignInPage,
-  head: () => ({
+  // The canonical URL follows the configured SITE_URL (the real domain in
+  // production, the local origin in development) instead of a hardcoded host.
+  loader: () => getSiteUrl(),
+  head: ({ loaderData: siteUrl }) => ({
     meta: [
       { title: "Sign In | Solventia" },
       { name: "description", content: "Sign in to your Solventia account." },
     ],
-    links: [{ rel: "canonical", href: "https://solventia.in/sign-in" }],
+    links: [{ rel: "canonical", href: `${(siteUrl ?? "").replace(/\/$/, "")}/sign-in` }],
   }),
 });
 

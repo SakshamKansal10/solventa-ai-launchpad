@@ -3,12 +3,12 @@ import { useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { ArrowRight, Loader2 } from "lucide-react";
 
-import mark from "@/assets/solventia-mark.png";
 import { getCurrentUser } from "@/lib/actions/auth";
 import { completeConsultation } from "@/lib/actions/profile";
 import { useLocale } from "@/lib/i18n/LocaleProvider";
 import { clearLocalDraft, useConsultation } from "@/lib/consultation/store";
 import { AccountGate } from "./AccountGate";
+import { GenerationVisual } from "./GenerationVisual";
 import { ScreenBody } from "./ui";
 
 const STATUS_KEYS = [
@@ -24,42 +24,53 @@ const STATUS_KEYS = [
  * a timer — nothing here ever claims completion, and there is no progress
  * bar or percentage to fake. The screen leaves only when the request actually
  * resolves (see SubmitStep). */
-function GeneratingOverlay() {
+function GeneratingPanel() {
   const { t } = useLocale();
   const [i, setI] = useState(0);
   useEffect(() => {
     const id = window.setInterval(() => setI((n) => Math.min(n + 1, STATUS_KEYS.length - 1)), 4500);
     return () => window.clearInterval(id);
   }, []);
+  // Normal document flow inside the consultation card: the panel reserves its
+  // own height, so nothing here can ever cover the banner, header or copy around it.
   return (
     <div
       role="status"
       aria-live="polite"
       data-testid="generating"
-      className="fixed inset-0 z-40 flex flex-col items-center justify-center gap-8 bg-sol-pearl px-6 text-center"
+      className="flex flex-col items-center gap-8 py-2 text-center"
     >
-      <img src={mark} alt="" width={298} height={436} className="h-10 w-auto" />
       <div className="flex max-w-md flex-col items-center gap-3">
         <h1 className="sol-h2">{t("consult.generating.title")}</h1>
-        <p className="min-h-[1.75rem] text-[1.0625rem] text-sol-ink" key={i}>
+        <p
+          className="flex min-h-[1.75rem] items-center gap-2 text-[1.0625rem] text-sol-ink"
+          key={i}
+        >
+          <Loader2 className="size-4 animate-spin text-sol-violet" aria-hidden="true" />
           {t(STATUS_KEYS[i])}
         </p>
         {i === STATUS_KEYS.length - 1 && (
           <p className="text-[0.9375rem] text-sol-secondary">{t("consult.generating.long")}</p>
         )}
       </div>
-      <Loader2 className="size-6 animate-spin text-sol-violet" aria-hidden="true" />
-      <p className="max-w-xs text-[0.9375rem] leading-relaxed text-sol-secondary">
+      <GenerationVisual />
+      <p className="max-w-sm text-[0.9375rem] leading-relaxed text-sol-secondary">
         {t("consult.generating.saved")}
       </p>
     </div>
   );
 }
 
-export function SubmitStep({ autoStart }: { autoStart: boolean }) {
+export function SubmitStep({
+  autoStart,
+  onGeneratingChange,
+}: {
+  autoStart: boolean;
+  onGeneratingChange?: (generating: boolean) => void;
+}) {
   const { t, locale } = useLocale();
   const navigate = useNavigate();
-  const { answers, flush } = useConsultation();
+  const { answers, flush, dismissResumed } = useConsultation();
   const currentUser = useQuery({
     queryKey: ["current-user"],
     queryFn: () => getCurrentUser(),
@@ -74,6 +85,7 @@ export function SubmitStep({ autoStart }: { autoStart: boolean }) {
   async function run() {
     if (submitting.current) return;
     submitting.current = true;
+    dismissResumed();
     setPhase("generating");
     try {
       await flush();
@@ -88,6 +100,10 @@ export function SubmitStep({ autoStart }: { autoStart: boolean }) {
     }
   }
 
+  useEffect(() => {
+    onGeneratingChange?.(phase === "generating");
+  }, [phase, onGeneratingChange]);
+
   const signedIn = Boolean(currentUser.data);
   useEffect(() => {
     if (autoStart && signedIn && !autoStarted.current) {
@@ -97,7 +113,7 @@ export function SubmitStep({ autoStart }: { autoStart: boolean }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [autoStart, signedIn]);
 
-  if (phase === "generating") return <GeneratingOverlay />;
+  if (phase === "generating") return <GeneratingPanel />;
 
   return (
     <ScreenBody title={t("consult.submit.title")}>

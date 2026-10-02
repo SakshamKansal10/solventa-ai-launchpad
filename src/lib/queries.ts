@@ -16,6 +16,8 @@ export const qk = {
   proofAll: ["proof"] as const,
   opportunity: (id: string) => ["opportunity", id] as const,
   opportunityAll: ["opportunity"] as const,
+  opportunityEconomics: (opportunityId: string) =>
+    ["opportunity-economics", opportunityId] as const,
   notifications: ["notifications"] as const,
   history: ["history"] as const,
   settings: ["settings"] as const,

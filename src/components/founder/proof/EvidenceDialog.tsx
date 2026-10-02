@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useMutation } from "@tanstack/react-query";
-import { Paperclip, X } from "lucide-react";
+import { Paperclip, Sparkles, X } from "lucide-react";
 import { toast } from "sonner";
 
 import {
@@ -13,6 +13,7 @@ import {
 import {
   addProofEvidence,
   EVIDENCE_TYPES,
+  interpretProofEvidence,
   updateProofEvidence,
   type AssumptionDTO,
   type EvidenceDTO,
@@ -21,6 +22,7 @@ import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
 import { useLocale } from "@/lib/i18n/LocaleProvider";
 import { useCurrentUserQuery, useInvalidateFounder } from "@/lib/queries";
 import { cn } from "@/lib/utils";
+import type { EvidenceInterpretation } from "@/lib/ai/prompts/evidence-interpretation";
 import { Button } from "../ui";
 
 const MAX_FILE_BYTES = 10 * 1024 * 1024;
@@ -36,6 +38,7 @@ const NEEDS_PERSON = new Set(["interview", "quote", "payment"]);
 interface Draft {
   assumptionId: string;
   type: (typeof EVIDENCE_TYPES)[number];
+  title: string;
   person: string;
   date: string;
   summary: string;
@@ -62,6 +65,7 @@ export function EvidenceDialog({
   taskId,
   weekId,
   editing,
+  titleSupported = false,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -71,8 +75,10 @@ export function EvidenceDialog({
   taskId?: string | null;
   weekId?: string | null;
   editing?: EvidenceDTO | null;
+  /** Whether this database can store an evidence title (migration 0012). */
+  titleSupported?: boolean;
 }) {
-  const { t } = useLocale();
+  const { t, locale } = useLocale();
   const invalidate = useInvalidateFounder();
   const user = useCurrentUserQuery();
   const fileRef = useRef<HTMLInputElement>(null);
@@ -84,6 +90,7 @@ export function EvidenceDialog({
       return {
         assumptionId: editing.assumptionId ?? assumptions[0]?.id ?? "",
         type: editing.type,
+        title: editing.title ?? "",
         person: editing.sourcePerson ?? "",
         date: editing.occurredOn,
         summary: editing.summary,
@@ -102,6 +109,7 @@ export function EvidenceDialog({
     return {
       assumptionId: presetAssumptionId ?? saved?.assumptionId ?? preset,
       type: saved?.type ?? "interview",
+      title: saved?.title ?? "",
       person: saved?.person ?? "",
       date: saved?.date ?? today(),
       summary: saved?.summary ?? "",
@@ -109,16 +117,42 @@ export function EvidenceDialog({
       url: saved?.url ?? "",
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [editing, presetAssumptionId, opportunityId, open]);
+  }, [editing, presetAssumptionId, opportunityId, open, assumptions[0]?.id]);
 
   const [draft, setDraft] = useState<Draft>(initial);
+  const [suggestion, setSuggestion] = useState<EvidenceInterpretation | null>(null);
+  const [applied, setApplied] = useState(false);
   useEffect(() => {
     if (open) {
       setDraft(initial);
       setFile(null);
       setFileError(null);
+      setSuggestion(null);
+      setApplied(false);
     }
   }, [open, initial]);
+
+  const interpret = useMutation({
+    mutationFn: () =>
+      interpretProofEvidence({
+        data: {
+          opportunityId,
+          assumptionId: draft.assumptionId,
+          evidenceType: draft.type,
+          sourcePerson: draft.person.trim() || undefined,
+          summary: draft.summary,
+          locale,
+        },
+      }),
+    onSuccess: (res) => {
+      setSuggestion(res);
+      setApplied(false);
+    },
+    onError: (err) => {
+      console.error("[proof] interpreting evidence failed:", err);
+      toast.error(t("pf.interpret.error"));
+    },
+  });
 
   // Keep the unsaved draft while the dialog is open (new evidence only).
   useEffect(() => {
@@ -153,6 +187,7 @@ export function EvidenceDialog({
             id: editing.id,
             assumptionId: draft.assumptionId,
             evidenceType: draft.type,
+            title: draft.title.trim() || null,
             sourcePerson: draft.person || null,
             occurredOn: draft.date,
             summary: draft.summary,
@@ -167,6 +202,7 @@ export function EvidenceDialog({
           opportunityId,
           assumptionId: draft.assumptionId,
           evidenceType: draft.type,
+          title: draft.title.trim() || undefined,
           sourcePerson: draft.person || undefined,
           occurredOn: draft.date,
           summary: draft.summary,
@@ -298,6 +334,24 @@ export function EvidenceDialog({
             </div>
           </div>
 
+          {titleSupported && (
+            <div className={field}>
+              <label htmlFor="ev-title" className={label}>
+                {t("pf.dialog.titleField")}{" "}
+                <span className="font-medium text-sol-secondary">({t("common.optional")})</span>
+              </label>
+              <input
+                id="ev-title"
+                data-testid="ev-title"
+                className={input}
+                maxLength={120}
+                placeholder={t("pf.dialog.titlePlaceholder")}
+                value={draft.title}
+                onChange={(e) => setDraft({ ...draft, title: e.target.value })}
+              />
+            </div>
+          )}
+
           <div className={field}>
             <label htmlFor="ev-person" className={label}>
               {t("pf.dialog.person")}{" "}
@@ -328,8 +382,69 @@ export function EvidenceDialog({
               className={cn(input, "py-3")}
               placeholder={t("pf.dialog.whatPlaceholder")}
               value={draft.summary}
-              onChange={(e) => setDraft({ ...draft, summary: e.target.value })}
+              onChange={(e) => {
+                setDraft({ ...draft, summary: e.target.value });
+                if (suggestion) setSuggestion(null);
+              }}
             />
+            <div className="flex flex-wrap items-center gap-3 pt-1">
+              <Button
+                type="button"
+                variant="soft"
+                size="sm"
+                loading={interpret.isPending}
+                disabled={draft.summary.trim().length < 8 || !draft.assumptionId}
+                onClick={() => interpret.mutate()}
+                data-testid="ev-interpret"
+              >
+                <Sparkles className="size-4" aria-hidden="true" />
+                {interpret.isPending ? t("pf.interpret.working") : t("pf.interpret.cta")}
+              </Button>
+              {draft.summary.trim().length < 8 && (
+                <span className="text-[0.875rem] text-sol-secondary">{t("pf.interpret.hint")}</span>
+              )}
+            </div>
+            {suggestion && (
+              <div
+                className={cn(
+                  "mt-1 rounded-2xl border px-4 py-3",
+                  suggestion.signal === "contradicts"
+                    ? "border-sol-warning/50 bg-sol-warning-soft"
+                    : "border-sol-violet/30 bg-sol-violet-soft",
+                )}
+                role="status"
+                data-testid="ev-suggestion"
+                data-signal={suggestion.signal}
+              >
+                <p className="text-[0.8125rem] font-bold uppercase tracking-[0.1em] text-sol-secondary">
+                  {t("pf.interpret.suggests")}:{" "}
+                  <span className="text-sol-ink">
+                    {t(`pf.signal.${suggestion.signal}` as const)}
+                  </span>
+                </p>
+                <p className="mt-1 text-[1rem] leading-snug text-sol-ink">{suggestion.reason}</p>
+                <div className="mt-2 flex flex-wrap items-center gap-3">
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="secondary"
+                    disabled={applied || draft.signal === suggestion.signal}
+                    onClick={() => {
+                      setDraft({ ...draft, signal: suggestion.signal });
+                      setApplied(true);
+                    }}
+                    data-testid="ev-use-suggestion"
+                  >
+                    {t("pf.interpret.use")}
+                  </Button>
+                  <span className="text-[0.875rem] text-sol-secondary">
+                    {applied || draft.signal === suggestion.signal
+                      ? t("pf.interpret.applied")
+                      : t("pf.interpret.disclaimer")}
+                  </span>
+                </div>
+              </div>
+            )}
           </div>
 
           <fieldset className={field}>
@@ -386,6 +501,8 @@ export function EvidenceDialog({
                 accept={ALLOWED_FILE_TYPES.join(",")}
                 className="sr-only"
                 id="ev-file"
+                aria-label={t("pf.dialog.file")}
+                tabIndex={-1}
                 data-testid="ev-file"
                 onChange={(e) => pickFile(e.target.files?.[0] ?? null)}
               />

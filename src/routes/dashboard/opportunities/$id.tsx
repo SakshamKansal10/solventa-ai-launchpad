@@ -4,6 +4,7 @@ import { toast } from "sonner";
 import { z } from "zod";
 import { ArrowLeft, ExternalLink, Layers, Target, Users, Wallet } from "lucide-react";
 
+import { EconomicsTab } from "@/components/founder/EconomicsTab";
 import { FitPill } from "@/components/founder/OpportunityCards";
 import { FitStatusPill, useFitReasonText } from "@/components/founder/fit";
 import {
@@ -27,7 +28,7 @@ import { qk, useInvalidateFounder } from "@/lib/queries";
 import { useTranslatedEntity, type OpportunityOverlay } from "@/lib/use-translation";
 import type { OpportunityDisplayDetail } from "@/lib/opportunity-display";
 
-const TABS = ["overview", "fit", "market", "proof"] as const;
+const TABS = ["overview", "fit", "market", "economics", "proof"] as const;
 type Tab = (typeof TABS)[number];
 
 export const Route = createFileRoute("/dashboard/opportunities/$id")({
@@ -95,7 +96,7 @@ function OpportunityPage() {
               key={key}
               value={key}
               data-testid={`tab-${key}`}
-              className="min-h-11 rounded-xl px-5 text-[1rem] font-semibold data-[state=active]:bg-sol-surface data-[state=active]:text-sol-violet-deep data-[state=active]:shadow-sm"
+              className="min-h-11 rounded-xl px-5 text-[1rem] font-semibold text-sol-secondary data-[state=active]:bg-sol-surface data-[state=active]:text-sol-violet-deep data-[state=active]:shadow-sm"
             >
               {t(`opp.tab.${key}` as const)}
             </TabsTrigger>
@@ -110,6 +111,9 @@ function OpportunityPage() {
         </TabsContent>
         <TabsContent value="market" className="mt-8">
           <Market dto={dto} opportunityId={id} />
+        </TabsContent>
+        <TabsContent value="economics" className="mt-8">
+          <EconomicsTab opportunityId={id} />
         </TabsContent>
         <TabsContent value="proof" className="mt-8">
           <ProofTab dto={dto} opportunityId={id} />
@@ -226,56 +230,86 @@ function Overview({ detail }: { detail: OpportunityDisplayDetail }) {
       )}
     </Card>
   );
+  const chain = [
+    { key: "customer", label: t("opp.ov.customer"), text: detail.customerHeadline },
+    { key: "pain", label: t("opp.ov.pain"), text: detail.problemHeadline },
+    { key: "product", label: t("opp.ov.product"), text: detail.solutionHeadline },
+    { key: "wedge", label: t("opp.ov.wedge"), text: detail.firstExperiment },
+  ].filter((n) => n.text);
   return (
-    <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
-      {block(
-        "customer",
-        <Users className="size-5" aria-hidden="true" />,
-        t("opp.ov.customer"),
-        t("opp.ov.customerCap"),
-        detail.customerHeadline,
-        detail.customer,
-      )}
-      {block(
-        "pain",
-        <Target className="size-5" aria-hidden="true" />,
-        t("opp.ov.pain"),
-        t("opp.ov.painCap"),
-        detail.problemHeadline,
-        detail.problem,
-      )}
-      {block(
-        "product",
-        <Layers className="size-5" aria-hidden="true" />,
-        t("opp.ov.product"),
-        t("opp.ov.productCap"),
-        detail.solutionHeadline,
-        detail.solution,
-      )}
-      {block(
-        "revenue",
-        <Wallet className="size-5" aria-hidden="true" />,
-        t("opp.ov.revenue"),
-        t("opp.ov.revenueCap"),
-        detail.moneyHeadline,
-        detail.businessModel,
-      )}
-      {block(
-        "wedge",
-        <Target className="size-5" aria-hidden="true" />,
-        t("opp.ov.wedge"),
-        t("opp.ov.wedgeCap"),
-        detail.firstExperiment,
-        "",
-      )}
-      {block(
-        "scale",
-        <Layers className="size-5" aria-hidden="true" />,
-        t("opp.ov.scale"),
-        t("opp.ov.scaleCap"),
-        detail.revenuePath,
-        "",
-      )}
+    <div className="flex flex-col gap-8">
+      <ol
+        className="relative grid gap-4 rounded-[1.5rem] border border-sol-border bg-sol-surface p-5 sm:grid-cols-2 lg:grid-cols-4 lg:p-6"
+        data-testid="overview-chain"
+      >
+        <span
+          aria-hidden="true"
+          className="absolute left-[12.5%] right-[12.5%] top-[2.6rem] hidden h-0.5 rounded-full bg-gradient-to-r from-sol-champagne via-sol-violet to-sol-champagne lg:block"
+        />
+        {chain.map((n, i) => (
+          <li key={n.key} className="relative flex flex-col gap-2 lg:items-center lg:text-center">
+            <span className="relative z-10 flex size-9 items-center justify-center rounded-full border-2 border-sol-violet bg-sol-violet-soft font-display text-[1rem] font-semibold text-sol-violet-deep">
+              {i + 1}
+            </span>
+            <p className="text-[0.8125rem] font-bold uppercase tracking-[0.1em] text-sol-champagne-deep">
+              {n.label}
+            </p>
+            <p className="line-clamp-4 text-[1.0625rem] font-medium leading-snug text-sol-ink">
+              {n.text}
+            </p>
+          </li>
+        ))}
+      </ol>
+      <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
+        {block(
+          "customer",
+          <Users className="size-5" aria-hidden="true" />,
+          t("opp.ov.customer"),
+          t("opp.ov.customerCap"),
+          detail.customerHeadline,
+          detail.customer,
+        )}
+        {block(
+          "pain",
+          <Target className="size-5" aria-hidden="true" />,
+          t("opp.ov.pain"),
+          t("opp.ov.painCap"),
+          detail.problemHeadline,
+          detail.problem,
+        )}
+        {block(
+          "product",
+          <Layers className="size-5" aria-hidden="true" />,
+          t("opp.ov.product"),
+          t("opp.ov.productCap"),
+          detail.solutionHeadline,
+          detail.solution,
+        )}
+        {block(
+          "revenue",
+          <Wallet className="size-5" aria-hidden="true" />,
+          t("opp.ov.revenue"),
+          t("opp.ov.revenueCap"),
+          detail.moneyHeadline,
+          detail.businessModel,
+        )}
+        {block(
+          "wedge",
+          <Target className="size-5" aria-hidden="true" />,
+          t("opp.ov.wedge"),
+          t("opp.ov.wedgeCap"),
+          detail.firstExperiment,
+          "",
+        )}
+        {block(
+          "scale",
+          <Layers className="size-5" aria-hidden="true" />,
+          t("opp.ov.scale"),
+          t("opp.ov.scaleCap"),
+          detail.revenuePath,
+          "",
+        )}
+      </div>
     </div>
   );
 }

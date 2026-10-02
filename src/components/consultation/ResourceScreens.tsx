@@ -13,7 +13,8 @@ import {
 import { getCurrencyForCountry } from "@/lib/country-currency";
 import { CurrencyField } from "./CurrencyField";
 import { useLabels } from "./labels";
-import { ChoiceGrid, ComboboxField, MultiGrid, Question, ScreenBody } from "./ui";
+import { ChipCloud, SegmentedScale, StepScale } from "./controls";
+import { ComboboxField, Question, ScreenBody } from "./ui";
 
 /** Country-aware bracket options: index → label in the founder's currency. */
 function useBracketOptions(kind: BracketKind) {
@@ -39,11 +40,12 @@ export function CapitalScreen() {
 
   return (
     <ScreenBody title={t("q.capital.title")} helper={t("q.capital.helper")}>
-      <ChoiceGrid
+      <StepScale
         name="capital"
         options={options}
         value={answers.capitalBracket === undefined ? undefined : String(answers.capitalBracket)}
         onChange={(id) => setAnswer("capitalBracket", Number(id))}
+        placeholder={t("consult.scale.pick")}
       />
       {isTop && (
         <Question label={t("q.capitalPrecise.label")} optional>
@@ -66,7 +68,7 @@ export function AccessScreen() {
   const { answers, setAnswer } = useConsultation();
   return (
     <ScreenBody title={t("q.access.title")} helper={t("q.access.helper")}>
-      <MultiGrid
+      <ChipCloud
         name="access"
         options={L.opts("access", ACCESS_IDS)}
         value={answers.access}
@@ -102,7 +104,7 @@ export function PositionScreen() {
           onChange={(id) => setAnswer("bizSector", id)}
         />
         <Question label={t("q.bizTurnover.label")}>
-          <ChoiceGrid
+          <StepScale
             name="turnover"
             options={turnover}
             value={
@@ -111,12 +113,12 @@ export function PositionScreen() {
                 : String(answers.bizTurnoverBracket)
             }
             onChange={(id) => setAnswer("bizTurnoverBracket", Number(id))}
+            placeholder={t("consult.scale.pick")}
           />
         </Question>
         <Question label={t("q.bizTeam.label")}>
-          <ChoiceGrid
+          <SegmentedScale
             name="bizteam"
-            columns={3}
             options={team}
             value={
               answers.bizTeamBracket === undefined
@@ -137,7 +139,7 @@ export function PositionScreen() {
 
   return (
     <ScreenBody title={t("q.income.label")} helper={t("q.income.helper")} optional>
-      <ChoiceGrid
+      <StepScale
         name="income"
         options={income}
         value={
@@ -146,6 +148,7 @@ export function PositionScreen() {
             : String(answers.annualIncomeBracket)
         }
         onChange={(id) => setAnswer("annualIncomeBracket", Number(id))}
+        placeholder={t("consult.scale.pick")}
       />
       {answers.annualIncomeBracket !== undefined && (
         <button

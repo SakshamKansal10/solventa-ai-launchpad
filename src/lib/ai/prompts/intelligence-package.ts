@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-import { generateJSON, AIGenerationError } from "@/lib/ai/gemini.server";
+import { generateJSON, generateStructured, AIGenerationError } from "@/lib/ai/gemini.server";
 import { env } from "@/lib/env.server";
 import {
   FounderDNASchema,
@@ -31,6 +31,19 @@ import { formatAmbitionContextForPrompt, type AmbitionCalibration } from "@/lib/
 // Roadmap". That split is what actually fixed the complexity problem: this
 // module's response is now just founder DNA + 3 opportunity descriptions,
 // well under the ceiling that only ever showed up around nested roadmaps.
+//
+// Re-verified live (one real generateContent call, gemini-3.6-flash) that
+// THIS flat, post-split schema is accepted as a provider-side responseSchema
+// without a 400 — the ceiling above was specific to the old nested-roadmap
+// shape, not to this one. generateIntelligencePackage therefore uses
+// generateStructured (schema attached), which constrains the model to valid
+// JSON matching the shape at generation time instead of only hoping the
+// prompt's hand-written contract is followed — the class of bug this call
+// hit in practice (a syntactically malformed response) can no longer happen
+// the same way. Local Zod validation still runs on whatever comes back
+// either way; routes that nest 3 levels deep (roadmap-generation.ts,
+// roadmap-adjustment.ts) are a different, larger shape and still use
+// generateJSON — they haven't been re-verified against the live ceiling.
 //
 // The response Gemini returns is still flat (opportunityIndex-tagged)
 // rather than a bare array, purely so the model can't silently return
@@ -254,14 +267,17 @@ Produce this founder's initial Solventia workspace in one response:
 Respond with ONLY a single JSON object — no markdown fences, no commentary before or after — matching this exact shape:
 ${IDEA_PACKAGE_JSON_CONTRACT}${buildLanguageRule(locale)}`;
 
-  const flat = await generateJSON(FlatIntelligencePackageSchema, {
+  const flat = await generateStructured(FlatIntelligencePackageSchema, {
     systemInstruction: SYSTEM_INSTRUCTION,
     prompt,
-    // The one-call architecture guarantees exactly one automatic Gemini
-    // request per initial analysis — an invalid response here must fail
-    // immediately and surface a retry to the FOUNDER, not silently spend a
-    // second request against the shared daily quota on their behalf.
-    allowRetry: false,
+    // Up to 2 total attempts on the same model: an invalid/malformed first
+    // response retries ONCE automatically, telling the model exactly what
+    // was wrong, before surfacing a retry to the founder — bounded, so a
+    // consultation never costs more than 2 requests against the shared
+    // daily quota. The founder's own "Try again" button (SubmitStep.tsx)
+    // is a separate, explicit third+ attempt if both of these fail; their
+    // answers are preserved either way (consultation_drafts + local state),
+    // never requiring the 7-stage consultation to be refilled.
     callSite: "generateIntelligencePackage",
     purpose: "INITIAL_INTELLIGENCE",
     route: "consultation/complete",
@@ -283,7 +299,7 @@ const FlatExploreOpportunitySchema = FlatOpportunitySchema.extend({
 });
 type FlatExploreOpportunity = z.infer<typeof FlatExploreOpportunitySchema>;
 
-function makeFlatExploreSchema(count: number) {
+export function makeFlatExploreSchema(count: number) {
   const indexes = Array.from({ length: count }, (_, i) => i);
   return z
     .object({

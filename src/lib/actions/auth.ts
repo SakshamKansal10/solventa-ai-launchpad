@@ -39,9 +39,9 @@ export interface CurrentUserDTO {
   initials: string;
 }
 
-function initialsFor(fullName: string | null, email: string | null): string {
+export function initialsFor(fullName: string | null, email: string | null): string {
   const source = (fullName?.trim() || email?.split("@")[0] || "S").trim();
-  const parts = source.split(/[s._-]+/).filter(Boolean);
+  const parts = source.split(/[\s._-]+/).filter(Boolean);
   const letters = (parts.length > 1 ? parts[0][0] + parts[1][0] : source.slice(0, 2)).toUpperCase();
   return letters || "S";
 }

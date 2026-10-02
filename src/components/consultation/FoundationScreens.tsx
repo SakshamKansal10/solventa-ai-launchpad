@@ -1,5 +1,17 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Loader2, MapPin, Search } from "lucide-react";
+import {
+  Armchair,
+  Briefcase,
+  CircleHelp,
+  GraduationCap,
+  Laptop,
+  Loader2,
+  MapPin,
+  Pause,
+  School,
+  Search,
+  Store,
+} from "lucide-react";
 
 import { useLocale } from "@/lib/i18n/LocaleProvider";
 import { useConsultation } from "@/lib/consultation/store";
@@ -23,7 +35,19 @@ import { lookupPostalCode, searchCities, type CitySuggestion } from "@/lib/actio
 import { searchInstitutions, type InstitutionSuggestion } from "@/lib/actions/institutions";
 import { LANGUAGE_LIBRARY } from "@/lib/onboarding-types";
 import { useLabels } from "./labels";
-import { ChoiceGrid, Chip, ComboboxField, MultiGrid, Question, ScreenBody, TextField } from "./ui";
+import { ChipCloud, DirectionCards, SegmentedScale } from "./controls";
+import { Chip, ComboboxField, Question, ScreenBody, TextField } from "./ui";
+
+const STATUS_ICONS = {
+  school_student: School,
+  college_student: GraduationCap,
+  working_professional: Briefcase,
+  business_owner: Store,
+  freelancer: Laptop,
+  career_break: Pause,
+  not_working: Armchair,
+  other: CircleHelp,
+};
 
 /** Debounced value — used by the city/institution search boxes. */
 function useDebounced<T>(value: T, ms: number): T {
@@ -61,8 +85,9 @@ export function BasicsScreen() {
         error={invalid ? t("q.age.invalid", { min: AGE_MIN, max: AGE_MAX }) : null}
       />
       <Question label={t("q.status.label")}>
-        <ChoiceGrid
+        <DirectionCards
           name="status"
+          icons={STATUS_ICONS}
           options={L.opts("status", STATUS_IDS)}
           value={answers.status}
           onChange={(id) => setAnswer("status", id)}
@@ -436,8 +461,9 @@ export function EducationScreen() {
   return (
     <ScreenBody title={t("q.education.title")}>
       <Question label={t("q.education.label")}>
-        <ChoiceGrid
+        <SegmentedScale
           name="education"
+          noBarsFor={["other"]}
           options={L.opts("education", EDUCATION_IDS)}
           value={answers.education}
           onChange={(id) => setAnswer("education", id)}
@@ -487,9 +513,9 @@ export function EducationScreen() {
 
       {answers.status === "college_student" && (
         <Question label={t("q.studyYear.label")}>
-          <ChoiceGrid
+          <SegmentedScale
             name="studyYear"
-            columns={3}
+            noBarsFor={["recent_grad"]}
             options={L.opts("study_year", STUDY_YEAR_IDS)}
             value={answers.studyYear}
             onChange={(id) => setAnswer("studyYear", id)}
@@ -526,9 +552,8 @@ export function LanguagesTimeScreen() {
   return (
     <ScreenBody title={t("q.languagesTime.title")}>
       <Question label={t("q.languages.label")} helper={t("q.languages.helper")}>
-        <MultiGrid
+        <ChipCloud
           name="language"
-          columns={3}
           options={library.map((name) => ({ id: name, label: L.language(name) }))}
           value={languages}
           onToggle={toggle}
@@ -569,9 +594,8 @@ export function LanguagesTimeScreen() {
       </Question>
 
       <Question label={t("q.hours.label")} helper={t("q.hours.helper")}>
-        <ChoiceGrid
+        <SegmentedScale
           name="hours"
-          columns={3}
           options={L.opts("hours", HOURS_IDS)}
           value={answers.weeklyHours}
           onChange={(id) => setAnswer("weeklyHours", id)}

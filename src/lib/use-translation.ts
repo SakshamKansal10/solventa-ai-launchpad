@@ -63,3 +63,14 @@ export function useTranslatedBrief(
 }
 
 export type { OpportunityOverlay };
+
+/** The reader-language title of an opportunity, falling back to the canonical
+ * one while (or if) the translation is unavailable. Shares its cache with the
+ * opportunity pages, so a title is translated at most once. */
+export function useTranslatedTitle(
+  id: string | null | undefined,
+  title: string | null | undefined,
+): string | null {
+  const { data } = useTranslatedEntity<{ title?: string }>("opportunity", id ?? null);
+  return data?.title ?? title ?? null;
+}

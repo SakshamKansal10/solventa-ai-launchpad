@@ -17,11 +17,33 @@ import {
 } from "@/components/ui/command";
 import { cn } from "@/lib/utils";
 import { useLabels } from "./labels";
-import { MultiGrid, ScreenBody, Segmented } from "./ui";
+import { ChipCloud } from "./controls";
+import { ScreenBody, Segmented } from "./ui";
 
 /** Skills: searchable multi-select. Each skill states how good it really is
  * AND whether it was ever used on a real project/job — that second answer is
  * what stops a long list of beginner tick-boxes from anchoring the result. */
+const LEVEL_RANK: Record<string, number> = { basic: 1, working: 2, advanced: 3, professional: 4 };
+
+/** Four bars that fill with the stated proficiency. */
+function LevelMeter({ level }: { level: string | null }) {
+  const rank = level ? (LEVEL_RANK[level] ?? 0) : 0;
+  return (
+    <span className="flex items-end gap-[3px]" aria-hidden="true">
+      {[1, 2, 3, 4].map((b) => (
+        <span
+          key={b}
+          style={{ height: `${8 + b * 4}px` }}
+          className={cn(
+            "w-1.5 rounded-sm transition-colors duration-200",
+            b <= rank ? "bg-sol-violet" : "bg-sol-border-strong",
+          )}
+        />
+      ))}
+    </span>
+  );
+}
+
 export function SkillsScreen() {
   const { t } = useLocale();
   const L = useLabels();
@@ -140,7 +162,10 @@ export function SkillsScreen() {
               )}
             >
               <div className="flex items-start justify-between gap-3">
-                <p className="text-[1.0625rem] font-semibold text-sol-ink">{L.skill(skill.name)}</p>
+                <p className="flex items-center gap-3 text-[1.0625rem] font-semibold text-sol-ink">
+                  <LevelMeter level={skill.level} />
+                  {L.skill(skill.name)}
+                </p>
                 <button
                   type="button"
                   onClick={() => remove(skill.name)}
@@ -198,8 +223,46 @@ export function DomainsScreen() {
   const { answers, setAnswer } = useConsultation();
   return (
     <ScreenBody title={t("q.domains.title")} helper={t("q.domains.helper")}>
-      <MultiGrid
+      <ChipCloud
         name="domains"
+        searchPlaceholder={t("consult.search.domains")}
+        emptyLabel={t("q.skills.noMatches")}
+        groups={[
+          {
+            label: t("consult.group.domainsTech"),
+            ids: ["software", "ecommerce", "data_research", "engineering", "design", "product"],
+          },
+          {
+            label: t("consult.group.domainsBiz"),
+            ids: [
+              "finance",
+              "consulting",
+              "marketing",
+              "sales",
+              "operations",
+              "accounting",
+              "hr",
+              "support",
+            ],
+          },
+          {
+            label: t("consult.group.domainsIndustry"),
+            ids: [
+              "healthcare",
+              "education",
+              "manufacturing",
+              "realestate",
+              "hospitality",
+              "media",
+              "agri_food",
+              "logistics",
+              "government",
+              "nonprofit",
+              "legal",
+            ],
+          },
+          { label: "", ids: ["none"] },
+        ]}
         options={L.opts("domains", DOMAIN_IDS)}
         value={answers.domains}
         onToggle={(id) => setAnswer("domains", toggleMulti("domains", answers.domains, id))}
@@ -214,7 +277,7 @@ export function ExecutionScreen() {
   const { answers, setAnswer } = useConsultation();
   return (
     <ScreenBody title={t("q.execution.title")} helper={t("q.execution.helper")}>
-      <MultiGrid
+      <ChipCloud
         name="execution"
         options={L.opts("execution", EXECUTION_IDS)}
         value={answers.executionSignals}

@@ -44,21 +44,31 @@ function BuildingPage() {
   const founder = useFounderState();
   const [statusIndex, setStatusIndex] = useState(0);
   const [waitingOnOther, setWaitingOnOther] = useState(false);
+  const [timedOut, setTimedOut] = useState(false);
   const startedRef = useRef(false);
 
   const build = useMutation({
     mutationFn: () => buildRoadmap({ data: { opportunityId, locale } }),
     onSuccess: async (res) => {
-      await invalidate();
       if (res.status === "ready") {
-        void navigate({
-          to: "/dashboard/roadmap",
-          search: { tab: "week", week: 1 },
-          replace: true,
-        });
+        try {
+          await invalidate();
+        } finally {
+          // Navigate even if refreshing the cache failed: the destination page
+          // fetches its own data, so a stale cache must never leave this
+          // screen spinning once the roadmap itself is confirmed built.
+          void navigate({
+            to: "/dashboard/roadmap",
+            search: { tab: "week", week: 1 },
+            replace: true,
+          });
+        }
       } else if (res.status === "in_progress") {
         // Another request (another tab, or an earlier attempt) owns this build.
         setWaitingOnOther(true);
+        await invalidate().catch(() => {});
+      } else {
+        await invalidate().catch(() => {});
       }
     },
     onError: (err) => console.error("[roadmap] build request failed:", err),
@@ -71,6 +81,20 @@ function BuildingPage() {
     build.mutate();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // A hard ceiling so this screen can never spin forever: generation plus
+  // persistence normally finishes well under a minute, so anything still
+  // pending after this is a genuine failure (a hung request, a dead
+  // connection to the AI/database) even if no error ever came back.
+  useEffect(() => {
+    if (!build.isPending) return;
+    setTimedOut(false);
+    const id = window.setTimeout(() => {
+      console.error("[roadmap] build request timed out client-side after 120s");
+      setTimedOut(true);
+    }, 120_000);
+    return () => window.clearTimeout(id);
+  }, [build.isPending]);
 
   useEffect(() => {
     const id = window.setInterval(
@@ -98,7 +122,8 @@ function BuildingPage() {
   const failed =
     build.isError ||
     build.data?.status === "failed" ||
-    (waitingOnOther && roadmapStatus === "failed");
+    (waitingOnOther && roadmapStatus === "failed") ||
+    timedOut;
 
   return (
     <div className="flex min-h-dvh flex-col bg-sol-pearl text-sol-ink">
@@ -132,6 +157,7 @@ function BuildingPage() {
                   onClick={() => {
                     setWaitingOnOther(false);
                     setStatusIndex(0);
+                    setTimedOut(false);
                     build.mutate();
                   }}
                   data-testid="retry-build"

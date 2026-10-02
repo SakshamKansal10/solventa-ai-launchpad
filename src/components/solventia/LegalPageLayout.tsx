@@ -37,7 +37,7 @@ export function LegalPageLayout({
           <h1 className="font-display text-[2rem] font-semibold leading-[1.15] text-sol-ink sm:text-[2.5rem]">
             {title}
           </h1>
-          <p className="mt-3 text-[0.85rem] text-sol-secondary">Last updated: {lastUpdated}</p>
+          <p className="mt-3 text-[0.9375rem] text-sol-secondary">Last updated: {lastUpdated}</p>
           {intro && (
             <p className="mt-6 max-w-[820px] text-[1rem] leading-[1.8] text-sol-secondary">
               {intro}
@@ -49,7 +49,7 @@ export function LegalPageLayout({
               aria-label="Sections"
               className="hidden self-start rounded-2xl border border-sol-border bg-sol-surface p-4 lg:sticky lg:top-24 lg:block"
             >
-              <p className="text-[0.68rem] font-semibold uppercase tracking-wide text-sol-muted">
+              <p className="text-[0.875rem] font-semibold uppercase tracking-wide text-sol-muted">
                 On this page
               </p>
               <ol className="mt-3 flex flex-col gap-2">
@@ -57,7 +57,7 @@ export function LegalPageLayout({
                   <li key={s.id}>
                     <a
                       href={`#${s.id}`}
-                      className="text-[0.82rem] leading-snug text-sol-secondary transition-colors hover:text-sol-violet-deep"
+                      className="text-[0.9375rem] leading-snug text-sol-secondary transition-colors hover:text-sol-violet-deep"
                     >
                       {s.title}
                     </a>

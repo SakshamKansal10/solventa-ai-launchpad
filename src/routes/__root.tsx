@@ -148,7 +148,7 @@ function RootComponent() {
         <MotionConfig reducedMotion="user">
           {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
           <Outlet />
-          <Toaster position="bottom-right" />
+          <Toaster position="bottom-center" />
         </MotionConfig>
       </LocaleProvider>
     </QueryClientProvider>

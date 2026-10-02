@@ -25,6 +25,10 @@ export interface SchemaCapabilities {
   drafts: boolean;
   /** roadmaps.status allows 'building' / 'failed' / 'completed'. */
   roadmapStates: boolean;
+  /** opportunity_economics table (migration 0011). */
+  economics: boolean;
+  /** proof_evidence.title and the url/screenshot/survey types (migration 0012). */
+  evidenceTitle: boolean;
 }
 
 const ALL_OFF: SchemaCapabilities = {
@@ -34,6 +38,8 @@ const ALL_OFF: SchemaCapabilities = {
   profileExtras: false,
   drafts: false,
   roadmapStates: false,
+  economics: false,
+  evidenceTitle: false,
 };
 
 let cache: { at: number; caps: SchemaCapabilities } | null = null;
@@ -66,7 +72,16 @@ export async function getSchemaCapabilities(
     }
   };
 
-  const [weekLock, proof, translations, profileExtras, drafts, roadmapStates] = await Promise.all([
+  const [
+    weekLock,
+    proof,
+    translations,
+    profileExtras,
+    drafts,
+    roadmapStates,
+    economics,
+    evidenceTitle,
+  ] = await Promise.all([
     probe("roadmap_weeks", "generation_status"),
     probe("proof_assumptions", "id"),
     probe("content_translations", "id"),
@@ -74,6 +89,8 @@ export async function getSchemaCapabilities(
     probe("consultation_drafts", "user_id"),
     // Column added in the same migration as the widened status check.
     probe("roadmaps", "build_error"),
+    probe("opportunity_economics", "id"),
+    probe("proof_evidence", "title"),
   ]);
 
   const caps: SchemaCapabilities = {
@@ -84,6 +101,8 @@ export async function getSchemaCapabilities(
     profileExtras,
     drafts,
     roadmapStates,
+    economics,
+    evidenceTitle,
   };
   cache = { at: Date.now(), caps };
   return caps;

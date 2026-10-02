@@ -2,8 +2,18 @@ import { expect, type Page } from "@playwright/test";
 
 /** Selects an option in a cmdk combobox by its visible label. */
 export async function pickCombo(page: Page, testId: string, label: string | RegExp) {
-  await page.getByTestId(testId).click();
-  await page.getByRole("option", { name: label }).first().click();
+  // The list is an animated popover; if it closes underneath the click (seen once
+  // under heavy load) reopen it. Three genuine failures in a row still fail.
+  for (let attempt = 1; attempt <= 3; attempt++) {
+    await page.getByTestId(testId).click();
+    try {
+      await page.getByRole("option", { name: label }).first().click({ timeout: 8_000 });
+      return;
+    } catch (err) {
+      if (attempt === 3) throw err;
+      await page.keyboard.press("Escape");
+    }
+  }
 }
 
 export async function cont(page: Page) {

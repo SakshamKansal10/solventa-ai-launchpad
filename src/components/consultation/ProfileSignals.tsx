@@ -1,3 +1,6 @@
+import { useEffect, useRef, useState } from "react";
+import { AnimatePresence, motion, useReducedMotion } from "motion/react";
+
 import { useLocale } from "@/lib/i18n/LocaleProvider";
 import { useConsultation } from "@/lib/consultation/store";
 import { bracketLabelFor } from "@/lib/consultation/brackets";
@@ -98,9 +101,38 @@ export function useProfileFacts(): Fact[] {
   return facts;
 }
 
+/** Living, not a receipt: a fact that wasn't here on the previous render
+ * gets one brief violet highlight that settles back to normal — the only
+ * signal that this panel is reacting to what the founder just answered,
+ * not a static printout. */
+function useJustArrivedKeys(facts: Fact[]): Set<string> {
+  const seen = useRef<Set<string>>(new Set());
+  const [justArrived, setJustArrived] = useState<Set<string>>(new Set());
+
+  useEffect(() => {
+    const newly = new Set<string>();
+    for (const f of facts) {
+      if (!seen.current.has(f.key)) {
+        newly.add(f.key);
+        seen.current.add(f.key);
+      }
+    }
+    if (newly.size === 0) return;
+    setJustArrived(newly);
+    const id = window.setTimeout(() => setJustArrived(new Set()), 1100);
+    return () => window.clearTimeout(id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [facts.map((f) => f.key).join(",")]);
+
+  return justArrived;
+}
+
 export function ProfileSignals({ className }: { className?: string }) {
   const { t } = useLocale();
   const facts = useProfileFacts();
+  const justArrived = useJustArrivedKeys(facts);
+  const reduceMotion = useReducedMotion();
+
   return (
     <aside
       aria-label={t("consult.panel.title")}
@@ -115,16 +147,38 @@ export function ProfileSignals({ className }: { className?: string }) {
           {t("consult.panel.empty")}
         </p>
       ) : (
-        <dl className="mt-4 flex flex-col gap-4">
-          {facts.map((f) => (
-            <div key={f.key}>
-              <dt className="text-[0.875rem] font-semibold text-sol-secondary">{f.label}</dt>
-              <dd className="mt-0.5 text-[1.0625rem] font-medium leading-snug text-sol-ink">
-                {f.value}
-              </dd>
-            </div>
-          ))}
-        </dl>
+        <>
+          <dl className="mt-4 flex flex-col gap-1">
+            <AnimatePresence initial={false}>
+              {facts.map((f) => (
+                <motion.div
+                  key={f.key}
+                  layout={!reduceMotion}
+                  initial={reduceMotion ? false : { opacity: 0, x: -6 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.32, ease: [0.22, 1, 0.36, 1] }}
+                  className="-mx-2.5 rounded-xl px-2.5 py-2.5 transition-colors duration-[700ms]"
+                  style={{
+                    backgroundColor:
+                      justArrived.has(f.key) && !reduceMotion
+                        ? "var(--sol-violet-soft)"
+                        : "transparent",
+                  }}
+                  data-testid={`profile-fact-${f.key}`}
+                  data-just-arrived={justArrived.has(f.key) || undefined}
+                >
+                  <dt className="text-[0.875rem] font-semibold text-sol-secondary">{f.label}</dt>
+                  <dd className="mt-0.5 text-[1.0625rem] font-medium leading-snug text-sol-ink">
+                    {f.value}
+                  </dd>
+                </motion.div>
+              ))}
+            </AnimatePresence>
+          </dl>
+          <p className="mt-4 border-t border-sol-border pt-3 text-[0.8125rem] leading-snug text-sol-secondary">
+            {t("consult.panel.footerNote")}
+          </p>
+        </>
       )}
     </aside>
   );

@@ -85,7 +85,8 @@ export type GeminiFailureCategory =
   | "GEMINI_QUOTA_EXCEEDED" // 429 — rate limit or daily quota
   | "GEMINI_UNAVAILABLE" // 503 — temporary model overload/high demand
   | "GEMINI_EMPTY_RESPONSE" // 2xx but no text came back
-  | "GEMINI_SCHEMA_MISMATCH" // response parsed but failed Zod validation
+  | "GEMINI_MALFORMED_JSON" // 2xx, text came back, but JSON.parse itself failed
+  | "GEMINI_SCHEMA_MISMATCH" // parsed fine but failed Zod validation
   | "GEMINI_REQUEST_FAILED"; // network/timeout/unknown
 
 function classifyGeminiFailure(err: unknown): GeminiFailureCategory {
@@ -140,6 +141,7 @@ export type GeminiCallPurpose =
   | "ROADMAP_REPLAN"
   | "REANALYZE"
   | "PROOF_ASSUMPTIONS"
+  | "EVIDENCE_INTERPRETATION"
   | "CONTENT_TRANSLATION"
   | "LEGACY_FALLBACK";
 
@@ -160,14 +162,12 @@ interface GenerateStructuredParams {
   systemInstruction: string;
   prompt: string;
   /**
-   * Defaults to true. The one-call initial-consultation generation
-   * (generateIntelligencePackage) passes false: that call site must cost
-   * exactly one automatic Gemini request, so an invalid first response has
-   * to surface as an immediate failure — recoverable only by an explicit
-   * user-triggered retry — never a silent second HTTP call charged against
-   * the same daily quota. Every other caller (mentor replies, roadmap
-   * adjustment, etc.) keeps the retry since it's a minor UX nicety there,
-   * not a guarantee the app makes to the user.
+   * Defaults to true (2 total attempts on the same model, the second one
+   * telling the model exactly what was wrong with the first). A caller
+   * passes false only when even a single corrective retry must never
+   * happen automatically — e.g. a call site that is itself already a
+   * user-triggered retry — since every retry is a second HTTP request
+   * against the same daily quota.
    */
   allowRetry?: boolean;
   /** Diagnostic label only (e.g. "generateIntelligencePackage") — never
@@ -207,6 +207,14 @@ function logCallCost(fields: {
   fallbackUsed?: boolean;
   responseSchemaPresent?: boolean;
   responseMimeType?: string;
+  /** Characters in the raw response text, when one came back — lets a
+   * truncated response (suspiciously short) be told apart from a genuinely
+   * malformed one at a glance, without logging the content itself. */
+  responseLength?: number;
+  /** Parse/validation failures only: a bounded, non-secret excerpt of the
+   * raw response around where it broke — see snippetNearParseError. Never
+   * set on success, and never the full response. */
+  diagnosticSnippet?: string;
 }) {
   console.info(
     "GEMINI_CALL",
@@ -225,12 +233,40 @@ function logCallCost(fields: {
       candidatesTokenCount: fields.usage?.candidatesTokenCount ?? null,
       thoughtsTokenCount: fields.usage?.thoughtsTokenCount ?? null,
       totalTokenCount: fields.usage?.totalTokenCount ?? null,
+      responseLength: fields.responseLength ?? null,
       durationMs: fields.durationMs,
       success: fields.success,
       errorCategory: fields.errorCategory ?? null,
       timestamp: new Date().toISOString(),
     }),
   );
+  // Separate line, and only when there's something to show: keeps the
+  // always-emitted GEMINI_CALL line's shape stable for log parsing, while
+  // still making a malformed/invalid response locally debuggable.
+  if (fields.diagnosticSnippet) {
+    console.info(
+      `GEMINI_PARSE_DIAGNOSTIC requestId=${fields.requestId} purpose=${fields.purpose} attempt=${fields.attempt} category=${fields.errorCategory ?? "unknown"} responseLength=${fields.responseLength ?? "unknown"}: ${fields.diagnosticSnippet}`,
+    );
+  }
+}
+
+/** A bounded, non-secret excerpt of a response that failed to parse/validate
+ * — enough to see what Gemini actually did wrong (truncation, a stray
+ * comment, an unescaped quote) without dumping the full founder-derived
+ * content into server logs. Centers on the JSON.parse error's reported
+ * character offset when the error message carries one (V8 always includes
+ * one, e.g. "at position 10974"); otherwise shows the start and end. */
+function snippetNearParseError(text: string, errorMessage: string, radius = 200): string {
+  const offsetMatch = /position (\d+)/.exec(errorMessage);
+  if (!offsetMatch) {
+    return text.length <= radius * 2
+      ? text
+      : `${text.slice(0, radius)} …[${text.length - radius * 2} chars omitted]… ${text.slice(-radius)}`;
+  }
+  const pos = Number(offsetMatch[1]);
+  const start = Math.max(0, pos - radius);
+  const end = Math.min(text.length, pos + radius);
+  return `…${text.slice(start, end)}…  (error at offset ${pos} of ${text.length})`;
 }
 
 /** Shared by generateStructured and generateJSON — the only difference
@@ -277,7 +313,9 @@ async function runGenerationLoop<T>(
       const prompt =
         attempt === 0
           ? params.prompt
-          : `${params.prompt}\n\nYour previous response failed validation with this error, fix it and respond again with ONLY valid JSON matching the required shape:\n${lastError}`;
+          : lastCategory === "GEMINI_MALFORMED_JSON"
+            ? `${params.prompt}\n\nYour previous response was not valid JSON — it could not be parsed at all and failed with this error:\n${lastError}\nRespond again with ONLY a single, complete, syntactically valid JSON object matching the required shape. No markdown fences, no commentary, no truncation.`
+            : `${params.prompt}\n\nYour previous response did not satisfy the required JSON schema. Validation failed with this error:\n${lastError}\nFix it and respond again with ONLY valid JSON matching the required shape.`;
 
       try {
         const response = await ai.models.generateContent({
@@ -316,7 +354,33 @@ async function runGenerationLoop<T>(
           });
           continue;
         }
-        const parsed = JSON.parse(responseText);
+
+        let parsed: unknown;
+        try {
+          parsed = JSON.parse(responseText);
+        } catch (parseErr) {
+          lastError = parseErr instanceof Error ? parseErr.message : "Malformed JSON response.";
+          lastCategory = "GEMINI_MALFORMED_JSON";
+          logCallCost({
+            requestId,
+            purpose: params.purpose,
+            route,
+            model,
+            fallbackUsed: isFallbackModel,
+            thinkingLevel: params.thinkingLevel ?? "default",
+            attempt,
+            durationMs,
+            success: false,
+            usage,
+            errorCategory: lastCategory,
+            responseSchemaPresent: responseSchema !== null,
+            responseMimeType: "application/json",
+            responseLength: responseText.length,
+            diagnosticSnippet: snippetNearParseError(responseText, lastError),
+          });
+          continue;
+        }
+
         const result = schema.safeParse(parsed);
         if (result.success) {
           logCallCost({
@@ -332,6 +396,7 @@ async function runGenerationLoop<T>(
             usage,
             responseSchemaPresent: responseSchema !== null,
             responseMimeType: "application/json",
+            responseLength: responseText.length,
           });
           return result.data;
         }
@@ -351,6 +416,8 @@ async function runGenerationLoop<T>(
           errorCategory: lastCategory,
           responseSchemaPresent: responseSchema !== null,
           responseMimeType: "application/json",
+          responseLength: responseText.length,
+          diagnosticSnippet: responseText.length <= 400 ? responseText : undefined,
         });
       } catch (err) {
         lastError = err instanceof Error ? err.message : "Gemini request failed.";

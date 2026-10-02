@@ -77,6 +77,7 @@ export function ConsultationShell({
   const c = useConsultation();
   const [profileOpen, setProfileOpen] = useState(false);
   const [confirmRestart, setConfirmRestart] = useState(false);
+  const [generating, setGenerating] = useState(false);
 
   const stage = c.stage;
   const isFirst = c.index === 0 && !c.isSubmitStep;
@@ -169,7 +170,7 @@ export function ConsultationShell({
                   data-testid={`screen-${c.isSubmitStep ? "submit" : c.current?.key}`}
                 >
                   {c.isSubmitStep ? (
-                    <SubmitStep autoStart={autoSubmit} />
+                    <SubmitStep autoStart={autoSubmit} onGeneratingChange={setGenerating} />
                   ) : c.current ? (
                     <ScreenView screenKey={c.current.key} />
                   ) : null}
@@ -187,6 +188,19 @@ export function ConsultationShell({
                       <ArrowLeft className="size-4" aria-hidden="true" />
                       {t("consult.back")}
                     </button>
+                    {c.canContinue && (
+                      <p
+                        key={c.current?.key}
+                        className="sol-reveal hidden flex-1 items-center justify-center gap-2 text-[0.9375rem] font-semibold text-sol-violet-deep sm:flex"
+                        data-testid="signal-added"
+                      >
+                        <span className="relative flex size-2.5">
+                          <span className="absolute inline-flex size-full animate-ping rounded-full bg-sol-violet/50" />
+                          <span className="relative inline-flex size-2.5 rounded-full bg-sol-violet" />
+                        </span>
+                        {t("consult.signalAdded")}
+                      </p>
+                    )}
                     <button
                       type="button"
                       onClick={c.goNext}
@@ -199,7 +213,7 @@ export function ConsultationShell({
                     </button>
                   </div>
                 )}
-                {c.isSubmitStep && (
+                {c.isSubmitStep && !generating && (
                   <div className="mt-6">
                     <button
                       type="button"
