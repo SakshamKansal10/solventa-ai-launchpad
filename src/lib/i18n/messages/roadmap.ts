@@ -11,7 +11,8 @@ const en = {
   "rm.mission.markComplete": "Mark complete",
   "rm.mission.reopen": "Reopen",
   "rm.mission.completedOn": "Completed {date}",
-  "rm.mission.needEvidenceHint": "Add the evidence this mission asks for, then you can complete it.",
+  "rm.mission.needEvidenceHint":
+    "Add the evidence this mission asks for, then you can complete it.",
   "rm.mission.needEvidenceError": "This mission needs evidence before it can be completed.",
   "rm.mission.expand": "Open mission",
   "rm.mission.collapse": "Close mission",

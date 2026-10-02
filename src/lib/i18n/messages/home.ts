@@ -46,8 +46,7 @@ const en = {
   "founderSignal.eyebrow": "Product demonstration",
   "founderSignal.headline1": "Your profile should",
   "founderSignal.headline2": "change the opportunity.",
-  "founderSignal.subhead":
-    "The same business idea should not be recommended to everyone.",
+  "founderSignal.subhead": "The same business idea should not be recommended to everyone.",
   "founderSignal.demoLabel": "PRODUCT DEMONSTRATION",
   "founderSignal.demoNote": "Illustrative inputs — not a live score.",
   "founderSignal.group.capability": "Capability",
@@ -214,8 +213,7 @@ const hi: Record<keyof typeof en, string> = {
   "founderSignal.eyebrow": "प्रोडक्ट डेमो",
   "founderSignal.headline1": "आपकी प्रोफ़ाइल को",
   "founderSignal.headline2": "अवसर बदलना चाहिए।",
-  "founderSignal.subhead":
-    "एक ही बिज़नेस आइडिया हर किसी को सुझाया नहीं जाना चाहिए।",
+  "founderSignal.subhead": "एक ही बिज़नेस आइडिया हर किसी को सुझाया नहीं जाना चाहिए।",
   "founderSignal.demoLabel": "प्रोडक्ट डेमो",
   "founderSignal.demoNote": "उदाहरण के लिए दिए गए इनपुट — यह कोई असली स्कोर नहीं है।",
   "founderSignal.group.capability": "क्षमता",

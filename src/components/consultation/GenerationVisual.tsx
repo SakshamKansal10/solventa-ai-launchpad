@@ -55,7 +55,7 @@ export function GenerationVisual() {
             transition={{ duration: 0.4, delay: 0.1 + i * 0.09 }}
             className="min-w-0 rounded-xl border border-sol-border bg-sol-surface px-3 py-2 text-left"
           >
-            <span className="block truncate text-[0.75rem] font-semibold uppercase tracking-[0.06em] text-sol-secondary">
+            <span className="block truncate text-[0.875rem] font-semibold uppercase tracking-[0.06em] text-sol-secondary">
               {f.label}
             </span>
             <span className="block truncate text-[0.9375rem] font-medium leading-snug text-sol-ink">

@@ -217,7 +217,7 @@ export function MissionCard({
         <div className="relative mt-5 pl-0 sm:pl-[3.25rem]">
           <dl className="grid gap-5" data-testid="mission-details">
             <div>
-              <dt className="text-[0.8125rem] font-bold uppercase tracking-[0.1em] text-sol-champagne-deep">
+              <dt className="text-[0.875rem] font-bold uppercase tracking-[0.1em] text-sol-champagne-deep">
                 {t("rm.mission.whyShort")}
               </dt>
               <dd className="mt-1 max-w-[62ch] text-[1.0625rem] leading-relaxed text-sol-ink">
@@ -226,7 +226,7 @@ export function MissionCard({
             </div>
             {steps.length > 0 && (
               <div>
-                <dt className="text-[0.8125rem] font-bold uppercase tracking-[0.1em] text-sol-champagne-deep">
+                <dt className="text-[0.875rem] font-bold uppercase tracking-[0.1em] text-sol-champagne-deep">
                   {t("rm.mission.do")}
                 </dt>
                 <dd>
@@ -245,7 +245,7 @@ export function MissionCard({
               </div>
             )}
             <div>
-              <dt className="text-[0.8125rem] font-bold uppercase tracking-[0.1em] text-sol-champagne-deep">
+              <dt className="text-[0.875rem] font-bold uppercase tracking-[0.1em] text-sol-champagne-deep">
                 {t("rm.mission.capture")}
               </dt>
               <dd className="mt-1 max-w-[62ch] text-[1.0625rem] leading-relaxed text-sol-ink">

@@ -53,7 +53,7 @@ function BriefChain({ brief }: { brief: OpportunityBrief }) {
             <n.icon className="size-6 text-sol-violet-deep" aria-hidden="true" />
           </span>
           <div className="min-w-0">
-            <p className="text-[0.8125rem] font-bold uppercase tracking-[0.1em] text-sol-champagne-deep">
+            <p className="text-[0.875rem] font-bold uppercase tracking-[0.1em] text-sol-champagne-deep">
               {n.label}
             </p>
             <p className="mt-1 line-clamp-4 text-[1.0625rem] leading-snug text-sol-ink">{n.text}</p>

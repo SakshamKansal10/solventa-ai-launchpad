@@ -14,7 +14,8 @@ const en = {
   "story.signals.title": "Your signals",
   "story.directions.title": "Directions for this founder",
   "story.strongest": "Strongest direction",
-  "story.engine.aria": "Founder signals flowing into Solventia Intelligence and out to three directions",
+  "story.engine.aria":
+    "Founder signals flowing into Solventia Intelligence and out to three directions",
 
   "story.opp.eyebrow": "Opportunity intelligence",
   "story.opp.headline": "One direction rises above the rest.",

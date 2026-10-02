@@ -179,7 +179,7 @@ export function AdaptiveRoadmap() {
                       className="rounded-2xl border border-sol-champagne/60 bg-sol-hp-surface p-4"
                       data-testid="demo-evidence"
                     >
-                      <p className="flex items-center gap-2 text-[13px] font-bold uppercase tracking-[0.1em] text-sol-champagne-deep">
+                      <p className="flex items-center gap-2 text-[0.875rem] font-bold uppercase tracking-[0.1em] text-sol-champagne-deep">
                         <Quote className="size-3.5" aria-hidden="true" />
                         {t("story.road.captured")} · {t("story.road.evidenceKind")}
                       </p>

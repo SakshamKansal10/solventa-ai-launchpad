@@ -78,17 +78,17 @@ test.describe("Hindi — public pages", () => {
     page,
   }) => {
     await gotoApp(page, "/");
-    await expect(page.getByRole("heading", { level: 1 })).toContainText("Find the business");
+    await expect(page.getByRole("heading", { level: 1 })).toContainText("Your Dream.");
     await page.getByTestId("language-switch").click();
-    await expect(page.getByRole("heading", { level: 1 })).toContainText("वह बिज़नेस खोजें");
+    await expect(page.getByRole("heading", { level: 1 })).toContainText("आपका सपना");
     await expect(page.locator("html")).toHaveAttribute("lang", "hi");
     await expect(page.locator("header")).toContainText("SOLVENTIA");
 
     await page.reload();
-    await expect(page.getByRole("heading", { level: 1 })).toContainText("वह बिज़नेस खोजें");
+    await expect(page.getByRole("heading", { level: 1 })).toContainText("आपका सपना");
     // The very first HTML (no JavaScript) is already Hindi — no English flash.
     const html = await page.request.get("/", { headers: { cookie: "solventia-locale=hi" } });
-    expect(await html.text()).toContain("वह बिज़नेस खोजें");
+    expect(await html.text()).toContain("आपका सपना");
   });
 
   for (const route of [

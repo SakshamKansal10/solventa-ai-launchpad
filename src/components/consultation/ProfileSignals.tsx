@@ -175,7 +175,7 @@ export function ProfileSignals({ className }: { className?: string }) {
               ))}
             </AnimatePresence>
           </dl>
-          <p className="mt-4 border-t border-sol-border pt-3 text-[0.8125rem] leading-snug text-sol-secondary">
+          <p className="mt-4 border-t border-sol-border pt-3 text-[0.875rem] leading-snug text-sol-secondary">
             {t("consult.panel.footerNote")}
           </p>
         </>

@@ -149,7 +149,7 @@ export function StepScale({
         </div>
       </div>
 
-      <div className="flex justify-between gap-4 text-[0.8125rem] font-semibold text-sol-secondary">
+      <div className="flex justify-between gap-4 text-[0.875rem] font-semibold text-sol-secondary">
         <span>{startLabel ?? options[0].label}</span>
         <span className="text-right">{endLabel ?? options[n - 1].label}</span>
       </div>
@@ -160,7 +160,7 @@ export function StepScale({
             <li
               key={o.id}
               className={cn(
-                "min-w-0 flex-1 px-1 text-center text-[0.8125rem] leading-tight transition-colors",
+                "min-w-0 flex-1 px-1 text-center text-[0.875rem] leading-tight transition-colors",
                 i === idx ? "font-semibold text-sol-ink" : "text-sol-secondary",
               )}
             >
@@ -351,7 +351,7 @@ export function ChipCloud({
           return (
             <div key={g.label} className="flex flex-col gap-2.5">
               {g.label && (
-                <p className="text-[0.8125rem] font-bold uppercase tracking-[0.1em] text-sol-champagne-deep">
+                <p className="text-[0.875rem] font-bold uppercase tracking-[0.1em] text-sol-champagne-deep">
                   {g.label}
                 </p>
               )}
@@ -471,7 +471,7 @@ export function GroupedChecklist({
         return (
           <div key={g.label}>
             {g.label && (
-              <p className="mb-2 text-[0.8125rem] font-bold uppercase tracking-[0.1em] text-sol-champagne-deep">
+              <p className="mb-2 text-[0.875rem] font-bold uppercase tracking-[0.1em] text-sol-champagne-deep">
                 {g.label}
               </p>
             )}

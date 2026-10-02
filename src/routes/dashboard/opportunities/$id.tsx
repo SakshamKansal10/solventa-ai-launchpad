@@ -251,7 +251,7 @@ function Overview({ detail }: { detail: OpportunityDisplayDetail }) {
             <span className="relative z-10 flex size-9 items-center justify-center rounded-full border-2 border-sol-violet bg-sol-violet-soft font-display text-[1rem] font-semibold text-sol-violet-deep">
               {i + 1}
             </span>
-            <p className="text-[0.8125rem] font-bold uppercase tracking-[0.1em] text-sol-champagne-deep">
+            <p className="text-[0.875rem] font-bold uppercase tracking-[0.1em] text-sol-champagne-deep">
               {n.label}
             </p>
             <p className="line-clamp-4 text-[1.0625rem] font-medium leading-snug text-sol-ink">

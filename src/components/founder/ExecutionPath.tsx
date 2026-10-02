@@ -3,35 +3,10 @@ import { motion, useReducedMotion } from "motion/react";
 import { Check, TriangleAlert } from "lucide-react";
 
 import type { AssumptionDTO } from "@/lib/actions/proof";
+import { buildPath, PATH_NODES } from "@/lib/execution-path";
 import type { MessageKey } from "@/lib/i18n";
 import { useLocale } from "@/lib/i18n/LocaleProvider";
 import { cn } from "@/lib/utils";
-
-type NodeId =
-  "direction" | "problem" | "payment" | "offer" | "delivery" | "repeatability" | "growth";
-type Category = AssumptionDTO["category"];
-type Status = "completed" | "testing" | "contradicted" | "untested" | "none";
-
-/** The route from "a direction was chosen" to "it grows", read off the founder's
- * REAL assumptions. Each stop owns the assumption categories that belong to it,
- * so its state is whatever the evidence says — never a score or a percentage. */
-const NODES: { id: NodeId; categories: Category[] }[] = [
-  { id: "direction", categories: [] },
-  { id: "problem", categories: ["problem"] },
-  { id: "payment", categories: ["willingness_to_pay", "pricing"] },
-  { id: "offer", categories: ["competition", "other"] },
-  { id: "delivery", categories: ["delivery"] },
-  { id: "repeatability", categories: ["retention"] },
-  { id: "growth", categories: ["distribution"] },
-];
-
-function statusOf(items: AssumptionDTO[]): Status {
-  if (items.length === 0) return "none";
-  if (items.some((a) => a.state === "contradicted")) return "contradicted";
-  if (items.every((a) => a.state === "supported")) return "completed";
-  if (items.some((a) => a.state !== "untested")) return "testing";
-  return "untested";
-}
 
 export function ExecutionPath({
   opportunityId,
@@ -46,13 +21,7 @@ export function ExecutionPath({
   const navigate = useNavigate();
   const reduceMotion = useReducedMotion();
 
-  const stops = NODES.map((n) => {
-    const items = assumptions.filter((a) => n.categories.includes(a.category));
-    const status: Status = n.id === "direction" ? "completed" : statusOf(items);
-    return { ...n, items, status };
-  });
-  // "You are here": the first stop after the direction that is not yet supported.
-  const currentIndex = stops.findIndex((s, i) => i > 0 && s.status !== "completed");
+  const { stops, currentIndex } = buildPath(assumptions);
 
   const go = (stop: (typeof stops)[number]) => {
     if (stop.id === "direction") {
@@ -73,7 +42,7 @@ export function ExecutionPath({
         aria-busy="true"
         data-testid="execution-path-loading"
       >
-        {NODES.map((n) => (
+        {PATH_NODES.map((n) => (
           <span key={n.id} className="flex flex-1 flex-col items-center gap-2">
             <span className="size-9 animate-pulse rounded-full bg-white/10" />
             <span className="h-2.5 w-14 animate-pulse rounded-full bg-white/10" />
@@ -161,7 +130,7 @@ export function ExecutionPath({
                     {done ? (
                       <Check className="size-4" strokeWidth={3} aria-hidden="true" />
                     ) : (
-                      <span className="text-[0.8125rem] font-bold">{i + 1}</span>
+                      <span className="text-[0.875rem] font-bold">{i + 1}</span>
                     )}
                   </motion.span>
                   {warn && (
@@ -175,7 +144,7 @@ export function ExecutionPath({
                 </button>
                 <span
                   className={cn(
-                    "mt-1.5 text-center text-[0.8125rem] font-semibold leading-tight",
+                    "mt-1.5 text-center text-[0.875rem] font-semibold leading-tight",
                     done || isCurrent ? "text-white" : "text-white/60",
                   )}
                 >
@@ -183,7 +152,7 @@ export function ExecutionPath({
                 </span>
                 <span
                   className={cn(
-                    "mt-0.5 text-center text-[0.75rem] leading-tight",
+                    "mt-0.5 text-center text-[0.875rem] leading-tight",
                     isCurrent ? "font-semibold text-sol-champagne" : "text-white/45",
                   )}
                 >

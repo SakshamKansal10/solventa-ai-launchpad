@@ -206,7 +206,7 @@ function RoadmapWorkspace({
           data-testid="roadmap-now"
         >
           <div className="min-w-0">
-            <dt className="text-[0.8125rem] font-bold uppercase tracking-[0.1em] text-sol-secondary">
+            <dt className="text-[0.875rem] font-bold uppercase tracking-[0.1em] text-sol-secondary">
               {t("rm.header.current")}
             </dt>
             <dd
@@ -225,7 +225,7 @@ function RoadmapWorkspace({
             </dd>
           </div>
           <div className="min-w-0" data-testid="next-checkpoint">
-            <dt className="text-[0.8125rem] font-bold uppercase tracking-[0.1em] text-sol-secondary">
+            <dt className="text-[0.875rem] font-bold uppercase tracking-[0.1em] text-sol-secondary">
               {t("rm.header.checkpoint")}
             </dt>
             <dd className="mt-1 text-[1.125rem] font-semibold leading-snug text-sol-ink">

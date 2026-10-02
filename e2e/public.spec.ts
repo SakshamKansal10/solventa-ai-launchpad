@@ -28,22 +28,27 @@ test.describe("homepage", () => {
       return {
         hero: top("main section:first-of-type"),
         signal: top("#founder-signal"),
+        opportunity: top("#opportunity-demo"),
         how: top("#how-it-works"),
         adaptive: top("#adaptive-roadmap"),
-        why: top("#why-solventia"),
+        proof: top("#proof-demo"),
+        why: top("#ask-sol-demo"),
         faq: top("#faq"),
         cta: top("main section:has(a[href='/for-organizations'])"),
       };
     });
     expect(order.hero).toBeLessThan(order.signal);
-    expect(order.signal).toBeLessThan(order.how);
+    expect(order.signal).toBeLessThan(order.opportunity);
+    expect(order.opportunity).toBeLessThan(order.how);
     expect(order.how).toBeLessThan(order.adaptive);
-    expect(order.adaptive).toBeLessThan(order.why);
+    expect(order.adaptive).toBeLessThan(order.proof);
+    expect(order.proof).toBeLessThan(order.why);
     expect(order.why).toBeLessThan(order.cta);
     expect(order.cta).toBeLessThan(order.faq);
 
-    // Exactly the intended eight blocks: hero, five sections, closing CTA, FAQ (footer is outside main).
-    await expect(page.locator("main > section")).toHaveCount(7);
+    // Exactly the intended nine blocks: hero, the six product demonstrations, closing CTA, FAQ
+    // (footer is outside main; the connectors between sections are not sections).
+    await expect(page.locator("main > section")).toHaveCount(9);
     const text = await page.locator("main").innerText();
     expect(text).not.toMatch(/Business DNA/i);
     expect(text).not.toMatch(/Founder Genome/i);

@@ -92,7 +92,7 @@ export function PhaseStrip({
                   {text.phaseTitle(p.id, p.title)}
                 </span>
                 {p.range && (
-                  <span className="text-[0.8125rem] text-sol-secondary">
+                  <span className="text-[0.875rem] text-sol-secondary">
                     {t("common.weeksRange", { from: p.range.first, to: p.range.last })}
                   </span>
                 )}

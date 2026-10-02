@@ -130,7 +130,7 @@ export function WhySolventia() {
               {t("story.ask.eyebrow")}
             </p>
 
-            <p className="mt-4 text-[13px] font-bold uppercase tracking-[0.1em] text-sol-champagne-deep">
+            <p className="mt-4 text-[0.875rem] font-bold uppercase tracking-[0.1em] text-sol-champagne-deep">
               {t("story.ask.contextLabel")}
             </p>
             <div

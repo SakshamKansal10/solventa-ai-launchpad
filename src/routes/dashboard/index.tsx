@@ -3,7 +3,18 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { z } from "zod";
-import { ArrowRight, Compass } from "lucide-react";
+import {
+  ArrowRight,
+  Check,
+  Clock3,
+  Compass,
+  FileCheck2,
+  Lightbulb,
+  Loader2,
+  Rocket,
+  Users,
+  Wallet,
+} from "lucide-react";
 import { Line, LineChart, ReferenceDot, ResponsiveContainer } from "recharts";
 
 import {
@@ -12,6 +23,17 @@ import {
   FitPill,
   FlagshipCard,
 } from "@/components/founder/OpportunityCards";
+import {
+  GhostChart,
+  GhostNodes,
+  JourneyRibbon,
+  MomentumBars,
+  ProgressRing,
+  StackedBar,
+  WeekTrack,
+  type MomentumDay,
+  type RibbonPhase,
+} from "@/components/founder/dashboard/graphics";
 import { ExecutionPath } from "@/components/founder/ExecutionPath";
 import { FitStatusPill } from "@/components/founder/fit";
 import { EvidenceMap } from "@/components/founder/proof/EvidenceMap";
@@ -38,10 +60,11 @@ import {
   contributionPerCustomer,
   revenueSensitivityPoints,
 } from "@/lib/economics";
-import { getProofOverview } from "@/lib/actions/proof";
+import { getProofOverview, type AssumptionDTO } from "@/lib/actions/proof";
 import { getRoadmapView, type RoadmapView } from "@/lib/actions/roadmap";
 import { useLocale } from "@/lib/i18n/LocaleProvider";
 import { qk, useCurrentUserQuery, useFounderState, useInvalidateFounder } from "@/lib/queries";
+import { cn } from "@/lib/utils";
 import { useTranslatedBrief } from "@/lib/use-translation";
 import { useTranslatedEntity } from "@/lib/use-translation";
 import { useTranslatedTitle } from "@/lib/use-translation";
@@ -331,6 +354,43 @@ function DirectionSelected({
   );
 }
 
+const FIT_PIPS = { strong: 3, moderate: 2, conditional: 1 } as const;
+const FIT_ICONS = {
+  capability: Lightbulb,
+  resources: Wallet,
+  access: Users,
+  ambition: Rocket,
+} as const;
+
+const localKey = (d: Date) =>
+  `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+
+/** The last 14 days, one entry per day: missions finished (from their completion
+ * time) and evidence captured (from the date the founder gave it). */
+function buildMomentum(view: RoadmapView, assumptions: AssumptionDTO[]): MomentumDay[] {
+  const now = new Date();
+  const days: MomentumDay[] = [];
+  for (let i = 13; i >= 0; i--) {
+    const d = new Date(now.getFullYear(), now.getMonth(), now.getDate() - i);
+    days.push({ key: localKey(d), missions: 0, evidence: 0, today: i === 0 });
+  }
+  const byKey = new Map(days.map((d) => [d.key, d]));
+  for (const w of view.weeks) {
+    for (const m of w.missions) {
+      if (!m.completedAt) continue;
+      const day = byKey.get(localKey(new Date(m.completedAt)));
+      if (day) day.missions += 1;
+    }
+  }
+  for (const a of assumptions) {
+    for (const e of a.evidence) {
+      const day = byKey.get(e.occurredOn);
+      if (day) day.evidence += 1;
+    }
+  }
+  return days;
+}
+
 interface WeekOverlay {
   mission?: string;
   missions?: Record<string, { title?: string }>;
@@ -434,26 +494,38 @@ function NextMove({
   const breakEven = econ ? breakEvenCustomers(econ) : null;
   const sensPoints = econ ? revenueSensitivityPoints(econ) : [];
   const matrix = detail.data?.fit.matrix ?? null;
-  const recentChanges: { key: string; text: string }[] = [];
-  if (adaptation) recentChanges.push({ key: "adapt", text: adaptation });
-  for (const m of weekMissions.filter((x) => x.state === "completed").slice(0, 2)) {
-    recentChanges.push({ key: m.id, text: t("cc.recent.missionDone", { title: m.title }) });
-  }
-  const mostEvidenced = [...assumptions].sort((a, b) => b.evidence.length - a.evidence.length)[0];
-  if (mostEvidenced && mostEvidenced.evidence.length > 0) {
-    recentChanges.push({
-      key: mostEvidenced.id,
-      text: t("cc.recent.evidenceAdded", { title: mostEvidenced.title }),
-    });
-  }
-  if (recentChanges.length === 0 && week) {
-    recentChanges.push({
-      key: "start",
-      text: t("cc.recent.weekStarted", {
-        week: t("common.weekN", { n: String(week.number).padStart(2, "0") }),
-      }),
-    });
-  }
+  const supportedN = counts?.supported ?? 0;
+  const testingN = (counts?.weak ?? 0) + (counts?.mixed ?? 0);
+  const untestedN = counts?.untested ?? 0;
+  const contradictedN = counts?.contradicted ?? 0;
+  const momentum = buildMomentum(view, assumptions);
+  const momentumTotal = momentum.reduce((n, d) => n + d.missions + d.evidence, 0);
+  const weekDone = weekMissions.length > 0 && missionsDone === weekMissions.length;
+  const nextWeekLabel =
+    week && week.number < view.totals.weeks
+      ? t("common.weekN", { n: String(week.number + 1).padStart(2, "0") })
+      : t("rm.state.completed");
+  const phaseRibbon: RibbonPhase[] = view.phases.map((p, i) => ({
+    id: p.id,
+    number: i + 1,
+    title: skeleton.data?.phases?.[p.id]?.title ?? p.title,
+    current: p.id === view.currentPhaseId,
+    weeks: p.weekIds.flatMap((wid) => {
+      const w = view.weeks.find((x) => x.id === wid);
+      return w
+        ? [
+            {
+              id: w.id,
+              state: (w.state === "completed"
+                ? "completed"
+                : w.id === view.currentWeekId
+                  ? "current"
+                  : "future") as "completed" | "current" | "future",
+            },
+          ]
+        : [];
+    }),
+  }));
 
   return (
     <>
@@ -491,7 +563,7 @@ function NextMove({
           {/* Top row: Active Direction / Current Week / Evidence — real data only. */}
           <div className="relative grid gap-5 border-b border-workspace-border pb-5 sm:grid-cols-[1.35fr_1fr_1.15fr]">
             <div className="min-w-0">
-              <p className="text-[0.75rem] font-bold uppercase tracking-[0.1em] text-workspace-muted">
+              <p className="text-[0.875rem] font-bold uppercase tracking-[0.1em] text-workspace-muted">
                 {t("cc.surface.direction")}
               </p>
               <p
@@ -502,7 +574,7 @@ function NextMove({
               </p>
             </div>
             <div className="min-w-0">
-              <p className="text-[0.75rem] font-bold uppercase tracking-[0.1em] text-workspace-muted">
+              <p className="text-[0.875rem] font-bold uppercase tracking-[0.1em] text-workspace-muted">
                 {t("cc.surface.week")}
               </p>
               <p className="mt-1.5 text-[1.1875rem] font-semibold leading-snug text-workspace-foreground">
@@ -511,7 +583,7 @@ function NextMove({
               <p className="truncate text-[0.9375rem] text-workspace-muted">{weekTitle}</p>
             </div>
             <div className="min-w-0">
-              <p className="text-[0.75rem] font-bold uppercase tracking-[0.1em] text-workspace-muted">
+              <p className="text-[0.875rem] font-bold uppercase tracking-[0.1em] text-workspace-muted">
                 {t("cc.surface.evidence")}
               </p>
               <p
@@ -521,17 +593,45 @@ function NextMove({
                 {proof.data && assumptions.length > 0
                   ? t("cc.surface.evidenceLine", {
                       captured: view.totals.evidence,
-                      supported: counts?.supported ?? 0,
-                      testing: (counts?.weak ?? 0) + (counts?.mixed ?? 0),
+                      supported: supportedN,
+                      testing: testingN,
                     })
                   : t("cc.surface.evidenceNone")}
               </p>
+              <div className="mt-2.5">
+                <StackedBar
+                  ariaLabel={t("cc.surface.evidenceAria")}
+                  track="bg-white/10"
+                  segments={[
+                    {
+                      value: supportedN,
+                      className: "bg-sol-champagne",
+                      label: t("cc.map.legend.supported"),
+                    },
+                    {
+                      value: testingN,
+                      className: "bg-sol-violet",
+                      label: t("cc.map.legend.testing"),
+                    },
+                    {
+                      value: contradictedN,
+                      className: "bg-sol-warning",
+                      label: t("pf.state.contradicted"),
+                    },
+                    {
+                      value: untestedN,
+                      className: "bg-white/25",
+                      label: t("cc.map.legend.untested"),
+                    },
+                  ]}
+                />
+              </div>
             </div>
           </div>
 
           {/* The execution path — each stop read off the founder's real assumptions. */}
           <div className="relative mt-5">
-            <p className="mb-3 text-[0.75rem] font-bold uppercase tracking-[0.1em] text-sol-champagne">
+            <p className="mb-3 text-[0.875rem] font-bold uppercase tracking-[0.1em] text-sol-champagne">
               {t("cc.path.heading")}
             </p>
             <ExecutionPath
@@ -571,51 +671,152 @@ function NextMove({
         </section>
       )}
 
-      {/* Today's Move — the single largest, most visually dominant action on
-          the page (spec: "visually stronger than all ordinary cards"). A
-          light champagne-bordered console, deliberately NOT a second dark
-          surface — the spec is explicit that one dark surface is enough. */}
-      {week && !completed && mission && week.state !== "generating_next" && (
-        <Card
-          className="relative overflow-hidden border-l-[6px] border-l-sol-champagne p-6 sm:p-8"
-          data-testid="todays-move"
-        >
-          <Eyebrow className="text-sol-champagne-deep">{t("cc.today.heading")}</Eyebrow>
-          <h2
-            className="mt-3 max-w-[32ch] font-display text-[clamp(1.5rem,1.2rem+1.2vw,2.125rem)] font-semibold leading-[1.15] text-sol-ink"
-            data-testid="current-mission"
-          >
-            {missionTitle}
-          </h2>
-          {mission.why && (
-            <p className="sol-body sol-prose mt-3 max-w-[60ch] text-sol-secondary">
-              <span className="font-semibold text-sol-ink">{t("cc.today.why")}: </span>
-              {mission.why}
-            </p>
-          )}
-          <div className="mt-5 flex flex-wrap items-center gap-2">
-            {mission.timeEstimate && <Pill>{mission.timeEstimate}</Pill>}
-            {mission.evidenceRequired && <Pill tone="violet">{t("rm.evidenceRequired")}</Pill>}
-          </div>
-          <div className="mt-6">
-            <LinkButton
-              to="/dashboard/roadmap"
-              search={{ week: week.number, mission: mission.id }}
-              variant="primary"
-              size="lg"
-              data-testid="start-mission"
+      {/* Today's Move + this week as a track that ends at the next unlock. */}
+      {week && !completed && (
+        <div className="grid gap-5 lg:grid-cols-[1.35fr_1fr]">
+          {mission && week.state !== "generating_next" ? (
+            <Card
+              className="relative overflow-hidden border-l-[6px] border-l-sol-champagne p-6 sm:p-8"
+              data-testid="todays-move"
             >
-              {mission.state === "not_started" ? t("rm.mission.start") : t("cc.c.continueMission")}
-              <ArrowRight className="size-4 text-sol-champagne" aria-hidden="true" />
-            </LinkButton>
-          </div>
-        </Card>
+              <Eyebrow className="text-sol-champagne-deep">{t("cc.today.heading")}</Eyebrow>
+              <h2
+                className="mt-3 max-w-[30ch] font-display text-[clamp(1.5rem,1.2rem+1.2vw,2.125rem)] font-semibold leading-[1.15] text-sol-ink"
+                data-testid="current-mission"
+              >
+                {missionTitle}
+              </h2>
+              <div className="mt-5 flex flex-wrap items-center gap-2">
+                {mission.timeEstimate && (
+                  <Pill>
+                    <Clock3 className="size-3.5" aria-hidden="true" />
+                    {mission.timeEstimate}
+                  </Pill>
+                )}
+                {mission.evidenceRequired && (
+                  <Pill tone="violet">
+                    <FileCheck2 className="size-3.5" aria-hidden="true" />
+                    {t("rm.evidenceRequired")}
+                  </Pill>
+                )}
+              </div>
+              <div className="mt-6">
+                <LinkButton
+                  to="/dashboard/roadmap"
+                  search={{ week: week.number, mission: mission.id }}
+                  variant="primary"
+                  size="lg"
+                  data-testid="start-mission"
+                >
+                  {mission.state === "not_started"
+                    ? t("rm.mission.start")
+                    : t("cc.c.continueMission")}
+                  <ArrowRight className="size-4 text-sol-champagne" aria-hidden="true" />
+                </LinkButton>
+              </div>
+            </Card>
+          ) : (
+            <Card
+              className="flex flex-col items-start justify-center gap-5 border-l-[6px] border-l-sol-champagne p-6 sm:p-8"
+              data-testid="week-wrap"
+            >
+              {week.state === "generating_next" ? (
+                <p
+                  className="flex items-center gap-3 font-display text-[1.5rem] font-semibold text-sol-ink"
+                  role="status"
+                >
+                  <Loader2 className="size-6 animate-spin text-sol-violet" aria-hidden="true" />
+                  {t("rm.gen.preparingShort")}
+                </p>
+              ) : (
+                <>
+                  <span className="flex size-14 items-center justify-center rounded-full bg-sol-champagne text-sol-ink">
+                    <Check className="size-7" strokeWidth={3} aria-hidden="true" />
+                  </span>
+                  <h2 className="font-display text-[clamp(1.5rem,1.2rem+1.2vw,2.125rem)] font-semibold leading-[1.15] text-sol-ink">
+                    {t("rm.week.readyToClose")}
+                  </h2>
+                  <LinkButton
+                    to="/dashboard/roadmap"
+                    search={{ week: week.number }}
+                    size="lg"
+                    data-testid="review-from-dashboard"
+                  >
+                    {t("rm.week.review")}
+                    <ArrowRight className="size-4 text-sol-champagne" aria-hidden="true" />
+                  </LinkButton>
+                </>
+              )}
+            </Card>
+          )}
+
+          <Card className="flex flex-col gap-5 p-6" data-testid="next-unlock">
+            <h2 className="sol-eyebrow">{t("cc.unlock.heading")}</h2>
+            <div className="my-auto">
+              <WeekTrack
+                testId="week-track"
+                missions={weekMissions.map((m) => ({
+                  id: m.id,
+                  title: weekDetail.data?.missions?.[m.id]?.title ?? m.title,
+                  state: m.state,
+                }))}
+                unlocked={weekDone || week.state === "ready_to_close"}
+                nextLabel={nextWeekLabel}
+                onOpen={(missionId) =>
+                  navigate({
+                    to: "/dashboard/roadmap",
+                    search: { week: week.number, mission: missionId },
+                  })
+                }
+              />
+            </div>
+          </Card>
+        </div>
       )}
 
-      {/* Evidence Map + Business Pulse — real assumptions, real counts. */}
-      <div className="grid gap-5 lg:grid-cols-[1.4fr_1fr]">
+      {/* Pulse rings + evidence map — real counts and real assumptions. */}
+      <div className="grid gap-5 lg:grid-cols-[1fr_1.4fr]">
+        <Card className="flex flex-col gap-5 p-6" data-testid="business-pulse">
+          <h2 className="sol-eyebrow">{t("cc.pulse.heading")}</h2>
+          <div className="my-auto flex flex-wrap items-start justify-around gap-5">
+            <ProgressRing
+              testId="ring-missions"
+              label={t("cc.ring.missions")}
+              value={missionsDone}
+              total={weekMissions.length}
+              tone="violet"
+            />
+            <ProgressRing
+              testId="ring-supported"
+              label={t("cc.ring.supported")}
+              value={supportedN}
+              total={assumptions.length}
+              tone="champagne"
+            />
+            <ProgressRing
+              testId="ring-weeks"
+              label={t("cc.ring.weeks")}
+              value={view.totals.completedWeeks}
+              total={view.totals.weeks}
+              tone="violet"
+            />
+          </div>
+        </Card>
+
         <Card className="flex flex-col gap-4 p-6" data-testid="dashboard-evidence-map">
-          <h2 className="sol-eyebrow">{t("cc.map.heading")}</h2>
+          <div className="flex items-center justify-between gap-3">
+            <h2 className="sol-eyebrow">{t("cc.map.heading")}</h2>
+            <LinkButton
+              to="/dashboard/proof"
+              search={{ opportunity: opportunityId }}
+              variant="ghost"
+              size="sm"
+              aria-label={t("cc.c.openProof")}
+              title={t("cc.c.openProof")}
+            >
+              <ArrowRight className="size-4" aria-hidden="true" />
+            </LinkButton>
+          </div>
           {proof.isPending ? (
             <Skeleton className="h-28" />
           ) : assumptions.length > 0 ? (
@@ -629,83 +830,65 @@ function NextMove({
               }
             />
           ) : (
-            <p className="text-[1rem] leading-snug text-sol-secondary">{t("cc.map.empty")}</p>
+            <div className="flex flex-col items-start gap-3">
+              <GhostNodes />
+              <p className="text-[0.9375rem] leading-snug text-sol-secondary">
+                {t("cc.map.empty")}
+              </p>
+            </div>
           )}
-          <LinkButton
-            to="/dashboard/proof"
-            search={{ opportunity: opportunityId }}
-            variant="ghost"
-            size="sm"
-            className="self-start"
-          >
-            {t("cc.c.openProof")}
-          </LinkButton>
-        </Card>
-
-        <Card className="flex flex-col gap-4 p-6" data-testid="business-pulse">
-          <h2 className="sol-eyebrow">{t("cc.pulse.heading")}</h2>
-          <dl className="grid grid-cols-2 gap-x-4 gap-y-4">
-            <div>
-              <dt className="text-[0.8125rem] font-semibold text-sol-secondary">
-                {t("cc.pulse.week")}
-              </dt>
-              <dd className="mt-1 text-[1.125rem] font-semibold text-sol-ink">
-                {week ? String(week.number).padStart(2, "0") : "—"}
-              </dd>
-            </div>
-            <div>
-              <dt className="text-[0.8125rem] font-semibold text-sol-secondary">
-                {t("cc.c.proofPulse")}
-              </dt>
-              <dd className="mt-1 text-[1.125rem] font-semibold text-sol-ink">
-                {t("cc.pulse.missions", { done: missionsDone, total: weekMissions.length })}
-              </dd>
-            </div>
-            <div>
-              <dt className="text-[0.8125rem] font-semibold text-sol-secondary">
-                {t("cc.surface.evidence")}
-              </dt>
-              <dd className="mt-1 text-[1.125rem] font-semibold text-sol-ink">
-                {t("cc.pulse.evidence", { n: view.totals.evidence })}
-              </dd>
-            </div>
-            <div>
-              <dt className="text-[0.8125rem] font-semibold text-sol-secondary">
-                {t("cc.oppPulse.heading")}
-              </dt>
-              <dd className="mt-1 text-[1.125rem] font-semibold text-sol-ink">
-                {t("cc.pulse.assumptions", { n: counts?.supported ?? 0 })}
-              </dd>
-            </div>
-          </dl>
         </Card>
       </div>
 
-      {/* Opportunity Pulse + Economics Snapshot. */}
+      {/* Founder fit as four bars; economics as a chart (or the shape of one). */}
       <div className="grid gap-5 md:grid-cols-2">
         <Card className="flex flex-col gap-4 p-6" data-testid="opportunity-pulse">
           <h2 className="sol-eyebrow">{t("cc.oppPulse.heading")}</h2>
-          {detail.isPending ? (
+          {detail.isPending || !matrix ? (
             <Skeleton className="h-28" />
-          ) : matrix ? (
+          ) : (
             <ul className="flex flex-col gap-3">
               {matrix.rows.map((row) => (
                 <li key={row.key} className="flex items-center justify-between gap-3">
-                  <span className="text-[0.9375rem] font-medium text-sol-ink">
+                  <span className="flex items-center gap-3 text-[0.9375rem] font-semibold text-sol-ink">
+                    <span className="flex size-8 items-center justify-center rounded-lg bg-sol-champagne-soft text-sol-champagne-deep">
+                      {(() => {
+                        const Icon = FIT_ICONS[row.key];
+                        return <Icon className="size-4" aria-hidden="true" />;
+                      })()}
+                    </span>
                     {t(`fit.row.${row.key}` as const)}
                   </span>
-                  <FitStatusPill status={row.status} />
+                  <span
+                    className="flex items-center gap-1.5"
+                    role="img"
+                    aria-label={t(`fit.status.${row.status}` as const)}
+                    title={t(`fit.status.${row.status}` as const)}
+                  >
+                    {[1, 2, 3].map((n) => (
+                      <span
+                        key={n}
+                        className={cn(
+                          "h-2.5 w-8 rounded-full",
+                          n <= FIT_PIPS[row.status]
+                            ? row.status === "strong"
+                              ? "bg-sol-champagne-deep"
+                              : "bg-sol-violet"
+                            : "bg-sol-ivory-depth",
+                        )}
+                      />
+                    ))}
+                  </span>
                 </li>
               ))}
             </ul>
-          ) : (
-            <Skeleton className="h-28" />
           )}
         </Card>
 
         <Card className="flex flex-col gap-4 p-6" data-testid="economics-snapshot">
           <div className="flex items-center justify-between gap-3">
-            <h2 className="sol-eyebrow">{t("cc.econ.heading" as const)}</h2>
+            <h2 className="sol-eyebrow">{t("cc.econ.heading")}</h2>
+            {econ?.exists && <Pill>{t("opp.econ.assumptionBadge")}</Pill>}
           </div>
           {economics.isPending ? (
             <Skeleton className="h-28" />
@@ -713,23 +896,21 @@ function NextMove({
             <>
               <dl className="grid grid-cols-2 gap-x-4 gap-y-3">
                 <div>
-                  <dt className="text-[0.8125rem] font-semibold text-sol-secondary">
+                  <dt className="text-[0.875rem] font-semibold text-sol-secondary">
                     {t("opp.econ.contribution")}
                   </dt>
-                  <dd className="mt-1 text-[1.0625rem] font-semibold text-sol-ink">
+                  <dd className="mt-1 font-display text-[1.5rem] font-semibold text-sol-ink">
                     {contribution != null
                       ? `${econ.currency} ${contribution.toLocaleString()}`
-                      : t("opp.econ.contributionUnknown")}
+                      : "—"}
                   </dd>
                 </div>
                 <div>
-                  <dt className="text-[0.8125rem] font-semibold text-sol-secondary">
+                  <dt className="text-[0.875rem] font-semibold text-sol-secondary">
                     {t("opp.econ.breakEven")}
                   </dt>
-                  <dd className="mt-1 text-[1.0625rem] font-semibold text-sol-ink">
-                    {breakEven != null
-                      ? t("opp.econ.breakEvenCustomers", { n: breakEven })
-                      : t("opp.econ.breakEvenUnknown")}
+                  <dd className="mt-1 font-display text-[1.5rem] font-semibold text-sol-ink">
+                    {breakEven != null ? breakEven : "—"}
                   </dd>
                 </div>
               </dl>
@@ -757,12 +938,9 @@ function NextMove({
                   </ResponsiveContainer>
                 </div>
               )}
-              <Pill className="self-start">{t("opp.econ.assumptionBadge")}</Pill>
             </>
           ) : (
-            <p className="text-[1rem] leading-snug text-sol-secondary">
-              {t("opp.econ.empty.body")}
-            </p>
+            <GhostChart />
           )}
           <LinkButton
             to="/dashboard/opportunities/$id"
@@ -777,91 +955,43 @@ function NextMove({
         </Card>
       </div>
 
-      {/* Next Unlock, Mini Roadmap, Recent Changes. */}
-      <div className="grid gap-5 md:grid-cols-3">
-        <Card className="flex flex-col gap-3 p-6" data-testid="next-unlock">
-          <h2 className="sol-eyebrow">{t("cc.unlock.heading")}</h2>
-          {requiredMissions.length > 0 ? (
-            <>
-              <ul className="flex flex-col gap-2">
-                {requiredMissions.map((m) => (
-                  <li key={m.id} className="flex items-center gap-2 text-[0.9375rem] text-sol-ink">
-                    <span
-                      className={
-                        m.state === "completed"
-                          ? "text-sol-champagne-deep"
-                          : "text-sol-border-strong"
-                      }
-                      aria-hidden="true"
-                    >
-                      {m.state === "completed" ? "✓" : "○"}
-                    </span>
-                    <span className="truncate">{m.title}</span>
-                  </li>
-                ))}
-              </ul>
-              <p className="mt-auto text-[0.9375rem] font-medium text-sol-secondary">
-                {week?.state === "ready_to_close"
-                  ? t("cc.unlock.allDone")
-                  : t("cc.unlock.progress", {
-                      done: requiredMissions.filter((m) => m.state === "completed").length,
-                      total: requiredMissions.length,
-                    })}
-              </p>
-            </>
-          ) : (
-            <p className="text-[1rem] leading-snug text-sol-secondary">{t("cc.c.noChange")}</p>
+      {/* The whole roadmap on one line, and the last fortnight's momentum. */}
+      <div className="grid gap-5 lg:grid-cols-[1.5fr_1fr]">
+        <Card className="flex flex-col gap-5 p-6" data-testid="mini-roadmap">
+          <div className="flex items-center justify-between gap-3">
+            <h2 className="sol-eyebrow">{t("cc.mini.heading")}</h2>
+            <LinkButton
+              to="/dashboard/roadmap"
+              variant="ghost"
+              size="sm"
+              aria-label={t("cc.mini.openFull")}
+              title={t("cc.mini.openFull")}
+            >
+              <ArrowRight className="size-4" aria-hidden="true" />
+            </LinkButton>
+          </div>
+          <JourneyRibbon
+            phases={phaseRibbon}
+            onOpenPhase={(id) => navigate({ to: "/dashboard/roadmap", search: { phase: id } })}
+          />
+          {phaseTitle && (
+            <p className="truncate text-[0.9375rem] font-semibold text-sol-secondary">
+              {phaseTitle}
+            </p>
           )}
         </Card>
 
-        <Card className="flex flex-col gap-3 p-6" data-testid="mini-roadmap">
-          <h2 className="sol-eyebrow">{t("cc.mini.heading")}</h2>
-          <div className="flex flex-col gap-2.5">
-            {view.phases.map((p) => (
-              <div key={p.id} className="flex items-center gap-2">
-                <span className="w-[5.5rem] shrink-0 truncate text-[0.8125rem] font-semibold text-sol-secondary">
-                  {p.title}
-                </span>
-                <div className="flex flex-wrap items-center gap-1">
-                  {p.weekIds.map((wid) => {
-                    const w = view.weeks.find((x) => x.id === wid);
-                    const tone =
-                      w?.state === "completed"
-                        ? "bg-sol-champagne-deep"
-                        : w?.id === view.currentWeekId
-                          ? "bg-sol-violet"
-                          : "bg-sol-border-strong";
-                    return (
-                      <span
-                        key={wid}
-                        className={`size-2.5 rounded-full ${tone}`}
-                        aria-hidden="true"
-                      />
-                    );
-                  })}
-                </div>
-              </div>
-            ))}
-          </div>
-          <LinkButton
-            to="/dashboard/roadmap"
-            variant="ghost"
-            size="sm"
-            className="mt-auto self-start"
-          >
-            {t("cc.mini.openFull")}
-          </LinkButton>
-        </Card>
-
-        <Card className="flex flex-col gap-3 p-6" data-testid="recent-changes">
-          <h2 className="sol-eyebrow">{t("cc.recent.heading")}</h2>
-          <ul className="flex flex-col gap-2.5">
-            {recentChanges.slice(0, 3).map((c) => (
-              <li key={c.key} className="text-[0.9375rem] leading-snug text-sol-ink">
-                {c.text}
-              </li>
-            ))}
-          </ul>
+        <Card className="flex flex-col gap-4 p-6" data-testid="recent-changes">
+          <h2 className="sol-eyebrow">{t("cc.mom.heading")}</h2>
+          <MomentumBars
+            days={momentum}
+            ariaLabel={t("cc.mom.aria")}
+            missionsLabel={t("cc.mom.missions")}
+            evidenceLabel={t("cc.mom.evidence")}
+          />
+          {momentumTotal === 0 && (
+            <p className="text-[0.9375rem] text-sol-secondary">{t("cc.mom.empty")}</p>
+          )}
         </Card>
       </div>
     </>

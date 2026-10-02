@@ -137,8 +137,7 @@ const hi: Record<keyof typeof en, string> = {
   "askSol.prompt.firstTest": "मैं सबसे पहले क्या परखूं?",
   "askSol.prompt.interviews": "अगले इंटरव्यू में मुझे क्या पूछना चाहिए?",
   "askSol.assumptionLine": "अनुमान: {title}",
-  "askSol.q.whatChanges":
-    "यह साक्ष्य अभी आया है: “{summary}” — इससे मेरी योजना में क्या बदलता है?",
+  "askSol.q.whatChanges": "यह साक्ष्य अभी आया है: “{summary}” — इससे मेरी योजना में क्या बदलता है?",
   "askSol.placeholder": "Sol से कुछ खास पूछें…",
   "askSol.send": "भेजें",
   "askSol.thinking": "Sol सोच रहा है…",

@@ -120,10 +120,22 @@ const en = {
   "cc.mini.openFull": "Open full roadmap",
 
   "cc.econ.heading": "Economics",
+  "cc.ring.missions": "Missions",
+  "cc.ring.supported": "Supported",
+  "cc.ring.weeks": "Weeks",
+  "cc.mom.heading": "Last 14 days",
+  "cc.mom.missions": "Missions",
+  "cc.mom.evidence": "Evidence",
+  "cc.mom.aria": "Missions finished and evidence captured over the last 14 days",
+  "cc.mom.empty": "Your first mission starts the line.",
+  "cc.surface.evidenceAria": "Evidence by state",
+  "cc.map.legend.supported": "Supported",
+  "cc.map.legend.testing": "Testing",
+  "cc.map.legend.untested": "Untested",
 
   "cc.recent.heading": "Recent changes",
   "cc.recent.missionDone": "{title} completed",
-  "cc.recent.evidenceAdded": "Evidence added to \"{title}\"",
+  "cc.recent.evidenceAdded": 'Evidence added to "{title}"',
   "cc.recent.weekStarted": "{week} started",
 
   // ── Viewing an earlier consultation ────────────────────────────────────
@@ -445,10 +457,22 @@ const hi: Record<keyof typeof en, string> = {
   "cc.mini.openFull": "पूरा रोडमैप खोलें",
 
   "cc.econ.heading": "अर्थशास्त्र",
+  "cc.ring.missions": "मिशन",
+  "cc.ring.supported": "समर्थित",
+  "cc.ring.weeks": "सप्ताह",
+  "cc.mom.heading": "पिछले 14 दिन",
+  "cc.mom.missions": "मिशन",
+  "cc.mom.evidence": "साक्ष्य",
+  "cc.mom.aria": "पिछले 14 दिनों में पूरे हुए मिशन और दर्ज साक्ष्य",
+  "cc.mom.empty": "आपका पहला मिशन इस रेखा की शुरुआत करेगा।",
+  "cc.surface.evidenceAria": "स्थिति के अनुसार साक्ष्य",
+  "cc.map.legend.supported": "समर्थित",
+  "cc.map.legend.testing": "परीक्षण में",
+  "cc.map.legend.untested": "अपरीक्षित",
 
   "cc.recent.heading": "हाल के बदलाव",
   "cc.recent.missionDone": "{title} पूरा हुआ",
-  "cc.recent.evidenceAdded": "\"{title}\" में साक्ष्य जोड़ा गया",
+  "cc.recent.evidenceAdded": '"{title}" में साक्ष्य जोड़ा गया',
   "cc.recent.weekStarted": "{week} शुरू हुआ",
 
   "cc.earlier.body": "आप एक पुरानी कंसल्टेशन देख रहे हैं।",

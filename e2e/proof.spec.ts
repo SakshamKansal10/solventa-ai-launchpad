@@ -202,7 +202,8 @@ test.describe("Proof — assumptions become evidence", () => {
     context,
   }) => {
     await founderWithRoadmap(page, context);
-    // Missions that require evidence expose Add Proof.
+    // Missions that require evidence expose Add Proof once opened.
+    await page.getByTestId("mission-card").nth(1).getByTestId("mission-toggle").click();
     const link = page.getByTestId("mission-add-proof").first();
     await expect(link).toBeVisible();
     await link.click();

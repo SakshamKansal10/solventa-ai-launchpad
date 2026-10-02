@@ -416,7 +416,7 @@ export function EvidenceDialog({
                 data-testid="ev-suggestion"
                 data-signal={suggestion.signal}
               >
-                <p className="text-[0.8125rem] font-bold uppercase tracking-[0.1em] text-sol-secondary">
+                <p className="text-[0.875rem] font-bold uppercase tracking-[0.1em] text-sol-secondary">
                   {t("pf.interpret.suggests")}:{" "}
                   <span className="text-sol-ink">
                     {t(`pf.signal.${suggestion.signal}` as const)}

@@ -184,7 +184,7 @@ export function OpportunityDemo() {
                     </span>
                   </span>
                   {active && (
-                    <span className="relative hidden rounded-full bg-sol-violet px-3 py-1 text-[12.5px] font-bold uppercase tracking-[0.08em] text-white sm:inline">
+                    <span className="relative hidden rounded-full bg-sol-violet px-3 py-1 text-[0.875rem] font-bold uppercase tracking-[0.08em] text-white sm:inline">
                       {t("story.opp.focus")}
                     </span>
                   )}
@@ -230,7 +230,7 @@ export function OpportunityDemo() {
                         <node.icon className="size-6 text-sol-violet-deep" aria-hidden="true" />
                       </span>
                       <div className="min-w-0">
-                        <p className="text-[13px] font-bold uppercase tracking-[0.1em] text-sol-champagne-deep">
+                        <p className="text-[0.875rem] font-bold uppercase tracking-[0.1em] text-sol-champagne-deep">
                           {t(`story.opp.${node.key}` as MessageKey)}
                         </p>
                         <p className="mt-1 text-[16px] font-medium leading-snug text-sol-ink">

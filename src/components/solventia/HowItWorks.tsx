@@ -133,16 +133,11 @@ export function HowItWorks() {
                     </motion.span>
                   </span>
 
-                  <div
-                    className={cn(
-                      "min-w-0 transition-opacity duration-300",
-                      reached ? "opacity-100" : "opacity-60",
-                    )}
-                  >
+                  <div className="min-w-0">
                     <p
                       className={cn(
                         "font-display text-[15px] font-semibold tracking-[0.12em] transition-colors duration-300",
-                        reached ? "text-sol-champagne-deep" : "text-sol-muted",
+                        reached ? "text-sol-champagne-deep" : "text-sol-secondary",
                       )}
                     >
                       {step.n}

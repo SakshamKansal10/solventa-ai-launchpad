@@ -161,17 +161,17 @@ export function AskSolPanel({
                   {opportunityTitle}
                 </p>
                 {weekNumber != null && (
-                  <p className="truncate text-[0.8125rem] text-sol-secondary">
+                  <p className="truncate text-[0.875rem] text-sol-secondary">
                     {t("common.weekN", { n: String(weekNumber) })}
                     {phaseTitle ? ` · ${phaseTitle}` : ""}
                   </p>
                 )}
                 {missionTitle && (
-                  <p className="truncate text-[0.8125rem] text-sol-secondary">{missionTitle}</p>
+                  <p className="truncate text-[0.875rem] text-sol-secondary">{missionTitle}</p>
                 )}
                 {assumptionTitle && (
                   <p
-                    className="truncate text-[0.8125rem] text-sol-secondary"
+                    className="truncate text-[0.875rem] text-sol-secondary"
                     data-testid="ask-sol-assumption"
                   >
                     {t("askSol.assumptionLine", { title: assumptionTitle })}

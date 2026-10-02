@@ -97,7 +97,7 @@ export function EvidenceMap({
                   <span className={cn("size-2 rounded-full", tone.dot)} />
                 )}
               </span>
-              <span className="line-clamp-2 text-[0.8125rem] font-medium leading-tight text-sol-secondary">
+              <span className="line-clamp-2 text-[0.875rem] font-medium leading-tight text-sol-secondary">
                 {a.title}
               </span>
             </button>
@@ -115,7 +115,7 @@ export function EvidenceMap({
             <p className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[1rem] font-semibold text-sol-ink">
               <span
                 className={cn(
-                  "inline-flex min-h-6 items-center rounded-full border px-2.5 text-[0.8125rem] font-semibold",
+                  "inline-flex min-h-6 items-center rounded-full border px-2.5 text-[0.875rem] font-semibold",
                   MAP_TONE[current.state].ring,
                   MAP_TONE[current.state].fill,
                 )}

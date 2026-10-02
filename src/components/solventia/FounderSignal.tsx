@@ -446,7 +446,7 @@ export function FounderSignal() {
                       <motion.span
                         initial={{ opacity: 0, y: 4 }}
                         animate={{ opacity: 1, y: 0 }}
-                        className="rounded-full bg-sol-champagne px-3 py-1 text-[12.5px] font-bold uppercase tracking-[0.08em] text-sol-ink"
+                        className="rounded-full bg-sol-champagne px-3 py-1 text-[0.875rem] font-bold uppercase tracking-[0.08em] text-sol-ink"
                       >
                         {t("story.strongest")}
                       </motion.span>

@@ -1,5 +1,13 @@
 import { spawn, spawnSync, type ChildProcess } from "node:child_process";
-import { createWriteStream, existsSync, mkdirSync, readdirSync, readFileSync } from "node:fs";
+import {
+  cpSync,
+  createWriteStream,
+  existsSync,
+  mkdirSync,
+  readdirSync,
+  readFileSync,
+  rmSync,
+} from "node:fs";
 import path from "node:path";
 
 import { startFakeStack } from "./fake-supabase";
@@ -22,7 +30,12 @@ const APP_PORT = Number(process.env.E2E_PORT ?? 4175);
 // Must equal the port the production build was compiled against (see global-setup).
 const FAKE_PORT = Number(process.env.E2E_FAKE_PORT ?? 54329);
 const DATA_DIR = path.resolve(process.cwd(), ".e2e-tmp/compare/db");
-const OUTPUT = path.resolve(process.cwd(), ".e2e-tmp/output/server/index.mjs");
+// The disposable test runs rebuild .e2e-tmp/output at will. The comparison server
+// serves its OWN copy, taken once at start-up, so a test run can never swap the
+// files (and the hashed asset names) out from under a page someone is looking at.
+const BUILT = path.resolve(process.cwd(), ".e2e-tmp/output");
+const SNAPSHOT = path.resolve(process.cwd(), ".e2e-tmp/compare/app");
+const OUTPUT = path.resolve(SNAPSHOT, "server/index.mjs");
 
 function readEnvLocal(keys: string[]): Record<string, string> {
   const file = path.resolve(process.cwd(), ".env.local");
@@ -78,7 +91,7 @@ function assertClientBundleIsNotProduction(): void {
   } catch {
     return;
   }
-  const assetsDir = path.resolve(path.dirname(OUTPUT), "../../public/assets");
+  const assetsDir = path.resolve(SNAPSHOT, "public/assets");
   if (!existsSync(assetsDir)) return;
   for (const file of readdirSync(assetsDir)) {
     if (!file.endsWith(".js")) continue;
@@ -95,11 +108,13 @@ function assertClientBundleIsNotProduction(): void {
 }
 
 export default async function compareSetup() {
-  if (!existsSync(OUTPUT)) {
+  if (!existsSync(path.join(BUILT, "server/index.mjs"))) {
     throw new Error(
       "No production build found. Run `npx playwright test` once (or E2E_SKIP_BUILD=0 with the serve config) to build it first.",
     );
   }
+  rmSync(SNAPSHOT, { recursive: true, force: true });
+  cpSync(BUILT, SNAPSHOT, { recursive: true });
   assertClientBundleIsNotProduction();
   mkdirSync(path.dirname(DATA_DIR), { recursive: true });
   const stack = await startFakeStack({ port: FAKE_PORT, dataDir: DATA_DIR });

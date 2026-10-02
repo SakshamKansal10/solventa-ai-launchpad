@@ -16,8 +16,12 @@ import { appUrl, forbidRealBackends, resetStack, sql } from "./helpers/stack";
 
 const SIZES = [
   { name: "1440x900", width: 1440, height: 900 },
+  { name: "1280x800", width: 1280, height: 800 },
   { name: "1024x768", width: 1024, height: 768 },
+  { name: "768x1024", width: 768, height: 1024 },
+  { name: "430x932", width: 430, height: 932 },
   { name: "390x844", width: 390, height: 844 },
+  { name: "360x740", width: 360, height: 740 },
 ];
 
 const OUT = path.resolve(process.cwd(), ".e2e-tmp/screens");
