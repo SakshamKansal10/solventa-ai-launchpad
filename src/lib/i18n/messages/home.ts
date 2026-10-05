@@ -22,8 +22,7 @@ const en = {
   "hero.headline1": "Your Dream.",
   "hero.headline2": "Our Intelligence.",
   "hero.headline3": "Real Impact.",
-  "hero.subhead":
-    "Your skills, education, experience and constraints become realistic opportunities — then a roadmap that adapts as you learn.",
+  "hero.subhead": "Your context becomes a direction — then a plan that adapts as reality changes.",
   "hero.cta.primary": "Find My Business Idea",
   "hero.cta.secondary": "See How It Works",
   "hero.signal.personalized": "Personalized",
@@ -189,8 +188,7 @@ const hi: Record<keyof typeof en, string> = {
   "hero.headline1": "आपका सपना।",
   "hero.headline2": "हमारी इंटेलिजेंस।",
   "hero.headline3": "वास्तविक प्रभाव।",
-  "hero.subhead":
-    "आपके कौशल, शिक्षा, अनुभव और सीमाओं को यथार्थवादी अवसरों में बदलता है — फिर एक ऐसा रोडमैप जो आपके सीखने के साथ ढलता है।",
+  "hero.subhead": "आपका संदर्भ एक दिशा बनता है — फिर एक योजना जो हकीकत के साथ ढलती है।",
   "hero.cta.primary": "मेरा बिज़नेस आइडिया खोजें",
   "hero.cta.secondary": "देखें यह कैसे काम करता है",
   "hero.signal.personalized": "व्यक्तिगत",

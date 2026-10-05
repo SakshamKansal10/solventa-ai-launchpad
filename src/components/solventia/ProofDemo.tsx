@@ -23,16 +23,16 @@ const INITIAL: Record<NodeId, State> = {
 const LOOP_MS = 12400;
 
 const RING: Record<State, string> = {
-  untested: "border-sol-border-strong bg-sol-hp-surface text-sol-muted",
-  testing: "border-sol-violet bg-sol-violet-soft text-sol-violet-deep",
-  supported: "border-sol-champagne bg-sol-champagne-soft text-sol-champagne-deep",
-  contradicted: "border-sol-warning bg-sol-warning-soft text-sol-warning",
+  untested: "border-white/25 bg-white/[0.06] text-white/70",
+  testing: "border-sol-violet bg-sol-violet/25 text-white",
+  supported: "border-sol-champagne bg-sol-champagne/20 text-sol-champagne",
+  contradicted: "border-[#E09A7C] bg-sol-warning/25 text-[#F0B29A]",
 };
 const DOT: Record<State, string> = {
-  untested: "bg-sol-border-strong",
-  testing: "bg-sol-violet",
-  supported: "bg-sol-champagne-deep",
-  contradicted: "bg-sol-warning",
+  untested: "bg-white/45",
+  testing: "bg-[#A895F2]",
+  supported: "bg-sol-champagne",
+  contradicted: "bg-[#E09A7C]",
 };
 
 /** Five assumptions change state as evidence arrives — including evidence that
@@ -99,23 +99,29 @@ export function ProofDemo() {
   return (
     <section
       id="proof-demo"
-      className="scroll-mt-[76px] bg-sol-hp-pearl px-[18px] py-[72px] sm:px-6 lg:px-9 lg:py-[96px]"
+      className="relative scroll-mt-[76px] overflow-hidden bg-workspace px-[18px] py-[72px] sm:px-6 lg:px-9 lg:py-[104px]"
     >
-      <div className="mx-auto max-w-[1180px]">
-        <p className="text-[14px] font-semibold uppercase tracking-[0.14em] text-sol-champagne-deep">
+      {/* Light falls on the map from above — depth without a gradient wash. */}
+      <div
+        className="pointer-events-none absolute inset-0"
+        style={{
+          background:
+            "radial-gradient(ellipse 720px 420px at 30% 0%, rgba(114,87,216,0.20), transparent 70%), radial-gradient(ellipse 520px 360px at 90% 100%, rgba(195,160,100,0.12), transparent 70%)",
+        }}
+        aria-hidden="true"
+      />
+      <div className="relative mx-auto max-w-[1180px]">
+        <p className="text-[14px] font-semibold uppercase tracking-[0.14em] text-sol-champagne">
           {t("story.proof.eyebrow")}
         </p>
         <h2
           className={cn(
-            "mt-4 max-w-[20ch] font-display text-[34px] font-semibold text-sol-ink sm:text-[40px] lg:text-[48px]",
-            locale === "hi" ? "leading-[1.35]" : "leading-[1.1]",
+            "mt-4 max-w-[20ch] font-display text-[34px] font-semibold text-white sm:text-[40px] lg:text-[52px]",
+            locale === "hi" ? "leading-[1.35]" : "leading-[1.08]",
           )}
         >
           {t("story.proof.headline")}
         </h2>
-        <p className="mt-4 max-w-[600px] text-[18px] leading-[28px] text-sol-secondary">
-          {t("story.proof.subhead")}
-        </p>
 
         <motion.div
           onViewportEnter={() => setEntered(true)}
@@ -123,14 +129,13 @@ export function ProofDemo() {
           ref={stageRef}
           animate={{ opacity: fading ? 0.35 : 1 }}
           transition={{ duration: 0.45 }}
-          className="relative mt-12 rounded-[32px] border border-sol-hp-border bg-sol-hp-surface p-5 sm:p-8"
+          className="relative mt-12 rounded-[32px] border border-white/10 bg-white/[0.04] p-5 shadow-[0_40px_80px_rgba(0,0,0,0.35)] backdrop-blur-sm sm:p-8"
           data-testid="proof-demo"
         >
           <div className="flex flex-wrap items-center gap-3">
-            <span className="inline-flex min-h-8 items-center rounded-full border border-sol-violet/30 bg-sol-violet-soft px-4 text-[14px] font-bold tracking-[0.1em] text-sol-violet-deep">
+            <span className="inline-flex min-h-8 items-center rounded-full border border-white/20 bg-white/10 px-4 text-[14px] font-bold tracking-[0.1em] text-white">
               {t("adaptiveRoadmap.demoLabel")}
             </span>
-            <span className="text-[15px] text-sol-secondary">{t("adaptiveRoadmap.demoNote")}</span>
           </div>
 
           <div className="mt-6 grid gap-6 lg:grid-cols-[minmax(0,7fr)_minmax(0,5fr)] lg:gap-8">
@@ -139,7 +144,7 @@ export function ProofDemo() {
               <div className="relative">
                 <span
                   aria-hidden="true"
-                  className="absolute left-[10%] right-[10%] top-[31px] hidden h-0.5 rounded-full bg-sol-hp-ivory-deep sm:block"
+                  className="absolute left-[10%] right-[10%] top-[31px] hidden h-0.5 rounded-full bg-white/15 sm:block"
                 />
                 <ul
                   className="relative grid grid-cols-2 gap-x-3 gap-y-6 sm:grid-cols-5"
@@ -187,13 +192,13 @@ export function ProofDemo() {
                             )}
                           </motion.span>
                         </span>
-                        <span className="text-[16px] font-semibold text-sol-ink">
+                        <span className="text-[16px] font-semibold text-white">
                           {t(`story.proof.node.${id}` as MessageKey)}
                         </span>
                         <span
                           className={cn(
-                            "text-[13.5px] font-semibold",
-                            state === "contradicted" ? "text-sol-warning" : "text-sol-secondary",
+                            "text-[14px] font-semibold",
+                            state === "contradicted" ? "text-[#F0B29A]" : "text-white/70",
                           )}
                         >
                           {stateWord(state)}
@@ -204,9 +209,9 @@ export function ProofDemo() {
                 </ul>
               </div>
 
-              <ul className="mt-7 flex flex-wrap gap-x-5 gap-y-2 border-t border-sol-border pt-5">
+              <ul className="mt-7 flex flex-wrap gap-x-5 gap-y-2 border-t border-white/10 pt-5">
                 {STATES.map((s) => (
-                  <li key={s} className="flex items-center gap-2 text-[14px] text-sol-secondary">
+                  <li key={s} className="flex items-center gap-2 text-[14px] text-white/70">
                     <span className={cn("size-2.5 rounded-full", DOT[s])} aria-hidden="true" />
                     {stateWord(s)}
                   </li>
@@ -215,8 +220,8 @@ export function ProofDemo() {
             </div>
 
             {/* The evidence stream */}
-            <div className="rounded-3xl border border-sol-border bg-sol-hp-pearl p-5">
-              <p className="text-[14px] font-bold uppercase tracking-[0.1em] text-sol-champagne-deep">
+            <div className="rounded-3xl border border-white/10 bg-white/[0.04] p-5">
+              <p className="text-[14px] font-bold uppercase tracking-[0.1em] text-sol-champagne">
                 {t("story.proof.stream")}
               </p>
               <ul className="mt-4 flex min-h-[210px] flex-col gap-3" data-testid="proof-stream">
@@ -225,7 +230,7 @@ export function ProofDemo() {
                     <motion.li
                       key="wait"
                       exit={{ opacity: 0 }}
-                      className="text-[15px] text-sol-muted"
+                      className="text-[15px] text-white/60"
                     >
                       {t("story.proof.waiting")}
                     </motion.li>
@@ -237,16 +242,16 @@ export function ProofDemo() {
                       initial={{ opacity: 0, x: 24 }}
                       animate={{ opacity: 1, x: 0 }}
                       transition={{ duration: reduceMotion ? 0 : 0.4, ease: [0.22, 1, 0.36, 1] }}
-                      className="rounded-2xl border border-sol-champagne/60 bg-sol-hp-surface p-4"
+                      className="rounded-2xl border border-sol-champagne/50 bg-white/[0.07] p-4"
                     >
-                      <p className="flex items-start gap-2 text-[16px] font-medium leading-snug text-sol-ink">
+                      <p className="flex items-start gap-2 text-[16px] font-medium leading-snug text-white">
                         <MessageSquareQuote
-                          className="mt-0.5 size-4 shrink-0 text-sol-champagne-deep"
+                          className="mt-0.5 size-4 shrink-0 text-sol-champagne"
                           aria-hidden="true"
                         />
                         {t("story.proof.ev1.quote")}
                       </p>
-                      <p className="mt-2 text-[13.5px] font-semibold text-sol-secondary">
+                      <p className="mt-2 text-[14px] font-semibold text-white/65">
                         {t("story.proof.ev1.meta")}
                       </p>
                     </motion.li>
@@ -258,16 +263,16 @@ export function ProofDemo() {
                       initial={{ opacity: 0, x: 24 }}
                       animate={{ opacity: 1, x: 0 }}
                       transition={{ duration: reduceMotion ? 0 : 0.4, ease: [0.22, 1, 0.36, 1] }}
-                      className="rounded-2xl border border-sol-warning/50 bg-sol-hp-surface p-4"
+                      className="rounded-2xl border border-[#E09A7C]/60 bg-white/[0.07] p-4"
                     >
-                      <p className="flex items-start gap-2 text-[16px] font-medium leading-snug text-sol-ink">
+                      <p className="flex items-start gap-2 text-[16px] font-medium leading-snug text-white">
                         <MessageSquareQuote
-                          className="mt-0.5 size-4 shrink-0 text-sol-warning"
+                          className="mt-0.5 size-4 shrink-0 text-[#F0B29A]"
                           aria-hidden="true"
                         />
                         {t("story.proof.ev2.quote")}
                       </p>
-                      <p className="mt-2 text-[13.5px] font-semibold text-sol-secondary">
+                      <p className="mt-2 text-[14px] font-semibold text-white/65">
                         {t("story.proof.ev2.meta")}
                       </p>
                       {states.payment === "contradicted" && (
@@ -276,7 +281,7 @@ export function ProofDemo() {
                           initial={{ opacity: 0, y: 6 }}
                           animate={{ opacity: 1, y: 0 }}
                           onClick={() => scrollToSection("ask-sol-demo")}
-                          className="mt-3 inline-flex min-h-10 items-center rounded-full border border-sol-violet/40 bg-sol-violet-soft px-4 text-[14px] font-semibold text-sol-violet-deep transition-colors hover:border-sol-violet"
+                          className="mt-3 inline-flex min-h-10 items-center rounded-full border border-sol-champagne/60 bg-sol-champagne/10 px-4 text-[14px] font-semibold text-sol-champagne transition-colors duration-150 hover:border-sol-champagne hover:bg-sol-champagne/20"
                           data-testid="proof-ask-sol"
                         >
                           {t("story.proof.askSol")}

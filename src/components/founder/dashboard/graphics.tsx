@@ -1,5 +1,5 @@
 import { motion, useReducedMotion } from "motion/react";
-import { Check, Lock, LockOpen } from "lucide-react";
+import { Check, Loader2, Lock, LockOpen, TriangleAlert, type LucideIcon } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 
@@ -429,5 +429,210 @@ export function GhostNodes() {
         />
       ))}
     </svg>
+  );
+}
+
+/* -------------------------------------------------------------------- StepPath */
+
+export interface PathStep {
+  id: string;
+  label: string;
+  state: "done" | "current" | "future";
+  /** Small line under the label, e.g. "You are here". */
+  note?: string;
+  /** The current step is being worked on right now. */
+  busy?: boolean;
+  /** The current step needs attention (e.g. the last attempt failed). */
+  warn?: boolean;
+}
+
+/** A short path for the dark command surface: finished stops are champagne with a
+ * tick, the current stop is violet and pulses, the rest are outlined. It shows
+ * where the founder is — the button beside it is what moves them forward. */
+export function StepPath({
+  steps,
+  ariaLabel,
+  testId,
+}: {
+  steps: PathStep[];
+  ariaLabel: string;
+  testId?: string;
+}) {
+  const reduceMotion = useReducedMotion();
+  return (
+    <nav aria-label={ariaLabel} data-testid={testId}>
+      {/* A vertical timeline on a phone, a horizontal path from sm up. */}
+      <ol className="flex flex-col sm:flex-row sm:items-start">
+        {steps.map((s, i) => {
+          const next = steps[i + 1];
+          const flow = !next
+            ? null
+            : s.state === "done"
+              ? next.state === "done"
+                ? "done"
+                : "toCurrent"
+              : "idle";
+          const done = s.state === "done";
+          const current = s.state === "current";
+          return (
+            <li
+              key={s.id}
+              className="relative flex min-h-14 min-w-0 items-start gap-4 sm:min-h-0 sm:flex-1 sm:flex-col sm:items-center sm:gap-0"
+              data-status={s.state}
+              data-testid={`step-${s.id}`}
+            >
+              {flow && (
+                <>
+                  <span
+                    aria-hidden="true"
+                    className={cn(
+                      "absolute left-[19.5px] top-10 h-5 w-[3px] rounded-full sm:hidden",
+                      flow === "done" && "bg-sol-champagne",
+                      flow === "toCurrent" && "bg-gradient-to-b from-sol-champagne to-sol-violet",
+                      flow === "idle" && "bg-white/15",
+                    )}
+                  />
+                  <motion.span
+                    aria-hidden="true"
+                    className={cn(
+                      "absolute left-1/2 top-[21px] hidden h-[3px] w-full origin-left rounded-full sm:block",
+                      flow === "done" && "bg-sol-champagne",
+                      flow === "toCurrent" && "bg-gradient-to-r from-sol-champagne to-sol-violet",
+                      flow === "idle" && "bg-white/15",
+                    )}
+                    initial={{ scaleX: reduceMotion ? 1 : 0 }}
+                    animate={{ scaleX: 1 }}
+                    transition={{ duration: 0.45, delay: 0.1 + i * 0.09, ease: "easeOut" }}
+                  />
+                </>
+              )}
+              <span className="relative z-10 flex h-11 w-11 shrink-0 items-center justify-center">
+                {current && !reduceMotion && (
+                  <motion.span
+                    aria-hidden="true"
+                    className="absolute inset-0.5 rounded-full border-2 border-sol-violet/70"
+                    animate={{ scale: [1, 1.35], opacity: [0.7, 0] }}
+                    transition={{ duration: 1.8, repeat: Infinity, ease: "easeOut" }}
+                  />
+                )}
+                <motion.span
+                  initial={{ scale: reduceMotion ? 1 : 0.6, opacity: reduceMotion ? 1 : 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  transition={{ duration: 0.35, delay: 0.05 + i * 0.09 }}
+                  className={cn(
+                    "relative flex size-9 items-center justify-center rounded-full border-2",
+                    done
+                      ? "border-sol-champagne bg-sol-champagne text-sol-navy"
+                      : current
+                        ? "border-sol-violet bg-sol-violet text-white shadow-[0_0_0_4px_rgba(114,87,216,0.28)]"
+                        : "border-white/25 bg-transparent text-white/55",
+                  )}
+                >
+                  {done ? (
+                    <Check className="size-4" strokeWidth={3} aria-hidden="true" />
+                  ) : current && s.busy ? (
+                    <Loader2 className="size-4 animate-spin" aria-hidden="true" />
+                  ) : current && s.warn ? (
+                    <TriangleAlert className="size-4" aria-hidden="true" />
+                  ) : (
+                    <span className="text-[0.875rem] font-bold">{i + 1}</span>
+                  )}
+                </motion.span>
+              </span>
+              <span className="flex min-h-11 min-w-0 flex-col justify-center sm:min-h-0 sm:items-center sm:justify-start sm:text-center">
+                <span
+                  className={cn(
+                    "text-[0.875rem] font-semibold leading-tight sm:mt-1.5",
+                    done || current ? "text-white" : "text-white/60",
+                  )}
+                >
+                  {s.label}
+                </span>
+                {s.note && (
+                  <span
+                    className={cn(
+                      "mt-0.5 text-[0.875rem] leading-tight",
+                      current ? "font-semibold text-sol-champagne" : "text-white/45",
+                    )}
+                  >
+                    {s.note}
+                  </span>
+                )}
+              </span>
+            </li>
+          );
+        })}
+      </ol>
+    </nav>
+  );
+}
+
+/* ------------------------------------------------------------- JourneyPreview */
+
+export interface PreviewStep {
+  id: string;
+  label: string;
+  icon: LucideIcon;
+}
+
+/** What waits after the consultation, drawn rather than described: the first
+ * stop is lit (that is where the founder is), the others are dashed ghosts that
+ * fill in as the work happens. */
+export function JourneyPreview({ steps, ariaLabel }: { steps: PreviewStep[]; ariaLabel: string }) {
+  const reduceMotion = useReducedMotion();
+  return (
+    <nav aria-label={ariaLabel} data-testid="journey-preview">
+      {/* A vertical list on a phone, a horizontal path from sm up. */}
+      <ol className="flex flex-col sm:flex-row sm:items-start">
+        {steps.map((s, i) => {
+          const first = i === 0;
+          const last = i === steps.length - 1;
+          const Icon = s.icon;
+          return (
+            <li
+              key={s.id}
+              className="relative flex min-h-[4.5rem] min-w-0 items-start gap-4 sm:min-h-0 sm:flex-1 sm:flex-col sm:items-center sm:gap-0"
+            >
+              {!last && (
+                <>
+                  <span
+                    aria-hidden="true"
+                    className="absolute left-[26px] top-[54px] h-[1.5rem] w-0 border-l-2 border-dashed border-sol-border-strong sm:hidden"
+                  />
+                  <motion.span
+                    aria-hidden="true"
+                    className="absolute left-1/2 top-[27px] hidden h-0 w-full origin-left border-t-2 border-dashed border-sol-border-strong sm:block"
+                    initial={{ scaleX: reduceMotion ? 1 : 0 }}
+                    animate={{ scaleX: 1 }}
+                    transition={{ duration: 0.5, delay: 0.2 + i * 0.12, ease: "easeOut" }}
+                  />
+                </>
+              )}
+              <motion.span
+                initial={{ opacity: reduceMotion ? 1 : 0, scale: reduceMotion ? 1 : 0.7 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.4, delay: 0.1 + i * 0.12 }}
+                className={cn(
+                  "relative z-10 flex size-[54px] shrink-0 items-center justify-center rounded-full border-2",
+                  first
+                    ? "border-sol-violet bg-sol-violet text-white shadow-[0_8px_22px_rgba(112,88,215,0.3)]"
+                    : "border-dashed border-sol-border-strong bg-sol-surface text-sol-secondary",
+                )}
+              >
+                <Icon className="size-6" aria-hidden="true" />
+              </motion.span>
+              <span
+                className={cn(
+                  "flex min-h-[54px] items-center text-[0.875rem] font-bold uppercase tracking-[0.06em] sm:mt-2.5 sm:min-h-0 sm:text-center",
+                  first ? "text-sol-violet-deep" : "text-sol-secondary",
+                )}
+              >
+                {s.label}
+              </span>
+            </li>
+          );
+        })}
+      </ol>
+    </nav>
   );
 }

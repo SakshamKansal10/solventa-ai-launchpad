@@ -168,7 +168,7 @@ export function ExecutionPath({
         </ol>
       </nav>
       {!hasAssumptions && (
-        <p className="mt-2 text-[0.9375rem] text-white/60" data-testid="execution-path-empty">
+        <p className="sr-only" data-testid="execution-path-empty">
           {t("cc.path.empty")}
         </p>
       )}

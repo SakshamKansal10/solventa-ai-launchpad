@@ -223,14 +223,6 @@ test.describe("homepage", () => {
     expect(text).not.toMatch(/\d+\s?%/);
   });
 
-  test("the comparison lists what a chatbot lacks and what Solventia keeps, four each", async ({
-    page,
-  }) => {
-    await gotoApp(page, "/");
-    const cmp = page.getByTestId("why-comparison");
-    await expect(cmp.locator("li")).toHaveCount(8);
-  });
-
   test("the FAQ has five questions that open and close", async ({ page }) => {
     await gotoApp(page, "/");
     const faq = page.locator("#faq");

@@ -1,28 +1,15 @@
 import type { ReactNode } from "react";
-import { useQuery } from "@tanstack/react-query";
 import { motion } from "motion/react";
 import { Flame, Rocket, Sparkles, Users, type LucideIcon } from "lucide-react";
 
 import type { OpportunityBrief } from "@/lib/actions/founder";
-import { getOpportunityDetail } from "@/lib/actions/opportunities";
-import type { FitStatus } from "@/lib/fit/matrix";
-import type { MessageKey } from "@/lib/i18n";
 import { useLocale } from "@/lib/i18n/LocaleProvider";
-import { qk } from "@/lib/queries";
 import { useTranslatedBrief } from "@/lib/use-translation";
-import { cn } from "@/lib/utils";
-import { Fact, LinkButton, Pill, Button, Skeleton } from "./ui";
-
-const PIPS: Record<FitStatus, number> = { strong: 3, moderate: 2, conditional: 1 };
-const PIP_TONE: Record<FitStatus, string> = {
-  strong: "bg-sol-champagne-deep",
-  moderate: "bg-sol-violet",
-  conditional: "bg-sol-border-strong",
-};
+import { Fact, LinkButton, Pill, Button } from "./ui";
 
 /** Customer → problem → product, as three connected stops rather than three
  * paragraphs. Each is clamped to a few lines; the full text is one click away. */
-function BriefChain({ brief }: { brief: OpportunityBrief }) {
+export function BriefChain({ brief }: { brief: OpportunityBrief }) {
   const { t } = useLocale();
   const all: { icon: LucideIcon; label: string; text: string | null }[] = [
     { icon: Users, label: t("opp.fact.customer"), text: brief.customer },
@@ -61,50 +48,6 @@ function BriefChain({ brief }: { brief: OpportunityBrief }) {
         </motion.li>
       ))}
     </ol>
-  );
-}
-
-/** The founder's four real fit rows (capability, resources, access, ambition),
- * each as a labelled categorical bar — never a number. */
-function FlagshipFit({ opportunityId }: { opportunityId: string }) {
-  const { t } = useLocale();
-  const detail = useQuery({
-    queryKey: qk.opportunity(opportunityId),
-    queryFn: () => getOpportunityDetail({ data: { id: opportunityId } }),
-    staleTime: 30_000,
-  });
-  if (detail.isPending) return <Skeleton className="h-24" />;
-  const matrix = detail.data?.fit.matrix;
-  if (!matrix) return null;
-  return (
-    <ul className="grid gap-2.5 sm:grid-cols-2" data-testid="flagship-fit">
-      {matrix.rows.map((row) => (
-        <li
-          key={row.key}
-          className="flex items-center justify-between gap-3 rounded-xl border border-sol-border bg-sol-pearl px-4 py-2.5"
-        >
-          <span className="text-[0.9375rem] font-semibold text-sol-ink">
-            {t(`fit.row.${row.key}` as MessageKey)}
-          </span>
-          <span className="flex items-center gap-2.5">
-            <span className="flex gap-1" aria-hidden="true">
-              {[1, 2, 3].map((n) => (
-                <span
-                  key={n}
-                  className={cn(
-                    "h-2 w-5 rounded-full",
-                    n <= PIPS[row.status] ? PIP_TONE[row.status] : "bg-sol-ivory-depth",
-                  )}
-                />
-              ))}
-            </span>
-            <span className="min-w-[5.25rem] text-right text-[0.875rem] font-semibold text-sol-secondary">
-              {t(`fit.status.${row.status}` as MessageKey)}
-            </span>
-          </span>
-        </li>
-      ))}
-    </ul>
   );
 }
 
@@ -206,20 +149,19 @@ export function FlagshipCard({
       >
         {brief.title}
       </h2>
-      <p className="sol-body sol-prose relative mt-4 text-sol-secondary">{brief.oneLiner}</p>
       <div className="relative mt-9">
         <BriefChain brief={brief} />
       </div>
-      <div className="relative mt-8">
-        <FlagshipFit opportunityId={brief.id} />
-      </div>
       {brief.whyFit[0] && (
         <p
-          className="relative mt-6 rounded-2xl border-l-4 border-sol-champagne bg-sol-champagne-soft/50 px-5 py-4 text-[1.0625rem] leading-snug text-sol-ink"
+          className="relative mt-8 flex gap-3 rounded-2xl border-l-4 border-sol-champagne bg-sol-champagne-soft/50 px-5 py-4 text-[1.0625rem] leading-snug text-sol-ink"
           data-testid="flagship-why"
         >
-          <span className="font-semibold">{t("opp.fact.whyFit")}: </span>
-          {brief.whyFit[0]}
+          <Sparkles className="mt-0.5 size-5 shrink-0 text-sol-champagne-deep" aria-hidden="true" />
+          <span className="min-w-0">
+            <span className="sr-only">{t("opp.fact.whyFit")}: </span>
+            {brief.whyFit[0]}
+          </span>
         </p>
       )}
       <div className="relative mt-9 flex flex-wrap items-center gap-3">
@@ -251,12 +193,15 @@ export function FlagshipCard({
 
 export function AlternativeCard({
   brief: raw,
+  rank,
   onChoose,
   choosing,
   disabled,
   readOnly,
 }: {
   brief: OpportunityBrief;
+  /** Position among the directions (the flagship is 1). */
+  rank?: number;
   onChoose: () => void;
   choosing: boolean;
   disabled: boolean;
@@ -264,26 +209,41 @@ export function AlternativeCard({
 }) {
   const { t } = useLocale();
   const brief = useTranslatedBrief(raw) ?? raw;
+  const lines: { icon: LucideIcon; label: string; text: string }[] = [];
+  if (brief.customer)
+    lines.push({ icon: Users, label: t("opp.fact.customer"), text: brief.customer });
+  if (brief.problem) lines.push({ icon: Flame, label: t("opp.fact.problem"), text: brief.problem });
   return (
     <article
       className="sol-card flex flex-col gap-4 p-6"
       data-testid="alternative-card"
       aria-label={brief.title}
     >
-      <div className="flex items-start justify-between gap-3">
-        <h3 className="sol-h3 min-w-0">{brief.title}</h3>
+      <div className="flex items-start gap-3">
+        {rank != null && (
+          <span
+            className="flex size-8 shrink-0 items-center justify-center rounded-full bg-sol-ivory-depth font-display text-[1rem] font-semibold text-sol-secondary"
+            aria-hidden="true"
+          >
+            {rank}
+          </span>
+        )}
+        <h3 className="sol-h3 min-w-0 flex-1">{brief.title}</h3>
         <FitPill fit={brief.fit} />
       </div>
-      <p className="line-clamp-3 text-[1rem] leading-relaxed text-sol-secondary">
-        {brief.oneLiner}
-      </p>
-      <dl className="grid gap-4">
-        {brief.customer && (
-          <Fact label={t("opp.fact.customer")}>
-            <span className="line-clamp-2">{brief.customer}</span>
-          </Fact>
-        )}
-      </dl>
+      <ul className="flex flex-col gap-3">
+        {lines.map((l) => (
+          <li key={l.label} className="flex items-start gap-3">
+            <span className="mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-lg bg-sol-champagne-soft text-sol-champagne-deep">
+              <l.icon className="size-4" aria-hidden="true" />
+            </span>
+            <span className="line-clamp-2 min-w-0 text-[1rem] leading-snug text-sol-ink">
+              <span className="sr-only">{l.label}: </span>
+              {l.text}
+            </span>
+          </li>
+        ))}
+      </ul>
       <div className="mt-auto flex flex-wrap gap-3 pt-2">
         <LinkButton
           to="/dashboard/opportunities/$id"

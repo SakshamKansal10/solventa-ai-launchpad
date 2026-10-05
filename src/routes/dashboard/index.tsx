@@ -9,29 +9,35 @@ import {
   Clock3,
   Compass,
   FileCheck2,
-  Lightbulb,
+  FlaskConical,
   Loader2,
+  Map as MapIcon,
   Rocket,
-  Users,
-  Wallet,
+  UserRound,
 } from "lucide-react";
 import { Line, LineChart, ReferenceDot, ResponsiveContainer } from "recharts";
 
 import {
   AlternativeCard,
-  BriefFacts,
+  BriefChain,
   FitPill,
   FlagshipCard,
 } from "@/components/founder/OpportunityCards";
+import { DirectionCompare } from "@/components/founder/dashboard/DirectionCompare";
+import { FitSignals } from "@/components/founder/dashboard/fit-visual";
 import {
   GhostChart,
   GhostNodes,
+  JourneyPreview,
   JourneyRibbon,
   MomentumBars,
   ProgressRing,
   StackedBar,
+  StepPath,
   WeekTrack,
   type MomentumDay,
+  type PathStep,
+  type PreviewStep,
   type RibbonPhase,
 } from "@/components/founder/dashboard/graphics";
 import { ExecutionPath } from "@/components/founder/ExecutionPath";
@@ -41,7 +47,6 @@ import {
   Button,
   Card,
   ErrorPanel,
-  EmptyState,
   Eyebrow,
   LinkButton,
   PageHeader,
@@ -64,7 +69,6 @@ import { getProofOverview, type AssumptionDTO } from "@/lib/actions/proof";
 import { getRoadmapView, type RoadmapView } from "@/lib/actions/roadmap";
 import { useLocale } from "@/lib/i18n/LocaleProvider";
 import { qk, useCurrentUserQuery, useFounderState, useInvalidateFounder } from "@/lib/queries";
-import { cn } from "@/lib/utils";
 import { useTranslatedBrief } from "@/lib/use-translation";
 import { useTranslatedEntity } from "@/lib/use-translation";
 import { useTranslatedTitle } from "@/lib/use-translation";
@@ -150,21 +154,37 @@ function EarlierConsultationBanner() {
   );
 }
 
+/** What follows the consultation, as a path of stops — the first is lit. */
+function usePreviewSteps(): PreviewStep[] {
+  const { t } = useLocale();
+  return [
+    { id: "you", label: t("cc.none.step.you"), icon: UserRound },
+    { id: "directions", label: t("cc.none.step.directions"), icon: Compass },
+    { id: "roadmap", label: t("cc.none.step.roadmap"), icon: MapIcon },
+    { id: "proof", label: t("cc.none.step.proof"), icon: FlaskConical },
+    { id: "next", label: t("cc.none.step.next"), icon: Rocket },
+  ];
+}
+
 function NoConsultation() {
   const { t } = useLocale();
+  const steps = usePreviewSteps();
   return (
     <>
       <PageHeader title={t("cc.none.title")} subtitle={t("cc.none.body")} />
-      <EmptyState
-        title={t("cc.none.cardTitle")}
-        body={t("cc.none.cardBody")}
-        action={
-          <LinkButton to="/consultation" variant="primary" size="lg">
-            {t("nav.findMyBusinessIdea")}
-            <ArrowRight className="size-4 text-sol-champagne" aria-hidden="true" />
-          </LinkButton>
-        }
-      />
+      <Card className="flex flex-col gap-8 p-6 sm:p-10" data-testid="no-consultation">
+        <JourneyPreview steps={steps} ariaLabel={t("cc.none.step.aria")} />
+        <div className="flex flex-col items-start gap-3 border-t border-sol-border pt-8">
+          <p className="sol-h3">{t("cc.none.cardTitle")}</p>
+          <p className="sol-body sol-prose text-sol-secondary">{t("cc.none.cardBody")}</p>
+          <div className="mt-2">
+            <LinkButton to="/consultation" variant="primary" size="lg">
+              {t("nav.findMyBusinessIdea")}
+              <ArrowRight className="size-4 text-sol-champagne" aria-hidden="true" />
+            </LinkButton>
+          </div>
+        </div>
+      </Card>
     </>
   );
 }
@@ -212,6 +232,7 @@ function IdeasReady({
   const busy = choose.isPending || explore.isPending;
   const flagship = briefs[flagshipId];
   if (!flagship) return <NoConsultation />;
+  const alternatives = alternativeIds.flatMap((id) => (briefs[id] ? [briefs[id]] : []));
 
   return (
     <>
@@ -223,24 +244,24 @@ function IdeasReady({
         choosing={choose.isPending && choose.variables === flagshipId}
         onChoose={() => choose.mutate(flagshipId)}
       />
-      {alternativeIds.length > 0 && (
+      <DirectionCompare briefs={[flagship, ...alternatives]} />
+      {alternatives.length > 0 && (
         <section aria-labelledby="alts-heading" className="flex flex-col gap-4">
           <h2 id="alts-heading" className="sol-eyebrow">
             {t("cc.alternatives")}
           </h2>
           <div className="grid gap-5 md:grid-cols-2">
-            {alternativeIds.map((id) =>
-              briefs[id] ? (
-                <AlternativeCard
-                  key={id}
-                  brief={briefs[id]}
-                  readOnly={readOnly}
-                  disabled={busy}
-                  choosing={choose.isPending && choose.variables === id}
-                  onChoose={() => choose.mutate(id)}
-                />
-              ) : null,
-            )}
+            {alternatives.map((alt, i) => (
+              <AlternativeCard
+                key={alt.id}
+                brief={alt}
+                rank={i + 2}
+                readOnly={readOnly}
+                disabled={busy}
+                choosing={choose.isPending && choose.variables === alt.id}
+                onChoose={() => choose.mutate(alt.id)}
+              />
+            ))}
           </div>
         </section>
       )}
@@ -284,83 +305,141 @@ function DirectionSelected({
   const navigate = useNavigate();
   const founder = useFounderState();
   const brief = useTranslatedBrief(founder.data!.briefs[opportunityId]);
+  const detail = useQuery({
+    queryKey: qk.opportunity(opportunityId),
+    queryFn: () => getOpportunityDetail({ data: { id: opportunityId } }),
+    staleTime: 30_000,
+  });
   if (!brief) return <NoConsultation />;
 
+  const building = stage === "roadmap_building";
+  const failed = stage === "roadmap_failed";
   const goBuild = () => navigate({ to: "/dashboard/roadmap/building", search: { opportunityId } });
+  const matrix = detail.data?.fit.matrix ?? null;
+
+  // Where the founder is: direction chosen, roadmap next — then week 1, evidence, adapt.
+  const steps: PathStep[] = [
+    { id: "direction", label: t("cc.path.direction"), state: "done", note: t("cc.path.chosen") },
+    {
+      id: "roadmap",
+      label: t("cc.b.step.roadmap"),
+      state: "current",
+      busy: building,
+      warn: failed,
+      note: building
+        ? t("cc.b.step.building")
+        : failed
+          ? t("cc.b.step.failed")
+          : t("cc.path.state.current"),
+    },
+    { id: "week1", label: t("common.weekN", { n: "01" }), state: "future" },
+    { id: "evidence", label: t("cc.b.step.evidence"), state: "future" },
+    { id: "adapt", label: t("howItWorks.step5.title"), state: "future" },
+  ];
 
   return (
     <>
-      <PageHeader title={t("cc.b.title")} subtitle={t("cc.b.subtitle")} />
-      <Card className="flex flex-col gap-5 p-6 sm:p-8" data-testid="next-step">
-        <Eyebrow>{t("cc.b.nextStep")}</Eyebrow>
-        {stage === "roadmap_failed" && (
+      <PageHeader title={t("cc.b.title")} />
+
+      <section
+        className="relative overflow-hidden rounded-[24px] bg-workspace p-6 sm:p-8"
+        data-testid="next-step"
+      >
+        <div
+          className="pointer-events-none absolute inset-0"
+          style={{
+            background:
+              "radial-gradient(ellipse 480px 320px at 85% -10%, var(--workspace-violet-glow), transparent 70%)",
+          }}
+          aria-hidden="true"
+        />
+        <div className="relative flex flex-wrap items-start justify-between gap-4">
+          <div className="min-w-0">
+            <p className="text-[0.875rem] font-bold uppercase tracking-[0.1em] text-workspace-muted">
+              {t("cc.surface.direction")}
+            </p>
+            <h2
+              className="mt-1.5 max-w-[32ch] font-display text-[clamp(1.5rem,1.2rem+1.2vw,2.125rem)] font-semibold leading-[1.15] text-workspace-foreground"
+              data-testid="surface-direction"
+            >
+              {brief.title}
+            </h2>
+          </div>
+          <FitPill fit={brief.fit} />
+        </div>
+
+        {failed && (
           <div
             role="alert"
-            className="rounded-2xl border border-sol-warning/40 bg-sol-warning-soft px-4 py-3 text-[1.0625rem] text-sol-ink"
+            className="relative mt-5 rounded-2xl border border-sol-warning/50 bg-sol-warning/15 px-4 py-3 text-[1rem] text-workspace-foreground"
           >
             {t("cc.b.failed")}
           </div>
         )}
-        {stage === "roadmap_building" && (
+        {building && (
           <div
             role="status"
-            className="rounded-2xl border border-sol-violet/25 bg-sol-violet-soft px-4 py-3 text-[1.0625rem] text-sol-ink"
+            className="relative mt-5 rounded-2xl border border-sol-violet/40 bg-sol-violet/15 px-4 py-3 text-[1rem] text-workspace-foreground"
           >
             {t("cc.b.building")}
           </div>
         )}
-        <h2 className="sol-h2">
-          {hasArchivedRoadmap ? t("cc.b.resumeTitle") : t("cc.b.buildTitle")}
-        </h2>
-        <p className="sol-body sol-prose text-sol-secondary">
-          {hasArchivedRoadmap ? t("cc.b.resumeBody") : t("cc.b.buildBody")}
-        </p>
-        <div className="flex flex-wrap gap-3">
-          {!readOnly && (
-            <Button size="lg" variant="primary" onClick={goBuild} data-testid="build-roadmap">
-              {stage === "roadmap_building"
-                ? t("cc.b.viewProgress")
-                : stage === "roadmap_failed"
-                  ? t("common.retry")
-                  : hasArchivedRoadmap
-                    ? t("cc.b.resumeCta")
-                    : t("cc.b.buildCta")}
-            </Button>
-          )}
-          <LinkButton
-            to="/dashboard/opportunities/$id"
-            params={{ id: opportunityId }}
-            variant="secondary"
-            size="lg"
-          >
-            {t("cc.b.openOpportunity")}
-          </LinkButton>
+
+        <div className="relative mt-6 border-t border-workspace-border pt-6">
+          <StepPath steps={steps} ariaLabel={t("cc.b.step.aria")} testId="build-path" />
         </div>
+
+        <div className="relative mt-6 flex flex-wrap items-center justify-between gap-4 border-t border-workspace-border pt-6">
+          <p className="min-w-0 flex-1 basis-60 text-[0.9375rem] text-workspace-muted">
+            {hasArchivedRoadmap ? t("cc.b.resumeHint") : t("cc.b.hint")}
+          </p>
+          <div className="flex w-full flex-wrap gap-3 sm:w-auto">
+            {!readOnly && (
+              <Button
+                size="lg"
+                variant="champagne"
+                onClick={goBuild}
+                data-testid="build-roadmap"
+                className="w-full sm:w-auto"
+              >
+                {building
+                  ? t("cc.b.viewProgress")
+                  : failed
+                    ? t("common.retry")
+                    : hasArchivedRoadmap
+                      ? t("cc.b.resumeCta")
+                      : t("cc.b.buildCta")}
+                <ArrowRight className="size-4" aria-hidden="true" />
+              </Button>
+            )}
+            <LinkButton
+              to="/dashboard/opportunities/$id"
+              params={{ id: opportunityId }}
+              variant="secondary"
+              size="lg"
+              className="w-full border-workspace-border bg-transparent text-workspace-foreground hover:border-sol-violet/50 sm:w-auto"
+            >
+              {t("cc.b.openOpportunity")}
+            </LinkButton>
+          </div>
+        </div>
+      </section>
+
+      <Card className="flex flex-col gap-6 p-6 sm:p-8" data-testid="chosen-direction">
+        <Eyebrow>{t("cc.b.chosen")}</Eyebrow>
+        <BriefChain brief={brief} />
       </Card>
-      <Card className="p-6 sm:p-8" data-testid="chosen-direction">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <Eyebrow>{t("cc.b.chosen")}</Eyebrow>
-          <FitPill fit={brief.fit} />
-        </div>
-        <h2 className="mt-3 max-w-[30ch] font-display text-[clamp(1.5rem,1.25rem+1vw,2rem)] font-semibold leading-[1.15] text-sol-ink">
-          {brief.title}
-        </h2>
-        <p className="sol-body sol-prose mt-3 text-sol-secondary">{brief.oneLiner}</p>
-        <div className="mt-6">
-          <BriefFacts brief={brief} columns={3} limit={3} />
-        </div>
+      <Card className="flex flex-col gap-4 p-6" data-testid="chosen-fit">
+        <h2 className="sol-eyebrow">{t("cc.oppPulse.heading")}</h2>
+        {detail.isPending ? (
+          <Skeleton className="h-28" />
+        ) : matrix ? (
+          <FitSignals rows={matrix.rows} layout="tiles" />
+        ) : null}
       </Card>
     </>
   );
 }
-
-const FIT_PIPS = { strong: 3, moderate: 2, conditional: 1 } as const;
-const FIT_ICONS = {
-  capability: Lightbulb,
-  resources: Wallet,
-  access: Users,
-  ambition: Rocket,
-} as const;
 
 const localKey = (d: Date) =>
   `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
@@ -679,40 +758,44 @@ function NextMove({
               className="relative overflow-hidden border-l-[6px] border-l-sol-champagne p-6 sm:p-8"
               data-testid="todays-move"
             >
-              <Eyebrow className="text-sol-champagne-deep">{t("cc.today.heading")}</Eyebrow>
-              <h2
-                className="mt-3 max-w-[30ch] font-display text-[clamp(1.5rem,1.2rem+1.2vw,2.125rem)] font-semibold leading-[1.15] text-sol-ink"
-                data-testid="current-mission"
-              >
-                {missionTitle}
-              </h2>
-              <div className="mt-5 flex flex-wrap items-center gap-2">
-                {mission.timeEstimate && (
-                  <Pill>
-                    <Clock3 className="size-3.5" aria-hidden="true" />
-                    {mission.timeEstimate}
-                  </Pill>
-                )}
-                {mission.evidenceRequired && (
-                  <Pill tone="violet">
-                    <FileCheck2 className="size-3.5" aria-hidden="true" />
-                    {t("rm.evidenceRequired")}
-                  </Pill>
-                )}
-              </div>
-              <div className="mt-6">
-                <LinkButton
-                  to="/dashboard/roadmap"
-                  search={{ week: week.number, mission: mission.id }}
-                  variant="primary"
-                  size="lg"
-                  data-testid="start-mission"
+              {/* Keyed by mission: when one is finished the next one arrives as a
+                  state change (480ms reveal), not a silent text swap. */}
+              <div key={mission.id} className="sol-reveal">
+                <Eyebrow className="text-sol-champagne-deep">{t("cc.today.heading")}</Eyebrow>
+                <h2
+                  className="mt-3 max-w-[30ch] font-display text-[clamp(1.5rem,1.2rem+1.2vw,2.125rem)] font-semibold leading-[1.15] text-sol-ink"
+                  data-testid="current-mission"
                 >
-                  {mission.state === "not_started"
-                    ? t("rm.mission.start")
-                    : t("cc.c.continueMission")}
-                  <ArrowRight className="size-4 text-sol-champagne" aria-hidden="true" />
-                </LinkButton>
+                  {missionTitle}
+                </h2>
+                <div className="mt-5 flex flex-wrap items-center gap-2">
+                  {mission.timeEstimate && (
+                    <Pill>
+                      <Clock3 className="size-3.5" aria-hidden="true" />
+                      {mission.timeEstimate}
+                    </Pill>
+                  )}
+                  {mission.evidenceRequired && (
+                    <Pill tone="violet">
+                      <FileCheck2 className="size-3.5" aria-hidden="true" />
+                      {t("rm.evidenceRequired")}
+                    </Pill>
+                  )}
+                </div>
+                <div className="mt-6">
+                  <LinkButton
+                    to="/dashboard/roadmap"
+                    search={{ week: week.number, mission: mission.id }}
+                    variant="primary"
+                    size="lg"
+                    data-testid="start-mission"
+                  >
+                    {mission.state === "not_started"
+                      ? t("rm.mission.start")
+                      : t("cc.c.continueMission")}
+                    <ArrowRight className="size-4 text-sol-champagne" aria-hidden="true" />
+                  </LinkButton>
+                </div>
               </div>
             </Card>
           ) : (
@@ -832,9 +915,7 @@ function NextMove({
           ) : (
             <div className="flex flex-col items-start gap-3">
               <GhostNodes />
-              <p className="text-[0.9375rem] leading-snug text-sol-secondary">
-                {t("cc.map.empty")}
-              </p>
+              <p className="sr-only">{t("cc.map.empty")}</p>
             </div>
           )}
         </Card>
@@ -847,41 +928,7 @@ function NextMove({
           {detail.isPending || !matrix ? (
             <Skeleton className="h-28" />
           ) : (
-            <ul className="flex flex-col gap-3">
-              {matrix.rows.map((row) => (
-                <li key={row.key} className="flex items-center justify-between gap-3">
-                  <span className="flex items-center gap-3 text-[0.9375rem] font-semibold text-sol-ink">
-                    <span className="flex size-8 items-center justify-center rounded-lg bg-sol-champagne-soft text-sol-champagne-deep">
-                      {(() => {
-                        const Icon = FIT_ICONS[row.key];
-                        return <Icon className="size-4" aria-hidden="true" />;
-                      })()}
-                    </span>
-                    {t(`fit.row.${row.key}` as const)}
-                  </span>
-                  <span
-                    className="flex items-center gap-1.5"
-                    role="img"
-                    aria-label={t(`fit.status.${row.status}` as const)}
-                    title={t(`fit.status.${row.status}` as const)}
-                  >
-                    {[1, 2, 3].map((n) => (
-                      <span
-                        key={n}
-                        className={cn(
-                          "h-2.5 w-8 rounded-full",
-                          n <= FIT_PIPS[row.status]
-                            ? row.status === "strong"
-                              ? "bg-sol-champagne-deep"
-                              : "bg-sol-violet"
-                            : "bg-sol-ivory-depth",
-                        )}
-                      />
-                    ))}
-                  </span>
-                </li>
-              ))}
-            </ul>
+            <FitSignals rows={matrix.rows} />
           )}
         </Card>
 
@@ -989,9 +1036,7 @@ function NextMove({
             missionsLabel={t("cc.mom.missions")}
             evidenceLabel={t("cc.mom.evidence")}
           />
-          {momentumTotal === 0 && (
-            <p className="text-[0.9375rem] text-sol-secondary">{t("cc.mom.empty")}</p>
-          )}
+          {momentumTotal === 0 && <p className="sr-only">{t("cc.mom.empty")}</p>}
         </Card>
       </div>
     </>

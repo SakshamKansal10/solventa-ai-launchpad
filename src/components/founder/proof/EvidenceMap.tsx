@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { motion, useReducedMotion } from "motion/react";
 
 import { useLocale } from "@/lib/i18n/LocaleProvider";
 import type { AssumptionDTO } from "@/lib/actions/proof";
@@ -46,7 +47,25 @@ export function EvidenceMap({
   onSelect: (id: string) => void;
 }) {
   const { t } = useLocale();
+  const reduceMotion = useReducedMotion();
   const [active, setActive] = useState<string | null>(null);
+  // When new evidence lands, the assumption it speaks to pulses once — the map
+  // reacting to what was just learned. Never on first load.
+  const [pulses, setPulses] = useState<Record<string, number>>({});
+  const prevCounts = useRef<Map<string, number> | null>(null);
+  useEffect(() => {
+    const prev = prevCounts.current;
+    if (prev) {
+      const grown = assumptions.filter((a) => (prev.get(a.id) ?? 0) < a.evidence.length);
+      if (grown.length > 0) {
+        setPulses((p) => ({
+          ...p,
+          ...Object.fromEntries(grown.map((a) => [a.id, a.evidence.length])),
+        }));
+      }
+    }
+    prevCounts.current = new Map(assumptions.map((a) => [a.id, a.evidence.length]));
+  }, [assumptions]);
   if (assumptions.length === 0) return null;
 
   const coarse = typeof window !== "undefined" && window.matchMedia("(pointer: coarse)").matches;
@@ -85,7 +104,7 @@ export function EvidenceMap({
             >
               <span
                 className={cn(
-                  "flex size-14 items-center justify-center rounded-full border-2 text-[0.9375rem] font-bold text-sol-ink transition-shadow",
+                  "relative flex size-14 items-center justify-center rounded-full border-2 text-[0.9375rem] font-bold text-sol-ink transition-shadow",
                   tone.ring,
                   tone.fill,
                   active === a.id && "shadow-[0_0_0_4px_rgba(114,87,216,0.18)]",
@@ -95,6 +114,23 @@ export function EvidenceMap({
                 {a.evidence.length > 0 ? a.evidence.length : ""}
                 {a.evidence.length === 0 && (
                   <span className={cn("size-2 rounded-full", tone.dot)} />
+                )}
+                {pulses[a.id] != null && !reduceMotion && (
+                  <motion.span
+                    key={pulses[a.id]}
+                    className="pointer-events-none absolute -inset-0.5 rounded-full border-2 border-sol-champagne"
+                    initial={{ scale: 1, opacity: 0.9 }}
+                    animate={{ scale: 1.6, opacity: 0 }}
+                    transition={{ duration: 0.9, ease: [0.22, 1, 0.36, 1] }}
+                    onAnimationComplete={() =>
+                      setPulses((p) => {
+                        const next = { ...p };
+                        delete next[a.id];
+                        return next;
+                      })
+                    }
+                    data-testid="evidence-map-pulse"
+                  />
                 )}
               </span>
               <span className="line-clamp-2 text-[0.875rem] font-medium leading-tight text-sol-secondary">

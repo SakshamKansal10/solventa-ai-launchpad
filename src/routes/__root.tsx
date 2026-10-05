@@ -84,6 +84,11 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
+      // Google Search Console ownership for solventia.in (same tag as the live site).
+      {
+        name: "google-site-verification",
+        content: "5pfs0LqNccWfiE7yKIRcO36X5PYG_867F3leOOx_oBM",
+      },
       { name: "author", content: "Solventia" },
       { name: "application-name", content: "Solventia" },
       { name: "apple-mobile-web-app-title", content: "Solventia" },

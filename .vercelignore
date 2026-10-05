@@ -1,0 +1,24 @@
+# A CLI deployment uploads exactly what a Git deployment would contain: never
+# local env files, the E2E harness's local database, screenshots or build output.
+# (Mirrors .gitignore; production env vars come from the Vercel project itself.)
+node_modules
+dist
+dist-ssr
+.output
+.vinxi
+.tanstack
+.nitro
+.wrangler
+.dev.vars
+.vercel
+.vscode
+.idea
+.env*
+*.local
+*.log
+scripts/_output
+e2e-results
+e2e-report
+.e2e-tmp
+test-results
+e2e/_*.spec.ts

@@ -2,6 +2,19 @@ import { useState } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
+import {
+  ArrowRight,
+  CircleCheck,
+  Clock3,
+  Compass,
+  GraduationCap,
+  History as HistoryIcon,
+  Map as MapIcon,
+  MapPin,
+  UserRound,
+  Wallet,
+  type LucideIcon,
+} from "lucide-react";
 
 import { FitPill } from "@/components/founder/OpportunityCards";
 import {
@@ -31,6 +44,7 @@ import { useLocale } from "@/lib/i18n/LocaleProvider";
 import { qk, useFounderState, useInvalidateFounder } from "@/lib/queries";
 import { formatDate } from "@/components/founder/proof/bits";
 import { useTranslatedTitle } from "@/lib/use-translation";
+import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/dashboard/history")({
   component: HistoryPage,
@@ -98,9 +112,29 @@ function HistoryPage() {
           }
         />
       ) : (
-        <ol className="flex flex-col gap-5">
+        <ol className="relative flex flex-col gap-5" data-testid="history-timeline">
+          {/* The rail the consultations hang from, newest first. */}
+          <span
+            aria-hidden="true"
+            className="absolute bottom-8 left-5 top-8 w-0.5 rounded-full bg-gradient-to-b from-sol-violet/60 via-sol-border-strong to-sol-border"
+          />
           {query.data.map((entry) => (
-            <li key={entry.consultationId}>
+            <li key={entry.consultationId} className="relative pl-12 sm:pl-14">
+              <span
+                aria-hidden="true"
+                className={cn(
+                  "absolute left-0 top-6 flex size-10 items-center justify-center rounded-full border-2",
+                  entry.isCurrent
+                    ? "border-sol-violet bg-sol-violet text-white shadow-[0_6px_18px_rgba(112,88,215,0.3)]"
+                    : "border-sol-border-strong bg-sol-surface text-sol-secondary",
+                )}
+              >
+                {entry.isCurrent ? (
+                  <Compass className="size-5" />
+                ) : (
+                  <HistoryIcon className="size-5" />
+                )}
+              </span>
               <EntryCard entry={entry} onRestore={() => setRestoring(entry)} />
             </li>
           ))}
@@ -140,17 +174,25 @@ function HistoryPage() {
   );
 }
 
+/** One consultation as a small flow: what was found → what was chosen → where the
+ * roadmap stands, so the history reads as a path rather than a table of text. */
 function EntryCard({ entry, onRestore }: { entry: HistoryEntry; onRestore: () => void }) {
   const { t, td, locale } = useLocale();
   const p = entry.profile;
   const statusId = p.status ? statusIdFromEnglish(p.status) : null;
-  const facts = [
-    statusId ? td(`opt.status.${statusId}`, undefined, p.status ?? "") : p.status,
-    p.age ? t("hist.age", { n: p.age }) : null,
-    [p.state, p.country].filter(Boolean).join(", ") || null,
-    p.weeklyHours ? t("common.hoursPerWeek", { n: p.weeklyHours }) : null,
-    p.capitalAmount && p.currency ? formatMoney(p.capitalAmount, p.currency) : null,
-  ].filter(Boolean);
+  const facts: { icon: LucideIcon; text: string }[] = [
+    {
+      icon: GraduationCap,
+      text: statusId ? td(`opt.status.${statusId}`, undefined, p.status ?? "") : (p.status ?? ""),
+    },
+    { icon: UserRound, text: p.age ? t("hist.age", { n: p.age }) : "" },
+    { icon: MapPin, text: [p.state, p.country].filter(Boolean).join(", ") },
+    { icon: Clock3, text: p.weeklyHours ? t("common.hoursPerWeek", { n: p.weeklyHours }) : "" },
+    {
+      icon: Wallet,
+      text: p.capitalAmount && p.currency ? formatMoney(p.capitalAmount, p.currency) : "",
+    },
+  ].filter((f) => f.text);
 
   const roadmapTone =
     entry.roadmapStatus === "active"
@@ -161,10 +203,23 @@ function EntryCard({ entry, onRestore }: { entry: HistoryEntry; onRestore: () =>
           ? "warning"
           : "neutral";
 
+  const nodeClass =
+    "relative flex flex-col gap-3 rounded-2xl border border-sol-border bg-sol-pearl p-4";
+  const nodeIcon =
+    "flex size-9 shrink-0 items-center justify-center rounded-xl bg-sol-champagne-soft text-sol-champagne-deep";
+  const arrow = (
+    <span
+      aria-hidden="true"
+      className="absolute -right-[1.15rem] top-1/2 z-10 hidden size-7 -translate-y-1/2 items-center justify-center rounded-full border border-sol-border bg-sol-surface text-sol-violet shadow-sm md:flex"
+    >
+      <ArrowRight className="size-3.5" />
+    </span>
+  );
+
   return (
     <Card
       as="article"
-      className="flex flex-col gap-5 p-6 sm:p-7"
+      className="flex flex-col gap-5 p-5 sm:p-7"
       data-testid="history-entry"
       data-current={entry.isCurrent}
     >
@@ -174,22 +229,32 @@ function EntryCard({ entry, onRestore }: { entry: HistoryEntry; onRestore: () =>
       </div>
 
       {facts.length > 0 && (
-        <p
-          className="text-[1.0625rem] leading-snug text-sol-secondary"
-          data-testid="history-profile"
-        >
-          {facts.join(" · ")}
-        </p>
+        <ul className="flex flex-wrap gap-2" data-testid="history-profile">
+          {facts.map((f) => (
+            <li
+              key={f.text}
+              className="flex items-center gap-2 rounded-full bg-sol-ivory px-3.5 py-1.5 text-[0.9375rem] font-medium text-sol-ink"
+            >
+              <f.icon className="size-4 text-sol-champagne-deep" aria-hidden="true" />
+              {f.text}
+            </li>
+          ))}
+        </ul>
       )}
 
-      <div className="grid gap-5 md:grid-cols-2">
-        <div>
-          <p className="sol-eyebrow">{t("hist.generated", { n: entry.directions.length })}</p>
-          <ul className="mt-2 flex flex-col gap-2">
+      <div className="grid gap-4 md:grid-cols-[1.7fr_1fr_1fr]">
+        <div className={nodeClass}>
+          <div className="flex items-center gap-3">
+            <span className={nodeIcon}>
+              <Compass className="size-5" aria-hidden="true" />
+            </span>
+            <p className="sol-eyebrow">{t("hist.generated", { n: entry.directions.length })}</p>
+          </div>
+          <ul className="flex flex-col gap-2.5">
             {entry.directions.map((d) => (
               <li
                 key={d.id}
-                className="flex items-start justify-between gap-3 text-[1.0625rem] text-sol-ink"
+                className="flex flex-col items-start gap-1.5 text-[1.0625rem] text-sol-ink sm:flex-row sm:justify-between sm:gap-3"
               >
                 <span className={d.id === entry.selected?.id ? "font-semibold" : undefined}>
                   <TranslatedTitle id={d.id} title={d.title} />
@@ -198,23 +263,40 @@ function EntryCard({ entry, onRestore }: { entry: HistoryEntry; onRestore: () =>
               </li>
             ))}
           </ul>
+          {arrow}
         </div>
-        <div className="flex flex-col gap-3">
-          <div>
+
+        <div className={nodeClass}>
+          <div className="flex items-center gap-3">
+            <span className={nodeIcon}>
+              <CircleCheck className="size-5" aria-hidden="true" />
+            </span>
             <p className="sol-eyebrow">{t("hist.selected")}</p>
-            <p className="mt-2 text-[1.0625rem] font-semibold text-sol-ink">
-              {entry.selected ? (
-                <TranslatedTitle id={entry.selected.id} title={entry.selected.title} />
-              ) : (
-                t("hist.noneSelected")
-              )}
-            </p>
+          </div>
+          <p
+            className={cn(
+              "text-[1.0625rem] text-sol-ink",
+              entry.selected ? "font-semibold" : "text-sol-secondary",
+            )}
+          >
+            {entry.selected ? (
+              <TranslatedTitle id={entry.selected.id} title={entry.selected.title} />
+            ) : (
+              t("hist.noneSelected")
+            )}
+          </p>
+          {arrow}
+        </div>
+
+        <div className={nodeClass}>
+          <div className="flex items-center gap-3">
+            <span className={nodeIcon}>
+              <MapIcon className="size-5" aria-hidden="true" />
+            </span>
+            <p className="sol-eyebrow">{t("hist.roadmap")}</p>
           </div>
           <div>
-            <p className="sol-eyebrow">{t("hist.roadmap")}</p>
-            <div className="mt-2">
-              <Pill tone={roadmapTone}>{t(`hist.roadmap.${entry.roadmapStatus}` as const)}</Pill>
-            </div>
+            <Pill tone={roadmapTone}>{t(`hist.roadmap.${entry.roadmapStatus}` as const)}</Pill>
           </div>
         </div>
       </div>

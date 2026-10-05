@@ -7,21 +7,6 @@ import type { MessageKey } from "@/lib/i18n";
 import { useLocale } from "@/lib/i18n/LocaleProvider";
 import { cn } from "@/lib/utils";
 
-/** Four rows each side, and only what the product actually does — no mentor
- * marketplace, funding signal or other capability that is not running today. */
-const GENERIC: MessageKey[] = [
-  "whySolventia.generic1",
-  "whySolventia.generic2",
-  "whySolventia.generic3",
-  "whySolventia.generic4",
-];
-const SOLVENTIA: MessageKey[] = [
-  "whySolventia.solventia1",
-  "whySolventia.solventia2",
-  "whySolventia.solventia3",
-  "whySolventia.solventia4",
-];
-
 type ChipId = "opp" | "week" | "interviews" | "payment";
 const CHIPS: { id: ChipId; key: MessageKey }[] = [
   { id: "opp", key: "story.ask.chip.opp" },
@@ -96,9 +81,6 @@ export function WhySolventia() {
         >
           {t("whySolventia.headline")}
         </h2>
-        <p className="mx-auto mt-4 max-w-[600px] text-center text-[18px] leading-[28px] text-sol-secondary">
-          {t("story.ask.subhead")}
-        </p>
 
         <motion.div
           onViewportEnter={() => setEntered(true)}
@@ -207,29 +189,6 @@ export function WhySolventia() {
             <p className="mt-1 text-[14px] text-sol-secondary">{t("story.ask.hint")}</p>
           </div>
         </motion.div>
-
-        {/* The same difference, stated plainly. */}
-        <div
-          className="mt-8 grid overflow-hidden rounded-[24px] border border-sol-border sm:grid-cols-2"
-          data-testid="why-comparison"
-        >
-          <ul className="flex flex-col gap-3 bg-sol-hp-ivory-light px-7 py-6">
-            {GENERIC.map((key) => (
-              <li key={key} className="flex items-start gap-3">
-                <X className="mt-1 size-5 shrink-0 text-sol-muted" aria-hidden="true" />
-                <span className="text-[17px] leading-[26px] text-sol-secondary">{t(key)}</span>
-              </li>
-            ))}
-          </ul>
-          <ul className="flex flex-col gap-3 bg-sol-navy px-7 py-6">
-            {SOLVENTIA.map((key) => (
-              <li key={key} className="flex items-start gap-3">
-                <Check className="mt-1 size-5 shrink-0 text-sol-champagne" aria-hidden="true" />
-                <span className="text-[17px] leading-[26px] text-white/95">{t(key)}</span>
-              </li>
-            ))}
-          </ul>
-        </div>
       </div>
     </section>
   );

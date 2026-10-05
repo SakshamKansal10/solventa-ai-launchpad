@@ -122,9 +122,9 @@ function Index() {
         <HowItWorks />
         <StoryConnector from="#FCFAF7" to="#F7F2EA" labelKey="story.link.3" />
         <AdaptiveRoadmap />
-        <StoryConnector from="#F7F2EA" to="#FCFAF7" labelKey="story.link.4" />
+        <StoryConnector from="#F7F2EA" to="var(--workspace)" labelKey="story.link.4" />
         <ProofDemo />
-        <StoryConnector from="#FCFAF7" to="#F5EFE6" labelKey="story.link.5" />
+        <StoryConnector from="var(--workspace)" to="#F5EFE6" labelKey="story.link.5" />
         <WhySolventia />
         <SectionTransition from="#F5EFE6" to="#17203D" line="violet" />
         <FinalCTA />

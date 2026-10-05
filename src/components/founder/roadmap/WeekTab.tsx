@@ -311,7 +311,6 @@ export function WeekTab({
         )}
         <Card className="flex flex-col gap-3 p-6">
           <h3 className="sol-eyebrow">{t("askSol.title")}</h3>
-          <p className="text-[1.0625rem] leading-snug text-sol-ink">{t("rm.rail.askSol")}</p>
           <Button
             variant="soft"
             size="sm"

@@ -11,8 +11,7 @@ const en = {
   "pf.stream.mission": "Mission",
   "pf.stream.assumption": "Assumption",
   "pf.stream.empty.title": "No evidence recorded yet",
-  "pf.stream.empty.body":
-    "Evidence is what a conversation, a link, a screenshot or an order actually told you. Record the first piece and the assumption it speaks to will start to move.",
+  "pf.stream.empty.body": "Record what a conversation, a link or a screenshot actually told you.",
   "pf.stream.contradictsNote":
     "This evidence points against an assumption — it is shown here, not hidden.",
   "pf.stream.askSol": "Ask Sol what this changes",
@@ -146,8 +145,7 @@ const hi: Record<keyof typeof en, string> = {
   "pf.stream.mission": "मिशन",
   "pf.stream.assumption": "अनुमान",
   "pf.stream.empty.title": "अभी तक कोई साक्ष्य दर्ज नहीं हुआ",
-  "pf.stream.empty.body":
-    "साक्ष्य वह है जो किसी बातचीत, लिंक, स्क्रीनशॉट या ऑर्डर ने आपको सच में बताया। पहला साक्ष्य दर्ज करें और उससे जुड़ा अनुमान आगे बढ़ने लगेगा।",
+  "pf.stream.empty.body": "किसी बातचीत, लिंक या स्क्रीनशॉट ने जो सच में बताया, उसे दर्ज करें।",
   "pf.stream.contradictsNote":
     "यह साक्ष्य एक अनुमान के विरुद्ध जाता है — इसे छिपाया नहीं, यहां दिखाया गया है।",
   "pf.stream.askSol": "Sol से पूछें इससे क्या बदलता है",

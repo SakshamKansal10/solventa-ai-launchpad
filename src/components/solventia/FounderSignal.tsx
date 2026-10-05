@@ -177,21 +177,16 @@ export function FounderSignal() {
       className="scroll-mt-[76px] bg-sol-hp-pearl px-[18px] py-[72px] sm:px-6 lg:px-9 lg:py-[96px]"
     >
       <div className="mx-auto max-w-[1180px] text-center">
-        <p className="text-[14px] font-semibold uppercase tracking-[0.14em] text-sol-champagne-deep">
-          {t("founderSignal.eyebrow")}
-        </p>
+        {/* No eyebrow here: the demo's own "Product demonstration" label says it. */}
         <h2
           className={cn(
-            "mx-auto mt-5 max-w-[760px] font-display text-[34px] font-semibold text-sol-ink sm:text-[40px] lg:text-[48px]",
+            "mx-auto max-w-[760px] font-display text-[34px] font-semibold text-sol-ink sm:text-[40px] lg:text-[48px]",
             locale === "hi" ? "leading-[1.35]" : "leading-[1.1]",
           )}
         >
           {t("founderSignal.headline1")}{" "}
           <span className="italic text-sol-champagne-deep">{t("founderSignal.headline2")}</span>
         </h2>
-        <p className="mx-auto mt-5 max-w-[600px] text-[18px] leading-[28px] text-sol-secondary">
-          {t("founderSignal.subhead")}
-        </p>
       </div>
 
       <motion.div
@@ -213,7 +208,6 @@ export function FounderSignal() {
             >
               {t("founderSignal.demoLabel")}
             </span>
-            <span className="text-[15px] text-sol-secondary">{t("founderSignal.demoNote")}</span>
           </div>
 
           <div

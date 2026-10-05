@@ -15,6 +15,9 @@ export const qk = {
   proof: (opportunityId: string | null | undefined) => ["proof", opportunityId ?? null] as const,
   proofAll: ["proof"] as const,
   opportunity: (id: string) => ["opportunity", id] as const,
+  /** Under the same "opportunity" prefix, so every invalidation of an
+   * opportunity also refreshes the fit comparison built from it. */
+  directionFits: (ids: string[]) => ["opportunity", "fits", ...[...ids].sort()] as const,
   opportunityAll: ["opportunity"] as const,
   opportunityEconomics: (opportunityId: string) =>
     ["opportunity-economics", opportunityId] as const,

@@ -1,8 +1,9 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Compass } from "lucide-react";
+import { Compass, Users } from "lucide-react";
 
+import { FitStrip } from "@/components/founder/dashboard/fit-visual";
 import { FitPill } from "@/components/founder/OpportunityCards";
 import {
   Button,
@@ -13,11 +14,17 @@ import {
   PageHeader,
   PageSkeleton,
   Pill,
+  Skeleton,
 } from "@/components/founder/ui";
 import type { OpportunityBrief } from "@/lib/actions/founder";
-import { chooseDirection, exploreMoreOpportunities } from "@/lib/actions/opportunities";
+import {
+  chooseDirection,
+  exploreMoreOpportunities,
+  getDirectionFits,
+} from "@/lib/actions/opportunities";
+import type { FitMatrix } from "@/lib/fit/matrix";
 import { useLocale } from "@/lib/i18n/LocaleProvider";
-import { useFounderState, useInvalidateFounder } from "@/lib/queries";
+import { qk, useFounderState, useInvalidateFounder } from "@/lib/queries";
 import { useTranslatedBrief } from "@/lib/use-translation";
 import { z } from "zod";
 
@@ -31,19 +38,25 @@ export const Route = createFileRoute("/dashboard/opportunities/")({
 
 type Section = "selected" | "alternative" | "previous";
 
-/** Title, customer, a one-line product explanation, and status. Nothing more. */
+/** Title, who it is for, the four fit rows as a strip, and status. The fit strip is
+ * drawn from the same deterministic matrix as the opportunity page. */
 function OpportunityRow({
   brief: raw,
   section,
   onChoose,
   choosing,
   canChoose,
+  matrix,
+  fitLoading,
 }: {
   brief: OpportunityBrief;
   section: Section;
   onChoose?: () => void;
   choosing?: boolean;
   canChoose: boolean;
+  /** Undefined for rows that do not show fit (earlier consultations). */
+  matrix?: FitMatrix | null;
+  fitLoading?: boolean;
 }) {
   const { t } = useLocale();
   const brief = useTranslatedBrief(raw) ?? raw;
@@ -67,12 +80,25 @@ function OpportunityRow({
           )}
         </div>
         {brief.customer && (
-          <p className="mt-2 text-[1.0625rem] text-sol-ink">
-            <span className="font-semibold">{t("opp.fact.customer")}: </span>
-            {brief.customer}
+          <p className="mt-3 flex items-start gap-3 text-[1.0625rem] leading-snug text-sol-ink">
+            <span className="mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-lg bg-sol-champagne-soft text-sol-champagne-deep">
+              <Users className="size-4" aria-hidden="true" />
+            </span>
+            <span className="line-clamp-2 min-w-0">
+              <span className="sr-only">{t("opp.fact.customer")}: </span>
+              {brief.customer}
+            </span>
           </p>
         )}
-        <p className="mt-1.5 text-[1.0625rem] leading-snug text-sol-secondary">{brief.oneLiner}</p>
+        {section !== "previous" && (
+          <div className="mt-4">
+            {matrix ? (
+              <FitStrip rows={matrix.rows} />
+            ) : fitLoading ? (
+              <Skeleton className="h-9 w-72 max-w-full" />
+            ) : null}
+          </div>
+        )}
       </div>
       <div className="flex shrink-0 flex-wrap gap-3">
         <LinkButton
@@ -121,6 +147,20 @@ function OpportunitiesPage() {
       console.error("[opportunities] explore more failed:", err);
       toast.error(t("cc.explore.error"));
     },
+  });
+
+  // Fit for every direction in view, in one call (hooks run before any early return).
+  const fitIds = Object.values(founder.data?.briefs ?? {})
+    .filter(
+      (b) =>
+        b.consultationId === founder.data?.direction.consultationId && b.status !== "dismissed",
+    )
+    .map((b) => b.id);
+  const fits = useQuery({
+    queryKey: qk.directionFits(fitIds),
+    queryFn: () => getDirectionFits({ data: { ids: fitIds } }),
+    staleTime: 30_000,
+    enabled: fitIds.length > 0,
   });
 
   if (founder.isPending) return <PageSkeleton label={t("shell.skeleton.loading")} />;
@@ -182,7 +222,13 @@ function OpportunitiesPage() {
           <h2 id="sel-h" className="sol-eyebrow">
             {t("opp.list.selected")}
           </h2>
-          <OpportunityRow brief={selected} section="selected" canChoose={false} />
+          <OpportunityRow
+            brief={selected}
+            section="selected"
+            canChoose={false}
+            matrix={fits.data?.[selected.id]}
+            fitLoading={fits.isLoading}
+          />
         </section>
       )}
 
@@ -199,6 +245,8 @@ function OpportunitiesPage() {
               canChoose={canChoose}
               choosing={choose.isPending && choose.variables === b.id}
               onChoose={() => choose.mutate(b.id)}
+              matrix={fits.data?.[b.id]}
+              fitLoading={fits.isLoading}
             />
           ))}
         </section>

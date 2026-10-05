@@ -24,7 +24,7 @@ const NODES: { x: number; y: number }[] = [
 
 // The network is the last thing to come alive: it starts once the headline, the
 // calls to action and the floating signal cards are all in place.
-const NETWORK_DELAY = 2.3;
+const NETWORK_DELAY = 1.1;
 
 // Each pair indexes into NODES — kept sparse on purpose (5 lines across 6
 // nodes, never a full mesh).

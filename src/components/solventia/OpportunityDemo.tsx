@@ -125,9 +125,6 @@ export function OpportunityDemo() {
         >
           {t("story.opp.headline")}
         </h2>
-        <p className="mt-4 max-w-[620px] text-[18px] leading-[28px] text-sol-secondary">
-          {t("story.opp.subhead")}
-        </p>
 
         <motion.div
           onViewportEnter={() => setEntered(true)}

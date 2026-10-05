@@ -504,6 +504,31 @@
   animation: sol-reveal var(--sol-dur-reveal) var(--sol-ease) both;
 }
 
+/* A primary action's arrow leans forward every few seconds — a quiet "this way". */
+@keyframes sol-nudge {
+  0%,
+  72%,
+  100% {
+    transform: translateX(0);
+  }
+  80% {
+    transform: translateX(4px);
+  }
+  88% {
+    transform: translateX(0);
+  }
+}
+
+@utility sol-nudge {
+  animation: sol-nudge 3.4s cubic-bezier(0.22, 1, 0.36, 1) 1.6s infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sol-nudge {
+    animation: none;
+  }
+}
+
 /* Ambient purple studio light — homepage hero only. Color stops are
    calibrated against pixel samples from the reference swatch (not a
    generic purple), core anchored exactly at the corner (0% 0%) and

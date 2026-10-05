@@ -2,9 +2,25 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { z } from "zod";
-import { ArrowLeft, ExternalLink, Layers, Target, Users, Wallet } from "lucide-react";
+import {
+  ArrowLeft,
+  ArrowRight,
+  ArrowUpRight,
+  Check,
+  ChevronDown,
+  ExternalLink,
+  FlaskConical,
+  Flame,
+  Package,
+  TrendingUp,
+  Users,
+  Wallet,
+  type LucideIcon,
+} from "lucide-react";
 
 import { EconomicsTab } from "@/components/founder/EconomicsTab";
+import { FIT_ICONS } from "@/components/founder/dashboard/fit-constants";
+import { FitPips } from "@/components/founder/dashboard/fit-visual";
 import { FitPill } from "@/components/founder/OpportunityCards";
 import { FitStatusPill, useFitReasonText } from "@/components/founder/fit";
 import {
@@ -27,6 +43,7 @@ import { useLocale } from "@/lib/i18n/LocaleProvider";
 import { qk, useInvalidateFounder } from "@/lib/queries";
 import { useTranslatedEntity, type OpportunityOverlay } from "@/lib/use-translation";
 import type { OpportunityDisplayDetail } from "@/lib/opportunity-display";
+import { cn } from "@/lib/utils";
 
 const TABS = ["overview", "fit", "market", "economics", "proof"] as const;
 type Tab = (typeof TABS)[number];
@@ -60,7 +77,6 @@ function OpportunityPage() {
   const brief = {
     ...dto.brief,
     title: overlay.data?.title ?? dto.brief.title,
-    oneLiner: overlay.data?.oneLiner ?? dto.brief.oneLiner,
   };
   const detail: OpportunityDisplayDetail = { ...dto.detail, ...(overlay.data?.detail ?? {}) };
 
@@ -74,7 +90,7 @@ function OpportunityPage() {
         {t("opp.back")}
       </Link>
 
-      <HeaderBlock dto={dto} title={brief.title} oneLiner={brief.oneLiner} />
+      <HeaderBlock dto={dto} title={brief.title} />
 
       <Tabs
         value={tab}
@@ -123,15 +139,7 @@ function OpportunityPage() {
   );
 }
 
-function HeaderBlock({
-  dto,
-  title,
-  oneLiner,
-}: {
-  dto: OpportunityDetailDTO;
-  title: string;
-  oneLiner: string;
-}) {
+function HeaderBlock({ dto, title }: { dto: OpportunityDetailDTO; title: string }) {
   const { t } = useLocale();
   const navigate = useNavigate();
   const invalidate = useInvalidateFounder();
@@ -160,7 +168,6 @@ function HeaderBlock({
       <h1 className="sol-page-title max-w-[26ch]" data-testid="opportunity-title">
         {title}
       </h1>
-      <p className="sol-body sol-prose text-sol-secondary">{oneLiner}</p>
       <div className="flex flex-wrap gap-3">
         {dto.isSelected ? (
           dto.roadmapStatus === "active" || dto.roadmapStatus === "completed" ? (
@@ -203,114 +210,127 @@ function HeaderBlock({
   );
 }
 
-/** Six large blocks — the whole business in ten seconds. */
+/** The whole business as six connected tiles — customer, pain, product, revenue,
+ * first test, growth. Each shows only its one-line headline; the longer
+ * explanation is one tap away, so the page reads in ten seconds. */
 function Overview({ detail }: { detail: OpportunityDisplayDetail }) {
   const { t } = useLocale();
-  // A headline that fell back to its own full sentence (older rows) must not be
-  // shown twice — the sentence beneath is only rendered when it adds something.
-  const block = (
-    key: string,
-    icon: React.ReactNode,
-    label: string,
-    caption: string,
-    headline: string,
-    sentence: string,
-  ) => (
-    <Card key={key} className="flex flex-col gap-3 p-6" data-testid={`block-${key}`}>
-      <div className="flex items-center gap-2.5 text-sol-champagne-deep">
-        {icon}
-        <p className="text-[0.875rem] font-bold uppercase tracking-[0.1em]">{label}</p>
-      </div>
-      <p className="text-[0.9375rem] text-sol-secondary">{caption}</p>
-      <p className="font-display text-[1.5rem] font-semibold leading-[1.2] text-sol-ink">
-        {headline}
-      </p>
-      {sentence && sentence !== headline && (
-        <p className="text-[1.0625rem] leading-relaxed text-sol-secondary">{sentence}</p>
-      )}
-    </Card>
-  );
-  const chain = [
-    { key: "customer", label: t("opp.ov.customer"), text: detail.customerHeadline },
-    { key: "pain", label: t("opp.ov.pain"), text: detail.problemHeadline },
-    { key: "product", label: t("opp.ov.product"), text: detail.solutionHeadline },
-    { key: "wedge", label: t("opp.ov.wedge"), text: detail.firstExperiment },
-  ].filter((n) => n.text);
+  const tiles: {
+    key: string;
+    icon: LucideIcon;
+    label: string;
+    headline: string;
+    sentence: string;
+  }[] = [
+    {
+      key: "customer",
+      icon: Users,
+      label: t("opp.ov.customer"),
+      headline: detail.customerHeadline,
+      sentence: detail.customer,
+    },
+    {
+      key: "pain",
+      icon: Flame,
+      label: t("opp.ov.pain"),
+      headline: detail.problemHeadline,
+      sentence: detail.problem,
+    },
+    {
+      key: "product",
+      icon: Package,
+      label: t("opp.ov.product"),
+      headline: detail.solutionHeadline,
+      sentence: detail.solution,
+    },
+    {
+      key: "revenue",
+      icon: Wallet,
+      label: t("opp.ov.revenue"),
+      headline: detail.moneyHeadline,
+      sentence: detail.businessModel,
+    },
+    {
+      key: "wedge",
+      icon: FlaskConical,
+      label: t("opp.ov.wedge"),
+      headline: detail.firstExperiment,
+      sentence: "",
+    },
+    {
+      key: "scale",
+      icon: TrendingUp,
+      label: t("opp.ov.scale"),
+      headline: detail.revenuePath,
+      sentence: "",
+    },
+  ];
   return (
-    <div className="flex flex-col gap-8">
-      <ol
-        className="relative grid gap-4 rounded-[1.5rem] border border-sol-border bg-sol-surface p-5 sm:grid-cols-2 lg:grid-cols-4 lg:p-6"
-        data-testid="overview-chain"
-      >
-        <span
-          aria-hidden="true"
-          className="absolute left-[12.5%] right-[12.5%] top-[2.6rem] hidden h-0.5 rounded-full bg-gradient-to-r from-sol-champagne via-sol-violet to-sol-champagne lg:block"
-        />
-        {chain.map((n, i) => (
-          <li key={n.key} className="relative flex flex-col gap-2 lg:items-center lg:text-center">
-            <span className="relative z-10 flex size-9 items-center justify-center rounded-full border-2 border-sol-violet bg-sol-violet-soft font-display text-[1rem] font-semibold text-sol-violet-deep">
-              {i + 1}
-            </span>
-            <p className="text-[0.875rem] font-bold uppercase tracking-[0.1em] text-sol-champagne-deep">
-              {n.label}
-            </p>
-            <p className="line-clamp-4 text-[1.0625rem] font-medium leading-snug text-sol-ink">
-              {n.text}
-            </p>
+    <ol className="grid gap-5 md:grid-cols-2 xl:grid-cols-3" data-testid="overview-flow">
+      {tiles.map((tile, i) => {
+        const Icon = tile.icon;
+        // A headline that fell back to its own full sentence (older rows) must not be
+        // shown twice — the sentence is only offered when it adds something.
+        const more = tile.sentence && tile.sentence !== tile.headline;
+        return (
+          <li key={tile.key} className="relative">
+            <Card className="flex h-full flex-col gap-4 p-6" data-testid={`block-${tile.key}`}>
+              <div className="flex items-center justify-between gap-3">
+                <span className="flex size-12 items-center justify-center rounded-2xl bg-sol-champagne-soft text-sol-champagne-deep">
+                  <Icon className="size-6" aria-hidden="true" />
+                </span>
+                <span
+                  className="flex size-8 items-center justify-center rounded-full bg-sol-violet-soft font-display text-[1rem] font-semibold text-sol-violet-deep"
+                  aria-hidden="true"
+                >
+                  {i + 1}
+                </span>
+              </div>
+              <div>
+                <p className="text-[0.875rem] font-bold uppercase tracking-[0.1em] text-sol-champagne-deep">
+                  {tile.label}
+                </p>
+                <p
+                  className={cn(
+                    "mt-1.5 font-display font-semibold text-sol-ink",
+                    // A headline that is really a sentence (the first test, the growth path)
+                    // is set smaller so it doesn't swamp its tile.
+                    tile.headline.length > 70
+                      ? "text-[1.1875rem] leading-snug"
+                      : "text-[1.5rem] leading-[1.2]",
+                  )}
+                >
+                  {tile.headline}
+                </p>
+              </div>
+              {more && (
+                <details className="group mt-auto">
+                  <summary className="flex min-h-10 w-fit cursor-pointer list-none items-center gap-1.5 rounded-lg text-[0.9375rem] font-semibold text-sol-violet-deep outline-none focus-visible:ring-2 focus-visible:ring-sol-violet/50 [&::-webkit-details-marker]:hidden">
+                    <ChevronDown
+                      className="size-4 transition-transform duration-200 group-open:rotate-180"
+                      aria-hidden="true"
+                    />
+                    {t("opp.ov.detail")}
+                  </summary>
+                  <p className="mt-2 text-[1.0625rem] leading-relaxed text-sol-secondary">
+                    {tile.sentence}
+                  </p>
+                </details>
+              )}
+            </Card>
+            {/* The flow arrow between neighbouring tiles (three to a row). */}
+            {i % 3 !== 2 && i < tiles.length - 1 && (
+              <span
+                aria-hidden="true"
+                className="absolute -right-[1.65rem] top-1/2 z-10 hidden size-8 -translate-y-1/2 items-center justify-center rounded-full border border-sol-border bg-sol-surface text-sol-violet shadow-sm xl:flex"
+              >
+                <ArrowRight className="size-4" />
+              </span>
+            )}
           </li>
-        ))}
-      </ol>
-      <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
-        {block(
-          "customer",
-          <Users className="size-5" aria-hidden="true" />,
-          t("opp.ov.customer"),
-          t("opp.ov.customerCap"),
-          detail.customerHeadline,
-          detail.customer,
-        )}
-        {block(
-          "pain",
-          <Target className="size-5" aria-hidden="true" />,
-          t("opp.ov.pain"),
-          t("opp.ov.painCap"),
-          detail.problemHeadline,
-          detail.problem,
-        )}
-        {block(
-          "product",
-          <Layers className="size-5" aria-hidden="true" />,
-          t("opp.ov.product"),
-          t("opp.ov.productCap"),
-          detail.solutionHeadline,
-          detail.solution,
-        )}
-        {block(
-          "revenue",
-          <Wallet className="size-5" aria-hidden="true" />,
-          t("opp.ov.revenue"),
-          t("opp.ov.revenueCap"),
-          detail.moneyHeadline,
-          detail.businessModel,
-        )}
-        {block(
-          "wedge",
-          <Target className="size-5" aria-hidden="true" />,
-          t("opp.ov.wedge"),
-          t("opp.ov.wedgeCap"),
-          detail.firstExperiment,
-          "",
-        )}
-        {block(
-          "scale",
-          <Layers className="size-5" aria-hidden="true" />,
-          t("opp.ov.scale"),
-          t("opp.ov.scaleCap"),
-          detail.revenuePath,
-          "",
-        )}
-      </div>
-    </div>
+        );
+      })}
+    </ol>
   );
 }
 
@@ -338,12 +358,15 @@ function FounderFit({
     <div className="flex flex-col gap-8" data-testid="founder-fit">
       <div className="flex flex-col gap-3">
         <Eyebrow>{t("opp.fit.overall")}</Eyebrow>
-        <p
-          className="font-display text-[clamp(2rem,1.6rem+1.6vw,2.75rem)] font-semibold leading-none text-sol-ink"
-          data-testid="fit-overall"
-        >
-          {t(`fit.overall.${matrix.overall}` as const)}
-        </p>
+        <div className="flex flex-wrap items-center gap-x-5 gap-y-3">
+          <p
+            className="font-display text-[clamp(2rem,1.6rem+1.6vw,2.75rem)] font-semibold leading-none text-sol-ink"
+            data-testid="fit-overall"
+          >
+            {t(`fit.overall.${matrix.overall}` as const)}
+          </p>
+          <FitPips status={matrix.overall} pipClassName="h-3.5 w-10" />
+        </div>
         <p className="sol-body sol-prose text-sol-secondary">
           {t(`fit.overallBody.${matrix.overall}` as const)}
         </p>
@@ -352,13 +375,22 @@ function FounderFit({
       <ul className="flex flex-col gap-3">
         {matrix.rows.map((row) => (
           <li key={row.key} data-testid={`fit-row-${row.key}`}>
-            <Card className="flex flex-col gap-2 p-5 sm:flex-row sm:items-start sm:justify-between sm:gap-6">
-              <div className="min-w-0 sm:w-1/3">
-                <p className="text-[1.125rem] font-semibold text-sol-ink">
-                  {t(`fit.row.${row.key}` as const)}
-                </p>
-                <div className="mt-2">
-                  <FitStatusPill status={row.status} />
+            <Card className="flex flex-col gap-3 p-5 sm:flex-row sm:items-start sm:justify-between sm:gap-6">
+              <div className="flex min-w-0 items-start gap-4 sm:w-1/3">
+                <span className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-sol-champagne-soft text-sol-champagne-deep">
+                  {(() => {
+                    const Icon = FIT_ICONS[row.key];
+                    return <Icon className="size-5" aria-hidden="true" />;
+                  })()}
+                </span>
+                <div className="min-w-0">
+                  <p className="text-[1.125rem] font-semibold text-sol-ink">
+                    {t(`fit.row.${row.key}` as const)}
+                  </p>
+                  <div className="mt-2 flex flex-wrap items-center gap-3">
+                    <FitPips status={row.status} />
+                    <FitStatusPill status={row.status} />
+                  </div>
                 </div>
               </div>
               <p className="text-[1.0625rem] leading-relaxed text-sol-ink sm:w-2/3">
@@ -376,9 +408,11 @@ function FounderFit({
             {advantages.map((a) => (
               <li key={a} className="flex gap-3 text-[1.0625rem] leading-snug text-sol-ink">
                 <span
-                  className="mt-2 size-1.5 shrink-0 rounded-full bg-sol-champagne"
+                  className="mt-0.5 flex size-6 shrink-0 items-center justify-center rounded-full bg-sol-champagne-soft text-sol-champagne-deep"
                   aria-hidden="true"
-                />
+                >
+                  <Check className="size-3.5" strokeWidth={3} />
+                </span>
                 {a}
               </li>
             ))}
@@ -393,9 +427,11 @@ function FounderFit({
               {gaps.map((g) => (
                 <li key={g} className="flex gap-3 text-[1.0625rem] leading-snug text-sol-ink">
                   <span
-                    className="mt-2 size-1.5 shrink-0 rounded-full bg-sol-warning"
+                    className="mt-0.5 flex size-6 shrink-0 items-center justify-center rounded-full bg-sol-warning-soft text-sol-warning"
                     aria-hidden="true"
-                  />
+                  >
+                    <ArrowUpRight className="size-3.5" strokeWidth={3} />
+                  </span>
                   {g}
                 </li>
               ))}

@@ -112,7 +112,7 @@ function SignalCard({
     <motion.div
       initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.9, delay: 1.7 + card.delay * 0.15, ease: [0.22, 1, 0.36, 1] }}
+      transition={{ duration: 0.9, delay: 0.9 + card.delay * 0.15, ease: [0.22, 1, 0.36, 1] }}
       className={`group absolute ${card.className} ${card.hideOnMobile ? "hidden sm:block" : ""}`}
       style={{
         width: card.width,
@@ -238,7 +238,7 @@ export function Hero() {
         <motion.div initial="hidden" animate="show" className="max-w-[640px]">
           <motion.p
             variants={fadeUp}
-            transition={{ duration: 0.7, delay: 0.25, ease: [0.22, 1, 0.36, 1] }}
+            transition={{ duration: 0.45, delay: 0.1, ease: [0.22, 1, 0.36, 1] }}
             className="text-[13.5px] font-bold uppercase tracking-[0.14em] text-sol-champagne"
           >
             {t("hero.eyebrow")}
@@ -257,7 +257,7 @@ export function Hero() {
                   style={line.style}
                   initial={{ y: reduceMotion ? 0 : "115%", opacity: reduceMotion ? 1 : 0 }}
                   animate={{ y: 0, opacity: 1 }}
-                  transition={{ duration: 0.85, delay: 0.4 + i * 0.14, ease: [0.22, 1, 0.36, 1] }}
+                  transition={{ duration: 0.6, delay: 0.18 + i * 0.1, ease: [0.22, 1, 0.36, 1] }}
                 >
                   {t(line.key)}
                 </motion.span>
@@ -267,61 +267,49 @@ export function Hero() {
 
           <motion.p
             variants={fadeUp}
-            transition={{ duration: 0.7, delay: 1.0, ease: [0.22, 1, 0.36, 1] }}
-            className="mt-[26px] max-w-[480px] text-[17px] leading-[27px] text-white/80"
+            transition={{ duration: 0.5, delay: 0.5, ease: [0.22, 1, 0.36, 1] }}
+            className="mt-[24px] max-w-[440px] text-[18px] leading-[28px] text-white/85"
           >
             {t("hero.subhead")}
           </motion.p>
 
           <motion.div
             variants={fadeUp}
-            transition={{ duration: 0.7, delay: 1.2, ease: [0.22, 1, 0.36, 1] }}
-            className="mt-[28px] flex flex-wrap items-center gap-3.5"
+            transition={{ duration: 0.5, delay: 0.6, ease: [0.22, 1, 0.36, 1] }}
+            className="mt-[30px] flex flex-wrap items-center gap-4"
           >
+            {/* The one action that matters: an ivory-champagne surface with depth,
+                a light sweep on hover and an arrow that nudges every few seconds. */}
             <button
               type="button"
               onClick={() => navigate({ to: "/consultation" })}
-              className="group inline-flex h-[56px] items-center gap-3 rounded-2xl px-[32px] text-[15.5px] font-bold text-sol-navy shadow-[0_14px_36px_rgba(0,0,0,.32)] transition-all duration-[180ms] hover:-translate-y-px hover:shadow-[0_18px_44px_rgba(0,0,0,.4)]"
+              className="group relative inline-flex h-[60px] items-center gap-3 overflow-hidden rounded-2xl px-[34px] text-[16.5px] font-bold text-sol-navy shadow-[0_16px_40px_rgba(0,0,0,.38),inset_0_1px_0_rgba(255,255,255,.9)] ring-1 ring-white/50 transition-[transform,box-shadow] duration-150 ease-[cubic-bezier(.22,1,.36,1)] hover:-translate-y-0.5 hover:shadow-[0_20px_52px_rgba(220,192,139,.42),inset_0_1px_0_rgba(255,255,255,.9)] active:translate-y-0 active:scale-[0.985] active:duration-100"
               style={{
                 background: "linear-gradient(135deg, #FFFDFB 0%, #F2ECE2 55%, #DCC08B 100%)",
               }}
             >
-              {t("hero.cta.primary")}
-              <ArrowRight
-                className="size-[18px] text-sol-violet-deep transition-transform duration-300 group-hover:translate-x-[5px]"
+              <span
                 aria-hidden="true"
+                className="pointer-events-none absolute inset-y-0 -left-2/3 w-1/2 -skew-x-12 bg-gradient-to-r from-transparent via-white/70 to-transparent transition-[left] duration-700 ease-[cubic-bezier(.22,1,.36,1)] group-hover:left-[130%]"
               />
+              <span className="relative">{t("hero.cta.primary")}</span>
+              <span className="sol-nudge relative flex" aria-hidden="true">
+                <ArrowRight className="size-[19px] text-sol-violet-deep transition-transform duration-150 group-hover:translate-x-[5px]" />
+              </span>
             </button>
 
             <button
               type="button"
               onClick={() => scrollToSection("how-it-works")}
-              className="inline-flex h-[56px] items-center gap-2 rounded-2xl border border-white/25 bg-white/[0.05] px-[26px] text-[14.5px] font-semibold text-white/85 backdrop-blur-sm transition-colors hover:border-white/45 hover:text-white"
+              className="inline-flex h-[60px] items-center gap-2 rounded-2xl border border-white/20 bg-transparent px-[24px] text-[14.5px] font-semibold text-white/80 transition-colors duration-150 hover:border-white/45 hover:text-white"
             >
               {t("hero.cta.secondary")}
             </button>
           </motion.div>
 
-          {/* Plain-text signal trio — never cards (item 140). */}
-          <motion.p
-            variants={fadeUp}
-            transition={{ duration: 0.7, delay: 1.4, ease: [0.22, 1, 0.36, 1] }}
-            className="mt-6 flex flex-wrap items-center gap-x-3 gap-y-1.5 text-[14px] font-medium text-white/65"
-          >
-            <span>{t("hero.signal.personalized")}</span>
-            <span aria-hidden="true" className="text-white/30">
-              ·
-            </span>
-            <span>{t("hero.signal.realityChecked")}</span>
-            <span aria-hidden="true" className="text-white/30">
-              ·
-            </span>
-            <span>{t("hero.signal.adaptive")}</span>
-          </motion.p>
-
           <motion.div
             variants={fadeUp}
-            transition={{ duration: 0.7, delay: 1.5, ease: [0.22, 1, 0.36, 1] }}
+            transition={{ duration: 0.5, delay: 0.75, ease: [0.22, 1, 0.36, 1] }}
             className="mt-6 flex flex-wrap gap-3 sm:hidden"
           >
             {SIGNAL_CARDS.filter((c) => !c.hideOnMobile).map((card) => (

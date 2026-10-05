@@ -1,5 +1,12 @@
 import { useRef, useState } from "react";
-import { motion, useMotionValueEvent, useReducedMotion, useScroll, useSpring } from "motion/react";
+import {
+  AnimatePresence,
+  motion,
+  useMotionValueEvent,
+  useReducedMotion,
+  useScroll,
+  useSpring,
+} from "motion/react";
 import {
   Compass,
   FlaskConical,
@@ -43,21 +50,17 @@ export function HowItWorks() {
       className="scroll-mt-[76px] bg-sol-hp-pearl px-[18px] py-[72px] sm:px-6 lg:px-9 lg:py-[96px]"
     >
       <div className="mx-auto max-w-[1180px]">
-        <p className="text-[14px] font-semibold uppercase tracking-[0.14em] text-sol-champagne-deep">
+        <p className="text-center text-[14px] font-semibold uppercase tracking-[0.14em] text-sol-champagne-deep">
           {t("howItWorks.eyebrow")}
         </p>
         <h2
           className={cn(
-            "mt-4 max-w-[18ch] font-display text-[34px] font-semibold text-sol-ink sm:text-[40px] lg:text-[48px]",
+            "mx-auto mt-4 max-w-[18ch] text-center font-display text-[34px] font-semibold text-sol-ink sm:text-[40px] lg:text-[48px]",
             locale === "hi" ? "leading-[1.35]" : "leading-[1.1]",
           )}
         >
           {t("howItWorks.headline")}
         </h2>
-        <p className="mt-4 max-w-[580px] text-[18px] leading-[28px] text-sol-secondary">
-          {t("howItWorks.subhead")}
-        </p>
-
         <div
           ref={ref}
           className="relative mt-14"
@@ -142,17 +145,38 @@ export function HowItWorks() {
                     >
                       {step.n}
                     </p>
-                    <h3 className="mt-1 font-display text-[26px] font-semibold leading-[1.15] text-sol-ink">
+                    <h3
+                      className={cn(
+                        "mt-1 font-display text-[26px] font-semibold leading-[1.15] transition-colors duration-300",
+                        reached ? "text-sol-ink" : "text-sol-secondary",
+                      )}
+                    >
                       {t(step.title)}
                     </h3>
-                    <p className="mt-2 text-[16.5px] leading-[26px] text-sol-secondary lg:mx-auto lg:max-w-[22ch]">
-                      {t(step.body)}
-                    </p>
+                    {/* One line per step, read aloud here; shown once, below, for the
+                        step in view — so five paragraphs never compete at once. */}
+                    <p className="sr-only">{t(step.body)}</p>
                   </div>
                 </li>
               );
             })}
           </ol>
+
+          <div className="mt-10 flex min-h-[3.5rem] justify-center" aria-hidden="true">
+            <AnimatePresence mode="wait" initial={false}>
+              <motion.p
+                key={active}
+                initial={reduceMotion ? false : { opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={reduceMotion ? undefined : { opacity: 0, y: -6 }}
+                transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
+                className="max-w-[34ch] text-center text-[19px] leading-[28px] text-sol-ink"
+                data-testid="how-caption"
+              >
+                {t(STEPS[active].body)}
+              </motion.p>
+            </AnimatePresence>
+          </div>
         </div>
       </div>
     </section>

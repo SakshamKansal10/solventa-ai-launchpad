@@ -286,6 +286,43 @@ export const getOpportunityDetail = createServerFn({ method: "GET" })
     };
   });
 
+/** Founder Fit for several directions in ONE call — only the four-row matrix, so
+ * a side-by-side comparison doesn't pay for a full detail load per direction.
+ * Same deterministic computation as the detail page, so the two never disagree. */
+export const getDirectionFits = createServerFn({ method: "GET" })
+  .validator(z.object({ ids: z.array(z.string().uuid()).min(1).max(40) }))
+  .handler(async ({ data }): Promise<Record<string, FitMatrix>> => {
+    const { supabase, user } = await requireUser();
+
+    const { data: opportunities, error } = await supabase
+      .from("opportunities")
+      .select("id, business_dna_id, candidate")
+      .in("id", data.ids)
+      .eq("user_id", user.id);
+    if (error) throw new Error(error.message);
+    const rows = opportunities ?? [];
+    if (rows.length === 0) return {};
+
+    const dnaIds = [...new Set(rows.map((r) => r.business_dna_id))];
+    const { data: dnaRows, error: dnaError } = await supabase
+      .from("business_dna")
+      .select("id, normalized_signals, ambition_band")
+      .in("id", dnaIds);
+    if (dnaError) throw new Error(dnaError.message);
+    const dnaById = new Map((dnaRows ?? []).map((d) => [d.id, d]));
+
+    const out: Record<string, FitMatrix> = {};
+    for (const row of rows) {
+      const dna = dnaById.get(row.business_dna_id);
+      if (!dna) continue;
+      const profile = dna.normalized_signals as unknown as NormalizedProfile;
+      const factors = getFitFactors(row.candidate as unknown as OpportunityPackage);
+      const warnings = getConstraintWarnings(profile, factors);
+      out[row.id] = computeFitMatrix(profile, factors, dna.ambition_band, warnings.length);
+    }
+    return out;
+  });
+
 /** Cited market research — the only path that ever makes a live search call,
  * and only on an explicit click. Never runs on navigation. Cached globally
  * per category+title for 30 days. */

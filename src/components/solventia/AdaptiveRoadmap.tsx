@@ -97,9 +97,6 @@ export function AdaptiveRoadmap() {
         >
           {t("adaptiveRoadmap.headline")}
         </h2>
-        <p className="mt-4 max-w-[600px] text-[18px] leading-[28px] text-sol-secondary">
-          {t("adaptiveRoadmap.subhead")}
-        </p>
 
         <motion.div
           onViewportEnter={() => setEntered(true)}
@@ -114,7 +111,6 @@ export function AdaptiveRoadmap() {
             <span className="inline-flex min-h-8 items-center rounded-full border border-sol-violet/30 bg-sol-violet-soft px-4 text-[14px] font-bold tracking-[0.1em] text-sol-violet-deep">
               {t("adaptiveRoadmap.demoLabel")}
             </span>
-            <span className="text-[15px] text-sol-secondary">{t("adaptiveRoadmap.demoNote")}</span>
           </div>
 
           <div className="mt-6 grid gap-6 lg:grid-cols-[1fr_170px_0.9fr] lg:items-stretch lg:gap-4">
