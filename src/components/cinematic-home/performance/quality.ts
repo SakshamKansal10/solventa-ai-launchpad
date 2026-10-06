@@ -2,50 +2,62 @@ import type { QualityTier } from "../device/capabilities";
 
 /**
  * Per-tier rendering budgets. Scene code reads these values; it never checks
- * the tier itself, so a new cost (bloom, shadows, particles) is added once
- * here and every tier already knows whether it may pay for it.
+ * the tier itself, so a new cost is added once here and every tier already
+ * knows whether it may pay for it. LOW keeps every scene and the composition —
+ * it only spends less on resolution, counts and material complexity.
  */
 export interface QualityPreset {
   /** Device-pixel-ratio range: [floor the governor may drop to, ceiling]. */
   dpr: [number, number];
   antialias: boolean;
-  /** Placeholder data nodes in the field. */
-  nodeCount: number;
+  /** Rendered opportunities in the universe (logically always 360). */
+  universeCount: number;
+  /** Max filaments alive at once, and Bézier samples per filament. */
+  filamentCapacity: number;
+  filamentSegments: number;
+  /** Sweep segments for the core's blades. */
+  coreSegments: number;
+  /** Gates along the execution path. */
+  pathGates: number;
+  /** Clear-coat / sheen ceramics (MeshPhysicalMaterial) instead of standard. */
+  physicalMaterials: boolean;
   /** Sustained frame rate below which the governor lowers resolution. */
   minFps: number;
-  // Reserved for later phases — wired through now, all off in Phase 1.
-  postprocessing: boolean;
-  shadows: boolean;
-  particleBudget: number;
 }
 
 export const QUALITY_PRESETS: Record<QualityTier, QualityPreset> = {
   high: {
     dpr: [1, 2],
     antialias: true,
-    nodeCount: 180,
+    universeCount: 360,
+    filamentCapacity: 900,
+    filamentSegments: 24,
+    coreSegments: 72,
+    pathGates: 34,
+    physicalMaterials: true,
     minFps: 50,
-    postprocessing: false,
-    shadows: false,
-    particleBudget: 0,
   },
   medium: {
     dpr: [1, 1.5],
     antialias: true,
-    nodeCount: 120,
+    universeCount: 240,
+    filamentCapacity: 700,
+    filamentSegments: 20,
+    coreSegments: 56,
+    pathGates: 30,
+    physicalMaterials: true,
     minFps: 45,
-    postprocessing: false,
-    shadows: false,
-    particleBudget: 0,
   },
   low: {
     dpr: [0.75, 1.25],
     antialias: false,
-    nodeCount: 64,
+    universeCount: 120,
+    filamentCapacity: 460,
+    filamentSegments: 14,
+    coreSegments: 36,
+    pathGates: 24,
+    physicalMaterials: false,
     minFps: 40,
-    postprocessing: false,
-    shadows: false,
-    particleBudget: 0,
   },
 };
 

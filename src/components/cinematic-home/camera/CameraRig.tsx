@@ -5,14 +5,15 @@ import { Vector3, type PerspectiveCamera } from "three";
 import { damp } from "../math";
 import type { ExperienceStore } from "../scroll/experience-store";
 import { MAX_FRAME_DT } from "../scroll/progress-math";
-import { createCameraPath, fovForAspect } from "./camera-path";
+import { sampleKeys } from "../timeline/timeline";
+import { createCameraPath, FOCUS_KEYS, FOV_KEYS, fovForAspect, NEAR_KEYS } from "./camera-path";
 
 /**
  * Pointer parallax: the furthest the camera leans (world units, along its own
  * right/up axes) and how lazily it follows (1/s). Deliberately tiny — a sense
- * of depth, never a steering wheel.
+ * of depth, never a steering wheel. Scaled down while passing close geometry.
  */
-const LEAN = { x: 0.22, y: 0.12, lambda: 1.8 };
+const LEAN = { x: 0.2, y: 0.11, lambda: 1.6 };
 const WORLD_UP = new Vector3(0, 1, 0);
 
 /** Places the camera on the scroll-driven path every frame, after the timeline. */
@@ -34,19 +35,33 @@ export function CameraRig({ store, parallax }: { store: ExperienceStore; paralla
     const s = store.state;
     const camera = state.camera as PerspectiveCamera;
     const dt = Math.min(delta, MAX_FRAME_DT);
+    const p = s.progress;
+    const aspect = state.size.width / Math.max(1, state.size.height);
 
-    const fov = fovForAspect(state.size.width / state.size.height);
-    if (Math.abs(camera.fov - fov) > 0.01) {
+    const fov = fovForAspect(aspect, sampleKeys(FOV_KEYS, p));
+    const near = sampleKeys(NEAR_KEYS, p);
+    if (Math.abs(camera.fov - fov) > 0.01 || Math.abs(camera.near - near) > 1e-4) {
       camera.fov = fov;
+      camera.near = near;
+      camera.far = 1600;
       camera.updateProjectionMatrix();
     }
 
     const { position, target, forward, right, up } = scratch;
-    path.sample(s.progress, position, target);
+    path.sample(p, position, target);
 
+    // Portrait screens step back from single-object scenes so the subject keeps its margins.
+    if (aspect < 1) {
+      const focus = sampleKeys(FOCUS_KEYS, p);
+      // Enough to keep the subject's full WIDTH in a narrow horizontal field of view.
+      const back = 1 + (1 - aspect) * 0.95 * focus;
+      position.sub(target).multiplyScalar(back).add(target);
+    }
+
+    const closeness = near < 0.08 ? 0.25 : 1;
     const l = lean.current;
-    l.x = damp(l.x, parallax ? s.pointer.x * LEAN.x : 0, LEAN.lambda, dt);
-    l.y = damp(l.y, parallax ? s.pointer.y * LEAN.y : 0, LEAN.lambda, dt);
+    l.x = damp(l.x, parallax ? s.pointer.x * LEAN.x * closeness : 0, LEAN.lambda, dt);
+    l.y = damp(l.y, parallax ? s.pointer.y * LEAN.y * closeness : 0, LEAN.lambda, dt);
     forward.subVectors(target, position).normalize();
     right.crossVectors(forward, WORLD_UP).normalize();
     up.crossVectors(right, forward);

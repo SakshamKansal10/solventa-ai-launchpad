@@ -23,8 +23,6 @@ export interface ExperienceState {
   time: number;
   sceneIndex: number;
   sceneLocal: number;
-  coreEnergy: number;
-  nodeOrder: number;
   /** Pointer over the viewport, −1 → 1 on both axes (0, 0 = centre). */
   pointer: { x: number; y: number };
   camera: { x: number; y: number; z: number; fov: number };
@@ -35,9 +33,36 @@ export interface ExperienceState {
   /** First frames are on screen — the loading veil can lift. */
   ready: boolean;
   perf: { fps: number; dpr: number; dprChanges: number };
-  renderer: { calls: number; triangles: number };
+  renderer: {
+    calls: number;
+    triangles: number;
+    /** Visible gold filaments, visible opportunity nodes, GPU geometries and textures. */
+    filaments: number;
+    nodes: number;
+    geometries: number;
+    textures: number;
+  };
   device: DeviceProfile | null;
   capability: Capability | null;
+  /** World-space points the DOM labels follow (written by the worlds each frame). */
+  anchors: Map<string, Anchor>;
+  /** The product surface's world matrix and how much the real DOM has taken it over. */
+  slab: { visible: boolean; matrix: Float32Array; dom: number; released: boolean };
+  /** DOM elements the canvas drives directly every frame (never through React state). */
+  dom: {
+    anchors: Map<string, HTMLElement>;
+    captions: Map<string, HTMLElement>;
+    panel: HTMLElement | null;
+    counter: HTMLElement | null;
+  };
+}
+
+export interface Anchor {
+  x: number;
+  y: number;
+  z: number;
+  /** Opacity 0 → 1. */
+  o: number;
 }
 
 export function createExperienceStore() {
@@ -48,17 +73,18 @@ export function createExperienceStore() {
     time: 0,
     sceneIndex: 0,
     sceneLocal: 0,
-    coreEnergy: 0,
-    nodeOrder: 0,
     pointer: { x: 0, y: 0 },
     camera: { x: 0, y: 0, z: 0, fov: 0 },
     stageActive: true,
     atStart: true,
     ready: false,
     perf: { fps: 0, dpr: 1, dprChanges: 0 },
-    renderer: { calls: 0, triangles: 0 },
+    renderer: { calls: 0, triangles: 0, filaments: 0, nodes: 0, geometries: 0, textures: 0 },
     device: null,
     capability: null,
+    anchors: new Map(),
+    slab: { visible: false, matrix: new Float32Array(16), dom: 0, released: false },
+    dom: { anchors: new Map(), captions: new Map(), panel: null, counter: null },
   };
   const listeners = new Set<() => void>();
   return {

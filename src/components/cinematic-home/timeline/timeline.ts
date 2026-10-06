@@ -4,42 +4,67 @@ import { clamp01 } from "../math";
  * The cinematic homepage's single source of truth for WHEN things happen.
  *
  * Scroll progress (0 → 1 across the whole cinematic section) is divided into
- * the eight narrative scenes. Every other channel — camera keyframes, core
- * energy, node order — is anchored to a scene through `progressOf`, never to a
- * raw number, so lengthening one scene later re-times everything after it
- * without touching any other file.
+ * the narrative scenes below. Every other channel — camera keys, core
+ * assembly, universe scoring, path construction — is anchored to a scene
+ * through `progressOf` / `local`, never to a raw number, so re-timing one
+ * scene re-times everything after it without touching any other file.
  *
- * Pure data + pure functions: no three.js, no DOM. Safe to import from the DOM
- * overlay, the static fallback and the WebGL scene alike.
+ * Pure data + pure functions: no three.js, no DOM.
  */
 
 export type SceneId =
-  | "chaos"
+  | "void"
+  | "awakening"
   | "context"
-  | "possibilities"
-  | "intelligence"
-  | "direction"
-  | "execution"
+  | "passage"
+  | "universe"
+  | "computation"
+  | "convergence"
+  | "three"
+  | "selection"
+  | "unfold"
+  | "validate"
+  | "build"
+  | "elevate"
   | "evidence"
-  | "adaptation";
+  | "crisis"
+  | "adaptation"
+  | "handoff"
+  | "product"
+  | "connected"
+  | "return"
+  | "finale";
 
 export interface SceneDef {
   id: SceneId;
-  /** Development label only — not homepage copy. */
+  /** Development label (HUD, tests) — not homepage copy. */
   label: string;
   /** Scroll length of the scene, in large-viewport heights (lvh). */
   lengthVh: number;
 }
 
 export const SCENES: readonly SceneDef[] = [
-  { id: "chaos", label: "Chaos", lengthVh: 125 },
-  { id: "context", label: "Context", lengthVh: 125 },
-  { id: "possibilities", label: "Possibilities", lengthVh: 125 },
-  { id: "intelligence", label: "Intelligence", lengthVh: 125 },
-  { id: "direction", label: "Direction", lengthVh: 125 },
-  { id: "execution", label: "Execution", lengthVh: 125 },
-  { id: "evidence", label: "Evidence", lengthVh: 125 },
-  { id: "adaptation", label: "Adaptation", lengthVh: 125 },
+  { id: "void", label: "Void", lengthVh: 110 },
+  { id: "awakening", label: "Core awakening", lengthVh: 190 },
+  { id: "context", label: "Context", lengthVh: 210 },
+  { id: "passage", label: "Core → universe", lengthVh: 170 },
+  { id: "universe", label: "Opportunity universe", lengthVh: 150 },
+  { id: "computation", label: "Computation", lengthVh: 190 },
+  { id: "convergence", label: "Convergence", lengthVh: 210 },
+  { id: "three", label: "Final three", lengthVh: 190 },
+  { id: "selection", label: "One direction", lengthVh: 120 },
+  { id: "unfold", label: "Opportunity → path", lengthVh: 170 },
+  { id: "validate", label: "Validate", lengthVh: 150 },
+  { id: "build", label: "Build", lengthVh: 150 },
+  { id: "elevate", label: "Elevate", lengthVh: 150 },
+  { id: "evidence", label: "Evidence", lengthVh: 130 },
+  { id: "crisis", label: "Evidence crisis", lengthVh: 130 },
+  { id: "adaptation", label: "Adaptation", lengthVh: 190 },
+  { id: "handoff", label: "3D → interface", lengthVh: 140 },
+  { id: "product", label: "Product", lengthVh: 200 },
+  { id: "connected", label: "Connected intelligence", lengthVh: 150 },
+  { id: "return", label: "Product → cinema", lengthVh: 120 },
+  { id: "finale", label: "Finale", lengthVh: 190 },
 ];
 
 export interface SceneRange extends SceneDef {
@@ -64,6 +89,8 @@ export function buildSceneRanges(scenes: readonly SceneDef[]): SceneRange[] {
 
 export const SCENE_RANGES: readonly SceneRange[] = buildSceneRanges(SCENES);
 
+const BY_ID = new Map<SceneId, SceneRange>(SCENE_RANGES.map((r) => [r.id, r]));
+
 /** Total scroll distance of the cinematic section, in lvh. */
 export const TIMELINE_SCROLL_VH = SCENES.reduce((sum, s) => sum + s.lengthVh, 0);
 
@@ -73,9 +100,33 @@ export function progressOf(
   local = 0,
   ranges: readonly SceneRange[] = SCENE_RANGES,
 ): number {
-  const range = ranges.find((r) => r.id === id);
+  const range = ranges === SCENE_RANGES ? BY_ID.get(id) : ranges.find((r) => r.id === id);
   if (!range) throw new Error(`Unknown scene: ${id}`);
   return range.start + (range.end - range.start) * clamp01(local);
+}
+
+/** How far through scene `id` global progress `p` is, clamped 0 → 1. */
+export function local(p: number, id: SceneId): number {
+  const range = BY_ID.get(id);
+  if (!range) throw new Error(`Unknown scene: ${id}`);
+  return clamp01((p - range.start) / (range.end - range.start));
+}
+
+/** Linear 0 → 1 between two global progress values. */
+export function between(p: number, a: number, b: number): number {
+  return b > a ? clamp01((p - a) / (b - a)) : p >= b ? 1 : 0;
+}
+
+/** Eased (smoothstep) 0 → 1 between two points given as [scene, local] pairs. */
+export function ramp(
+  p: number,
+  from: SceneId,
+  fromLocal: number,
+  to: SceneId,
+  toLocal: number,
+): number {
+  const u = between(p, progressOf(from, fromLocal), progressOf(to, toLocal));
+  return u * u * (3 - 2 * u);
 }
 
 export interface ScenePosition {
@@ -130,39 +181,8 @@ export function sampleKeys(keys: readonly Key[], progress: number): number {
   return keys[keys.length - 1].value;
 }
 
-/** How charged the placeholder core is: 0 dormant → 1 peak (mid-Intelligence). */
-export const CORE_ENERGY: readonly Key[] = [
-  { at: 0, value: 0.06 },
-  { at: progressOf("context"), value: 0.12 },
-  { at: progressOf("possibilities", 0.5), value: 0.45 },
-  { at: progressOf("intelligence", 0.5), value: 1 },
-  { at: progressOf("direction", 0.5), value: 0.65 },
-  { at: 1, value: 0.5 },
-];
-
-/** How ordered the placeholder node field is: 0 drifting chaos → 1 structured. */
-export const NODE_ORDER: readonly Key[] = [
-  { at: 0, value: 0 },
-  { at: progressOf("context", 0.6), value: 0.65 },
-  { at: progressOf("intelligence"), value: 1 },
-  { at: 1, value: 1 },
-];
-
-export interface TimelineSample {
-  sceneIndex: number;
-  sceneLocal: number;
-  coreEnergy: number;
-  nodeOrder: number;
-}
-
-const scratchScene: ScenePosition = { index: 0, local: 0 };
-
-/** Everything the scene needs for one frame, written into `out` (no per-frame allocation). */
-export function sampleTimeline(progress: number, out: TimelineSample): TimelineSample {
-  sceneAt(progress, SCENE_RANGES, scratchScene);
-  out.sceneIndex = scratchScene.index;
-  out.sceneLocal = scratchScene.local;
-  out.coreEnergy = sampleKeys(CORE_ENERGY, progress);
-  out.nodeOrder = sampleKeys(NODE_ORDER, progress);
-  return out;
-}
+/** Shorthand for authoring keys anchored to scenes: k("context", 0.5, 1.2). */
+export const k = (id: SceneId, at: number, value: number): Key => ({
+  at: progressOf(id, at),
+  value,
+});

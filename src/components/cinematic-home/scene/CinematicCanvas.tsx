@@ -16,12 +16,14 @@ export default function CinematicCanvas({
   preset,
   animate,
   parallax,
+  freeze,
   onContextLost,
 }: {
   store: ExperienceStore;
   preset: QualityPreset;
   animate: boolean;
   parallax: boolean;
+  freeze: boolean;
   onContextLost: () => void;
 }) {
   return (
@@ -36,7 +38,7 @@ export default function CinematicCanvas({
         stencil: false,
         powerPreference: "high-performance",
       }}
-      camera={{ fov: BASE_FOV, near: 0.1, far: 140, position: [0, 1.4, 17] }}
+      camera={{ fov: BASE_FOV, near: 0.2, far: 1600, position: [0, 2.4, 74] }}
       // The stage is position: fixed, so page scroll never moves the canvas;
       // a short resize debounce avoids reallocating buffers mid-drag.
       resize={{ scroll: false, debounce: { scroll: 0, resize: 120 } }}
@@ -51,7 +53,13 @@ export default function CinematicCanvas({
         );
       }}
     >
-      <SceneRoot store={store} preset={preset} animate={animate} parallax={parallax} />
+      <SceneRoot
+        store={store}
+        preset={preset}
+        animate={animate}
+        parallax={parallax}
+        freeze={freeze}
+      />
     </Canvas>
   );
 }

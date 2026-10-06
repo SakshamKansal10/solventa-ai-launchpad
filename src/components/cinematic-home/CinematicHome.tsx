@@ -9,17 +9,18 @@ import {
   type TierOverride,
 } from "./device/capabilities";
 import { StaticFallback } from "./fallback/StaticFallback";
-import { ExperienceLoader } from "./loading/ExperienceLoader";
-import { DomOverlay } from "./overlay/DomOverlay";
+import { CinematicOverlay } from "./overlay/CinematicOverlay";
+import { Narrative } from "./overlay/Narrative";
+import { ProductLayer } from "./overlay/ProductLayer";
 import { QUALITY_PRESETS } from "./performance/quality";
-import { PALETTE } from "./scene/palette";
 import {
   createExperienceStore,
   ExperienceStoreContext,
   useExperienceValue,
 } from "./scroll/experience-store";
 import { useScrollController } from "./scroll/useScrollController";
-import { TIMELINE_SCROLL_VH } from "./timeline/timeline";
+import { SCENE_RANGES, TIMELINE_SCROLL_VH } from "./timeline/timeline";
+import { COLORS } from "./world/layout";
 
 // three.js + React Three Fiber load only in the browser, after hydration, and
 // only for devices that get the WebGL experience. The HUD is dev tooling.
@@ -30,25 +31,27 @@ const DebugHud = lazy(() => import("./debug/DebugHud"));
 const START_TIMEOUT_MS = 15_000;
 
 /**
- * EXPERIENCE SHELL of the cinematic homepage (Phase 1 prototype).
+ * EXPERIENCE SHELL of the cinematic homepage.
  *
  *   section (tall, native scroll) ── sets the scroll length of the timeline
  *     └ stage (position: fixed, 100lvh) ── persists through the whole section
- *         ├ WebGL canvas (lazy)         ── scene/  camera/  timeline/  performance/
- *         └ DOM overlay                 ── overlay/
- *   loading veil · static fallback · dev HUD
+ *         ├ WebGL canvas (lazy)         ── world/, camera/, timeline/, performance/
+ *         ├ overlay (captions, labels)  ── driven per frame by the canvas (DomSync)
+ *         └ product layer (real DOM)    ── mapped onto the 3D surface, then released
+ *   server-rendered narrative · static fallback · dev HUD
  *
  * The stage is `fixed`, not `sticky`: the global stylesheet sets overflow-x on
- * both <html> and <body>, which disables sticky positioning site-wide. Content
- * after the section (the footer) simply slides over the stage, and rendering
- * pauses once it is covered.
+ * both <html> and <body>, which disables sticky positioning site-wide.
  */
 export function CinematicHome({
   tierOverride,
   debug,
+  freeze = false,
 }: {
   tierOverride?: TierOverride;
   debug?: boolean;
+  /** Deterministic frames (no ambient motion, no smoothing) for review and tests. */
+  freeze?: boolean;
 }) {
   const [store] = useState(createExperienceStore);
   const sectionRef = useRef<HTMLElement>(null);
@@ -57,7 +60,7 @@ export function CinematicHome({
   const [failure, setFailure] = useState<string | null>(null);
   const ready = useExperienceValue(store, (s) => s.ready);
 
-  // Decide the experience on the client (the server render is the loading veil).
+  // Decide the experience on the client (the server render is the void + first line).
   useEffect(() => {
     const device = probeDevice();
     const decided = classifyDevice(device, { reducedMotion, override: tierOverride });
@@ -65,6 +68,16 @@ export function CinematicHome({
     store.state.capability = decided;
     setCapability(decided);
   }, [store, reducedMotion, tierOverride]);
+
+  // Review/test hook (only with ?freeze or ?debug): scene ranges + live state for frame capture.
+  useEffect(() => {
+    if (!freeze && !debug) return;
+    const w = window as unknown as Record<string, unknown>;
+    w.__cine = { scenes: SCENE_RANGES, state: store.state };
+    return () => {
+      delete w.__cine;
+    };
+  }, [store, freeze, debug]);
 
   const mode = failure ? "fallback" : (capability?.mode ?? "pending");
 
@@ -80,9 +93,15 @@ export function CinematicHome({
   }, [mode, ready]);
 
   useScrollController(store, sectionRef, mode !== "fallback");
-  usePointerInput(store, mode === "webgl" && !reducedMotion);
+  usePointerInput(store, mode === "webgl" && !reducedMotion && !freeze);
 
   const showHud = debug ?? import.meta.env.DEV;
+  const status =
+    mode === "fallback"
+      ? "Showing the still version of the experience."
+      : ready
+        ? "The interactive experience is ready. Scroll to travel through it."
+        : "Loading the interactive experience.";
 
   return (
     <ExperienceStoreContext.Provider value={store}>
@@ -91,9 +110,13 @@ export function CinematicHome({
         data-mode={mode}
         data-tier={capability?.tier ?? ""}
         data-ready={String(ready || mode === "fallback")}
-        style={{ backgroundColor: PALETTE.midnight }}
+        style={{ backgroundColor: COLORS.black }}
       >
-        <h1 className="sr-only">Solventia — cinematic homepage prototype</h1>
+        {/* The fallback is itself the semantic story — never read it twice. */}
+        {mode !== "fallback" && <Narrative />}
+        <p role="status" aria-live="polite" className="sr-only">
+          {status}
+        </p>
 
         {mode === "fallback" ? (
           <StaticFallback />
@@ -101,29 +124,37 @@ export function CinematicHome({
           <section
             ref={sectionRef}
             data-testid="cinematic-timeline"
-            // The stage's own 100lvh plus the timeline's scroll length.
-            style={{ height: `${TIMELINE_SCROLL_VH + 100}lvh` }}
+            aria-label="Cinematic story — scroll to travel through it"
+            className="[--cine-pace:1] max-sm:[--cine-pace:0.82]"
+            // The stage's own 100lvh plus the timeline's scroll length (shorter on phones).
+            style={{ height: `calc(${TIMELINE_SCROLL_VH}lvh * var(--cine-pace) + 100lvh)` }}
           >
             <div className="fixed inset-x-0 top-0 h-lvh" data-testid="cinematic-stage">
-              {mode === "webgl" && capability && (
-                <CanvasErrorBoundary onError={setFailure}>
-                  <Suspense fallback={null}>
-                    <CinematicCanvas
-                      store={store}
-                      preset={QUALITY_PRESETS[capability.tier]}
-                      animate={!reducedMotion}
-                      parallax={!reducedMotion}
-                      onContextLost={() => setFailure("WebGL context lost")}
-                    />
-                  </Suspense>
-                </CanvasErrorBoundary>
-              )}
-              <DomOverlay />
+              {/* The world fades up over the void as soon as it has rendered real frames. */}
+              <div
+                className={`absolute inset-0 transition-opacity duration-[1400ms] ${ready ? "opacity-100" : "opacity-0"}`}
+              >
+                {mode === "webgl" && capability && (
+                  <CanvasErrorBoundary onError={setFailure}>
+                    <Suspense fallback={null}>
+                      <CinematicCanvas
+                        store={store}
+                        preset={QUALITY_PRESETS[capability.tier]}
+                        animate={!reducedMotion}
+                        parallax={!reducedMotion}
+                        freeze={freeze}
+                        onContextLost={() => setFailure("WebGL context lost")}
+                      />
+                    </Suspense>
+                  </CanvasErrorBoundary>
+                )}
+              </div>
+              <CinematicOverlay />
+              <ProductLayer />
             </div>
           </section>
         )}
 
-        <ExperienceLoader ready={ready || mode === "fallback"} />
         {/* Client only: `capability` is first set after mount, so the HUD never server-renders. */}
         {showHud && capability && (
           <Suspense fallback={null}>

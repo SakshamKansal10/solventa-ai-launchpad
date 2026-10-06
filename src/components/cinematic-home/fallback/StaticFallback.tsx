@@ -1,65 +1,135 @@
-import { PALETTE } from "../scene/palette";
-import { SCENE_RANGES } from "../timeline/timeline";
+import { Link } from "@tanstack/react-router";
+import { ArrowRight } from "lucide-react";
 
-const pad = (n: number) => String(n).padStart(2, "0");
+import { ProductPreview } from "../overlay/ProductPreview";
 
 /**
- * The experience without WebGL or motion — for reduced-motion visitors, devices
- * without WebGL2 or with a software GPU, and any WebGL failure. A normal-height
- * page (the 10-screen scroll only exists to drive the camera) with a still
- * composition and the same eight scenes. PLACEHOLDER content, like the 3D.
+ * The same story without WebGL or motion — for prefers-reduced-motion, devices
+ * without WebGL2 or with a software GPU, and any WebGL failure. Each chapter is
+ * a still composition rendered from the real scene (public/cinematic/*.webp),
+ * with the same words. Semantic, readable, keyboard-operable; the product
+ * preview is the same real, interactive DOM.
  */
-export function StaticFallback() {
-  return (
-    <section
-      data-testid="cinematic-fallback"
-      className="relative px-5 pb-24 pt-[124px] text-white sm:px-10"
-      style={{ backgroundColor: PALETTE.midnight }}
-    >
-      <div className="mx-auto flex max-w-5xl flex-col items-center">
-        <StaticCore />
-        <p className="mt-8 font-mono text-[11px] uppercase tracking-[0.3em] text-white/60">
-          Static preview
-        </p>
-      </div>
-      <ol className="mx-auto mt-20 grid max-w-5xl gap-x-8 sm:grid-cols-2 lg:grid-cols-4">
-        {SCENE_RANGES.map((scene) => (
-          <li key={scene.id} className="border-t border-white/10 py-6">
-            <span className="font-mono text-[11px] text-white/60">{pad(scene.index + 1)}</span>
-            <p className="mt-2 font-display text-[1.6rem] text-white/90">{scene.label}</p>
-          </li>
-        ))}
-      </ol>
-    </section>
-  );
+interface Chapter {
+  still?: string;
+  title: string;
+  line?: string;
+  alt?: string;
+  product?: boolean;
+  cta?: boolean;
 }
 
-/** A still, flat echo of the placeholder core: rings, a faceted centre, a few nodes. */
-function StaticCore() {
-  const nodes: [number, number, number][] = [
-    [-92, -40, 3],
-    [78, -66, 2.5],
-    [104, 30, 3],
-    [-60, 82, 2.5],
-    [20, 100, 2],
-    [-110, 18, 2],
-  ];
+const CHAPTERS: Chapter[] = [
+  {
+    still: "core",
+    title: "Every founder begins with uncertainty.",
+    line: "There is a direction hidden inside your reality.",
+    alt: "The Solventia Intelligence Core: curved ceramic blades in an S around a dark spine, inlaid with champagne metal.",
+  },
+  {
+    still: "context",
+    title: "Solventia starts with you.",
+    line: "Illustrative profile — ₹50,000 · digital development · India · 12 hours a week · beginner · limited customer access.",
+    alt: "Six signals — capital, skills, location, time, experience and customer access — arriving at the core.",
+  },
+  {
+    still: "universe",
+    title: "Hundreds of possible directions.",
+    line: "Your context reshapes every one of them.",
+    alt: "A universe of small engineered opportunity objects in composed territories, linked by fine gold filaments.",
+  },
+  {
+    still: "nine",
+    title: "360 → 120 → 36 → 9 → 3 → 1",
+    line: "Directions that don’t fit you lose energy; the ones that do come into alignment.",
+    alt: "Nine remaining opportunities joined in one elliptical orbit.",
+  },
+  {
+    still: "one",
+    title: "One direction worth testing.",
+    alt: "A single sculpture of nested, twisting ceramic arches, connected to the core by a gold filament.",
+  },
+  {
+    still: "build",
+    title: "Validate · Build · Elevate",
+    line: "Discover what reality supports. Turn evidence into execution. Improve what proves valuable.",
+    alt: "The opportunity unfolded into a path of ceramic arches with gold rails running through them.",
+  },
+  {
+    still: "crisis",
+    title: "Plans are assumptions until reality responds.",
+    line: "“I wouldn’t pay for this version.” — an illustrative customer response.",
+    alt: "Arches ahead on the path losing alignment after contradictory evidence.",
+  },
+  {
+    still: "adapted",
+    title: "The path changes when the evidence changes.",
+    alt: "The arches rebuilt along a new direction.",
+  },
+  {
+    product: true,
+    title: "A chatbot answers. Solventia carries the journey forward.",
+    line: "Context, opportunity, evidence, path and progress — connected in one workspace.",
+  },
+  {
+    still: "identity",
+    title: "Find the direction worth building.",
+    line: "Your reality. Your evidence. Your path forward.",
+    alt: "The Intelligence Core again, far away and still.",
+    cta: true,
+  },
+];
+
+export function StaticFallback() {
   return (
-    <svg viewBox="-130 -130 260 260" className="h-56 w-56" aria-hidden="true">
-      <circle r="86" fill="none" stroke={PALETTE.violet} strokeOpacity="0.55" />
-      <ellipse
-        rx="108"
-        ry="36"
-        fill="none"
-        stroke={PALETTE.champagne}
-        strokeOpacity="0.45"
-        transform="rotate(-18)"
-      />
-      <polygon points="0,-44 38,-22 38,22 0,44 -38,22 -38,-22" fill={PALETTE.champagne} />
-      <polygon points="0,-44 38,-22 0,0 -38,-22" fill={PALETTE.pearl} fillOpacity="0.18" />
-      {nodes.map(([x, y, r]) => (
-        <circle key={`${x},${y}`} cx={x} cy={y} r={r} fill={PALETTE.pearl} fillOpacity="0.7" />
-      ))}
-    </svg>
+    <div
+      data-testid="cinematic-fallback"
+      className="bg-[#070B13] px-5 pb-24 pt-[112px] text-[#F1EEE6] sm:px-10"
+    >
+      <ol className="mx-auto flex max-w-6xl flex-col gap-24 sm:gap-32">
+        {CHAPTERS.map((c, i) => {
+          const Heading = i === 0 ? "h1" : "h2";
+          return (
+            <li key={c.title} className="flex flex-col gap-7">
+              {c.still && (
+                <img
+                  src={`/cinematic/${c.still}-1600.webp`}
+                  srcSet={`/cinematic/${c.still}-960.webp 960w, /cinematic/${c.still}-1600.webp 1600w`}
+                  sizes="(min-width: 1200px) 1152px, 100vw"
+                  width={1600}
+                  height={900}
+                  alt={c.alt ?? ""}
+                  loading={i === 0 ? "eager" : "lazy"}
+                  decoding="async"
+                  className="aspect-[16/9] w-full rounded-[20px] object-cover"
+                />
+              )}
+              <div className={c.cta ? "text-center" : "max-w-3xl"}>
+                <Heading className="font-display text-[clamp(1.9rem,4vw,3.4rem)] leading-[1.08] text-[#F1EEE6]">
+                  {c.title}
+                </Heading>
+                {c.line && (
+                  <p className="mt-4 text-[clamp(1rem,1.5vw,1.2rem)] text-[#cfc6b6]">{c.line}</p>
+                )}
+                {c.cta && (
+                  <Link
+                    to="/consultation"
+                    className="mt-9 inline-flex h-14 items-center gap-3 rounded-full bg-[linear-gradient(135deg,#FFFDFB_0%,#F2ECE2_55%,#DCC08B_100%)] px-8 text-[1.0625rem] font-semibold text-sol-navy"
+                  >
+                    Find My Business Idea
+                    <ArrowRight className="size-5" aria-hidden="true" />
+                  </Link>
+                )}
+              </div>
+              {c.product && (
+                <div className="h-[min(620px,80svh)] w-full">
+                  <ProductPreview />
+                </div>
+              )}
+            </li>
+          );
+        })}
+      </ol>
+    </div>
   );
 }

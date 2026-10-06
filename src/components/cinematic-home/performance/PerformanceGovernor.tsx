@@ -26,6 +26,8 @@ export function PerformanceGovernor({
     // three resets these per render, so this reads the previous frame's totals.
     s.renderer.calls = state.gl.info.render.calls;
     s.renderer.triangles = state.gl.info.render.triangles;
+    s.renderer.geometries = state.gl.info.memory.geometries;
+    s.renderer.textures = state.gl.info.memory.textures;
 
     const w = sampleWindow.current;
     if (delta > 0.25) {

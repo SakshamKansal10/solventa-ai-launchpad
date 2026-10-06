@@ -6,8 +6,11 @@ import {
   CAMERA_KEYS,
   createCameraPath,
   curveParameter,
+  FOCUS_KEYS,
+  FOV_KEYS,
   fovForAspect,
   MAX_FOV,
+  NEAR_KEYS,
 } from "./camera-path";
 
 describe("curveParameter", () => {
@@ -24,12 +27,12 @@ describe("curveParameter", () => {
   });
 });
 
-describe("camera path", () => {
+describe("the camera journey", () => {
   const path = createCameraPath();
   const position = new Vector3();
   const target = new Vector3();
 
-  it("keys are in scroll order, spanning the whole timeline", () => {
+  it("keys run in scroll order and span the whole timeline", () => {
     expect(CAMERA_KEYS[0].at).toBe(0);
     expect(CAMERA_KEYS[CAMERA_KEYS.length - 1].at).toBe(1);
     for (let i = 1; i < CAMERA_KEYS.length; i++) {
@@ -40,28 +43,51 @@ describe("camera path", () => {
   it("sits exactly on every key when scroll reaches it", () => {
     for (const key of CAMERA_KEYS) {
       path.sample(key.at, position, target);
-      expect(position.toArray().map((v) => +v.toFixed(6))).toEqual([...key.position]);
-      expect(target.toArray().map((v) => +v.toFixed(6))).toEqual([...key.target]);
+      for (let a = 0; a < 3; a++) {
+        expect(position.getComponent(a)).toBeCloseTo(key.position[a], 5);
+        expect(target.getComponent(a)).toBeCloseTo(key.target[a], 5);
+      }
     }
   });
 
-  it("moves continuously — no jumps, no NaN — across the whole scroll", () => {
+  it("is continuous — no jumps, no NaN, never looking at its own position", () => {
     const previous = new Vector3();
     path.sample(0, previous, target);
-    for (let i = 1; i <= 4000; i++) {
-      path.sample(i / 4000, position, target);
+    for (let i = 1; i <= 8000; i++) {
+      path.sample(i / 8000, position, target);
       expect(Number.isFinite(position.x + position.y + position.z)).toBe(true);
-      expect(Number.isFinite(target.x + target.y + target.z)).toBe(true);
-      expect(position.distanceTo(previous)).toBeLessThan(0.1);
+      expect(position.distanceTo(target)).toBeGreaterThan(0.5);
+      // A small scroll can never throw the camera across the world.
+      expect(position.distanceTo(previous)).toBeLessThan(0.6);
       previous.copy(position);
     }
   });
 });
 
+describe("lens channels", () => {
+  it("compresses in the passage and opens wide for the reveal", () => {
+    const values = FOV_KEYS.map((k) => k.value);
+    expect(Math.min(...values)).toBeLessThan(30);
+    expect(Math.max(...values)).toBeGreaterThanOrEqual(48);
+  });
+
+  it("only uses a tiny near plane while architecture passes the lens", () => {
+    expect(Math.min(...NEAR_KEYS.map((k) => k.value))).toBeLessThan(0.05);
+    expect(NEAR_KEYS[NEAR_KEYS.length - 1].value).toBeGreaterThanOrEqual(0.1);
+  });
+
+  it("portrait framing focus is a 0 → 1 weight", () => {
+    for (const k of FOCUS_KEYS) {
+      expect(k.value).toBeGreaterThanOrEqual(0);
+      expect(k.value).toBeLessThanOrEqual(1);
+    }
+  });
+});
+
 describe("fovForAspect", () => {
-  it("keeps the base lens on landscape screens", () => {
+  it("keeps the scene's lens on landscape screens", () => {
     expect(fovForAspect(16 / 9)).toBe(BASE_FOV);
-    expect(fovForAspect(1)).toBe(BASE_FOV);
+    expect(fovForAspect(1, 30)).toBe(30);
   });
 
   it("widens for portrait so the horizontal framing holds, within a cap", () => {

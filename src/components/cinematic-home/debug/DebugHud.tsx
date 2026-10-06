@@ -14,11 +14,9 @@ function read(store: ExperienceStore) {
     target: s.targetProgress,
     scene: `${scene.index + 1}/${SCENE_RANGES.length} ${scene.label} (${(s.sceneLocal * 100).toFixed(0)}%)`,
     camera: `${s.camera.x.toFixed(2)}, ${s.camera.y.toFixed(2)}, ${s.camera.z.toFixed(2)} · fov ${s.camera.fov.toFixed(1)}°`,
-    energy: s.coreEnergy,
-    order: s.nodeOrder,
     fps: s.perf.fps,
     dpr: `${s.perf.dpr.toFixed(2)} (device ${s.device?.dpr ?? "?"}, changes ${s.perf.dprChanges})`,
-    draw: `${s.renderer.calls} calls · ${s.renderer.triangles.toLocaleString()} tris`,
+    draw: `${s.renderer.calls} calls · ${s.renderer.triangles.toLocaleString()} tris · ${s.renderer.nodes} nodes · ${s.renderer.filaments} filaments · ${s.renderer.geometries} geo`,
     mode: s.capability
       ? `${s.capability.mode} · ${s.capability.tier} — ${s.capability.reasons.join(", ")}`
       : "probing…",
@@ -40,7 +38,6 @@ export default function DebugHud({ store }: { store: ExperienceStore }) {
     ["progress", `${snapshot.progress.toFixed(3)} (raw ${snapshot.target.toFixed(3)})`],
     ["scene", snapshot.scene],
     ["camera", snapshot.camera],
-    ["core / order", `${snapshot.energy.toFixed(2)} / ${snapshot.order.toFixed(2)}`],
     ["fps", snapshot.fps ? snapshot.fps.toFixed(0) : "–"],
     ["dpr", snapshot.dpr],
     ["draw", snapshot.draw],
