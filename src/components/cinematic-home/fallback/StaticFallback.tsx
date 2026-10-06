@@ -24,19 +24,19 @@ const CHAPTERS: Chapter[] = [
     still: "core",
     title: "Every founder begins with uncertainty.",
     line: "There is a direction hidden inside your reality.",
-    alt: "The Solventia Intelligence Core: curved ceramic blades in an S around a dark spine, inlaid with champagne metal.",
+    alt: "The Solventia Intelligence Core: six nested, gimballed titanium frames with gold inlays around a smoked-glass kernel holding a lit computational lattice.",
   },
   {
     still: "context",
     title: "Solventia starts with you.",
     line: "Illustrative profile — ₹50,000 · digital development · India · 12 hours a week · beginner · limited customer access.",
-    alt: "Six signals — capital, skills, location, time, experience and customer access — arriving at the core.",
+    alt: "Six signal modules — capital, skills, location, time, experience and customer access — docking into ports on the core's outer frame.",
   },
   {
     still: "universe",
     title: "Hundreds of possible directions.",
     line: "Your context reshapes every one of them.",
-    alt: "A universe of small engineered opportunity objects in composed territories, linked by fine gold filaments.",
+    alt: "A universe of small framed decision objects, each with a confidence light, in composed territories linked by fine gold filaments.",
   },
   {
     still: "nine",
@@ -47,24 +47,24 @@ const CHAPTERS: Chapter[] = [
   {
     still: "one",
     title: "One direction worth testing.",
-    alt: "A single sculpture of nested, twisting ceramic arches, connected to the core by a gold filament.",
+    alt: "A single structure of nested, twisting portal frames, connected to the core by a gold filament.",
   },
   {
     still: "build",
     title: "Validate · Build · Elevate",
     line: "Discover what reality supports. Turn evidence into execution. Improve what proves valuable.",
-    alt: "The opportunity unfolded into a path of ceramic arches with gold rails running through them.",
+    alt: "The opportunity unfolded into a path of machined portal gates locking together over a deck, with gold rails running through them.",
   },
   {
     still: "crisis",
     title: "Plans are assumptions until reality responds.",
     line: "“I wouldn’t pay for this version.” — an illustrative customer response.",
-    alt: "Arches ahead on the path losing alignment after contradictory evidence.",
+    alt: "Gates ahead on the path unlocking and losing alignment after contradictory evidence.",
   },
   {
     still: "adapted",
     title: "The path changes when the evidence changes.",
-    alt: "The arches rebuilt along a new direction.",
+    alt: "The gates rebuilt along a new direction.",
   },
   {
     product: true,
@@ -75,7 +75,7 @@ const CHAPTERS: Chapter[] = [
     still: "identity",
     title: "Find the direction worth building.",
     line: "Your reality. Your evidence. Your path forward.",
-    alt: "The Intelligence Core again, far away and still.",
+    alt: "The Intelligence Core resolved into a calm emblem of nested square frames.",
     cta: true,
   },
 ];

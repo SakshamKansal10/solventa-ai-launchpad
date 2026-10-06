@@ -1,51 +1,63 @@
 # Cinematic homepage — progress log (resume from here)
 
 Local-only work on branch `cinematic-homepage`. Never push, deploy, merge or mount on `/`.
-Route: `/cinematic` (noindex). `/` untouched. Checkpoint commit of Phase 1: `e02195c` (local).
+Route: `/cinematic` (noindex). `/` untouched.
+Local checkpoints: `e02195c` (Phase 1 foundation), `686c42c` (21-scene experience, before the
+art-direction pass), then the art-direction pass commit.
 
 ## Resume order
 1. This file → 2. `git status` → 3. only the files for the next unfinished item.
 
-## Status at start of master directive (2026-10-06)
-- DONE (Phase 1, keep): persistent R3F canvas, native scroll → damped progress, store outside React,
-  device tiers + governor + render gate, reduced-motion/no-WebGL fallback, dev HUD, e2e + unit tests.
-- PLACEHOLDER (replace): `scene/CorePlaceholder`, `scene/NodeField`, `scene/node-layout`,
-  8-scene timeline, Phase 1 camera keys, `StaticFallback` content, overlay labels, shared Header + pearl plate.
-
 ## Architecture decisions (durable)
-- One canvas, everything a PURE function of scroll progress (reversible); only bounded ambient
-  motion uses time. `?freeze=1` zeroes time + damping for deterministic frames.
-- World scale: core radius 6 at origin; opening on +z (`world/layout.ts`). Passage scales the core
-  shell ×6 about the opening while the camera passes through → universe lives "inside" (centre −5×opening).
-- ONE filament system (GPU Bézier ribbons, data texture) used by core, universe, convergence,
-  roadmap rails, evidence, adaptation and finale = the gold-filament continuity.
-- Universe: logical 360 opportunities (rendered 360/240/120 by tier, top-36 always rendered),
-  5 families × instanced parts (seed, frame, pearl shell, glass shell, energy). Deterministic
-  illustrative scoring (`universe/scoring.ts`), elimination stages 360→120→36→9→3→1.
-- Product reveal = real DOM panel mapped onto a WebGL slab with a CSS homography, then released
-  to plain DOM. Illustrative read-only preview built from real presentational components.
-- Cinematic-only nav (`nav/CinematicNav.tsx`) reusing `SignInDialog` + `useCurrentUserQuery`;
-  shared Header untouched. CTA → `/consultation` (same as live hero).
+- One canvas; everything a PURE function of scroll progress (reversible); only bounded ambient
+  motion uses time. `?freeze=1` zeroes time + damping for deterministic frames and exposes
+  `window.__cine` (scenes, state, and `three` = scene/gl for profiling).
+- World: core (the Engine) at the origin, radius ≈ 6; universe behind it; finals hub
+  `[6,-0.5,-46]`; path runs −z and climbs in Elevate; product slab past the revised path.
+- ONE structural primitive — the machined rounded-rectangle frame (`world/geometry/frames.ts`).
+- ONE filament system (GPU Bézier ribbons, data texture) = the gold/violet signal language.
+- Universe: logical 360 (rendered 360/240/120 by tier, top-36 always), 5 families × 5 instanced
+  parts, deterministic illustrative scoring, 360→120→36→9→3→1.
+- Product reveal = real DOM (Founder OS, illustrative) mapped onto a WebGL slab by CSS
+  homography, then released to plain DOM.
+- Sound = Web Audio synthesis (`sound/engine.ts`) rendering a pure score (`sound/score.ts`);
+  off by default, gesture-started, session preference (`sound/controller.ts`).
+- Stage is `position: fixed`; past the section it is lifted with the page (protected ending).
+- Nav immersion via `--immerse` written by DomSync (never below AA contrast).
+- Keep three.js out of the eager route graph: modules imported by the route chunk (overlay,
+  sound, nav) must not import three-dependent modules (check the build: see PERFORMANCE).
 
-## Work list (updated)
-- [x] infrastructure: materials (+ dithered instance dissolve), studio env, sweep geometry, filament system
-      (GPU Bézier ribbons; DOUBLE-SIDED — single-sided culled everything), layout, 21-scene timeline
-- [x] void signals + core awakening + redesigned core (S silhouette, slit aperture, inlays, violet strands)
-- [x] context signals (6 forms) → core reactions
-- [x] passage: SHELL expands about the opening; inner mechanism stays (camera threads past it)
-- [x] universe: model+scoring (tested), 5 families × 5 instanced parts, territory-shaped connections,
-      context waves, convergence formations, nine ring
-- [x] final three (nested-arch winner + vane + helix), selection, unfold (arches telescope into path)
-- [x] path: 34 gates, validate/build/elevate, rails, milestones, distant arches, evidence, crisis, adaptation
-- [x] product surface (slab) + DOM homography handoff + illustrative ProductPreview (real components)
-- [x] connected chain + isolated answer, finale core variant at the slab position
-- [x] DOM: captions (copy.ts), anchored labels, count, CTA → /consultation, CinematicNav, SR narrative
-- [ ] visual polish pass (gate joints clunky, arch profile chunky, finalist scale, connected tokens)
-- [ ] mobile/tablet framing pass
-- [ ] reduced-motion / fallback narrative with stills rendered from the scene
-- [ ] docs: ART_DIRECTION, STORYBOARD, SURPRISE_MAP, PERFORMANCE, TEST_REPORT
-- [ ] tests (unit rewrite for timeline/camera/quality, e2e, a11y, visual regression), perf, walkthrough
+## Art-direction pass (2026-10-07) — DONE
+- [x] material system: titanium, graphite, smoked/provisional glass, edge hairlines, pearl sparingly
+- [x] Engine (core) redesign: gimbal frames + kernel lattice; fly-past assembly; ports; passage aperture
+- [x] context modules (skill matrix, connector array) docking into ports; weighted labels
+- [x] universe families as decision objects; confidence lights; stronger connections
+- [x] final three: strata tower / nest of portal frames / orbital array; comparison + fit signals
+- [x] path: portal gates (corners + bars), Validate/Build/Elevate topology + camera language
+- [x] product: dark Founder OS UI; graphite slab with titanium bezel; gate token
+- [x] finale: emblem + staged lockup/line/promise/CTA + protected hold; stage lift before footer
+- [x] nav immersion; Geist/Geist Mono technical type (scoped)
+- [x] sound system + offline render check (levels, spectrogram, WAV)
+- [x] suspense: exposure beats, longer passage/selection, finale hold
+- [x] mobile/tablet review; label clamping; phone milestone tags suppressed
+- [x] perf regression found (glass overdraw, alpha-hash physical, heavy plates) and fixed
+- [x] eager three.js regression found and fixed
+- [x] fallback stills regenerated; alt texts updated
+- [x] tests: unit (62 cinematic), cinematic E2E (16), visual baselines (local), full suite
+- [x] docs: ART_DIRECTION, STORYBOARD, SURPRISE_MAP, PERFORMANCE, TEST_REPORT
+
+## Next (human review)
+- Visual review of `/cinematic` on real devices (phones, Safari) — not done here.
+- Decide whether to keep or tone down: the fly-past frames in Awakening, the kernel's indigo
+  seam glow, the selection-scene filament density on phones.
 
 ## Tools (local, gitignored .e2e-tmp)
-- `node .e2e-tmp/frames.mjs <base> <out> 1440x810 scene:local ...` (uses ?freeze=1; env TIER, DPR, HUD)
-- `node .e2e-tmp/sheet.mjs out.jpg cols tileW a.jpg ...` contact sheet
+- `frames.mjs <base> <out> 1440x810 scene:local …` (?freeze=1; env TIER, DPR, HUD, WAIT)
+- `shoot.sh <name> <cols> <WxH> scene:at …` → `.e2e-tmp/art/<name>/sheet.jpg` (env BASE, TILE)
+- `review29.mjs <base> <out>` (29 reference frames) · `sheet.mjs out cols tileW files…` (env RATIO)
+- `perf.mjs <base>` → perf-results.json (baseline: perf-before.json, final: perf-after.json)
+- `profile.mjs <base> <tier> scene:at …` (per-material frame-time cost)
+- `sound-render.mjs <dev-base> <seconds> [lead] [name]` (offline soundtrack: levels, spectrogram, WAV)
+- `walkthrough.mjs <base>` · `mux-walkthrough.mjs` (adds the synced soundtrack)
+- `stills.mjs <base>` (fallback WebPs → public/cinematic) · `serve-prod.mjs [port]`
+- Stop `vite dev` before E2E / perf (it pegs the CPU on this OneDrive path).

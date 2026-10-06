@@ -13,15 +13,17 @@ import {
 import { RoundedBoxGeometry } from "three/examples/jsm/geometries/RoundedBoxGeometry.js";
 import { mergeGeometries } from "three/examples/jsm/utils/BufferGeometryUtils.js";
 
-import { arcPoints, roundedRect, sweep } from "../geometry/sweep";
+import { frameGeometry, plateGeometry } from "../geometry/frames";
+import { roundedRect, sweep } from "../geometry/sweep";
 
 /**
- * Five opportunity architectures — miniature engineered objects, never spheres.
- * Each is split by material so a whole family is one draw call per part:
- *   seed   — dark central seed
- *   frame  — champagne structure + directional connectors
- *   shell  — the pearl surface (rendered as glass while the fit is uncertain)
- *   energy — the restrained internal light (tinted per instance)
+ * Five opportunity architectures — miniature engineered DECISION OBJECTS,
+ * never spheres or organic forms. Every family shares one anatomy, split by
+ * material so a whole family is one draw call per part:
+ *   seed   — dark graphite logic kernel
+ *   frame  — titanium precision frame + directional connectors (the family's shape)
+ *   shell  — the resolution surface: smoked glass while uncertain, pearl once confident
+ *   energy — the confidence light (indigo while computing, gold when it fits)
  * Node-local units: about 1 across; +z faces "forward" (aligned = facing the visitor).
  */
 export interface FamilyGeometry {
@@ -60,40 +62,26 @@ const connectors = () => [
 ];
 
 function studio(): FamilyGeometry {
-  // Diamond frame with twin curved plates.
-  const s = 0.46;
-  const edges: [number, number, number][][] = [
-    [
-      [0, s, 0],
-      [s, 0, 0],
-    ],
-    [
-      [s, 0, 0],
-      [0, -s, 0],
-    ],
-    [
-      [0, -s, 0],
-      [-s, 0, 0],
-    ],
-    [
-      [-s, 0, 0],
-      [0, s, 0],
-    ],
-  ];
-  const frame = merge([...edges.map(([a, b]) => rod(a, b, 0.022)), ...connectors()]);
-  const plate = (side: number) =>
-    sweep(
-      arcPoints(0.62, Math.PI / 2 - 0.55 * side - 0.35, Math.PI / 2 - 0.55 * side + 0.35, 6).map(
-        (v) => new Vector3(v.x, 0, -v.y + 0.62),
-      ),
-      roundedRect(0.04, 0.5, 0.015, 2),
-      { segments: 10 },
-    );
+  // A rounded-square frame holding twin optical panes.
+  const frame = frameGeometry({
+    hw: 0.44,
+    hh: 0.44,
+    bar: 0.075,
+    depth: 0.07,
+    radius: 0.12,
+    curveSegments: 3,
+    bevel: 0,
+  });
+  const panes = [-0.09, 0.09].map((z) => {
+    const g = plateGeometry(0.27, 0.27, 0.02, 0.07, 0, 3);
+    g.translate(0, 0, z);
+    return g;
+  });
   return {
-    seed: new OctahedronGeometry(0.17, 0),
-    frame,
-    shell: merge([plate(1), plate(-1)]),
-    energy: new RoundedBoxGeometry(0.09, 0.09, 0.09, 1, 0.02),
+    seed: new RoundedBoxGeometry(0.16, 0.16, 0.16, 1, 0.03),
+    frame: merge([frame, ...connectors()]),
+    shell: merge(panes),
+    energy: new RoundedBoxGeometry(0.12, 0.12, 0.12, 1, 0.02),
   };
 }
 
@@ -102,11 +90,11 @@ function product(): FamilyGeometry {
   const lens = new LatheGeometry(
     [
       [0, -0.08],
-      [0.22, -0.06],
-      [0.32, -0.02],
-      [0.34, 0],
-      [0.32, 0.02],
-      [0.22, 0.06],
+      [0.18, -0.05],
+      [0.25, -0.02],
+      [0.27, 0],
+      [0.25, 0.02],
+      [0.18, 0.05],
       [0, 0.08],
     ].map(([x, y]) => new Vector2(x, y)),
     18,
@@ -132,63 +120,56 @@ function product(): FamilyGeometry {
     seed,
     frame: merge([rim, ...clamps, ...connectors()]),
     shell: lens,
-    energy: place(new IcosahedronGeometry(0.06, 1), [0, 0, 0.1]),
+    energy: place(new IcosahedronGeometry(0.085, 1), [0, 0, 0.1]),
   };
 }
 
 function media(): FamilyGeometry {
-  // A spindle with three fins and a pearl collar band.
-  const spindle = new LatheGeometry(
-    [
-      [0, -0.5],
-      [0.05, -0.38],
-      [0.11, 0],
-      [0.05, 0.38],
-      [0, 0.5],
-    ].map(([x, y]) => new Vector2(x, y)),
-    10,
-  );
-  const fins = [0, 1, 2].map((k) => {
-    const a = (k / 3) * Math.PI * 2;
-    const fin = new RoundedBoxGeometry(0.03, 0.66, 0.2, 1, 0.01);
-    fin.translate(0, 0, 0.22);
-    fin.rotateY(a);
-    return fin;
+  // A portrait frame with three signal bars (a channel), behind a vertical pane.
+  const frame = frameGeometry({
+    hw: 0.27,
+    hh: 0.46,
+    bar: 0.045,
+    depth: 0.06,
+    radius: 0.08,
+    curveSegments: 3,
+    bevel: 0,
   });
-  const band = new LatheGeometry(
-    [
-      [0.26, -0.07],
-      [0.31, -0.07],
-      [0.33, 0],
-      [0.31, 0.07],
-      [0.26, 0.07],
-    ].map(([x, y]) => new Vector2(x, y)),
-    16,
+  const bars = [-0.16, 0, 0.16].map((y, k) =>
+    place(new RoundedBoxGeometry(0.3 - k * 0.06, 0.035, 0.04, 1, 0.01), [0, y, 0.02]),
   );
+  const pane = plateGeometry(0.17, 0.33, 0.02, 0.05, 0, 3);
+  pane.translate(0, 0, -0.07);
+  const seed = new CapsuleGeometry(0.06, 0.2, 3, 8);
+  seed.rotateZ(Math.PI / 2);
+  seed.translate(0, 0, -0.16);
   return {
-    seed: spindle,
-    frame: merge([...fins, ...connectors()]),
-    shell: band,
-    energy: new RoundedBoxGeometry(0.035, 0.3, 0.035, 1, 0.01),
+    seed,
+    frame: merge([frame, ...bars, ...connectors()]),
+    shell: pane,
+    energy: new RoundedBoxGeometry(0.05, 0.36, 0.05, 1, 0.01),
   };
 }
 
 function local(): FamilyGeometry {
-  // A curved petal shell crossed by two pins.
-  const petal = sweep(
-    arcPoints(0.48, Math.PI * 0.12, Math.PI * 0.88, 9).map((v) => new Vector3(v.x, 0, -v.y + 0.3)),
-    roundedRect(0.045, 0.52, 0.02, 2),
-    { segments: 16, taper: (u) => 0.55 + 0.45 * Math.sin(Math.PI * u) },
-  );
+  // A diamond frame on a vertical locator pin — a position held precisely.
+  const frame = frameGeometry({
+    hw: 0.36,
+    hh: 0.36,
+    bar: 0.05,
+    depth: 0.06,
+    radius: 0.06,
+    curveSegments: 3,
+    bevel: 0,
+  });
+  frame.rotateZ(Math.PI / 4);
+  const pane = plateGeometry(0.2, 0.2, 0.02, 0.03, 0, 3);
+  pane.rotateZ(Math.PI / 4);
   return {
-    seed: new IcosahedronGeometry(0.16, 1),
-    frame: merge([
-      rod([-0.4, -0.3, 0], [0.4, 0.3, 0], 0.018),
-      rod([-0.4, 0.3, 0], [0.4, -0.3, 0], 0.018),
-      ...connectors(),
-    ]),
-    shell: petal,
-    energy: place(new IcosahedronGeometry(0.055, 0), [0, 0, 0.12]),
+    seed: new OctahedronGeometry(0.13, 0),
+    frame: merge([frame, rod([0, -0.62, 0], [0, 0.62, 0], 0.016), ...connectors()]),
+    shell: pane,
+    energy: place(new RoundedBoxGeometry(0.11, 0.11, 0.11, 1, 0.02), [0, 0, 0.08]),
   };
 }
 
@@ -208,8 +189,8 @@ function venture(): FamilyGeometry {
   return {
     seed: new OctahedronGeometry(0.13, 0),
     frame: merge([...edges, ...connectors()]),
-    shell: new CylinderGeometry(r * 0.94, r * 0.94, h * 0.96, 3, 1),
-    energy: new RoundedBoxGeometry(0.07, 0.16, 0.07, 1, 0.02),
+    shell: new CylinderGeometry(r * 0.78, r * 0.78, h * 0.84, 3, 1),
+    energy: new RoundedBoxGeometry(0.1, 0.22, 0.1, 1, 0.02),
   };
 }
 

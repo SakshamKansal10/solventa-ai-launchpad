@@ -1,5 +1,6 @@
 import { progressOf, type SceneId } from "../timeline/timeline";
 import { SIGNALS } from "../world/context/context-model";
+import { WEIGHTS } from "../world/universe/scoring";
 
 /**
  * Every word the cinematic homepage shows, and exactly when. Minimal by
@@ -111,7 +112,8 @@ export const CAPTIONS: Caption[] = [
     kind: "finale",
     text: "Find the direction worth building.",
     sub: "Your reality. Your evidence. Your path forward.",
-    span: ["finale", 0.5, "finale", 1.01],
+    // Staged inside one composition (identity → line → promise → CTA), then a protected hold.
+    span: ["finale", 0.3, "finale", 1.01],
     place: "bottom",
   },
 ];
@@ -135,9 +137,10 @@ export const LABELS: {
   sub?: string;
   kind: "tag" | "quote" | "direction";
 }[] = [
+  // Each founder signal is named with its weight in the (illustrative) model.
   ...SIGNALS.map((s) => ({
     anchor: `signal-${s.id}`,
-    text: s.label,
+    text: `${s.label} · w ${WEIGHTS[s.id].toFixed(2).slice(1)}`,
     sub: s.value,
     kind: "tag" as const,
   })),

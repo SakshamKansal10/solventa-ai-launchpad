@@ -2,7 +2,7 @@ import { useFrame } from "@react-three/fiber";
 import { useMemo } from "react";
 import { Matrix4, Vector3 } from "three";
 
-import { progressOf } from "../timeline/timeline";
+import { progressOf, ramp } from "../timeline/timeline";
 import { quadToMatrix3d, SLAB } from "../world/product/product-model";
 import { STAGE_COUNTS } from "../world/universe/universe-model";
 import { universePhases } from "../world/universe/universe-state";
@@ -25,6 +25,7 @@ function setStyle(
   cache[key] = value;
   el.style[key] = value;
 }
+const labelHalf = new WeakMap<HTMLElement, number>();
 const show = (el: HTMLElement, o: number) => {
   setStyle(el, "opacity", o.toFixed(3));
   setStyle(el, "visibility", o > 0.002 ? "visible" : "hidden");
@@ -46,12 +47,28 @@ export function DomSync() {
   /** The panel's first rasterisation is done right after load, invisibly, instead of mid-handoff. */
   const warmUntil = useMemo(() => ({ t: 0 }), []);
   const countTo = progressOf("selection", 0.68);
+  const finaleFrom = progressOf("finale", 0.3);
+  const nav = useMemo(() => ({ el: null as HTMLElement | null, value: "" }), []);
+  const finaleTo = progressOf("finale", 0.62);
 
   useFrame((state) => {
     const s = store.state;
     const p = s.progress;
     const { width, height } = state.size;
     const dom = s.dom;
+
+    // Immersion: the navigation recedes during the deepest sequences, returns for the product.
+    nav.el ??= document.querySelector<HTMLElement>("[data-testid=cinematic-nav]");
+    if (nav.el) {
+      const immerse = (
+        ramp(p, "void", 0.7, "awakening", 0.45) *
+        (1 - ramp(p, "handoff", 0.45, "product", 0.1))
+      ).toFixed(2);
+      if (immerse !== nav.value) {
+        nav.value = immerse;
+        nav.el.style.setProperty("--immerse", immerse);
+      }
+    }
 
     for (const c of CAPTIONS) {
       const el = dom.captions.get(c.id);
@@ -60,6 +77,18 @@ export function DomSync() {
       if (c.id === "void" && p < progressOf("void", 0.12)) o = 1;
       show(el, o);
       setStyle(el, "transform", `translate3d(0, ${((1 - o) * 10).toFixed(1)}px, 0)`);
+      if (c.kind === "finale") {
+        // The finale stages its own parts (identity → line → promise → CTA) from one value.
+        const r = Math.min(1, Math.max(0, (p - finaleFrom) / (finaleTo - finaleFrom)));
+        const key = r.toFixed(3);
+        if (el.dataset.reveal !== key) {
+          el.dataset.reveal = key;
+          el.style.setProperty("--reveal", key);
+        }
+        // The CTA is only focusable once it is visibly there.
+        const cta = el.querySelector<HTMLElement>("[data-testid=cinematic-cta]");
+        if (cta) setStyle(cta, "visibility", r > 0.62 ? "visible" : "hidden");
+      }
     }
     for (const w of WAVE_LABELS) {
       const el = dom.captions.get(w.id);
@@ -83,8 +112,17 @@ export function DomSync() {
       const x = (scratch.v.x * 0.5 + 0.5) * width;
       const y = (-scratch.v.y * 0.5 + 0.5) * height;
       const inside = x > -80 && x < width + 80 && y > 40 && y < height + 40;
-      show(el, behind || !inside ? 0 : a.o);
-      setStyle(el, "transform", `translate3d(${x.toFixed(1)}px, ${y.toFixed(1)}px, 0)`);
+      // Phones keep the stage captions clear: milestone tags are left to the narrative there.
+      const crowded = width < 640 && id.startsWith("milestone-");
+      show(el, behind || !inside || crowded ? 0 : a.o);
+      // Labels never clip at the screen edge (their width is measured once — text is fixed).
+      let half = labelHalf.get(el);
+      if (half === undefined && a.o > 0.002) {
+        half = el.firstElementChild ? (el.firstElementChild as HTMLElement).offsetWidth / 2 : 0;
+        labelHalf.set(el, half);
+      }
+      const cx = Math.min(Math.max(x, (half ?? 0) + 14), width - (half ?? 0) - 14);
+      setStyle(el, "transform", `translate3d(${cx.toFixed(1)}px, ${y.toFixed(1)}px, 0)`);
     }
 
     // The convergence count: changes only as a stage completes.

@@ -389,7 +389,7 @@ export function createUniverse(renderCount = LOGICAL_COUNT, seed = 11): Universe
     const hub = members.reduce((best, o) =>
       dist(o.rest, territory.centre) < dist(best.rest, territory.centre) ? o : best,
     );
-    connections.push({ a: -1, b: hub.index, kind: "trunk", width: 0.032, phase: rand() });
+    connections.push({ a: -1, b: hub.index, kind: "trunk", width: 0.02, phase: rand() });
     switch (territory.id) {
       case "A":
         chain(members, 0.03, false, 7);

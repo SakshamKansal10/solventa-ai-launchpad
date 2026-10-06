@@ -5,12 +5,14 @@ import { local, progressOf } from "../../timeline/timeline";
 import { FINALS_HUB } from "../layout";
 
 /**
- * The execution path as DATA. Its gates are the SAME arches that formed the
- * chosen opportunity's sculpture: a tight, twisting nest of arches that
- * telescopes out along the path (Unfold), is provisional glass with unlocked
- * crowns (Validate), locks into ceramic (Build), grows and interconnects
- * (Elevate), loses integrity ahead after contradictory evidence (Crisis), and
- * is physically rebuilt onto a revised direction (Adaptation).
+ * The execution path as DATA. Its gates are the SAME machined portal frames
+ * that formed the chosen opportunity: a tight, twisting nest of frames that
+ * telescopes out along the path (Unfold). Each gate is assembled from four
+ * corner brackets and four bars: in Validate the bars hang open in smoked
+ * glass (an untested plan); in Build they slide in, lock and turn to titanium;
+ * in Elevate the path climbs and branches into a network. Contradictory
+ * evidence unlocks the gates ahead (Crisis) and they are physically rebuilt
+ * onto a revised direction (Adaptation).
  * Pure functions of progress — fully reversible.
  */
 
@@ -22,26 +24,35 @@ export const WINNER_POS: [number, number, number] = [
 ];
 
 export const GATE_SPACING = 5.6;
-/** Arches that formed the chosen sculpture (the first gates of the path). */
+/** Frames that formed the chosen sculpture (the first gates of the path). */
 export const SCULPTURE_ARCHES = 14;
 /** The gate where contradictory evidence lands (the assumption). */
 export const ASSUMPTION_GATE = 26;
 /** Gates ahead of the assumption that destabilise and are rebuilt elsewhere. */
 export const UNSTABLE = [27, 28, 29, 30, 31, 32, 33] as const;
 
-/** Arch geometry in gate-local space: x across, y up, z along the path. */
-export const ARCH = { radius: 3.7, centreY: -2.1 } as const;
+/** Portal geometry in gate-local space: x across, y up, z along the path. */
+export const GATE = {
+  hw: 3.4,
+  hh: 2.9,
+  centreY: -0.3,
+  radius: 0.85,
+  bar: 0.24,
+  depth: 0.42,
+  stub: 0.5,
+} as const;
 
 const ORIGINAL_POINTS: [number, number, number][] = [
   [WINNER_POS[0], WINNER_POS[1], WINNER_POS[2]],
   [5.8, 3.0, -76],
   [4.4, 2.6, -102],
   [2.8, 2.9, -130],
-  [1.3, 3.3, -158],
-  [0.1, 3.5, -184],
-  [-0.8, 3.6, -208],
-  [-1.6, 3.7, -232],
-  [-2.2, 3.8, -256],
+  // Elevate: the path gains altitude.
+  [1.3, 4.6, -158],
+  [0.1, 5.9, -184],
+  [-0.8, 6.5, -208],
+  [-1.6, 6.8, -232],
+  [-2.2, 7.0, -256],
 ];
 
 export const originalPath = new CatmullRomCurve3(
@@ -114,7 +125,7 @@ const m4 = new Matrix4();
 const tmpT = new Vector3();
 const tmpP = new Vector3();
 
-/** Orientation whose local +z runs along `tangent` (arches face the traveller). */
+/** Orientation whose local +z runs along `tangent` (gates face the traveller). */
 function alongQuaternion(tangent: Vector3, out: Quaternion) {
   m4.lookAt(new Vector3(), tangent.clone().negate(), UP);
   return out.setFromRotationMatrix(m4);
@@ -140,7 +151,7 @@ export function revisedFrame(j: number, out: GateFrame): GateFrame {
   return out;
 }
 
-/** Arch i inside the chosen sculpture: a tight nest that twists as it recedes. */
+/** Frame i inside the chosen sculpture: a tight nest that twists as it recedes. */
 export function sculptureFrame(i: number, out: GateFrame): GateFrame {
   const depth = i * 0.34;
   originalFrame(0, out);
@@ -159,11 +170,11 @@ export interface GateState extends GateFrame {
   present: number;
   /** 0 = provisional glass, 1 = ceramic. */
   solid: number;
-  /** Crown segment: 0 = hovering, unlocked; 1 = locked into the arch. */
+  /** The bars: 0 = hanging open, unlocked; 1 = slid in and locked. */
   crown: number;
   /** Instability from contradictory evidence (0 → 1). */
   unstable: number;
-  /** The gate's arch is offset/rotated by instability (per-gate seeded). */
+  /** The gate is offset/rotated by instability (per-gate seeded). */
   wobble: [number, number, number];
 }
 
@@ -293,4 +304,24 @@ export function revisedEye(d: number): {
   const p = pointAtDistance(revisedPath, REVISED_LENGTH, d, new Vector3());
   const t = pointAtDistance(revisedPath, REVISED_LENGTH, d + 14, new Vector3());
   return { position: [p.x, p.y + 0.5, p.z], target: [t.x, t.y + 0.2, t.z] };
+}
+
+/**
+ * Camera beside / above the original path at distance d: `side` units to the
+ * traveller's right (negative = left) and `up` above, looking `ahead` units on.
+ */
+export function sideEye(
+  d: number,
+  side: number,
+  up: number,
+  ahead = 14,
+): { position: [number, number, number]; target: [number, number, number] } {
+  const p = pointAtDistance(originalPath, ORIGINAL_LENGTH, d, new Vector3());
+  const t = pointAtDistance(originalPath, ORIGINAL_LENGTH, d + ahead, new Vector3());
+  const tangent = tangentAtDistance(originalPath, ORIGINAL_LENGTH, d, new Vector3());
+  const right = new Vector3().crossVectors(tangent, UP).normalize();
+  return {
+    position: [p.x + right.x * side, p.y + up, p.z + right.z * side],
+    target: [t.x, t.y - 0.6, t.z],
+  };
 }

@@ -129,19 +129,3 @@ export function roundedRect(width: number, height: number, radius: number, corne
   }
   return pts;
 }
-
-/** Points along a circular arc in the XY plane (radius, from angle a0 to a1). */
-export function arcPoints(radius: number, a0: number, a1: number, count: number, z = 0): Vector3[] {
-  const pts: Vector3[] = [];
-  for (let i = 0; i < count; i++) {
-    const a = a0 + ((a1 - a0) * i) / (count - 1);
-    pts.push(new Vector3(Math.cos(a) * radius, Math.sin(a) * radius, z));
-  }
-  return pts;
-}
-
-/** Soft taper: thin at both tips, full in the middle — a sculpted, non-extruded look. */
-export const bladeTaper =
-  (tip = 0.28, power = 0.6) =>
-  (u: number) =>
-    tip + (1 - tip) * Math.pow(Math.sin(Math.PI * u), power);

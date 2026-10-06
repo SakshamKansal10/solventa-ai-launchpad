@@ -6,7 +6,7 @@ import { RoundedBoxGeometry } from "three/examples/jsm/geometries/RoundedBoxGeom
 import { smoothstep } from "../../math";
 import { local } from "../../timeline/timeline";
 import { useWorld } from "../WorldContext";
-import { ARCH, ASSUMPTION_GATE, originalFrame } from "./path-model";
+import { ASSUMPTION_GATE, GATE, originalFrame } from "./path-model";
 
 /**
  * Evidence: an optical information object — a framed glass tablet — that
@@ -33,7 +33,7 @@ export function Evidence() {
     });
     const right = new Vector3(1, 0, 0).applyQuaternion(f.quaternion);
     const forward = new Vector3(0, 0, -1).applyQuaternion(f.quaternion);
-    const target = f.position.clone().add(new Vector3(0, ARCH.centreY + ARCH.radius * 0.55, 0));
+    const target = f.position.clone().add(new Vector3(0, GATE.centreY + GATE.hh * 0.22, 0));
     const start = target
       .clone()
       .addScaledVector(right, 13)

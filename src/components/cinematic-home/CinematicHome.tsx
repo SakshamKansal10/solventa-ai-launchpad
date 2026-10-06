@@ -19,6 +19,7 @@ import {
   useExperienceValue,
 } from "./scroll/experience-store";
 import { useScrollController } from "./scroll/useScrollController";
+import { soundController } from "./sound/controller";
 import { SCENE_RANGES, TIMELINE_SCROLL_VH } from "./timeline/timeline";
 import { COLORS } from "./world/layout";
 
@@ -94,6 +95,8 @@ export function CinematicHome({
 
   useScrollController(store, sectionRef, mode !== "fallback");
   usePointerInput(store, mode === "webgl" && !reducedMotion && !freeze);
+  // The soundtrack is offered with the WebGL experience only (off until the visitor asks).
+  useEffect(() => (mode === "webgl" ? soundController.attach(store) : undefined), [mode, store]);
 
   const showHud = debug ?? import.meta.env.DEV;
   const status =

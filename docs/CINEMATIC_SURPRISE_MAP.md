@@ -1,89 +1,90 @@
 # Cinematic surprise map
 
-The homepage is one continuously transforming world. Each major transition first lets the
-visitor form an expectation, then violates it with a transformation that has a reason.
-Pattern: **setup → comfort → hidden clue → disruption → transformation → reveal**.
-
-All eight are implemented in `/cinematic` (local). Code pointers are given per transition.
+The homepage is one continuously transforming system. Each major transition lets the visitor
+form an expectation, then reveals a deeper capability of the SAME environment.
+Pattern: **setup → comfort → hidden clue → anticipation (darkness, silence, compression) →
+transformation → reveal**. All eight are implemented in `/cinematic` (local).
 
 ---
 
-## 1. Intelligence Core → Universe (object → world)
+## 1. Engine → Universe (object → system → world)
 | | |
 |---|---|
-| **Visitor believes** | The core is one finished, self-contained sculpture to admire from outside. |
-| **Hidden clue** | A narrow vertical slit between the two front ceramic shells, inlaid in champagne; the gold guide filaments converge on it during the approach. |
-| **Transformation** | The lens compresses (FOV 38° → 28°), the slit halves swing apart, and the camera threads through the inner mechanism — spine, glass, inner blades pass within ~2 units — while the outer shell expands ×6 about the opening and keeps opening until it is lost in the dark. |
-| **Reveal** | The lens opens to 50° on an environment far larger than the object that contained it: the opportunity universe. |
+| **Visitor believes** | The Engine is one finished machine — a gimbal of titanium frames around a lit kernel — to admire from outside. |
+| **Hidden clue** | Its layers are concentric and pinned on alternating axes: they could line up. Each founder signal already turned one of them. |
+| **Anticipation** | The gimbal aligns outer → inner with mechanical clicks, the pins retract, the frames slide back into a narrowing square tunnel; aperture hairlines light one by one down it; exposure and sound close in (low tension, filter shut). |
+| **Transformation** | The camera squeezes through the tunnel and between the parting kernel halves; darkness; faint horizon lines far ahead. |
+| **Reveal** | The lens opens to 50° on an environment vastly larger than the machine: the opportunity universe; the sound releases into a wide pad. |
 | **Meaning** | Solventia is not a tool you look at — you enter its intelligence. |
-| **Code** | `world/core/core-motion.ts` (shell scale about `OPENING`), `core-design.ts` (`j1`/`j2` slit), `camera/camera-keys.ts` (passage keys), `camera-path.ts` (`FOV_KEYS`, `NEAR_KEYS`), `world/universe/universe-state.ts` (`revealFront`). |
+| **Code** | `world/core/core-design.ts` (frames, `TELESCOPE`), `core-motion.ts` (`enginePose`: align, pins, telescope, part, lit, hint), `camera-keys.ts` (passage), `atmosphere-keys.ts`, `sound/score.ts`. |
 
 ## 2. Universe → Order (endless → controllable)
 | | |
 |---|---|
-| **Visitor believes** | An enormous, open-ended field of possibilities to drift through. |
-| **Hidden clue** | Six context waves (Capital, Skills, Location, Time, Experience, Customer access) roll outward from the core's trunks — violet pulses on the filaments, nodes re-scoring as each wave passes. |
-| **Transformation** | Low-fit territories lose energy and recede; whole families retract; the territories' own architecture (rails, spiral arm, lattice) withdraws; survivors fold inward and depth compresses. |
-| **Reveal** | 360 → 120 → 36 → 9: the nine hang in one ordered elliptical orbit. The "infinite" world was computational all along. |
-| **Meaning** | Your context turns overwhelming possibility into a manageable, reasoned shortlist. |
-| **Code** | `world/universe/scoring.ts` (illustrative model), `universe-model.ts` (territories, stages, formations), `universe-state.ts` (waves, convergence), `OpportunityUniverse.tsx` (nine ring). |
+| **Visitor believes** | An enormous, open-ended field of possibilities. |
+| **Hidden clue** | Six context waves (violet) roll through; every node's confidence light shifts as each passes; information ticks. |
+| **Transformation** | Low-fit territories lose energy and recede; whole families retract; survivors' shells resolve from smoked glass to pearl; the territories fold inward. |
+| **Reveal** | 360 → 120 → 36 → 9: the nine on one ordered orbit, each step marked by a narrowing interval. |
+| **Meaning** | Your context turns overwhelming possibility into a reasoned shortlist. |
+| **Code** | `world/universe/scoring.ts`, `universe-model.ts`, `universe-state.ts`, `families.ts`, `OpportunityUniverse.tsx`. |
 
 ## 3. Three → One (three futures, compared at once)
 | | |
 |---|---|
-| **Visitor believes** | Three separate sculptures — each could become its own world; the camera visits them one by one. |
-| **Hidden clue** | Gold pathways begin to circulate between all three while the camera is still visiting. |
-| **Transformation** | Two lose coherence — their ribs drift apart and their ceramic dissolves to glass — while the nested arches of Direction 02 gain solidity and a long filament aligns it with the core's trunk. |
-| **Reveal** | Silence: one sculpture, one line — "One direction worth testing." |
-| **Meaning** | Solventia evaluates directions together and commits to one worth testing — not a list of ideas. |
-| **Code** | `world/path/Finalists.tsx`, `path-model.ts` (`sculptureFrame`, chosen solidity), `overlay/copy.ts` (`selection`). |
+| **Visitor believes** | Three separate future architectures — a strata tower, a nest of frames, an orbital array — each could be its own world; the camera visits them one by one. |
+| **Hidden clue** | Gold pathways and the founder's six fit signals start running into all three while the camera is still visiting. |
+| **Anticipation** | Light withdraws to the decision; the sound narrows to a held breath (master dips). |
+| **Transformation** | On Directions 01 and 03 the signals that cannot hold retract; their pieces separate, titanium turns to glass, lights go out. Direction 02 keeps every signal and becomes the most ordered system in view. |
+| **Reveal** | A restrained resolution tone; one structure, one line — "One direction worth testing." |
+| **Meaning** | Solventia evaluates directions together and commits to one worth testing. |
+| **Code** | `world/path/Finalists.tsx` (`FAILS`, comparison layer), `path-model.ts` (chosen solidity), `sound/score.ts` (`MASTER`). |
 
-## 4. Opportunity → Roadmap (the object becomes the path)
+## 4. Opportunity → Roadmap (the future becomes the path)
 | | |
 |---|---|
-| **Visitor believes** | They are looking at a finished sculpture of nested, twisting arches. |
-| **Hidden clue** | The arches are concentric — a compressed tunnel — and the winner's gold filament points forward. |
-| **Transformation** | The camera orbits to its side and turns; the arches telescope out along the path one after another, untwisting and growing to full size; further gates rise into place ahead. |
-| **Reveal** | The visitor is now travelling through the path made of that opportunity. |
+| **Visitor believes** | The winner is a finished sculpture of nested, twisting portal frames. |
+| **Hidden clue** | The frames are concentric — a compressed tunnel — exactly the shape of the Engine's aligned aperture. |
+| **Transformation** | The camera orbits to its side and turns; the frames untwist and telescope out along the path, one after another, and become gates; more gates rise ahead. |
+| **Reveal** | The visitor is travelling through the path made of that opportunity. |
 | **Meaning** | A direction is only valuable when it becomes an executable path. |
-| **Code** | `path/path-model.ts` (`gateState` telescope), `path/ExecutionPath.tsx`, `camera-keys.ts` (unfold). |
+| **Code** | `path/path-model.ts` (`gateState`, `sculptureFrame`), `path/ExecutionPath.tsx`, `camera-keys.ts` (unfold). |
 
 ## 5. Roadmap → Evidence crisis (the future was never fixed)
 | | |
 |---|---|
-| **Visitor believes** | The path is now confident: Validate → Build → Elevate made it solid, interconnected and grand. |
-| **Hidden clue** | A framed glass tablet drifts in from beside the path carrying an illustrative customer quote — "I wouldn't pay for this version." — and settles into one gate (the assumption). |
-| **Transformation** | Instability propagates forward from that gate: arches tilt and shift, crowns lift off, legs separate, ceramic turns provisional again, rails thin and break, the original future beyond retracts. No explosion. |
+| **Visitor believes** | The path is confident: gates locked in Build, the network climbed and branched in Elevate. |
+| **Hidden clue** | An evidence tablet — "I wouldn't pay for this version." (illustrative) — docks at one gate: the assumption. |
+| **Transformation** | Confidence drains (exposure falls, filter closes): the gates ahead unlock — bars hang open again, corners drift, titanium turns provisional — rails thin and break, the original future retracts. No explosion, no glitch. |
 | **Reveal** | "Plans are assumptions until reality responds." |
 | **Meaning** | Evidence, not optimism, decides what holds. |
-| **Code** | `path/Evidence.tsx`, `path-model.ts` (`unstable`, `wobble`), `ExecutionPath.tsx` (rails, future rails). |
+| **Code** | `path/Evidence.tsx`, `path-model.ts` (`unstable`, `wobble`), `ExecutionPath.tsx` (open bars, rails). |
 
-## 6. Evidence → Adaptation (the world rebuilds around you)
+## 6. Evidence → Adaptation (the system re-routes)
 | | |
 |---|---|
 | **Visitor believes** | The unstable section is lost. |
-| **Hidden clue** | The rebuilt gates lift mid-flight rather than vanish — the parts are being reused. |
-| **Transformation** | Each unstable arch travels on a curved, lifted trajectory to a slot on a revised direction branching from the assumption gate, re-stabilises, and the rails reconnect through it. The camera stays inside and follows the new direction. |
+| **Hidden clue** | The unlocked gates lift instead of vanishing — their parts are being reused. |
+| **Transformation** | Each gate travels on a lifted curve to a slot on a revised direction branching from the assumption gate, re-locks; rails reconnect; a rerouting arpeggio resolves. The camera stays inside and follows. |
 | **Reveal** | "The path changes when the evidence changes." |
-| **Meaning** | Adaptation is reconfiguration, not starting over. |
-| **Code** | `path-model.ts` (`revisedPath`, `revisedFrame`, adaptation in `gateState`), camera keys (`revisedEye`). |
+| **Meaning** | Solventia learns from evidence: adaptation is reconfiguration, not starting over. |
+| **Code** | `path-model.ts` (`revisedPath`, `revisedFrame`), camera keys (`revisedEye`). |
 
 ## 7. Cinema → Real product (wait — this is real?)
 | | |
 |---|---|
-| **Visitor believes** | A floating pearl slab with an abstract interface layout is another 3D object. |
-| **Hidden clue** | The slab detaches from the last rebuilt gate and squares up to the lens; the lens narrows to 26°, flattening perspective. |
-| **Transformation** | Real HTML is projected onto the slab with a CSS homography while it is still 3D; it takes over the surface; once the slab faces the screen it is released as plain, interactive DOM. |
-| **Reveal** | The visitor can select text, use the tabs with the keyboard and read Founder Fit — the real product components, clearly labelled as an illustrative preview. |
+| **Visitor believes** | A graphite slab with a titanium bezel and an abstract layout is another 3D object. |
+| **Hidden clue** | It detaches from the last rebuilt gate and squares up; the lens narrows to 26°; light holds its breath. |
+| **Transformation** | Real HTML is projected onto the slab with a CSS homography while it is still 3D, takes over the surface, and is released as plain, interactive DOM; the navigation returns. |
+| **Reveal** | A Founder OS the visitor can read, select and operate by keyboard — clearly labelled as an illustrative preview. |
 | **Meaning** | The cinematic intelligence is the product. |
-| **Code** | `world/product/product-model.ts` (`quadToMatrix3d`, `slabState`), `Product3D.tsx`, `overlay/DomSync.tsx`, `overlay/ProductPreview.tsx`. Phones crossfade instead (slab too small). |
+| **Code** | `world/product/product-model.ts`, `Product3D.tsx`, `overlay/DomSync.tsx`, `overlay/ProductPreview.tsx`. Phones crossfade (slab too small). |
 
-## 8. Product → Finale (product becomes Solventia)
+## 8. Product → Finale (the product becomes Solventia)
 | | |
 |---|---|
 | **Visitor believes** | The page is about to end with a footer. |
-| **Hidden clue** | An isolated glass answer dissolves while a connected chain — context dial, opportunity lens, evidence tablet, path arch, milestone — persists on gold filaments. |
-| **Transformation** | The interface hands back to the 3D surface, which leans away into depth; the camera pulls far back; the core's pieces fly in and reassemble where the product stood. |
-| **Reveal** | Stillness. The core in the distance; "Find the direction worth building." and the real CTA → `/consultation`. Only then the footer. |
+| **Hidden clue** | An isolated answer dissolves while a connected chain (dial, lens, tablet, gate, capsule) persists on gold filaments. |
+| **Transformation** | The surface leans away into darkness; the Engine's layers return and resolve — every frame aligning into one calm nested-square emblem with gold hairlines. |
+| **Reveal** | Staged in one composition: SOLVENTIA · VALIDATE · BUILD · ELEVATE → "Find the direction worth building." → "Your reality. Your evidence. Your path forward." → the CTA; then a protected hold. The footer arrives below — never over — the ending. |
 | **Meaning** | Everything the visitor saw was Solventia carrying one journey forward. |
-| **Code** | `Product3D.tsx` (chain, isolated answer), `core/IntelligenceCore.tsx` (`variant="finale"`), `core-motion.ts` (`finaleTransform`). |
+| **Code** | `core/core-motion.ts` (finale pose), `overlay/CinematicOverlay.tsx` (`stage()`), `overlay/DomSync.tsx` (`--reveal`), `scroll/useScrollController.ts` (stage lift). |

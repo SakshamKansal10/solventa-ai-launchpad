@@ -1,5 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import { ArrowRight } from "lucide-react";
+import type { CSSProperties } from "react";
 
 import { useExperienceStore } from "../scroll/experience-store";
 import { CAPTIONS, LABELS, WAVE_LABELS, type Caption } from "./copy";
@@ -71,6 +72,7 @@ export function CinematicOverlay() {
         <div
           key={l.anchor}
           ref={reg(store.state.dom.anchors, l.anchor)}
+          data-anchor={l.anchor}
           aria-hidden="true"
           className="absolute left-0 top-0 will-change-transform"
           style={{ opacity: 0, visibility: "hidden" }}
@@ -128,24 +130,38 @@ function CaptionBody({ caption: c }: { caption: Caption }) {
   }
   if (c.kind === "finale") {
     return (
-      <div className="pointer-events-auto">
+      <div className="pointer-events-auto flex flex-col items-center">
+        {/* Identity first: the system the visitor just watched has a name. */}
+        <div aria-hidden="true" className="flex flex-col items-center" style={stage(0, 0.3)}>
+          <p className="font-mono text-[13px] tracking-[0.62em] text-[#F1EEE6]">SOLVENTIA</p>
+          <p className="mt-1.5 font-mono text-[10px] tracking-[0.42em] text-[#c9b48f]">
+            VALIDATE · BUILD · ELEVATE
+          </p>
+        </div>
         <p
           aria-hidden="true"
-          className="font-display text-[clamp(2.3rem,5vw,4.4rem)] leading-[1.04] text-[#F1EEE6]"
+          className="mt-7 font-display text-[clamp(2.2rem,4.8vw,4.3rem)] leading-[1.04] text-[#F1EEE6]"
+          style={stage(0.22, 0.52)}
         >
           {c.text}
         </p>
-        <p aria-hidden="true" className="mt-5 text-[clamp(1rem,1.4vw,1.2rem)] text-[#cfc6b6]">
+        <p
+          aria-hidden="true"
+          className="mt-4 text-[clamp(1rem,1.4vw,1.2rem)] text-[#cfc6b6]"
+          style={{ ...stage(0.42, 0.66), fontFamily: "var(--font-tech)" }}
+        >
           {c.sub}
         </p>
-        <Link
-          to="/consultation"
-          data-testid="cinematic-cta"
-          className="mt-9 inline-flex h-14 items-center gap-3 rounded-full bg-[linear-gradient(135deg,#FFFDFB_0%,#F2ECE2_55%,#DCC08B_100%)] px-8 text-[1.0625rem] font-semibold text-sol-navy shadow-[0_18px_50px_rgba(196,166,122,0.25)] transition-[filter,transform] duration-200 hover:brightness-105 active:scale-[0.98]"
-        >
-          Find My Business Idea
-          <ArrowRight className="size-5" aria-hidden="true" />
-        </Link>
+        <div style={stage(0.62, 0.9)}>
+          <Link
+            to="/consultation"
+            data-testid="cinematic-cta"
+            className="mt-8 inline-flex h-14 items-center gap-3 rounded-full bg-[linear-gradient(135deg,#FFFDFB_0%,#F2ECE2_55%,#DCC08B_100%)] px-8 text-[1.0625rem] font-semibold text-sol-navy shadow-[0_18px_50px_rgba(196,166,122,0.25)] transition-[filter,transform] duration-200 hover:brightness-105 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#DCC08B] active:scale-[0.98]"
+          >
+            Find My Business Idea
+            <ArrowRight className="size-5" aria-hidden="true" />
+          </Link>
+        </div>
       </div>
     );
   }
@@ -176,4 +192,10 @@ function CaptionBody({ caption: c }: { caption: Caption }) {
       )}
     </>
   );
+}
+
+/** One part of the finale, fading and rising in over its own share of the reveal (CSS-only). */
+function stage(from: number, to: number): CSSProperties {
+  const t = `clamp(0, calc((var(--reveal, 1) - ${from}) / ${to - from}), 1)`;
+  return { opacity: t, transform: `translate3d(0, calc((1 - ${t}) * 14px), 0)` };
 }

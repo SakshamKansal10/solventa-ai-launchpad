@@ -1,266 +1,163 @@
-import { CatmullRomCurve3, Vector3 } from "three";
-
-import { mulberry32 } from "../../math";
-
 /**
- * The Intelligence Core as DATA: every piece of the sculpture is described
- * here (pure, deterministic), built into geometry by IntelligenceCore.tsx.
+ * The Intelligence Core — "the Engine" — as DATA (pure, deterministic); built
+ * into geometry by IntelligenceCore.tsx and posed by core-motion.ts.
  *
- * Silhouette (seen from the visitor's side, +z): an S. The upper family of
- * ceramic shells wraps the upper-LEFT and back like a "C"; the lower family
- * wraps the lower-RIGHT like a reversed "C"; a dark spine leans along the S's
- * diagonal. Upper-right and lower-left stay open — deliberate negative space
- * through which the spine, glass and violet heart are seen. Broad shells are
- * paired with fine ribs (hierarchy), large pieces carry champagne edge inlays,
- * and the opening on +z is an engineered aperture: trimmed jambs, metal
- * lintel and sill.
+ * Six nested, gimballed titanium frames around a smoked-glass kernel. Each
+ * frame turns about an axis pinned to its parent (alternating y / x), so the
+ * rest pose is a composed, gyroscopic structure — and every change of state
+ * is a precise mechanical rotation, not a wobble. Inside the kernel, a
+ * computational lattice carries violet inference pulses.
+ *
+ * The founder's six signals dock into PORTS on the outer frame; each one
+ * turns one inner layer (the system visibly reconfigures around the founder).
+ * For the passage the gimbal aligns into a telescoping square aperture that
+ * narrows toward the kernel — the camera squeezes through it into the world.
  */
 
-const DEG = Math.PI / 180;
-
-export interface BladeSpec {
+export interface FrameSpec {
   id: string;
-  /** Sweep path around the y axis: angle (deg), height and radius at start → end. */
-  theta: [number, number];
-  y: [number, number];
-  /** Radius at start, middle (bulge) and end. */
-  r: [number, number, number];
-  width: number;
-  thickness: number;
-  twist: number;
-  /** Mostly-vertical piece (the aperture jambs). */
-  vertical?: boolean;
-  /** Champagne inlay along one edge (+1 / −1 picks the edge). */
-  trim?: 1 | -1;
-  /** Champagne strut + clamp back to the spine. */
-  strut?: boolean;
-  /** Swings aside (±1) when the camera passes through the opening. */
-  opens?: number;
-  /** Assembly order 0 → 1 within the awakening. */
-  order: number;
+  /** Outer half size (square), bar width, depth along z, corner radius. */
+  half: number;
+  bar: number;
+  depth: number;
+  radius: number;
+  /** The axis this frame turns about, pinned to its parent. */
+  axis: "x" | "y";
+  /** Rest angle relative to its parent (radians). */
+  rest: number;
+  /** Champagne inlay on the inner edge. */
+  inlay: boolean;
+  /** Machined index marks on the front face (count per side). */
+  ticks: number;
 }
 
-export const BLADES: BladeSpec[] = [
-  // Upper family — a "C" around the upper-left and back.
+export const FRAMES: FrameSpec[] = [
   {
-    id: "t1",
-    theta: [107, 252],
-    y: [3.4, 1.4],
-    r: [5.6, 5.9, 5.2],
-    width: 2.2,
-    thickness: 0.2,
-    twist: 0.22,
-    trim: -1,
-    order: 0.3,
+    id: "f1",
+    half: 5.6,
+    bar: 0.56,
+    depth: 0.72,
+    radius: 1.2,
+    axis: "y",
+    rest: 0.64,
+    inlay: false,
+    ticks: 5,
   },
   {
-    id: "t2",
-    theta: [122, 282],
-    y: [2.9, 0.4],
-    r: [5.7, 6.2, 5.6],
-    width: 1.15,
-    thickness: 0.17,
-    twist: 0.3,
-    trim: 1,
-    order: 0.42,
+    id: "f2",
+    half: 4.72,
+    bar: 0.42,
+    depth: 0.58,
+    radius: 1,
+    axis: "x",
+    rest: 0.72,
+    inlay: true,
+    ticks: 0,
   },
   {
-    id: "t3",
-    theta: [96, 228],
-    y: [5.0, 3.7],
-    r: [3.7, 4.3, 3.9],
-    width: 0.42,
-    thickness: 0.14,
-    twist: 0.15,
-    order: 0.2,
+    id: "f3",
+    half: 3.92,
+    bar: 0.34,
+    depth: 0.48,
+    radius: 0.84,
+    axis: "y",
+    rest: -0.62,
+    inlay: false,
+    ticks: 3,
   },
   {
-    id: "t4",
-    theta: [146, 302],
-    y: [1.9, -0.3],
-    r: [6.1, 6.5, 6.0],
-    width: 0.32,
-    thickness: 0.12,
-    twist: 0.1,
-    order: 0.5,
+    id: "f4",
+    half: 3.22,
+    bar: 0.27,
+    depth: 0.4,
+    radius: 0.68,
+    axis: "x",
+    rest: -0.5,
+    inlay: true,
+    ticks: 0,
   },
   {
-    id: "t5",
-    theta: [102, 172],
-    y: [5.5, 4.9],
-    r: [2.4, 2.9, 2.6],
-    width: 0.7,
-    thickness: 0.15,
-    twist: 0.2,
-    order: 0.12,
+    id: "f5",
+    half: 2.6,
+    bar: 0.22,
+    depth: 0.33,
+    radius: 0.55,
+    axis: "y",
+    rest: 0.68,
+    inlay: false,
+    ticks: 0,
   },
   {
-    id: "t6",
-    theta: [168, 258],
-    y: [3.5, 2.2],
-    r: [3.1, 3.5, 3.2],
-    width: 0.95,
-    thickness: 0.15,
-    twist: 0.25,
-    strut: true,
-    order: 0.24,
-  },
-  // Lower family — a reversed "C" around the lower-right and back.
-  {
-    id: "b1",
-    theta: [286, 431],
-    y: [-1.5, -2.9],
-    r: [5.2, 5.9, 5.6],
-    width: 2.1,
-    thickness: 0.2,
-    twist: -0.22,
-    trim: 1,
-    order: 0.34,
-  },
-  {
-    id: "b2",
-    theta: [298, 418],
-    y: [-2.9, -0.7],
-    r: [5.7, 6.2, 5.7],
-    width: 1.1,
-    thickness: 0.17,
-    twist: -0.3,
-    trim: -1,
-    order: 0.46,
-  },
-  {
-    id: "b3",
-    theta: [276, 410],
-    y: [-5.0, -3.7],
-    r: [3.7, 4.3, 3.9],
-    width: 0.42,
-    thickness: 0.14,
-    twist: -0.15,
-    order: 0.22,
-  },
-  {
-    id: "b4",
-    theta: [322, 452],
-    y: [-2.6, -1.8],
-    r: [6.1, 6.5, 6.0],
-    width: 0.32,
-    thickness: 0.12,
-    twist: -0.1,
-    order: 0.54,
-  },
-  {
-    id: "b5",
-    theta: [282, 352],
-    y: [-5.5, -4.9],
-    r: [2.4, 2.9, 2.6],
-    width: 0.7,
-    thickness: 0.15,
-    twist: -0.2,
-    order: 0.14,
-  },
-  {
-    id: "b6",
-    theta: [348, 438],
-    y: [-3.5, -2.2],
-    r: [3.1, 3.5, 3.2],
-    width: 0.95,
-    thickness: 0.15,
-    twist: -0.25,
-    strut: true,
-    order: 0.28,
-  },
-  // The aperture: two broad front shells meeting at a narrow vertical slit,
-  // champagne-inlaid along the slit. They swing apart as the camera arrives.
-  {
-    id: "j1",
-    theta: [99, 97.5],
-    y: [-1.9, 2.9],
-    r: [5.75, 6.05, 5.7],
-    width: 1.05,
-    thickness: 0.22,
-    twist: 0.06,
-    vertical: true,
-    trim: 1,
-    opens: -1,
-    order: 0.6,
-  },
-  {
-    id: "j2",
-    theta: [81, 82.5],
-    y: [-2.2, 2.6],
-    r: [5.7, 6.0, 5.75],
-    width: 0.95,
-    thickness: 0.22,
-    twist: -0.05,
-    vertical: true,
-    trim: -1,
-    opens: 1,
-    order: 0.64,
+    id: "f6",
+    half: 2.04,
+    bar: 0.18,
+    depth: 0.28,
+    radius: 0.44,
+    axis: "x",
+    rest: 0.4,
+    inlay: true,
+    ticks: 0,
   },
 ];
 
-export interface GlassSpec {
-  id: string;
-  theta: [number, number];
-  y: [number, number];
-  r: number;
-  width: number;
-  order: number;
-}
+/** The kernel: two smoked-glass halves (they part for the passage) around a lattice. */
+export const KERNEL = { half: 0.98, radius: 0.16, axis: "y" as const, rest: 0.6 };
 
-export const GLASS: GlassSpec[] = [
-  { id: "g1", theta: [150, 236], y: [2.7, 1.1], r: 4.4, width: 1.5, order: 0.7 },
-  { id: "g2", theta: [330, 416], y: [-1.1, -2.7], r: 4.4, width: 1.5, order: 0.76 },
-  { id: "g3", theta: [236, 262], y: [2.2, -2.2], r: 1.7, width: 1.1, order: 0.82 },
+/** Lattice nodes inside the kernel: 4 × 3 × 3, no centre column (the halves split cleanly). */
+export const LATTICE: [number, number, number][] = (() => {
+  const out: [number, number, number][] = [];
+  for (const x of [-0.66, -0.22, 0.22, 0.66])
+    for (const y of [-0.5, 0, 0.5]) for (const z of [-0.5, 0, 0.5]) out.push([x, y, z]);
+  return out;
+})();
+
+/** Lattice struts: axis-aligned neighbours (index pairs). Cross-centre struts break when the kernel parts. */
+export const STRUTS: [number, number][] = (() => {
+  const out: [number, number][] = [];
+  LATTICE.forEach((a, i) =>
+    LATTICE.forEach((b, j) => {
+      if (j <= i) return;
+      const d = [Math.abs(a[0] - b[0]), Math.abs(a[1] - b[1]), Math.abs(a[2] - b[2])];
+      const axes = d.filter((v) => v > 1e-6).length;
+      if (
+        axes === 1 &&
+        (Math.abs(d[0] - 0.44) < 1e-6 || Math.abs(d[1] - 0.5) < 1e-6 || Math.abs(d[2] - 0.5) < 1e-6)
+      )
+        out.push([i, j]);
+    }),
+  );
+  return out;
+})();
+
+/**
+ * The six input ports on the outer frame's front face (frame-local), in the
+ * order of the founder's signals: capital, skills, location, time, experience,
+ * customer access. Each signal turns one inner layer (STEP radians): frames
+ * f2…f6, then the kernel.
+ */
+export const PORTS: { x: number; y: number; step: number }[] = [
+  { x: -5.32, y: 2.3, step: -0.42 },
+  { x: 5.32, y: 2.3, step: 0.58 },
+  { x: -2.0, y: 5.32, step: 0.4 },
+  { x: 5.32, y: -2.3, step: -0.62 },
+  { x: -5.32, y: -2.3, step: 0.38 },
+  { x: 2.0, y: -5.32, step: -0.55 },
 ];
 
-/** The dark S-spine: leans along the S's diagonal (top-left → bottom-right). */
-export const SPINE_POINTS: [number, number, number][] = [
-  [-0.9, 5.7, -0.4],
-  [-1.2, 3.0, 0.2],
-  [0, 0, 0],
-  [1.2, -3.0, -0.2],
-  [0.9, -5.7, 0.4],
-];
+/** Aligned for the passage: each frame sits this far behind its parent (a narrowing square tunnel). */
+export const TELESCOPE = { first: 2.0, step: -1.1 };
 
-/** Champagne collars along the spine (u along the spine). */
-export const COLLARS = [0.24, 0.5, 0.76];
-
-export function bladeCurve(spec: BladeSpec | GlassSpec, samples = 9): CatmullRomCurve3 {
-  const pts: Vector3[] = [];
-  const isBlade = Array.isArray((spec as BladeSpec).r);
-  for (let i = 0; i < samples; i++) {
-    const u = i / (samples - 1);
-    const theta = (spec.theta[0] + (spec.theta[1] - spec.theta[0]) * u) * DEG;
-    const y = spec.y[0] + (spec.y[1] - spec.y[0]) * u;
-    let r: number;
-    if (isBlade) {
-      const [r0, rm, r1] = (spec as BladeSpec).r;
-      const bulge = Math.sin(u * Math.PI);
-      r = u < 0.5 ? r0 + (rm - r0) * bulge : r1 + (rm - r1) * bulge;
-    } else {
-      r = (spec as GlassSpec).r;
-    }
-    pts.push(new Vector3(Math.cos(theta) * r, y, Math.sin(theta) * r));
-  }
-  return new CatmullRomCurve3(pts, false, "centripetal");
+/** Pin length between frame i's inner edge and frame i+1's outer edge. */
+export function pinSpan(i: number): [number, number] {
+  const outer = FRAMES[i];
+  const inner = FRAMES[i + 1];
+  const from = inner ? inner.half - 0.04 : KERNEL.half - 0.02;
+  return [from, outer.half - outer.bar + 0.04];
 }
 
-/** Where each piece flies in from: far out in the dark, on a curved approach. */
-export interface Approach {
-  from: [number, number, number];
-  bow: [number, number, number];
-  /** Spin (radians about y) still to unwind at the start. */
-  spin: number;
-}
-
-export function approachFor(id: string, index: number): Approach {
-  const rand = mulberry32(1000 + index * 97 + id.charCodeAt(0) * 13 + id.charCodeAt(1));
-  const angle = rand() * Math.PI * 2;
-  const dist = 26 + rand() * 22;
-  return {
-    from: [Math.cos(angle) * dist, (rand() - 0.5) * 22, -18 - rand() * 34],
-    bow: [(rand() - 0.5) * 18, 6 + rand() * 8, (rand() - 0.5) * 12],
-    spin: (rand() < 0.5 ? -1 : 1) * (1.1 + rand() * 1.5),
-  };
+/** Awakening: when each layer flies in (inner layers first — the engine builds outward). */
+export function arrivalWindow(layer: number): [number, number] {
+  const order = FRAMES.length - 1 - layer; // f6 → 0 … f1 → 5
+  const start = 0.07 + order * 0.1;
+  return [start, start + 0.34];
 }

@@ -128,7 +128,9 @@ test.describe("cinematic homepage", () => {
       "true",
     );
     await page.getByRole("tab", { name: "Evidence" }).click();
-    await expect(page.getByText("Contradicted")).toBeVisible();
+    await expect(
+      page.getByRole("tabpanel").getByText("Contradicted", { exact: true }),
+    ).toBeVisible();
     // Real DOM: text is selectable, not painted into the canvas.
     expect(await preview.evaluate((el) => getComputedStyle(el).userSelect)).not.toBe("none");
     // Outside the product scene it is inert (not focusable, not clickable).
@@ -238,6 +240,9 @@ test.describe("cinematic homepage", () => {
     };
     await open(page, "tier=low&freeze=1");
     await audit("start");
+    // Deep in the film the navigation recedes — it must stay legible (AA) while it does.
+    await goTo(page, "computation", 0.5);
+    await audit("immersed");
     await goTo(page, "product", 0.5);
     await audit("product");
     await goTo(page, "finale", 0.95);
@@ -246,5 +251,104 @@ test.describe("cinematic homepage", () => {
     await expect(page.getByTestId("cinematic-fallback")).toBeVisible({ timeout: 45_000 });
     await audit("fallback");
     expect(findings).toEqual([]);
+  });
+
+  test("back and forward return to the same moment of the story", async ({ page }) => {
+    await open(page);
+    await goTo(page, "crisis", 0.5);
+    const before = await cameraState(page);
+    await page.getByTestId("cinematic-nav").getByRole("link", { name: "Solventia home" }).click();
+    await page.waitForURL((url) => url.pathname === "/");
+    await page.goBack();
+    await expect(page.getByTestId("cinematic-home")).toHaveAttribute("data-ready", "true", {
+      timeout: 45_000,
+    });
+    await expect.poll(async () => (await cameraState(page)).scene).toBe(before.scene);
+    await page.goForward();
+    await page.waitForURL((url) => url.pathname === "/");
+    await page.goBack();
+    await expect(page.getByTestId("cinematic-home")).toHaveAttribute("data-ready", "true", {
+      timeout: 45_000,
+    });
+    await expect.poll(async () => (await cameraState(page)).scene).toBe(before.scene);
+  });
+
+  test("sound is off until asked for, plays on request, and is remembered for the visit", async ({
+    page,
+  }) => {
+    await open(page);
+    const toggle = page.getByTestId("sound-toggle");
+    await expect(toggle).toHaveAttribute("aria-pressed", "false");
+    await expect(toggle).toHaveAttribute("data-audio", "idle");
+    await toggle.click();
+    await expect(toggle).toHaveAttribute("aria-pressed", "true");
+    await expect(toggle).toHaveAttribute("data-audio", "running");
+    // A reload keeps the choice, but audio waits for the visitor's next interaction.
+    await page.reload();
+    await expect(page.getByTestId("cinematic-home")).toHaveAttribute("data-ready", "true", {
+      timeout: 45_000,
+    });
+    await expect(toggle).toHaveAttribute("aria-pressed", "true");
+    await expect(toggle).toHaveAttribute("data-audio", "idle");
+    await page.mouse.click(400, 400);
+    await expect(toggle).toHaveAttribute("data-audio", "running");
+    // Muting is immediate and also remembered.
+    await toggle.click();
+    await expect(toggle).toHaveAttribute("aria-pressed", "false");
+    await expect(toggle).toHaveAttribute("data-audio", "idle");
+  });
+
+  test("the still version offers no sound at all", async ({ page }) => {
+    await gotoApp(page, "/cinematic?tier=fallback");
+    await expect(page.getByTestId("cinematic-fallback")).toBeVisible({ timeout: 45_000 });
+    await expect(page.getByTestId("sound-toggle")).toHaveCount(0);
+  });
+
+  test("the ending is protected: the footer arrives below the finale, never over it", async ({
+    page,
+  }) => {
+    await open(page);
+    await goTo(page, "finale", 1);
+    const cta = page.getByTestId("cinematic-cta");
+    await expect(cta).toBeVisible();
+    // Scroll on into the footer: the stage leaves with the page instead of being covered.
+    await page.evaluate(() => window.scrollBy(0, Math.round(window.innerHeight * 0.45)));
+    await expect
+      .poll(async () => {
+        const ctaBox = await cta.boundingBox();
+        const footerTop = await page
+          .locator("footer")
+          .first()
+          .evaluate((f) => f.getBoundingClientRect().top);
+        return ctaBox ? ctaBox.y + ctaBox.height <= footerTop + 1 : false;
+      })
+      .toBe(true);
+  });
+
+  test("the navigation recedes in the depths of the film and returns for the product", async ({
+    page,
+  }) => {
+    await open(page);
+    const links = page.getByTestId("cinematic-nav").getByRole("navigation").locator("ul").first();
+    const opacity = () => links.evaluate((el) => Number(getComputedStyle(el).opacity));
+    await goTo(page, "computation", 0.5);
+    await expect.poll(opacity).toBeLessThan(0.7);
+    expect(await opacity()).toBeGreaterThanOrEqual(0.54);
+    await page.getByTestId("cinematic-nav").hover();
+    await expect.poll(opacity).toBeGreaterThan(0.99);
+    await page.mouse.move(700, 500);
+    await goTo(page, "product", 0.5);
+    await expect.poll(opacity).toBeGreaterThan(0.99);
+  });
+
+  test("world labels never linger after a jump to another part of the story", async ({ page }) => {
+    await open(page);
+    const label = page.locator("[data-anchor=finalist-0]");
+    const opacity = () => label.evaluate((el) => Number(getComputedStyle(el).opacity));
+    // The overview of the three futures: every direction is named on screen.
+    await goTo(page, "three", 0.97);
+    await expect.poll(opacity).toBeGreaterThan(0.5);
+    await goTo(page, "context", 0.85);
+    await expect.poll(opacity).toBe(0);
   });
 });

@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import type { CSSProperties } from "react";
 import { z } from "zod";
 
 import { CinematicHome } from "@/components/cinematic-home/CinematicHome";
@@ -31,15 +32,30 @@ export const Route = createFileRoute("/cinematic")({
       },
       { name: "robots", content: "noindex, nofollow" },
     ],
+    links: [
+      // The technical typeface (signals, states, data); the editorial serif comes from the root.
+      {
+        rel: "stylesheet",
+        href: "https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500&display=swap",
+      },
+    ],
   }),
 });
+
+const TECH_TYPE = {
+  "--font-tech": '"Geist", var(--font-sans)',
+  "--font-mono": '"Geist Mono", ui-monospace, SFMono-Regular, Menlo, monospace',
+} as CSSProperties;
 
 function CinematicPage() {
   const { tier, debug, freeze } = Route.useSearch();
   return (
     <div className="min-h-screen bg-[#070B13]">
-      <CinematicNav />
-      <CinematicHome tierOverride={tier} debug={debug} freeze={freeze} />
+      {/* Technical typography is scoped to the experience; the shared footer keeps its own. */}
+      <div style={TECH_TYPE}>
+        <CinematicNav />
+        <CinematicHome tierOverride={tier} debug={debug} freeze={freeze} />
+      </div>
       {/* Opaque and stacked above the fixed WebGL stage: the footer slides over it. */}
       <div className="relative z-20">
         <Footer />

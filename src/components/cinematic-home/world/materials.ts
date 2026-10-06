@@ -1,6 +1,7 @@
 import {
   Color,
   DoubleSide,
+  FrontSide,
   MeshBasicMaterial,
   MeshPhysicalMaterial,
   MeshStandardMaterial,
@@ -11,24 +12,33 @@ import type { QualityPreset } from "../performance/quality";
 import { COLORS } from "./layout";
 
 /**
- * The material language (shared, created once per canvas):
- *   pearl     — warm ivory ceramic, soft clear-coat sheen, never plastic
- *   champagne — brushed champagne metal (needs the studio environment to read)
- *   midnight  — near-black engineered structure
- *   glass     — optical layers: faint body, bright reflective edges
+ * The material language (shared, created once per canvas). Every material has
+ * a meaning, and the world is built mostly from the first three:
+ *   titanium  — dark machined metal: technology, precision, structure
+ *   graphite  — near-black engineered mass (kernels, seeds, rails)
+ *   smoked    — smoked optical glass: uncertainty, latent possibility
+ *   pearl     — warm ceramic, used selectively: clarity, resolution, stability
+ *   champagne — brushed gold metal: value, selection, the winning direction
+ *   glass     — clear optics: faint body, bright reflective edges
  *   energy    — unlit, tinted per instance (instanceColor) for internal light
- *   violet    — restrained internal intelligence
+ *   violet    — indigo-violet intelligence: computation, active reasoning
+ *   edgeGold / edgeIndigo — fine emissive hairlines on machined edges
  */
 export interface Materials {
-  /** Instanced pieces that dissolve per instance (alpha in instanceColor.r, alpha-hashed). */
-  pearlDissolve: MeshStandardMaterial;
-  glassDissolve: MeshPhysicalMaterial;
   pearl: MeshStandardMaterial;
   champagne: MeshStandardMaterial;
   midnight: MeshStandardMaterial;
   glass: MeshPhysicalMaterial;
   energy: MeshBasicMaterial;
   violet: MeshBasicMaterial;
+  titanium: MeshStandardMaterial;
+  graphite: MeshStandardMaterial;
+  smoked: MeshPhysicalMaterial;
+  /** Smoked glass that dissolves per instance (provisional → resolved). */
+  smokedDissolve: MeshStandardMaterial;
+  titaniumDissolve: MeshStandardMaterial;
+  edgeGold: MeshBasicMaterial;
+  edgeIndigo: MeshBasicMaterial;
   all: Material[];
 }
 
@@ -67,23 +77,87 @@ export function createMaterials(preset: QualityPreset): Materials {
     depthWrite: false,
     envMapIntensity: 1.6,
   });
-  const pearlDissolve = withInstanceAlpha(pearl.clone());
-  pearlDissolve.alphaHash = true;
-  const glassDissolve = withInstanceAlpha(glass.clone());
-  // Provisional architecture must still read: a little more body than the core's optics.
-  glassDissolve.opacity = 0.2;
   const energy = new MeshBasicMaterial({ color: "#ffffff" });
   const violet = new MeshBasicMaterial({ color: COLORS.violetGlow });
+  // Dark titanium: reads through its machined edges catching the key and rim, never flat.
+  const titanium = preset.physicalMaterials
+    ? new MeshPhysicalMaterial({
+        color: COLORS.titanium,
+        metalness: 0.92,
+        roughness: 0.3,
+        clearcoat: 0.35,
+        clearcoatRoughness: 0.22,
+        envMapIntensity: 1.25,
+      })
+    : new MeshStandardMaterial({ color: COLORS.titanium, metalness: 0.9, roughness: 0.32 });
+  const graphite = new MeshStandardMaterial({
+    color: COLORS.graphite,
+    metalness: 0.7,
+    roughness: 0.4,
+    envMapIntensity: 1.1,
+  });
+  const smoked = new MeshPhysicalMaterial({
+    color: COLORS.smoke,
+    metalness: 0.1,
+    roughness: 0.08,
+    transparent: true,
+    opacity: 0.22,
+    clearcoat: 1,
+    clearcoatRoughness: 0.05,
+    // Closed solids only: one front-faced pass (double-sided transparency draws twice).
+    side: FrontSide,
+    depthWrite: false,
+    envMapIntensity: 2.6,
+  });
+  // Provisional architecture: light optical glass, so the structure reads as untested.
+  // Standard (not physical) and single-pass: whole gates of it can fill the screen.
+  const smokedDissolve = withInstanceAlpha(
+    new MeshStandardMaterial({
+      color: "#9aa6c2",
+      metalness: 0.25,
+      roughness: 0.1,
+      transparent: true,
+      opacity: 0.2,
+      depthWrite: false,
+      envMapIntensity: 2,
+    }),
+  );
+  // Dissolving titanium (alpha-hashed): standard shading — it is often many large pieces.
+  const titaniumDissolve = withInstanceAlpha(
+    new MeshStandardMaterial({ color: COLORS.titanium, metalness: 0.9, roughness: 0.32 }),
+  );
+  titaniumDissolve.alphaHash = true;
+  const edgeGold = new MeshBasicMaterial({ color: COLORS.edgeGold });
+  const edgeIndigo = new MeshBasicMaterial({ color: COLORS.indigo });
   return {
-    pearlDissolve,
-    glassDissolve,
     pearl,
     champagne,
     midnight,
     glass,
     energy,
     violet,
-    all: [pearl, champagne, midnight, glass, energy, violet, pearlDissolve, glassDissolve],
+    titanium,
+    graphite,
+    smoked,
+    smokedDissolve,
+    titaniumDissolve,
+    edgeGold,
+    edgeIndigo,
+    all: [
+      pearl,
+      champagne,
+      midnight,
+      glass,
+      energy,
+      violet,
+      titanium,
+      graphite,
+      smoked,
+      smokedDissolve,
+      titaniumDissolve,
+      edgeGold,
+      edgeIndigo,
+    ],
   };
 }
 

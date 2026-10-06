@@ -20,11 +20,33 @@ export const FOG_KEYS = [
   k("finale", 1, 0.008),
 ];
 
-/** Overall scene light (exposure) — darkness is a material. */
+/**
+ * Overall scene light (exposure) — darkness is a material. Every major reveal
+ * is staged: the world dims and narrows first (anticipation), then precision
+ * light lands with the reveal (payoff).
+ */
 export const EXPOSURE_KEYS = [
   k("void", 0, 0.7),
   k("awakening", 0.6, 1),
-  k("selection", 0.5, 0.92),
+  k("context", 1, 1),
+  // Into the Engine: compression and darkness before the world opens.
+  k("passage", 0.45, 0.85),
+  k("passage", 0.88, 0.5),
+  k("universe", 0.08, 1.06),
+  k("convergence", 1, 1),
+  // Nine → three → one: the light withdraws to the decision, then resolves on it.
+  k("three", 0.9, 0.86),
+  k("selection", 0.4, 0.66),
+  k("selection", 0.72, 1.02),
+  k("elevate", 0.9, 1.05),
+  // Evidence: confidence drains with the light.
+  k("evidence", 0.4, 0.95),
+  k("crisis", 0.6, 0.7),
+  k("adaptation", 0.85, 1),
+  // Held breath before the interface; quiet for reading it.
+  k("handoff", 0.3, 0.78),
   k("product", 0.2, 0.75),
-  k("return", 1, 1),
+  k("return", 0.85, 0.62),
+  // The final reveal: the emblem resolves out of darkness.
+  k("finale", 0.35, 1),
 ];

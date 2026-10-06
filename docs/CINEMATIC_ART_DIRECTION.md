@@ -1,61 +1,98 @@
-# Cinematic art direction — "Precision in motion"
+# Cinematic art direction — "Intelligent luxury · precision futurism · computational architecture"
 
-Industrial sculpture × computational design × optical technology. Darkness is a material.
-Nothing glows for its own sake; objects read through geometry, material and light.
+The film is the mind of Solventia at work: it understands a founder, simulates hundreds of
+futures, eliminates weak ones, constructs a path, learns from evidence, adapts, and becomes a
+real product. The futuristic feeling comes from precision, materials, logic and restraint —
+never from neon, HUDs, particles or glitches. Darkness is a material.
 
-## Palette (sRGB; tuned under lighting)
-| Role | Hex | Where |
+## Anti-biology rule (what changed in the 2026-10-07 pass)
+Every curved, tapered, repeated form that could read as bone, rib, vertebra, petal, fin or
+helix was removed. The world is now built from straight runs, precise radii and chamfered
+edges.
+
+| Before (removed) | Read as | Now |
 |---|---|---|
-| Environmental black | `#070B13` | background, fog, scrims |
-| Midnight | `#101B2B` | structure (spine, seeds) |
-| Atmospheric navy | `#192536` | sky gradient top |
-| Warm pearl | `#F1EEE6` (rendered `#E7E1D3`) | ceramic; on-screen copy |
-| Champagne metal | `#C4A67A` | inlays, collars, frames |
-| Gold filament | `#D9B97F` (capped energy) | the connective language |
-| Restrained violet | `#75668F` / glow `#9C8BC4` | internal intelligence only |
+| Core: pearl curved blades in an S around a dark "spine" with collars | ribs, spine, vertebrae | six nested **gimballed titanium frames** around a smoked-glass **kernel** with a computational lattice |
+| Context: "skills strands", "access tree" | hair, roots | a lit 3×3 **skill matrix**; a **connector array** (2 of 5 channels live) |
+| Universe: "petal shell", "spindle with fins" | flower, fish | **diamond frame on a locator pin**; **portrait channel frame** with signal bars |
+| Final three: fan of vanes, rib helix, nest of twisting arches | fins, DNA, rib cage | **strata tower** (vertical), **orbital array** (radial), **nest of portal frames** (the winner) |
+| Path: tunnel of white three-piece arches | rib cage | **machined portal gates** (4 corner brackets + 4 bars) over a deck |
+| Product token "arch" | rib | a small **portal gate** |
 
-## Materials (`world/materials.ts`)
-- **Pearl ceramic** — physical: roughness 0.5, clear-coat 0.42, faint sheen (standard on LOW).
-- **Champagne metal** — metalness 1, roughness 0.26; reads only because of the studio
-  environment (RoomEnvironment → PMREM, intensity 0.38).
-- **Optical glass** — 9% body, strong clear-coat reflections; provisional architecture uses 20%.
-- **Dissolve variants** — per-instance alpha (alpha-hashed ceramic): glass ↔ ceramic in place.
-- **Energy / violet** — unlit, tinted per instance; never floods the frame.
+## The structural primitive (`world/geometry/frames.ts`)
+One machined, rounded-rectangle **frame** (extruded, chamfered) — plus its corner bracket,
+inlay strip and solid plate — builds the core's gimbal, the winning direction, every gate, the
+satellite channels, the product bezel and the finale emblem. One vocabulary = one system.
 
-## Geometry vocabulary
-- Swept profiles (`geometry/sweep.ts`): rounded-rectangle sections swept along arcs with taper
-  and twist → blades, ribs, arches, collars, rims. Champagne **inlays** ride blade edges.
-- **Core**: dark S-spine; upper family of shells wraps upper-left, lower family lower-right
-  (the S); open negative space upper-right/lower-left; two front shells meet at a narrow slit.
-- **Opportunity families** (5): studio (diamond frame + twin plates), product (pearl lens in a
-  champagne rim), media (spindle + fins + collar), local (petal shell + crossed pins),
-  venture (prism + metal edges). Each: dark seed, metal frame, shell, internal energy.
-- **Path**: three-piece arches (legs + crown) with machined collars; crowns hover when provisional.
+## Materials — each one means something (`world/materials.ts`)
+| Material | Hex | Meaning |
+|---|---|---|
+| Dark titanium (metal 0.92, rough 0.3, clear-coat) | `#5A606B` | technology, precision, structure |
+| Graphite | `#1B2029` | engineered mass: kernels, seeds, decks |
+| Smoked optical glass (front-faced, single pass) | `#3A4458`, 22 % | uncertainty, latent possibility |
+| Provisional glass (light) | `#9AA6C2`, 20 % | an untested plan (Validate, crisis) |
+| Pearl ceramic — used sparingly | `#E7E1D3` | clarity, resolution (confident nodes, milestones, deck track) |
+| Champagne gold metal / gold hairline | `#C4A67A` / `#F2D49A` | value, selection, the winning direction |
+| Indigo-violet energy | `#8B7FF2` / `#7D6FF0` | intelligence, computation, active reasoning |
+| Environmental black / midnight | `#070B13` / `#101B2B` | the space |
+
+Dissolves are per instance (alpha in `instanceColor.r`): titanium ↔ provisional glass in place.
+
+## Scene language
+- **Engine (core):** gimbal frames f1–f6 (alternating y/x axes, pinned with gold-collared pins),
+  machined index marks on f1/f3, gold inlays on f2/f4/f6, six input ports on f1, a kernel of two
+  smoked halves holding a 4×3×3 lattice with violet inference traces and one quiet gold "S".
+  Micro-motion: the locked gimbal breathes by fractions of a degree.
+- **Universe:** five families of framed decision objects; each node has a graphite kernel, a
+  titanium frame, a resolution surface (smoked → pearl) and a **confidence light** (indigo while
+  computing → gold when it fits). Hierarchy from territory scale, light and filament density.
+- **Path:** Validate = open corners, bars hanging in light glass, violet probes testing ahead,
+  hairline rails. Build = bars slide in and lock, logic locks turn gold, a graphite deck with a
+  pearl track assembles. Elevate = the path climbs; every gate grows satellite channels at
+  altitude, interconnected; vast frames open far out.
+- **Product:** a dark Founder OS (system bar, founder-context rail with model weights, learning
+  log, selection trace 360 → 1, founder-fit pips, roadmap, current move, evidence timeline) on a
+  graphite slab with a titanium bezel.
+- **Finale:** the engine resolves into a calm nested-square emblem with gold hairlines.
 
 ## The gold filament (continuity)
-One GPU system (`world/filaments`): core blades → guides into the slit → universe trunks and
-territory rails → nine-ring → comparison pathways → alignment with the core → path rails →
-evidence signal → rebuilt rails → product chain → finale core. Curved, varied width,
-information pulses, retract/grow from either end, fade near the lens and into fog.
+One GPU system (`world/filaments`): void signals → port channels (width = signal weight) →
+the signal path through the gimbal pivots → violet inference in the kernel → universe trunks and
+territory structure → context waves (violet) → nine-ring → comparison layer (pathways + six fit
+signals per future; failing signals retract) → alignment with the core → rails (hairline →
+structured) → probes → satellite links → evidence → rebuilt rails → product chain → finale.
 
-## Lighting
-Warm key from upper-left front, cool rim from behind-right, faint warm kicker from below,
-low hemisphere; violet point light only inside the core. Exposure 0.7 in the void → 1.0.
-Fog per scene (`world/atmosphere-keys.ts`) gives atmospheric depth without post-processing.
-Post-processing: none — tone mapping (ACES) only. Bloom was rejected: it would hide geometry.
+## Light and suspense
+Warm key upper-left, cool rim behind-right, warm kicker below, low hemisphere, RoomEnvironment
+reflections; one violet point light inside the kernel (always present — intensity only).
+Exposure is staged (`world/atmosphere-keys.ts`): it dims and narrows before each reveal and
+lands precision light with the payoff (passage → universe, three → one, crisis → adaptation,
+handoff, return → finale). No bloom, no post-processing; ACES tone mapping only.
 
-## Motion grammar
-information → inward · possibilities → outward · intelligence → alignment ·
-rejection → loss of energy, recession · evidence → (de)stabilisation ·
-adaptation → reconfiguration · progress → increasing order.
-Camera: slow dolly, controlled orbit, macro approach, pass-through, reveal pull-back.
-Mouse: ≤ 0.2 units lean, damped; reduced to a quarter near close geometry; none on touch.
+## Typography
+Dual system: **Cormorant Garamond** (editorial serif) for statements, the finale line and the
+chosen direction's name; **Geist / Geist Mono** (technical) for signals, weights, states,
+labels and the whole product OS. Geist is loaded and scoped to the experience only
+(`routes/cinematic.tsx`) — the shared footer keeps its fonts.
 
-## Typography & copy
-Cormorant Garamond for statements; Manrope small caps (mono tags) for labels; pearl on black
-with a soft text shadow and edge vignette. One line at a time. Captions are aria-hidden
-duplicates of the server-rendered narrative.
+## Navigation
+Cinematic-only bar. It recedes during the deepest sequences (`--immerse`, never below AA
+contrast), restores instantly on hover / keyboard focus, and returns fully for the product and
+the finale. A discreet sound toggle sits beside Sign In.
+
+## Sound (`sound/`)
+Synthesised live with the Web Audio API — no audio files. Layers: ambient bed (low partials +
+air through a slowly breathing low-pass), low tension (beating sub tones), spatial pad (open D
+chord, stereo width by scene), computation ticks, a soft forward pulse on the path. Cues:
+activation bell, fly-by air, mechanical locks, signal pings, aperture clicks, kernel unlock,
+universe reveal swell, wave tones, narrowing intervals, a held breath then a restrained
+resolution for the one, unfold, phase-specific gate voices (glass ping / mechanical lock /
+wide pluck), a clean evidence bend (never an alarm), a rerouting arpeggio, a grounded handoff
+tone, chain pings, and the finale chord. The score (`sound/score.ts`) is pure data over scroll
+progress; cues play only while travelling forward. Off by default; starts only from a user
+gesture; preference kept for the visit; never required for meaning.
 
 ## Avoided on purpose
-Spheres, brains, torus/ring motifs, particle backgrounds, bloom floods, hexagons, holograms,
-glass cards, node spaghetti (no hub-and-spoke), constant rotation, jump cuts, shake.
+Bones/ribs/petals/helices/organic silhouettes, glowing balls, particle backgrounds, bloom
+floods, hexagons, holograms, HUD frames, glitches, scanlines, cyberpunk neon, fake data,
+constant rotation, jump cuts, shake.

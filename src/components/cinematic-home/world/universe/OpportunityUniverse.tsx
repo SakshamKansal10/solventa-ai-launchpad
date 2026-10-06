@@ -23,7 +23,7 @@ const PARTS = ["seed", "frame", "pearl", "glass", "energy"] as const;
 /** Aligned = one shared, designed three-quarter attitude (never flat-on to the lens). */
 const ALIGNED = new Quaternion().setFromEuler(new Euler(-0.22, 0.62, 0.08));
 const WARM = new Color("#f0cf94");
-const COOL = new Color("#8d86b6");
+const COOL = new Color("#7f72e6");
 
 /**
  * The Opportunity Universe: every rendered opportunity as five instanced parts
@@ -160,7 +160,7 @@ export function OpportunityUniverse() {
         color
           .copy(COOL)
           .lerp(WARM, nf.warm)
-          .multiplyScalar(nf.energy * 1.5);
+          .multiplyScalar(nf.energy * 2.8);
         parts[4]!.setColorAt(slot, color);
         slot++;
       }
@@ -226,7 +226,7 @@ export function OpportunityUniverse() {
         len * (0.06 + c.phase * 0.08),
         0,
       );
-      const base = c.kind === "trunk" ? 0.55 : c.kind === "dark" ? 0.35 : 0.42;
+      const base = c.kind === "trunk" ? 0.55 : c.kind === "dark" ? 0.38 : 0.58;
       filaments.params(idx, {
         s1,
         width: c.width,
@@ -266,7 +266,7 @@ export function OpportunityUniverse() {
   });
 
   const partMaterial = (k: number): Material =>
-    [materials.midnight, materials.champagne, materials.pearl, materials.glass, materials.energy][
+    [materials.graphite, materials.titanium, materials.pearl, materials.smoked, materials.energy][
       k
     ];
 

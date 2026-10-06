@@ -47,12 +47,12 @@ export const SCENES: readonly SceneDef[] = [
   { id: "void", label: "Void", lengthVh: 110 },
   { id: "awakening", label: "Core awakening", lengthVh: 190 },
   { id: "context", label: "Context", lengthVh: 210 },
-  { id: "passage", label: "Core → universe", lengthVh: 170 },
+  { id: "passage", label: "Core → universe", lengthVh: 200 },
   { id: "universe", label: "Opportunity universe", lengthVh: 150 },
   { id: "computation", label: "Computation", lengthVh: 190 },
   { id: "convergence", label: "Convergence", lengthVh: 210 },
   { id: "three", label: "Final three", lengthVh: 190 },
-  { id: "selection", label: "One direction", lengthVh: 120 },
+  { id: "selection", label: "One direction", lengthVh: 150 },
   { id: "unfold", label: "Opportunity → path", lengthVh: 170 },
   { id: "validate", label: "Validate", lengthVh: 150 },
   { id: "build", label: "Build", lengthVh: 150 },
@@ -64,7 +64,7 @@ export const SCENES: readonly SceneDef[] = [
   { id: "product", label: "Product", lengthVh: 200 },
   { id: "connected", label: "Connected intelligence", lengthVh: 150 },
   { id: "return", label: "Product → cinema", lengthVh: 120 },
-  { id: "finale", label: "Finale", lengthVh: 190 },
+  { id: "finale", label: "Finale", lengthVh: 240 },
 ];
 
 export interface SceneRange extends SceneDef {

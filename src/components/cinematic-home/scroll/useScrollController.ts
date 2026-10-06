@@ -25,14 +25,22 @@ export function useScrollController(
     if (!enabled || !section) return;
     let top = 0;
     let height = 0;
+    const stage = section.querySelector<HTMLElement>("[data-testid=cinematic-stage]");
+    let lift = -1;
 
     const update = () => {
       const s = store.state;
       const y = window.scrollY;
       s.targetProgress = sectionProgress(y, top, height, window.innerHeight);
-      // Content after the section slides over the fixed stage; once it covers
-      // the whole viewport the stage is invisible and rendering can pause.
+      // Once the section has scrolled out the stage is invisible and rendering can pause.
       const stageActive = y < top + height;
+      // The ending is protected: past the section the stage scrolls away WITH the page
+      // (as if sticky), so the footer arrives below the finale instead of covering it.
+      const over = Math.max(0, Math.round(y + window.innerHeight - (top + height)));
+      if (stage && over !== lift) {
+        lift = over;
+        stage.style.transform = over ? `translate3d(0, ${-over}px, 0)` : "";
+      }
       const atStart = s.targetProgress < AT_START;
       if (stageActive !== s.stageActive || atStart !== s.atStart) {
         s.stageActive = stageActive;

@@ -14,7 +14,7 @@ import { RoundedBoxGeometry } from "three/examples/jsm/geometries/RoundedBoxGeom
 
 import { smoothstep } from "../../math";
 import { local, ramp } from "../../timeline/timeline";
-import { roundedRect, sweep } from "../geometry/sweep";
+import { frameGeometry, inlayGeometry } from "../geometry/frames";
 import { revisedFrame, UNSTABLE } from "../path/path-model";
 import { useWorld } from "../WorldContext";
 import { SLAB, SLAB_CENTRE, SLAB_NORMAL, SLAB_QUATERNION, slabState } from "./product-model";
@@ -64,17 +64,23 @@ export function Product3D() {
       [0.66, 0.07],
       [0.56, 0.07],
     ].map(([x, y]) => new Vector2(x, y));
-    const archPts = Array.from({ length: 13 }, (_, i) => {
-      const a = (i / 12) * Math.PI;
-      return new Vector3(Math.cos(a) * 0.7, Math.sin(a) * 0.7 - 0.35, 0);
-    });
     return {
       lens: new LatheGeometry(lensProfile, 28).rotateX(Math.PI / 2),
       ring: new LatheGeometry(ringProfile, 32).rotateX(Math.PI / 2),
       pane: new RoundedBoxGeometry(1.3, 0.85, 0.05, 2, 0.03),
-      arch: sweep(archPts, roundedRect(0.1, 0.26, 0.04, 2), {
-        segments: 24,
-        up: new Vector3(0, 0, 1),
+      // The path token is a gate — the same machined portal the visitor travelled through.
+      gate: frameGeometry({ hw: 0.62, hh: 0.52, bar: 0.1, depth: 0.16, radius: 0.16 }),
+      gateInlay: inlayGeometry(
+        { hw: 0.62, hh: 0.52, bar: 0.1, depth: 0.16, radius: 0.16 },
+        0.03,
+        0.02,
+      ),
+      bezel: frameGeometry({
+        hw: SLAB.width / 2 + 0.08,
+        hh: SLAB.height / 2 + 0.08,
+        bar: 0.16,
+        depth: SLAB.depth + 0.08,
+        radius: 0.24,
       }),
       needle: new RoundedBoxGeometry(0.05, 0.46, 0.05, 1, 0.02),
       body: new RoundedBoxGeometry(SLAB.width, SLAB.height, SLAB.depth, 4, 0.12),
@@ -238,13 +244,14 @@ export function Product3D() {
   return (
     <>
       <group ref={slab}>
-        <mesh geometry={geo.body} material={materials.pearl} />
+        <mesh geometry={geo.body} material={materials.graphite} />
+        <mesh geometry={geo.bezel} material={materials.titanium} />
         <group ref={face} position={[0, 0, SLAB.depth / 2 + 0.03]}>
           {FACE_BLOCKS.map((b, i) => (
             <mesh
               key={i}
               geometry={geo.block}
-              material={b.metal ? materials.champagne : materials.glass}
+              material={b.metal ? materials.champagne : materials.smoked}
               position={[b.x, b.y, 0]}
               scale={[b.w, b.h, 1]}
             />
@@ -283,7 +290,12 @@ export function Product3D() {
               <mesh geometry={geo.ring} material={materials.champagne} scale={[1.05, 0.7, 1]} />
             </>
           )}
-          {k === 3 && <mesh geometry={geo.arch} material={materials.pearl} />}
+          {k === 3 && (
+            <>
+              <mesh geometry={geo.gate} material={materials.titanium} />
+              <mesh geometry={geo.gateInlay} material={materials.champagne} />
+            </>
+          )}
           {k === 4 && (
             <>
               <mesh geometry={geo.token} material={materials.pearl} scale={0.7} />

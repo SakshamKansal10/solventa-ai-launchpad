@@ -37,6 +37,11 @@ export const COLORS = {
   violet: "#75668F",
   violetGlow: "#9C8BC4",
   gold: "#D9B97F",
+  titanium: "#5A606B",
+  graphite: "#1B2029",
+  smoke: "#3A4458",
+  indigo: "#8B7FF2",
+  edgeGold: "#F2D49A",
 } as const;
 
 export const add = (a: V3, b: V3): [number, number, number] => [
