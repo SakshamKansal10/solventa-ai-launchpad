@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AboutRouteImport } from './routes/about'
+import { Route as CinematicRouteImport } from './routes/cinematic'
 import { Route as ConsultationRouteImport } from './routes/consultation'
 import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as DataDeletionRouteImport } from './routes/data-deletion'
@@ -40,6 +41,11 @@ const IndexRoute = IndexRouteImport.update({
 const AboutRoute = AboutRouteImport.update({
   id: '/about',
   path: '/about',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CinematicRoute = CinematicRouteImport.update({
+  id: '/cinematic',
+  path: '/cinematic',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ConsultationRoute = ConsultationRouteImport.update({
@@ -149,6 +155,7 @@ const DashboardRoadmapBuildingRoute =
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
+  '/cinematic': typeof CinematicRoute
   '/consultation': typeof ConsultationRoute
   '/dashboard': typeof DashboardRouteWithChildren
   '/data-deletion': typeof DataDeletionRoute
@@ -173,6 +180,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
+  '/cinematic': typeof CinematicRoute
   '/consultation': typeof ConsultationRoute
   '/data-deletion': typeof DataDeletionRoute
   '/find-my-business-idea': typeof FindMyBusinessIdeaRoute
@@ -197,6 +205,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
+  '/cinematic': typeof CinematicRoute
   '/consultation': typeof ConsultationRoute
   '/dashboard': typeof DashboardRouteWithChildren
   '/data-deletion': typeof DataDeletionRoute
@@ -223,6 +232,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/about'
+    | '/cinematic'
     | '/consultation'
     | '/dashboard'
     | '/data-deletion'
@@ -247,6 +257,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/about'
+    | '/cinematic'
     | '/consultation'
     | '/data-deletion'
     | '/find-my-business-idea'
@@ -270,6 +281,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/about'
+    | '/cinematic'
     | '/consultation'
     | '/dashboard'
     | '/data-deletion'
@@ -295,6 +307,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AboutRoute: typeof AboutRoute
+  CinematicRoute: typeof CinematicRoute
   ConsultationRoute: typeof ConsultationRoute
   DashboardRoute: typeof DashboardRouteWithChildren
   DataDeletionRoute: typeof DataDeletionRoute
@@ -324,6 +337,13 @@ declare module '@tanstack/react-router' {
       path: '/about'
       fullPath: '/about'
       preLoaderRoute: typeof AboutRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/cinematic': {
+      id: '/cinematic'
+      path: '/cinematic'
+      fullPath: '/cinematic'
+      preLoaderRoute: typeof CinematicRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/consultation': {
@@ -496,6 +516,7 @@ const DashboardRouteWithChildren = DashboardRoute._addFileChildren(
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AboutRoute: AboutRoute,
+  CinematicRoute: CinematicRoute,
   ConsultationRoute: ConsultationRoute,
   DashboardRoute: DashboardRouteWithChildren,
   DataDeletionRoute: DataDeletionRoute,
