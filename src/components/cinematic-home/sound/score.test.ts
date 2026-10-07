@@ -9,11 +9,13 @@ describe("the score", () => {
     expect(mixAt(progressOf("void", 0.6)).bed).toBeGreaterThan(0.3);
   });
 
-  it("restricts the space in the passage, then opens it for the universe", () => {
-    const tunnel = mixAt(progressOf("passage", 0.85));
+  it("builds tension on the approach, restricts the space inside the lens, then opens it", () => {
+    const approach = mixAt(progressOf("passage", 0.54));
+    const barrel = mixAt(progressOf("passage", 0.65));
     const world = mixAt(progressOf("universe", 0.3));
-    expect(tunnel.cutoff).toBeLessThan(400);
-    expect(tunnel.tension).toBeGreaterThan(0.4);
+    expect(approach.tension).toBeGreaterThan(0.4);
+    expect(barrel.cutoff).toBeLessThan(400);
+    expect(barrel.tension).toBe(0);
     expect(world.cutoff).toBeGreaterThan(2000);
     expect(world.width).toBeGreaterThan(0.9);
     expect(world.tension).toBe(0);
@@ -112,9 +114,11 @@ describe("the score", () => {
     expect(resolve.at).toBeGreaterThan(progressOf("selection", 0.55));
   });
 
-  it("takes a breath of near-silence just before the universe opens", () => {
+  it("takes a breath of near-silence inside the lens, just before the universe opens", () => {
     const reveal = CUES.find((c) => c.kind === "reveal")!;
-    expect(mixAt(progressOf("passage", 0.93)).master).toBeLessThan(0.4);
-    expect(reveal.at).toBeGreaterThan(progressOf("passage", 0.93));
+    for (const at of [0.62, 0.66, 0.7])
+      expect(mixAt(progressOf("passage", at)).master).toBeLessThan(0.2);
+    expect(reveal.at).toBeGreaterThan(progressOf("passage", 0.71));
+    expect(reveal.at).toBeLessThan(progressOf("passage", 0.76));
   });
 });

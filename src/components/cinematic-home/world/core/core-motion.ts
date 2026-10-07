@@ -154,7 +154,9 @@ export function enginePose(p: number, finale: boolean): EnginePose {
     const arrive = within(a, ASSEMBLY.wafer(j));
     // Each founder signal calibrates one wafer: a precise lateral step.
     const slide = j < docked.length ? (j % 2 ? 1 : -1) * 0.14 * settle(docked[j]) : 0;
-    const split = 1.3 * smoothstep(0.4 + j * 0.045, 0.58 + j * 0.045, s);
+    // The iris opens while the lens is still a detail in frame; the planes then turn like a lock.
+    const split =
+      1.3 * (j === 0 ? smoothstep(0.32, 0.47, s) : smoothstep(0.38 + j * 0.04, 0.54 + j * 0.04, s));
     return {
       arrive,
       z,
@@ -178,12 +180,13 @@ export function enginePose(p: number, finale: boolean): EnginePose {
     kernel,
     energy:
       kernel * (0.45 + 0.08 * docked.reduce((x, y) => x + y, 0)) + 0.9 * smoothstep(0.6, 0.8, s),
-    seam: smoothstep(0.66, 0.92, a) * (1 - 0.5 * smoothstep(0.5, 0.8, s)),
+    // Peripheral light dims as the camera closes on the aperture.
+    seam: smoothstep(0.66, 0.92, a) * (1 - 0.85 * smoothstep(0.3, 0.46, s)),
     route: smoothstep(0.86, 1, a),
     docked,
     pulse: ctx.pulse,
     signal: clamp01((s - 0.34) / 0.52),
-    hint: smoothstep(0.64, 0.82, s) * (1 - smoothstep(0.95, 1, s)),
+    hint: 0,
   };
 }
 

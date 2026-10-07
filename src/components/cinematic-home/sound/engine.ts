@@ -45,6 +45,7 @@ export class SoundEngine {
   private out: GainNode;
   private dry: GainNode;
   private send: GainNode;
+  private verbOut: GainNode;
   private bedGain: GainNode;
   private bedFilter: BiquadFilterNode;
   private tensionGain: GainNode;
@@ -84,6 +85,7 @@ export class SoundEngine {
     verb.buffer = this.impulse(3.4, 2.6);
     const verbOut = ctx.createGain();
     verbOut.gain.value = 0.55;
+    this.verbOut = verbOut;
     verb.connect(verbOut).connect(this.out);
     this.send = ctx.createGain();
     this.send.gain.value = 1;
@@ -179,6 +181,9 @@ export class SoundEngine {
   update(mix: Mix, time: number) {
     this.mix = mix;
     const m = mix.master;
+    // Breaths reach the tails too: a near-silence is not filled by ringing reverb.
+    this.dry.gain.setTargetAtTime(0.9 * (0.2 + 0.8 * m), time, TAU);
+    this.verbOut.gain.setTargetAtTime(0.55 * (0.12 + 0.88 * m), time, TAU);
     this.bedGain.gain.setTargetAtTime(mix.bed * 0.5 * m, time, TAU);
     this.bedFilter.frequency.setTargetAtTime(mix.cutoff, time, TAU * 1.6);
     this.tensionGain.gain.setTargetAtTime(mix.tension * 0.42 * m, time, TAU * 1.4);

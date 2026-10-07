@@ -9,7 +9,7 @@
  */
 export type P2 = readonly [number, number];
 
-export const S_OUTER: readonly P2[] = [
+const RAW_OUTER: readonly P2[] = [
   [-0.2123, -0.3165],
   [-0.2658, -0.3003],
   [-0.2962, -0.2575],
@@ -56,7 +56,7 @@ export const S_OUTER: readonly P2[] = [
   [0.6378, 0.9946],
 ];
 
-export const S_INNER: readonly P2[] = [
+const RAW_INNER: readonly P2[] = [
   [-0.2123, -0.3165],
   [-0.2332, -0.2808],
   [-0.2559, -0.2458],
@@ -102,3 +102,26 @@ export const S_INNER: readonly P2[] = [
   [0.6517, 0.9586],
   [0.6378, 0.9946],
 ];
+
+/**
+ * The trace is pixel-accurate, so it carries the PNG's stair-step noise. A few passes of
+ * neighbour averaging (tips pinned) keep the mark's exact shape while giving machined surfaces
+ * a clean, continuous edge.
+ */
+function smooth(chain: readonly P2[], passes = 6): readonly P2[] {
+  let pts = chain.map(([x, y]) => [x, y] as [number, number]);
+  for (let k = 0; k < passes; k++) {
+    pts = pts.map((p, i) =>
+      i === 0 || i === pts.length - 1
+        ? p
+        : ([
+            0.25 * pts[i - 1][0] + 0.5 * p[0] + 0.25 * pts[i + 1][0],
+            0.25 * pts[i - 1][1] + 0.5 * p[1] + 0.25 * pts[i + 1][1],
+          ] as [number, number]),
+    );
+  }
+  return pts;
+}
+
+export const S_OUTER: readonly P2[] = smooth(RAW_OUTER);
+export const S_INNER: readonly P2[] = smooth(RAW_INNER);

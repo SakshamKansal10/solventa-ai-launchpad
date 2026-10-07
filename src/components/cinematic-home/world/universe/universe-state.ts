@@ -42,8 +42,8 @@ export function universePhases(p: number): Phases {
     return 96 * smoothstep(start, start + 0.38, w);
   });
   return {
-    revealFront: 110 * ramp(p, "passage", 0.7, "universe", 0.45),
-    trunkGrow: ramp(p, "passage", 0.74, "universe", 0.3),
+    revealFront: 110 * ramp(p, "passage", 0.36, "passage", 0.62),
+    trunkGrow: ramp(p, "passage", 0.62, "universe", 0.2),
     branchGrow: ramp(p, "universe", 0.12, "universe", 0.8),
     waves,
     stages: [

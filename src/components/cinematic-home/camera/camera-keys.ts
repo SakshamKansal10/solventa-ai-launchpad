@@ -40,14 +40,16 @@ export const CAMERA_PATH_KEYS: CameraKey[] = [
   key("context", 0.4, [12, 2.2, 17], [-2.6, 0, 0]),
   key("context", 0.75, [6, 1.4, 19.5], [-2.2, 0.2, 0]),
   key("context", 1, [2.2, 0.9, 16.5], [0, 0.3, 0]),
-  // B — the Engine aligns into a square aperture; the camera squeezes through the narrowing
-  // tunnel of frames, between the parting kernel halves, and out into the world.
-  key("passage", 0.3, [0.9, 0.75, 13.5], [0, 0.3, 0]),
-  key("passage", 0.5, [0.3, 0.5, 8], [0, 0.3, -3]),
-  key("passage", 0.64, [0.14, 0.42, 3.4], [0, 0.32, -8]),
-  key("passage", 0.76, [0.08, 0.38, -1.6], [0, 0.25, -12]),
-  key("passage", 0.88, [0.2, 0.36, -5.2], [0, -0.4, -18]),
-  key("passage", 1, [1.3, 0.7, -9], [0, -1.4, -32]),
+  // B — the aperture. The channels part; the camera centres on the lens; the iris opens on a
+  // pinpoint of light; the camera enters the barrel (its planes pass the lens) and leaves it
+  // into a world far larger than the machine that contained it.
+  key("passage", 0.25, [0.6, 0.35, 11], [0, 0.05, 0]),
+  key("passage", 0.45, [0.06, 0.04, 4.2], [0, 0, -2]),
+  key("passage", 0.56, [0, 0, 1.4], [0, 0, -6]),
+  key("passage", 0.64, [0, 0, -0.9], [0, -0.05, -12]),
+  key("passage", 0.72, [0, -0.1, -3.4], [0, -0.6, -22]),
+  key("passage", 0.86, [0.4, 1.4, -7.5], [0.6, -2.2, -34]),
+  key("passage", 1, [0.9, 3.4, -8.5], [1, -3, -40]),
   // C/D — the reveal: up out of the aperture to a true overlook of the whole constellation.
   key("universe", 0.45, [0.2, 7.5, -4.5], [1.5, -3.5, -45]),
   key("universe", 1, [-1.8, 13.5, 2.5], [3, -4.5, -47]),

@@ -29,7 +29,7 @@ export const CHANNEL = {
 
 /** Wafers in the counter (z positions, front first). Size in world units. */
 export const WAFER = { w: 1.9, h: 3.1, radius: 0.26, thickness: 0.04 } as const;
-export const WAFER_Z = [0.84, 0.42, 0, -0.42, -0.84];
+export const WAFER_Z = [0.5, 0.28, 0, -0.28, -0.5];
 
 /** Where each founder signal docks: channel (0 upper, 1 lower) and position along its outer edge. */
 export const PORTS: { channel: 0 | 1; u: number }[] = [

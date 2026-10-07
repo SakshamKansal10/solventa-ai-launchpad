@@ -1,7 +1,9 @@
 import { useFrame } from "@react-three/fiber";
 import { useEffect, useLayoutEffect, useMemo, useRef } from "react";
 import {
+  AdditiveBlending,
   BoxGeometry,
+  CanvasTexture,
   BufferGeometry,
   Color,
   CylinderGeometry,
@@ -12,8 +14,10 @@ import {
   Group,
   InstancedMesh,
   Matrix4,
+  Mesh,
   MeshBasicMaterial,
   Object3D,
+  PlaneGeometry,
   Quaternion,
   Shape,
   Vector2,
@@ -44,6 +48,8 @@ import {
   WAFER_Z,
 } from "./core-design";
 import { enginePose, type EnginePose } from "./core-motion";
+import { bladeMatrix, buildLens, LENS, LENS_TRACES } from "./lens";
+import { buildFaceDetail, buildSeamLight, buildShell, rimNormal, shellPoint } from "./s-shell";
 import { S_INNER, S_OUTER } from "./s-mark";
 
 /** Distant signals in the void (appear at local `at`), and the bow of their run in. */
@@ -66,100 +72,24 @@ const HINTS: [number, number, number][] = [
 /** Founder-signal weights in the illustrative scoring model (channel width). */
 const WEIGHTS = [0.22, 0.22, 0.1, 0.16, 0.14, 0.16];
 /** Inner-edge points where connectors reach into the counter. */
-const STRUT_U = [0.2, 0.42];
+const STRUT_U = [0.08, 0.34];
 const GOLD = new Color(COLORS.edgeGold);
 /** The lit inner bevel: a deeper gold, so it reads as light on metal rather than paint. */
-const SEAM_GOLD = new Color("#E2A95A");
+const SEAM_GOLD = new Color("#E9C48A");
 const INDIGO = new Color(COLORS.indigo);
 const VIOLET = new Color(COLORS.violetGlow);
 
-/** The S channel's crescent, extruded: `inset` toward the midline, `depth` along z at `z`. */
-function crescent(inset: number, depth: number, bevel: number, z: number) {
-  const pts = crescentOutline(inset).map(([x, y]) => new Vector2(x * S_SCALE, y * S_SCALE));
-  const d = Math.max(0.001, depth - bevel * 2);
-  const g = new ExtrudeGeometry(new Shape(pts), {
-    depth: d,
-    bevelEnabled: bevel > 0,
-    bevelThickness: bevel,
-    bevelSize: bevel,
-    bevelSegments: 3,
-    curveSegments: 1,
-  });
-  g.translate(0, 0, z - d / 2);
-  return g;
-}
-
-/**
- * The gold inner light — the logo's lit inner bevel. Three bands along the concave edge,
- * brightest along the curve and falling away toward the tip and the far end: a gradient
- * strip on the front face and on the back face (bright at the edge, fading into the metal),
- * and a band just off the edge across the depth (for oblique views into the counter).
- */
-function seamRibbon() {
-  const M = 48;
-  const pos: number[] = [];
-  const col: number[] = [];
-  const idx: number[] = [];
-  const glow = (u: number) => (u < 0.66 ? Math.pow(Math.sin((Math.PI * u) / 0.66), 0.55) : 0);
-  const band = (at: (u: number, side: 0 | 1) => [number, number, number], fadeInner: boolean) => {
-    const base = pos.length / 3;
-    for (let i = 0; i <= M; i++) {
-      const u = i / M;
-      const g = glow(u);
-      for (const side of [0, 1] as const) {
-        pos.push(...at(u, side));
-        const k = fadeInner && side === 1 ? 0 : g;
-        col.push(k, k, k);
-      }
-      if (i < M) {
-        const a = base + i * 2;
-        idx.push(a, a + 1, a + 2, a + 1, a + 3, a + 2);
-      }
-    }
-  };
-  const front = CHANNEL.depth / 2 + 0.004;
-  for (const z of [front, -front]) {
-    band((u, side) => {
-      const [x, y] = chainAt(S_INNER, u);
-      const [nx, ny] = chainNormal(S_INNER, S_OUTER, u);
-      const into = side === 0 ? -0.01 : 0.17; // from the edge into the metal
-      return [(x - nx * (into / S_SCALE)) * S_SCALE, (y - ny * (into / S_SCALE)) * S_SCALE, z];
-    }, true);
-  }
-  band((u, side) => {
-    const [x, y] = chainAt(S_INNER, u);
-    const [nx, ny] = chainNormal(S_INNER, S_OUTER, u);
-    return [x * S_SCALE + nx * 0.04, y * S_SCALE + ny * 0.04, side === 0 ? -0.4 : 0.4];
-  }, false);
-  const g = new BufferGeometry();
-  g.setAttribute("position", new Float32BufferAttribute(pos, 3));
-  g.setAttribute("color", new Float32BufferAttribute(col, 3));
-  g.setIndex(idx);
-  return g;
-}
-
 function buildEngine() {
-  const front = CHANNEL.depth / 2;
+  // The channel: a machined shell (s-shell.ts) with its face detail and the gold inner light.
+  const [detailDark, detailLit] = buildFaceDetail();
   return {
-    body: crescent(0, CHANNEL.depth, CHANNEL.bevel, 0),
-    // A champagne pinstripe between the body and the machined covers (front and back).
-    stripe: [front, -front].map((z) =>
-      crescent(CHANNEL.coverInset - 0.035, 0.03, 0, z + Math.sign(z) * 0.01),
-    ),
-    cover: [front, -front].map((z) =>
-      crescent(CHANNEL.coverInset, CHANNEL.coverDepth, 0.025, z + Math.sign(z) * 0.035),
-    ),
-    seam: seamRibbon(),
-    wafer: plateGeometry(WAFER.w / 4, WAFER.h / 2, WAFER.thickness, WAFER.radius, 0, 6),
-    waferRim: frameGeometry({
-      hw: WAFER.w / 4,
-      hh: WAFER.h / 2,
-      bar: 0.022,
-      depth: WAFER.thickness + 0.012,
-      radius: WAFER.radius,
-      bevel: 0,
-      curveSegments: 6,
-    }),
+    shell: buildShell(),
+    detailDark,
+    detailLit,
+    seam: buildSeamLight(),
+    // The optical kernel (lens.ts) and its warm core light.
+    ...buildLens(),
+    core: new PlaneGeometry(0.9, 0.9),
     unit: new BoxGeometry(1, 1, 1),
     pad: new BoxGeometry(0.07, 0.07, 0.012),
     strut: new CylinderGeometry(0.05, 0.05, 1, 12, 1).translate(0, 0.5, 0),
@@ -184,8 +114,12 @@ export function IntelligenceCore({ variant = "origin" }: { variant?: "origin" | 
   const { store, materials, filaments, animate } = useWorld();
   const root = useRef<Group>(null);
   const channelGroups = useRef<(Group | null)[]>([]);
-  const wafers = useRef<InstancedMesh>(null);
-  const rims = useRef<InstancedMesh>(null);
+  const bezels = useRef<InstancedMesh>(null);
+  const lip = useRef<InstancedMesh>(null);
+  const barrel = useRef<InstancedMesh>(null);
+  const planes = useRef<InstancedMesh>(null);
+  const blades = useRef<InstancedMesh>(null);
+  const core = useRef<Mesh>(null);
   const traces = useRef<InstancedMesh>(null);
   const pads = useRef<InstancedMesh>(null);
   const struts = useRef<InstancedMesh>(null);
@@ -200,6 +134,40 @@ export function IntelligenceCore({ variant = "origin" }: { variant?: "origin" | 
     [],
   );
   const fil = useMemo(() => filaments.range(`core-${variant}`, 45), [filaments, variant]);
+  // The barrel is seen from inside when the camera travels through the lens.
+  const barrelMaterial = useMemo(() => {
+    const mat = materials.graphite.clone();
+    mat.side = DoubleSide;
+    return mat;
+  }, [materials.graphite]);
+  // The warm core: the logo light in the counter, seen through the closed iris.
+  const coreMaterial = useMemo(() => {
+    // A soft radial falloff, added to the frame: light, not a coin.
+    const size = 64;
+    const canvas = document.createElement("canvas");
+    canvas.width = canvas.height = size;
+    const g = canvas.getContext("2d")!;
+    const grad = g.createRadialGradient(size / 2, size / 2, 0, size / 2, size / 2, size / 2);
+    grad.addColorStop(0, "rgba(255,255,255,1)");
+    grad.addColorStop(0.18, "rgba(255,255,255,0.85)");
+    grad.addColorStop(0.45, "rgba(255,255,255,0.22)");
+    grad.addColorStop(1, "rgba(255,255,255,0)");
+    g.fillStyle = grad;
+    g.fillRect(0, 0, size, size);
+    return new MeshBasicMaterial({
+      color: GOLD.clone(),
+      map: new CanvasTexture(canvas),
+      transparent: true,
+      depthWrite: false,
+      blending: AdditiveBlending,
+      toneMapped: false,
+    });
+  }, []);
+  // Body metal (group 0) and champagne chamfers / lips (group 1).
+  const shellMaterials = useMemo(
+    () => [materials.sMetal, materials.champagne],
+    [materials.sMetal, materials.champagne],
+  );
 
   // Flights in (origin): fixed points derived from the camera path, so pure in scroll. The first
   // channel sweeps past the lens; its complement rises out of the dark beyond.
@@ -234,6 +202,7 @@ export function IntelligenceCore({ variant = "origin" }: { variant?: "origin" | 
       rest: [new Matrix4(), new Matrix4()],
       lock: [new Matrix4(), new Matrix4()],
       m: new Matrix4(),
+      lm: new Matrix4(),
       q: new Quaternion(),
       q2: new Quaternion(),
       e: new Euler(),
@@ -252,7 +221,7 @@ export function IntelligenceCore({ variant = "origin" }: { variant?: "origin" | 
   // programs (creating them later would recompile mid-scroll, e.g. when the finale appears).
   useLayoutEffect(() => {
     const black = new Color(0, 0, 0);
-    for (const mesh of [rims.current, traces.current, pads.current, portLights.current]) {
+    for (const mesh of [traces.current, pads.current, portLights.current]) {
       if (!mesh) continue;
       for (let i = 0; i < mesh.count; i++) mesh.setColorAt(i, black);
     }
@@ -260,13 +229,17 @@ export function IntelligenceCore({ variant = "origin" }: { variant?: "origin" | 
 
   useEffect(
     () => () => {
-      built.body.dispose();
-      built.stripe.forEach((g) => g.dispose());
-      built.cover.forEach((g) => g.dispose());
       [
+        built.shell,
+        built.detailDark,
+        built.detailLit,
         built.seam,
-        built.wafer,
-        built.waferRim,
+        built.bezel,
+        built.lip,
+        built.barrel,
+        built.plane,
+        built.blade,
+        built.core,
         built.unit,
         built.pad,
         built.strut,
@@ -274,8 +247,11 @@ export function IntelligenceCore({ variant = "origin" }: { variant?: "origin" | 
         built.socket,
       ].forEach((g) => g.dispose());
       seamMaterial.dispose();
+      barrelMaterial.dispose();
+      coreMaterial.map?.dispose();
+      coreMaterial.dispose();
     },
-    [built, seamMaterial],
+    [built, seamMaterial, barrelMaterial, coreMaterial],
   );
 
   useFrame(() => {
@@ -327,60 +303,79 @@ export function IntelligenceCore({ variant = "origin" }: { variant?: "origin" | 
       }
     });
 
-    // Kernel wafers: settle in, calibrate with the founder's signals, split for the aperture.
-    const W4 = WAFER.w / 4;
-    if (wafers.current && rims.current) {
-      let n = 0;
-      pose.wafers.forEach((wf, j) => {
-        const arrive = Math.min(1, Math.max(0, wf.arrive));
-        const settleZ = (1 - arrive) * (j % 2 ? -5 : 5);
-        for (const side of [-1, 1]) {
-          o.position.set(side * (W4 + wf.split) + wf.slide, 0, wf.z + settleZ);
-          o.rotation.set(0, 0, 0);
-          o.scale.setScalar(arrive > 0.001 ? 1 : 0.0001);
-          o.updateMatrix();
-          m.multiplyMatrices(place, o.matrix);
-          wafers.current!.setMatrixAt(n, m);
-          rims.current!.setMatrixAt(n, m);
-          // Hairline rims: quiet while computing, brighter only as the aperture opens.
-          const edge = arrive * (0.06 + 0.14 * wf.glow + 0.16 * smoothstep(0.02, 0.4, wf.split));
-          rims.current!.setColorAt(n, c.copy(INDIGO).multiplyScalar(edge));
-          n++;
+    // The optical kernel. Elements (pose.wafers): 0 front bezel + iris, 1-3 computation planes,
+    // 4 rear bezel + barrel. Each settles in along the axis; a founder signal turns its plane a
+    // precise step; the aperture opens the iris and turns the planes like a combination lock.
+    const el = pose.wafers;
+    const arriveOf = (j: number) => Math.min(1, Math.max(0, el[j].arrive));
+    const settleZ = (j: number) => (1 - arriveOf(j)) * (j % 2 ? -5 : 5);
+    const shown = (j: number) => (arriveOf(j) > 0.001 ? 1 : 0.0001);
+    const opening = Math.min(1, el[0].split / 1.3);
+    const turn = (j: number) =>
+      el[j].slide * 2.6 + (j % 2 ? 1 : -1) * 0.7 * Math.min(1, el[j].split / 1.3);
+    if (bezels.current && barrel.current && planes.current && blades.current) {
+      ([0, 4] as const).forEach((j, n) => {
+        o.position.set(0, 0, el[j].z + settleZ(j));
+        o.rotation.set(0, 0, 0);
+        o.scale.setScalar(shown(j));
+        o.updateMatrix();
+        bezels.current!.setMatrixAt(n, m.multiplyMatrices(place, o.matrix));
+        if (j === 0 && lip.current) {
+          lip.current.setMatrixAt(0, m);
+          lip.current.instanceMatrix.needsUpdate = true;
         }
       });
-      wafers.current.instanceMatrix.needsUpdate = true;
-      rims.current.instanceMatrix.needsUpdate = true;
-      if (rims.current.instanceColor) rims.current.instanceColor.needsUpdate = true;
+      o.position.set(0, 0, (el[0].z + el[4].z) / 2 + settleZ(4));
+      o.rotation.set(0, 0, 0);
+      o.scale.setScalar(shown(4));
+      o.updateMatrix();
+      barrel.current.setMatrixAt(0, m.multiplyMatrices(place, o.matrix));
+      for (let j = 1; j <= 3; j++) {
+        o.position.set(0, 0, el[j].z + settleZ(j));
+        o.rotation.set(0, 0, turn(j));
+        o.scale.setScalar(shown(j));
+        o.updateMatrix();
+        planes.current.setMatrixAt(j - 1, m.multiplyMatrices(place, o.matrix));
+      }
+      for (let k = 0; k < LENS.blades; k++) {
+        bladeMatrix(k, opening, scratch.lm);
+        scratch.lm.elements[14] += settleZ(0);
+        if (shown(0) < 1) scratch.lm.scale(v.setScalar(0.0001));
+        blades.current.setMatrixAt(k, m.multiplyMatrices(place, scratch.lm));
+      }
+      for (const mesh of [bezels.current, barrel.current, planes.current, blades.current])
+        mesh.instanceMatrix.needsUpdate = true;
     }
-    // Traces and inference pads: organised routing; pads light in sequence.
+    // Radial traces and inference pads on the planes: input, routing, processing - front to
+    // back, each plane sweeping round in order (organised, never random).
     if (traces.current && pads.current) {
-      TRACES.forEach((tr, i) => {
-        const wf = pose.wafers[tr.wafer];
-        const arrive = Math.min(1, Math.max(0, wf.arrive));
-        const settleZ = (1 - arrive) * (tr.wafer % 2 ? -5 : 5);
-        const dx = tr.side * wf.split + wf.slide;
-        const z = wf.z + settleZ + WAFER.thickness / 2 + 0.006;
-        o.position.set((tr.x0 + tr.x1) / 2 + dx, tr.y, z);
-        o.rotation.set(0, 0, 0);
-        o.scale.set(Math.abs(tr.x1 - tr.x0), 0.012, 0.008);
-        if (arrive < 0.001) o.scale.setScalar(0.0001);
+      LENS_TRACES.forEach((tr, i) => {
+        const j = tr.plane + 1;
+        const wf = el[j];
+        const a = tr.angle + turn(j);
+        const z = wf.z + settleZ(j) + 0.006;
+        const rm = (tr.r0 + tr.r1) / 2;
+        o.position.set(Math.cos(a) * rm, Math.sin(a) * rm, z);
+        o.rotation.set(0, 0, a);
+        o.scale.set(tr.r1 - tr.r0, 0.012, 0.006);
+        if (shown(j) < 1) o.scale.setScalar(0.0001);
         o.updateMatrix();
         traces.current!.setMatrixAt(i, m.multiplyMatrices(place, o.matrix));
-        o.position.set(tr.x1 + dx, tr.y, z);
-        o.scale.setScalar(arrive < 0.001 ? 0.0001 : 1);
+        o.position.set(Math.cos(a) * tr.r1, Math.sin(a) * tr.r1, z);
+        o.scale.setScalar(shown(j));
         o.updateMatrix();
         pads.current!.setMatrixAt(i, m.multiplyMatrices(place, o.matrix));
-        const wave = 0.5 + 0.5 * Math.sin(t * 2.1 - i * 0.61 + tr.y * 2.2);
-        const sweep = smoothstep(0, 1, wf.glow * 3 - (i / TRACES.length) * 2);
+        const order = tr.plane / 3 + (i % 9) / 27;
+        const sweep = smoothstep(0, 1, wf.glow * 2.2 - order * 1.6);
+        const wave = 0.5 + 0.5 * Math.sin(t * 2.1 - i * 0.61);
         traces.current!.setColorAt(
           i,
-          c.copy(INDIGO).multiplyScalar(sweep * (0.12 + 0.24 * wf.glow)),
+          c.copy(INDIGO).multiplyScalar(sweep * (0.14 + 0.3 * wf.glow)),
         );
-        // The signal's own pad flashes gold as it is absorbed.
-        const flash =
-          tr.wafer < pose.docked.length
-            ? pose.docked[tr.wafer] * (1 - pose.docked[tr.wafer]) * 4
-            : 0;
+        // The two founder signals each plane calibrates on flash gold as they are absorbed.
+        const d0 = pose.docked[tr.plane * 2] ?? 0;
+        const d1 = pose.docked[tr.plane * 2 + 1] ?? 0;
+        const flash = Math.max(d0 * (1 - d0), d1 * (1 - d1)) * 4;
         c.copy(VIOLET)
           .multiplyScalar(sweep * (0.18 + 0.7 * wf.glow * wave))
           .lerp(GOLD, Math.min(1, flash));
@@ -391,15 +386,32 @@ export function IntelligenceCore({ variant = "origin" }: { variant?: "origin" | 
         if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true;
       }
     }
+    // Decision: the warm core behind the iris - through the pinhole, the logo light. It yields
+    // as the iris opens (what the lens contains is seen instead).
+    if (core.current) {
+      const lum =
+        (finale ? pose.seam : pose.kernel * (0.55 + 0.45 * pose.energy)) *
+        (1 - smoothstep(0, 0.4, opening));
+      o.position.set(0, 0, LENS.irisZ - 0.07 + settleZ(0));
+      o.rotation.set(0, 0, 0);
+      o.scale.setScalar(lum > 0.01 ? 1 : 0.0001);
+      o.updateMatrix();
+      core.current.matrix.multiplyMatrices(place, o.matrix);
+      core.current.matrixWorldNeedsUpdate = true;
+      coreMaterial.color.copy(SEAM_GOLD).multiplyScalar(0.4 + 1.4 * lum);
+    }
 
     // Connectors: precision struts from each channel's inner edge into the counter.
     if (struts.current && collars.current) {
       let n = 0;
       for (let k = 0; k < 2; k++) {
         for (const u of STRUT_U) {
+          // From the channel inner edge straight to the lens bezel.
           const [x, y] = chainAt(S_INNER, u);
-          const [nx, ny] = chainNormal(S_INNER, S_OUTER, u);
-          const len = 0.62 * pose.connectors;
+          const r = Math.hypot(x, y);
+          const nx = -x / r;
+          const ny = -y / r;
+          const len = Math.max(0.02, r * S_SCALE - LENS.outer - 0.03) * pose.connectors;
           o.position.set(x * S_SCALE, y * S_SCALE, 0);
           o.quaternion.setFromUnitVectors(Y_AXIS, v.set(nx, ny, 0));
           o.scale.set(1, Math.max(0.0001, len), 1);
@@ -422,7 +434,7 @@ export function IntelligenceCore({ variant = "origin" }: { variant?: "origin" | 
         const { x, y, nx, ny } = portLocal(i);
         // A port exists only with its channel (never floating ahead of the metal).
         const present = pose.channels[pt.channel].arrive > 0.001 ? 1 : 0.0001;
-        o.position.set(x * S_SCALE + nx * 0.16, y * S_SCALE + ny * 0.16, CHANNEL.depth / 2 + 0.02);
+        o.position.set(x * S_SCALE + nx * 0.2, y * S_SCALE + ny * 0.2, 0);
         o.quaternion.setFromUnitVectors(Y_AXIS, v.set(nx, ny, 0));
         o.scale.setScalar(present);
         o.updateMatrix();
@@ -452,11 +464,14 @@ export function IntelligenceCore({ variant = "origin" }: { variant?: "origin" | 
     }
     if (violetLight.current) {
       violetLight.current.position.setFromMatrixPosition(place);
-      violetLight.current.intensity = pose.kernel * (2 + pose.energy * 4 + pose.pulse * 3);
+      // Close to the aperture the kernel light yields: the lens is lit by its own traces.
+      const near = finale ? 0 : smoothstep(0.4, 0.5, local(p, "passage"));
+      violetLight.current.intensity =
+        pose.kernel * (2 + pose.energy * 4 + pose.pulse * 3) * (1 - 0.9 * near);
     }
     if (goldLight.current) {
-      goldLight.current.position.copy(v.set(0, 0, 1.3).applyMatrix4(place));
-      goldLight.current.intensity = pose.seam * (finale ? 18 : 13);
+      goldLight.current.position.copy(v.set(0, 0, 0.9).applyMatrix4(place));
+      goldLight.current.intensity = pose.seam * (finale ? 10 : 7);
     }
 
     // ---- Filaments ------------------------------------------------------------------
@@ -524,7 +539,7 @@ export function IntelligenceCore({ variant = "origin" }: { variant?: "origin" | 
             // Before its channel arrives the blueprint sits where the metal will lock (in the
             // finale: the emblem's final place — the S is drawn in light, then the metal lands).
             const mtx = pose.channels[k].arrive >= 1 ? ch[k] : finale ? lock[k] : rest[k];
-            spanTo(mtx, chain, sIdx / 4, (sIdx + 1) / 4, innerChain ? 0 : front - 0.1);
+            spanTo(mtx, chain, sIdx / 4, (sIdx + 1) / 4, 0);
             if (innerChain) {
               // The seam rides just off the concave edge, into the counter.
               const [nx, ny] = chainNormal(S_INNER, S_OUTER, (sIdx + 0.5) / 4);
@@ -555,7 +570,10 @@ export function IntelligenceCore({ variant = "origin" }: { variant?: "origin" | 
             filaments.hide(idx);
             continue;
           }
-          spanTo(ch[k], S_MID, 0.04 + sIdx * 0.31, 0.04 + (sIdx + 1) * 0.31, front);
+          // In the machined groove along the channel's face.
+          const u0 = 0.07 + sIdx * 0.287;
+          for (let q = 0; q < 4; q++)
+            shellPoint(u0 + (0.287 * q) / 3, 0.42, 1, 0.012, pts[q]).applyMatrix4(ch[k]);
           cubicThrough(idx, pts[0], pts[1], pts[2], pts[3]);
           filaments.params(idx, {
             s1: on,
@@ -577,18 +595,15 @@ export function IntelligenceCore({ variant = "origin" }: { variant?: "origin" | 
           filaments.hide(idx);
           return;
         }
-        const { x, y, nx, ny } = portLocal(i);
-        const [mx, my] = chainAt(S_MID, pt.u);
-        const A = pts[0]
-          .set(x * S_SCALE + nx * 0.2, y * S_SCALE + ny * 0.2, front)
-          .applyMatrix4(ch[pt.channel]);
-        const C1 = pts[1]
-          .set((x * 0.7 + mx * 0.3) * S_SCALE, (y * 0.7 + my * 0.3) * S_SCALE, front + 0.3)
-          .applyMatrix4(ch[pt.channel]);
-        const C2 = pts[2]
-          .set(mx * S_SCALE, my * S_SCALE, front + 0.12)
-          .applyMatrix4(ch[pt.channel]);
-        const B = pts[3].set(mx * S_SCALE, my * S_SCALE, front).applyMatrix4(ch[pt.channel]);
+        // From the port on the rim, over the face, into the groove (the S then carries it).
+        const B = shellPoint(pt.u, 0.42, 1, 0.012, pts[3]);
+        const A = shellPoint(pt.u, 0, 1, 0, pts[0]).addScaledVector(rimNormal(pt.u, w), 0.3);
+        A.z = 0.2;
+        const C1 = pts[1].copy(A).lerp(B, 0.35);
+        C1.z += 0.45;
+        const C2 = pts[2].copy(B);
+        C2.z += 0.2;
+        for (const q of [A, C1, C2, B]) q.applyMatrix4(ch[pt.channel]);
         filaments.curve(idx, A.x, A.y, A.z, C1.x, C1.y, C1.z, C2.x, C2.y, C2.z, B.x, B.y, B.z);
         filaments.params(idx, {
           s0: smoothstep(0.55, 1, d),
@@ -600,28 +615,8 @@ export function IntelligenceCore({ variant = "origin" }: { variant?: "origin" | 
           speed: 0.5,
         });
       });
-      // 28–32: each wafer's central bus (gold), until the wafer splits for the aperture.
-      pose.wafers.forEach((wf, j) => {
-        const idx = base + 28 + j;
-        const on = Math.min(1, Math.max(0, wf.arrive)) * pose.kernel;
-        if (on <= 0.01 || wf.split > 0.05) {
-          filaments.hide(idx);
-          return;
-        }
-        const z = wf.z + WAFER.thickness / 2 + 0.008;
-        const A = pts[0].set(wf.slide, -WAFER.h / 2 + 0.25, z).applyMatrix4(place);
-        const B = pts[1].set(wf.slide, WAFER.h / 2 - 0.25, z).applyMatrix4(place);
-        filaments.arc(idx, A.x, A.y, A.z, B.x, B.y, B.z);
-        filaments.params(idx, {
-          s1: on,
-          width: 0.03,
-          intensity: 0.5 + 0.5 * pose.energy,
-          violet: j === 0 ? 0 : 0.5,
-          pulse: 1.5,
-          phase: j * 0.2,
-          speed: 0.8,
-        });
-      });
+      // 28-32: unused since the lens kernel.
+      for (let j = 0; j < 5; j++) filaments.hide(base + 28 + j);
       // 33–35: VOID — distant signals appear one by one, each travelling slowly along a
       // barely perceptible engineered channel (42–44) — S-curved, the second answering the
       // first from another depth — then they streak into the counter.
@@ -725,35 +720,49 @@ export function IntelligenceCore({ variant = "origin" }: { variant?: "origin" | 
               channelGroups.current[k] = el;
             }}
           >
-            <mesh geometry={built.body} material={materials.sMetal} />
-            {built.stripe.map((g, i) => (
-              <mesh key={`s${i}`} geometry={g} material={materials.champagne} />
-            ))}
-            {built.cover.map((g, i) => (
-              <mesh key={`c${i}`} geometry={g} material={materials.sCover} />
-            ))}
+            <mesh geometry={built.shell} material={shellMaterials} />
+            <mesh geometry={built.detailDark} material={materials.graphite} />
+            <mesh geometry={built.detailLit} material={materials.champagne} />
             <mesh geometry={built.seam} material={seamMaterial} userData={{ seam: true }} />
           </group>
         ))}
         <instancedMesh
-          ref={wafers}
-          args={[built.wafer, materials.smoked, WAFER_Z.length * 2]}
+          ref={bezels}
+          args={[built.bezel, materials.titanium, 2]}
+          frustumCulled={false}
+        />
+        <instancedMesh ref={lip} args={[built.lip, materials.champagne, 1]} frustumCulled={false} />
+        <instancedMesh
+          ref={barrel}
+          args={[built.barrel, barrelMaterial, 1]}
+          frustumCulled={false}
+        />
+        <instancedMesh
+          ref={planes}
+          args={[built.plane, materials.smoked, 3]}
           frustumCulled={false}
           renderOrder={2}
         />
         <instancedMesh
-          ref={rims}
-          args={[built.waferRim, materials.energy, WAFER_Z.length * 2]}
+          ref={blades}
+          args={[built.blade, materials.graphite, LENS.blades]}
+          frustumCulled={false}
+        />
+        <mesh
+          ref={core}
+          geometry={built.core}
+          material={coreMaterial}
+          matrixAutoUpdate={false}
           frustumCulled={false}
         />
         <instancedMesh
           ref={traces}
-          args={[built.unit, materials.energy, TRACES.length]}
+          args={[built.unit, materials.energy, LENS_TRACES.length]}
           frustumCulled={false}
         />
         <instancedMesh
           ref={pads}
-          args={[built.pad, materials.energy, TRACES.length]}
+          args={[built.pad, materials.energy, LENS_TRACES.length]}
           frustumCulled={false}
         />
         <instancedMesh

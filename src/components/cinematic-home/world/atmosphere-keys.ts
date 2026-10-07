@@ -30,8 +30,10 @@ export const EXPOSURE_KEYS = [
   k("awakening", 0.6, 1),
   k("context", 1, 1),
   // Into the Engine: compression and darkness before the world opens.
-  k("passage", 0.45, 0.85),
-  k("passage", 0.88, 0.5),
+  k("passage", 0.4, 0.9),
+  k("passage", 0.62, 0.55),
+  k("passage", 0.7, 0.62),
+  k("passage", 0.78, 1.02),
   k("universe", 0.08, 1.06),
   k("convergence", 1, 1),
   // Nine → three → one: the light withdraws to the decision, then resolves on it.

@@ -106,7 +106,7 @@ export function OpportunityUniverse() {
     }
   }, [model, scratch]);
 
-  const showFrom = progressOf("passage", 0.66);
+  const showFrom = progressOf("passage", 0.36);
   const showTo = progressOf("unfold", 1);
 
   useFrame(() => {

@@ -41,9 +41,10 @@ const BED = [
   K("void", 0.45, 0.42),
   K("awakening", 0.5, 0.55),
   K("context", 1, 0.55),
-  K("passage", 0.55, 0.32),
-  K("passage", 0.9, 0.2),
-  K("universe", 0.05, 0.6),
+  K("passage", 0.55, 0.3),
+  K("passage", 0.6, 0.04),
+  K("passage", 0.72, 0.04),
+  K("passage", 0.8, 0.6),
   K("computation", 1, 0.5),
   K("three", 0.4, 0.34),
   K("selection", 0.12, 0.14),
@@ -63,8 +64,8 @@ const CUTOFF = [
   K("awakening", 0.8, 700),
   K("context", 1, 950),
   K("passage", 0.6, 300),
-  K("passage", 0.92, 220),
-  K("universe", 0.06, 2600),
+  K("passage", 0.72, 220),
+  K("passage", 0.78, 2600),
   K("computation", 0.6, 1700),
   // The nine: the field narrows around the decision.
   K("convergence", 0.9, 780),
@@ -82,9 +83,9 @@ const CUTOFF = [
 ];
 const TENSION = [
   K("context", 0.9, 0),
-  K("passage", 0.35, 0.12),
-  K("passage", 0.9, 0.62),
-  K("universe", 0.04, 0),
+  K("passage", 0.3, 0.1),
+  K("passage", 0.54, 0.5),
+  K("passage", 0.6, 0),
   K("three", 0.3, 0),
   K("three", 0.9, 0.34),
   K("selection", 0.45, 0.4),
@@ -95,8 +96,8 @@ const TENSION = [
   K("adaptation", 1, 0),
 ];
 const PAD = [
-  K("passage", 0.95, 0),
-  K("universe", 0.08, 0.5),
+  K("passage", 0.74, 0),
+  K("passage", 0.86, 0.5),
   K("computation", 0.8, 0.3),
   K("convergence", 1, 0.16),
   K("three", 0.4, 0.05),
@@ -113,8 +114,8 @@ const PAD = [
   K("finale", 1, 0.4),
 ];
 const WIDTH = [
-  K("passage", 0.9, 0.15),
-  K("universe", 0.2, 1),
+  K("passage", 0.74, 0.15),
+  K("passage", 0.9, 1),
   K("convergence", 1, 0.45),
   K("selection", 0.5, 0.2),
   K("elevate", 0.8, 0.95),
@@ -131,10 +132,11 @@ const PULSE = [
 ];
 const MASTER = [
   K("void", 0, 1),
-  // A breath of near-silence immediately before the universe opens…
-  K("passage", 0.86, 1),
-  K("passage", 0.93, 0.3),
-  K("passage", 0.965, 1),
+  // Near-silence inside the lens, immediately before the universe opens…
+  K("passage", 0.56, 1),
+  K("passage", 0.6, 0.12),
+  K("passage", 0.71, 0.12),
+  K("passage", 0.735, 1),
   // … and before the one is chosen.
   K("selection", 0.1, 1),
   K("selection", 0.3, 0.5),
@@ -252,8 +254,8 @@ function buildCues(): Cue[] {
   // The channels part around the aperture; each wafer opens, front first; the world opens.
   out.push(cue("passage", 0.12, "align", 0));
   WAFER_Z.forEach((_, j) => out.push(cue("passage", 0.42 + j * 0.045, "align", 0.3 + j * 0.15)));
-  out.push(cue("passage", 0.58, "unlock"));
-  out.push(cue("passage", 0.965, "reveal", 0, { major: true }));
+  out.push(cue("passage", 0.56, "unlock"));
+  out.push(cue("passage", 0.735, "reveal", 0, { major: true }));
   // Computation: discrete evaluation events, as each wave reaches each territory.
   out.push(...evaluationCues());
   // The narrowing, stage by stage; the nine; the three.
