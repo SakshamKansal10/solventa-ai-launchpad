@@ -178,10 +178,12 @@ export function Product3D() {
     [],
   );
 
-  useFrame(() => {
+  useFrame((state) => {
     const s = store.state;
     const p = s.progress;
     const st = slabState(p);
+    // Phones: the panel grows out of the slab full-width, so the small slab withdraws beneath it.
+    const yieldToPanel = state.size.width < 640 ? smoothstep(0.15, 0.5, st.dom) : 0;
     const g = slab.current;
     if (!g) return;
     g.visible = st.visible;
@@ -201,7 +203,7 @@ export function Product3D() {
     g.position.lerpVectors(scratch.from.position, SLAB_CENTRE, ease);
     g.position.y += Math.sin(ease * Math.PI) * 1.2;
     g.quaternion.slerpQuaternions(scratch.from.quaternion, SLAB_QUATERNION, ease);
-    g.scale.setScalar(0.35 + 0.65 * ease);
+    g.scale.setScalar(Math.max(0.0001, (0.35 + 0.65 * ease) * (1 - yieldToPanel)));
     // Return: the surface leans back into depth and dissolves into structure.
     const r = st.recede;
     g.position.addScaledVector(SLAB_NORMAL, -r * 16).addScaledVector(RIGHT, -r * 5);

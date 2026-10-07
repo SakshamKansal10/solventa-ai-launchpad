@@ -15,7 +15,7 @@ export function ProductLayer() {
           store.state.dom.panel = el;
           if (el) el.inert = true;
         }}
-        className="absolute left-0 top-0 h-[650px] w-[1040px] origin-top-left will-change-transform max-lg:h-[475px] max-lg:w-[760px] max-sm:h-[min(600px,78svh)] max-sm:w-[calc(100vw-24px)]"
+        className="absolute left-0 top-0 h-[650px] w-[1040px] origin-top-left will-change-transform max-sm:origin-center max-lg:h-[475px] max-lg:w-[760px] max-sm:h-[min(600px,78svh)] max-sm:w-[calc(100vw-24px)]"
         style={{ opacity: 0, visibility: "hidden" }}
       >
         <ProductPreview />

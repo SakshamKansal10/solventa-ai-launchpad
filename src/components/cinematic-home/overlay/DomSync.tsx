@@ -216,7 +216,7 @@ export function DomSync() {
           panel,
           "transform",
           width < 640
-            ? `translate3d(${((width - w) / 2).toFixed(1)}px, ${((height - h) / 2 + 20).toFixed(1)}px, 0)`
+            ? `translate3d(${((width - w) / 2).toFixed(1)}px, ${((height - h) / 2 + 20 + (1 - o) * 26).toFixed(1)}px, 0) scale(${(0.82 + 0.18 * o).toFixed(4)})`
             : `matrix3d(${quadToMatrix3d(w, h, quad)
                 .map((n) => n.toFixed(6))
                 .join(",")})`,

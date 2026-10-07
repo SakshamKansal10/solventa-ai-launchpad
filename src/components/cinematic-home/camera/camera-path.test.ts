@@ -101,9 +101,9 @@ describe("lens channels", () => {
     expect(NEAR_KEYS[NEAR_KEYS.length - 1].value).toBeGreaterThanOrEqual(0.1);
   });
 
-  it("portrait framing focus is a 0 → 1 weight", () => {
+  it("portrait framing focus is a bounded weight (negative = closer for tall subjects)", () => {
     for (const k of FOCUS_KEYS) {
-      expect(k.value).toBeGreaterThanOrEqual(0);
+      expect(k.value).toBeGreaterThanOrEqual(-0.6);
       expect(k.value).toBeLessThanOrEqual(1);
     }
   });

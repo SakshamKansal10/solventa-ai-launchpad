@@ -154,7 +154,11 @@ export const NEAR_KEYS: Key[] = [
 /** How much a scene is about ONE object — portrait screens step back from it. */
 export const FOCUS_KEYS: Key[] = [
   k("void", 0, 1),
-  k("context", 1, 1),
+  // The S is taller than wide: on a phone it can stand larger than the widened lens implies.
+  k("awakening", 0.5, 0.25),
+  k("context", 0.2, 0.3),
+  k("context", 0.35, 0.85),
+  k("context", 1, 0.85),
   k("passage", 0.4, 0),
   k("convergence", 1, 0.3),
   k("three", 0.2, 1),
@@ -164,8 +168,8 @@ export const FOCUS_KEYS: Key[] = [
   k("handoff", 0.6, 1),
   k("connected", 0.4, 1),
   k("return", 0.6, 0.6),
-  // The emblem is taller than wide: the widened portrait lens already keeps its margins.
-  k("finale", 0.4, 0.15),
+  // The finale emblem: closer on a phone, so it fills the upper half of the portrait frame.
+  k("finale", 0.4, -0.5),
 ];
 
 /**
