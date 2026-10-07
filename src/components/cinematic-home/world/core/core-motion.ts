@@ -79,7 +79,7 @@ function restChannel(arrive: number): ChannelPose {
 export function enginePose(p: number, finale: boolean): EnginePose {
   if (finale) {
     // The return: the S reappears — first as light, then as structure — and resolves.
-    const a = ramp(p, "return", 0.42, "finale", 0.55);
+    const a = ramp(p, "return", 0.3, "finale", 0.5);
     const resolve = smoothstep(0.62, 0.95, a);
     const wafers = WAFER_Z.map((z, j) => ({
       arrive: settle((a - 0.42 - j * 0.04) / 0.24),
@@ -92,27 +92,29 @@ export function enginePose(p: number, finale: boolean): EnginePose {
     const c0 = settle((a - 0.14) / 0.34);
     const c1 = settle((a - 0.24) / 0.34);
     return {
-      visible: p > progressOf("return", 0.4),
+      visible: p > progressOf("return", 0.28),
       position: FINALE_PLACE,
       yaw: FINALE_YAW + 0.16 * (1 - resolve) + 0.07,
       pitch: -0.03,
+      // As at the beginning, each half of the S descends onto the line of light already drawn
+      // for it, from just in front of the emblem — it lands, it does not fly in from elsewhere.
       channels: [
         {
-          x: -9 * (1 - c0),
-          y: 2 * (1 - c0),
-          z: -3 * (1 - c0),
-          rx: 0,
-          ry: 0,
-          rz: 0.5 * (1 - c0),
+          x: -1.6 * (1 - c0),
+          y: 1.2 * (1 - c0),
+          z: 7 * (1 - c0),
+          rx: 0.28 * (1 - c0),
+          ry: -0.34 * (1 - c0),
+          rz: 0.12 * (1 - c0),
           arrive: c0,
         },
         {
-          x: 9 * (1 - c1),
-          y: -2 * (1 - c1),
-          z: -3 * (1 - c1),
-          rx: 0,
-          ry: 0,
-          rz: 0.5 * (1 - c1),
+          x: 1.6 * (1 - c1),
+          y: -1.2 * (1 - c1),
+          z: 7 * (1 - c1),
+          rx: -0.28 * (1 - c1),
+          ry: 0.34 * (1 - c1),
+          rz: -0.12 * (1 - c1),
           arrive: c1,
         },
       ],

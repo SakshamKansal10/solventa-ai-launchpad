@@ -97,7 +97,10 @@ export const CAMERA_PATH_KEYS: CameraKey[] = [
   { at: progressOf("build", 1), ...sideEye(96, -9, 3.5, 18) },
   { at: progressOf("elevate", 0.5), ...sideEye(108, -12, 11, 22) },
   { at: progressOf("elevate", 1), ...frameEye(118, -15, 16, 138, -14, 8) },
-  { at: progressOf("evidence", 0.35), ...frameEye(122, -14, 15, 142, -22, 11) },
+  // The camera's aim follows the evidence in: out along the branch channel, then over the last
+  // gate's crown, then down into the assumption.
+  { at: progressOf("evidence", 0.35), ...frameEye(122, -14, 15, 142, -15, 10) },
+  { at: progressOf("evidence", 0.6), ...frameEye(127, -13, 11.5, 144, -4, 6) },
   { at: progressOf("evidence", 1), ...frameEye(132, -12, 8, 146, -3, 1.5) },
   // The consequence: further out on the same side, where the dependent section can be seen
   // failing in profile — the assumption at the left of frame, what rested on it to the right.
