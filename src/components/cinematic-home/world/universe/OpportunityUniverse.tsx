@@ -15,7 +15,6 @@ import {
 import { progressOf, ramp } from "../../timeline/timeline";
 import { useWorld } from "../WorldContext";
 import { buildFamilies } from "./families";
-import { FINALS_HUB } from "../layout";
 import { Territories } from "./Territories";
 import { CONVERGE_ANCHOR, createUniverse, TRUNK_ORIGIN } from "./universe-model";
 import { createNodeFrame, nodeFrame, universePhases } from "./universe-state";
@@ -63,19 +62,8 @@ export function OpportunityUniverse() {
     () => filaments.range("universe", model.connections.length),
     [filaments, model],
   );
+  /** The nine's lattice links (9) and the 120 → 36 decision axis (1). */
   const ring = useMemo(() => filaments.range("nine-ring", 10), [filaments]);
-  /** The nine survivors in ring order (by angle around the finals hub). */
-  const nine = useMemo(
-    () =>
-      [...model.formations.nine.entries()]
-        .sort(
-          (x, y) =>
-            Math.atan2(x[1][1] - FINALS_HUB[1], x[1][0] - FINALS_HUB[0]) -
-            Math.atan2(y[1][1] - FINALS_HUB[1], y[1][0] - FINALS_HUB[0]),
-        )
-        .map(([i]) => i),
-    [model],
-  );
   const meshes = useRef<(InstancedMesh | null)[]>([]);
   const group = useRef<Group>(null);
   const scratch = useMemo(

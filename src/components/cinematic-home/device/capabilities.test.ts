@@ -35,6 +35,27 @@ describe("classifyDevice", () => {
     expect(classifyDevice({ ...desktop, memoryGb: 4 }, motionOk)).toMatchObject({ tier: "medium" });
   });
 
+  it("keeps integrated graphics on the medium tier, even with many cores", () => {
+    for (const gpu of [
+      "ANGLE (Intel, Intel(R) UHD Graphics 620 Direct3D11 vs_5_0 ps_5_0, D3D11)",
+      "ANGLE (Intel, Intel(R) Iris(R) Xe Graphics Direct3D11 vs_5_0 ps_5_0, D3D11)",
+      "ANGLE (AMD, AMD Radeon(TM) Vega 3 Graphics Direct3D11 vs_5_0 ps_5_0, D3D11)",
+      "ANGLE (AMD, AMD Radeon(TM) Graphics Direct3D11 vs_5_0 ps_5_0, D3D11)",
+      "ANGLE (AMD, AMD Radeon 780M Graphics Direct3D11 vs_5_0 ps_5_0, D3D11)",
+    ]) {
+      expect(classifyDevice({ ...desktop, gpu }, motionOk)).toMatchObject({ tier: "medium" });
+    }
+    for (const gpu of [
+      desktop.gpu,
+      "ANGLE (AMD, AMD Radeon RX 6600 Direct3D11 vs_5_0 ps_5_0, D3D11)",
+      "ANGLE (Intel, Intel(R) Arc(TM) A770 Graphics Direct3D11 vs_5_0 ps_5_0, D3D11)",
+      "Apple M2 Pro",
+      null,
+    ]) {
+      expect(classifyDevice({ ...desktop, gpu }, motionOk)).toMatchObject({ tier: "high" });
+    }
+  });
+
   it("gives phones the medium tier, and low-memory phones the low tier", () => {
     expect(classifyDevice(phone, motionOk)).toMatchObject({ mode: "webgl", tier: "medium" });
     expect(classifyDevice({ ...phone, memoryGb: 2 }, motionOk)).toMatchObject({ tier: "low" });

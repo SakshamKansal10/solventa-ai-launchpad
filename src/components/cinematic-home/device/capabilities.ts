@@ -38,6 +38,16 @@ export function isSoftwareGpu(gpu: string | null): boolean {
   return gpu !== null && SOFTWARE_GPU.test(gpu);
 }
 
+// Integrated graphics shares memory bandwidth with the CPU: measured on a Radeon Vega APU, the
+// densest scenes (the universe, the branching path) fall to ~40 fps on the high tier. Discrete
+// GPUs, Intel Arc and Apple silicon keep the high tier.
+const INTEGRATED_GPU =
+  /\bintel\b(?!.*\barc\b)|radeon\(tm\) graphics|radeon graphics|vega \d+ graphics|radeon \d{3}m\b/i;
+
+export function isIntegratedGpu(gpu: string | null): boolean {
+  return gpu !== null && INTEGRATED_GPU.test(gpu);
+}
+
 export function classifyDevice(
   device: DeviceProfile,
   { reducedMotion, override }: { reducedMotion: boolean; override?: TierOverride | null },
@@ -60,8 +70,11 @@ export function classifyDevice(
       reasons.push("≤ 3 GB memory");
     }
   } else if ((device.cores ?? 0) >= 8 && (device.memoryGb === null || device.memoryGb >= 8)) {
-    tier = "high";
-    reasons.push("desktop, ≥ 8 cores");
+    if (isIntegratedGpu(device.gpu)) reasons.push("desktop, ≥ 8 cores, integrated graphics");
+    else {
+      tier = "high";
+      reasons.push("desktop, ≥ 8 cores");
+    }
   } else {
     reasons.push("desktop, modest CPU");
   }

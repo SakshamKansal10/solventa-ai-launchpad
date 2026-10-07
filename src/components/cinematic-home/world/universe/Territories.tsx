@@ -308,10 +308,11 @@ export function Territories({ model }: { model: UniverseModel }) {
         .multiplyScalar(appear * (0.25 + 1.1 * flare + 0.5 * survive) * (0.25 + 0.75 * alive));
     });
     gold.color.copy(GOLD).multiplyScalar(0.4 + 0.9 * smoothstep(0.08, 0.3, ph.waves[0] / 96));
-    // Labels: named while the universe is read and computed; gone once order takes over.
+    // Labels: each territory is named once, while the camera holds on the revealed universe, and
+    // the names leave as the founder's waves begin — the computation is read from the world.
     const named =
-      ramp(p, "universe", 0.3, "universe", 0.55) *
-      (1 - ramp(p, "computation", 0.86, "convergence", 0.1));
+      ramp(p, "universe", 0.3, "universe", 0.5) *
+      (1 - ramp(p, "universe", 0.88, "computation", 0.06));
     TERRITORIES.forEach((t, i) => {
       const g = groups.current[i];
       const o = active && g && g.visible ? named : 0;

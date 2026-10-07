@@ -142,7 +142,7 @@
 | 10–12 Product → S        | The connected chain's five floating tokens and the "isolated answer" tile are gone. The interface's own relationships are drawn as gold routing across the surface (context → opportunity → evidence → path → progress). That routing then leaves the surface and converges into the S.                  |
 | 13 Finale                | Bar returns only after the emblem has resolved (finale 0.72 → 0.86).                                                                                                                                                                                                                                     |
 
-Not yet changed: moments 2 (instruments still arrive beside the Engine), 9 (the slab is briefly alone before the interface appears).
+Partly changed: moment 2 — the heading is now a brief title and the instruments still dock into the Engine's own ports, but each still pauses once at a reading position beside the S (kept for legibility). Not changed: moment 9 — after the camera passes through the last rebuilt gate the slab is briefly alone against the dark before the interface fills it.
 
 ## Order of work
 

@@ -75,7 +75,7 @@ export function CinematicOverlay() {
           className="absolute left-0 top-0 will-change-transform"
           style={{ opacity: 0, visibility: "hidden" }}
         >
-          <div className="-translate-x-1/2 -translate-y-full whitespace-nowrap text-center">
+          <div className="-translate-x-1/2 -translate-y-full whitespace-nowrap text-center [text-shadow:0_0_10px_rgba(7,11,19,0.95),0_1px_3px_rgba(7,11,19,0.9)]">
             {l.kind === "quote" ? (
               <>
                 <p className="font-display text-[clamp(1.25rem,2vw,1.75rem)] italic leading-tight text-[#F1EEE6]">

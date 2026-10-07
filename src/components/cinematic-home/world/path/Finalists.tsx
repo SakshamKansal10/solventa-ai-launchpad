@@ -413,8 +413,9 @@ export function Finalists() {
     } else filaments.hide(idx);
     for (let j = 22; j < fil.count; j++) filaments.hide(fil.start + j);
 
-    // Labels: each future is named while it is a candidate; the two fade as they lose coherence.
-    const named = smoothstep(0.2, 0.4, three) * (1 - ramp(p, "unfold", 0.05, "unfold", 0.3));
+    // Labels: the futures grow unnamed while the camera moves between them; each is named once all
+    // three are held in one frame for the comparison; the two fade as they lose coherence.
+    const named = smoothstep(0.46, 0.6, three) * (1 - ramp(p, "unfold", 0.05, "unfold", 0.3));
     centres.forEach((c3, k) => {
       const o = named * (k === 1 ? 1 : 1 - lose);
       s.anchors.set(`finalist-${k}`, { x: c3[0], y: c3[1] + (k === 1 ? 4 : 4.4), z: c3[2], o });

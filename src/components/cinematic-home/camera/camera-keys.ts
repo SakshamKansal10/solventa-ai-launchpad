@@ -56,12 +56,14 @@ export const CAMERA_PATH_KEYS: CameraKey[] = [
   key("universe", 0.45, [0.2, 7.5, -4.5], [1.5, -3.5, -45]),
   // …and over the whole constellation, once it is all there.
   key("universe", 0.62, [0.1, 7.9, -4.2], [1.6, -3.6, -45]),
-  key("universe", 1, [-1.8, 13.5, 2.5], [3, -4.5, -47]),
-  // E — computation, in the same world: no cut to a new view. The overlook glides slowly down
-  // and across while the founder's waves visibly cross everything below it, settling toward the
+  // One arc from here to the nine: a gentle rise to the crest of the overlook, then a steady
+  // descent, always moving forward into the world — never back out and in again.
+  key("universe", 1, [-0.6, 9.6, -2.6], [2, -3.8, -45.5]),
+  // E — computation, in the same world: no cut to a new view. The overlook glides down and
+  // across while the founder's waves visibly cross everything below it, settling toward the
   // region where the survivors gather.
-  key("computation", 0.35, [-0.6, 11.6, -1.2], [2.2, -3.6, -44.5]),
-  key("computation", 0.7, [2.4, 9.2, -7], [4.4, -2.2, -44]),
+  key("computation", 0.35, [0.6, 9.4, -5.4], [3, -3.2, -45]),
+  key("computation", 0.7, [2.6, 8.4, -9], [4.4, -2.2, -44]),
   key("computation", 1, [4.4, 6.8, -13], [5.4, -1.2, -42]),
   // F/G — toward the promising region; the nine.
   key("convergence", 0.5, [6, 3.2, -21], [7, -1, -42]),

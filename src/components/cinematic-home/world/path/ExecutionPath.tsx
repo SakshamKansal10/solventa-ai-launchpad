@@ -78,8 +78,17 @@ function buildGate(curveSegments: number) {
   deck.rotateX(-Math.PI / 2);
   const track = plateGeometry(0.16, GATE_SPACING / 2 - 0.3, 0.04, 0.06, 0, 2);
   track.rotateX(-Math.PI / 2);
-  // Elevate: satellite channel frames (with a gold inlay) and vast distant frames.
-  const satOpts = { hw: 2.2, hh: 1.6, bar: 0.16, depth: 0.26, radius: 0.5, curveSegments };
+  // Elevate: satellite channel frames (with a gold inlay) and vast distant frames. Always seen at
+  // a distance, so their corners need half the curve resolution of the gates the camera passes.
+  const farSegments = Math.max(5, Math.round(curveSegments / 2));
+  const satOpts = {
+    hw: 2.2,
+    hh: 1.6,
+    bar: 0.16,
+    depth: 0.26,
+    radius: 0.5,
+    curveSegments: farSegments,
+  };
   const satellite = frameGeometry(satOpts);
   const satInlay = inlayGeometry(satOpts, 0.04, 0.03);
   const distant = frameGeometry({
@@ -88,7 +97,7 @@ function buildGate(curveSegments: number) {
     bar: 0.32,
     depth: 0.5,
     radius: 1.3,
-    curveSegments,
+    curveSegments: farSegments,
   });
   // Build: functional modules mount onto the locked gates; the assumption node's housing.
   const module = new RoundedBoxGeometry(0.46, 1.2, 0.46, 2, 0.06);
