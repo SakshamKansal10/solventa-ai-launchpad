@@ -12,9 +12,10 @@ import { SoundToggle } from "../sound/SoundToggle";
  * eight other pages) is untouched. Transparent over the dark world with a soft
  * top scrim for legibility; same destinations, same sign-in dialog, same CTA.
  *
- * Immersion: during the deepest sequences the canvas' DomSync sets --immerse
- * (0 → 1) and the bar recedes — never below AA contrast — then returns for the
- * product and the finale. Hover or keyboard focus restores it at once.
+ * Immersion: while the film plays the canvas' DomSync sets --immerse (0 → 1) and
+ * the site bar leaves the stage — links and calls to action fade out entirely,
+ * the wordmark and the sound control stay, quietly. It returns for the product
+ * and the final hold. Hover or keyboard focus restores the whole bar at once.
  */
 const recede = (amount: number) => ({
   opacity: `calc(1 - var(--immerse, 0) * var(--immerse-allow, 1) * ${amount})`,
@@ -36,7 +37,7 @@ export function CinematicNav() {
       <div
         aria-hidden="true"
         className="pointer-events-none absolute inset-x-0 top-0 h-28 bg-[linear-gradient(to_bottom,rgba(7,11,19,0.82),rgba(7,11,19,0))] transition-opacity duration-700"
-        style={recede(0.45)}
+        style={recede(1)}
       />
       <nav
         aria-label="Primary"
@@ -46,7 +47,7 @@ export function CinematicNav() {
           to="/"
           className="flex items-center gap-3 rounded-lg transition-opacity duration-700"
           aria-label="Solventia home"
-          style={recede(0.3)}
+          style={recede(0.45)}
         >
           <img src={mark} alt="" width={30} height={30} className="size-[30px]" />
           <span className="font-display text-[1.05rem] tracking-[0.22em] text-[#F1EEE6] sm:text-[1.2rem] sm:tracking-[0.32em]">
@@ -55,7 +56,7 @@ export function CinematicNav() {
         </Link>
         <ul
           className="hidden items-center gap-8 transition-opacity duration-700 lg:flex"
-          style={recede(0.45)}
+          style={recede(1)}
         >
           {LINKS.map((l) => (
             <li key={l.to}>
@@ -68,38 +69,42 @@ export function CinematicNav() {
             </li>
           ))}
         </ul>
-        <div
-          className="flex items-center gap-3 transition-opacity duration-700 sm:gap-5"
-          style={recede(0.45)}
-        >
-          <SoundToggle />
-          {signedIn ? (
-            <Link
-              to="/dashboard"
-              className="whitespace-nowrap text-[0.875rem] font-semibold text-[#F1EEE6] hover:text-white sm:text-[0.9rem]"
-            >
-              Dashboard
-            </Link>
-          ) : (
-            <SignInDialog
-              trigger={
-                <button
-                  type="button"
-                  className="whitespace-nowrap text-[0.875rem] font-semibold text-[#F1EEE6] hover:text-white sm:text-[0.9rem]"
-                >
-                  Sign In
-                </button>
-              }
-            />
-          )}
-          <Link
-            to="/consultation"
-            className="inline-flex h-10 items-center gap-2 rounded-full border border-[#c4a67a]/60 px-4 text-[0.875rem] font-semibold text-[#F1EEE6] transition-colors hover:border-[#c4a67a] hover:bg-[#c4a67a]/10 sm:h-11 sm:px-5"
+        <div className="flex items-center gap-3 sm:gap-5">
+          <div className="transition-opacity duration-700" style={recede(0.35)}>
+            <SoundToggle />
+          </div>
+          <div
+            className="flex items-center gap-3 transition-opacity duration-700 sm:gap-5"
+            style={recede(1)}
           >
-            <span className="max-sm:hidden">Find My Business Idea</span>
-            <span className="sm:hidden">Start</span>
-            <ArrowRight className="size-4" aria-hidden="true" />
-          </Link>
+            {signedIn ? (
+              <Link
+                to="/dashboard"
+                className="whitespace-nowrap text-[0.875rem] font-semibold text-[#F1EEE6] hover:text-white sm:text-[0.9rem]"
+              >
+                Dashboard
+              </Link>
+            ) : (
+              <SignInDialog
+                trigger={
+                  <button
+                    type="button"
+                    className="whitespace-nowrap text-[0.875rem] font-semibold text-[#F1EEE6] hover:text-white sm:text-[0.9rem]"
+                  >
+                    Sign In
+                  </button>
+                }
+              />
+            )}
+            <Link
+              to="/consultation"
+              className="inline-flex h-10 items-center gap-2 rounded-full border border-[#c4a67a]/60 px-4 text-[0.875rem] font-semibold text-[#F1EEE6] transition-colors hover:border-[#c4a67a] hover:bg-[#c4a67a]/10 sm:h-11 sm:px-5"
+            >
+              <span className="max-sm:hidden">Find My Business Idea</span>
+              <span className="sm:hidden">Start</span>
+              <ArrowRight className="size-4" aria-hidden="true" />
+            </Link>
+          </div>
         </div>
       </nav>
     </header>

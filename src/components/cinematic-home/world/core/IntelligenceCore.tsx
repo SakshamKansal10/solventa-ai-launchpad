@@ -26,14 +26,12 @@ import {
 } from "three";
 import { RoundedBoxGeometry } from "three/examples/jsm/geometries/RoundedBoxGeometry.js";
 
-import { createCameraPath } from "../../camera/camera-path";
 import { smoothstep } from "../../math";
-import { local, progressOf } from "../../timeline/timeline";
+import { local } from "../../timeline/timeline";
 import { frameGeometry, plateGeometry } from "../geometry/frames";
 import { COLORS } from "../layout";
 import { useWorld } from "../WorldContext";
 import {
-  ASSEMBLY,
   CHANNEL,
   chainAt,
   chainNormal,
@@ -52,16 +50,24 @@ import { bladeMatrix, buildLens, LENS, LENS_TRACES } from "./lens";
 import { buildFaceDetail, buildSeamLight, buildShell, rimNormal, shellPoint } from "./s-shell";
 import { S_INNER, S_OUTER } from "./s-mark";
 
-/** Distant signals in the void (appear at local `at`), and the bow of their run in. */
-const VOID_SIGNALS: {
-  from: [number, number, number];
-  bend: [number, number, number];
-  at: number;
-}[] = [
-  { from: [-22, 8, -16], bend: [5, 5, 8], at: -0.14 },
-  { from: [27, -6, -34], bend: [-6, 4, 10], at: 0.3 },
-  { from: [-7, -12, -52], bend: [3, -5, 12], at: 0.62 },
+/**
+ * The void: the founder's signals already run through the Engine's own channels. Each travels one
+ * edge of the S (channel k, outer/inner chain) and draws it in light behind it — seen so close at
+ * first that the lines read as abstract curves. Appears at void-local `at`.
+ */
+const VOID_RUNS: { k: number; ci: number; at: number }[] = [
+  { k: 0, ci: 0, at: -0.4 },
+  { k: 0, ci: 1, at: 0.15 },
+  { k: 1, ci: 0, at: 0.4 },
 ];
+/** How far along its edge (0 → 1) each void signal has drawn at progress p. */
+function voidHeads(p: number): number[] {
+  const vv = local(p, "void");
+  const aa = local(p, "awakening");
+  return VOID_RUNS.map((r) =>
+    Math.min(1, 0.82 * smoothstep(r.at, r.at + 0.8, vv) + 0.18 * smoothstep(0, 0.22, aa)),
+  );
+}
 /** Faint distant structure glimpsed through the aperture before the reveal. */
 const HINTS: [number, number, number][] = [
   [-9, 1.5, -30],
@@ -171,29 +177,23 @@ export function IntelligenceCore({ variant = "origin" }: { variant?: "origin" | 
 
   // Flights in (origin): fixed points derived from the camera path, so pure in scroll. The first
   // channel sweeps past the lens; its complement rises out of the dark beyond.
-  const flights = useMemo<Flight[]>(() => {
-    const path = createCameraPath();
-    const P = new Vector3();
-    const T = new Vector3();
-    path.sample(progressOf("awakening", ASSEMBLY.channels[0][0]), P, T);
-    const fwd = T.clone().sub(P).normalize();
-    const right = new Vector3().crossVectors(fwd, Y_AXIS).normalize();
-    return [
+  // Each channel descends onto the line already drawn for it, from just in front of the S —
+  // the metal lands where the signals were travelling, it does not fly in from elsewhere.
+  const flights = useMemo<Flight[]>(
+    () => [
       {
-        from: P.clone()
-          .addScaledVector(fwd, 3)
-          .addScaledVector(right, 4.5)
-          .add(new Vector3(0, 1.5, 0)),
-        via: P.clone().addScaledVector(fwd, 14).addScaledVector(right, 2),
-        turn: new Quaternion().setFromEuler(new Euler(0.5, -1.0, 0.9)),
+        from: new Vector3(-1.6, 1.2, 7),
+        via: new Vector3(-0.5, 0.4, 2.4),
+        turn: new Quaternion().setFromEuler(new Euler(0.28, -0.34, 0.12)),
       },
       {
-        from: new Vector3(10, -16, -34),
-        via: new Vector3(4, -6, -12),
-        turn: new Quaternion().setFromEuler(new Euler(-0.5, 0.9, -0.7)),
+        from: new Vector3(1.6, -1.2, 7),
+        via: new Vector3(0.5, -0.4, 2.4),
+        turn: new Quaternion().setFromEuler(new Euler(-0.28, 0.34, -0.12)),
       },
-    ];
-  }, []);
+    ],
+    [],
+  );
 
   const scratch = useMemo(
     () => ({
@@ -518,18 +518,23 @@ export function IntelligenceCore({ variant = "origin" }: { variant?: "origin" | 
       const front = CHANNEL.depth / 2 + CHANNEL.coverDepth + 0.05;
       // 0–15: the S drawn in light — reference channels (outer + inner, both channels), then
       // the inner ones stay as the gold seam once the metal is in place.
+      const heads = finale ? [0, 0, 0] : voidHeads(p);
+      // In the void the lines are faint traces; they gain presence as the S resolves.
+      const gain = finale ? 1 : 0.5 + 0.5 * smoothstep(0, 0.3, local(p, "awakening"));
       for (let k = 0; k < 2; k++) {
         const bp = Math.min(1, Math.max(0, (pose.blueprint - k * 0.12) / 0.88));
         for (let ci = 0; ci < 2; ci++) {
           const innerChain = ci === 1;
+          const run = VOID_RUNS.findIndex((r) => r.k === k && r.ci === ci);
+          const drawn = Math.max(bp, run >= 0 ? heads[run] : 0);
           for (let sIdx = 0; sIdx < 4; sIdx++) {
             const idx = base + k * 8 + ci * 4 + sIdx;
-            const grow = Math.min(1, Math.max(0, bp * 4 - sIdx));
+            const grow = Math.min(1, Math.max(0, drawn * 4 - sIdx));
             const fadeOuter = innerChain ? 0 : pose.blueprintFade;
             const seamOn = innerChain ? pose.seam : 0;
             const intensity =
               grow *
-              ((1 - fadeOuter) * (finale ? 1.15 : 0.75) * (innerChain ? 1 - pose.seam : 1) +
+              ((1 - fadeOuter) * (finale ? 1.15 : 0.75) * gain * (innerChain ? 1 - pose.seam : 1) +
                 seamOn * 1.1);
             if (intensity <= 0.01) {
               filaments.hide(idx);
@@ -617,62 +622,53 @@ export function IntelligenceCore({ variant = "origin" }: { variant?: "origin" | 
       });
       // 28-32: unused since the lens kernel.
       for (let j = 0; j < 5; j++) filaments.hide(base + 28 + j);
-      // 33–35: VOID — distant signals appear one by one, each travelling slowly along a
-      // barely perceptible engineered channel (42–44) — S-curved, the second answering the
-      // first from another depth — then they streak into the counter.
-      const vv = local(p, "void");
-      const aa = local(p, "awakening");
-      VOID_SIGNALS.forEach((sig, j) => {
-        const idx = base + 33 + j;
-        const channel = base + 42 + j;
-        const appear = finale ? 0 : smoothstep(sig.at, sig.at + 0.12, vv);
-        const travel = smoothstep(0.0 + j * 0.03, 0.16 + j * 0.03, aa);
-        if (appear <= 0 || travel >= 1) {
-          filaments.hide(idx);
-          filaments.hide(channel);
-          return;
-        }
-        const [x, y, z] = sig.from;
-        const [bx, by, bz] = sig.bend;
-        // Opposed handles: an S-curve, not an arc — the emblem's inflection, unseen.
-        for (const k of [idx, channel])
-          filaments.curve(
-            k,
-            x,
-            y,
-            z,
-            (x * 2) / 3 + bx,
-            (y * 2) / 3 + by,
-            (z * 2) / 3 + bz,
-            x / 3 - bx,
-            y / 3 - by,
-            z / 3 - bz,
-            0,
-            0,
-            0,
-          );
-        filaments.params(channel, {
-          s0: 0,
-          s1: Math.min(1, appear * 1.4),
-          width: 0.06,
-          intensity: 0.32 * appear * (1 - travel),
-          violet: 0.55,
-          // A slow bead of light travels each channel: the hidden system is already running.
-          pulse: 1,
-          phase: j * 0.37,
-          speed: 0.07,
+      // 33–35: VOID — the founder's signals, each a bright head riding one edge of the S and
+      // drawing it (the line behind it is the blueprint, 0–15). 42–44: the tail across the
+      // previous quarter when the head has just crossed into a new one. They are absorbed as
+      // the S resolves.
+      {
+        const heads = voidHeads(p);
+        const vv = local(p, "void");
+        const fade = finale ? 0 : 1 - smoothstep(0.12, 0.24, local(p, "awakening"));
+        VOID_RUNS.forEach((r, j) => {
+          const idx = base + 33 + j;
+          const tail = base + 42 + j;
+          const h = heads[j];
+          const appear = smoothstep(r.at, r.at + 0.1, vv);
+          if (fade <= 0.001 || appear <= 0.001 || h <= 0.001 || h >= 0.999) {
+            filaments.hide(idx);
+            filaments.hide(tail);
+            return;
+          }
+          const chain = r.ci ? S_INNER : S_OUTER;
+          const qi = Math.min(3, Math.floor(h * 4));
+          const u = h * 4 - qi;
+          const len = 0.4;
+          spanTo(rest[r.k], chain, qi / 4, (qi + 1) / 4, 0);
+          cubicThrough(idx, pts[0], pts[1], pts[2], pts[3]);
+          const glow = appear * fade * (2.2 + 0.4 * Math.sin(t * 1.7 + j));
+          filaments.params(idx, {
+            s0: Math.max(0, u - len),
+            s1: u,
+            width: 0.07,
+            intensity: glow,
+            violet: j === 1 ? 0.8 : 0.15,
+            pulse: 0,
+          });
+          if (u < len && qi > 0) {
+            spanTo(rest[r.k], chain, (qi - 1) / 4, qi / 4, 0);
+            cubicThrough(tail, pts[0], pts[1], pts[2], pts[3]);
+            filaments.params(tail, {
+              s0: 1 - (len - u),
+              s1: 1,
+              width: 0.07,
+              intensity: glow,
+              violet: j === 1 ? 0.8 : 0.15,
+              pulse: 0,
+            });
+          } else filaments.hide(tail);
         });
-        const glide = 0.2 * smoothstep(sig.at, 1, vv);
-        const head = 0.03 + glide + travel * (0.97 - glide);
-        filaments.params(idx, {
-          s0: Math.max(0, head - 0.05 - travel * 0.1),
-          s1: head,
-          width: 1.5 - travel * 0.9,
-          intensity: appear * (2.4 + 0.5 * Math.sin(t * 1.7 + j)),
-          violet: j === 1 ? 0.8 : 0,
-          pulse: 0,
-        });
-      });
+      }
       // 36: the gold signal that leads the camera into the aperture.
       {
         const idx = base + 36;

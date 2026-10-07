@@ -78,15 +78,18 @@ export function DomSync() {
     // Immersion: the navigation recedes during the deepest sequences, returns for the product.
     nav.el ??= document.querySelector<HTMLElement>("[data-testid=cinematic-nav]");
     if (nav.el) {
-      const immerse = (
-        ramp(p, "void", 0.7, "awakening", 0.45) *
-        (1 - ramp(p, "handoff", 0.45, "product", 0.1))
+      const immerse = Math.max(
+        ramp(p, "void", 0.25, "void", 0.85) * (1 - ramp(p, "handoff", 0.6, "product", 0.1)),
+        ramp(p, "connected", 0.4, "return", 0.2) * (1 - ramp(p, "finale", 0.72, "finale", 0.86)),
       ).toFixed(2);
       if (immerse !== nav.value) {
         nav.value = immerse;
         nav.el.style.setProperty("--immerse", immerse);
       }
     }
+
+    // Film time (the rendered progress, not the raw scroll position).
+    if (dom.time) setStyle(dom.time, "transform", `scaleY(${p.toFixed(4)})`);
 
     // Visible captions, so world labels can step aside instead of colliding with the copy.
     const sizeKey = `${width}x${height}`;
@@ -117,7 +120,7 @@ export function DomSync() {
       if (el)
         show(
           el,
-          captionOpacity({ id: w.id, kind: "line", text: "", span: w.span, place: "lower" }, p),
+          captionOpacity({ id: w.id, kind: "line", text: "", span: w.span, place: "title" }, p),
         );
     }
 

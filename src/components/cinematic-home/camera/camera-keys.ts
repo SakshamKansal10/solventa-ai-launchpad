@@ -1,6 +1,6 @@
 import { progressOf, type SceneId } from "../timeline/timeline";
 import { FINALS_HUB } from "../world/layout";
-import { pathEye, revisedEye, sideEye, WINNER_POS } from "../world/path/path-model";
+import { frameEye, pathEye, revisedEye, sideEye, WINNER_POS } from "../world/path/path-model";
 import { productEye } from "../world/product/product-model";
 import type { CameraKey, Vec3 } from "./camera-path";
 
@@ -27,14 +27,14 @@ const key = (scene: SceneId, at: number, position: Vec3, target: Vec3): CameraKe
  * Slow dolly, controlled orbit, macro approach, pass-through, reveal.
  */
 export const CAMERA_PATH_KEYS: CameraKey[] = [
-  // A — the void: far out, almost nothing to see; an extremely slow drift forward.
-  key("void", 0, [0, 2.4, 74], [0, 0.4, 0]),
-  key("void", 1, [0.5, 1.8, 58], [0, 0.4, 0]),
-  // Awakening — close enough to see the precision: the S is drawn in light, its first channel
-  // passes the lens, the wafers settle; then a pull back reveals the whole Engine.
+  // A — the void, discovered: the film opens so close to the S's edges that the signals running
+  // along them read as abstract curves; the camera draws back and the curves resolve into the
+  // S. The metal then lands on those lines while the camera arcs gently around the Engine.
+  key("void", 0, [-1, 3.3, 6.8], [-2.7, 2.4, 0]),
+  key("void", 1, [-0.4, 2.5, 12.5], [-1.4, 1.4, 0]),
   key("awakening", 0.24, [1.2, 1.1, 21], [0, 0.4, 0]),
-  key("awakening", 0.46, [3.4, 0.7, 12.5], [-0.4, 0.3, 0]),
-  key("awakening", 0.72, [4.6, 0.5, 10.5], [0.2, 0, 0]),
+  key("awakening", 0.46, [3, 0.8, 15.5], [-0.3, 0.3, 0]),
+  key("awakening", 0.72, [4.2, 0.6, 13.5], [0.2, 0, 0]),
   key("awakening", 1, [8.5, 1.6, 25], [-3.6, -0.6, 0]),
   // The camera stops on the complete Engine before the founder's signals arrive.
   key("context", 0.1, [8.6, 1.62, 24.8], [-3.6, -0.6, 0]),
@@ -57,30 +57,21 @@ export const CAMERA_PATH_KEYS: CameraKey[] = [
   // …and over the whole constellation, once it is all there.
   key("universe", 0.62, [0.1, 7.9, -4.2], [1.6, -3.6, -45]),
   key("universe", 1, [-1.8, 13.5, 2.5], [3, -4.5, -47]),
-  // E — computation, travelled: glide past the capability matrix, then across to the
-  // capital terraces, then turn toward the emerging region where the survivors gather.
-  key("computation", 0.32, [-7, 3.6, -16.5], [-17, 2, -28]),
-  key("computation", 0.64, [5, 6.2, -22], [17, 3.8, -37]),
-  key("computation", 1, [4.5, 6.2, -15], [5, -1, -40]),
+  // E — computation, in the same world: no cut to a new view. The overlook glides slowly down
+  // and across while the founder's waves visibly cross everything below it, settling toward the
+  // region where the survivors gather.
+  key("computation", 0.35, [-0.6, 11.6, -1.2], [2.2, -3.6, -44.5]),
+  key("computation", 0.7, [2.4, 9.2, -7], [4.4, -2.2, -44]),
+  key("computation", 1, [4.4, 6.8, -13], [5.4, -1.2, -42]),
   // F/G — toward the promising region; the nine.
   key("convergence", 0.5, [6, 3.2, -21], [7, -1, -42]),
   key("convergence", 1, [6.2, 2.6, -24], [6, 0.8, -46]),
-  // H — between the three futures (each could be its own world).
-  // Each is framed whole — three distinct architectures, never cropped — from low and close,
-  // so each could be an entire future.
-  key(
-    "three",
-    0.2,
-    [-4.6, -1.3, -35.6],
-    [FINALS_HUB[0] - 7.5, FINALS_HUB[1] + 2.1, FINALS_HUB[2] + 1],
-  ),
-  key("three", 0.34, [4.8, 1.2, -43.6], [WINNER_POS[0], WINNER_POS[1] + 1.2, WINNER_POS[2]]),
-  key(
-    "three",
-    0.48,
-    [16.6, -2.9, -36.8],
-    [FINALS_HUB[0] + 7.5, FINALS_HUB[1] + 0.3, FINALS_HUB[2] - 0.5],
-  ),
+  // H — the three futures grow out of the lattice columns while the camera keeps moving along
+  // the same axis, into the space between them: the side futures sweep past the frame edges, the
+  // nest forms ahead and above; then it eases back, below them, for the comparison.
+  key("three", 0.18, [6.1, 1.2, -30.5], [6, 1.6, -47]),
+  key("three", 0.34, [6, 0.4, -35.5], [6, 3.2, -52]),
+  key("three", 0.5, [6, 0.1, -31], [6, 1.8, -48]),
   // The comparison: all three held in one frame, seen from below, while the six signals rise
   // into each — then the camera stops and waits.
   key("three", 0.64, [6, 0.4, -25.5], [FINALS_HUB[0], FINALS_HUB[1] + 2.2, FINALS_HUB[2] - 2]),
@@ -93,25 +84,23 @@ export const CAMERA_PATH_KEYS: CameraKey[] = [
   key("unfold", 0.3, [11.5, 4.6, -45], [WINNER_POS[0], WINNER_POS[1] + 0.8, WINNER_POS[2] - 2]),
   key("unfold", 0.62, [8.6, 5.2, -47], [...pathEye(18).target]),
   { at: progressOf("unfold", 1), ...pathEye(4) },
-  // Validate → Build → Elevate: one evolving world, travelled through.
-  // Validate: out of the corridor. The plan is provisional, seen from the side in open space,
-  // its probes reaching ahead into nothing; then up over it before Build.
+  // Validate → Build → Elevate → evidence: ONE carried camera, always on the left of the road.
+  // It rises out of the corridor it was inside; the provisional plan is seen in open space;
+  // it drops low alongside as the gates lock (Build); it climbs as the branches grow out of the
+  // gates it has just passed (Elevate); and over the network it watches the evidence travel in.
   { at: progressOf("validate", 0.4), ...sideEye(24, -8.5, 6, 16) },
   { at: progressOf("validate", 0.75), ...sideEye(42, -10, 7.5, 20) },
-  { at: progressOf("validate", 1), ...sideEye(58, -3, 9, 18) },
-  // Build: step outside and track alongside — watch the gates lock and the deck form.
-  { at: progressOf("build", 0.4), ...sideEye(74, 7, 1.6) },
-  { at: progressOf("build", 1), ...sideEye(98, 7.5, 2.4) },
-  // Elevate: gain altitude over the branching network.
-  { at: progressOf("elevate", 0.5), ...sideEye(106, 10, 18, 22) },
-  { at: progressOf("elevate", 1), ...sideEye(118, 6, 22, 24) },
-  // Evidence arrives; then the crisis — pull back to see the future lose integrity.
-  { at: progressOf("evidence", 0.3), ...raise(pathEye(122), 7) },
-  { at: progressOf("evidence", 1), ...pathEye(138) },
-  // The consequence: up and out to the side, where the dependent section can be seen failing
-  // in profile — the assumption at the left of frame, what rested on it to the right. Then the
-  // camera stops while the other possibilities appear.
-  { at: progressOf("crisis", 0.3), ...raise(pathEye(134), 3, 1) },
+  { at: progressOf("validate", 1), ...sideEye(58, -8, 5, 18) },
+  { at: progressOf("build", 0.4), ...sideEye(74, -7.5, 2, 16) },
+  { at: progressOf("build", 1), ...sideEye(96, -9, 3.5, 18) },
+  { at: progressOf("elevate", 0.5), ...sideEye(108, -12, 11, 22) },
+  { at: progressOf("elevate", 1), ...frameEye(118, -15, 16, 138, -14, 8) },
+  { at: progressOf("evidence", 0.35), ...frameEye(122, -14, 15, 142, -22, 11) },
+  { at: progressOf("evidence", 1), ...frameEye(132, -12, 8, 146, -3, 1.5) },
+  // The consequence: further out on the same side, where the dependent section can be seen
+  // failing in profile — the assumption at the left of frame, what rested on it to the right.
+  // Then the camera stops while the other possibilities appear.
+  { at: progressOf("crisis", 0.3), ...sideEye(141, -14, 8, 11) },
   { at: progressOf("crisis", 0.65), ...sideEye(151, -19, 9.5, 9) },
   { at: progressOf("crisis", 1), ...sideEye(152, -18.6, 9.2, 9) },
   // Adaptation — inside the transformation, following the rebuilt direction.

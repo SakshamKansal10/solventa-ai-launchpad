@@ -61,7 +61,7 @@ export const SCENES: readonly SceneDef[] = [
   { id: "crisis", label: "Evidence crisis", lengthVh: 130 },
   { id: "adaptation", label: "Adaptation", lengthVh: 190 },
   { id: "handoff", label: "3D → interface", lengthVh: 140 },
-  { id: "product", label: "Product", lengthVh: 200 },
+  { id: "product", label: "Product", lengthVh: 150 },
   { id: "connected", label: "Connected intelligence", lengthVh: 150 },
   { id: "return", label: "Product → cinema", lengthVh: 120 },
   { id: "finale", label: "Finale", lengthVh: 240 },

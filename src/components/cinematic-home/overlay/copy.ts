@@ -3,18 +3,21 @@ import { SIGNALS } from "../world/context/context-model";
 import { WEIGHTS } from "../world/universe/scoring";
 
 /**
- * Every word the cinematic homepage shows, and exactly when. Minimal by
- * design: the visuals carry the story, the copy only names it. Pure data.
+ * Every word the cinematic homepage shows, and exactly when. Film titles, not
+ * page sections: one short line in the lower third, on screen briefly, while
+ * the world carries the story. Validate, Build and Elevate are chapter marks
+ * that pass while the architecture itself changes. Pure data.
  */
 export type Span = [SceneId, number, SceneId, number];
 
 export interface Caption {
   id: string;
-  kind: "statement" | "title" | "line" | "quiet" | "finale";
+  kind: "statement" | "chapter" | "line" | "quiet" | "finale";
   text: string;
   sub?: string;
   span: Span;
-  place: "lower" | "upper" | "centre" | "bottom";
+  /** "title": the lower-third film title; "end": the finale composition. */
+  place: "title" | "end";
 }
 
 export const CAPTIONS: Caption[] = [
@@ -22,90 +25,90 @@ export const CAPTIONS: Caption[] = [
     id: "void",
     kind: "statement",
     text: "Every founder begins with uncertainty.",
-    span: ["void", 0.12, "awakening", 0.18],
-    place: "lower",
+    span: ["void", 0.12, "awakening", 0.1],
+    place: "title",
   },
   {
     id: "awakening",
     kind: "statement",
     text: "There is a direction hidden inside your reality.",
-    span: ["awakening", 0.55, "context", 0.1],
-    place: "lower",
+    span: ["awakening", 0.58, "context", 0.02],
+    place: "title",
   },
   {
     id: "context",
     kind: "line",
     text: "Solventia starts with you.",
     sub: "Illustrative founder profile",
-    span: ["context", 0.04, "context", 0.96],
-    place: "upper",
+    span: ["context", 0.14, "context", 0.7],
+    place: "title",
   },
   {
     id: "universe",
     kind: "quiet",
     text: "Hundreds of possible directions.",
-    span: ["universe", 0.25, "computation", 0.06],
-    place: "lower",
+    span: ["universe", 0.3, "universe", 0.95],
+    place: "title",
   },
   {
     id: "computation",
     kind: "line",
     text: "Your context reshapes every one of them.",
-    span: ["computation", 0.06, "computation", 0.95],
-    place: "upper",
+    span: ["computation", 0.02, "computation", 0.4],
+    place: "title",
   },
   {
     id: "selection",
     kind: "statement",
     text: "One direction worth testing.",
-    span: ["selection", 0.7, "unfold", 0.22],
-    place: "bottom",
+    span: ["selection", 0.7, "unfold", 0.12],
+    place: "title",
   },
   {
     id: "validate",
-    kind: "title",
+    kind: "chapter",
     text: "Validate",
     sub: "Discover what reality supports.",
-    span: ["validate", 0.02, "validate", 0.9],
-    place: "upper",
+    span: ["validate", 0.1, "validate", 0.64],
+    place: "title",
   },
   {
     id: "build",
-    kind: "title",
+    kind: "chapter",
     text: "Build",
     sub: "Turn evidence into execution.",
-    span: ["build", 0.02, "build", 0.9],
-    place: "upper",
+    span: ["build", 0.1, "build", 0.64],
+    place: "title",
   },
   {
     id: "elevate",
-    kind: "title",
+    kind: "chapter",
     text: "Elevate",
     sub: "Improve what proves valuable.",
-    span: ["elevate", 0.02, "elevate", 0.92],
-    place: "upper",
+    span: ["elevate", 0.1, "elevate", 0.64],
+    place: "title",
   },
   {
     id: "evidence",
     kind: "statement",
     text: "Plans are assumptions until reality responds.",
-    span: ["crisis", 0.22, "adaptation", 0.12],
-    place: "lower",
+    span: ["crisis", 0.24, "crisis", 0.96],
+    place: "title",
   },
   {
     id: "adaptation",
     kind: "statement",
     text: "The path changes when the evidence changes.",
-    span: ["adaptation", 0.5, "handoff", 0.25],
-    place: "lower",
+    span: ["adaptation", 0.5, "adaptation", 0.98],
+    place: "title",
   },
   {
     id: "connected",
     kind: "statement",
     text: "A chatbot answers.",
     sub: "Solventia carries the journey forward.",
-    span: ["connected", 0.32, "return", 0.4],
-    place: "upper",
+    span: ["connected", 0.35, "return", 0.15],
+    place: "title",
   },
   {
     id: "finale",
@@ -114,7 +117,7 @@ export const CAPTIONS: Caption[] = [
     sub: "Your reality. Your evidence. Your path forward.",
     // Staged inside one composition (identity → line → promise → CTA), then a protected hold.
     span: ["finale", 0.3, "finale", 1.01],
-    place: "bottom",
+    place: "end",
   },
 ];
 
@@ -170,7 +173,6 @@ export const LABELS: {
     sub: "Illustrative customer response",
     kind: "quote",
   },
-  { anchor: "isolated", text: "An isolated answer", sub: "No context · no history", kind: "tag" },
   { anchor: "chain-0", text: "Context", kind: "tag" },
   { anchor: "chain-1", text: "Opportunity", kind: "tag" },
   { anchor: "chain-2", text: "Evidence", kind: "tag" },

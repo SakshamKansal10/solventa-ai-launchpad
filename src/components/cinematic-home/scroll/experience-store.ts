@@ -54,6 +54,8 @@ export interface ExperienceState {
     captions: Map<string, HTMLElement>;
     panel: HTMLElement | null;
     counter: HTMLElement | null;
+    /** The hairline film-time indicator (replaces the page scrollbar). */
+    time: HTMLElement | null;
   };
 }
 
@@ -84,7 +86,7 @@ export function createExperienceStore() {
     capability: null,
     anchors: new Map(),
     slab: { visible: false, matrix: new Float32Array(16), dom: 0, released: false },
-    dom: { anchors: new Map(), captions: new Map(), panel: null, counter: null },
+    dom: { anchors: new Map(), captions: new Map(), panel: null, counter: null, time: null },
   };
   const listeners = new Set<() => void>();
   return {

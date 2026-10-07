@@ -1,5 +1,5 @@
 import { mulberry32 } from "../../math";
-import { FINALS_HUB, type V3 } from "../layout";
+import { FINALS_HUB, latticeNode, type V3 } from "../layout";
 import { fits, score, worstFit, type Fits, type OpportunityAttributes } from "./scoring";
 
 /**
@@ -529,18 +529,13 @@ export function createUniverse(renderCount = LOGICAL_COUNT, seed = 11): Universe
   // each headed by a finalist with its two nearest rivals ranked beneath it. Each column then
   // resolves into one future.
   const nine = new Map<number, [number, number, number]>();
-  const colX = [-7.5, 0, 7.5];
   const headCol = [1, 0, 2];
   const columns: number[][] = [[], [], []];
   top.slice(0, 9).forEach((o, i) => {
     const col = headCol[i % 3];
     const row = Math.floor(i / 3);
     columns[col].push(o.index);
-    nine.set(o.index, [
-      FINALS_HUB[0] + colX[col] * (1 - row * 0.06),
-      FINALS_HUB[1] + 3.4 - row * 2.3 + (col === 1 ? 0.6 : 0),
-      FINALS_HUB[2] + 1 + row * 1.2 - (col === 1 ? 1.5 : 0),
-    ]);
+    nine.set(o.index, latticeNode(col, row));
   });
   const nineLinks: [number, number][] = [];
   for (const c of columns) nineLinks.push([c[2], c[1]], [c[1], c[0]]);

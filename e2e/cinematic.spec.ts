@@ -382,18 +382,32 @@ test.describe("cinematic homepage", () => {
       .toBe(true);
   });
 
-  test("the navigation recedes in the depths of the film and returns for the product", async ({
+  test("the site bar leaves the film, stays reachable, and returns for the product", async ({
     page,
   }) => {
     await open(page);
-    const links = page.getByTestId("cinematic-nav").getByRole("navigation").locator("ul").first();
+    const nav = page.getByTestId("cinematic-nav");
+    const links = nav.getByRole("navigation").locator("ul").first();
     const opacity = () => links.evaluate((el) => Number(getComputedStyle(el).opacity));
+    const wordmark = nav.getByRole("link", { name: "Solventia home" });
+    // On arrival the full bar is there.
+    expect(await opacity()).toBeGreaterThan(0.99);
+    // During the film the links and calls to action leave the frame entirely; the wordmark stays,
+    // quietly, never below AA contrast.
     await goTo(page, "computation", 0.5);
-    await expect.poll(opacity).toBeLessThan(0.7);
-    expect(await opacity()).toBeGreaterThanOrEqual(0.54);
-    await page.getByTestId("cinematic-nav").hover();
+    await expect.poll(opacity).toBeLessThan(0.05);
+    expect(
+      await wordmark.evaluate((el) => Number(getComputedStyle(el).opacity)),
+    ).toBeGreaterThanOrEqual(0.54);
+    // Pointer and keyboard both bring the whole bar back at once.
+    await nav.hover();
     await expect.poll(opacity).toBeGreaterThan(0.99);
     await page.mouse.move(700, 500);
+    await expect.poll(opacity).toBeLessThan(0.05);
+    await wordmark.focus();
+    await expect.poll(opacity).toBeGreaterThan(0.99);
+    await wordmark.blur();
+    // The product is part of the site again: the bar returns.
     await goTo(page, "product", 0.5);
     await expect.poll(opacity).toBeGreaterThan(0.99);
   });

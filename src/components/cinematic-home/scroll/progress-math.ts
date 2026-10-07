@@ -16,8 +16,11 @@ export function sectionProgress(
   return clamp01((scrollY - sectionTop) / distance);
 }
 
-/** Smoothing between raw scroll and the rendered scene (1/s). Lower = floatier camera. */
-export const PROGRESS_SMOOTHING = 4.2;
+/**
+ * Smoothing between raw scroll and the rendered scene (1/s). Lower = floatier camera. Scrolling
+ * advances film time: the picture follows the wheel with weight, never like a page position.
+ */
+export const PROGRESS_SMOOTHING = 3;
 
 /**
  * Longest step (s) the scene integrates in one frame — a background tab that

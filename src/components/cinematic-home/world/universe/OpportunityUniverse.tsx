@@ -12,7 +12,7 @@ import {
   type Material,
 } from "three";
 
-import { progressOf } from "../../timeline/timeline";
+import { progressOf, ramp } from "../../timeline/timeline";
 import { useWorld } from "../WorldContext";
 import { buildFamilies } from "./families";
 import { FINALS_HUB } from "../layout";
@@ -253,7 +253,7 @@ export function OpportunityUniverse() {
 
     // The nine as a lattice: each column ranked upward into its head, the three heads joined in
     // gold — structure replacing the scattered network.
-    const ringGrow = ph.stages[2] * (1 - ph.stages[3]);
+    const ringGrow = ph.stages[2] * (1 - ramp(p, "three", 0.06, "three", 0.24));
     const links = model.formations.nineLinks;
     for (let j = 0; j < 9; j++) {
       const idx = ring.start + j;

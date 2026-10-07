@@ -28,6 +28,9 @@ import { COLORS } from "./world/layout";
 const CinematicCanvas = lazy(() => import("./scene/CinematicCanvas"));
 const DebugHud = lazy(() => import("./debug/DebugHud"));
 
+const HIDE_SCROLLBAR =
+  "html,body{scrollbar-width:none}html::-webkit-scrollbar,body::-webkit-scrollbar{display:none}";
+
 /** A WebGL start slower than this (huge GPU stall, broken driver) falls back to the static page. */
 const START_TIMEOUT_MS = 15_000;
 
@@ -133,6 +136,8 @@ export function CinematicHome({
         {mode === "fallback" ? (
           <StaticFallback />
         ) : (
+          // Time, not a page: the document scrollbar is hidden on this route (scrolling, keys and
+          // assistive navigation work as usual); the overlay shows a film-time hairline instead.
           <section
             ref={sectionRef}
             data-testid="cinematic-timeline"
@@ -141,6 +146,7 @@ export function CinematicHome({
             // The stage's own 100lvh plus the timeline's scroll length (shorter on phones).
             style={{ height: `calc(${TIMELINE_SCROLL_VH}lvh * var(--cine-pace) + 100lvh)` }}
           >
+            <style>{HIDE_SCROLLBAR}</style>
             <div className="fixed inset-x-0 top-0 h-lvh" data-testid="cinematic-stage">
               {/* The world fades up over the void as soon as it has rendered real frames. */}
               <div

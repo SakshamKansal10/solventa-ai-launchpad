@@ -27,6 +27,21 @@ export const UNIVERSE_CENTER: V3 = [
 /** Where the three finalists meet; the selected one becomes the path from here. */
 export const FINALS_HUB: V3 = [6, -0.5, -46];
 
+/**
+ * The nine as a decision lattice: three columns standing where the three futures will appear
+ * (0 = Direction 01 left, 1 = the one, 2 = Direction 03 right), each ranked downward from its
+ * head (row 0). The futures later grow out of these nodes.
+ */
+export function latticeNode(col: number, row: number): [number, number, number] {
+  const x = [-7.5, 0, 7.5][col];
+  const centre = col === 1;
+  return [
+    FINALS_HUB[0] + x * (1 - row * 0.06),
+    FINALS_HUB[1] + 3.4 - row * 2.3 + (centre ? 0.6 : 0),
+    FINALS_HUB[2] + 1 + row * 1.2 - (centre ? 1.5 : 0),
+  ];
+}
+
 /** Palette from the art direction (sRGB hex; three converts to linear). */
 export const COLORS = {
   // Environment (V3 palette).

@@ -169,7 +169,13 @@ export function nodeFrame(
   for (let k = 1; k <= 5; k++) {
     const f = ph.stages[k - 1];
     if (f <= 0) break;
-    if (o.stage === k) {
+    if (o.stage === k && k === 4) {
+      // 9 → 3: the rivals are not discarded. Each brightens and is absorbed where it stands —
+      // the future growing out of its column takes its pieces from these nodes.
+      falling = f;
+      energy *= 1 + 0.8 * Math.sin(Math.PI * Math.min(1, f * 1.4));
+      scale *= 1 - f;
+    } else if (o.stage === k) {
       falling = f;
       energy *= 1 - 0.93 * f;
       solid *= 1 - f;

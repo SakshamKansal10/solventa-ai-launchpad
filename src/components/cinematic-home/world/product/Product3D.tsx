@@ -1,16 +1,12 @@
 import { useFrame } from "@react-three/fiber";
 import { useEffect, useMemo, useRef } from "react";
 import {
-  CapsuleGeometry,
   Euler,
   Group,
   MeshBasicMaterial,
-  LatheGeometry,
   Matrix4,
-  Mesh,
   PlaneGeometry,
   Quaternion,
-  Vector2,
   Vector3,
 } from "three";
 import { RoundedBoxGeometry } from "three/examples/jsm/geometries/RoundedBoxGeometry.js";
@@ -20,7 +16,7 @@ import { local, ramp } from "../../timeline/timeline";
 import { CHANNEL, S_SCALE } from "../core/core-design";
 import { FINALE_PLACE, FINALE_YAW } from "../core/core-motion";
 import { S_INNER, S_OUTER } from "../core/s-mark";
-import { frameGeometry, inlayGeometry } from "../geometry/frames";
+import { frameGeometry } from "../geometry/frames";
 import { revisedFrame, UNSTABLE } from "../path/path-model";
 import { useWorld } from "../WorldContext";
 import { SLAB, SLAB_CENTRE, SLAB_NORMAL, SLAB_QUATERNION, slabState } from "./product-model";
@@ -54,27 +50,38 @@ const TONES: Record<Tone, string> = {
   pill: "#ece7dd",
 };
 
+/**
+ * Connected: the interface's own relationships, drawn as gold routing across the surface it
+ * already is — no new objects. Normalised face points (from the panel's layout, CHAIN order):
+ * the founder context in the sidebar, the direction's headline, the confidence card (evidence),
+ * the roadmap (path) and its stages (progress).
+ */
+const ROUTE: [number, number][] = [
+  [0.12, 0.4],
+  [0.5, 0.26],
+  [0.89, 0.26],
+  [0.45, 0.82],
+  [0.85, 0.82],
+];
+
 const RIGHT = new Vector3()
   .crossVectors(new Vector3(0, 1, 0), SLAB_NORMAL)
   .normalize()
   .negate();
 
-/** Where link k of the connected chain floats, in front of the product surface. */
-function tokenPosition(k: number, out: Vector3): Vector3 {
-  const along = k / (CHAIN.length - 1);
-  out
-    .copy(SLAB_CENTRE)
-    .addScaledVector(RIGHT, -1.2 + along * 7.8)
-    .addScaledVector(SLAB_NORMAL, 4.2 + Math.sin(along * Math.PI) * 1.5);
-  out.y += -2.1 + Math.sin(along * Math.PI * 1.2) * 1.1;
-  return out;
+/** A route node in world space, on the slab's face as it is placed this frame. */
+function routePoint(k: number, slab: Matrix4, out: Vector3): Vector3 {
+  const [x, y] = ROUTE[k];
+  return out
+    .set((x - 0.5) * SLAB.width, (0.5 - y) * SLAB.height, SLAB.depth / 2 + 0.03)
+    .applyMatrix4(slab);
 }
 
 /**
- * Scene 22 → 23: the remaining pathways converge — on the emblem's centre and the four points
- * from which its outline is then drawn in light (where each channel's edges begin, beside the
- * kernel). World space, in the emblem's pose while it assembles; assigned left to right, so
- * the converging lines never cross.
+ * Scene 22 → 23: the routing leaves the surface and converges — on the emblem's centre and the
+ * four points from which its outline is then drawn in light (where each channel's edges begin,
+ * beside the kernel). World space, in the emblem's pose while it assembles; assigned left to
+ * right, as are the route nodes, so the converging lines never cross.
  */
 const CONVERGE_TO = (() => {
   const place = new Matrix4().compose(
@@ -83,7 +90,7 @@ const CONVERGE_TO = (() => {
     new Vector3(1, 1, 1),
   );
   const front = CHANNEL.depth / 2 + CHANNEL.coverDepth;
-  return [[0, 0] as const, S_OUTER[0], S_INNER[0]]
+  const ends = [[0, 0] as const, S_OUTER[0], S_INNER[0]]
     .flatMap(([x, y], i) =>
       i === 0
         ? [[x, y]]
@@ -94,42 +101,16 @@ const CONVERGE_TO = (() => {
     )
     .map(([x, y]) => new Vector3(x * S_SCALE, y * S_SCALE, front).applyMatrix4(place))
     .sort((a, b) => a.dot(RIGHT) - b.dot(RIGHT));
+  const byX = ROUTE.map((_, k) => k).sort((a, b) => ROUTE[a][0] - ROUTE[b][0]);
+  return ROUTE.map((_, k) => ends[byX.indexOf(k)]);
 })();
 
 export function Product3D() {
   const { store, materials, filaments } = useWorld();
   const slab = useRef<Group>(null);
   const face = useRef<Group>(null);
-  const tokens = useRef<(Group | null)[]>([]);
-  const tile = useRef<Mesh>(null);
-  const geo = useMemo(() => {
-    const token = new CapsuleGeometry(0.42, 0.55, 4, 14);
-    token.rotateZ(Math.PI / 2);
-    const lensProfile = [
-      [0, -0.12],
-      [0.36, -0.08],
-      [0.52, 0],
-      [0.36, 0.08],
-      [0, 0.12],
-    ].map(([x, y]) => new Vector2(x, y));
-    const ringProfile = [
-      [0.56, -0.07],
-      [0.66, -0.07],
-      [0.68, 0],
-      [0.66, 0.07],
-      [0.56, 0.07],
-    ].map(([x, y]) => new Vector2(x, y));
-    return {
-      lens: new LatheGeometry(lensProfile, 28).rotateX(Math.PI / 2),
-      ring: new LatheGeometry(ringProfile, 32).rotateX(Math.PI / 2),
-      pane: new RoundedBoxGeometry(1.3, 0.85, 0.05, 2, 0.03),
-      // The path token is a gate — the same machined portal the visitor travelled through.
-      gate: frameGeometry({ hw: 0.62, hh: 0.52, bar: 0.1, depth: 0.16, radius: 0.16 }),
-      gateInlay: inlayGeometry(
-        { hw: 0.62, hh: 0.52, bar: 0.1, depth: 0.16, radius: 0.16 },
-        0.03,
-        0.02,
-      ),
+  const geo = useMemo(
+    () => ({
       bezel: frameGeometry({
         hw: SLAB.width / 2 + 0.08,
         hh: SLAB.height / 2 + 0.08,
@@ -137,23 +118,11 @@ export function Product3D() {
         depth: SLAB.depth + 0.08,
         radius: 0.24,
       }),
-      needle: new RoundedBoxGeometry(0.05, 0.46, 0.05, 1, 0.02),
       body: new RoundedBoxGeometry(SLAB.width, SLAB.height, SLAB.depth, 4, 0.12),
       facePlane: new PlaneGeometry(1, 1),
-      token,
-      band: new LatheGeometry(
-        [
-          [0.46, -0.13],
-          [0.53, -0.13],
-          [0.55, 0],
-          [0.53, 0.13],
-          [0.46, 0.13],
-        ].map(([x, y]) => new Vector2(x, y)),
-        28,
-      ).rotateZ(Math.PI / 2),
-      tile: new RoundedBoxGeometry(2.8, 1.5, 0.06, 2, 0.05),
-    };
-  }, []);
+    }),
+    [],
+  );
   useEffect(() => () => Object.values(geo).forEach((g) => g.dispose()), [geo]);
   const fil = useMemo(() => filaments.range("product", 8 + CHAIN.length), [filaments]);
   // Flat, unlit, untoned: exactly the DOM panel's colours, so the handoff adds only type.
@@ -171,9 +140,9 @@ export function Product3D() {
   const scratch = useMemo(
     () => ({
       from: { position: new Vector3(), quaternion: new Quaternion(), scale: 1 },
-      v: new Vector3(),
-      q: new Quaternion(),
-      m: new Matrix4(),
+      a: new Vector3(),
+      b: new Vector3(),
+      n: new Vector3(),
     }),
     [],
   );
@@ -190,10 +159,7 @@ export function Product3D() {
     s.slab.visible = st.visible;
     if (!st.visible) {
       filaments.hideRange(fil);
-      tokens.current.forEach((t) => t && (t.visible = false));
-      if (tile.current) tile.current.visible = false;
       CHAIN.forEach((_, k) => s.anchors.set(`chain-${k}`, { x: 0, y: 0, z: 0, o: 0 }));
-      s.anchors.set("isolated", { x: 0, y: 0, z: 0, o: 0 });
       return;
     }
     // Emerge: from the last rebuilt gate's opening, travel forward, square up to the camera.
@@ -217,78 +183,43 @@ export function Product3D() {
     if (face.current) face.current.visible = st.dom < 0.98;
     if (face.current) face.current.scale.setScalar(1 - 0.02 * st.dom);
 
-    // Connected: an isolated answer (no history, no links) dissolves; the chain persists.
+    // Connected: as the type leaves the surface, its relationships light up across it — context
+    // → opportunity → evidence → path → progress — one continuous gold route, node by node.
     const connected = local(p, "connected");
-    const chainIn = smoothstep(0.12, 0.6, connected) * (1 - ramp(p, "return", 0.3, "return", 1));
-    CHAIN.forEach((label, k) => {
-      const t = tokens.current[k];
-      if (!t) return;
-      const appear =
-        smoothstep(0.12 + k * 0.08, 0.32 + k * 0.08, connected) *
-        (1 - ramp(p, "return", 0.2, "return", 0.9));
-      t.visible = appear > 0.01;
-      tokenPosition(k, t.position);
-      t.quaternion.copy(SLAB_QUATERNION);
-      t.scale.setScalar(appear);
-      s.anchors.set(`chain-${k}`, {
-        x: t.position.x,
-        y: t.position.y + 0.95,
-        z: t.position.z,
-        o: appear,
-      });
-      void label;
+    const back = local(p, "return");
+    const leave = 1 - ramp(p, "return", 0.18, "return", 0.6);
+    const { a, b, n } = scratch;
+    n.set(0, 0, 1).transformDirection(g.matrixWorld);
+    CHAIN.forEach((_, k) => {
+      routePoint(k, g.matrixWorld, a);
+      const lit = smoothstep(0.14 + k * 0.08, 0.26 + k * 0.08, connected) * leave;
+      s.anchors.set(`chain-${k}`, { x: a.x, y: a.y + 0.28, z: a.z, o: lit });
     });
     for (let k = 0; k < CHAIN.length - 1; k++) {
-      const a = tokens.current[k];
-      const b = tokens.current[k + 1];
       const idx = fil.start + k;
-      const grow = smoothstep(0.2 + k * 0.08, 0.4 + k * 0.08, connected) * chainIn;
-      if (!a || !b || grow <= 0.01) {
+      const grow = smoothstep(0.18 + k * 0.08, 0.3 + k * 0.08, connected);
+      if (grow <= 0.01 || leave <= 0.01) {
         filaments.hide(idx);
         continue;
       }
-      filaments.arc(
-        idx,
-        a.position.x,
-        a.position.y,
-        a.position.z,
-        b.position.x,
-        b.position.y,
-        b.position.z,
-        0,
-        0.5,
-        0,
-      );
+      routePoint(k, g.matrixWorld, a);
+      routePoint(k + 1, g.matrixWorld, b);
+      // A shallow bow off the surface keeps the route on the face, never through it.
+      const bow = 0.12 * g.scale.x;
+      filaments.arc(idx, a.x, a.y, a.z, b.x, b.y, b.z, n.x * bow, n.y * bow, n.z * bow);
       filaments.params(idx, {
         s1: grow,
-        width: 0.05,
-        intensity: 1,
+        width: 0.03,
+        intensity: 1.15 * leave,
         pulse: 1.2,
         phase: k * 0.2,
         speed: 0.3,
       });
     }
-    // The chain is fed by the surface it came from.
-    const feed = fil.start + 5;
-    if (chainIn > 0.01 && tokens.current[0]) {
-      const a = tokens.current[0].position;
-      filaments.arc(feed, g.position.x, g.position.y, g.position.z, a.x, a.y, a.z, 0, 0.8, 0);
-      filaments.params(feed, {
-        s1: chainIn,
-        width: 0.04,
-        intensity: 0.8,
-        pulse: 1,
-        phase: 0.5,
-        speed: 0.3,
-      });
-    } else filaments.hide(feed);
-    filaments.hide(fil.start + 4);
-    filaments.hide(fil.start + 6);
-    filaments.hide(fil.start + 7);
+    for (let k = CHAIN.length - 1; k < 8; k++) filaments.hide(fil.start + k);
 
-    // The return: as the chain dissolves, each link sends its light to where the emblem will
-    // form — rising, then arriving face-on — and the streaks land as the S is drawn in light.
-    const back = local(p, "return");
+    // The return: the routing leaves the surface — each node sends its light to where the emblem
+    // will form, rising, then arriving face-on — and the streaks land as the S is drawn in light.
     for (let k = 0; k < CHAIN.length; k++) {
       const idx = fil.start + 8 + k;
       const head = smoothstep(0.08 + k * 0.03, 0.4 + k * 0.03, back);
@@ -297,22 +228,22 @@ export function Product3D() {
         filaments.hide(idx);
         continue;
       }
-      const a = tokenPosition(k, scratch.v);
-      const b = CONVERGE_TO[k];
+      routePoint(k, g.matrixWorld, a);
+      const to = CONVERGE_TO[k];
       filaments.curve(
         idx,
         a.x,
         a.y,
         a.z,
-        a.x + (b.x - a.x) * 0.2,
+        a.x + (to.x - a.x) * 0.2,
         a.y + 3.2,
-        a.z + (b.z - a.z) * 0.2,
-        b.x + SLAB_NORMAL.x * 5,
-        b.y + 0.6,
-        b.z + SLAB_NORMAL.z * 5,
-        b.x,
-        b.y,
-        b.z,
+        a.z + (to.z - a.z) * 0.2,
+        to.x + SLAB_NORMAL.x * 5,
+        to.y + 0.6,
+        to.z + SLAB_NORMAL.z * 5,
+        to.x,
+        to.y,
+        to.z,
       );
       filaments.params(idx, {
         s0: tail,
@@ -324,100 +255,27 @@ export function Product3D() {
         speed: 0.45,
       });
     }
-
-    if (tile.current) {
-      const show = smoothstep(0.06, 0.2, connected) * (1 - smoothstep(0.42, 0.7, connected));
-      tile.current.visible = show > 0.01;
-      tile.current.position
-        .copy(SLAB_CENTRE)
-        .addScaledVector(RIGHT, -6.4)
-        .addScaledVector(SLAB_NORMAL, 4.5)
-        .add(scratch.v.set(0, 0.9 - (1 - show) * 0.6, 0));
-      tile.current.quaternion.copy(SLAB_QUATERNION);
-      tile.current.scale.setScalar(0.6 + 0.4 * show);
-      s.anchors.set("isolated", {
-        x: tile.current.position.x,
-        y: tile.current.position.y,
-        z: tile.current.position.z,
-        o: show,
-      });
-    }
   });
 
   return (
-    <>
-      <group ref={slab}>
-        <mesh geometry={geo.body} material={materials.graphite} />
-        <mesh geometry={geo.bezel} material={materials.titanium} />
-        <group ref={face} position={[0, 0, SLAB.depth / 2 + 0.006]}>
-          {FACE.map(({ r: [x, y, w, h], tone }, i) => (
-            <mesh
-              key={i}
-              geometry={geo.facePlane}
-              material={faceTones[tone]}
-              position={[
-                (x + w / 2 - 0.5) * SLAB.width,
-                (0.5 - (y + h / 2)) * SLAB.height,
-                i * 0.002,
-              ]}
-              scale={[w * SLAB.width, h * SLAB.height, 1]}
-            />
-          ))}
-        </group>
+    <group ref={slab}>
+      <mesh geometry={geo.body} material={materials.graphite} />
+      <mesh geometry={geo.bezel} material={materials.titanium} />
+      <group ref={face} position={[0, 0, SLAB.depth / 2 + 0.006]}>
+        {FACE.map(({ r: [x, y, w, h], tone }, i) => (
+          <mesh
+            key={i}
+            geometry={geo.facePlane}
+            material={faceTones[tone]}
+            position={[
+              (x + w / 2 - 0.5) * SLAB.width,
+              (0.5 - (y + h / 2)) * SLAB.height,
+              i * 0.002,
+            ]}
+            scale={[w * SLAB.width, h * SLAB.height, 1]}
+          />
+        ))}
       </group>
-      {CHAIN.map((label, k) => (
-        <group
-          key={label}
-          ref={(el) => {
-            tokens.current[k] = el;
-          }}
-          visible={false}
-        >
-          {/* Each link is an object the visitor has already met in the film. */}
-          {k === 0 && (
-            <>
-              <mesh geometry={geo.ring} material={materials.champagne} />
-              <mesh
-                geometry={geo.needle}
-                material={materials.violet}
-                rotation={[0, 0, -0.9]}
-                position={[0.1, 0.12, 0.05]}
-              />
-            </>
-          )}
-          {k === 1 && (
-            <>
-              <mesh geometry={geo.lens} material={materials.pearl} />
-              <mesh geometry={geo.ring} material={materials.champagne} scale={0.82} />
-            </>
-          )}
-          {k === 2 && (
-            <>
-              <mesh geometry={geo.pane} material={materials.glass} renderOrder={2} />
-              <mesh geometry={geo.ring} material={materials.champagne} scale={[1.05, 0.7, 1]} />
-            </>
-          )}
-          {k === 3 && (
-            <>
-              <mesh geometry={geo.gate} material={materials.titanium} />
-              <mesh geometry={geo.gateInlay} material={materials.champagne} />
-            </>
-          )}
-          {k === 4 && (
-            <>
-              <mesh geometry={geo.token} material={materials.pearl} scale={0.7} />
-              <mesh geometry={geo.band} material={materials.champagne} scale={0.7} />
-            </>
-          )}
-        </group>
-      ))}
-      <mesh
-        ref={tile}
-        geometry={geo.tile}
-        material={materials.glass}
-        visible={false}
-        renderOrder={2}
-      />
-    </>
+    </group>
   );
 }

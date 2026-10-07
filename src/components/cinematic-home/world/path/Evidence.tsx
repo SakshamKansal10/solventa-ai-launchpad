@@ -1,16 +1,25 @@
 import { useFrame } from "@react-three/fiber";
 import { useEffect, useMemo, useRef } from "react";
-import { CylinderGeometry, Group, Matrix4, Quaternion, Vector3 } from "three";
+import { CatmullRomCurve3, CylinderGeometry, Group, Matrix4, Quaternion, Vector3 } from "three";
 import { RoundedBoxGeometry } from "three/examples/jsm/geometries/RoundedBoxGeometry.js";
 
 import { smoothstep } from "../../math";
-import { local } from "../../timeline/timeline";
+import { local, progressOf } from "../../timeline/timeline";
 import { useWorld } from "../WorldContext";
-import { ASSUMPTION_GATE, GATE, originalFrame } from "./path-model";
+import {
+  ASSUMPTION_GATE,
+  branchLocal,
+  createGateState,
+  GATE,
+  gateState,
+  originalFrame,
+} from "./path-model";
 
 /**
  * Evidence: an optical information object — a framed glass tablet — that
- * arrives from beside the path and settles into the assumption gate. Its
+ * travels in through the network the visitor has just flown over: down the
+ * outermost channel on the visitor's side of the last branching gate, frame
+ * by frame, leaving a trace, and settles into the assumption gate. Its
  * (illustrative) customer quote is real DOM, anchored to it.
  */
 export function Evidence() {
@@ -24,22 +33,30 @@ export function Evidence() {
     [],
   );
   useEffect(() => () => Object.values(geo).forEach((g) => g.dispose()), [geo]);
-  const fil = useMemo(() => filaments.range("evidence", 2), [filaments]);
+  const fil = useMemo(() => filaments.range("evidence", 6), [filaments]);
   const frame = useMemo(() => {
     const f = originalFrame(ASSUMPTION_GATE, {
       position: new Vector3(),
       quaternion: new Quaternion(),
       scale: 1,
     });
-    const right = new Vector3(1, 0, 0).applyQuaternion(f.quaternion);
-    const forward = new Vector3(0, 0, -1).applyQuaternion(f.quaternion);
     const target = f.position.clone().add(new Vector3(0, GATE.centreY + GATE.hh * 0.22, 0));
-    const start = target
-      .clone()
-      .addScaledVector(right, 13)
-      .add(new Vector3(0, 5, 0))
-      .addScaledVector(forward, -4);
-    return { quaternion: f.quaternion, target, start, right };
+    // Its route: the channel on the visitor's side of the last branching gate (gate-local +x is
+    // the visitor's left), outer frame → inner, over the gate's crown, into the assumption.
+    // Gates are static while it travels (Elevate done, no crisis yet).
+    const st = gateState(ASSUMPTION_GATE - 1, progressOf("evidence", 0.5), createGateState());
+    const g = new Matrix4().compose(
+      st.position,
+      st.quaternion,
+      new Vector3().setScalar(st.scale * st.present),
+    );
+    const pts = [2, 1, 0].map((b) =>
+      branchLocal(ASSUMPTION_GATE - 1, 1, b, new Vector3()).applyMatrix4(g),
+    );
+    pts.push(new Vector3(0, GATE.centreY + GATE.hh + 1.6, 0).applyMatrix4(g));
+    pts.push(target.clone());
+    const route = new CatmullRomCurve3(pts, false, "centripetal");
+    return { quaternion: f.quaternion, target, route, pts };
   }, []);
   const tmp = useMemo(() => ({ v: new Vector3(), m: new Matrix4() }), []);
 
@@ -59,9 +76,9 @@ export function Evidence() {
       return;
     }
     const t = travel * travel * (3 - 2 * travel);
-    g.position.lerpVectors(frame.start, frame.target, t);
-    g.position.y += Math.sin(t * Math.PI) * 1.5;
+    frame.route.getPoint(t, g.position);
     g.quaternion.copy(frame.quaternion);
+    // Turned toward the visitor, who watches from the left of the path.
     g.rotateY((1 - t) * 0.9);
     // Settling into the assumption, it becomes part of the structure (absorbed in the crisis).
     g.scale.setScalar((0.6 + 0.4 * smoothstep(0, 0.3, e)) * (1 - smoothstep(0.25, 0.6, crisis)));
@@ -89,7 +106,29 @@ export function Evidence() {
         speed: 0.6,
       });
     } else filaments.hide(idx);
-    filaments.hide(fil.start + 1);
+    // The trace it leaves through the network: each channel segment lights as it passes.
+    const fade = 1 - smoothstep(0.2, 0.5, crisis);
+    for (let k = 0; k < 4; k++) {
+      const j = fil.start + 1 + k;
+      const u = Math.min(1, Math.max(0, t * 4 - k));
+      if (u <= 0.01 || fade <= 0.01) {
+        filaments.hide(j);
+        continue;
+      }
+      const a = frame.pts[k];
+      const b = frame.pts[k + 1];
+      filaments.arc(j, a.x, a.y, a.z, b.x, b.y, b.z, 0, 0.4, 0);
+      filaments.params(j, {
+        s1: u,
+        width: 0.045,
+        intensity: 0.9 * fade,
+        violet: 0.75,
+        pulse: 1.2,
+        phase: k * 0.2,
+        speed: 0.5,
+      });
+    }
+    filaments.hide(fil.start + 5);
   });
 
   return (

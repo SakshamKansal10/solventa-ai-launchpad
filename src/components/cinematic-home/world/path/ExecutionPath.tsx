@@ -22,7 +22,9 @@ import { cornerGeometry, frameGeometry, inlayGeometry, plateGeometry } from "../
 import { useWorld } from "../WorldContext";
 import {
   ASSUMPTION_GATE,
+  branchLocal,
   createGateState,
+  ELEVATE_FROM,
   GATE,
   GATE_SPACING,
   gateState,
@@ -41,7 +43,6 @@ const ALTERNATIVES = [new Vector3(), new Vector3(-16, -4, -14), new Vector3(-6, 
 const REVISED_END = revisedPath.getPointAt(0.85, new Vector3());
 
 /** Gates that grow satellite channels in Elevate (the path branches into a network). */
-const ELEVATE_FROM = 18;
 const ELEVATE_TO = ASSUMPTION_GATE - 1;
 const SATELLITES = (ELEVATE_TO - ELEVATE_FROM + 1) * 2;
 /** Frames per branch: each satellite channel reaches outward through this many, each larger. */
@@ -412,15 +413,12 @@ export function ExecutionPath() {
         const j = nIdx * 2 + (side > 0 ? 1 : 0);
         for (let b = 0; b < BRANCH; b++) {
           const grow = smoothstep(t0 + b * 0.07, t0 + 0.34 + b * 0.07, elevate);
-          const out = 5.2 + nIdx * 1.1 + b * 5.4;
-          const up = 1.4 + nIdx * 0.55 + b * 3.2;
           e.set(0, -side * (0.18 + b * 0.24), side * (0.06 + b * 0.04));
           q.setFromEuler(e);
-          lm.compose(
-            v.set(side * (out - 2.5 * (1 - grow)), cy + up * grow, -nIdx * 0.3 - b * 1.6),
-            q,
-            s.setScalar(Math.max(0.001, grow * st.present * (0.85 + b * 0.6))),
-          );
+          branchLocal(i, side, b, v);
+          v.x -= side * 2.5 * (1 - grow);
+          v.y = cy + (v.y - cy) * grow;
+          lm.compose(v, q, s.setScalar(Math.max(0.001, grow * st.present * (0.85 + b * 0.6))));
           const frame = branchMatrices[j * BRANCH + b].multiplyMatrices(gateMatrices[i], lm);
           if (b === 0) satMatrices[j].copy(frame);
           if (grow > 0.01) {

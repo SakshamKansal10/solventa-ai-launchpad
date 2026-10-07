@@ -2,7 +2,8 @@ import { CatmullRomCurve3, Matrix4, Quaternion, Vector3 } from "three";
 
 import { mulberry32, smoothstep } from "../../math";
 import { local, progressOf, ramp } from "../../timeline/timeline";
-import { FINALS_HUB } from "../layout";
+import { FINALS_HUB, latticeNode } from "../layout";
+import { SIDE_FINALISTS } from "./finalists-model";
 
 /**
  * The execution path as DATA. Its gates are the SAME machined portal frames
@@ -30,6 +31,9 @@ export const SCULPTURE_ARCHES = 14;
 export const ASSUMPTION_GATE = 26;
 /** Gates ahead of the assumption that destabilise and are rebuilt elsewhere. */
 export const UNSTABLE = [27, 28, 29, 30, 31, 32, 33] as const;
+
+/** First gate that grows branch channels in Elevate (the path becomes a network). */
+export const ELEVATE_FROM = 18;
 
 /** Portal geometry in gate-local space: x across, y up, z along the path. */
 export const GATE = {
@@ -123,6 +127,7 @@ export interface GateFrame {
 const UP = new Vector3(0, 1, 0);
 const m4 = new Matrix4();
 const tmpT = new Vector3();
+const tmpN = new Vector3();
 const tmpP = new Vector3();
 
 /** Orientation whose local +z runs along `tangent` (gates face the traveller). */
@@ -149,6 +154,35 @@ export function revisedFrame(j: number, out: GateFrame): GateFrame {
   alongQuaternion(tmpT, out.quaternion);
   out.scale = 1;
   return out;
+}
+
+/**
+ * Where a piece of a growing future leaves from at progress p: one of its column's lattice nodes
+ * (col 0 = Direction 01, 1 = the one, 2 = Direction 03). The head (row 0) is itself travelling to
+ * the future's centre as the rivals are absorbed, so pieces leave from where it is.
+ */
+export function columnNode(col: number, row: number, p: number, out: Vector3): Vector3 {
+  const [x, y, z] = latticeNode(col, row);
+  out.set(x, y, z);
+  if (row !== 0) return out;
+  const f = ramp(p, "three", 0, "three", 0.24);
+  const e = f * f * (3 - 2 * f);
+  const c =
+    col === 1 ? WINNER_POS : col === 0 ? SIDE_FINALISTS[0].centre : SIDE_FINALISTS[1].centre;
+  return out.set(x + (c[0] - x) * e, y + (c[1] - y) * e, z + (c[2] - z) * e);
+}
+
+/**
+ * Centre of Elevate's branch frame b (0 = nearest the gate) on one side (−1 left, +1 right) of
+ * gate i, in gate-local space, fully grown: each channel reaches outward and upward.
+ */
+export function branchLocal(i: number, side: number, b: number, out: Vector3): Vector3 {
+  const n = i - ELEVATE_FROM;
+  return out.set(
+    side * (5.2 + n * 1.1 + b * 5.4),
+    GATE.centreY + 1.4 + n * 0.55 + b * 3.2,
+    -n * 0.3 - b * 1.6,
+  );
 }
 
 /** Frame i inside the chosen sculpture: a tight nest that twists as it recedes. */
@@ -211,11 +245,17 @@ export function gateState(i: number, p: number, out: GateState): GateState {
   if (i < SCULPTURE_ARCHES) {
     telescope = smoothstep(0.08 + i * 0.035, 0.42 + i * 0.035, unfold);
     sculptureFrame(i, tmpFrame, ramp(p, "selection", 0.3, "selection", 0.82));
+    // The nest grows out of the centre column of the nine: each frame leaves one of the column's
+    // nodes and travels back into place as it forms, front frames first.
+    const grow = smoothstep(0.03 + i * 0.016, 0.27 + i * 0.016, local(p, "three"));
+    if (grow < 1) {
+      columnNode(1, i % 3, p, tmpN);
+      tmpFrame.position.lerpVectors(tmpN, tmpFrame.position, grow);
+    }
     out.position.lerpVectors(tmpFrame.position, out.position, telescope);
     out.quaternion.slerpQuaternions(tmpFrame.quaternion, out.quaternion, telescope);
     out.scale = tmpFrame.scale + (1 - tmpFrame.scale) * telescope;
-    // The sculpture emerges where its opportunity stood, as the final three appear.
-    out.present = smoothstep(0.04 + i * 0.012, 0.3 + i * 0.012, local(p, "three"));
+    out.present = grow;
   } else {
     // Further gates unfold out of the path ahead as it extends, rising into place.
     const a =
@@ -313,6 +353,27 @@ export function revisedEye(d: number): {
  * Camera beside / above the original path at distance d: `side` units to the
  * traveller's right (negative = left) and `up` above, looking `ahead` units on.
  */
+/**
+ * A camera pose relative to the path: at distance d, `side` to the right (negative = left) and
+ * `up` above it, looking at the point (td, tSide, tUp) in the same frame.
+ */
+export function frameEye(
+  d: number,
+  side: number,
+  up: number,
+  td: number,
+  tSide: number,
+  tUp: number,
+): { position: [number, number, number]; target: [number, number, number] } {
+  const at = (dist: number, s: number, u: number) => {
+    const p = pointAtDistance(originalPath, ORIGINAL_LENGTH, dist, new Vector3());
+    const tangent = tangentAtDistance(originalPath, ORIGINAL_LENGTH, dist, new Vector3());
+    const right = new Vector3().crossVectors(tangent, UP).normalize();
+    return [p.x + right.x * s, p.y + u, p.z + right.z * s] as [number, number, number];
+  };
+  return { position: at(d, side, up), target: at(td, tSide, tUp) };
+}
+
 export function sideEye(
   d: number,
   side: number,

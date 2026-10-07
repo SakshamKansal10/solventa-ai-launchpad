@@ -13,12 +13,10 @@ import { CAPTIONS, LABELS, WAVE_LABELS, type Caption } from "./copy";
  * narrative — except the finale CTA, which is a real, focusable link.
  */
 const PLACE: Record<Caption["place"], string> = {
-  lower: "left-5 right-5 bottom-[13svh] sm:left-[7vw] sm:right-auto sm:max-w-[min(46rem,60vw)]",
-  upper:
-    "left-5 right-5 top-[calc(76px+5svh)] sm:left-[7vw] sm:right-auto sm:max-w-[min(40rem,56vw)]",
-  centre:
-    "left-5 right-5 top-1/2 -translate-y-1/2 text-center sm:left-1/2 sm:right-auto sm:w-[min(52rem,80vw)] sm:-translate-x-1/2",
-  bottom: "inset-x-5 bottom-[9svh] text-center sm:inset-x-[12vw]",
+  // A film title: centred in the lower third, sized to its words.
+  title:
+    "left-1/2 bottom-[11svh] w-max max-w-[min(44rem,calc(100vw-2.5rem))] -translate-x-1/2 text-center",
+  end: "inset-x-5 bottom-[9svh] text-center sm:inset-x-[12vw]",
 };
 
 export function CinematicOverlay() {
@@ -57,13 +55,13 @@ export function CinematicOverlay() {
           <CaptionBody caption={c} />
         </div>
       ))}
-      {WAVE_LABELS.map((w, k) => (
+      {WAVE_LABELS.map((w) => (
         <p
           key={w.id}
           ref={reg(store.state.dom.captions, w.id)}
           aria-hidden="true"
-          className="absolute bottom-[calc(13svh+0.5rem)] left-5 font-mono text-[11px] uppercase tracking-[0.28em] text-[#d9c39b] sm:left-[7vw]"
-          style={{ opacity: 0, visibility: "hidden", transform: `translateY(${k * 0}px)` }}
+          className="absolute bottom-[6.5svh] left-1/2 -translate-x-1/2 whitespace-nowrap font-mono text-[10.5px] uppercase tracking-[0.3em] text-[#d9c39b]"
+          style={{ opacity: 0, visibility: "hidden" }}
         >
           {w.text}
         </p>
@@ -108,24 +106,41 @@ export function CinematicOverlay() {
         }}
         aria-hidden="true"
         data-testid="cinematic-count"
-        className="absolute bottom-[5.5svh] left-1/2 -translate-x-1/2 font-mono text-[12px] tracking-[0.35em] text-[#d9c39b]"
+        className="absolute bottom-[6svh] right-[7vw] font-mono text-[12px] tracking-[0.35em] text-[#d9c39b] max-sm:bottom-[3svh] max-sm:right-5"
         style={{ opacity: 0 }}
       >
         360
       </p>
+      {/* Film time: a hairline where the page scrollbar would be. */}
+      <div
+        aria-hidden="true"
+        className="absolute right-3 top-1/2 h-[38svh] w-px -translate-y-1/2 bg-[#F1EEE6]/[0.09] sm:right-5"
+      >
+        <div
+          ref={(el) => {
+            store.state.dom.time = el;
+          }}
+          className="absolute inset-0 origin-top bg-[#d9c39b]/70"
+          style={{ transform: "scaleY(0)" }}
+        />
+      </div>
     </div>
   );
 }
 
 function CaptionBody({ caption: c }: { caption: Caption }) {
-  if (c.kind === "title") {
+  if (c.kind === "chapter") {
+    // A chapter mark passing over the world: the name, a hairline, the promise — one line.
     return (
-      <>
-        <p className="font-mono text-[12px] uppercase tracking-[0.62em] text-[#d9c39b]">{c.text}</p>
-        <p className="mt-3 font-display text-[clamp(1.9rem,3.4vw,3.1rem)] leading-[1.08] text-[#F1EEE6]">
+      <p className="flex flex-wrap items-center justify-center gap-x-5 gap-y-1.5">
+        <span className="-mr-[0.62em] font-mono text-[12px] uppercase tracking-[0.62em] text-[#d9c39b]">
+          {c.text}
+        </span>
+        <span aria-hidden="true" className="h-px w-8 bg-[#c9b48f]/50" />
+        <span className="font-display text-[clamp(1.1rem,1.5vw,1.35rem)] italic text-[#e6dfd2]">
           {c.sub}
-        </p>
-      </>
+        </span>
+      </p>
     );
   }
   if (c.kind === "finale") {
@@ -165,16 +180,13 @@ function CaptionBody({ caption: c }: { caption: Caption }) {
       </div>
     );
   }
-  const big = c.kind === "statement";
   return (
     <>
       <p
         className={
-          big
-            ? "font-display text-[clamp(1.9rem,3.6vw,3.3rem)] leading-[1.08] text-[#F1EEE6]"
-            : c.kind === "quiet"
-              ? "font-display text-[clamp(1.4rem,2.2vw,2rem)] italic text-[#e6dfd2]"
-              : "font-display text-[clamp(1.6rem,2.6vw,2.4rem)] leading-tight text-[#F1EEE6]"
+          c.kind === "quiet"
+            ? "font-display text-[clamp(1.25rem,1.9vw,1.75rem)] italic leading-snug text-[#e6dfd2]"
+            : "font-display text-[clamp(1.3rem,2.1vw,1.9rem)] leading-snug text-[#F1EEE6]"
         }
       >
         {c.text}
@@ -182,9 +194,9 @@ function CaptionBody({ caption: c }: { caption: Caption }) {
       {c.sub && (
         <p
           className={
-            big
-              ? "mt-3 font-display text-[clamp(1.4rem,2.4vw,2.1rem)] text-[#d9c39b]"
-              : "mt-2 font-mono text-[10.5px] uppercase tracking-[0.28em] text-[#c9b48f]"
+            c.kind === "statement"
+              ? "mt-1 font-display text-[clamp(1.3rem,2.1vw,1.9rem)] leading-snug text-[#d9c39b]"
+              : "mt-2 font-mono text-[10px] uppercase tracking-[0.3em] text-[#c9b48f]"
           }
         >
           {c.sub}

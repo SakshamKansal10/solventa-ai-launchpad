@@ -24,7 +24,7 @@ import { FINALS_HUB } from "../layout";
 import { TRUNK_ORIGIN } from "../universe/universe-model";
 import { useWorld } from "../WorldContext";
 import { SIDE_FINALISTS } from "./finalists-model";
-import { GATE, originalFrame, WINNER_POS } from "./path-model";
+import { columnNode, GATE, originalFrame, WINNER_POS } from "./path-model";
 
 /**
  * The two futures that are NOT chosen, each its own architecture:
@@ -43,6 +43,9 @@ type GeoKey = "level" | "pane" | "module" | "face" | "spindle" | "orbit" | "ligh
 interface Piece {
   geo: GeoKey;
   matrix: Matrix4;
+  /** When it grows (0 = first … 1 = last) and which lattice node of its column it leaves from. */
+  order: number;
+  row: number;
 }
 
 const LEVELS = 9;
@@ -53,6 +56,9 @@ const FAILS = [
   [3, 4],
 ];
 
+/** Column of the nine each side future grows out of (Direction 01 left, Direction 03 right). */
+const COLUMN = [0, 2];
+
 const compose = (x: number, y: number, z: number, rx = 0, ry = 0, rz = 0, s = 1) =>
   new Matrix4().compose(
     new Vector3(x, y, z),
@@ -62,32 +68,55 @@ const compose = (x: number, y: number, z: number, rx = 0, ry = 0, rz = 0, s = 1)
 
 function towerPieces(): Piece[] {
   const out: Piece[] = [];
+  // The spindle first, then the levels bottom to top — each from the lattice node beside it.
+  out.push({ geo: "spindle", matrix: compose(0, 0, 0), order: 0, row: 1 });
   for (let i = 0; i < LEVELS; i++) {
     const y = -2.2 + i * 0.55;
     const turn = i * 0.13;
-    out.push({ geo: "level", matrix: compose(0, y, 0, -Math.PI / 2, 0, turn) });
-    out.push({ geo: "pane", matrix: compose(0, y, 0, -Math.PI / 2, 0, turn) });
+    const order = 0.08 + (i / (LEVELS - 1)) * 0.8;
+    const row = 2 - Math.floor((i * 3) / LEVELS);
+    out.push({ geo: "level", matrix: compose(0, y, 0, -Math.PI / 2, 0, turn), order, row });
+    out.push({
+      geo: "pane",
+      matrix: compose(0, y, 0, -Math.PI / 2, 0, turn),
+      order: order + 0.06,
+      row,
+    });
     out.push({
       geo: "light",
       matrix: compose(1.3 * Math.cos(turn), y + 0.1, -1.3 * Math.sin(turn), 0, turn, 0, 0.1),
+      order: order + 0.1,
+      row,
     });
   }
-  out.push({ geo: "spindle", matrix: compose(0, 0, 0) });
   return out;
 }
 
 function arrayPieces(): Piece[] {
   const out: Piece[] = [];
+  // Spindle and ring first, then the modules around the ring, each from one of the column's nodes.
+  out.push({ geo: "spindle", matrix: compose(0, 0, 0, 0, 0, 0, 0.8), order: 0, row: 0 });
+  out.push({ geo: "orbit", matrix: compose(0, 0, 0, Math.PI / 2, 0, 0), order: 0.06, row: 2 });
   for (let i = 0; i < MODULES; i++) {
     const a = (i / MODULES) * Math.PI * 2;
     const x = Math.cos(a) * 2.3;
     const z = Math.sin(a) * 2.3;
-    out.push({ geo: "module", matrix: compose(x, 0, z, 0, -a, 0) });
-    out.push({ geo: "face", matrix: compose(x * 1.09, 0, z * 1.09, 0, Math.PI / 2 - a, 0) });
-    out.push({ geo: "light", matrix: compose(x * 1.16, 0.22, z * 1.16, 0, -a, 0, 0.09) });
+    const order = 0.14 + (i / (MODULES - 1)) * 0.74;
+    const row = i % 3;
+    out.push({ geo: "module", matrix: compose(x, 0, z, 0, -a, 0), order, row });
+    out.push({
+      geo: "face",
+      matrix: compose(x * 1.09, 0, z * 1.09, 0, Math.PI / 2 - a, 0),
+      order: order + 0.06,
+      row,
+    });
+    out.push({
+      geo: "light",
+      matrix: compose(x * 1.16, 0.22, z * 1.16, 0, -a, 0, 0.09),
+      order: order + 0.1,
+      row,
+    });
   }
-  out.push({ geo: "orbit", matrix: compose(0, 0, 0, Math.PI / 2, 0, 0) });
-  out.push({ geo: "spindle", matrix: compose(0, 0, 0, 0, 0, 0, 0.8) });
   return out;
 }
 
@@ -142,6 +171,9 @@ export function Finalists() {
       s: new Vector3(),
       e: new Euler(),
       col: new Color(),
+      t: new Vector3(),
+      g: new Vector3(),
+      src: [0, 1, 2].map(() => new Vector3()),
       violet: new Color("#7d6ff0"),
       gold: new Color("#f0cf8c"),
     }),
@@ -168,10 +200,9 @@ export function Finalists() {
     const s = store.state;
     const p = s.progress;
     const three = local(p, "three");
-    const emerge = smoothstep(0.04, 0.3, three);
     const lose = ramp(p, "selection", 0.28, "selection", 0.85);
     const gone = ramp(p, "unfold", 0.0, "unfold", 0.45);
-    const active = emerge > 0 && gone < 1;
+    const active = three > 0.03 && gone < 1;
     g.visible = active;
     if (!active) {
       filaments.hideRange(fil);
@@ -182,7 +213,7 @@ export function Finalists() {
       }
       return;
     }
-    const { m, c, d, q, v, s: sc, e, col, violet, gold } = scratch;
+    const { m, c, d, q, v, s: sc, e, col, violet, gold, t, g: gs, src } = scratch;
     const counts: Partial<Record<GeoKey, [number, number]>> = {};
     SIDE_FINALISTS.forEach((f, k) => {
       // Each future turns slowly while it is a candidate, then stops.
@@ -195,8 +226,9 @@ export function Finalists() {
         f.centre[1] - fall * 3,
         f.centre[2] - fall * 18 - gone * 10,
       );
-      sc.setScalar(1.3 * emerge * (1 - 0.35 * gone));
+      sc.setScalar(1.3 * (1 - 0.35 * gone));
       c.compose(v, q, sc);
+      for (let r = 0; r < 3; r++) columnNode(COLUMN[k], r, p, src[r]);
       pieces[k].forEach((pc, i) => {
         const dv = drift[k][i];
         // Losing coherence: pieces separate along their own axes, turning away.
@@ -205,6 +237,13 @@ export function Finalists() {
         d.makeRotationFromEuler(e);
         d.setPosition(dv[0] * loose * 2.2, dv[1] * loose * 1.6, dv[2] * loose * 2.2);
         m.multiplyMatrices(c, d).multiply(pc.matrix);
+        // Growth: the piece leaves its lattice node small and travels into place as it forms.
+        const grow = smoothstep(0.02 + pc.order * 0.2, 0.24 + pc.order * 0.2, three);
+        if (grow < 1) {
+          t.setFromMatrixPosition(m);
+          m.scale(gs.setScalar(Math.max(0.001, grow)));
+          m.setPosition(t.lerpVectors(src[pc.row], t, grow));
+        }
         const slot = counts[pc.geo] ?? (counts[pc.geo] = [0, 0]);
         const glassMat = plan[pc.geo][1];
         if (pc.geo === "light") {
@@ -214,7 +253,7 @@ export function Finalists() {
           col
             .copy(violet)
             .lerp(gold, 0.35)
-            .multiplyScalar(1.4 * emerge * (1 - lose) * (1 - gone));
+            .multiplyScalar(1.4 * grow * (1 - lose) * (1 - gone));
           mesh.setColorAt(slot[0]++, col);
           return;
         }
