@@ -230,6 +230,11 @@ export function OpportunityUniverse() {
       const base = c.kind === "trunk" ? 0.55 : c.kind === "dark" ? 0.38 : 0.58;
       // Hierarchical weighting: high-value routes dominate, weak ones fade to almost nothing.
       const value = Math.min(1, Math.min(eA, eB) / 1.4);
+      // Selective: weak links are not drawn at all — the network shows only what matters.
+      if (c.kind !== "trunk" && value < 0.3 && wave < 0.2) {
+        filaments.hide(idx);
+        return;
+      }
       filaments.params(idx, {
         s1,
         width: c.width * (c.kind === "trunk" ? 1 : 0.55 + 1.25 * Math.pow(value, 1.5)),
@@ -246,22 +251,26 @@ export function OpportunityUniverse() {
       });
     });
 
-    // The nine are joined by one ordered ring — structure replacing the scattered network.
+    // The nine as a lattice: each column ranked upward into its head, the three heads joined in
+    // gold — structure replacing the scattered network.
     const ringGrow = ph.stages[2] * (1 - ph.stages[3]);
+    const links = model.formations.nineLinks;
     for (let j = 0; j < 9; j++) {
       const idx = ring.start + j;
-      const A = frames[nine[j]];
-      const B = frames[nine[(j + 1) % 9]];
-      if (ringGrow <= 0.002 || !A.visible || !B.visible) {
+      const pair = links[j];
+      const A = pair ? frames[pair[0]] : null;
+      const B = pair ? frames[pair[1]] : null;
+      if (!A || !B || ringGrow <= 0.002 || !A.visible || !B.visible) {
         filaments.hide(idx);
         continue;
       }
-      const len = Math.hypot(B.x - A.x, B.y - A.y, B.z - A.z);
-      filaments.arc(idx, A.x, A.y, A.z, B.x, B.y, B.z, 0, len * 0.08, len * 0.05);
+      const heads = j >= 6;
+      filaments.arc(idx, A.x, A.y, A.z, B.x, B.y, B.z, 0, heads ? 0.6 : 0, 0);
       filaments.params(idx, {
         s1: ringGrow,
-        width: 0.045,
-        intensity: 0.75 * ringGrow,
+        width: heads ? 0.05 : 0.032,
+        intensity: (heads ? 1 : 0.55) * ringGrow,
+        violet: heads ? 0 : 0.6,
         pulse: 0.9,
         phase: j / 9,
         speed: 0.12,

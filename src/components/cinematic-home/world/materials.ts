@@ -148,21 +148,25 @@ export function createMaterials(preset: QualityPreset): Materials {
   );
   // Provisional architecture: light optical glass, so the structure reads as untested.
   // Standard (not physical) and single-pass: whole gates of it can fill the screen.
-  const smokedDissolve = withRim(
-    withInstanceAlpha(
-      new MeshStandardMaterial({
-        color: "#9aa6c2",
-        metalness: 0.25,
-        roughness: 0.1,
-        transparent: true,
-        opacity: 0.2,
-        depthWrite: false,
-        envMapIntensity: 2,
-      }),
+  const smokedDissolve = withGlassEdge(
+    withRim(
+      withInstanceAlpha(
+        new MeshStandardMaterial({
+          color: "#9aa6c2",
+          metalness: 0.25,
+          roughness: 0.1,
+          transparent: true,
+          opacity: 0.2,
+          depthWrite: false,
+          envMapIntensity: 2,
+        }),
+      ),
+      "#b9c6e2",
+      2.4,
+      0.3,
     ),
-    "#b9c6e2",
-    2.4,
-    0.3,
+    "#a69cff",
+    3.2,
   );
   // Dissolving titanium (alpha-hashed): standard shading — it is often many large pieces.
   const titaniumDissolve = withRim(
@@ -259,6 +263,34 @@ function withInstanceAlpha<T extends MeshStandardMaterial>(material: T): T {
         "#endif",
       ].join("\n"),
     );
+  });
+}
+
+/**
+ * Glass edges: like real glass, a transparent surface reads at its edges. At grazing angles
+ * the opacity rises and a cool light gathers, so provisional structure draws itself as fine
+ * lines in the dark (instance alpha still applies: dissolving pieces fade with it).
+ */
+function withGlassEdge<T extends MeshStandardMaterial>(
+  material: T,
+  color: string,
+  gain: number,
+): T {
+  const c = new Color(color);
+  return addPatch(material, `glass-edge:${color}:${gain}`, (shader) => {
+    shader.uniforms.edgeColor = { value: c };
+    shader.fragmentShader = shader.fragmentShader
+      .replace("void main() {", "uniform vec3 edgeColor;\nvoid main() {")
+      .replace(
+        "#include <opaque_fragment>",
+        [
+          "  float edgeF = pow(1.0 - clamp(abs(dot(normal, normalize(vViewPosition))), 0.0, 1.0), 2.2);",
+          `  float edgeA = diffuseColor.a * edgeF * ${gain.toFixed(2)};`,
+          "  outgoingLight += edgeColor * edgeA;",
+          "  diffuseColor.a = clamp(diffuseColor.a + edgeA, 0.0, 1.0);",
+          "#include <opaque_fragment>",
+        ].join("\n"),
+      );
   });
 }
 

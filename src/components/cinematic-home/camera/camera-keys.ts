@@ -62,34 +62,39 @@ export const CAMERA_PATH_KEYS: CameraKey[] = [
   key("convergence", 0.5, [6, 3.2, -21], [7, -1, -42]),
   key("convergence", 1, [6.2, 2.6, -24], [6, 0.8, -46]),
   // H — between the three futures (each could be its own world).
-  // Each is framed whole — three distinct architectures, never cropped.
+  // Each is framed whole — three distinct architectures, never cropped — from low and close,
+  // so each could be an entire future.
   key(
     "three",
     0.2,
-    [-5, 2.8, -32.5],
-    [FINALS_HUB[0] - 7.5, FINALS_HUB[1] + 0.8, FINALS_HUB[2] + 1],
+    [-4.6, -1.3, -35.6],
+    [FINALS_HUB[0] - 7.5, FINALS_HUB[1] + 2.1, FINALS_HUB[2] + 1],
   ),
-  key("three", 0.34, [4.6, 2.8, -38], [WINNER_POS[0], WINNER_POS[1] + 0.8, WINNER_POS[2]]),
+  key("three", 0.34, [4.8, 1.2, -43.6], [WINNER_POS[0], WINNER_POS[1] + 1.2, WINNER_POS[2]]),
   key(
     "three",
     0.48,
-    [15.5, 2.4, -34.5],
-    [FINALS_HUB[0] + 7.5, FINALS_HUB[1] - 1, FINALS_HUB[2] - 0.5],
+    [16.6, -2.9, -36.8],
+    [FINALS_HUB[0] + 7.5, FINALS_HUB[1] + 0.3, FINALS_HUB[2] - 0.5],
   ),
-  // The comparison: all three held in one frame while the six signals run into each.
-  key("three", 0.64, [6, 3.6, -23], [FINALS_HUB[0], FINALS_HUB[1] + 1.4, FINALS_HUB[2] - 3]),
-  key("three", 1, [6.05, 3.55, -23.6], [FINALS_HUB[0], FINALS_HUB[1] + 1.3, FINALS_HUB[2] - 3]),
-  key("selection", 0.3, [6.1, 3.5, -25], [FINALS_HUB[0], FINALS_HUB[1] + 1.2, FINALS_HUB[2] - 3]),
+  // The comparison: all three held in one frame, seen from below, while the six signals rise
+  // into each — then the camera stops and waits.
+  key("three", 0.64, [6, 0.4, -25.5], [FINALS_HUB[0], FINALS_HUB[1] + 2.2, FINALS_HUB[2] - 2]),
+  key("three", 1, [6.02, 0.45, -26], [FINALS_HUB[0], FINALS_HUB[1] + 2.2, FINALS_HUB[2] - 2]),
+  key("selection", 0.3, [6.05, 0.55, -27], [FINALS_HUB[0], FINALS_HUB[1] + 2.3, FINALS_HUB[2] - 2]),
   // I — settle on the one; silence.
-  key("selection", 0.6, [6.2, 3.0, -37], [WINNER_POS[0], WINNER_POS[1] - 0.6, WINNER_POS[2]]),
-  key("selection", 1, [6.4, 3.2, -40.5], [WINNER_POS[0], WINNER_POS[1] - 0.9, WINNER_POS[2]]),
+  key("selection", 0.6, [6.2, 2.2, -38.5], [WINNER_POS[0], WINNER_POS[1] - 0.2, WINNER_POS[2]]),
+  key("selection", 1, [6.3, 2.4, -41.5], [WINNER_POS[0], WINNER_POS[1] - 0.5, WINNER_POS[2]]),
   // J — the opportunity becomes a path: orbit to its side, then turn and move with it.
   key("unfold", 0.3, [11.5, 4.6, -45], [WINNER_POS[0], WINNER_POS[1] + 0.8, WINNER_POS[2] - 2]),
   key("unfold", 0.62, [8.6, 5.2, -47], [...pathEye(18).target]),
   { at: progressOf("unfold", 1), ...pathEye(4) },
   // Validate → Build → Elevate: one evolving world, travelled through.
-  { at: progressOf("validate", 0.5), ...pathEye(30) },
-  { at: progressOf("validate", 1), ...pathEye(56) },
+  // Validate: out of the corridor. The plan is provisional, seen from the side in open space,
+  // its probes reaching ahead into nothing; then up over it before Build.
+  { at: progressOf("validate", 0.4), ...sideEye(24, -8.5, 6, 16) },
+  { at: progressOf("validate", 0.75), ...sideEye(42, -10, 7.5, 20) },
+  { at: progressOf("validate", 1), ...sideEye(58, -3, 9, 18) },
   // Build: step outside and track alongside — watch the gates lock and the deck form.
   { at: progressOf("build", 0.4), ...sideEye(74, 7, 1.6) },
   { at: progressOf("build", 1), ...sideEye(98, 7.5, 2.4) },
@@ -99,8 +104,12 @@ export const CAMERA_PATH_KEYS: CameraKey[] = [
   // Evidence arrives; then the crisis — pull back to see the future lose integrity.
   { at: progressOf("evidence", 0.3), ...raise(pathEye(122), 7) },
   { at: progressOf("evidence", 1), ...pathEye(138) },
-  { at: progressOf("crisis", 0.6), ...raise(pathEye(132), 5.6, 2) },
-  { at: progressOf("crisis", 1), ...raise(pathEye(133), 6.6, 4) },
+  // The consequence: up and out to the side, where the dependent section can be seen failing
+  // in profile — the assumption at the left of frame, what rested on it to the right. Then the
+  // camera stops while the other possibilities appear.
+  { at: progressOf("crisis", 0.3), ...raise(pathEye(134), 3, 1) },
+  { at: progressOf("crisis", 0.65), ...sideEye(151, -19, 9.5, 9) },
+  { at: progressOf("crisis", 1), ...sideEye(152, -18.6, 9.2, 9) },
   // Adaptation — inside the transformation, following the rebuilt direction.
   { at: progressOf("adaptation", 0.35), ...pathEye(146) },
   { at: progressOf("adaptation", 0.7), ...revisedEye(12) },
@@ -111,8 +120,8 @@ export const CAMERA_PATH_KEYS: CameraKey[] = [
   { at: progressOf("product", 1), ...productEye(0) },
   { at: progressOf("connected", 1), ...productEye(3.5) },
   { at: progressOf("return", 1), ...productEye(14, 4) },
-  { at: progressOf("finale", 0.3), ...lower(productEye(28, 5.5), 3) },
+  { at: progressOf("finale", 0.3), ...lower(productEye(27.5, 5.3), 2.4) },
   // The protected hold: the composition is still while the identity and CTA land.
-  { at: progressOf("finale", 0.62), ...lower(productEye(29.5, 5.2), 3.15) },
-  { at: progressOf("finale", 1), ...lower(productEye(29.8, 5.2), 3.17) },
+  { at: progressOf("finale", 0.62), ...lower(productEye(25.5, 5), 2.25) },
+  { at: progressOf("finale", 1), ...lower(productEye(25.7, 5), 2.27) },
 ];

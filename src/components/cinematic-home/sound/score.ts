@@ -87,9 +87,9 @@ const TENSION = [
   K("passage", 0.54, 0.5),
   K("passage", 0.6, 0),
   K("three", 0.3, 0),
-  K("three", 0.9, 0.34),
-  K("selection", 0.45, 0.4),
-  K("selection", 0.6, 0),
+  K("three", 0.95, 0.38),
+  K("selection", 0.2, 0.3),
+  K("selection", 0.26, 0),
   K("evidence", 0.5, 0),
   K("crisis", 0.4, 0.28),
   K("adaptation", 0.6, 0.12),
@@ -138,10 +138,15 @@ const MASTER = [
   K("passage", 0.71, 0.12),
   K("passage", 0.735, 1),
   // … and before the one is chosen.
-  K("selection", 0.1, 1),
-  K("selection", 0.3, 0.5),
-  K("selection", 0.55, 0.5),
-  K("selection", 0.65, 1),
+  K("selection", 0.18, 1),
+  K("selection", 0.27, 0.12),
+  K("selection", 0.56, 0.12),
+  K("selection", 0.64, 1),
+  // … and before the identity resolves (the signature lands as the space returns).
+  K("finale", 0.24, 1),
+  K("finale", 0.29, 0.14),
+  K("finale", 0.345, 0.14),
+  K("finale", 0.365, 1),
   // Evidence: the normal soundscape briefly contracts.
   K("evidence", 0.56, 1),
   K("evidence", 0.62, 0.62),
@@ -264,7 +269,7 @@ function buildCues(): Cue[] {
   // The comparison: as the six signals land in each future, one focused processing pulse —
   // panned left, centre, right, where each future stands — then the near-silent pause.
   [0, 0.5, 1].forEach((i, k) => out.push(cue("three", 0.84 + k * 0.04, "compare", i)));
-  out.push(cue("selection", 0.62, "resolve", 0, { major: true }));
+  out.push(cue("selection", 0.645, "resolve", 0, { major: true }));
   out.push(cue("unfold", 0.12, "unfold"));
   // Gates passed along the path — a different voice in each phase.
   for (const [phase, n] of [
@@ -283,7 +288,7 @@ function buildCues(): Cue[] {
   // softly (the motif's second voice) — then, as the emblem resolves, complete.
   out.push(cue("return", 0.45, "motif", 1));
   // The emblem resolves: the opening motif returns, complete.
-  out.push(cue("finale", 0.36, "signature", 0, { major: true }));
+  out.push(cue("finale", 0.37, "signature", 0, { major: true }));
   return out.sort((a, b) => a.at - b.at);
 }
 

@@ -1,7 +1,7 @@
 import { CatmullRomCurve3, Matrix4, Quaternion, Vector3 } from "three";
 
 import { mulberry32, smoothstep } from "../../math";
-import { local, progressOf } from "../../timeline/timeline";
+import { local, progressOf, ramp } from "../../timeline/timeline";
 import { FINALS_HUB } from "../layout";
 
 /**
@@ -152,14 +152,17 @@ export function revisedFrame(j: number, out: GateFrame): GateFrame {
 }
 
 /** Frame i inside the chosen sculpture: a tight nest that twists as it recedes. */
-export function sculptureFrame(i: number, out: GateFrame): GateFrame {
+export function sculptureFrame(i: number, out: GateFrame, order = 0): GateFrame {
   const depth = i * 0.34;
   originalFrame(0, out);
   tmpT.set(0, 0, -1).applyQuaternion(out.quaternion);
   out.position
     .set(WINNER_POS[0], WINNER_POS[1] + 0.9, WINNER_POS[2])
     .addScaledVector(tmpT, depth - 2.2);
-  const twist = new Quaternion().setFromAxisAngle(new Vector3(0, 0, 1), i * 0.21 - 0.9);
+  const twist = new Quaternion().setFromAxisAngle(
+    new Vector3(0, 0, 1),
+    (i * 0.21 - 0.9) * (1 - 0.82 * order),
+  );
   out.quaternion.multiply(twist);
   out.scale = 0.62 - i * 0.018;
   return out;
@@ -207,7 +210,7 @@ export function gateState(i: number, p: number, out: GateState): GateState {
   let telescope = 1;
   if (i < SCULPTURE_ARCHES) {
     telescope = smoothstep(0.08 + i * 0.035, 0.42 + i * 0.035, unfold);
-    sculptureFrame(i, tmpFrame);
+    sculptureFrame(i, tmpFrame, ramp(p, "selection", 0.3, "selection", 0.82));
     out.position.lerpVectors(tmpFrame.position, out.position, telescope);
     out.quaternion.slerpQuaternions(tmpFrame.quaternion, out.quaternion, telescope);
     out.scale = tmpFrame.scale + (1 - tmpFrame.scale) * telescope;

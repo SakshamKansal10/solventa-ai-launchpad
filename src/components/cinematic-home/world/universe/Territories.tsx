@@ -253,7 +253,7 @@ export function Territories({ model }: { model: UniverseModel }) {
       }),
     [model],
   );
-  const showFrom = progressOf("passage", 0.66);
+  const showFrom = progressOf("passage", 0.36);
   const showTo = progressOf("unfold", 1);
   /** Each territory's label sits above its architecture (territory-local). */
   const labelAt = useMemo(
@@ -273,6 +273,8 @@ export function Territories({ model }: { model: UniverseModel }) {
     const p = store.state.progress;
     const active = p > showFrom && p < showTo;
     const ph = universePhases(p);
+    // Before the final three the whole landscape withdraws: negative space for the decision.
+    const quiet = ramp(p, "convergence", 0.84, "three", 0.18);
     TERRITORIES.forEach((t, i) => {
       const g = groups.current[i];
       if (!g) return;
@@ -284,7 +286,7 @@ export function Territories({ model }: { model: UniverseModel }) {
       // Authority: the share still alive, eased through the convergence stages.
       let alive = 1;
       for (let k = 0; k < 5; k++) alive = alive + (m.alive[k + 1] - alive) * ph.stages[k];
-      const recede = (1 - alive) * (1 - ph.fadeOut) + ph.fadeOut;
+      const recede = Math.max((1 - alive) * (1 - ph.fadeOut) + ph.fadeOut, quiet);
       g.position.set(
         t.centre[0] + m.away.x * recede * 26,
         t.centre[1] - (1 - appear) * 9 - recede * 7 + m.away.y * recede * 6,
@@ -292,7 +294,7 @@ export function Territories({ model }: { model: UniverseModel }) {
       );
       g.rotation.set(0, t.yaw, 0);
       g.scale.setScalar(Math.max(0.0001, (0.86 + 0.14 * appear) * (1 - 0.35 * ph.fadeOut)));
-      g.visible = appear > 0.002;
+      g.visible = appear > 0.002 && quiet < 0.995;
       // Routes: a resting glow, a flare as each founder-context wave passes, gold if it survives.
       let flare = 0;
       for (const w of ph.waves) {

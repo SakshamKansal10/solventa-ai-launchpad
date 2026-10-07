@@ -342,6 +342,8 @@ export interface UniverseModel {
   formations: {
     spiral: Map<number, [number, number, number]>;
     nine: Map<number, [number, number, number]>;
+    /** The nine's lattice links (opportunity index pairs): up each column, then across the heads. */
+    nineLinks: [number, number][];
     three: Map<number, [number, number, number]>;
   };
 }
@@ -523,16 +525,26 @@ export function createUniverse(renderCount = LOGICAL_COUNT, seed = 11): Universe
       CONVERGE_ANCHOR[2] - 1 + Math.abs(x) * 0.18,
     ]);
   });
+  // The nine as a DECISION LATTICE: three columns standing where the three futures will appear,
+  // each headed by a finalist with its two nearest rivals ranked beneath it. Each column then
+  // resolves into one future.
   const nine = new Map<number, [number, number, number]>();
-  // The nine on one tilted ellipse — an orbit of candidates, not a grid.
+  const colX = [-7.5, 0, 7.5];
+  const headCol = [1, 0, 2];
+  const columns: number[][] = [[], [], []];
   top.slice(0, 9).forEach((o, i) => {
-    const a = (i / 9) * Math.PI * 2 + 0.35;
+    const col = headCol[i % 3];
+    const row = Math.floor(i / 3);
+    columns[col].push(o.index);
     nine.set(o.index, [
-      FINALS_HUB[0] + Math.cos(a) * 9.2,
-      FINALS_HUB[1] + 1.4 + Math.sin(a) * 3.7,
-      FINALS_HUB[2] + 1 + Math.sin(a) * 3.4,
+      FINALS_HUB[0] + colX[col] * (1 - row * 0.06),
+      FINALS_HUB[1] + 3.4 - row * 2.3 + (col === 1 ? 0.6 : 0),
+      FINALS_HUB[2] + 1 + row * 1.2 - (col === 1 ? 1.5 : 0),
     ]);
   });
+  const nineLinks: [number, number][] = [];
+  for (const c of columns) nineLinks.push([c[2], c[1]], [c[1], c[0]]);
+  nineLinks.push([columns[0][0], columns[1][0]], [columns[1][0], columns[2][0]]);
   // Direction 01 left, 02 centre-back (the one), 03 right.
   const [first, second, third] = top;
   const three = new Map<number, [number, number, number]>([
@@ -547,6 +559,6 @@ export function createUniverse(renderCount = LOGICAL_COUNT, seed = 11): Universe
     connections,
     finalists: [second.index, first.index, third.index],
     winner: first.index,
-    formations: { spiral, nine, three },
+    formations: { spiral, nine, nineLinks, three },
   };
 }

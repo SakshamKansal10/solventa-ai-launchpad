@@ -4,9 +4,11 @@ import {
   CapsuleGeometry,
   Euler,
   Group,
+  MeshBasicMaterial,
   LatheGeometry,
   Matrix4,
   Mesh,
+  PlaneGeometry,
   Quaternion,
   Vector2,
   Vector3,
@@ -27,18 +29,30 @@ import { SLAB, SLAB_CENTRE, SLAB_NORMAL, SLAB_QUATERNION, slabState } from "./pr
 export const CHAIN = ["Context", "Opportunity", "Evidence", "Path", "Progress"] as const;
 
 /**
- * Abstract interface layout on the slab's face, in slab-local units: a header
- * rule and three columns of blocks — what the real DOM panel will occupy.
+ * The slab's face IS the interface's silhouette: the real panel's structure (measured from
+ * the DOM at desktop size, normalised x, y, w, h from its top-left) in the panel's own flat
+ * colours, unlit. When the real DOM fades in on top, only its type and icons appear — the
+ * surfaces were already there.
  */
-const FACE_BLOCKS: { x: number; y: number; w: number; h: number; metal?: boolean }[] = [
-  { x: 0, y: 1.62, w: 5.8, h: 0.03, metal: true },
-  { x: -2.15, y: 0.45, w: 1.7, h: 1.9 },
-  { x: 0, y: 0.75, w: 1.9, h: 1.3 },
-  { x: 0, y: -0.75, w: 1.9, h: 1.0 },
-  { x: 2.15, y: 0.2, w: 1.7, h: 2.4 },
-  { x: -2.15, y: -1.25, w: 1.7, h: 0.03, metal: true },
-  { x: 2.15, y: -1.45, w: 1.7, h: 0.03, metal: true },
+type Tone = "base" | "band" | "card" | "line" | "pill";
+const FACE: { r: [number, number, number, number]; tone: Tone }[] = [
+  { r: [0, 0, 1, 1], tone: "base" },
+  { r: [0, 0, 1, 0.081], tone: "band" },
+  { r: [0, 0.0805, 1, 0.0018], tone: "line" },
+  { r: [0.2375, 0.082, 0.0018, 0.918], tone: "line" },
+  { r: [0.2624, 0.1008, 0.0878, 0.0508], tone: "pill" },
+  { r: [0.8121, 0.1819, 0.1638, 0.1489], tone: "card" },
+  { r: [0.2623, 0.394, 0.3471, 0.2657], tone: "card" },
+  { r: [0.6286, 0.3939, 0.3473, 0.2658], tone: "card" },
+  { r: [0.2623, 0.6904, 0.7136, 0.2427], tone: "card" },
 ];
+const TONES: Record<Tone, string> = {
+  base: "#0a0f19",
+  band: "#0e131c",
+  card: "#121720",
+  line: "#1a1f29",
+  pill: "#ece7dd",
+};
 
 const RIGHT = new Vector3()
   .crossVectors(new Vector3(0, 1, 0), SLAB_NORMAL)
@@ -125,7 +139,7 @@ export function Product3D() {
       }),
       needle: new RoundedBoxGeometry(0.05, 0.46, 0.05, 1, 0.02),
       body: new RoundedBoxGeometry(SLAB.width, SLAB.height, SLAB.depth, 4, 0.12),
-      block: new RoundedBoxGeometry(1, 1, 0.04, 1, 0.02),
+      facePlane: new PlaneGeometry(1, 1),
       token,
       band: new LatheGeometry(
         [
@@ -142,6 +156,18 @@ export function Product3D() {
   }, []);
   useEffect(() => () => Object.values(geo).forEach((g) => g.dispose()), [geo]);
   const fil = useMemo(() => filaments.range("product", 8 + CHAIN.length), [filaments]);
+  // Flat, unlit, untoned: exactly the DOM panel's colours, so the handoff adds only type.
+  const faceTones = useMemo(
+    () =>
+      Object.fromEntries(
+        (Object.keys(TONES) as Tone[]).map((t) => [
+          t,
+          new MeshBasicMaterial({ color: TONES[t], toneMapped: false, fog: false }),
+        ]),
+      ) as Record<Tone, MeshBasicMaterial>,
+    [],
+  );
+  useEffect(() => () => Object.values(faceTones).forEach((m) => m.dispose()), [faceTones]);
   const scratch = useMemo(
     () => ({
       from: { position: new Vector3(), quaternion: new Quaternion(), scale: 1 },
@@ -321,14 +347,18 @@ export function Product3D() {
       <group ref={slab}>
         <mesh geometry={geo.body} material={materials.graphite} />
         <mesh geometry={geo.bezel} material={materials.titanium} />
-        <group ref={face} position={[0, 0, SLAB.depth / 2 + 0.03]}>
-          {FACE_BLOCKS.map((b, i) => (
+        <group ref={face} position={[0, 0, SLAB.depth / 2 + 0.006]}>
+          {FACE.map(({ r: [x, y, w, h], tone }, i) => (
             <mesh
               key={i}
-              geometry={geo.block}
-              material={b.metal ? materials.champagne : materials.smoked}
-              position={[b.x, b.y, 0]}
-              scale={[b.w, b.h, 1]}
+              geometry={geo.facePlane}
+              material={faceTones[tone]}
+              position={[
+                (x + w / 2 - 0.5) * SLAB.width,
+                (0.5 - (y + h / 2)) * SLAB.height,
+                i * 0.002,
+              ]}
+              scale={[w * SLAB.width, h * SLAB.height, 1]}
             />
           ))}
         </group>

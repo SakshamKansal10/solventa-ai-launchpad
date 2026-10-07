@@ -55,11 +55,8 @@ const rod = (from: [number, number, number], to: [number, number, number], r = 0
   const g = new CylinderGeometry(r, r, len, 6, 1);
   return place(g, [(a.x + b.x) / 2, (a.y + b.y) / 2, (a.z + b.z) / 2], b.clone().sub(a));
 };
-/** Short champagne connectors: where filaments plug in. */
-const connectors = () => [
-  rod([0, 0, 0.3], [0, 0, 0.62], 0.014),
-  rod([0, 0, -0.3], [0, 0, -0.55], 0.014),
-];
+/** One short champagne port stub at the front: where filaments plug in (no spikes). */
+const connectors = () => [rod([0, 0, 0.3], [0, 0, 0.4], 0.013)];
 
 function studio(): FamilyGeometry {
   // A rounded-square frame holding twin optical panes.
@@ -167,7 +164,7 @@ function local(): FamilyGeometry {
   pane.rotateZ(Math.PI / 4);
   return {
     seed: new OctahedronGeometry(0.13, 0),
-    frame: merge([frame, rod([0, -0.62, 0], [0, 0.62, 0], 0.016), ...connectors()]),
+    frame: merge([frame, rod([0, -0.48, 0], [0, 0.48, 0], 0.014), ...connectors()]),
     shell: pane,
     energy: place(new RoundedBoxGeometry(0.11, 0.11, 0.11, 1, 0.02), [0, 0, 0.08]),
   };

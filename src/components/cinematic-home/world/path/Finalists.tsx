@@ -24,7 +24,7 @@ import { FINALS_HUB } from "../layout";
 import { TRUNK_ORIGIN } from "../universe/universe-model";
 import { useWorld } from "../WorldContext";
 import { SIDE_FINALISTS } from "./finalists-model";
-import { WINNER_POS } from "./path-model";
+import { GATE, originalFrame, WINNER_POS } from "./path-model";
 
 /**
  * The two futures that are NOT chosen, each its own architecture:
@@ -157,6 +157,11 @@ export function Finalists() {
     }
   }, [scratch]);
 
+  const roadFrame = useMemo(
+    () => ({ position: new Vector3(), quaternion: new Quaternion(), scale: 1 }),
+    [],
+  );
+
   useFrame(() => {
     const g = group.current;
     if (!g) return;
@@ -183,7 +188,13 @@ export function Finalists() {
       // Each future turns slowly while it is a candidate, then stops.
       e.set(0, 0.4 + three * 0.55 * (k ? -1 : 1), k ? 0.18 : -0.08);
       q.setFromEuler(e);
-      v.set(f.centre[0], f.centre[1], f.centre[2] - gone * 10);
+      // Becoming irrelevant: as it loses coherence it falls back into the dark.
+      const fall = smoothstep(0.35, 1, lose);
+      v.set(
+        f.centre[0] + (k ? 1 : -1) * fall * 6,
+        f.centre[1] - fall * 3,
+        f.centre[2] - fall * 18 - gone * 10,
+      );
       sc.setScalar(1.3 * emerge * (1 - 0.35 * gone));
       c.compose(v, q, sc);
       pieces[k].forEach((pc, i) => {
@@ -220,7 +231,7 @@ export function Finalists() {
         const gm = glass.current[pc.geo];
         if (gm && coherence < 0.99) {
           gm.setMatrixAt(slot[1], m);
-          gm.setColorAt(slot[1]++, col.setScalar((1 - coherence) * (1 - gone)));
+          gm.setColorAt(slot[1]++, col.setScalar((1 - coherence) * (1 - fall) * (1 - gone)));
         }
       });
     });
@@ -252,7 +263,7 @@ export function Finalists() {
     pairs.forEach(([a, b], j) => {
       const idx = fil.start + j;
       const toWinner = a === 1 || b === 1;
-      const keep = toWinner ? 1 - lose * 0.4 : 1 - lose;
+      const keep = 1 - lose;
       const s1 = compare * keep * (1 - gone);
       if (s1 <= 0.01) {
         filaments.hide(idx);
@@ -271,7 +282,14 @@ export function Finalists() {
       });
     });
     // … and the founder's six fit signals evaluated in each, simultaneously.
-    const hub: [number, number, number] = [FINALS_HUB[0], FINALS_HUB[1] + 6.5, FINALS_HUB[2] + 3];
+    // From below the three during the comparison; once the one is chosen, its six signals gather
+    // into a short foundation under it (no lines across the frame).
+    const gather = ramp(p, "selection", 0.35, "selection", 0.75);
+    const hub: [number, number, number] = [
+      FINALS_HUB[0] + (WINNER_POS[0] - FINALS_HUB[0]) * gather,
+      FINALS_HUB[1] - 4.5 + (WINNER_POS[1] - 2.4 - (FINALS_HUB[1] - 4.5)) * gather,
+      FINALS_HUB[2] + 10 + (WINNER_POS[2] + 1.5 - (FINALS_HUB[2] + 10)) * gather,
+    ];
     const fit = ramp(p, "three", 0.66, "three", 0.95);
     centres.forEach((ctr, k) => {
       const fails = k === 1 ? [] : FAILS[k === 0 ? 0 : 1];
@@ -310,12 +328,25 @@ export function Finalists() {
     });
     // The one aligns with the core's system: a long filament from the trunk origin.
     const align =
-      ramp(p, "selection", 0.4, "selection", 0.9) * (1 - ramp(p, "unfold", 0.3, "unfold", 0.7));
+      ramp(p, "selection", 0.4, "selection", 0.9) * (1 - ramp(p, "unfold", 0.62, "unfold", 0.9));
     const idx = fil.start + 3;
     if (align > 0.01) {
       // Its path traces the Solventia S: a cubic with opposed handles — a subtle echo of the
       // emblem in the one direction worth testing.
-      const W = centres[1];
+      // As the opportunity unfolds, the pathway's end runs forward along the new road's centre:
+      // the idea's own gold line becomes the way ahead.
+      const ext = ramp(p, "unfold", 0.08, "unfold", 0.62);
+      const W: [number, number, number] = [centres[1][0], centres[1][1], centres[1][2]];
+      if (ext > 0) {
+        originalFrame(Math.round(2 + ext * 16), roadFrame);
+        const E = scratch.v
+          .set(0, GATE.centreY - GATE.hh + 0.25, 0)
+          .applyQuaternion(roadFrame.quaternion)
+          .add(roadFrame.position);
+        W[0] += (E.x - W[0]) * ext;
+        W[1] += (E.y - W[1]) * ext;
+        W[2] += (E.z - W[2]) * ext;
+      }
       const [ax, ay, az] = TRUNK_ORIGIN;
       filaments.curve(
         idx,

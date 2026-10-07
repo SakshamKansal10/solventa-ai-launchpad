@@ -156,7 +156,7 @@ function CaptionBody({ caption: c }: { caption: Caption }) {
           <Link
             to="/consultation"
             data-testid="cinematic-cta"
-            className="mt-8 inline-flex h-14 items-center gap-3 rounded-full bg-[linear-gradient(135deg,#FFFDFB_0%,#F2ECE2_55%,#DCC08B_100%)] px-8 text-[1.0625rem] font-semibold text-sol-navy shadow-[0_18px_50px_rgba(196,166,122,0.25)] transition-[filter,transform] duration-200 hover:brightness-105 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#DCC08B] active:scale-[0.98]"
+            className="mt-8 inline-flex h-14 items-center gap-3 rounded-full bg-[linear-gradient(180deg,#FBF8F2_0%,#EDE5D6_100%)] px-8 text-[1.0625rem] font-semibold text-sol-navy shadow-[inset_0_0_0_1px_rgba(201,170,121,0.9),0_0_0_4px_rgba(201,170,121,0.12),0_14px_40px_rgba(196,166,122,0.16)] transition-[filter,transform,box-shadow] duration-200 hover:brightness-105 hover:shadow-[inset_0_0_0_1px_rgba(201,170,121,1),0_0_0_6px_rgba(201,170,121,0.16),0_14px_40px_rgba(196,166,122,0.22)] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#DCC08B] active:scale-[0.98]"
           >
             Find My Business Idea
             <ArrowRight className="size-5" aria-hidden="true" />
