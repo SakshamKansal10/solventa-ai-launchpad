@@ -310,18 +310,24 @@ export function Finalists() {
       ramp(p, "selection", 0.4, "selection", 0.9) * (1 - ramp(p, "unfold", 0.3, "unfold", 0.7));
     const idx = fil.start + 3;
     if (align > 0.01) {
+      // Its path traces the Solventia S: a cubic with opposed handles — a subtle echo of the
+      // emblem in the one direction worth testing.
       const W = centres[1];
-      filaments.arc(
+      const [ax, ay, az] = TRUNK_ORIGIN;
+      filaments.curve(
         idx,
-        TRUNK_ORIGIN[0],
-        TRUNK_ORIGIN[1],
-        TRUNK_ORIGIN[2],
+        ax,
+        ay,
+        az,
+        ax + 14,
+        ay + 9,
+        az - 14,
+        W[0] - 12,
+        W[1] - 7,
+        W[2] + 14,
         W[0],
         W[1],
         W[2],
-        0,
-        6,
-        0,
       );
       filaments.params(idx, {
         s1: align,

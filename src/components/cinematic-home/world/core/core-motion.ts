@@ -1,87 +1,132 @@
-import { Euler, Matrix4, Quaternion, Vector3 } from "three";
+import { Vector3 } from "three";
 
 import { smoothstep } from "../../math";
 import { local, progressOf, ramp } from "../../timeline/timeline";
 import { contextResponse } from "../context/context-model";
 import { SLAB_CENTRE, SLAB_NORMAL } from "../product/product-model";
-import { arrivalWindow, FRAMES, KERNEL, PORTS, TELESCOPE } from "./core-design";
+import { ASSEMBLY, CHANNEL, PORTS, portLocal, S_SCALE, WAFER_Z } from "./core-design";
 
-/** Layers in gimbal order: the six frames, then the kernel. */
-export const LAYERS = FRAMES.length + 1;
+export interface ChannelPose {
+  /** Offset from the channel's rest place (world units) and rotation (radians, xyz). */
+  x: number;
+  y: number;
+  z: number;
+  rx: number;
+  ry: number;
+  rz: number;
+  /** 0 → 1 arrival (0 = not yet visible). */
+  arrive: number;
+}
+
+export interface WaferPose {
+  arrive: number;
+  /** Rest z plus any settling offset. */
+  z: number;
+  /** Calibration slide (x) from a founder signal. */
+  slide: number;
+  /** Aperture: how far each half has moved aside (world units). */
+  split: number;
+  /** Trace / inference brightness 0 → 1. */
+  glow: number;
+}
 
 export interface EnginePose {
   visible: boolean;
-  /** Engine placement (core-local origin for the opening, the product's place for the finale). */
+  /** Engine placement: the origin for the opening, the product's place for the finale. */
   position: [number, number, number];
   yaw: number;
   pitch: number;
-  /** Relative gimbal angle per layer (frames f1…f6, kernel). */
-  angles: number[];
-  /** Relative z offset per layer (telescoping). */
-  offsets: number[];
-  /** Per-layer arrival 0 → 1 (origin: flight in; finale: growth from the kernel). */
-  arrive: number[];
-  /** 1 = gimbal pins locked, 0 = retracted (free to telescope). */
-  pins: number;
-  /** How far each kernel half has slid aside (world units). */
-  part: number;
-  /** Kernel ignition and inference energy. */
-  wake: number;
+  channels: [ChannelPose, ChannelPose];
+  wafers: WaferPose[];
+  /** Reference channels drawing the S (0 → 1), and their fade once the metal is in place. */
+  blueprint: number;
+  blueprintFade: number;
+  connectors: number;
+  /** Kernel activation and inference energy. */
+  kernel: number;
   energy: number;
-  /** Ports and channels: how docked each founder signal is. */
+  /** The gold inner light along the S (the logo's lit counter). */
+  seam: number;
+  /** Energy travelling along the S's centre channels (0 → 1 drawn). */
+  route: number;
   docked: number[];
   pulse: number;
-  /** Aperture hairlines lit, per frame (they come on in sequence down the tunnel). */
-  lit: boolean[];
-  /** Distant glints seen through the aperture before the reveal. */
+  /** Gold signal leading the camera into the aperture (0 = none … 1 = gone deep). */
+  signal: number;
+  /** Faint structure far ahead, glimpsed through the aperture. */
   hint: number;
 }
 
 const ORIGIN_PLACE: [number, number, number] = [0, 0, 0];
-const FINALE_PLACE: [number, number, number] = [
+/** Where the S emblem resolves in the finale (behind the receding product surface). */
+export const FINALE_PLACE: [number, number, number] = [
   SLAB_CENTRE.x,
-  SLAB_CENTRE.y + 1.2,
+  SLAB_CENTRE.y + 1.4,
   SLAB_CENTRE.z - 6,
 ];
-/** The finale engine turns its face toward the visitor (who stands on the product's normal). */
+/** The finale engine faces the visitor (who stands on the product's normal). */
 export const FINALE_YAW = Math.atan2(SLAB_NORMAL.x, SLAB_NORMAL.z);
 
+const clamp01 = (x: number) => (x < 0 ? 0 : x > 1 ? 1 : x);
 /** A precise mechanical move: quick, then a soft landing (no overshoot). */
-const settle = (x: number) => {
-  const t = x <= 0 ? 0 : x >= 1 ? 1 : x;
-  return 1 - Math.pow(1 - t, 3);
-};
+const settle = (x: number) => 1 - Math.pow(1 - clamp01(x), 3);
+const within = (a: number, [w0, w1]: [number, number]) => clamp01((a - w0) / (w1 - w0));
+
+function restChannel(arrive: number): ChannelPose {
+  return { x: 0, y: 0, z: 0, rx: 0, ry: 0, rz: 0, arrive };
+}
 
 export function enginePose(p: number, finale: boolean): EnginePose {
-  const angles = FRAMES.map((f) => f.rest).concat(KERNEL.rest);
-  const offsets = new Array<number>(LAYERS).fill(0);
   if (finale) {
-    const a = ramp(p, "return", 0.6, "finale", 0.6);
-    const arrive = angles.map((_, i) => {
-      const order = LAYERS - 1 - i;
-      return settle((a - order * 0.075) / 0.42);
-    });
-    // Arrives in its working pose, then resolves: every layer aligns into one calm emblem.
-    const resolve = smoothstep(0.55, 0.95, a);
-    for (let i = 0; i < LAYERS; i++) {
-      angles[i] *= 1 - resolve;
-      offsets[i] = i === 0 ? 0 : -0.16 * resolve;
-    }
+    // The return: the S reappears — first as light, then as structure — and resolves.
+    const a = ramp(p, "return", 0.42, "finale", 0.55);
+    const resolve = smoothstep(0.62, 0.95, a);
+    const wafers = WAFER_Z.map((z, j) => ({
+      arrive: settle((a - 0.42 - j * 0.04) / 0.24),
+      z,
+      slide: 0,
+      split: 0,
+      // In the emblem the kernel is quiet: the counter reads as lit space, as on the logo.
+      glow: 0.3 * smoothstep(0.6, 0.9, a),
+    }));
+    const c0 = settle((a - 0.14) / 0.34);
+    const c1 = settle((a - 0.24) / 0.34);
     return {
-      visible: p > progressOf("return", 0.55),
+      visible: p > progressOf("return", 0.4),
       position: FINALE_PLACE,
-      yaw: FINALE_YAW + 0.32 * (1 - resolve) + 0.16 * resolve,
-      pitch: -0.08,
-      angles,
-      offsets,
-      arrive,
-      pins: 1 - resolve,
-      part: 0,
-      wake: smoothstep(0.05, 0.4, a),
-      energy: 0.7 + 0.3 * resolve,
+      yaw: FINALE_YAW + 0.16 * (1 - resolve) + 0.07,
+      pitch: -0.03,
+      channels: [
+        {
+          x: -9 * (1 - c0),
+          y: 2 * (1 - c0),
+          z: -3 * (1 - c0),
+          rx: 0,
+          ry: 0,
+          rz: 0.5 * (1 - c0),
+          arrive: c0,
+        },
+        {
+          x: 9 * (1 - c1),
+          y: -2 * (1 - c1),
+          z: -3 * (1 - c1),
+          rx: 0,
+          ry: 0,
+          rz: 0.5 * (1 - c1),
+          arrive: c1,
+        },
+      ],
+      wafers,
+      blueprint: smoothstep(0.0, 0.3, a),
+      blueprintFade: smoothstep(0.5, 0.75, a),
+      connectors: smoothstep(0.5, 0.68, a),
+      kernel: smoothstep(0.55, 0.85, a),
+      energy: 0.6 + 0.4 * resolve,
+      seam: smoothstep(0.58, 0.95, a),
+      route: smoothstep(0.62, 0.95, a),
       docked: [1, 1, 1, 1, 1, 1],
       pulse: 0,
-      lit: FRAMES.map((_, i) => resolve > 0.5 + (FRAMES.length - 1 - i) * 0.06),
+      signal: 0,
       hint: 0,
     };
   }
@@ -90,73 +135,65 @@ export function enginePose(p: number, finale: boolean): EnginePose {
   const s = local(p, "passage");
   const ctx = contextResponse(p);
   const docked = [ctx.capital, ctx.skills, ctx.location, ctx.time, ctx.experience, ctx.access];
-  // Each founder signal turns one inner layer, precisely.
-  docked.forEach((d, i) => {
-    angles[i + 1] += PORTS[i].step * settle(d);
+
+  // The aperture: the channels part (point-symmetric), each wafer splits, front first.
+  const open = smoothstep(0.1, 0.42, s);
+  const channels: [ChannelPose, ChannelPose] = [
+    restChannel(within(a, ASSEMBLY.channels[0] as [number, number])),
+    restChannel(within(a, ASSEMBLY.channels[1] as [number, number])),
+  ];
+  channels[0].x = -1.1 * open;
+  channels[0].y = 0.45 * open;
+  channels[0].ry = -0.22 * open;
+  channels[1].x = 1.1 * open;
+  channels[1].y = -0.45 * open;
+  channels[1].ry = 0.22 * open;
+
+  const kernel = smoothstep(ASSEMBLY.kernel[0], ASSEMBLY.kernel[1], a);
+  const wafers = WAFER_Z.map((z, j) => {
+    const arrive = within(a, ASSEMBLY.wafer(j));
+    // Each founder signal calibrates one wafer: a precise lateral step.
+    const slide = j < docked.length ? (j % 2 ? 1 : -1) * 0.14 * settle(docked[j]) : 0;
+    const split = 1.3 * smoothstep(0.4 + j * 0.045, 0.58 + j * 0.045, s);
+    return {
+      arrive,
+      z,
+      slide: slide * (1 - open),
+      split,
+      glow:
+        kernel * (0.5 + 0.1 * docked.reduce((x, y) => x + y, 0)) + 0.6 * smoothstep(0.35, 0.6, s),
+    };
   });
-  // The passage: layers align outer → inner (a gimbal unlocking), pins retract, the layers
-  // slide back into a narrowing square tunnel, then the kernel parts.
-  for (let i = 0; i < LAYERS; i++) {
-    const align = smoothstep(0.02 + i * 0.045, 0.15 + i * 0.045, s);
-    angles[i] *= 1 - align;
-    const tel = smoothstep(0.38 + i * 0.03, 0.56 + i * 0.03, s);
-    offsets[i] = (i === 0 ? TELESCOPE.first : i === LAYERS - 1 ? 0 : TELESCOPE.step) * tel;
-  }
-  const arrive = angles.map((_, i) => {
-    if (i === LAYERS - 1) return smoothstep(0.0, 0.12, a);
-    const [w0, w1] = arrivalWindow(i);
-    return (a - w0) / (w1 - w0);
-  });
-  const wake = smoothstep(0.0, 0.16, a);
+
   return {
     visible: p < progressOf("universe", 0.14),
     position: ORIGIN_PLACE,
     yaw: 0,
     pitch: 0,
-    angles,
-    offsets,
-    arrive,
-    pins: 1 - smoothstep(0.34, 0.42, s),
-    part: 1.08 * smoothstep(0.56, 0.74, s),
-    wake,
+    channels,
+    wafers,
+    blueprint: smoothstep(ASSEMBLY.blueprint[0], ASSEMBLY.blueprint[1], a),
+    blueprintFade: smoothstep(0.55, 0.8, a),
+    connectors: smoothstep(ASSEMBLY.connectors[0], ASSEMBLY.connectors[1], a),
+    kernel,
     energy:
-      wake * (0.45 + 0.08 * docked.reduce((x, y) => x + y, 0)) + 0.9 * smoothstep(0.6, 0.8, s),
+      kernel * (0.45 + 0.08 * docked.reduce((x, y) => x + y, 0)) + 0.9 * smoothstep(0.6, 0.8, s),
+    seam: smoothstep(0.66, 0.92, a) * (1 - 0.5 * smoothstep(0.5, 0.8, s)),
+    route: smoothstep(0.86, 1, a),
     docked,
     pulse: ctx.pulse,
-    lit: FRAMES.map((_, i) => s > 0.42 + i * 0.045),
+    signal: clamp01((s - 0.34) / 0.52),
     hint: smoothstep(0.64, 0.82, s) * (1 - smoothstep(0.95, 1, s)),
   };
 }
 
-const AXIS_X = new Vector3(1, 0, 0);
-const AXIS_Y = new Vector3(0, 1, 0);
-const scratch = { q: new Quaternion(), m: new Matrix4(), e: new Euler(), v: new Vector3() };
-
-/** The engine's placement matrix. */
-export function placement(pose: EnginePose, out: Matrix4): Matrix4 {
-  scratch.e.set(pose.pitch, pose.yaw, 0, "YXZ");
-  scratch.q.setFromEuler(scratch.e);
-  return out.compose(scratch.v.set(...pose.position), scratch.q, new Vector3(1, 1, 1));
-}
-
-/** World matrices of every layer along the gimbal chain (no allocation after the first call). */
-export function layerMatrices(pose: EnginePose, out: Matrix4[]): Matrix4[] {
-  const parent = placement(pose, out[LAYERS] ?? (out[LAYERS] = new Matrix4()));
-  let prev = parent;
-  for (let i = 0; i < LAYERS; i++) {
-    const axis = i < FRAMES.length ? FRAMES[i].axis : KERNEL.axis;
-    scratch.q.setFromAxisAngle(axis === "x" ? AXIS_X : AXIS_Y, pose.angles[i]);
-    scratch.m.compose(scratch.v.set(0, 0, pose.offsets[i]), scratch.q, new Vector3(1, 1, 1));
-    const m = out[i] ?? (out[i] = new Matrix4());
-    m.multiplyMatrices(prev, scratch.m);
-    prev = m;
-  }
-  return out;
-}
-
-/** Port i's world position at rest (where a founder signal docks), on the outer frame's face. */
+/** Port i's world position at rest (where a founder signal docks), off the channel's outer edge. */
 export function portPosition(i: number, out = new Vector3()): Vector3 {
-  const f1 = FRAMES[0];
-  out.set(PORTS[i].x, PORTS[i].y, f1.depth / 2 + 0.22);
-  return out.applyAxisAngle(AXIS_Y, f1.rest);
+  const { x, y, nx, ny } = portLocal(i);
+  const sign = PORTS[i].channel === 0 ? 1 : -1;
+  return out.set(
+    sign * (x * S_SCALE + nx * 0.42),
+    sign * (y * S_SCALE + ny * 0.42),
+    CHANNEL.depth / 2 + 0.25,
+  );
 }

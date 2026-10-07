@@ -1,29 +1,50 @@
 import { useFrame } from "@react-three/fiber";
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef } from "react";
 import {
   BoxGeometry,
+  BufferGeometry,
   Color,
   CylinderGeometry,
+  DoubleSide,
+  Euler,
+  ExtrudeGeometry,
+  Float32BufferAttribute,
   Group,
   InstancedMesh,
   Matrix4,
-  Mesh,
+  MeshBasicMaterial,
   Object3D,
   Quaternion,
+  Shape,
+  Vector2,
   Vector3,
-  type BufferGeometry,
   type PointLight,
 } from "three";
-import { mergeGeometries } from "three/examples/jsm/utils/BufferGeometryUtils.js";
 import { RoundedBoxGeometry } from "three/examples/jsm/geometries/RoundedBoxGeometry.js";
 
 import { createCameraPath } from "../../camera/camera-path";
 import { smoothstep } from "../../math";
 import { local, progressOf } from "../../timeline/timeline";
-import { frameGeometry, inlayGeometry } from "../geometry/frames";
+import { frameGeometry, plateGeometry } from "../geometry/frames";
+import { COLORS } from "../layout";
 import { useWorld } from "../WorldContext";
-import { arrivalWindow, FRAMES, KERNEL, LATTICE, pinSpan, PORTS, STRUTS } from "./core-design";
-import { enginePose, LAYERS, layerMatrices } from "./core-motion";
+import {
+  ASSEMBLY,
+  CHANNEL,
+  chainAt,
+  chainNormal,
+  chainSpan,
+  crescentOutline,
+  PORTS,
+  portLocal,
+  S_MID,
+  S_SCALE,
+  TRACES,
+  WAFER,
+  WAFER_Z,
+} from "./core-design";
+import { enginePose, type EnginePose } from "./core-motion";
+import { S_INNER, S_OUTER } from "./s-mark";
 
 /** Distant signals in the void (appear at local `at`), and the bow of their run in. */
 const VOID_SIGNALS: {
@@ -35,7 +56,7 @@ const VOID_SIGNALS: {
   { from: [27, -6, -34], bend: [-6, 4, 10], at: 0.48 },
   { from: [-7, -12, -52], bend: [3, -5, 12], at: 0.76 },
 ];
-/** Faint distant signals glimpsed through the aperture before the reveal. */
+/** Faint distant structure glimpsed through the aperture before the reveal. */
 const HINTS: [number, number, number][] = [
   [-9, 1.5, -30],
   [7, -2.5, -38],
@@ -44,232 +65,218 @@ const HINTS: [number, number, number][] = [
 ];
 /** Founder-signal weights in the illustrative scoring model (channel width). */
 const WEIGHTS = [0.22, 0.22, 0.1, 0.16, 0.14, 0.16];
-/** Layers that overtake the camera on their way in (the rest rise out of the dark beyond). */
-const PASSES_CAMERA = new Set([0, 2, 4]);
+/** Inner-edge points where connectors reach into the counter. */
+const STRUT_U = [0.2, 0.42];
+const GOLD = new Color(COLORS.edgeGold);
+/** The lit inner bevel: a deeper gold, so it reads as light on metal rather than paint. */
+const SEAM_GOLD = new Color("#E2A95A");
+const INDIGO = new Color(COLORS.indigo);
+const VIOLET = new Color(COLORS.violetGlow);
 
-const COLORS_VIOLET = "#7d6ff0";
-const COLORS_GOLD = "#f0cf8c";
-const flat = (g: BufferGeometry) => (g.index ? g.toNonIndexed() : g);
-const merge = (parts: BufferGeometry[]) => mergeGeometries(parts.map(flat));
+/** The S channel's crescent, extruded: `inset` toward the midline, `depth` along z at `z`. */
+function crescent(inset: number, depth: number, bevel: number, z: number) {
+  const pts = crescentOutline(inset).map(([x, y]) => new Vector2(x * S_SCALE, y * S_SCALE));
+  const d = Math.max(0.001, depth - bevel * 2);
+  const g = new ExtrudeGeometry(new Shape(pts), {
+    depth: d,
+    bevelEnabled: bevel > 0,
+    bevelThickness: bevel,
+    bevelSize: bevel,
+    bevelSegments: 3,
+    curveSegments: 1,
+  });
+  g.translate(0, 0, z - d / 2);
+  return g;
+}
+
+/**
+ * The gold inner light — the logo's lit inner bevel. Three bands along the concave edge,
+ * brightest along the curve and falling away toward the tip and the far end: a gradient
+ * strip on the front face and on the back face (bright at the edge, fading into the metal),
+ * and a band just off the edge across the depth (for oblique views into the counter).
+ */
+function seamRibbon() {
+  const M = 48;
+  const pos: number[] = [];
+  const col: number[] = [];
+  const idx: number[] = [];
+  const glow = (u: number) => (u < 0.66 ? Math.pow(Math.sin((Math.PI * u) / 0.66), 0.55) : 0);
+  const band = (at: (u: number, side: 0 | 1) => [number, number, number], fadeInner: boolean) => {
+    const base = pos.length / 3;
+    for (let i = 0; i <= M; i++) {
+      const u = i / M;
+      const g = glow(u);
+      for (const side of [0, 1] as const) {
+        pos.push(...at(u, side));
+        const k = fadeInner && side === 1 ? 0 : g;
+        col.push(k, k, k);
+      }
+      if (i < M) {
+        const a = base + i * 2;
+        idx.push(a, a + 1, a + 2, a + 1, a + 3, a + 2);
+      }
+    }
+  };
+  const front = CHANNEL.depth / 2 + 0.004;
+  for (const z of [front, -front]) {
+    band((u, side) => {
+      const [x, y] = chainAt(S_INNER, u);
+      const [nx, ny] = chainNormal(S_INNER, S_OUTER, u);
+      const into = side === 0 ? -0.01 : 0.17; // from the edge into the metal
+      return [(x - nx * (into / S_SCALE)) * S_SCALE, (y - ny * (into / S_SCALE)) * S_SCALE, z];
+    }, true);
+  }
+  band((u, side) => {
+    const [x, y] = chainAt(S_INNER, u);
+    const [nx, ny] = chainNormal(S_INNER, S_OUTER, u);
+    return [x * S_SCALE + nx * 0.04, y * S_SCALE + ny * 0.04, side === 0 ? -0.4 : 0.4];
+  }, false);
+  const g = new BufferGeometry();
+  g.setAttribute("position", new Float32BufferAttribute(pos, 3));
+  g.setAttribute("color", new Float32BufferAttribute(col, 3));
+  g.setIndex(idx);
+  return g;
+}
+
+function buildEngine() {
+  const front = CHANNEL.depth / 2;
+  return {
+    body: crescent(0, CHANNEL.depth, CHANNEL.bevel, 0),
+    // A champagne pinstripe between the body and the machined covers (front and back).
+    stripe: [front, -front].map((z) =>
+      crescent(CHANNEL.coverInset - 0.035, 0.03, 0, z + Math.sign(z) * 0.01),
+    ),
+    cover: [front, -front].map((z) =>
+      crescent(CHANNEL.coverInset, CHANNEL.coverDepth, 0.025, z + Math.sign(z) * 0.035),
+    ),
+    seam: seamRibbon(),
+    wafer: plateGeometry(WAFER.w / 4, WAFER.h / 2, WAFER.thickness, WAFER.radius, 0, 6),
+    waferRim: frameGeometry({
+      hw: WAFER.w / 4,
+      hh: WAFER.h / 2,
+      bar: 0.022,
+      depth: WAFER.thickness + 0.012,
+      radius: WAFER.radius,
+      bevel: 0,
+      curveSegments: 6,
+    }),
+    unit: new BoxGeometry(1, 1, 1),
+    pad: new BoxGeometry(0.07, 0.07, 0.012),
+    strut: new CylinderGeometry(0.05, 0.05, 1, 12, 1).translate(0, 0.5, 0),
+    collar: new CylinderGeometry(0.1, 0.1, 0.12, 16, 1),
+    socket: new RoundedBoxGeometry(0.62, 0.36, 0.34, 2, 0.06),
+  };
+}
+
+const ONE = new Vector3(1, 1, 1);
+const Z_AXIS = new Vector3(0, 0, 1);
+const Y_AXIS = new Vector3(0, 1, 0);
+const BASE = [new Quaternion(), new Quaternion().setFromAxisAngle(Z_AXIS, Math.PI)];
 
 interface Flight {
   from: Vector3;
   via: Vector3;
   turn: Quaternion;
-  /** true: start facing the camera axis (the visitor looks through it). */
-  facing: boolean;
 }
-
-function buildEngine(curveSegments: number) {
-  const frames = FRAMES.map((f) => {
-    const o = {
-      hw: f.half,
-      hh: f.half,
-      bar: f.bar,
-      depth: f.depth,
-      radius: f.radius,
-      curveSegments,
-    };
-    const body = frameGeometry(o);
-    const trim: BufferGeometry[] = [];
-    if (f.inlay) trim.push(inlayGeometry(o, 0.045, 0.03));
-    // Machined index marks on the front face (an instrument scale, never decoration for its own sake).
-    for (let k = 0; k < f.ticks; k++) {
-      const u = (k + 1) / (f.ticks + 1) - 0.5;
-      const along = u * (f.half * 2 - f.radius * 2.2);
-      const edge = f.half - f.bar / 2;
-      for (const [x, y, w, h] of [
-        [along, edge, 0.035, f.bar * 0.55],
-        [along, -edge, 0.035, f.bar * 0.55],
-        [edge, along, f.bar * 0.55, 0.035],
-        [-edge, along, f.bar * 0.55, 0.035],
-      ]) {
-        const t = new BoxGeometry(w, h, 0.02);
-        t.translate(x, y, f.depth / 2 + 0.008);
-        trim.push(t);
-      }
-    }
-    return { body, trim: trim.length ? merge(trim) : null };
-  });
-
-  // Gimbal pins: two per layer, on the CHILD's axis, with a gold collar at the parent's edge.
-  const pins = FRAMES.map((_, i) => {
-    const [a, b] = pinSpan(i);
-    const len = b - a;
-    const childAxis = i + 1 < FRAMES.length ? FRAMES[i + 1].axis : KERNEL.axis;
-    const parts: BufferGeometry[] = [];
-    for (const side of [-1, 1]) {
-      const rod = new CylinderGeometry(0.06, 0.06, len, 12, 1);
-      rod.translate(0, side * (a + len / 2), 0);
-      const collar = new CylinderGeometry(0.11, 0.11, 0.1, 16, 1);
-      collar.translate(0, side * (b - 0.07), 0);
-      for (const g of [rod, collar]) {
-        // Cylinders run along y; lay them on x when the child turns about x.
-        if (childAxis === "x") g.rotateZ(-Math.PI / 2);
-        parts.push(g);
-      }
-    }
-    return merge(parts);
-  });
-  // The aperture hairline on each frame's inner edge: lights in sequence down the tunnel.
-  const apertures = FRAMES.map((f) =>
-    inlayGeometry(
-      { hw: f.half, hh: f.half, bar: f.bar, depth: f.depth, radius: f.radius, curveSegments },
-      0.028,
-      -0.028,
-    ),
-  );
-
-  // Input ports on the outer frame: machined housings with a status window.
-  const f1 = FRAMES[0];
-  const portBody = merge(
-    PORTS.map((pt) => {
-      const vertical = Math.abs(pt.x) > Math.abs(pt.y);
-      const g = new RoundedBoxGeometry(vertical ? 0.5 : 0.8, vertical ? 0.8 : 0.5, 0.34, 2, 0.06);
-      g.translate(pt.x, pt.y, f1.depth / 2 + 0.12);
-      return g;
-    }),
-  );
-  const portLight = new BoxGeometry(1, 1, 1);
-
-  const halfBox = new RoundedBoxGeometry(
-    KERNEL.half,
-    KERNEL.half * 2,
-    KERNEL.half * 2,
-    3,
-    KERNEL.radius,
-  );
-  const seam = frameGeometry({
-    hw: KERNEL.half - 0.08,
-    hh: KERNEL.half - 0.08,
-    bar: 0.03,
-    depth: 0.012,
-    radius: 0.12,
-    bevel: 0,
-  });
-  seam.rotateY(Math.PI / 2);
-  const node = new BoxGeometry(0.07, 0.07, 0.07);
-  const strut = new BoxGeometry(1, 0.014, 0.014);
-  return { frames, pins, apertures, portBody, portLight, halfBox, seam, node, strut };
-}
-
-/** Lattice split: nodes left / right of the kernel's seam, struts within each half, and across it. */
-const SIDES = [-1, 1].map((side) => {
-  const nodes = LATTICE.map((n, i) => ({ n, i })).filter(({ n }) => Math.sign(n[0]) === side);
-  const struts = STRUTS.filter(
-    ([a, b]) => Math.sign(LATTICE[a][0]) === side && Math.sign(LATTICE[b][0]) === side,
-  );
-  return { side, nodes, struts };
-});
-const CROSS = STRUTS.filter(([a, b]) => Math.sign(LATTICE[a][0]) !== Math.sign(LATTICE[b][0]));
 
 export function IntelligenceCore({ variant = "origin" }: { variant?: "origin" | "finale" }) {
   const finale = variant === "finale";
-  const { store, materials, filaments, preset, animate } = useWorld();
+  const { store, materials, filaments, animate } = useWorld();
   const root = useRef<Group>(null);
-  const layers = useRef<(Group | null)[]>([]);
-  const pinGroups = useRef<(Group | null)[]>([]);
-  const apertureMeshes = useRef<(Mesh | null)[]>([]);
-  const halves = useRef<(Group | null)[]>([]);
-  const nodeMeshes = useRef<(InstancedMesh | null)[]>([]);
-  const crossMesh = useRef<InstancedMesh>(null);
+  const channelGroups = useRef<(Group | null)[]>([]);
+  const wafers = useRef<InstancedMesh>(null);
+  const rims = useRef<InstancedMesh>(null);
+  const traces = useRef<InstancedMesh>(null);
+  const pads = useRef<InstancedMesh>(null);
+  const struts = useRef<InstancedMesh>(null);
+  const collars = useRef<InstancedMesh>(null);
+  const sockets = useRef<InstancedMesh>(null);
   const portLights = useRef<InstancedMesh>(null);
-  const strutMeshes = useRef<(InstancedMesh | null)[]>([]);
   const violetLight = useRef<PointLight>(null);
-  const built = useMemo(
-    () => buildEngine(Math.max(6, Math.round(preset.coreSegments / 6))),
-    [preset.coreSegments],
+  const goldLight = useRef<PointLight>(null);
+  const built = useMemo(() => buildEngine(), []);
+  const seamMaterial = useMemo(
+    () => new MeshBasicMaterial({ color: GOLD.clone(), vertexColors: true, side: DoubleSide }),
+    [],
   );
-  const fil = useMemo(() => filaments.range(`core-${variant}`, 28), [filaments, variant]);
+  const fil = useMemo(() => filaments.range(`core-${variant}`, 42), [filaments, variant]);
 
-  // Flight paths in (origin only): fixed points derived from the camera path, so pure in scroll.
+  // Flights in (origin): fixed points derived from the camera path, so pure in scroll. The first
+  // channel sweeps past the lens; its complement rises out of the dark beyond.
   const flights = useMemo<Flight[]>(() => {
     const path = createCameraPath();
     const P = new Vector3();
     const T = new Vector3();
-    return FRAMES.map((_, i) => {
-      const [w0] = arrivalWindow(i);
-      if (PASSES_CAMERA.has(i)) {
-        path.sample(progressOf("awakening", w0), P, T);
-        const fwd = T.clone().sub(P).normalize();
-        const turn = new Quaternion().setFromRotationMatrix(
-          new Matrix4().lookAt(new Vector3(), fwd, new Vector3(0, 1, 0)),
-        );
-        return {
-          from: P.clone().addScaledVector(fwd, -9),
-          via: P.clone().addScaledVector(fwd, 26),
-          turn,
-          facing: true,
-        };
-      }
-      const side = i % 4 === 1 ? -1 : 1;
-      return {
-        from: new Vector3(side * 9, -16 * side, -52),
-        via: new Vector3(side * 3, -5 * side, -14),
-        turn: new Quaternion().setFromAxisAngle(new Vector3(0, 1, 0), side * 2.4),
-        facing: false,
-      };
-    });
+    path.sample(progressOf("awakening", ASSEMBLY.channels[0][0]), P, T);
+    const fwd = T.clone().sub(P).normalize();
+    const right = new Vector3().crossVectors(fwd, Y_AXIS).normalize();
+    return [
+      {
+        from: P.clone()
+          .addScaledVector(fwd, 3)
+          .addScaledVector(right, 4.5)
+          .add(new Vector3(0, 1.5, 0)),
+        via: P.clone().addScaledVector(fwd, 14).addScaledVector(right, 2),
+        turn: new Quaternion().setFromEuler(new Euler(0.5, -1.0, 0.9)),
+      },
+      {
+        from: new Vector3(10, -16, -34),
+        via: new Vector3(4, -6, -12),
+        turn: new Quaternion().setFromEuler(new Euler(-0.5, 0.9, -0.7)),
+      },
+    ];
   }, []);
 
   const scratch = useMemo(
     () => ({
-      mats: [] as Matrix4[],
-      pos: new Vector3(),
-      quat: new Quaternion(),
-      scl: new Vector3(),
+      place: new Matrix4(),
+      ch: [new Matrix4(), new Matrix4()],
+      rest: [new Matrix4(), new Matrix4()],
+      lock: [new Matrix4(), new Matrix4()],
+      m: new Matrix4(),
+      q: new Quaternion(),
       q2: new Quaternion(),
+      e: new Euler(),
       v: new Vector3(),
       w: new Vector3(),
+      pos: new Vector3(),
+      scl: new Vector3(),
       o: new Object3D(),
       c: new Color(),
-      violet: new Color(COLORS_VIOLET),
-      gold: new Color(COLORS_GOLD),
+      pts: [0, 1, 2, 3].map(() => new Vector3()),
     }),
     [],
   );
 
+  // Per-instance colour buffers exist from the first frame, so the warm-up compiles the right
+  // programs (creating them later would recompile mid-scroll, e.g. when the finale appears).
+  useLayoutEffect(() => {
+    const black = new Color(0, 0, 0);
+    for (const mesh of [rims.current, traces.current, pads.current, portLights.current]) {
+      if (!mesh) continue;
+      for (let i = 0; i < mesh.count; i++) mesh.setColorAt(i, black);
+    }
+  }, []);
+
   useEffect(
     () => () => {
-      for (const f of built.frames) {
-        f.body.dispose();
-        f.trim?.dispose();
-      }
-      for (const g of built.pins) g.dispose();
-      for (const g of built.apertures) g.dispose();
-      [built.portBody, built.portLight, built.halfBox, built.seam, built.node, built.strut].forEach(
-        (g) => g.dispose(),
-      );
+      built.body.dispose();
+      built.stripe.forEach((g) => g.dispose());
+      built.cover.forEach((g) => g.dispose());
+      [
+        built.seam,
+        built.wafer,
+        built.waferRim,
+        built.unit,
+        built.pad,
+        built.strut,
+        built.collar,
+        built.socket,
+      ].forEach((g) => g.dispose());
+      seamMaterial.dispose();
     },
-    [built],
+    [built, seamMaterial],
   );
-
-  // Static lattice struts (instance matrices never change; only visibility of the cross ones).
-  useEffect(() => {
-    const o = scratch.o;
-    const place = (mesh: InstancedMesh | null, list: [number, number][], offsetX: number) => {
-      if (!mesh) return;
-      list.forEach(([a, b], k) => {
-        const A = LATTICE[a];
-        const B = LATTICE[b];
-        o.position.set((A[0] + B[0]) / 2 - offsetX, (A[1] + B[1]) / 2, (A[2] + B[2]) / 2);
-        const dx = B[0] - A[0];
-        const dy = B[1] - A[1];
-        const len = Math.hypot(dx, dy, B[2] - A[2]);
-        o.rotation.set(
-          0,
-          Math.abs(B[2] - A[2]) > 1e-6 ? -Math.PI / 2 : 0,
-          Math.abs(dy) > 1e-6 ? Math.PI / 2 : 0,
-        );
-        o.scale.set(len, 1, 1);
-        o.updateMatrix();
-        mesh.setMatrixAt(k, o.matrix);
-      });
-      mesh.instanceMatrix.needsUpdate = true;
-    };
-    SIDES.forEach((s, i) => place(strutMeshes.current[i], s.struts, 0));
-    place(crossMesh.current, CROSS, 0);
-  }, [scratch]);
 
   useFrame(() => {
     const group = root.current;
@@ -281,370 +288,469 @@ export function IntelligenceCore({ variant = "origin" }: { variant?: "origin" | 
     if (!pose.visible) {
       filaments.hideRange(fil);
       if (violetLight.current) violetLight.current.intensity = 0;
+      if (goldLight.current) goldLight.current.intensity = 0;
       return;
     }
     const t = animate ? s.time : 0;
-    // Micro-mechanical life: the locked gimbal breathes by fractions of a degree.
-    if (animate && pose.pins > 0.5)
-      for (let i = 1; i < LAYERS; i++) pose.angles[i] += 0.035 * Math.sin(t * 0.33 + i * 1.7);
-    const mats = layerMatrices(pose, scratch.mats);
-    const { pos, quat, scl, q2, v, w } = scratch;
+    const { place, ch, rest, lock, m, q, q2, e, v, w, pos, scl, o, c, pts } = scratch;
 
-    for (let i = 0; i < LAYERS; i++) {
-      const g = layers.current[i];
-      if (!g) continue;
-      const u = Math.min(1, Math.max(0, pose.arrive[i]));
-      g.visible = u > 0;
-      mats[i].decompose(pos, quat, scl);
-      if (u < 1 && i < FRAMES.length) {
-        if (finale) {
-          // Resolve out of the kernel: grow and turn into place.
-          scl.setScalar(Math.max(0.001, 1 - Math.pow(1 - u, 3)));
-          q2.setFromAxisAngle(w.set(0, 0, 1), (1 - u) * 1.2);
-          quat.multiply(q2);
-        } else {
-          const f = flights[i];
-          const e = 1 - Math.pow(1 - u, 2.4);
-          // Quadratic Bézier: from → via → rest.
-          v.copy(f.from).multiplyScalar((1 - e) * (1 - e));
-          v.addScaledVector(f.via, 2 * (1 - e) * e).addScaledVector(pos, e * e);
-          pos.copy(v);
-          const turn = smoothstep(f.facing ? 0.35 : 0.1, 1, u);
-          if (f.facing) q2.copy(f.turn);
-          else q2.copy(quat).multiply(f.turn);
-          quat.copy(q2.slerp(quat, turn));
-        }
-      } else if (u < 1) {
-        scl.setScalar(Math.max(0.001, u));
+    // Engine placement.
+    e.set(pose.pitch, pose.yaw, 0, "YXZ");
+    place.compose(v.set(...pose.position), q.setFromEuler(e), ONE);
+
+    // Channels: placement × offset × rotation × base (the lower channel is the upper, turned 180°).
+    pose.channels.forEach((cp, k) => {
+      const g = channelGroups.current[k];
+      e.set(cp.rx, cp.ry, cp.rz);
+      q.setFromEuler(e).multiply(BASE[k]);
+      rest[k].multiplyMatrices(place, m.compose(v.set(cp.x, cp.y, cp.z), q, ONE));
+      lock[k].multiplyMatrices(place, m.makeRotationFromQuaternion(BASE[k]));
+      const u = Math.min(1, Math.max(0, cp.arrive));
+      if (u < 1 && !finale) {
+        const f = flights[k];
+        const ease = 1 - Math.pow(1 - u, 2.4);
+        pos.copy(f.from).multiplyScalar((1 - ease) * (1 - ease));
+        pos
+          .addScaledVector(f.via, 2 * (1 - ease) * ease)
+          .addScaledVector(v.set(cp.x, cp.y, cp.z), ease * ease);
+        q2.copy(f.turn)
+          .multiply(BASE[k])
+          .slerp(q, smoothstep(0.2, 1, u));
+        ch[k].multiplyMatrices(place, m.compose(pos, q2, ONE));
+      } else {
+        ch[k].copy(rest[k]);
       }
-      g.matrix.compose(pos, quat, scl);
-      g.matrixWorldNeedsUpdate = true;
-      const pins = pinGroups.current[i];
-      // Pins unlock (retract into the frame) before the layers slide apart.
-      if (pins) pins.visible = pose.pins > 0.5;
-      const ap = apertureMeshes.current[i];
-      if (ap) ap.visible = pose.lit[i] ?? false;
-    }
-
-    // Kernel: halves part for the passage; the lattice splits with them.
-    halves.current.forEach((h, k) => {
-      if (h) h.position.x = (k === 0 ? -1 : 1) * (KERNEL.half / 2 + pose.part);
+      if (g) {
+        g.visible = u > 0;
+        g.matrix.copy(ch[k]);
+        g.matrixWorldNeedsUpdate = true;
+      }
     });
-    if (crossMesh.current) crossMesh.current.visible = pose.part < 0.02;
 
-    // Inference: lattice nodes carry violet pulses; each docked signal lights its region in gold.
-    const { c, violet, gold } = scratch;
-    SIDES.forEach((side, k) => {
-      const mesh = nodeMeshes.current[k];
-      if (!mesh) return;
-      side.nodes.forEach(({ n, i }, j) => {
-        const wave = 0.5 + 0.5 * Math.sin(t * 1.7 + i * 1.93 + n[1] * 3);
-        const sweep = smoothstep(0, 1, pose.wake * 3 - (i / LATTICE.length) * 2);
-        const region = i % 6;
-        const flash = pose.docked[region] * (1 - pose.docked[region]) * 4;
-        const level = sweep * (0.14 + pose.energy * (0.35 + 0.65 * wave));
-        c.copy(violet)
-          .multiplyScalar(Math.min(1.05, level * 1.25))
-          .lerp(gold, Math.min(1, flash * 0.9));
-        mesh.setColorAt(j, c);
+    // Kernel wafers: settle in, calibrate with the founder's signals, split for the aperture.
+    const W4 = WAFER.w / 4;
+    if (wafers.current && rims.current) {
+      let n = 0;
+      pose.wafers.forEach((wf, j) => {
+        const arrive = Math.min(1, Math.max(0, wf.arrive));
+        const settleZ = (1 - arrive) * (j % 2 ? -5 : 5);
+        for (const side of [-1, 1]) {
+          o.position.set(side * (W4 + wf.split) + wf.slide, 0, wf.z + settleZ);
+          o.rotation.set(0, 0, 0);
+          o.scale.setScalar(arrive > 0.001 ? 1 : 0.0001);
+          o.updateMatrix();
+          m.multiplyMatrices(place, o.matrix);
+          wafers.current!.setMatrixAt(n, m);
+          rims.current!.setMatrixAt(n, m);
+          // Hairline rims: quiet while computing, brighter only as the aperture opens.
+          const edge = arrive * (0.06 + 0.14 * wf.glow + 0.16 * smoothstep(0.02, 0.4, wf.split));
+          rims.current!.setColorAt(n, c.copy(INDIGO).multiplyScalar(edge));
+          n++;
+        }
       });
-      if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true;
-    });
-
-    // Port status windows: idle indigo → gold when the founder's signal has docked.
-    if (portLights.current) {
-      const pl = portLights.current;
-      const o = scratch.o;
-      PORTS.forEach((pt, i) => {
-        const vertical = Math.abs(pt.x) > Math.abs(pt.y);
-        o.position.set(pt.x, pt.y, FRAMES[0].depth / 2 + 0.3);
+      wafers.current.instanceMatrix.needsUpdate = true;
+      rims.current.instanceMatrix.needsUpdate = true;
+      if (rims.current.instanceColor) rims.current.instanceColor.needsUpdate = true;
+    }
+    // Traces and inference pads: organised routing; pads light in sequence.
+    if (traces.current && pads.current) {
+      TRACES.forEach((tr, i) => {
+        const wf = pose.wafers[tr.wafer];
+        const arrive = Math.min(1, Math.max(0, wf.arrive));
+        const settleZ = (1 - arrive) * (tr.wafer % 2 ? -5 : 5);
+        const dx = tr.side * wf.split + wf.slide;
+        const z = wf.z + settleZ + WAFER.thickness / 2 + 0.006;
+        o.position.set((tr.x0 + tr.x1) / 2 + dx, tr.y, z);
         o.rotation.set(0, 0, 0);
-        o.scale.set(vertical ? 0.12 : 0.46, vertical ? 0.46 : 0.12, 0.02);
+        o.scale.set(Math.abs(tr.x1 - tr.x0), 0.012, 0.008);
+        if (arrive < 0.001) o.scale.setScalar(0.0001);
         o.updateMatrix();
-        pl.setMatrixAt(i, o.matrix);
-        const d = pose.docked[i];
-        c.copy(violet)
-          .multiplyScalar(0.35 * pose.wake)
-          .lerp(gold, d);
-        c.multiplyScalar(0.6 + 0.8 * d);
-        pl.setColorAt(i, c);
+        traces.current!.setMatrixAt(i, m.multiplyMatrices(place, o.matrix));
+        o.position.set(tr.x1 + dx, tr.y, z);
+        o.scale.setScalar(arrive < 0.001 ? 0.0001 : 1);
+        o.updateMatrix();
+        pads.current!.setMatrixAt(i, m.multiplyMatrices(place, o.matrix));
+        const wave = 0.5 + 0.5 * Math.sin(t * 2.1 - i * 0.61 + tr.y * 2.2);
+        const sweep = smoothstep(0, 1, wf.glow * 3 - (i / TRACES.length) * 2);
+        traces.current!.setColorAt(
+          i,
+          c.copy(INDIGO).multiplyScalar(sweep * (0.12 + 0.24 * wf.glow)),
+        );
+        // The signal's own pad flashes gold as it is absorbed.
+        const flash =
+          tr.wafer < pose.docked.length
+            ? pose.docked[tr.wafer] * (1 - pose.docked[tr.wafer]) * 4
+            : 0;
+        c.copy(VIOLET)
+          .multiplyScalar(sweep * (0.18 + 0.7 * wf.glow * wave))
+          .lerp(GOLD, Math.min(1, flash));
+        pads.current!.setColorAt(i, c);
       });
-      pl.instanceMatrix.needsUpdate = true;
-      if (pl.instanceColor) pl.instanceColor.needsUpdate = true;
+      for (const mesh of [traces.current, pads.current]) {
+        mesh.instanceMatrix.needsUpdate = true;
+        if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true;
+      }
     }
 
+    // Connectors: precision struts from each channel's inner edge into the counter.
+    if (struts.current && collars.current) {
+      let n = 0;
+      for (let k = 0; k < 2; k++) {
+        for (const u of STRUT_U) {
+          const [x, y] = chainAt(S_INNER, u);
+          const [nx, ny] = chainNormal(S_INNER, S_OUTER, u);
+          const len = 0.62 * pose.connectors;
+          o.position.set(x * S_SCALE, y * S_SCALE, 0);
+          o.quaternion.setFromUnitVectors(Y_AXIS, v.set(nx, ny, 0));
+          o.scale.set(1, Math.max(0.0001, len), 1);
+          o.updateMatrix();
+          struts.current.setMatrixAt(n, m.multiplyMatrices(ch[k], o.matrix));
+          o.position.set(x * S_SCALE + nx * len, y * S_SCALE + ny * len, 0);
+          o.scale.setScalar(pose.connectors > 0.02 ? 1 : 0.0001);
+          o.updateMatrix();
+          collars.current.setMatrixAt(n, m.multiplyMatrices(ch[k], o.matrix));
+          n++;
+        }
+      }
+      struts.current.instanceMatrix.needsUpdate = true;
+      collars.current.instanceMatrix.needsUpdate = true;
+    }
+
+    // Ports on the outer edges: idle indigo → gold once the founder's signal has docked.
+    if (sockets.current && portLights.current) {
+      PORTS.forEach((pt, i) => {
+        const { x, y, nx, ny } = portLocal(i);
+        // A port exists only with its channel (never floating ahead of the metal).
+        const present = pose.channels[pt.channel].arrive > 0.001 ? 1 : 0.0001;
+        o.position.set(x * S_SCALE + nx * 0.16, y * S_SCALE + ny * 0.16, CHANNEL.depth / 2 + 0.02);
+        o.quaternion.setFromUnitVectors(Y_AXIS, v.set(nx, ny, 0));
+        o.scale.setScalar(present);
+        o.updateMatrix();
+        sockets.current!.setMatrixAt(i, m.multiplyMatrices(ch[pt.channel], o.matrix));
+        o.position.z += 0.19;
+        o.scale.set(0.34 * present, 0.06 * present, 0.02 * present);
+        o.updateMatrix();
+        portLights.current!.setMatrixAt(i, m.multiplyMatrices(ch[pt.channel], o.matrix));
+        const d = pose.docked[i];
+        c.copy(INDIGO)
+          .multiplyScalar(0.4 * pose.kernel)
+          .lerp(GOLD, d);
+        portLights.current!.setColorAt(i, c.multiplyScalar(0.6 + 0.8 * d));
+      });
+      sockets.current.instanceMatrix.needsUpdate = true;
+      portLights.current.instanceMatrix.needsUpdate = true;
+      if (portLights.current.instanceColor) portLights.current.instanceColor.needsUpdate = true;
+    }
+
+    // The gold inner light, and the two constant-count lights.
+    seamMaterial.color
+      .copy(SEAM_GOLD)
+      .multiplyScalar(pose.seam * (finale ? 1.3 : 0.95 + 0.25 * pose.pulse));
+    for (const g of channelGroups.current) {
+      const seam = g?.children.find((ch) => ch.userData.seam);
+      if (seam) seam.visible = pose.seam > 0.01;
+    }
     if (violetLight.current) {
-      violetLight.current.position.setFromMatrixPosition(mats[LAYERS - 1]);
-      violetLight.current.intensity = pose.wake * (2.5 + pose.energy * 4.5 + pose.pulse * 4);
+      violetLight.current.position.setFromMatrixPosition(place);
+      violetLight.current.intensity = pose.kernel * (2 + pose.energy * 4 + pose.pulse * 3);
+    }
+    if (goldLight.current) {
+      goldLight.current.position.copy(v.set(0, 0, 1.3).applyMatrix4(place));
+      goldLight.current.intensity = pose.seam * (finale ? 18 : 13);
     }
 
     // ---- Filaments ------------------------------------------------------------------
-    const kernelAt = v.setFromMatrixPosition(mats[LAYERS - 1]).clone();
-    // 0–5: founder channels — port → kernel, width by the signal's weight.
-    PORTS.forEach((pt, i) => {
-      const idx = fil.start + i;
-      const d = pose.docked[i];
-      if (d <= 0 || finale) {
-        filaments.hide(idx);
-        return;
-      }
-      const A = w
-        .set(pt.x, pt.y, FRAMES[0].depth / 2 + 0.2)
-        .applyMatrix4(mats[0])
-        .clone();
-      // Routed behind the layers (into the engine), then forward into the kernel.
-      const C1 = w
-        .set(pt.x * 0.92, pt.y * 0.92, -2.2)
-        .applyMatrix4(mats[0])
-        .clone();
-      const C2 = w
-        .set(0, 0, -2.0)
-        .applyMatrix4(mats[LAYERS - 1])
-        .clone();
+    renderFilaments(pose, fil.start, finale, p, t);
+    for (let j = 41; j < fil.count; j++) filaments.hide(fil.start + j);
+
+    function cubicThrough(idx: number, a: Vector3, b: Vector3, c2: Vector3, d: Vector3) {
       filaments.curve(
         idx,
-        A.x,
-        A.y,
-        A.z,
-        C1.x,
-        C1.y,
-        C1.z,
-        C2.x,
-        C2.y,
-        C2.z,
-        kernelAt.x,
-        kernelAt.y,
-        kernelAt.z,
+        a.x,
+        a.y,
+        a.z,
+        (-5 * a.x + 18 * b.x - 9 * c2.x + 2 * d.x) / 6,
+        (-5 * a.y + 18 * b.y - 9 * c2.y + 2 * d.y) / 6,
+        (-5 * a.z + 18 * b.z - 9 * c2.z + 2 * d.z) / 6,
+        (2 * a.x - 9 * b.x + 18 * c2.x - 5 * d.x) / 6,
+        (2 * a.y - 9 * b.y + 18 * c2.y - 5 * d.y) / 6,
+        (2 * a.z - 9 * b.z + 18 * c2.z - 5 * d.z) / 6,
+        d.x,
+        d.y,
+        d.z,
       );
-      filaments.params(idx, {
-        s1: smoothstep(0, 0.7, d),
-        width: 0.016 + WEIGHTS[i] * 0.07,
-        intensity: (0.3 + 0.45 * d) * pose.pins,
-        pulse: 1.2,
-        phase: i * 0.17,
-        speed: 0.5,
-      });
-    });
-    // 6–11: the signal path through the gimbal — pivot to pivot, inward to the kernel.
-    for (let i = 0; i < FRAMES.length; i++) {
-      const idx = fil.start + 6 + i;
-      const g = layers.current[i];
-      if (!g || pose.arrive[i] < 1 || pose.pins < 0.05) {
-        filaments.hide(idx);
-        continue;
-      }
-      const [a, b] = pinSpan(i);
-      const ax = i + 1 < FRAMES.length ? FRAMES[i + 1].axis : KERNEL.axis;
-      const A = w
-        .set(ax === "x" ? b : 0, ax === "x" ? 0 : b, 0)
-        .applyMatrix4(mats[i])
-        .clone();
-      const B = w
-        .set(ax === "x" ? a : 0, ax === "x" ? 0 : a, 0)
-        .applyMatrix4(mats[i])
-        .clone();
-      filaments.arc(idx, A.x, A.y, A.z, B.x, B.y, B.z, 0, 0, 0.35);
-      filaments.params(idx, {
-        width: 0.026,
-        intensity: pose.wake * (0.45 + pose.pulse * 0.9) * pose.pins,
-        violet: 0.6,
-        pulse: 1.4,
-        phase: i * 0.21,
-        speed: 0.7,
-      });
     }
-    // 12–17: inference traces inside the kernel lattice (violet).
-    for (let j = 0; j < 6; j++) {
-      const idx = fil.start + 12 + j;
-      if (pose.wake <= 0 || pose.part > 0.3) {
-        filaments.hide(idx);
-        continue;
-      }
-      // Straight runs along the lattice struts — data moving through a circuit.
-      const [ia, ib] = STRUTS[(j * 11 + 3) % STRUTS.length];
-      const A = LATTICE[ia];
-      const B = LATTICE[ib];
-      const PA = w
-        .set(A[0], A[1], A[2])
-        .applyMatrix4(mats[LAYERS - 1])
-        .clone();
-      const PB = w
-        .set(B[0], B[1], B[2])
-        .applyMatrix4(mats[LAYERS - 1])
-        .clone();
-      filaments.arc(idx, PA.x, PA.y, PA.z, PB.x, PB.y, PB.z);
-      filaments.params(idx, {
-        width: 0.022,
-        intensity: pose.wake * (0.6 + pose.energy * 0.8),
-        violet: 1,
-        pulse: 1.6,
-        phase: j * 0.29,
-        speed: 0.9,
-      });
+
+    function spanTo(
+      matrix: Matrix4,
+      chain: readonly (readonly [number, number])[],
+      u0: number,
+      u1: number,
+      z: number,
+    ) {
+      chainSpan(chain, u0, u1).forEach(([x, y], i) =>
+        pts[i].set(x * S_SCALE, y * S_SCALE, z).applyMatrix4(matrix),
+      );
     }
-    // 18: a single gold S traced through the lattice — Solventia, quietly.
-    {
-      const idx = fil.start + 18;
-      if (pose.wake <= 0 || pose.part > 0.3) filaments.hide(idx);
-      else {
-        const m = mats[LAYERS - 1];
-        const A = w.set(-0.5, 0.62, 0.3).applyMatrix4(m).clone();
-        const C1 = w.set(1.4, 0.62, 0.3).applyMatrix4(m).clone();
-        const C2 = w.set(-1.4, -0.62, -0.3).applyMatrix4(m).clone();
-        const B = w.set(0.5, -0.62, -0.3).applyMatrix4(m).clone();
+
+    function renderFilaments(
+      pose: EnginePose,
+      base: number,
+      finale: boolean,
+      p: number,
+      t: number,
+    ) {
+      const front = CHANNEL.depth / 2 + CHANNEL.coverDepth + 0.05;
+      // 0–15: the S drawn in light — reference channels (outer + inner, both channels), then
+      // the inner ones stay as the gold seam once the metal is in place.
+      for (let k = 0; k < 2; k++) {
+        const bp = Math.min(1, Math.max(0, (pose.blueprint - k * 0.12) / 0.88));
+        for (let ci = 0; ci < 2; ci++) {
+          const innerChain = ci === 1;
+          for (let sIdx = 0; sIdx < 4; sIdx++) {
+            const idx = base + k * 8 + ci * 4 + sIdx;
+            const grow = Math.min(1, Math.max(0, bp * 4 - sIdx));
+            const fadeOuter = innerChain ? 0 : pose.blueprintFade;
+            const seamOn = innerChain ? pose.seam : 0;
+            const intensity =
+              grow *
+              ((1 - fadeOuter) * (finale ? 1.15 : 0.75) * (innerChain ? 1 - pose.seam : 1) +
+                seamOn * 1.1);
+            if (intensity <= 0.01) {
+              filaments.hide(idx);
+              continue;
+            }
+            const chain = innerChain ? S_INNER : S_OUTER;
+            // Before its channel arrives the blueprint sits where the metal will lock (in the
+            // finale: the emblem's final place — the S is drawn in light, then the metal lands).
+            const mtx = pose.channels[k].arrive >= 1 ? ch[k] : finale ? lock[k] : rest[k];
+            spanTo(mtx, chain, sIdx / 4, (sIdx + 1) / 4, innerChain ? 0 : front - 0.1);
+            if (innerChain) {
+              // The seam rides just off the concave edge, into the counter.
+              const [nx, ny] = chainNormal(S_INNER, S_OUTER, (sIdx + 0.5) / 4);
+              w.set(nx * 0.08, ny * 0.08, 0)
+                .transformDirection(mtx)
+                .multiplyScalar(0.08);
+              pts.forEach((pt) => pt.add(w));
+            }
+            cubicThrough(idx, pts[0], pts[1], pts[2], pts[3]);
+            filaments.params(idx, {
+              s1: grow,
+              width: innerChain && seamOn > 0 ? 0.045 : finale ? 0.034 : 0.022,
+              intensity,
+              violet: innerChain ? 1 - seamOn : 0.85,
+              pulse: innerChain ? 0.6 : 1.4,
+              phase: (k * 8 + ci * 4 + sIdx) * 0.07,
+              speed: 0.4,
+            });
+          }
+        }
+      }
+      // 16–21: the S's centre channels — energy routed along each channel's face.
+      for (let k = 0; k < 2; k++) {
+        for (let sIdx = 0; sIdx < 3; sIdx++) {
+          const idx = base + 16 + k * 3 + sIdx;
+          const on = Math.min(1, Math.max(0, pose.route * 3 - sIdx));
+          if (on <= 0.01 || pose.channels[k].arrive < 1) {
+            filaments.hide(idx);
+            continue;
+          }
+          spanTo(ch[k], S_MID, 0.04 + sIdx * 0.31, 0.04 + (sIdx + 1) * 0.31, front);
+          cubicThrough(idx, pts[0], pts[1], pts[2], pts[3]);
+          filaments.params(idx, {
+            s1: on,
+            width: 0.022,
+            intensity: (0.38 + pose.energy * 0.3 + pose.pulse * 0.5) * (finale ? 1.4 : 1),
+            violet: finale ? 0.15 : 0.9,
+            pulse: 1.4,
+            phase: k * 0.5 + sIdx * 0.17,
+            speed: 0.55,
+          });
+        }
+      }
+      // 22–27: founder acquisition — a short stroke from the port into the S's own centre
+      // channel as the signal docks (the S then carries it), width by the signal's weight.
+      PORTS.forEach((pt, i) => {
+        const idx = base + 22 + i;
+        const d = pose.docked[i];
+        if (d <= 0 || d >= 1 || finale || pose.channels[pt.channel].arrive < 1) {
+          filaments.hide(idx);
+          return;
+        }
+        const { x, y, nx, ny } = portLocal(i);
+        const [mx, my] = chainAt(S_MID, pt.u);
+        const A = pts[0]
+          .set(x * S_SCALE + nx * 0.2, y * S_SCALE + ny * 0.2, front)
+          .applyMatrix4(ch[pt.channel]);
+        const C1 = pts[1]
+          .set((x * 0.7 + mx * 0.3) * S_SCALE, (y * 0.7 + my * 0.3) * S_SCALE, front + 0.3)
+          .applyMatrix4(ch[pt.channel]);
+        const C2 = pts[2]
+          .set(mx * S_SCALE, my * S_SCALE, front + 0.12)
+          .applyMatrix4(ch[pt.channel]);
+        const B = pts[3].set(mx * S_SCALE, my * S_SCALE, front).applyMatrix4(ch[pt.channel]);
         filaments.curve(idx, A.x, A.y, A.z, C1.x, C1.y, C1.z, C2.x, C2.y, C2.z, B.x, B.y, B.z);
         filaments.params(idx, {
-          s1: smoothstep(
-            0.1,
-            0.45,
-            pose.wake * (finale ? 1 : smoothstep(0.55, 0.9, local(p, "awakening"))),
-          ),
-          width: 0.024,
+          s0: smoothstep(0.55, 1, d),
+          s1: smoothstep(0, 0.6, d),
+          width: 0.016 + WEIGHTS[i] * 0.07,
           intensity: 0.9,
-          pulse: 0.5,
-          speed: 0.25,
+          pulse: 1.2,
+          phase: i * 0.17,
+          speed: 0.5,
+        });
+      });
+      // 28–32: each wafer's central bus (gold), until the wafer splits for the aperture.
+      pose.wafers.forEach((wf, j) => {
+        const idx = base + 28 + j;
+        const on = Math.min(1, Math.max(0, wf.arrive)) * pose.kernel;
+        if (on <= 0.01 || wf.split > 0.05) {
+          filaments.hide(idx);
+          return;
+        }
+        const z = wf.z + WAFER.thickness / 2 + 0.008;
+        const A = pts[0].set(wf.slide, -WAFER.h / 2 + 0.25, z).applyMatrix4(place);
+        const B = pts[1].set(wf.slide, WAFER.h / 2 - 0.25, z).applyMatrix4(place);
+        filaments.arc(idx, A.x, A.y, A.z, B.x, B.y, B.z);
+        filaments.params(idx, {
+          s1: on,
+          width: 0.03,
+          intensity: 0.5 + 0.5 * pose.energy,
+          violet: j === 0 ? 0 : 0.5,
+          pulse: 1.5,
+          phase: j * 0.2,
+          speed: 0.8,
+        });
+      });
+      // 33–35: VOID — distant signals appear one by one, then streak into the counter.
+      const vv = local(p, "void");
+      const aa = local(p, "awakening");
+      VOID_SIGNALS.forEach((sig, j) => {
+        const idx = base + 33 + j;
+        const appear = finale ? 0 : smoothstep(sig.at, sig.at + 0.12, vv);
+        const travel = smoothstep(0.0 + j * 0.03, 0.16 + j * 0.03, aa);
+        if (appear <= 0 || travel >= 1) {
+          filaments.hide(idx);
+          return;
+        }
+        const [x, y, z] = sig.from;
+        filaments.arc(idx, x, y, z, 0, 0, 0, sig.bend[0], sig.bend[1], sig.bend[2]);
+        const head = 0.03 + travel * 0.97;
+        filaments.params(idx, {
+          s0: Math.max(0, head - 0.025 - travel * 0.12),
+          s1: head,
+          width: 1.5 - travel * 0.9,
+          intensity: appear * (2.4 + 0.5 * Math.sin(t * 1.7 + j)),
+          violet: j === 1 ? 0.8 : 0,
+          pulse: 0,
+        });
+      });
+      // 36: the gold signal that leads the camera into the aperture.
+      {
+        const idx = base + 36;
+        if (pose.signal <= 0 || pose.signal >= 1 || finale) filaments.hide(idx);
+        else {
+          filaments.arc(idx, 0.05, 0.25, 16, 0.05, 0.1, -46);
+          const head = pose.signal;
+          filaments.params(idx, {
+            s0: Math.max(0, head - 0.07),
+            s1: head,
+            width: 0.09,
+            intensity: 2.2,
+            pulse: 0,
+          });
+        }
+      }
+      // 37–40: inside the aperture, faint structure far ahead.
+      for (let j = 0; j < 4; j++) {
+        const idx = base + 37 + j;
+        if (pose.hint <= 0) {
+          filaments.hide(idx);
+          continue;
+        }
+        const [x, y, z] = HINTS[j];
+        filaments.arc(idx, x - 16, y, z, x + 16, y - 1.5, z - 6, 0, 2.5, 0);
+        filaments.params(idx, {
+          s0: 0.5 - 0.5 * pose.hint,
+          s1: 0.5 + 0.5 * pose.hint,
+          width: 0.07,
+          intensity: pose.hint * 0.75,
+          violet: j % 2 ? 0.7 : 0,
+          pulse: 1.2,
+          phase: j * 0.3,
+          speed: 0.35,
         });
       }
     }
-    // 19–22: inside the tunnel, the first hints of something far larger ahead.
-    for (let j = 0; j < 4; j++) {
-      const idx = fil.start + 19 + j;
-      if (pose.hint <= 0) {
-        filaments.hide(idx);
-        continue;
-      }
-      // Long, faint structural lines far ahead: the horizon of something much larger.
-      const [x, y, z] = HINTS[j];
-      filaments.arc(idx, x - 16, y, z, x + 16, y - 1.5, z - 6, 0, 2.5, 0);
-      filaments.params(idx, {
-        s0: 0.5 - 0.5 * pose.hint,
-        s1: 0.5 + 0.5 * pose.hint,
-        width: 0.07,
-        intensity: pose.hint * 0.75,
-        violet: j % 2 ? 0.7 : 0,
-        pulse: 1.2,
-        phase: j * 0.3,
-        speed: 0.35,
-      });
-    }
-    // 23–25: VOID — distant signals appear one by one, then streak into the kernel.
-    const vv = local(p, "void");
-    const aa = local(p, "awakening");
-    VOID_SIGNALS.forEach((sig, j) => {
-      const idx = fil.start + 23 + j;
-      const appear = finale ? 0 : smoothstep(sig.at, sig.at + 0.12, vv);
-      const travel = smoothstep(0.0 + j * 0.03, 0.16 + j * 0.03, aa);
-      if (appear <= 0 || travel >= 1) {
-        filaments.hide(idx);
-        return;
-      }
-      const [x, y, z] = sig.from;
-      filaments.arc(idx, x, y, z, 0, 0, 0, sig.bend[0], sig.bend[1], sig.bend[2]);
-      const head = 0.03 + travel * 0.97;
-      filaments.params(idx, {
-        s0: Math.max(0, head - 0.025 - travel * 0.12),
-        s1: head,
-        width: 1.5 - travel * 0.9,
-        intensity: appear * (2.4 + 0.5 * Math.sin(t * 1.7 + j)),
-        violet: j === 1 ? 0.8 : 0,
-        pulse: 0,
-      });
-    });
-    for (let j = 26; j < fil.count; j++) filaments.hide(fil.start + j);
   });
 
   return (
     <>
       <group ref={root}>
-        {FRAMES.map((f, i) => (
+        {[0, 1].map((k) => (
           <group
-            key={f.id}
+            key={k}
             matrixAutoUpdate={false}
             ref={(el) => {
-              layers.current[i] = el;
+              channelGroups.current[k] = el;
             }}
           >
-            <mesh geometry={built.frames[i].body} material={materials.titanium} />
-            <mesh
-              ref={(el) => {
-                apertureMeshes.current[i] = el;
-              }}
-              geometry={built.apertures[i]}
-              material={finale ? materials.edgeGold : materials.edgeIndigo}
-              visible={false}
-            />
-            {built.frames[i].trim && (
-              <mesh geometry={built.frames[i].trim!} material={materials.champagne} />
-            )}
-            <group
-              ref={(el) => {
-                pinGroups.current[i] = el;
-              }}
-            >
-              <mesh geometry={built.pins[i]} material={materials.titanium} />
-            </group>
-            {i === 0 && (
-              <>
-                <mesh geometry={built.portBody} material={materials.graphite} />
-                <instancedMesh
-                  ref={portLights}
-                  args={[built.portLight, materials.energy, PORTS.length]}
-                />
-              </>
-            )}
+            <mesh geometry={built.body} material={materials.sMetal} />
+            {built.stripe.map((g, i) => (
+              <mesh key={`s${i}`} geometry={g} material={materials.champagne} />
+            ))}
+            {built.cover.map((g, i) => (
+              <mesh key={`c${i}`} geometry={g} material={materials.sCover} />
+            ))}
+            <mesh geometry={built.seam} material={seamMaterial} userData={{ seam: true }} />
           </group>
         ))}
-        <group
-          matrixAutoUpdate={false}
-          ref={(el) => {
-            layers.current[LAYERS - 1] = el;
-          }}
-        >
-          {SIDES.map((side, k) => (
-            <group
-              key={side.side}
-              ref={(el) => {
-                halves.current[k] = el;
-              }}
-            >
-              <mesh geometry={built.halfBox} material={materials.smoked} renderOrder={2} />
-              <mesh
-                geometry={built.seam}
-                material={materials.edgeIndigo}
-                position={[(-side.side * KERNEL.half) / 2 + side.side * 0.004, 0, 0]}
-              />
-              <group position={[(-side.side * KERNEL.half) / 2, 0, 0]}>
-                <instancedMesh
-                  ref={(el) => {
-                    nodeMeshes.current[k] = el;
-                    if (el) {
-                      const o = new Object3D();
-                      side.nodes.forEach(({ n }, j) => {
-                        o.position.set(n[0], n[1], n[2]);
-                        o.updateMatrix();
-                        el.setMatrixAt(j, o.matrix);
-                        el.setColorAt(j, new Color(0, 0, 0));
-                      });
-                      el.instanceMatrix.needsUpdate = true;
-                    }
-                  }}
-                  args={[built.node, materials.energy, side.nodes.length]}
-                />
-                <instancedMesh
-                  ref={(el) => {
-                    strutMeshes.current[k] = el;
-                  }}
-                  args={[built.strut, materials.graphite, side.struts.length]}
-                />
-              </group>
-            </group>
-          ))}
-          <instancedMesh ref={crossMesh} args={[built.strut, materials.graphite, CROSS.length]} />
-        </group>
+        <instancedMesh
+          ref={wafers}
+          args={[built.wafer, materials.smoked, WAFER_Z.length * 2]}
+          frustumCulled={false}
+          renderOrder={2}
+        />
+        <instancedMesh
+          ref={rims}
+          args={[built.waferRim, materials.energy, WAFER_Z.length * 2]}
+          frustumCulled={false}
+        />
+        <instancedMesh
+          ref={traces}
+          args={[built.unit, materials.energy, TRACES.length]}
+          frustumCulled={false}
+        />
+        <instancedMesh
+          ref={pads}
+          args={[built.pad, materials.energy, TRACES.length]}
+          frustumCulled={false}
+        />
+        <instancedMesh
+          ref={struts}
+          args={[built.strut, materials.titanium, 4]}
+          frustumCulled={false}
+        />
+        <instancedMesh
+          ref={collars}
+          args={[built.collar, materials.champagne, 4]}
+          frustumCulled={false}
+        />
+        <instancedMesh
+          ref={sockets}
+          args={[built.socket, materials.graphite, PORTS.length]}
+          frustumCulled={false}
+        />
+        <instancedMesh
+          ref={portLights}
+          args={[built.unit, materials.energy, PORTS.length]}
+          frustumCulled={false}
+        />
       </group>
       {/* Always in the scene (intensity only): toggling a light changes the light count and
         forces every lit shader to recompile mid-scroll. */}
       <pointLight ref={violetLight} color="#8f7fe8" intensity={0} distance={14} decay={2} />
+      <pointLight ref={goldLight} color="#f2c98c" intensity={0} distance={16} decay={2} />
     </>
   );
 }

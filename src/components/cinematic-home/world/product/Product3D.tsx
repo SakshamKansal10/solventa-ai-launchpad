@@ -2,6 +2,7 @@ import { useFrame } from "@react-three/fiber";
 import { useEffect, useMemo, useRef } from "react";
 import {
   CapsuleGeometry,
+  Euler,
   Group,
   LatheGeometry,
   Matrix4,
@@ -14,6 +15,9 @@ import { RoundedBoxGeometry } from "three/examples/jsm/geometries/RoundedBoxGeom
 
 import { smoothstep } from "../../math";
 import { local, ramp } from "../../timeline/timeline";
+import { CHANNEL, S_SCALE } from "../core/core-design";
+import { FINALE_PLACE, FINALE_YAW } from "../core/core-motion";
+import { S_INNER, S_OUTER } from "../core/s-mark";
 import { frameGeometry, inlayGeometry } from "../geometry/frames";
 import { revisedFrame, UNSTABLE } from "../path/path-model";
 import { useWorld } from "../WorldContext";
@@ -40,6 +44,43 @@ const RIGHT = new Vector3()
   .crossVectors(new Vector3(0, 1, 0), SLAB_NORMAL)
   .normalize()
   .negate();
+
+/** Where link k of the connected chain floats, in front of the product surface. */
+function tokenPosition(k: number, out: Vector3): Vector3 {
+  const along = k / (CHAIN.length - 1);
+  out
+    .copy(SLAB_CENTRE)
+    .addScaledVector(RIGHT, -1.2 + along * 7.8)
+    .addScaledVector(SLAB_NORMAL, 4.2 + Math.sin(along * Math.PI) * 1.5);
+  out.y += -2.1 + Math.sin(along * Math.PI * 1.2) * 1.1;
+  return out;
+}
+
+/**
+ * Scene 22 → 23: the remaining pathways converge — on the emblem's centre and the four points
+ * from which its outline is then drawn in light (where each channel's edges begin, beside the
+ * kernel). World space, in the emblem's pose while it assembles; assigned left to right, so
+ * the converging lines never cross.
+ */
+const CONVERGE_TO = (() => {
+  const place = new Matrix4().compose(
+    new Vector3(...FINALE_PLACE),
+    new Quaternion().setFromEuler(new Euler(-0.03, FINALE_YAW + 0.23, 0, "YXZ")),
+    new Vector3(1, 1, 1),
+  );
+  const front = CHANNEL.depth / 2 + CHANNEL.coverDepth;
+  return [[0, 0] as const, S_OUTER[0], S_INNER[0]]
+    .flatMap(([x, y], i) =>
+      i === 0
+        ? [[x, y]]
+        : [
+            [x, y],
+            [-x, -y],
+          ],
+    )
+    .map(([x, y]) => new Vector3(x * S_SCALE, y * S_SCALE, front).applyMatrix4(place))
+    .sort((a, b) => a.dot(RIGHT) - b.dot(RIGHT));
+})();
 
 export function Product3D() {
   const { store, materials, filaments } = useWorld();
@@ -100,7 +141,7 @@ export function Product3D() {
     };
   }, []);
   useEffect(() => () => Object.values(geo).forEach((g) => g.dispose()), [geo]);
-  const fil = useMemo(() => filaments.range("product", 8), [filaments]);
+  const fil = useMemo(() => filaments.range("product", 8 + CHAIN.length), [filaments]);
   const scratch = useMemo(
     () => ({
       from: { position: new Vector3(), quaternion: new Quaternion(), scale: 1 },
@@ -158,12 +199,7 @@ export function Product3D() {
         smoothstep(0.12 + k * 0.08, 0.32 + k * 0.08, connected) *
         (1 - ramp(p, "return", 0.2, "return", 0.9));
       t.visible = appear > 0.01;
-      const along = k / (CHAIN.length - 1);
-      t.position
-        .copy(SLAB_CENTRE)
-        .addScaledVector(RIGHT, -1.2 + along * 7.8)
-        .addScaledVector(SLAB_NORMAL, 4.2 + Math.sin(along * Math.PI) * 1.5)
-        .add(scratch.v.set(0, -2.1 + Math.sin(along * Math.PI * 1.2) * 1.1, 0));
+      tokenPosition(k, t.position);
       t.quaternion.copy(SLAB_QUATERNION);
       t.scale.setScalar(appear);
       s.anchors.set(`chain-${k}`, {
@@ -221,6 +257,45 @@ export function Product3D() {
     filaments.hide(fil.start + 4);
     filaments.hide(fil.start + 6);
     filaments.hide(fil.start + 7);
+
+    // The return: as the chain dissolves, each link sends its light to where the emblem will
+    // form — rising, then arriving face-on — and the streaks land as the S is drawn in light.
+    const back = local(p, "return");
+    for (let k = 0; k < CHAIN.length; k++) {
+      const idx = fil.start + 8 + k;
+      const head = smoothstep(0.08 + k * 0.03, 0.4 + k * 0.03, back);
+      const tail = smoothstep(0.34 + k * 0.03, 0.62 + k * 0.03, back);
+      if (head <= 0.01 || head - tail < 0.004) {
+        filaments.hide(idx);
+        continue;
+      }
+      const a = tokenPosition(k, scratch.v);
+      const b = CONVERGE_TO[k];
+      filaments.curve(
+        idx,
+        a.x,
+        a.y,
+        a.z,
+        a.x + (b.x - a.x) * 0.2,
+        a.y + 3.2,
+        a.z + (b.z - a.z) * 0.2,
+        b.x + SLAB_NORMAL.x * 5,
+        b.y + 0.6,
+        b.z + SLAB_NORMAL.z * 5,
+        b.x,
+        b.y,
+        b.z,
+      );
+      filaments.params(idx, {
+        s0: tail,
+        s1: head,
+        width: 0.045,
+        intensity: 1.25,
+        pulse: 0.9,
+        phase: k * 0.17,
+        speed: 0.45,
+      });
+    }
 
     if (tile.current) {
       const show = smoothstep(0.06, 0.2, connected) * (1 - smoothstep(0.42, 0.7, connected));

@@ -298,6 +298,63 @@ test.describe("cinematic homepage", () => {
     await expect(toggle).toHaveAttribute("data-audio", "idle");
   });
 
+  test("live sound: real output follows the scene, cues play once, mute is silence, leaving tears it down", async ({
+    page,
+  }) => {
+    await open(page);
+    type Sound = { level: () => number; context: () => string; fired: () => number };
+    const sound = <T>(fn: (s: Sound) => T) =>
+      page.evaluate((src) => {
+        const s = (window as unknown as { __cine: { sound: Sound } }).__cine.sound;
+        return new Function("s", `return (${src})(s)`)(s) as never;
+      }, fn.toString()) as Promise<T>;
+    const peak = async () => {
+      let max = 0;
+      for (let k = 0; k < 20; k++) {
+        max = Math.max(max, await sound((s) => s.level()));
+        await page.waitForTimeout(60);
+      }
+      return max;
+    };
+    const toggle = page.getByTestId("sound-toggle");
+    await expect(toggle).toContainText(/enable cinematic sound|sound/i);
+    // No autoplay: nothing exists until the visitor asks.
+    expect(await sound((s) => s.context())).toBe("none");
+    await goTo(page, "awakening", 0.7);
+    await toggle.click();
+    await expect(toggle).toContainText(/sound on/i);
+    await expect.poll(() => sound((s) => s.context())).toBe("running");
+    // Real signal reaches the destination.
+    await expect.poll(peak, { timeout: 10_000 }).toBeGreaterThan(0.005);
+    // Travelling forward through the Engine's completion plays its cues…
+    const before = await sound((s) => s.fired());
+    for (let k = 0; k <= 30; k++) await goTo(page, "awakening", 0.7 + k * 0.01);
+    expect(await sound((s) => s.fired())).toBeGreaterThan(before);
+    // …and wiggling around one boundary does not re-trigger anything.
+    const settled = await sound((s) => s.fired());
+    for (let k = 0; k < 8; k++) await goTo(page, "awakening", 0.9 + (k % 2 ? 0.003 : -0.003));
+    expect(await sound((s) => s.fired())).toBe(settled);
+    // Mute is silence; un-mute restores the current scene's soundscape.
+    await toggle.click();
+    await expect.poll(() => sound((s) => s.level()), { timeout: 10_000 }).toBe(0);
+    await toggle.click();
+    await expect.poll(peak, { timeout: 10_000 }).toBeGreaterThan(0.005);
+    // Leaving the page tears the audio down.
+    await page.evaluate(() => {
+      const w = window as unknown as { __cine: { sound: unknown }; __soundRef: unknown };
+      w.__soundRef = w.__cine.sound;
+    });
+    await page.getByTestId("cinematic-nav").getByRole("link", { name: "Solventia home" }).click();
+    await page.waitForURL((url) => url.pathname === "/");
+    await expect
+      .poll(() =>
+        page.evaluate(() =>
+          (window as unknown as { __soundRef: { context: () => string } }).__soundRef.context(),
+        ),
+      )
+      .toBe("none");
+  });
+
   test("the still version offers no sound at all", async ({ page }) => {
     await gotoApp(page, "/cinematic?tier=fallback");
     await expect(page.getByTestId("cinematic-fallback")).toBeVisible({ timeout: 45_000 });

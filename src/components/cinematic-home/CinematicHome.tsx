@@ -74,7 +74,16 @@ export function CinematicHome({
   useEffect(() => {
     if (!freeze && !debug) return;
     const w = window as unknown as Record<string, unknown>;
-    w.__cine = { scenes: SCENE_RANGES, state: store.state };
+    w.__cine = {
+      scenes: SCENE_RANGES,
+      state: store.state,
+      // Live sound diagnostics: output level reaching the speakers, context state, cues played.
+      sound: {
+        level: () => soundController.level(),
+        context: () => soundController.contextState(),
+        fired: () => soundController.fired,
+      },
+    };
     return () => {
       delete w.__cine;
     };

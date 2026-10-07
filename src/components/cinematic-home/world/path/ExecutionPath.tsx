@@ -28,9 +28,17 @@ import {
   gateState,
   MILESTONES,
   originalFrame,
+  revisedPath,
 } from "./path-model";
 
 export const GATE_COUNT = 34;
+
+/** Contradicted: the assumption node's light after the evidence lands. */
+const AMBER = new Color("#c97a45");
+/** Alternative directions revealed in the crisis (offsets from the assumption gate; the first is the revised path). */
+const ALTERNATIVES = [new Vector3(), new Vector3(-16, -4, -14), new Vector3(-6, 9, -20)];
+/** Where the revised direction leads (end of the revised path). */
+const REVISED_END = revisedPath.getPointAt(0.85, new Vector3());
 
 /** Gates that grow satellite channels in Elevate (the path branches into a network). */
 const ELEVATE_FROM = 18;
@@ -79,7 +87,24 @@ function buildGate(curveSegments: number) {
     radius: 1.3,
     curveSegments,
   });
-  return { corner, barH, barV, lockH, lockV, light, deck, track, satellite, satInlay, distant };
+  // Build: functional modules mount onto the locked gates; the assumption node's housing.
+  const module = new RoundedBoxGeometry(0.46, 1.2, 0.46, 2, 0.06);
+  const node = new RoundedBoxGeometry(1.25, 0.62, 0.72, 2, 0.12);
+  return {
+    corner,
+    barH,
+    barV,
+    lockH,
+    lockV,
+    light,
+    deck,
+    track,
+    satellite,
+    satInlay,
+    distant,
+    module,
+    node,
+  };
 }
 
 /** A suspended milestone: a pearl capsule held by a champagne band. */
@@ -143,10 +168,14 @@ export function ExecutionPath() {
   const milestoneBody = useRef<Mesh>(null);
   const milestoneBand = useRef<Mesh>(null);
   const distant = useRef<Mesh>(null);
+  const modules = useRef<Mesh>(null);
+  const moduleLights = useRef<Mesh>(null);
+  const node = useRef<Mesh>(null);
+  const nodeLight = useRef<Mesh>(null);
   const group = useRef<Group>(null);
   const rails = useMemo(() => filaments.range("path-rails", GATE_COUNT * 3 + 3), [filaments]);
   const links = useMemo(
-    () => filaments.range("path-links", SATELLITES * 2 + MILESTONES.length + 6),
+    () => filaments.range("path-links", SATELLITES * 2 + MILESTONES.length + 6 + 4),
     [filaments],
   );
   const scratch = useMemo(
@@ -184,6 +213,10 @@ export function ExecutionPath() {
     milestoneBody.current,
     milestoneBand.current,
     distant.current,
+    modules.current,
+    moduleLights.current,
+    node.current,
+    nodeLight.current,
   ];
 
   useLayoutEffect(() => {
@@ -198,6 +231,8 @@ export function ExecutionPath() {
       ...barSolid.current,
       ...barGlass.current,
       lockLights.current,
+      moduleLights.current,
+      nodeLight.current,
     ]) {
       if (!mesh) continue;
       for (let i = 0; i < mesh.count; i++) mesh.setColorAt(i, scratch.color.setScalar(1));
@@ -312,6 +347,35 @@ export function ExecutionPath() {
         put(track.current, n.dk++, m);
       }
     }
+    // Build: functional modules slide onto each locked gate — systems, not just frames.
+    let nm = 0;
+    for (let i = 10; i < GATE_COUNT; i++) {
+      const st = states[i];
+      const mount = smoothstep(0.35, 0.95, st.crown) * (1 - st.unstable) * st.present;
+      if (mount <= 0.01) continue;
+      for (const side of [-1, 1]) {
+        lm.compose(
+          v.set(side * (hw + 0.36 + (1 - mount) * 1.4), cy - 0.2, 0),
+          q.identity(),
+          s.setScalar(Math.max(0.001, mount)),
+        );
+        m.multiplyMatrices(gateMatrices[i], lm);
+        put(modules.current, nm, m);
+        lm.compose(
+          v.set(side * (hw + 0.36 + (1 - mount) * 1.4 + side * 0.24), cy - 0.2, 0),
+          q,
+          s.set(0.02, 0.8 * mount, 0.26),
+        );
+        m.multiplyMatrices(gateMatrices[i], lm);
+        if (moduleLights.current) {
+          moduleLights.current.setMatrixAt(nm, m);
+          color.copy(indigo).multiplyScalar(0.5).lerp(gold, st.solid);
+          moduleLights.current.setColorAt(nm, color.multiplyScalar(0.4 + 0.8 * mount));
+        }
+        nm++;
+      }
+    }
+
     const setCount = (mesh: Mesh, c: number) => {
       if (mesh) mesh.count = c;
     };
@@ -326,6 +390,8 @@ export function ExecutionPath() {
     setCount(lockLights.current, n.ll);
     setCount(deck.current, n.dk);
     setCount(track.current, n.dk);
+    setCount(modules.current, nm);
+    setCount(moduleLights.current, nm);
 
     // Elevate: satellite channels at altitude on both sides of every gate.
     let ns = 0;
@@ -336,14 +402,17 @@ export function ExecutionPath() {
         0.45 + (i - ELEVATE_FROM) * 0.06,
         elevate,
       );
+      const nIdx = i - ELEVATE_FROM;
+      const spread = 5.2 + nIdx * 1.9;
+      const rise = 1.4 + nIdx * 0.95;
       for (const side of [-1, 1]) {
-        const j = (i - ELEVATE_FROM) * 2 + (side > 0 ? 1 : 0);
-        e.set(0, -side * 0.18, side * 0.06);
+        const j = nIdx * 2 + (side > 0 ? 1 : 0);
+        e.set(0, -side * (0.16 + nIdx * 0.05), side * 0.06);
         q.setFromEuler(e);
         lm.compose(
-          v.set(side * (9.5 - 2.5 * (1 - grow)), cy + 4.6 * grow, 0),
+          v.set(side * (spread - 2.5 * (1 - grow)), cy + rise * grow, -nIdx * 0.3),
           q,
-          s.setScalar(Math.max(0.001, grow * st.present)),
+          s.setScalar(Math.max(0.001, grow * st.present * (0.85 + nIdx * 0.07))),
         );
         satMatrices[j].multiplyMatrices(gateMatrices[i], lm);
         if (grow > 0.01) {
@@ -486,6 +555,86 @@ export function ExecutionPath() {
       });
     }
 
+    // The ASSUMPTION NODE: confident gold until the evidence signal reaches it; then it changes
+    // state (contradicted) and the consequence travels forward along the path.
+    const ev = local(p, "evidence");
+    const crisisL = local(p, "crisis");
+    const adaptL = local(p, "adaptation");
+    const hit = smoothstep(0.88, 0.98, ev) + (p > progressOf("evidence", 1) ? 1 : 0);
+    const contradicted = Math.min(1, hit);
+    const nodeShow = states[ASSUMPTION_GATE].present * ramp(p, "validate", 0.6, "build", 0.2);
+    if (node.current && nodeLight.current) {
+      lm.compose(v.set(0, cy + hh + 0.42, 0), q.identity(), s.setScalar(Math.max(0.001, nodeShow)));
+      m.multiplyMatrices(gateMatrices[ASSUMPTION_GATE], lm);
+      node.current.setMatrixAt(0, nodeShow > 0.01 ? m : zero);
+      // Lit on both faces, so the change of state reads from wherever the visitor stands.
+      const flicker = contradicted > 0 && contradicted < 1 ? 0.6 + 0.4 * Math.sin(ev * 220) : 1;
+      color
+        .copy(gold)
+        .lerp(AMBER, contradicted)
+        .multiplyScalar((1.6 - 0.6 * contradicted) * flicker);
+      for (const face of [0, 1]) {
+        lm.compose(
+          v.set(0, cy + hh + 0.42, face ? -0.38 : 0.38),
+          q.identity(),
+          s.set(0.9 * nodeShow, 0.16 * nodeShow, 0.02),
+        );
+        m.multiplyMatrices(gateMatrices[ASSUMPTION_GATE], lm);
+        nodeLight.current.setMatrixAt(face, nodeShow > 0.01 ? m : zero);
+        nodeLight.current.setColorAt(face, color);
+      }
+      for (const mesh of [node.current, nodeLight.current]) {
+        mesh.instanceMatrix.needsUpdate = true;
+        if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true;
+      }
+    }
+    const extra = links.start + SATELLITES * 2 + MILESTONES.length + 6;
+    // The causal chain, visible: a pulse runs forward from the node through the gates it supports.
+    {
+      const idx = extra;
+      const run = smoothstep(0.0, 0.45, crisisL) * contradicted;
+      if (run <= 0.01 || run >= 0.999) filaments.hide(idx);
+      else {
+        const A = scratch.pts[0].copy(railAnchors[1]).applyMatrix4(gateMatrices[ASSUMPTION_GATE]);
+        const B = scratch.pts[1].copy(railAnchors[1]).applyMatrix4(gateMatrices[GATE_COUNT - 1]);
+        filaments.arc(idx, A.x, A.y + 0.3, A.z, B.x, B.y + 0.3, B.z, 0, 0.5, 0);
+        filaments.params(idx, {
+          s0: Math.max(0, run - 0.12),
+          s1: run,
+          width: 0.1,
+          intensity: 1.7,
+          violet: 0.4,
+          pulse: 0,
+        });
+      }
+    }
+    // Alternative routes: revealed, inactive, in the crisis; one becomes active in adaptation
+    // (indigo while recomputing), the others withdraw; it turns gold when the direction holds.
+    const reveal = smoothstep(0.5, 0.85, crisisL) * (1 - smoothstep(0.85, 1, adaptL));
+    const choose = smoothstep(0.12, 0.42, adaptL);
+    const hold = smoothstep(0.72, 0.9, adaptL);
+    ALTERNATIVES.forEach((alt, k) => {
+      const idx = extra + 1 + k;
+      const chosen = k === 0;
+      const live = reveal * (chosen ? 1 : 1 - choose);
+      if (live <= 0.01) {
+        filaments.hide(idx);
+        return;
+      }
+      const A = scratch.pts[0].copy(railAnchors[1]).applyMatrix4(gateMatrices[ASSUMPTION_GATE]);
+      const B = chosen ? scratch.pts[1].copy(REVISED_END) : scratch.pts[1].copy(A).add(alt);
+      filaments.arc(idx, A.x, A.y, A.z, B.x, B.y, B.z, 0, 3, 0);
+      filaments.params(idx, {
+        s1: live,
+        width: chosen ? 0.035 + 0.05 * choose : 0.03,
+        intensity: chosen ? 0.5 + 1.0 * choose : 0.5,
+        violet: chosen ? 1 - hold : 1,
+        pulse: chosen ? 1.2 : 0.6,
+        phase: k * 0.3,
+        speed: 0.5,
+      });
+    });
+
     // Milestones: suspended above their gates, waking as the traveller passes.
     MILESTONES.forEach((ms, k) => {
       const st = states[ms.gate];
@@ -616,6 +765,22 @@ export function ExecutionPath() {
       <instancedMesh
         ref={milestoneBand}
         args={[milestone.band, materials.champagne, MILESTONES.length]}
+        frustumCulled={false}
+      />
+      <instancedMesh
+        ref={modules}
+        args={[geo.module, materials.graphite, GATE_COUNT * 2]}
+        frustumCulled={false}
+      />
+      <instancedMesh
+        ref={moduleLights}
+        args={[geo.light, materials.energy, GATE_COUNT * 2]}
+        frustumCulled={false}
+      />
+      <instancedMesh ref={node} args={[geo.node, materials.graphite, 1]} frustumCulled={false} />
+      <instancedMesh
+        ref={nodeLight}
+        args={[geo.light, materials.energy, 2]}
         frustumCulled={false}
       />
       <instancedMesh

@@ -16,7 +16,8 @@ import { progressOf } from "../../timeline/timeline";
 import { useWorld } from "../WorldContext";
 import { buildFamilies } from "./families";
 import { FINALS_HUB } from "../layout";
-import { createUniverse, TRUNK_ORIGIN } from "./universe-model";
+import { Territories } from "./Territories";
+import { CONVERGE_ANCHOR, createUniverse, TRUNK_ORIGIN } from "./universe-model";
 import { createNodeFrame, nodeFrame, universePhases } from "./universe-state";
 
 const PARTS = ["seed", "frame", "pearl", "glass", "energy"] as const;
@@ -62,7 +63,7 @@ export function OpportunityUniverse() {
     () => filaments.range("universe", model.connections.length),
     [filaments, model],
   );
-  const ring = useMemo(() => filaments.range("nine-ring", 9), [filaments]);
+  const ring = useMemo(() => filaments.range("nine-ring", 10), [filaments]);
   /** The nine survivors in ring order (by angle around the finals hub). */
   const nine = useMemo(
     () =>
@@ -227,11 +228,14 @@ export function OpportunityUniverse() {
         0,
       );
       const base = c.kind === "trunk" ? 0.55 : c.kind === "dark" ? 0.38 : 0.58;
+      // Hierarchical weighting: high-value routes dominate, weak ones fade to almost nothing.
+      const value = Math.min(1, Math.min(eA, eB) / 1.4);
       filaments.params(idx, {
         s1,
-        width: c.width,
+        width: c.width * (c.kind === "trunk" ? 1 : 0.55 + 1.25 * Math.pow(value, 1.5)),
         intensity:
           base *
+          (c.kind === "trunk" ? 1 : 0.18 + 1.1 * Math.pow(value, 1.4)) *
           Math.min(1.2, 0.35 + (eA + eB) * 0.45) *
           (1 + relevance * 0.7 + wave * 0.9) *
           (1 - ph.fadeOut),
@@ -263,6 +267,24 @@ export function OpportunityUniverse() {
         speed: 0.12,
       });
     }
+    // 120 → 36: the survivors line up on one gold DECISION AXIS (the ranked board's centre row).
+    {
+      const idx = ring.start + 9;
+      const axis = ph.stages[1] * (1 - ph.stages[2]);
+      if (axis <= 0.002) filaments.hide(idx);
+      else {
+        const [x, y, z] = CONVERGE_ANCHOR;
+        filaments.arc(idx, x - 12.5, y, z + 1.2, x + 12.5, y, z + 1.2);
+        filaments.params(idx, {
+          s0: 0.5 - 0.5 * axis,
+          s1: 0.5 + 0.5 * axis,
+          width: 0.05,
+          intensity: 1.1 * axis,
+          pulse: 1,
+          speed: 0.2,
+        });
+      }
+    }
   });
 
   const partMaterial = (k: number): Material =>
@@ -271,36 +293,39 @@ export function OpportunityUniverse() {
     ];
 
   return (
-    <group ref={group}>
-      {families.map((geo, f) => {
-        const count = slots.byFamily[f].length;
-        if (!count) return null;
-        return PARTS.map((part, k) => (
-          <instancedMesh
-            key={`${f}-${part}-${count}`}
-            ref={(el) => {
-              meshes.current[f * 5 + k] = el;
-            }}
-            args={[
-              geo[
-                k === 3
-                  ? "shell"
-                  : k === 2
+    <>
+      <Territories model={model} />
+      <group ref={group}>
+        {families.map((geo, f) => {
+          const count = slots.byFamily[f].length;
+          if (!count) return null;
+          return PARTS.map((part, k) => (
+            <instancedMesh
+              key={`${f}-${part}-${count}`}
+              ref={(el) => {
+                meshes.current[f * 5 + k] = el;
+              }}
+              args={[
+                geo[
+                  k === 3
                     ? "shell"
-                    : part === "seed"
-                      ? "seed"
-                      : part === "frame"
-                        ? "frame"
-                        : "energy"
-              ],
-              partMaterial(k),
-              count,
-            ]}
-            frustumCulled={false}
-            renderOrder={k === 3 ? 2 : 0}
-          />
-        ));
-      })}
-    </group>
+                    : k === 2
+                      ? "shell"
+                      : part === "seed"
+                        ? "seed"
+                        : part === "frame"
+                          ? "frame"
+                          : "energy"
+                ],
+                partMaterial(k),
+                count,
+              ]}
+              frustumCulled={false}
+              renderOrder={k === 3 ? 2 : 0}
+            />
+          ));
+        })}
+      </group>
+    </>
   );
 }

@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import { progressOf } from "../timeline/timeline";
-import { CUES, cuesBetween, MAX_STEP, mixAt } from "./score";
+import { createCueGate, CUES, cuesBetween, MAX_STEP, mixAt, REARM } from "./score";
 
 describe("the score", () => {
   it("is silent at the very top and wakes in the void", () => {
@@ -53,5 +53,48 @@ describe("the score", () => {
     expect(cuesBetween(reveal.at + 0.001, reveal.at - 0.001)).toEqual([]);
     expect(cuesBetween(0, 0.5)).toEqual([]);
     expect(cuesBetween(0.2, 0.2 + MAX_STEP * 2)).toEqual([]);
+  });
+
+  it("never re-triggers a cue when the visitor moves back and forth around its boundary", () => {
+    const reveal = CUES.find((c) => c.kind === "reveal")!;
+    const gate = createCueGate(reveal.at - 0.004);
+    const fired: string[] = [];
+    // Wiggle across the boundary, within the re-arm margin.
+    for (const p of [0.002, -0.002, 0.003, -0.003, 0.001].map((d) => reveal.at + d))
+      fired.push(...gate.step(p).map((c) => c.kind));
+    expect(fired.filter((k) => k === "reveal")).toHaveLength(1);
+    // Back well before it, then forward again: it plays again.
+    gate.step(reveal.at - REARM * 1.5);
+    expect(gate.step(reveal.at + 0.001).map((c) => c.kind)).toContain("reveal");
+  });
+
+  it("marks computation with discrete events — one per context wave reaching each territory", () => {
+    const evaluations = CUES.filter((c) => c.kind === "evaluate");
+    expect(evaluations).toHaveLength(30);
+    for (const c of evaluations) {
+      expect(c.at).toBeGreaterThan(progressOf("computation", 0));
+      expect(c.at).toBeLessThan(progressOf("computation", 1));
+    }
+  });
+
+  it("opens with the signature motif and resolves it with the emblem at the end", () => {
+    expect(CUES[0].kind).toBe("motif");
+    expect(CUES.at(-1)!.kind).toBe("signature");
+    expect(CUES.filter((c) => c.major).map((c) => c.kind)).toEqual(
+      expect.arrayContaining([
+        "kernel",
+        "reveal",
+        "resolve",
+        "disruption",
+        "stabilize",
+        "signature",
+      ]),
+    );
+  });
+
+  it("takes a breath of near-silence just before the universe opens", () => {
+    const reveal = CUES.find((c) => c.kind === "reveal")!;
+    expect(mixAt(progressOf("passage", 0.93)).master).toBeLessThan(0.4);
+    expect(reveal.at).toBeGreaterThan(progressOf("passage", 0.93));
   });
 });

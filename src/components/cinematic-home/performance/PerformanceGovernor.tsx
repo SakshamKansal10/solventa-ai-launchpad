@@ -25,7 +25,8 @@ export function PerformanceGovernor({
     const s = store.state;
     // Review hook: with ?freeze / ?debug the scene graph is inspectable for profiling.
     const hook = (window as unknown as { __cine?: { three?: unknown } }).__cine;
-    if (hook && !hook.three) hook.three = { scene: state.scene, gl: state.gl };
+    if (hook && !hook.three)
+      hook.three = { scene: state.scene, gl: state.gl, camera: state.camera };
     // three resets these per render, so this reads the previous frame's totals.
     s.renderer.calls = state.gl.info.render.calls;
     s.renderer.triangles = state.gl.info.render.triangles;

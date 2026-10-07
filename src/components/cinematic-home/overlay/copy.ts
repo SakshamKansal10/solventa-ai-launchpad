@@ -144,6 +144,12 @@ export const LABELS: {
     sub: s.value,
     kind: "tag" as const,
   })),
+  // The five territories of the universe (visual categories of the demonstration).
+  { anchor: "territory-A", text: "Capability alignment", kind: "tag" },
+  { anchor: "territory-B", text: "Capital feasibility", sub: "Threshold · ₹50,000", kind: "tag" },
+  { anchor: "territory-C", text: "Market access", kind: "tag" },
+  { anchor: "territory-D", text: "Execution complexity", kind: "tag" },
+  { anchor: "territory-E", text: "Emerging possibilities", kind: "tag" },
   { anchor: "finalist-0", text: "Direction 01", kind: "direction" },
   { anchor: "finalist-1", text: "Direction 02", kind: "direction" },
   { anchor: "finalist-2", text: "Direction 03", kind: "direction" },

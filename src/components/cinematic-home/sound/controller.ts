@@ -1,6 +1,6 @@
 import type { ExperienceStore } from "../scroll/experience-store";
 import { SoundEngine } from "./engine";
-import { cuesBetween, mixAt } from "./score";
+import { createCueGate, mixAt } from "./score";
 
 /**
  * Owns the soundtrack for the page: the visitor's preference, the audio
@@ -8,7 +8,11 @@ import { cuesBetween, mixAt } from "./score";
  *
  * - OFF by default. Audio starts only from a user gesture (the toggle, or —
  *   when the visitor turned it on earlier in this visit — their first tap,
- *   click or key press), as browsers require.
+ *   click or key press), as browsers require. Autoplay rules are never bypassed.
+ * - Follows the scroll every frame: continuous layers track the current scene,
+ *   cues fire as their visible events are crossed (once — see createCueGate).
+ * - Muting fades to silence and suspends the context; un-muting resumes the
+ *   current scene's soundscape. A hidden tab is suspended and resumed too.
  * - The preference lasts for the visit (sessionStorage), never longer.
  * - Only offered with the WebGL experience; the still version is silent.
  * - Nothing depends on sound: every moment it marks is also seen.
@@ -30,9 +34,12 @@ class SoundController {
   private store: ExperienceStore | null = null;
   private ctx: AudioContext | null = null;
   private engine: SoundEngine | null = null;
+  private gate: ReturnType<typeof createCueGate> | null = null;
   private raf = 0;
-  private last = -1;
   private disarm: (() => void) | null = null;
+  private onVisibility: (() => void) | null = null;
+  /** Cues played since the page loaded (diagnostics for tests). */
+  fired = 0;
 
   subscribe = (l: () => void) => {
     this.listeners.add(l);
@@ -57,7 +64,15 @@ class SoundController {
     }
     this.set({ available: true, enabled: wanted });
     if (wanted) this.armGesture();
+    this.onVisibility = () => {
+      if (!this.ctx || !this.state.enabled) return;
+      if (document.hidden) this.pause();
+      else void this.start();
+    };
+    document.addEventListener("visibilitychange", this.onVisibility);
     return () => {
+      if (this.onVisibility) document.removeEventListener("visibilitychange", this.onVisibility);
+      this.onVisibility = null;
       this.stop(true);
       this.disarm?.();
       this.store = null;
@@ -75,6 +90,19 @@ class SoundController {
     this.set({ enabled });
     if (enabled) void this.start();
     else this.stop(false);
+  }
+
+  /** A real interface interaction (product preview tabs): a soft confirmation, if sound is on. */
+  ui() {
+    if (this.state.running && this.ctx && this.engine) this.engine.ui(this.ctx.currentTime + 0.01);
+  }
+
+  /** Diagnostics: the current output level (RMS), and the context's state. */
+  level() {
+    return this.engine && this.ctx?.state === "running" ? this.engine.level() : 0;
+  }
+  contextState() {
+    return this.ctx?.state ?? "none";
   }
 
   /** Resume on the visitor's first interaction (an earlier "on" in this visit). */
@@ -103,19 +131,33 @@ class SoundController {
     } catch {
       return;
     }
-    if (!this.state.enabled) return;
-    this.last = this.store.state.progress;
+    if (!this.state.enabled || !this.store) return;
+    // Start from where the visitor is: the current scene's layers, no backlog of cues.
+    this.gate = createCueGate(this.store.state.progress);
+    this.engine!.update(mixAt(this.store.state.progress), this.ctx.currentTime);
     this.engine!.setLevel(1, this.ctx.currentTime, 0.6);
     cancelAnimationFrame(this.raf);
     this.raf = requestAnimationFrame(this.loop);
     this.set({ running: this.ctx.state === "running" });
   }
 
+  /** Hidden tab: fade out and suspend (the preference is unchanged). */
+  private pause() {
+    cancelAnimationFrame(this.raf);
+    const ctx = this.ctx;
+    if (!ctx || !this.engine) return;
+    this.engine.setLevel(0, ctx.currentTime, 0.1);
+    window.setTimeout(() => {
+      if (document.hidden) void ctx.suspend();
+    }, 400);
+    this.set({ running: false });
+  }
+
   private stop(teardown: boolean) {
     cancelAnimationFrame(this.raf);
     const ctx = this.ctx;
     if (ctx && this.engine) {
-      this.engine.setLevel(0, ctx.currentTime, 0.15);
+      this.engine.setLevel(0, ctx.currentTime, 0.12);
       const engine = this.engine;
       window.setTimeout(() => {
         if (teardown) {
@@ -135,12 +177,14 @@ class SoundController {
     const store = this.store;
     const ctx = this.ctx;
     const engine = this.engine;
-    if (!store || !ctx || !engine) return;
+    if (!store || !ctx || !engine || !this.gate) return;
     const p = store.state.progress;
     const now = ctx.currentTime;
     engine.update(mixAt(p), now);
-    for (const cue of cuesBetween(this.last, p)) engine.play(cue, now + 0.02);
-    this.last = p;
+    for (const cue of this.gate.step(p)) {
+      engine.play(cue, now + 0.02);
+      this.fired++;
+    }
     this.raf = requestAnimationFrame(this.loop);
   };
 }

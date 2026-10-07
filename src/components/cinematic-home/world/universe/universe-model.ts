@@ -5,21 +5,22 @@ import { fits, score, worstFit, type Fits, type OpportunityAttributes } from "./
 /**
  * The Opportunity Universe as DATA — deterministic, art-directed, testable.
  *
- * 360 logical opportunities in five families (structural types) placed in six
- * composed territories, each with its own spatial pattern — never a random
- * sphere. Ranking by the illustrative score gives each opportunity the stage
- * at which it falls away: 360 → 120 → 36 → 9 → 3 → 1.
+ * "The Strategic Intelligence Constellation": 360 logical opportunities (five
+ * families of engineered decision modules) living on the monumental architecture
+ * of five territories — Capability alignment, Capital feasibility, Market access,
+ * Execution complexity, Emerging possibilities. These are visual categories of the
+ * illustrative demonstration, not claims about real analysis. Ranking by the
+ * illustrative score gives each opportunity the stage at which it falls away:
+ * 360 → 120 → 36 → 9 → 3 → 1.
  */
-
 export const LOGICAL_COUNT = 360;
 
-const TERRITORY_SCALE: Record<string, number> = {
-  A: 1.55,
-  B: 1.5,
-  C: 1.4,
-  D: 2.1,
-  E: 1.75,
-  F: 1.0,
+const TERRITORY_SCALE: Record<TerritoryId, number> = {
+  A: 1.35,
+  B: 1.45,
+  C: 1.55,
+  D: 2.0,
+  E: 2.1,
 };
 /** How many remain after each convergence stage. */
 export const STAGE_COUNTS = [360, 120, 36, 9, 3, 1] as const;
@@ -109,134 +110,164 @@ const EXCELLENT: Range = {
   difficulty: [0.2, 0.4],
 };
 
-export type TerritoryId = "A" | "B" | "C" | "D" | "E" | "F";
+export type TerritoryId = "A" | "B" | "C" | "D" | "E";
 
-interface Territory {
+/**
+ * A territory is a visual CATEGORY of the illustrative demonstration (never a claim
+ * about real analysis): one dominant architecture (built by Territories.tsx), the
+ * modules that live on it (pattern, territory-local; rotated by `yaw`), and how it
+ * routes information.
+ */
+export interface Territory {
   id: TerritoryId;
   name: string;
   centre: V3;
+  /** Rotation about y, so the architecture faces the camera's path. */
+  yaw: number;
   mix: [FamilyIndex, number][];
+  /** How many of its modules sample the high-value (excellent) range. */
+  excellent?: number;
   pattern: (i: number, n: number, rand: () => number) => [number, number, number];
 }
 
-const TAU = Math.PI * 2;
+/** Capability Alignment — the matrix wall: shelves of ordered modules. */
+export const WALL = { cols: 11, rows: 8, dx: 1.75, dy: 1.55, hw: 10.6, hh: 7.1 } as const;
+/** Capital Feasibility — stepped terraces, ordered by capital required (low → high). */
+export const TERRACE = {
+  levels: 5,
+  perLevel: 14,
+  dx: 1.05,
+  rise: 2.6,
+  step: 2.5,
+  hw: 7.8,
+  hd: 2.3,
+} as const;
+/** The terrace boundary the founder's ₹50,000 sits on (between these two levels). */
+export const CAPITAL_THRESHOLD_LEVEL = 1.5;
+/** Market Access — a routing ring with distributed stations. */
+export const RING = { radius: 12.5, stations: 8, perStation: 10 } as const;
+/** Execution Complexity — layered dependency planes deep in the atmosphere. */
+export const LAYERS = {
+  count: 5,
+  cols: 6,
+  rows: 3,
+  dx: 2.7,
+  dy: 3.1,
+  gap: 4.4,
+  hw: 8.8,
+  hh: 5.6,
+} as const;
+/** Emerging Possibilities — a sparse horizon arc. */
+export const HORIZON = { radius: 14, span: 2.5 } as const;
 
 export const TERRITORIES: Territory[] = [
   {
-    // A — near-left foreground: a sweeping ribbon that passes the camera.
     id: "A",
-    name: "near ribbon",
-    centre: [-14, 0.5, -21],
+    name: "Capability alignment",
+    centre: [-17, 2, -27],
+    yaw: 0.55,
     mix: [
-      [2, 24],
-      [0, 16],
+      [0, 30],
+      [2, 30],
+      [1, 28],
     ],
-    pattern: (i, n, rand) => {
-      const t = i / (n - 1);
-      const across = (i % 2 ? 1 : -1) * (0.6 + rand() * 1.1);
+    pattern: (i) => {
+      const col = i % WALL.cols;
+      const row = Math.floor(i / WALL.cols) % WALL.rows;
       return [
-        -5 + t * 10 + across * 0.4,
-        Math.sin(t * Math.PI) * 3 - 1.5 + across,
-        8 - t * 18 + across * 0.3,
+        (col - (WALL.cols - 1) / 2) * WALL.dx,
+        (row - (WALL.rows - 1) / 2) * WALL.dy,
+        0.75 + (col % 2) * 0.45,
       ];
     },
   },
   {
-    // B — upper-right middle distance: three tilted shelves.
     id: "B",
-    name: "upper shelves",
-    centre: [11, 7, -27],
+    name: "Capital feasibility",
+    centre: [17, 5, -37],
+    yaw: -0.5,
     mix: [
-      [1, 30],
-      [0, 16],
-      [2, 14],
+      [4, 30],
+      [3, 24],
+      [1, 16],
     ],
-    pattern: (i, _n, rand) => {
-      const shelf = i % 3;
-      const k = Math.floor(i / 3);
-      const col = k % 5;
-      const row = Math.floor(k / 5);
+    // `i` is the rank by capital required: the cheapest sit on the lowest, nearest level.
+    pattern: (i) => {
+      const level = Math.floor(i / TERRACE.perLevel);
+      const k = i % TERRACE.perLevel;
       return [
-        (col - 2) * 2.3 + (rand() - 0.5) * 0.6,
-        shelf * 2.4 - 2.4 + row * 0.35,
-        (row - 2) * 2.2 + shelf * 1.2 + (rand() - 0.5) * 0.6,
+        (k - (TERRACE.perLevel - 1) / 2) * TERRACE.dx,
+        (level - 2) * TERRACE.rise + 0.85,
+        -level * TERRACE.step,
       ];
     },
   },
   {
-    // C — beneath the camera path: a broad spiral floor.
     id: "C",
-    name: "spiral floor",
-    centre: [2, -10, -28],
+    name: "Market access",
+    centre: [3, -12.5, -32],
+    yaw: 0.2,
     mix: [
-      [3, 54],
-      [2, 12],
+      [3, 40],
+      [2, 30],
+      [0, 10],
     ],
-    pattern: (i, _n, rand) => {
-      const a = i * 0.72;
-      const r = 2.5 + i * 0.2;
-      return [Math.cos(a) * r, (rand() - 0.5) * 0.9 - r * 0.05, Math.sin(a) * r * 0.85];
+    pattern: (i) => {
+      const station = i % RING.stations;
+      const k = Math.floor(i / RING.stations);
+      const a = (station / RING.stations) * Math.PI * 2 + Math.PI / RING.stations;
+      const r = RING.radius + (station % 2 ? 2.6 : -2.6) + ((k % 2) - 0.5) * 1.3;
+      const along = (Math.floor(k / 2) - 2) * 1.35;
+      return [
+        Math.cos(a) * r - Math.sin(a) * along,
+        0.6 + (k % 2) * 0.5,
+        Math.sin(a) * r + Math.cos(a) * along,
+      ];
     },
   },
   {
-    // D — very deep background: long strands that run into darkness.
     id: "D",
-    name: "deep strands",
-    centre: [0, 3, -66],
+    name: "Execution complexity",
+    centre: [-3, 6, -74],
+    yaw: 0.2,
     mix: [
-      [4, 60],
-      [3, 20],
+      [4, 54],
+      [1, 24],
+      [3, 12],
     ],
-    pattern: (i, n, rand) => {
-      const strand = i % 4;
-      const t = Math.floor(i / 4) / Math.ceil(n / 4);
-      const x = -26 + t * 52;
+    pattern: (i) => {
+      const layer = i % LAYERS.count;
+      const k = Math.floor(i / LAYERS.count);
+      const col = k % LAYERS.cols;
+      const row = Math.floor(k / LAYERS.cols) % LAYERS.rows;
       return [
-        x,
-        (strand - 1.5) * 4.5 + Math.sin(t * TAU + strand) * 2.5,
-        Math.cos(t * 3 + strand) * 6 - strand * 3 + (rand() - 0.5),
+        (col - (LAYERS.cols - 1) / 2) * LAYERS.dx,
+        (row - (LAYERS.rows - 1) / 2) * LAYERS.dy,
+        (layer - (LAYERS.count - 1) / 2) * LAYERS.gap + 0.4,
       ];
     },
   },
   {
-    // E — the sparse high-value region: a calm, well-spaced constellation.
     id: "E",
-    name: "sparse constellation",
+    name: "Emerging possibilities",
     centre: [7, -0.5, -41],
+    yaw: 0,
     mix: [
-      [0, 12],
-      [1, 12],
+      [0, 16],
+      [1, 16],
     ],
+    excellent: 24,
     pattern: (i, n) => {
-      const a = i * 2.39996;
-      const r = 1.4 + Math.sqrt((i + 0.5) / n) * 6.5;
-      return [Math.cos(a) * r, Math.sin(a) * r * 0.55, ((i % 3) - 1) * 1.6];
-    },
-  },
-  {
-    // F — the dense, difficult region: a tight crystalline lattice.
-    id: "F",
-    name: "dense lattice",
-    centre: [-16, 6, -38],
-    mix: [
-      [4, 60],
-      [3, 10],
-      [2, 10],
-      [1, 6],
-      [0, 4],
-    ],
-    pattern: (i, _n, rand) => {
-      const x = i % 6;
-      const y = Math.floor(i / 6) % 5;
-      const z = Math.floor(i / 30);
-      return [
-        (x - 2.5) * 1.35 + (rand() - 0.5) * 0.25,
-        (y - 2) * 1.35 + (rand() - 0.5) * 0.25,
-        (z - 1) * 1.6 + (rand() - 0.5) * 0.25,
-      ];
+      // Spread along the horizon arc, alternately above and below it — sparse and open.
+      const t = (i + 0.5) / n;
+      const a = (t - 0.5) * HORIZON.span;
+      const r = HORIZON.radius - (i % 3) * 1.4;
+      return [Math.sin(a) * r, ((i * 7) % 5) * 0.9 - 1.6, -Math.cos(a) * r + HORIZON.radius * 0.72];
     },
   },
 ];
+
+const TAU = Math.PI * 2;
 
 export interface Opportunity {
   index: number;
@@ -325,10 +356,26 @@ export function createUniverse(renderCount = LOGICAL_COUNT, seed = 11): Universe
     // Interleave families inside a territory so no pattern is single-coloured.
     families.sort((x, y) => ((x * 7 + 3) % 5) - ((y * 7 + 3) % 5));
     const n = families.length;
-    families.forEach((family, i) => {
+    const sampled = families.map((family, i) => {
+      const range = i < (territory.excellent ?? 0) ? EXCELLENT : FAMILIES[family].range;
+      return {
+        family,
+        attrs: sampleAttrs(range, rand),
+        tilt: [rand() * TAU, rand() * TAU, rand() * TAU] as [number, number, number],
+        size: rand(),
+      };
+    });
+    // Capital Feasibility is ORDERED by capital required: the cheapest on the lowest level.
+    const order = sampled.map((_, i) => i);
+    if (territory.id === "B")
+      order.sort((x, y) => sampled[x].attrs.capitalInr - sampled[y].attrs.capitalInr);
+    // The emerging region interleaves the excellent with the rest along its arc.
+    if (territory.id === "E") order.sort((x, y) => ((x * 5) % n) - ((y * 5) % n));
+    const cy = Math.cos(territory.yaw);
+    const sy = Math.sin(territory.yaw);
+    order.forEach((slot, i) => {
+      const { family, attrs, tilt, size } = sampled[slot];
       const off = territory.pattern(i, n, rand);
-      const range = territory.id === "E" ? EXCELLENT : FAMILIES[family].range;
-      const attrs = sampleAttrs(range, rand);
       const f = fits(attrs);
       opportunities.push({
         index: opportunities.length,
@@ -342,13 +389,13 @@ export function createUniverse(renderCount = LOGICAL_COUNT, seed = 11): Universe
         stage: 0,
         conflict: worstFit(f).conflict,
         rest: [
-          territory.centre[0] + off[0],
+          territory.centre[0] + off[0] * cy + off[2] * sy,
           territory.centre[1] + off[1],
-          territory.centre[2] + off[2],
+          territory.centre[2] - off[0] * sy + off[2] * cy,
         ],
-        tilt: [rand() * TAU, rand() * TAU, rand() * TAU],
+        tilt,
         // Engineered forms must read at distance: larger in sparse and deep territories.
-        size: (0.8 + rand() * 0.45) * TERRITORY_SCALE[territory.id],
+        size: (0.85 + size * 0.4) * TERRITORY_SCALE[territory.id],
       });
     });
   }
@@ -359,7 +406,7 @@ export function createUniverse(renderCount = LOGICAL_COUNT, seed = 11): Universe
     o.stage = stageForRank(o.rank);
   });
 
-  // Rendered subset: every survivor of 120 → 36 always; the rest sampled evenly per territory.
+  // Rendered subset: every survivor of 120 → 36 always; the rest sampled evenly.
   const rendered = new Set<number>();
   for (const o of opportunities) if (o.rank <= 36) rendered.add(o.index);
   const remaining = Math.max(0, Math.min(renderCount, LOGICAL_COUNT) - rendered.size);
@@ -368,54 +415,74 @@ export function createUniverse(renderCount = LOGICAL_COUNT, seed = 11): Universe
   for (let i = 0; i < remaining; i++) rendered.add(others[Math.floor(i * step)].index);
   const renderedList = [...rendered].sort((a, b) => a - b);
 
-  // Connections — sparse, and shaped like their territory's architecture: rails
-  // along shelves, a spiral arm, strands, a lattice, a ring. Only the trunks
-  // (from the core) are hub links; nothing is connected to everything.
+  // Routing — sparse and HIERARCHICAL, shaped by each territory's architecture: one trunk
+  // from the core per territory, then its own routing (shelves, levels, ring stations,
+  // dependency layers, the horizon). Nothing is connected to everything.
   const connections: Connection[] = [];
   const isRendered = (i: number) => rendered.has(i);
-  const chain = (list: Opportunity[], width: number, closed = false, skipEvery = 0) => {
-    for (let i = 0; i < list.length - 1 + (closed ? 1 : 0); i++) {
-      if (skipEvery && i % skipEvery === skipEvery - 1) continue;
-      const a = list[i];
-      const b = list[(i + 1) % list.length];
-      connections.push({ a: a.index, b: b.index, kind: "branch", width, phase: rand() });
-    }
+  const link = (a: Opportunity, b: Opportunity, width: number) =>
+    connections.push({ a: a.index, b: b.index, kind: "branch", width, phase: rand() });
+  const chain = (list: Opportunity[], width: number, closed = false) => {
+    for (let i = 0; i < list.length - 1 + (closed ? 1 : 0); i++)
+      link(list[i], list[(i + 1) % list.length], width);
   };
   for (const territory of TERRITORIES) {
     const members = opportunities.filter(
       (o) => o.territory === territory.id && isRendered(o.index),
     );
     if (!members.length) continue;
-    const hub = members.reduce((best, o) =>
-      dist(o.rest, territory.centre) < dist(best.rest, territory.centre) ? o : best,
-    );
-    connections.push({ a: -1, b: hub.index, kind: "trunk", width: 0.02, phase: rand() });
+    // The trunk lands on the territory's best module: value routes the system.
+    const hub = members.reduce((best, o) => (o.score > best.score ? o : best));
+    connections.push({ a: -1, b: hub.index, kind: "trunk", width: 0.024, phase: rand() });
+    const by = (key: (o: Opportunity) => number) => {
+      const groups = new Map<number, Opportunity[]>();
+      for (const o of members) groups.set(key(o), [...(groups.get(key(o)) ?? []), o]);
+      return [...groups.values()];
+    };
     switch (territory.id) {
       case "A":
-        chain(members, 0.03, false, 7);
+        // Along every other shelf, and one vertical spine through the matrix.
+        for (const row of by((o) => Math.floor(o.local / WALL.cols) % WALL.rows))
+          if (Math.floor(row[0].local / WALL.cols) % 2 === 0) chain(row, 0.024);
+        chain(
+          members.filter((o) => o.local % WALL.cols === 5),
+          0.03,
+        );
         break;
-      case "B": {
-        // One rail per shelf row, running across its columns.
-        const rows = new Map<string, Opportunity[]>();
-        for (const o of members) {
-          const k = Math.floor(o.local / 3);
-          const key = `${o.local % 3}:${Math.floor(k / 5)}`;
-          rows.set(key, [...(rows.get(key) ?? []), o]);
-        }
-        for (const row of rows.values()) chain(row, 0.028);
+      case "B":
+        // One rail per level; the levels are climbed at one end only (a constraint).
+        for (const level of by((o) => Math.floor(o.local / TERRACE.perLevel))) chain(level, 0.024);
+        chain(
+          members.filter((o) => o.local % TERRACE.perLevel === 0),
+          0.03,
+        );
+        break;
+      case "C": {
+        // Each station's modules link to it; the stations link round the ring.
+        const stations = by((o) => o.local % RING.stations);
+        for (const st of stations) chain(st.slice(0, 4), 0.022);
+        chain(
+          stations.map((st) => st[0]),
+          0.034,
+          true,
+        );
         break;
       }
-      case "C":
-        chain(members, 0.03);
-        break;
-      case "D":
-        for (let s4 = 0; s4 < 4; s4++)
+      case "D": {
+        // Dependencies: across layers, module to the same module one layer deeper.
+        const layers = by((o) => o.local % LAYERS.count);
+        for (const layer of layers)
           chain(
-            members.filter((o) => o.local % 4 === s4),
-            0.026,
+            layer.filter((_, k) => k % 2 === 0),
+            0.02,
           );
-        for (let s4 = 0; s4 < 4; s4++) {
-          const end = members[members.length - 1 - s4];
+        for (const o of members) {
+          if (o.local % 3 !== 0) continue;
+          const deeper = members.find((m) => m.local === o.local + 1);
+          if (deeper) link(o, deeper, 0.022);
+        }
+        for (let s4 = 0; s4 < 3; s4++) {
+          const end = members[members.length - 1 - s4 * 7];
           if (!end) continue;
           connections.push({
             a: end.index,
@@ -424,60 +491,36 @@ export function createUniverse(renderCount = LOGICAL_COUNT, seed = 11): Universe
             width: 0.045,
             phase: rand(),
             far: [
-              end.rest[0] + 30 + s4 * 6,
-              end.rest[1] + (s4 - 1.5) * 8,
+              end.rest[0] + 30 + s4 * 8,
+              end.rest[1] + (s4 - 1) * 9,
               end.rest[2] - 70 - s4 * 15,
             ],
           });
         }
         break;
+      }
       case "E": {
-        // A calm ring around the constellation, ordered by angle.
-        const c = territory.centre;
-        const ring = [...members].sort(
-          (x, y) =>
-            Math.atan2(x.rest[1] - c[1], x.rest[0] - c[0]) -
-            Math.atan2(y.rest[1] - c[1], y.rest[0] - c[0]),
-        );
+        // A calm ring through the sparse region, ordered along the horizon.
+        const ring = [...members].sort((x, y) => x.local - y.local);
         chain(ring, 0.04, true);
         break;
       }
-      case "F":
-        // The dense, difficult lattice: links along both grid axes.
-        for (const o of members) {
-          const right = members.find((m) => m.local === o.local + 1 && o.local % 6 !== 5);
-          const up = members.find((m) => m.local === o.local + 6);
-          if (right)
-            connections.push({
-              a: o.index,
-              b: right.index,
-              kind: "branch",
-              width: 0.02,
-              phase: rand(),
-            });
-          if (up)
-            connections.push({
-              a: o.index,
-              b: up.index,
-              kind: "branch",
-              width: 0.02,
-              phase: rand(),
-            });
-        }
-        break;
     }
   }
 
   // Formations for the survivors.
   const top = byScore;
+  // 120 → 36: a ranked DECISION BOARD along one axis — three rows, the strongest at the centre.
   const spiral = new Map<number, [number, number, number]>();
   top.slice(0, 36).forEach((o, i) => {
-    const a = i * 2.39996 + 0.6;
-    const r = 2.4 + Math.sqrt(i + 1) * 1.75;
+    const row = i % 3;
+    const k = Math.floor(i / 3);
+    const col = k % 2 ? 6 + Math.ceil(k / 2) : 6 - Math.ceil(k / 2);
+    const x = (col - 6) * 1.95;
     spiral.set(o.index, [
-      CONVERGE_ANCHOR[0] + Math.cos(a) * r,
-      CONVERGE_ANCHOR[1] + Math.sin(a) * r * 0.62,
-      CONVERGE_ANCHOR[2] - 2 + Math.sin(a * 0.5) * 2 - i * 0.08,
+      CONVERGE_ANCHOR[0] + x,
+      CONVERGE_ANCHOR[1] + (row - 1) * 2.1,
+      CONVERGE_ANCHOR[2] - 1 + Math.abs(x) * 0.18,
     ]);
   });
   const nine = new Map<number, [number, number, number]>();
@@ -485,9 +528,9 @@ export function createUniverse(renderCount = LOGICAL_COUNT, seed = 11): Universe
   top.slice(0, 9).forEach((o, i) => {
     const a = (i / 9) * Math.PI * 2 + 0.35;
     nine.set(o.index, [
-      FINALS_HUB[0] + Math.cos(a) * 8.5,
-      FINALS_HUB[1] + 1.4 + Math.sin(a) * 3.4,
-      FINALS_HUB[2] + 1 + Math.sin(a) * 3.2,
+      FINALS_HUB[0] + Math.cos(a) * 9.2,
+      FINALS_HUB[1] + 1.4 + Math.sin(a) * 3.7,
+      FINALS_HUB[2] + 1 + Math.sin(a) * 3.4,
     ]);
   });
   // Direction 01 left, 02 centre-back (the one), 03 right.
@@ -506,8 +549,4 @@ export function createUniverse(renderCount = LOGICAL_COUNT, seed = 11): Universe
     winner: first.index,
     formations: { spiral, nine, three },
   };
-}
-
-function dist(a: readonly number[], b: readonly number[]) {
-  return Math.hypot(a[0] - b[0], a[1] - b[1], a[2] - b[2]);
 }

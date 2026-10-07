@@ -27,17 +27,19 @@ const key = (scene: SceneId, at: number, position: Vec3, target: Vec3): CameraKe
  * Slow dolly, controlled orbit, macro approach, pass-through, reveal.
  */
 export const CAMERA_PATH_KEYS: CameraKey[] = [
-  // A — the void: far out, almost nothing to see.
+  // A — the void: far out, almost nothing to see; an extremely slow drift forward.
   key("void", 0, [0, 2.4, 74], [0, 0.4, 0]),
-  key("void", 1, [0.8, 2.8, 66], [0, 0.4, 0]),
-  // Awakening — a slow dolly into a three-quarter view as the core assembles.
-  key("awakening", 0.3, [2.4, 2.2, 34], [-0.6, 0.2, 0]),
-  key("awakening", 0.62, [8, 3.4, 25], [-3.6, -0.6, 0]),
-  key("awakening", 1, [14.5, 4.4, 15], [-6.2, -1.2, 0]),
-  // Context — a controlled orbit while the six signals arrive.
-  key("context", 0.4, [17, 2.6, 6.5], [-3.6, 0, -1]),
-  key("context", 0.75, [9.5, 1.7, 16], [-3.2, 0.2, 0]),
-  key("context", 1, [3.2, 1.1, 17.5], [0, 0.3, 4]),
+  key("void", 1, [0.5, 1.8, 58], [0, 0.4, 0]),
+  // Awakening — close enough to see the precision: the S is drawn in light, its first channel
+  // passes the lens, the wafers settle; then a pull back reveals the whole Engine.
+  key("awakening", 0.24, [1.2, 1.1, 21], [0, 0.4, 0]),
+  key("awakening", 0.46, [3.4, 0.7, 12.5], [-0.4, 0.3, 0]),
+  key("awakening", 0.72, [4.6, 0.5, 10.5], [0.2, 0, 0]),
+  key("awakening", 1, [8.5, 1.6, 25], [-3.6, -0.6, 0]),
+  // Context — a controlled orbit within the S's readable front arc while the signals dock.
+  key("context", 0.4, [12, 2.2, 17], [-2.6, 0, 0]),
+  key("context", 0.75, [6, 1.4, 19.5], [-2.2, 0.2, 0]),
+  key("context", 1, [2.2, 0.9, 16.5], [0, 0.3, 0]),
   // B — the Engine aligns into a square aperture; the camera squeezes through the narrowing
   // tunnel of frames, between the parting kernel halves, and out into the world.
   key("passage", 0.3, [0.9, 0.75, 13.5], [0, 0.3, 0]),
@@ -46,13 +48,14 @@ export const CAMERA_PATH_KEYS: CameraKey[] = [
   key("passage", 0.76, [0.08, 0.38, -1.6], [0, 0.25, -12]),
   key("passage", 0.88, [0.2, 0.36, -5.2], [0, -0.4, -18]),
   key("passage", 1, [1.3, 0.7, -9], [0, -1.4, -32]),
-  // C/D — the reveal, then a slow drift through the universe.
-  // Rise to overlook the territories: floor below, constellation ahead, lattice left, shelves right.
-  key("universe", 0.5, [-0.5, 4.2, -13], [2, -2.2, -42]),
-  key("universe", 1, [-2.8, 6.4, -15], [2.5, -2.4, -44]),
-  // E — pull wider while the context computes.
-  key("computation", 0.45, [1.5, 8.5, -4], [0, -2.5, -30]),
-  key("computation", 1, [4.5, 6.2, -12], [4, -2, -38]),
+  // C/D — the reveal: up out of the aperture to a true overlook of the whole constellation.
+  key("universe", 0.45, [0.2, 7.5, -4.5], [1.5, -3.5, -45]),
+  key("universe", 1, [-1.8, 13.5, 2.5], [3, -4.5, -47]),
+  // E — computation, travelled: glide past the capability matrix, then across to the
+  // capital terraces, then turn toward the emerging region where the survivors gather.
+  key("computation", 0.32, [-7, 3.6, -16.5], [-17, 2, -28]),
+  key("computation", 0.64, [5, 6.2, -22], [17, 3.8, -37]),
+  key("computation", 1, [4.5, 6.2, -15], [5, -1, -40]),
   // F/G — toward the promising region; the nine.
   key("convergence", 0.5, [6, 3.2, -21], [7, -1, -42]),
   key("convergence", 1, [6.2, 2.6, -24], [6, 0.8, -46]),
@@ -96,8 +99,8 @@ export const CAMERA_PATH_KEYS: CameraKey[] = [
   { at: progressOf("product", 1), ...productEye(0) },
   { at: progressOf("connected", 1), ...productEye(3.5) },
   { at: progressOf("return", 1), ...productEye(14, 4) },
-  { at: progressOf("finale", 0.3), ...lower(productEye(30, 6), 3.2) },
+  { at: progressOf("finale", 0.3), ...lower(productEye(28, 5.5), 3) },
   // The protected hold: the composition is still while the identity and CTA land.
-  { at: progressOf("finale", 0.62), ...lower(productEye(34, 6), 3.7) },
-  { at: progressOf("finale", 1), ...lower(productEye(34.4, 6), 3.72) },
+  { at: progressOf("finale", 0.62), ...lower(productEye(29.5, 5.2), 3.15) },
+  { at: progressOf("finale", 1), ...lower(productEye(29.8, 5.2), 3.17) },
 ];

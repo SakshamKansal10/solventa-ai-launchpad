@@ -6,6 +6,8 @@ import type { FitRow } from "@/lib/fit/matrix";
 import type { MessageKey } from "@/lib/i18n";
 import { useLocale } from "@/lib/i18n/LocaleProvider";
 
+import { soundController } from "../sound/controller";
+
 /**
  * ILLUSTRATIVE, READ-ONLY preview of the Solventia workspace as a founder
  * intelligence system — the cinematic world, become an interface. Built from
@@ -47,11 +49,39 @@ const STEPS: PathStep[] = [
   { id: "prototype", label: "Create first prototype", state: "future" },
 ];
 
+/** The evidence timeline: what reality said, what it contradicted, how the path adapted. */
 const LEARNING = [
-  { tag: "Evidence", text: "“I wouldn’t pay for this version.”", tone: "text-[#c9c2f5]" },
-  { tag: "Assumption", text: "Full version price — contradicted", tone: "text-[#f0b79a]" },
-  { tag: "Adapted", text: "Test a lighter starter offer first", tone: "text-[#e9cf98]" },
+  {
+    week: "Wk 2",
+    tag: "Evidence",
+    text: "“I wouldn’t pay for this version.”",
+    tone: "text-[#c9c2f5]",
+    dot: "bg-[#8b7ff2]",
+  },
+  {
+    week: "Wk 2",
+    tag: "Assumption",
+    text: "Full version price — contradicted",
+    tone: "text-[#f0b79a]",
+    dot: "bg-[#f0b79a]",
+    delta: "0.62 → 0.41",
+  },
+  {
+    week: "Wk 3",
+    tag: "Adapted",
+    text: "Test a lighter starter offer first",
+    tone: "text-[#e9cf98]",
+    dot: "bg-[#e3c68e]",
+    delta: "0.41 → 0.68",
+  },
 ];
+
+/** Illustrative direction confidence: when selected, once the evidence landed, after adapting. */
+const CONFIDENCE = [
+  { at: "Selected", value: 0.62 },
+  { at: "Contradicted", value: 0.41 },
+  { at: "Adapted", value: 0.68 },
+] as const;
 
 const TABS = [
   { id: "direction", label: "Direction" },
@@ -60,6 +90,56 @@ const TABS = [
 ] as const;
 
 const label = "font-mono text-[10.5px] uppercase tracking-[0.24em] text-[#8f98ab]";
+/** Machined surface: a faint top light and a hairline edge, like the slab it came from. */
+const card =
+  "rounded-xl border border-white/[0.08] bg-linear-to-b from-white/[0.045] to-white/[0.012] shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]";
+
+/** Confidence through the evidence loop: a dip when reality disagreed, a recovery after adapting. */
+function ConfidenceTrace() {
+  const W = 132;
+  const H = 34;
+  const pts = CONFIDENCE.map((c, i) => [
+    6 + (i * (W - 12)) / (CONFIDENCE.length - 1),
+    H - 5 - ((c.value - 0.3) / 0.45) * (H - 10),
+  ]);
+  const last = CONFIDENCE[CONFIDENCE.length - 1];
+  return (
+    <figure
+      className={`${card} shrink-0 px-3.5 py-2.5`}
+      aria-label={`Illustrative direction confidence: ${CONFIDENCE.map((c) => `${c.value.toFixed(2)} ${c.at.toLowerCase()}`).join(", ")}`}
+    >
+      <div className="flex items-baseline justify-between gap-4" aria-hidden="true">
+        <span className={label}>Confidence</span>
+        <span className="font-mono text-[15px] text-[#e9cf98]">{last.value.toFixed(2)}</span>
+      </div>
+      <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`} className="mt-1" aria-hidden="true">
+        <polyline
+          points={pts.map((p) => p.join(",")).join(" ")}
+          fill="none"
+          stroke="rgba(201,194,245,0.55)"
+          strokeWidth="1.25"
+        />
+        {pts.map(([x, y], i) => (
+          <circle
+            key={i}
+            cx={x}
+            cy={y}
+            r={i === pts.length - 1 ? 3 : 2.25}
+            fill={i === 1 ? "#f0b79a" : i === pts.length - 1 ? "#e3c68e" : "#8b7ff2"}
+          />
+        ))}
+      </svg>
+      <figcaption
+        className="flex justify-between font-mono text-[9.5px] uppercase tracking-[0.14em] text-[#8f98ab]"
+        aria-hidden="true"
+      >
+        <span>Sel</span>
+        <span>Evid</span>
+        <span>Adapt</span>
+      </figcaption>
+    </figure>
+  );
+}
 
 export function ProductPreview() {
   const { t } = useLocale();
@@ -132,14 +212,27 @@ export function ProductPreview() {
             </ul>
           </div>
           <div className="mt-auto">
-            <h4 className={label}>Learning log</h4>
-            <ol className="mt-3 space-y-2.5 border-l border-white/10 pl-3">
+            <h4 className={label}>Evidence timeline</h4>
+            <ol className="relative mt-3 space-y-3 pl-4">
+              <span
+                aria-hidden="true"
+                className="absolute bottom-1.5 left-[3px] top-1.5 w-px bg-linear-to-b from-[#8b7ff2]/50 via-[#f0b79a]/40 to-[#e3c68e]/60"
+              />
               {LEARNING.map((l) => (
-                <li key={l.tag}>
-                  <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-[#8f98ab]">
-                    {l.tag}
+                <li key={l.tag} className="relative">
+                  <span
+                    aria-hidden="true"
+                    className={`absolute -left-4 top-[3px] size-[7px] rounded-full ring-2 ring-[#0a0f19] ${l.dot}`}
+                  />
+                  <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-[#8f98ab]">
+                    {l.week} · {l.tag}
                   </p>
-                  <p className={`text-[12.5px] leading-snug ${l.tone}`}>{l.text}</p>
+                  <p className={`mt-0.5 text-[12.5px] leading-snug ${l.tone}`}>{l.text}</p>
+                  {l.delta && (
+                    <p className="mt-0.5 font-mono text-[10px] tracking-[0.06em] text-[#8f98ab]">
+                      Confidence {l.delta}
+                    </p>
+                  )}
                 </li>
               ))}
             </ol>
@@ -160,7 +253,10 @@ export function ProductPreview() {
                 aria-selected={tab === tb.id}
                 aria-controls={`${base}-panel-${tb.id}`}
                 tabIndex={tab === tb.id ? 0 : -1}
-                onClick={() => setTab(tb.id)}
+                onClick={() => {
+                  setTab(tb.id);
+                  soundController.ui();
+                }}
                 onKeyDown={(e) => onKey(e, i)}
                 className={`rounded-full px-4 py-1.5 text-[0.875rem] font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#8b7ff2] ${
                   tab === tb.id
@@ -180,41 +276,54 @@ export function ProductPreview() {
                 id={`${base}-panel-direction`}
                 aria-labelledby={`${base}-tab-direction`}
               >
-                <p className={label}>Chosen direction · 02</p>
-                <h3 className="mt-1.5 font-display text-[1.45rem] leading-tight text-[#f3eee4] sm:text-[1.9rem]">
-                  A digital service for local businesses
-                </h3>
-                {/* The selection trace: the same narrowing the visitor just watched. */}
-                <div className="mt-4" aria-label="Narrowed from 360 directions to 1">
-                  <ol
-                    className="flex items-center gap-1.5 font-mono text-[11.5px] text-[#a9b0bf]"
-                    aria-hidden="true"
-                  >
-                    {NARROWING.map((n, i) => (
-                      <li key={n} className="flex items-center gap-1.5">
-                        <span className={i === NARROWING.length - 1 ? "text-[#e9cf98]" : undefined}>
-                          {n}
-                        </span>
-                        {i < NARROWING.length - 1 && (
-                          <span className="h-px w-4 bg-white/20 sm:w-7" />
-                        )}
-                      </li>
-                    ))}
-                  </ol>
-                  <p className="mt-1.5 text-[12.5px] text-[#8f98ab]">
-                    Narrowed against your context, compared, then sent to be tested — not assumed.
-                  </p>
+                <div className="flex flex-wrap items-start justify-between gap-4">
+                  <div className="min-w-0">
+                    <p className={label}>Chosen direction · 02</p>
+                    <h3 className="mt-1.5 font-display text-[1.45rem] leading-tight text-[#f3eee4] sm:text-[1.9rem]">
+                      A digital service for local businesses
+                    </h3>
+                    {/* The selection trace: the same narrowing the visitor just watched. */}
+                    <div className="mt-4" aria-label="Narrowed from 360 directions to 1">
+                      <ol
+                        className="flex items-center gap-1.5 font-mono text-[11.5px] text-[#a9b0bf]"
+                        aria-hidden="true"
+                      >
+                        {NARROWING.map((n, i) => (
+                          <li key={n} className="flex items-center gap-1.5">
+                            <span
+                              className={i === NARROWING.length - 1 ? "text-[#e9cf98]" : undefined}
+                            >
+                              {n}
+                            </span>
+                            {i < NARROWING.length - 1 && (
+                              <span className="h-px w-4 bg-white/20 sm:w-7" />
+                            )}
+                          </li>
+                        ))}
+                      </ol>
+                      <p className="mt-1.5 text-[12.5px] text-[#8f98ab]">
+                        Narrowed against your context, compared, then sent to be tested — not
+                        assumed.
+                      </p>
+                    </div>
+                  </div>
+                  <div className="hidden sm:block">
+                    <ConfidenceTrace />
+                  </div>
                 </div>
                 <div className="mt-5 grid gap-5 sm:grid-cols-2">
-                  <div className="rounded-xl border border-white/[0.08] bg-white/[0.025] p-4">
+                  <div className={`${card} flex flex-col p-4`}>
                     <h4 className={label}>Why it fits</h4>
                     <ul className="mt-3 space-y-2 text-[13.5px] text-[#d4cfc5]">
                       <li>Starts within ₹50,000</li>
                       <li>Uses your digital development skills</li>
                       <li>Fits 12 hours a week</li>
                     </ul>
+                    <p className="mt-auto border-t border-white/[0.06] pt-2.5 text-[12px] leading-snug text-[#8f98ab]">
+                      Chosen over Directions 01 and 03 on the same six signals.
+                    </p>
                   </div>
-                  <div className="rounded-xl border border-white/[0.08] bg-white/[0.025] p-4">
+                  <div className={`${card} p-4`}>
                     <h4 className={label}>Founder fit</h4>
                     <ul className="mt-3 space-y-2.5" data-testid="fit-signals">
                       {FIT.map((row) => {
@@ -249,7 +358,7 @@ export function ProductPreview() {
                   </div>
                 </div>
                 {/* Execution: where this direction is on its path, and the move that matters now. */}
-                <div className="mt-5 rounded-xl border border-white/[0.08] bg-white/[0.025] p-4">
+                <div className={`${card} mt-5 p-4`}>
                   <div className="flex flex-wrap items-center justify-between gap-3">
                     <h4 className={label}>Roadmap</h4>
                     <p className="font-mono text-[10.5px] tracking-[0.16em] text-[#8f98ab]">
@@ -287,7 +396,7 @@ export function ProductPreview() {
             {tab === "week" && (
               <div role="tabpanel" id={`${base}-panel-week`} aria-labelledby={`${base}-tab-week`}>
                 <p className={label}>Validate · this week</p>
-                <div className="mt-4 rounded-xl border border-white/[0.08] bg-white/[0.025] px-4 py-5 sm:px-5">
+                <div className={`${card} mt-4 px-4 py-5 sm:px-5`}>
                   <StepPath steps={STEPS} ariaLabel="Validation path" />
                 </div>
                 <div className="mt-4 flex items-start gap-3 rounded-xl border border-[#e3c68e]/25 bg-[#e3c68e]/[0.06] p-4">
@@ -312,7 +421,7 @@ export function ProductPreview() {
               >
                 <p className={label}>Assumption → evidence → adaptation</p>
                 <ol className="mt-4 grid gap-3 sm:grid-cols-3">
-                  <li className="rounded-xl border border-white/[0.08] bg-white/[0.025] p-4">
+                  <li className={`${card} p-4`}>
                     <p className={label}>Assumption</p>
                     <p className="mt-2 text-[14px] font-medium text-[#ece7dd]">
                       Owners will pay for the full version
@@ -320,17 +429,26 @@ export function ProductPreview() {
                     <p className="mt-3 inline-flex rounded-full bg-[#f0b79a]/12 px-2.5 py-0.5 text-[12px] font-semibold text-[#f0b79a]">
                       Contradicted
                     </p>
+                    <p className="mt-3 font-mono text-[11px] text-[#8f98ab]">
+                      Confidence 0.62 → 0.41
+                    </p>
                   </li>
-                  <li className="rounded-xl border border-white/[0.08] bg-white/[0.025] p-4">
-                    <p className={label}>Evidence</p>
+                  <li className={`${card} p-4`}>
+                    <p className={label}>Evidence · Wk 2</p>
                     <blockquote className="mt-2 font-display text-[1.2rem] italic leading-snug text-[#f3eee4]">
                       “I wouldn’t pay for this version.”
                     </blockquote>
+                    <p className="mt-3 text-[12px] text-[#8f98ab]">
+                      Illustrative customer response
+                    </p>
                   </li>
                   <li className="rounded-xl border border-[#e3c68e]/25 bg-[#e3c68e]/[0.06] p-4">
-                    <p className={label}>Adaptation</p>
+                    <p className={label}>Adaptation · Wk 3</p>
                     <p className="mt-2 text-[14px] text-[#ece7dd]">
                       Path updated: test a lighter starter offer first.
+                    </p>
+                    <p className="mt-3 font-mono text-[11px] text-[#e3c68e]">
+                      Confidence 0.41 → 0.68
                     </p>
                   </li>
                 </ol>

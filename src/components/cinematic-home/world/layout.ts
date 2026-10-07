@@ -29,19 +29,25 @@ export const FINALS_HUB: V3 = [6, -0.5, -46];
 
 /** Palette from the art direction (sRGB hex; three converts to linear). */
 export const COLORS = {
-  black: "#070B13",
-  midnight: "#101B2B",
-  navy: "#192536",
-  pearl: "#F1EEE6",
-  champagne: "#C4A67A",
-  violet: "#75668F",
-  violetGlow: "#9C8BC4",
+  // Environment (V3 palette).
+  black: "#050912",
+  midnight: "#0C1525",
+  navy: "#16233A",
+  graphite: "#202B39",
+  // Structure.
+  titanium: "#5C6A7C",
+  titaniumEdge: "#8FA2BA",
+  sMetal: "#46536F",
+  sCover: "#6C7A96",
+  smoke: "#38425A",
+  // Meaning.
+  pearl: "#F0EEE7",
+  champagne: "#C9AA79",
   gold: "#D9B97F",
-  titanium: "#5A606B",
-  graphite: "#1B2029",
-  smoke: "#3A4458",
-  indigo: "#8B7FF2",
   edgeGold: "#F2D49A",
+  indigo: "#756CE0",
+  violet: "#756CE0",
+  violetGlow: "#968CF2",
 } as const;
 
 export const add = (a: V3, b: V3): [number, number, number] => [

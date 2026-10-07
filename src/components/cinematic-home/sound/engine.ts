@@ -52,8 +52,12 @@ export class SoundEngine {
   private padPans: { pan: StereoPannerNode; side: number }[] = [];
   private noise: AudioBuffer;
   private rand = mulberry32(2026);
-  private nextTick = 0;
   private nextPulse = 0;
+  /** End times of the one-shot voices still sounding (polyphony cap). */
+  private busy: number[] = [];
+  /** Post-compressor tap: lets tests measure what actually reaches the speakers. */
+  readonly analyser: AnalyserNode;
+  private probe = new Float32Array(2048);
   private mix: Mix | null = null;
   private sources: AudioScheduledSourceNode[] = [];
 
@@ -65,7 +69,10 @@ export class SoundEngine {
     comp.ratio.value = 3;
     comp.attack.value = 0.01;
     comp.release.value = 0.3;
-    comp.connect(destination);
+    this.analyser = ctx.createAnalyser();
+    this.analyser.fftSize = 2048;
+    comp.connect(this.analyser);
+    this.analyser.connect(destination);
     this.out = ctx.createGain();
     this.out.gain.value = 0;
     this.out.connect(comp);
@@ -178,14 +185,6 @@ export class SoundEngine {
     this.padGain.gain.setTargetAtTime(mix.pad * 0.55 * m, time, TAU * 2);
     for (const { pan, side } of this.padPans) pan.pan.setTargetAtTime(side * mix.width, time, 0.6);
 
-    // Computation: fine information ticks, irregular, panned across the field.
-    if (mix.ticks > 0.3) {
-      if (this.nextTick < time) this.nextTick = time;
-      while (this.nextTick < time + LOOKAHEAD) {
-        this.tick(this.nextTick, 0.022 * m, (this.rand() * 2 - 1) * 0.8);
-        this.nextTick += (1 / mix.ticks) * (0.5 + this.rand());
-      }
-    }
     // The path: a soft, steady forward pulse.
     if (mix.pulse > 0.01) {
       if (this.nextPulse < time) this.nextPulse = time;
@@ -196,14 +195,70 @@ export class SoundEngine {
     }
   }
 
-  /** One-shot cue at `time`. */
+  /** Output level right now (RMS of what reaches the destination; 0 = silence). */
+  level(): number {
+    this.analyser.getFloatTimeDomainData(this.probe);
+    let sum = 0;
+    for (let k = 0; k < this.probe.length; k++) sum += this.probe[k] * this.probe[k];
+    return Math.sqrt(sum / this.probe.length);
+  }
+
+  /** A soft confirmation for a real interface interaction (tabs in the product preview). */
+  ui(time: number) {
+    this.click(time, 0.05, 4200, 0);
+    this.tone(N.E5, time, 0.025, { decay: 0.35, wet: 0.3 });
+  }
+
+  /** One-shot cue at `time`. Minor cues yield when too many voices already sound. */
   play(cue: Cue, time: number) {
+    this.busy = this.busy.filter((end) => end > time);
+    if (!cue.major && this.busy.length >= 24) return;
+    this.busy.push(time + (cue.major ? 8 : 1.6));
     const i = cue.index;
     const m = this.mix?.master ?? 1;
     switch (cue.kind) {
-      case "activation":
-        this.bell(N.D3, time, 0.2 * m, 4.5, 0);
-        this.tone(N.D2, time, 0.16 * m, { attack: 1.6, decay: 4.5, wet: 0.4 });
+      case "motif":
+        // The signature motif: two delicate bell tones, a fifth apart, in a large space
+        // (index 1: its return in scene 22 — the same phrase, quieter, further away).
+        this.bell(N.D5, time, 0.06 * (1 - 0.35 * i), 3.8, -0.25);
+        this.bell(N.A5, time + 0.42, 0.045 * (1 - 0.35 * i), 4.2, 0.25);
+        this.tone(N.D2, time, 0.06, { attack: 2, decay: 5, wet: 0.5 + 0.3 * i });
+        break;
+      case "kernel":
+        // The Engine is complete: a deep, refined harmonic activation.
+        this.tone(N.D2, time, 0.18 * m, { attack: 0.9, decay: 5.5, wet: 0.45 });
+        [N.D3, N.A3, N.D4].forEach((f, k) =>
+          this.tone(f, time + k * 0.05, 0.05 * m, {
+            attack: 0.7,
+            decay: 5,
+            wet: 0.8,
+            pan: (k - 1) * 0.35,
+          }),
+        );
+        this.bell(N.D6, time + 0.5, 0.025 * m, 3.4, 0.2);
+        break;
+      case "evaluate": {
+        // One evaluation: a short, pitched information event per territory as a wave reaches it.
+        const notes = [N.A4, N.Cs5, N.E5, N.Fs5, N.A5];
+        this.click(time, 0.05 * m, 3000 + i * 1600, i * 1.4 - 0.7);
+        this.tone(notes[Math.round(i * 4)], time, 0.022 * m, {
+          decay: 0.45,
+          wet: 0.6,
+          pan: i * 1.4 - 0.7,
+        });
+        break;
+      }
+      case "stabilize":
+        // The revised direction holds: a gentle, resolved chord.
+        [N.D4, N.Fs4, N.A4].forEach((f, k) =>
+          this.tone(f, time + k * 0.04, 0.045 * m, {
+            attack: 0.3,
+            decay: 3.6,
+            wet: 0.75,
+            pan: (k - 1) * 0.4,
+            type: "triangle",
+          }),
+        );
         break;
       case "flyby":
         this.sweep(time, 0.12 * m, [380, 2600, 700], 1.2, -0.7 + 1.4 * i);
@@ -237,16 +292,6 @@ export class SoundEngine {
           }),
         );
         break;
-      case "wave": {
-        const notes = [N.A4, N.B4, N.Cs5, N.E5, N.Fs5, N.A5];
-        this.tone(notes[Math.round(i * 5)], time, 0.035 * m, {
-          attack: 0.05,
-          decay: 1.4,
-          wet: 0.85,
-          pan: i * 1.2 - 0.6,
-        });
-        break;
-      }
       case "narrow":
         this.tone(N.E4, time, 0.045 * m, { decay: 0.7, wet: 0.6, pan: -0.2 });
         this.tone(N.D4, time + 0.16, 0.05 * m, { decay: 1.1, wet: 0.6, pan: 0.2 });
@@ -308,7 +353,11 @@ export class SoundEngine {
         this.bell(notes[Math.round(i * 4)], time, 0.035 * m, 1.1, i * 1.2 - 0.6);
         break;
       }
-      case "finale":
+      case "signature":
+        // The emblem resolves: the opening motif returns, now complete — over the full chord.
+        this.bell(N.D5, time, 0.07, 4.5, -0.25);
+        this.bell(N.A5, time + 0.42, 0.055, 5, 0.25);
+        this.bell(N.D6, time + 0.84, 0.035, 5.5, 0);
         this.tone(N.D2, time, 0.15 * m, { attack: 1.4, decay: 9, wet: 0.5 });
         [N.D3, N.A3, N.Fs4, N.A4, N.E5].forEach((f, k) =>
           this.tone(f, time + k * 0.08, 0.05 * m, {
@@ -434,21 +483,6 @@ export class SoundEngine {
     this.voiceOut(env, pan, 0.25);
     src.start(t, this.rand() * 3);
     src.stop(t + 0.12);
-  }
-
-  private tick(t: number, g: number, pan: number) {
-    const src = this.ctx.createBufferSource();
-    src.buffer = this.noise;
-    const hp = this.ctx.createBiquadFilter();
-    hp.type = "highpass";
-    hp.frequency.value = 4200 + this.rand() * 2400;
-    const env = this.ctx.createGain();
-    env.gain.setValueAtTime(g * (0.5 + this.rand() * 0.5), t);
-    env.gain.setTargetAtTime(0, t, 0.006);
-    src.connect(hp).connect(env);
-    this.voiceOut(env, pan, 0.5);
-    src.start(t, this.rand() * 3);
-    src.stop(t + 0.05);
   }
 
   /** The path's pulse: a soft low thump, felt more than heard. */

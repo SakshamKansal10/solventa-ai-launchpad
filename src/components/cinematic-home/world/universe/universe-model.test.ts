@@ -53,10 +53,11 @@ describe("opportunity universe", () => {
     expect(stageForRank(1)).toBe(0);
   });
 
-  it("first loses the distant, capital-heavy territories, then whole families retract", () => {
+  it("first loses the capital-heavy territories, then whole families retract", () => {
     const first = opportunities.filter((o) => o.stage === 1);
-    const distant = first.filter((o) => ["C", "D", "F"].includes(o.territory)).length;
-    expect(distant / first.length).toBeGreaterThan(0.85);
+    // Capital feasibility, market access and execution complexity carry most of the first cut.
+    const heavy = first.filter((o) => ["B", "C", "D"].includes(o.territory)).length;
+    expect(heavy / first.length).toBeGreaterThan(0.8);
     // Every commerce/making and local-services direction is gone after the first stage.
     expect(opportunities.filter((o) => o.family >= 3 && o.stage !== 1)).toEqual([]);
     // After 120 → 36 only the two digital families remain.
@@ -65,10 +66,16 @@ describe("opportunity universe", () => {
     expect(opportunities.some((o) => o.family === 2 && o.stage === 2)).toBe(true);
   });
 
-  it("the final three come from the sparse high-value region; the one is centre-back", () => {
+  it("the final three come from the emerging-possibilities region; the one is centre-back", () => {
     for (const i of model.finalists) expect(opportunities[i].territory).toBe("E");
     expect(model.finalists[1]).toBe(model.winner);
     expect(opportunities[model.winner].rank).toBe(1);
+  });
+
+  it("orders capital feasibility by capital required, so the founder's threshold is a place", () => {
+    const b = opportunities.filter((o) => o.territory === "B").sort((x, y) => x.local - y.local);
+    for (let i = 1; i < b.length; i++)
+      expect(b[i].attrs.capitalInr).toBeGreaterThanOrEqual(b[i - 1].attrs.capitalInr);
   });
 
   it("renders a tier's budget but always every survivor of 120 → 36", () => {
@@ -87,7 +94,8 @@ describe("opportunity universe", () => {
 
   it("is sparse — far fewer connections than a full graph — and deterministic", () => {
     expect(model.connections.length).toBeLessThan(LOGICAL_COUNT * 1.2);
-    expect(model.connections.filter((c) => c.kind === "trunk")).toHaveLength(6);
+    // One trunk from the core to each of the five territories.
+    expect(model.connections.filter((c) => c.kind === "trunk")).toHaveLength(5);
     expect(createUniverse().opportunities.map((o) => o.rank)).toEqual(
       opportunities.map((o) => o.rank),
     );

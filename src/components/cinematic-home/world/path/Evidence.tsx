@@ -77,7 +77,8 @@ export function Evidence() {
     if (reach > 0.01) {
       const a = g.position;
       const b = frame.target;
-      filaments.arc(idx, a.x, a.y, a.z, b.x, b.y - 1.6, b.z, 0, -0.6, 0);
+      // It strikes the assumption node on the gate's crown — the node then changes state.
+      filaments.arc(idx, a.x, a.y, a.z, b.x, b.y + GATE.hh * 0.78 + 0.42, b.z, 0, 0.8, 0);
       filaments.params(idx, {
         s1: reach,
         width: 0.05,
