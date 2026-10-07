@@ -36,10 +36,12 @@ export const CAMERA_PATH_KEYS: CameraKey[] = [
   key("awakening", 0.46, [3.4, 0.7, 12.5], [-0.4, 0.3, 0]),
   key("awakening", 0.72, [4.6, 0.5, 10.5], [0.2, 0, 0]),
   key("awakening", 1, [8.5, 1.6, 25], [-3.6, -0.6, 0]),
+  // The camera stops on the complete Engine before the founder's signals arrive.
+  key("context", 0.1, [8.6, 1.62, 24.8], [-3.6, -0.6, 0]),
   // Context — a controlled orbit within the S's readable front arc while the signals dock.
-  key("context", 0.4, [12, 2.2, 17], [-2.6, 0, 0]),
-  key("context", 0.75, [6, 1.4, 19.5], [-2.2, 0.2, 0]),
-  key("context", 1, [2.2, 0.9, 16.5], [0, 0.3, 0]),
+  key("context", 0.4, [11, 2.4, 29], [-1.4, 0, 0]),
+  key("context", 0.75, [4, 1.6, 30], [-1, 0.2, 0]),
+  key("context", 1, [2.2, 0.9, 20], [0, 0.3, 0]),
   // B — the aperture. The channels part; the camera centres on the lens; the iris opens on a
   // pinpoint of light; the camera enters the barrel (its planes pass the lens) and leaves it
   // into a world far larger than the machine that contained it.
@@ -52,6 +54,8 @@ export const CAMERA_PATH_KEYS: CameraKey[] = [
   key("passage", 1, [0.9, 3.4, -8.5], [1, -3, -40]),
   // C/D — the reveal: up out of the aperture to a true overlook of the whole constellation.
   key("universe", 0.45, [0.2, 7.5, -4.5], [1.5, -3.5, -45]),
+  // …and over the whole constellation, once it is all there.
+  key("universe", 0.62, [0.1, 7.9, -4.2], [1.6, -3.6, -45]),
   key("universe", 1, [-1.8, 13.5, 2.5], [3, -4.5, -47]),
   // E — computation, travelled: glide past the capability matrix, then across to the
   // capital terraces, then turn toward the emerging region where the survivors gather.

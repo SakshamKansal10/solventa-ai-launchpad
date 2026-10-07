@@ -58,9 +58,9 @@ const VOID_SIGNALS: {
   bend: [number, number, number];
   at: number;
 }[] = [
-  { from: [-22, 8, -16], bend: [5, 5, 8], at: 0.16 },
-  { from: [27, -6, -34], bend: [-6, 4, 10], at: 0.48 },
-  { from: [-7, -12, -52], bend: [3, -5, 12], at: 0.76 },
+  { from: [-22, 8, -16], bend: [5, 5, 8], at: -0.14 },
+  { from: [27, -6, -34], bend: [-6, 4, 10], at: 0.3 },
+  { from: [-7, -12, -52], bend: [3, -5, 12], at: 0.62 },
 ];
 /** Faint distant structure glimpsed through the aperture before the reveal. */
 const HINTS: [number, number, number][] = [
@@ -657,7 +657,10 @@ export function IntelligenceCore({ variant = "origin" }: { variant?: "origin" | 
           width: 0.06,
           intensity: 0.32 * appear * (1 - travel),
           violet: 0.55,
-          pulse: 0,
+          // A slow bead of light travels each channel: the hidden system is already running.
+          pulse: 1,
+          phase: j * 0.37,
+          speed: 0.07,
         });
         const glide = 0.2 * smoothstep(sig.at, 1, vv);
         const head = 0.03 + glide + travel * (0.97 - glide);

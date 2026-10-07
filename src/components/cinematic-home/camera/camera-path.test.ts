@@ -5,6 +5,7 @@ import {
   BASE_FOV,
   CAMERA_KEYS,
   createCameraPath,
+  createTiming,
   curveParameter,
   FOCUS_KEYS,
   FOV_KEYS,
@@ -24,6 +25,30 @@ describe("curveParameter", () => {
     expect(curveParameter(0.3, stops)).toBeCloseTo((1 + 0.5) / 3, 12);
     expect(curveParameter(-1, stops)).toBe(0);
     expect(curveParameter(2, stops)).toBe(1);
+  });
+});
+
+describe("createTiming", () => {
+  const stops = [0, 0.1, 0.5, 1];
+  const timing = createTiming(stops);
+
+  it("still reaches every key exactly at its own progress", () => {
+    stops.forEach((stop, i) => expect(timing(stop)).toBeCloseTo(i / 3, 12));
+  });
+
+  it("is monotone and changes speed smoothly (no jump at a key)", () => {
+    let prev = timing(0);
+    const speed = (p: number) => (timing(p + 1e-4) - timing(p - 1e-4)) / 2e-4;
+    for (let i = 1; i <= 1000; i++) {
+      const t = timing(i / 1000);
+      expect(t).toBeGreaterThanOrEqual(prev - 1e-12);
+      prev = t;
+    }
+    for (const key of [0.1, 0.5]) {
+      const before = speed(key - 2e-3);
+      const after = speed(key + 2e-3);
+      expect(Math.abs(after - before) / Math.max(before, after)).toBeLessThan(0.1);
+    }
   });
 });
 

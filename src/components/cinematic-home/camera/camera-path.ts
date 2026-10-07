@@ -43,6 +43,52 @@ export function curveParameter(progress: number, stops: readonly number[]): numb
   return 1;
 }
 
+/**
+ * Eased timing through the keys: a monotone cubic (PCHIP) through (key.at, i / (n − 1)). The
+ * camera still reaches each key exactly when scroll does, but its speed changes smoothly —
+ * arrivals decelerate, departures accelerate — instead of jumping at every key. Two keys with
+ * the same pose become a deliberate stop with an eased arrival and departure.
+ */
+export function createTiming(stops: readonly number[]): (progress: number) => number {
+  const n = stops.length;
+  if (n < 2) return () => 0;
+  const ys = stops.map((_, i) => i / (n - 1));
+  const h: number[] = [];
+  const d: number[] = [];
+  for (let i = 0; i < n - 1; i++) {
+    h.push(stops[i + 1] - stops[i]);
+    d.push((ys[i + 1] - ys[i]) / h[i]);
+  }
+  const m = new Array<number>(n).fill(0);
+  m[0] = d[0];
+  m[n - 1] = d[n - 2];
+  for (let i = 1; i < n - 1; i++) {
+    const w1 = 2 * h[i] + h[i - 1];
+    const w2 = h[i] + 2 * h[i - 1];
+    m[i] = (w1 + w2) / (w1 / d[i - 1] + w2 / d[i]);
+  }
+  return (progress) => {
+    const p = clamp01(progress);
+    let lo = 0;
+    let hi = n - 2;
+    while (lo < hi) {
+      const mid = (lo + hi + 1) >> 1;
+      if (stops[mid] <= p) lo = mid;
+      else hi = mid - 1;
+    }
+    const i = lo;
+    const u = h[i] > 0 ? clamp01((p - stops[i]) / h[i]) : 1;
+    const u2 = u * u;
+    const u3 = u2 * u;
+    return (
+      (2 * u3 - 3 * u2 + 1) * ys[i] +
+      (u3 - 2 * u2 + u) * h[i] * m[i] +
+      (-2 * u3 + 3 * u2) * ys[i + 1] +
+      (u3 - u2) * h[i] * m[i + 1]
+    );
+  };
+}
+
 export interface CameraPath {
   /** Writes the camera position and look-at target for `progress` (no allocation). */
   sample(progress: number, position: Vector3, target: Vector3): void;
@@ -61,10 +107,10 @@ export function createCameraPath(keys: readonly CameraKey[] = CAMERA_KEYS): Came
     false,
     "centripetal",
   );
-  const stops = keys.map((kk) => kk.at);
+  const timing = createTiming(keys.map((kk) => kk.at));
   return {
     sample(progress, position, target) {
-      const t = curveParameter(progress, stops);
+      const t = timing(progress);
       positions.getPoint(t, position);
       targets.getPoint(t, target);
     },

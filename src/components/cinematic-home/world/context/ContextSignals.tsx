@@ -25,14 +25,16 @@ import { SIGNALS, signalTravel } from "./context-model";
  * where the core lights the port, opens a channel and turns one layer.
  */
 const APPROACH: { from: [number, number, number]; bow: [number, number, number] }[] = [
-  { from: [-30, 9, 22], bow: [-7, 6, 9] }, // capital
-  { from: [28, 13, 24], bow: [7, 8, 5] }, // skills
-  { from: [-9, 28, 12], bow: [-4, 5, 8] }, // location
-  { from: [31, -7, 14], bow: [5, -6, 10] }, // time
-  { from: [-26, -17, 18], bow: [-8, -4, 7] }, // experience
-  { from: [11, -27, 20], bow: [6, -7, 6] }, // customer access
+  { from: [-17, 7, 13], bow: [-4, 4, 5] }, // capital
+  { from: [16, 9, 14], bow: [4, 5, 3] }, // skills
+  { from: [-6, 15, 8], bow: [-2, 3, 5] }, // location
+  { from: [17, -5, 9], bow: [3, -4, 6] }, // time
+  { from: [-15, -10, 11], bow: [-5, -2, 4] }, // experience
+  { from: [7, -15, 12], bow: [4, -4, 4] }, // customer access
 ];
 const DOCKS = SIGNALS.map((_, i) => portPosition(i));
+/** Where each instrument pauses to be read: one reading position in the open left of frame. */
+const HOLDS = DOCKS.map((_, i) => new Vector3(-7.4, -0.6 + (i % 2 ? 0.5 : -0.5), 6));
 
 const quadBezier = (a: number, b: number, c: number, t: number) =>
   (1 - t) * (1 - t) * a + 2 * (1 - t) * t * b + t * t * c;
@@ -69,6 +71,7 @@ export function ContextSignals() {
   useEffect(() => () => Object.values(geo).forEach((g) => g.dispose()), [geo]);
   const fil = useMemo(() => filaments.range("context", 12), [filaments]);
   const tmp = useMemo(() => new Vector3(), []);
+  const look = useMemo(() => new Vector3(), []);
 
   useFrame(() => {
     const s = store.state;
@@ -78,24 +81,31 @@ export function ContextSignals() {
       const t = signalTravel(p, i);
       const d = DOCKS[i];
       const a = APPROACH[i];
-      // Flight: in along a curve, decelerating; then slides into its port and is absorbed.
-      const f = 1 - Math.pow(1 - smoothstep(0, 0.82, t), 2);
-      const x = quadBezier(a.from[0], d.x + a.bow[0], d.x, f);
-      const y = quadBezier(a.from[1], d.y + a.bow[1], d.y, f);
-      const z = quadBezier(a.from[2], d.z + a.bow[2], d.z, f);
+      // Flight: in along a curve to a presentation point off its port (decelerating), held there
+      // long enough to be read, then a short precise slide into the port, and absorbed.
+      const hp = HOLDS[i];
+      const fly = 1 - Math.pow(1 - smoothstep(0, 0.45, t), 2.2);
+      const dock = smoothstep(0.66, 0.88, t);
+      const f = 0.82 * fly + 0.18 * dock;
+      const x = quadBezier(a.from[0], hp.x + a.bow[0], hp.x, fly) + (d.x - hp.x) * dock;
+      const y = quadBezier(a.from[1], hp.y + a.bow[1], hp.y, fly) + (d.y - hp.y) * dock;
+      const z = quadBezier(a.from[2], hp.z + a.bow[2], hp.z, fly) + (d.z - hp.z) * dock;
       const absorb = smoothstep(0.8, 1, t);
       const present = t > 0 && t < 1;
       if (g) {
         g.visible = present;
         g.position.set(x, y, z);
-        g.lookAt(0, 0, 0);
-        g.scale.setScalar(1.6 * (1 - absorb) * (0.55 + 0.45 * smoothstep(0, 0.25, t)));
+        // Faces the visitor while it is read, then turns to its port as it docks.
+        const cam = s.camera;
+        tmp.set(cam.x, cam.y, cam.z).lerp(look.set(0, 0, 0), dock);
+        g.lookAt(tmp);
+        g.scale.setScalar(1.9 * (1 - absorb) * (0.55 + 0.45 * smoothstep(0, 0.3, t)));
       }
       s.anchors.set(`signal-${sig.id}`, {
         x,
         y: y + 1.6,
         z,
-        o: smoothstep(0.08, 0.25, t) * (1 - smoothstep(0.66, 0.82, t)),
+        o: smoothstep(0.2, 0.4, t) * (1 - smoothstep(0.7, 0.84, t)),
       });
 
       // The carrier trace: a fine line of light behind the module, drawn from the dark.
