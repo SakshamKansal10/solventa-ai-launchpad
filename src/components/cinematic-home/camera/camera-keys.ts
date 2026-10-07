@@ -60,15 +60,24 @@ export const CAMERA_PATH_KEYS: CameraKey[] = [
   key("convergence", 0.5, [6, 3.2, -21], [7, -1, -42]),
   key("convergence", 1, [6.2, 2.6, -24], [6, 0.8, -46]),
   // H — between the three futures (each could be its own world).
-  key("three", 0.28, [-3.5, 2.2, -36], [FINALS_HUB[0] - 7.5, FINALS_HUB[1] + 1, FINALS_HUB[2] + 1]),
-  key("three", 0.55, [5, 2.6, -40], [WINNER_POS[0], WINNER_POS[1] + 0.8, WINNER_POS[2]]),
+  // Each is framed whole — three distinct architectures, never cropped.
   key(
     "three",
-    0.8,
-    [13.5, 0.6, -38],
+    0.2,
+    [-5, 2.8, -32.5],
+    [FINALS_HUB[0] - 7.5, FINALS_HUB[1] + 0.8, FINALS_HUB[2] + 1],
+  ),
+  key("three", 0.34, [4.6, 2.8, -38], [WINNER_POS[0], WINNER_POS[1] + 0.8, WINNER_POS[2]]),
+  key(
+    "three",
+    0.48,
+    [15.5, 2.4, -34.5],
     [FINALS_HUB[0] + 7.5, FINALS_HUB[1] - 1, FINALS_HUB[2] - 0.5],
   ),
-  key("three", 1, [6, 3.6, -23], [FINALS_HUB[0], FINALS_HUB[1] + 1.4, FINALS_HUB[2] - 3]),
+  // The comparison: all three held in one frame while the six signals run into each.
+  key("three", 0.64, [6, 3.6, -23], [FINALS_HUB[0], FINALS_HUB[1] + 1.4, FINALS_HUB[2] - 3]),
+  key("three", 1, [6.05, 3.55, -23.6], [FINALS_HUB[0], FINALS_HUB[1] + 1.3, FINALS_HUB[2] - 3]),
+  key("selection", 0.3, [6.1, 3.5, -25], [FINALS_HUB[0], FINALS_HUB[1] + 1.2, FINALS_HUB[2] - 3]),
   // I — settle on the one; silence.
   key("selection", 0.6, [6.2, 3.0, -37], [WINNER_POS[0], WINNER_POS[1] - 0.6, WINNER_POS[2]]),
   key("selection", 1, [6.4, 3.2, -40.5], [WINNER_POS[0], WINNER_POS[1] - 0.9, WINNER_POS[2]]),
@@ -83,9 +92,10 @@ export const CAMERA_PATH_KEYS: CameraKey[] = [
   { at: progressOf("build", 0.4), ...sideEye(74, 7, 1.6) },
   { at: progressOf("build", 1), ...sideEye(98, 7.5, 2.4) },
   // Elevate: gain altitude over the branching network.
-  { at: progressOf("elevate", 0.5), ...sideEye(108, 9, 8, 20) },
-  { at: progressOf("elevate", 1), ...sideEye(118, 5, 11, 26) },
+  { at: progressOf("elevate", 0.5), ...sideEye(106, 10, 18, 22) },
+  { at: progressOf("elevate", 1), ...sideEye(118, 6, 22, 24) },
   // Evidence arrives; then the crisis — pull back to see the future lose integrity.
+  { at: progressOf("evidence", 0.3), ...raise(pathEye(122), 7) },
   { at: progressOf("evidence", 1), ...pathEye(138) },
   { at: progressOf("crisis", 0.6), ...raise(pathEye(132), 5.6, 2) },
   { at: progressOf("crisis", 1), ...raise(pathEye(133), 6.6, 4) },

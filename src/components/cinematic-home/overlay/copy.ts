@@ -150,9 +150,14 @@ export const LABELS: {
   { anchor: "territory-C", text: "Market access", kind: "tag" },
   { anchor: "territory-D", text: "Execution complexity", kind: "tag" },
   { anchor: "territory-E", text: "Emerging possibilities", kind: "tag" },
-  { anchor: "finalist-0", text: "Direction 01", kind: "direction" },
+  // Priority order (overlapping labels yield to earlier ones): the one and its readout first.
   { anchor: "finalist-1", text: "Direction 02", kind: "direction" },
+  { anchor: "fit-1", text: "6 of 6 signals hold", kind: "tag" },
+  { anchor: "finalist-0", text: "Direction 01", kind: "direction" },
   { anchor: "finalist-2", text: "Direction 03", kind: "direction" },
+  // The comparison's result, under each future, once the six signals have landed.
+  { anchor: "fit-0", text: "4 of 6 signals hold", sub: "Capital · access fail", kind: "tag" },
+  { anchor: "fit-2", text: "4 of 6 signals hold", sub: "Time · experience fail", kind: "tag" },
   { anchor: "milestone-0", text: "Speak to potential customers", kind: "tag" },
   { anchor: "milestone-1", text: "Test the problem", kind: "tag" },
   { anchor: "milestone-2", text: "Test willingness to pay", kind: "tag" },

@@ -92,6 +92,26 @@ describe("the score", () => {
     );
   });
 
+  it("brings the identity motif back, softly, as the pathways converge — before the signature", () => {
+    const motifs = CUES.filter((c) => c.kind === "motif");
+    const signature = CUES.find((c) => c.kind === "signature")!;
+    expect(motifs).toHaveLength(2);
+    expect(motifs[1].index).toBe(1);
+    expect(motifs[1].at).toBeGreaterThan(progressOf("return", 0));
+    expect(motifs[1].at).toBeLessThan(signature.at);
+  });
+
+  it("compares the three futures with one focused pulse each, before the near-silent pause", () => {
+    const pulses = CUES.filter((c) => c.kind === "compare");
+    expect(pulses.map((c) => c.index)).toEqual([0, 0.5, 1]);
+    const resolve = CUES.find((c) => c.kind === "resolve")!;
+    for (const c of pulses) expect(c.at).toBeLessThan(progressOf("selection", 0));
+    // The pause: the space drops to near-silence between the comparison and the resolution.
+    expect(mixAt(progressOf("selection", 0.4)).master).toBeLessThan(0.6);
+    expect(mixAt(progressOf("selection", 0.4)).bed).toBeLessThan(0.2);
+    expect(resolve.at).toBeGreaterThan(progressOf("selection", 0.55));
+  });
+
   it("takes a breath of near-silence just before the universe opens", () => {
     const reveal = CUES.find((c) => c.kind === "reveal")!;
     expect(mixAt(progressOf("passage", 0.93)).master).toBeLessThan(0.4);

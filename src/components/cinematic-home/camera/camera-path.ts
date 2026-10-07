@@ -116,7 +116,8 @@ export const FOCUS_KEYS: Key[] = [
   k("handoff", 0.6, 1),
   k("connected", 0.4, 1),
   k("return", 0.6, 0.6),
-  k("finale", 0.4, 1),
+  // The emblem is taller than wide: the widened portrait lens already keeps its margins.
+  k("finale", 0.4, 0.15),
 ];
 
 /**

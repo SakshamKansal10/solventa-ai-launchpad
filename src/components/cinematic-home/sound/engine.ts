@@ -248,6 +248,12 @@ export class SoundEngine {
         });
         break;
       }
+      case "compare":
+        // The comparison: a focused processing pulse where each future stands (left → right).
+        this.click(time, 0.04 * m, 2200 + i * 900, i * 1.2 - 0.6);
+        this.tone(N.D3, time, 0.03 * m, { decay: 0.7, wet: 0.5, pan: i * 1.2 - 0.6 });
+        this.tone(N.A3, time + 0.02, 0.018 * m, { decay: 0.6, wet: 0.6, pan: i * 1.2 - 0.6 });
+        break;
       case "stabilize":
         // The revised direction holds: a gentle, resolved chord.
         [N.D4, N.Fs4, N.A4].forEach((f, k) =>

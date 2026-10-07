@@ -199,7 +199,7 @@ export function IntelligenceCore({ variant = "origin" }: { variant?: "origin" | 
     () => new MeshBasicMaterial({ color: GOLD.clone(), vertexColors: true, side: DoubleSide }),
     [],
   );
-  const fil = useMemo(() => filaments.range(`core-${variant}`, 42), [filaments, variant]);
+  const fil = useMemo(() => filaments.range(`core-${variant}`, 45), [filaments, variant]);
 
   // Flights in (origin): fixed points derived from the camera path, so pure in scroll. The first
   // channel sweeps past the lens; its complement rises out of the dark beyond.
@@ -461,7 +461,7 @@ export function IntelligenceCore({ variant = "origin" }: { variant?: "origin" | 
 
     // ---- Filaments ------------------------------------------------------------------
     renderFilaments(pose, fil.start, finale, p, t);
-    for (let j = 41; j < fil.count; j++) filaments.hide(fil.start + j);
+    filaments.hide(fil.start + 41);
 
     function cubicThrough(idx: number, a: Vector3, b: Vector3, c2: Vector3, d: Vector3) {
       filaments.curve(
@@ -622,22 +622,52 @@ export function IntelligenceCore({ variant = "origin" }: { variant?: "origin" | 
           speed: 0.8,
         });
       });
-      // 33–35: VOID — distant signals appear one by one, then streak into the counter.
+      // 33–35: VOID — distant signals appear one by one, each travelling slowly along a
+      // barely perceptible engineered channel (42–44) — S-curved, the second answering the
+      // first from another depth — then they streak into the counter.
       const vv = local(p, "void");
       const aa = local(p, "awakening");
       VOID_SIGNALS.forEach((sig, j) => {
         const idx = base + 33 + j;
+        const channel = base + 42 + j;
         const appear = finale ? 0 : smoothstep(sig.at, sig.at + 0.12, vv);
         const travel = smoothstep(0.0 + j * 0.03, 0.16 + j * 0.03, aa);
         if (appear <= 0 || travel >= 1) {
           filaments.hide(idx);
+          filaments.hide(channel);
           return;
         }
         const [x, y, z] = sig.from;
-        filaments.arc(idx, x, y, z, 0, 0, 0, sig.bend[0], sig.bend[1], sig.bend[2]);
-        const head = 0.03 + travel * 0.97;
+        const [bx, by, bz] = sig.bend;
+        // Opposed handles: an S-curve, not an arc — the emblem's inflection, unseen.
+        for (const k of [idx, channel])
+          filaments.curve(
+            k,
+            x,
+            y,
+            z,
+            (x * 2) / 3 + bx,
+            (y * 2) / 3 + by,
+            (z * 2) / 3 + bz,
+            x / 3 - bx,
+            y / 3 - by,
+            z / 3 - bz,
+            0,
+            0,
+            0,
+          );
+        filaments.params(channel, {
+          s0: 0,
+          s1: Math.min(1, appear * 1.4),
+          width: 0.06,
+          intensity: 0.32 * appear * (1 - travel),
+          violet: 0.55,
+          pulse: 0,
+        });
+        const glide = 0.2 * smoothstep(sig.at, 1, vv);
+        const head = 0.03 + glide + travel * (0.97 - glide);
         filaments.params(idx, {
-          s0: Math.max(0, head - 0.025 - travel * 0.12),
+          s0: Math.max(0, head - 0.05 - travel * 0.1),
           s1: head,
           width: 1.5 - travel * 0.9,
           intensity: appear * (2.4 + 0.5 * Math.sin(t * 1.7 + j)),

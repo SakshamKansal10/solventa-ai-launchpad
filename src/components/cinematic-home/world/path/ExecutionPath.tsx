@@ -44,6 +44,8 @@ const REVISED_END = revisedPath.getPointAt(0.85, new Vector3());
 const ELEVATE_FROM = 18;
 const ELEVATE_TO = ASSUMPTION_GATE - 1;
 const SATELLITES = (ELEVATE_TO - ELEVATE_FROM + 1) * 2;
+/** Frames per branch: each satellite channel reaches outward through this many, each larger. */
+const BRANCH = 3;
 
 const { hw, hh, centreY: cy, radius, bar, depth, stub } = GATE;
 const CORNERS = [
@@ -175,7 +177,8 @@ export function ExecutionPath() {
   const group = useRef<Group>(null);
   const rails = useMemo(() => filaments.range("path-rails", GATE_COUNT * 3 + 3), [filaments]);
   const links = useMemo(
-    () => filaments.range("path-links", SATELLITES * 2 + MILESTONES.length + 6 + 4),
+    () =>
+      filaments.range("path-links", SATELLITES * 2 + MILESTONES.length + 6 + 4 + SATELLITES * 2),
     [filaments],
   );
   const scratch = useMemo(
@@ -251,6 +254,10 @@ export function ExecutionPath() {
   );
   const gateMatrices = useMemo(() => Array.from({ length: GATE_COUNT }, () => new Matrix4()), []);
   const satMatrices = useMemo(() => Array.from({ length: SATELLITES }, () => new Matrix4()), []);
+  const branchMatrices = useMemo(
+    () => Array.from({ length: SATELLITES * BRANCH }, () => new Matrix4()),
+    [],
+  );
 
   useFrame(() => {
     const grp = group.current;
@@ -393,31 +400,33 @@ export function ExecutionPath() {
     setCount(modules.current, nm);
     setCount(moduleLights.current, nm);
 
-    // Elevate: satellite channels at altitude on both sides of every gate.
+    // Elevate: the path BRANCHES. Every gate grows a channel on each side that reaches outward
+    // and upward through BRANCH frames, each larger than the last — a distribution network,
+    // not a longer tunnel.
     let ns = 0;
     for (let i = ELEVATE_FROM; i <= ELEVATE_TO; i++) {
       const st = states[i];
-      const grow = smoothstep(
-        0.05 + (i - ELEVATE_FROM) * 0.06,
-        0.45 + (i - ELEVATE_FROM) * 0.06,
-        elevate,
-      );
       const nIdx = i - ELEVATE_FROM;
-      const spread = 5.2 + nIdx * 1.9;
-      const rise = 1.4 + nIdx * 0.95;
+      const t0 = 0.05 + nIdx * 0.06;
       for (const side of [-1, 1]) {
         const j = nIdx * 2 + (side > 0 ? 1 : 0);
-        e.set(0, -side * (0.16 + nIdx * 0.05), side * 0.06);
-        q.setFromEuler(e);
-        lm.compose(
-          v.set(side * (spread - 2.5 * (1 - grow)), cy + rise * grow, -nIdx * 0.3),
-          q,
-          s.setScalar(Math.max(0.001, grow * st.present * (0.85 + nIdx * 0.07))),
-        );
-        satMatrices[j].multiplyMatrices(gateMatrices[i], lm);
-        if (grow > 0.01) {
-          put(satellites.current, ns, satMatrices[j]);
-          put(satInlays.current, ns++, satMatrices[j]);
+        for (let b = 0; b < BRANCH; b++) {
+          const grow = smoothstep(t0 + b * 0.07, t0 + 0.34 + b * 0.07, elevate);
+          const out = 5.2 + nIdx * 1.1 + b * 5.4;
+          const up = 1.4 + nIdx * 0.55 + b * 3.2;
+          e.set(0, -side * (0.18 + b * 0.24), side * (0.06 + b * 0.04));
+          q.setFromEuler(e);
+          lm.compose(
+            v.set(side * (out - 2.5 * (1 - grow)), cy + up * grow, -nIdx * 0.3 - b * 1.6),
+            q,
+            s.setScalar(Math.max(0.001, grow * st.present * (0.85 + b * 0.6))),
+          );
+          const frame = branchMatrices[j * BRANCH + b].multiplyMatrices(gateMatrices[i], lm);
+          if (b === 0) satMatrices[j].copy(frame);
+          if (grow > 0.01) {
+            put(satellites.current, ns, frame);
+            put(satInlays.current, ns++, frame);
+          }
         }
       }
     }
@@ -528,6 +537,35 @@ export function ExecutionPath() {
           speed: 0.18,
         });
       } else filaments.hide(along);
+    }
+
+    // Branch rails: each branch is a channel — gold carried outward, frame to frame.
+    const branchRails = links.start + SATELLITES * 2 + MILESTONES.length + 6 + 4;
+    for (let j = 0; j < SATELLITES; j++) {
+      const st = states[ELEVATE_FROM + Math.floor(j / 2)];
+      for (let b = 0; b < BRANCH - 1; b++) {
+        const idx = branchRails + j * (BRANCH - 1) + b;
+        const nIdx = Math.floor(j / 2);
+        const reach =
+          smoothstep(0.12 + nIdx * 0.06 + b * 0.07, 0.46 + nIdx * 0.06 + b * 0.07, elevate) *
+          st.present *
+          (1 - st.unstable);
+        if (reach <= 0.01) {
+          filaments.hide(idx);
+          continue;
+        }
+        const A = scratch.pts[0].set(0, -1.45, 0).applyMatrix4(branchMatrices[j * BRANCH + b]);
+        const B = scratch.pts[1].set(0, -1.45, 0).applyMatrix4(branchMatrices[j * BRANCH + b + 1]);
+        filaments.arc(idx, A.x, A.y, A.z, B.x, B.y, B.z, 0, 0.6, 0);
+        filaments.params(idx, {
+          s1: reach,
+          width: 0.05,
+          intensity: 1.05 * reach * fadeEnd,
+          pulse: 1.3,
+          phase: j * 0.09 + b * 0.3,
+          speed: 0.22,
+        });
+      }
     }
 
     // Validate: violet probes test the gates ahead — reaching forward, then retracting.
@@ -749,12 +787,12 @@ export function ExecutionPath() {
       />
       <instancedMesh
         ref={satellites}
-        args={[geo.satellite, materials.titanium, SATELLITES]}
+        args={[geo.satellite, materials.titanium, SATELLITES * BRANCH]}
         frustumCulled={false}
       />
       <instancedMesh
         ref={satInlays}
-        args={[geo.satInlay, materials.champagne, SATELLITES]}
+        args={[geo.satInlay, materials.champagne, SATELLITES * BRANCH]}
         frustumCulled={false}
       />
       <instancedMesh

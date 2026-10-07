@@ -168,6 +168,7 @@ export type CueKind =
   | "unlock"
   | "reveal"
   | "evaluate"
+  | "compare"
   | "narrow"
   | "resolve"
   | "unfold"
@@ -258,6 +259,9 @@ function buildCues(): Cue[] {
   // The narrowing, stage by stage; the nine; the three.
   [0.04, 0.29, 0.54, 0.86].forEach((at, i) => out.push(cue("convergence", at, "narrow", i / 3)));
   out.push(cue("three", 0.06, "narrow", 1));
+  // The comparison: as the six signals land in each future, one focused processing pulse —
+  // panned left, centre, right, where each future stands — then the near-silent pause.
+  [0, 0.5, 1].forEach((i, k) => out.push(cue("three", 0.84 + k * 0.04, "compare", i)));
   out.push(cue("selection", 0.62, "resolve", 0, { major: true }));
   out.push(cue("unfold", 0.12, "unfold"));
   // Gates passed along the path — a different voice in each phase.

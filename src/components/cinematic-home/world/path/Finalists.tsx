@@ -171,7 +171,10 @@ export function Finalists() {
     if (!active) {
       filaments.hideRange(fil);
       // A jump out of the scene must not leave a label behind.
-      for (let k = 0; k < 3; k++) s.anchors.set(`finalist-${k}`, { x: 0, y: 0, z: 0, o: 0 });
+      for (let k = 0; k < 3; k++) {
+        s.anchors.set(`finalist-${k}`, { x: 0, y: 0, z: 0, o: 0 });
+        s.anchors.set(`fit-${k}`, { x: 0, y: 0, z: 0, o: 0 });
+      }
       return;
     }
     const { m, c, d, q, v, s: sc, e, col, violet, gold } = scratch;
@@ -235,7 +238,7 @@ export function Finalists() {
     });
 
     // The comparison layer: gold pathways between all three futures …
-    const compare = ramp(p, "three", 0.5, "selection", 0.15);
+    const compare = ramp(p, "three", 0.6, "selection", 0.15);
     const centres: [number, number, number][] = [
       [...SIDE_FINALISTS[0].centre],
       [WINNER_POS[0], WINNER_POS[1] + 0.9, WINNER_POS[2]],
@@ -269,7 +272,7 @@ export function Finalists() {
     });
     // … and the founder's six fit signals evaluated in each, simultaneously.
     const hub: [number, number, number] = [FINALS_HUB[0], FINALS_HUB[1] + 6.5, FINALS_HUB[2] + 3];
-    const fit = ramp(p, "three", 0.55, "three", 0.85);
+    const fit = ramp(p, "three", 0.66, "three", 0.95);
     centres.forEach((ctr, k) => {
       const fails = k === 1 ? [] : FAILS[k === 0 ? 0 : 1];
       for (let j = 0; j < 6; j++) {
@@ -345,6 +348,11 @@ export function Finalists() {
     centres.forEach((c3, k) => {
       const o = named * (k === 1 ? 1 : 1 - lose);
       s.anchors.set(`finalist-${k}`, { x: c3[0], y: c3[1] + (k === 1 ? 4 : 4.4), z: c3[2], o });
+      // The comparison's readout, under each structure, once every signal has landed.
+      const read =
+        smoothstep(0.8, 1, fit) * o * (1 - ramp(p, "selection", 0.45, "selection", 0.65));
+      const below = k === 0 ? 4.9 : k === 1 ? 3.2 : 2.9;
+      s.anchors.set(`fit-${k}`, { x: c3[0], y: c3[1] - below, z: c3[2], o: read });
     });
   });
 

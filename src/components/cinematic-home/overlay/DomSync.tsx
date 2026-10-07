@@ -26,6 +26,24 @@ function setStyle(
   el.style[key] = value;
 }
 const labelHalf = new WeakMap<HTMLElement, number>();
+const labelHeight = new WeakMap<HTMLElement, number>();
+/** A caption's text box in viewport px, measured once per viewport size (the copy never moves). */
+interface Box {
+  key: string;
+  l: number;
+  t: number;
+  r: number;
+  b: number;
+}
+const captionBox = new WeakMap<HTMLElement, Box>();
+function boxOf(el: HTMLElement, key: string): Box {
+  const cached = captionBox.get(el);
+  if (cached && cached.key === key) return cached;
+  const r = el.getBoundingClientRect();
+  const box = { key, l: r.left, t: r.top, r: r.right, b: r.bottom };
+  captionBox.set(el, box);
+  return box;
+}
 const show = (el: HTMLElement, o: number) => {
   setStyle(el, "opacity", o.toFixed(3));
   setStyle(el, "visibility", o > 0.002 ? "visible" : "hidden");
@@ -70,12 +88,16 @@ export function DomSync() {
       }
     }
 
+    // Visible captions, so world labels can step aside instead of colliding with the copy.
+    const sizeKey = `${width}x${height}`;
+    const shown: { box: Box; o: number }[] = [];
     for (const c of CAPTIONS) {
       const el = dom.captions.get(c.id);
       if (!el) continue;
       let o = captionOpacity(c, p);
       if (c.id === "void" && p < progressOf("void", 0.12)) o = 1;
       show(el, o);
+      if (o > 0.02 && c.kind !== "finale") shown.push({ box: boxOf(el, sizeKey), o });
       setStyle(el, "transform", `translate3d(0, ${((1 - o) * 10).toFixed(1)}px, 0)`);
       if (c.kind === "finale") {
         // The finale stages its own parts (identity → line → promise → CTA) from one value.
@@ -99,8 +121,10 @@ export function DomSync() {
         );
     }
 
-    // Labels follow their world anchors.
+    // Labels follow their world anchors. Earlier labels (copy order) keep their place; a later
+    // label that would overlap one already shown yields, softly, by how much it would cover.
     const cam = state.camera;
+    const placed: { l: number; t: number; r: number; b: number }[] = [];
     for (const [id, el] of dom.anchors) {
       const a = s.anchors.get(id);
       if (!a || a.o <= 0.002) {
@@ -114,14 +138,33 @@ export function DomSync() {
       const inside = x > -80 && x < width + 80 && y > 40 && y < height + 40;
       // Phones keep the stage captions clear: milestone tags are left to the narrative there.
       const crowded = width < 640 && id.startsWith("milestone-");
-      show(el, behind || !inside || crowded ? 0 : a.o);
-      // Labels never clip at the screen edge (their width is measured once — text is fixed).
+      // Labels never clip at the screen edge (their size is measured once — text is fixed).
       let half = labelHalf.get(el);
       if (half === undefined && a.o > 0.002) {
-        half = el.firstElementChild ? (el.firstElementChild as HTMLElement).offsetWidth / 2 : 0;
+        const body = el.firstElementChild as HTMLElement | null;
+        half = body ? body.offsetWidth / 2 : 0;
         labelHalf.set(el, half);
+        labelHeight.set(el, body ? body.offsetHeight : 0);
       }
       const cx = Math.min(Math.max(x, (half ?? 0) + 14), width - (half ?? 0) - 14);
+      // …and never sit under a caption: they yield as the copy appears.
+      let o = behind || !inside || crowded ? 0 : a.o;
+      if (o > 0) {
+        const h = labelHeight.get(el) ?? 0;
+        const hw = half ?? 0;
+        for (const { box, o: co } of shown) {
+          const m = 10;
+          if (cx + hw > box.l - m && cx - hw < box.r + m && y > box.t - m && y - h < box.b + m)
+            o *= 1 - co;
+        }
+        for (const q of placed) {
+          const ox = Math.min(cx + hw, q.r) - Math.max(cx - hw, q.l) + 6;
+          const oy = Math.min(y, q.b) - Math.max(y - h, q.t) + 4;
+          if (ox > 0 && oy > 0) o *= 1 - Math.min(1, ox / 18) * Math.min(1, oy / 8);
+        }
+        if (o > 0.3) placed.push({ l: cx - hw, t: y - h, r: cx + hw, b: y });
+      }
+      show(el, o);
       setStyle(el, "transform", `translate3d(${cx.toFixed(1)}px, ${y.toFixed(1)}px, 0)`);
     }
 
