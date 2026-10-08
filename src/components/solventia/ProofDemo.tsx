@@ -5,6 +5,7 @@ import { Check, MessageSquareQuote, TriangleAlert } from "lucide-react";
 import { scrollToSection } from "@/hooks/use-active-section";
 import type { MessageKey } from "@/lib/i18n";
 import { useLocale } from "@/lib/i18n/LocaleProvider";
+import { WhySolventia } from "@/components/solventia/WhySolventia";
 import { cn } from "@/lib/utils";
 
 type NodeId = "problem" | "customer" | "payment" | "channel" | "delivery";
@@ -316,6 +317,8 @@ export function ProofDemo() {
             />
           )}
         </motion.div>
+
+        <WhySolventia />
       </div>
     </section>
   );

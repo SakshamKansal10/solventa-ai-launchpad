@@ -3,10 +3,18 @@ import { motion, useReducedMotion, useScroll, useSpring } from "motion/react";
 
 const POP_SELECTOR = [
   "main h2",
-  "main h2 + p",
+  "main h3",
+  "main p",
   "main li",
+  "main img",
+  "main svg:not([aria-hidden])",
+  "main a[class*='rounded']",
+  "main button",
+  '[class*="rounded-full"]',
+  '[class*="rounded-xl"]',
   '[class*="rounded-2xl"]',
   '[class*="rounded-3xl"]',
+  '[class*="rounded-[16px]"]',
   '[class*="rounded-[24px]"]',
   '[class*="rounded-[28px]"]',
   '[class*="rounded-[32px]"]',
@@ -36,13 +44,17 @@ export function PopOnScroll() {
           .forEach((e, i) => {
             const el = e.target as HTMLElement;
             io.unobserve(el);
-            el.style.animationDelay = `${Math.min(i, 6) * 90}ms`;
+            el.style.animationDelay = `${Math.min(i, 8) * 80}ms`;
+            const r = el.getBoundingClientRect();
+            const mid = window.innerWidth / 2;
+            el.dataset.pop = r.width > window.innerWidth * 0.6 ? "up" : r.left + r.width / 2 < mid ? "left" : "right";
             el.classList.add("pop-in");
             el.addEventListener(
               "animationend",
               () => {
                 el.classList.remove("pop-pre", "pop-in");
                 el.style.animationDelay = "";
+                delete el.dataset.pop;
               },
               { once: true },
             );

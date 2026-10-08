@@ -32,7 +32,6 @@ test.describe("homepage", () => {
         how: top("#how-it-works"),
         adaptive: top("#adaptive-roadmap"),
         proof: top("#proof-demo"),
-        why: top("#ask-sol-demo"),
         faq: top("#faq"),
         cta: top("main section:has(a[href='/for-organizations'])"),
       };
@@ -42,13 +41,12 @@ test.describe("homepage", () => {
     expect(order.opportunity).toBeLessThan(order.how);
     expect(order.how).toBeLessThan(order.adaptive);
     expect(order.adaptive).toBeLessThan(order.proof);
-    expect(order.proof).toBeLessThan(order.why);
-    expect(order.why).toBeLessThan(order.cta);
+    expect(order.proof).toBeLessThan(order.cta);
     expect(order.cta).toBeLessThan(order.faq);
 
-    // Exactly the intended nine blocks: hero, the six product demonstrations, closing CTA, FAQ
+    // Exactly the intended eight blocks: hero, the five product demonstrations, closing CTA, FAQ
     // (footer is outside main; the connectors between sections are not sections).
-    await expect(page.locator("main > section")).toHaveCount(9);
+    await expect(page.locator("main > section")).toHaveCount(8);
     const text = await page.locator("main").innerText();
     expect(text).not.toMatch(/Business DNA/i);
     expect(text).not.toMatch(/Founder Genome/i);

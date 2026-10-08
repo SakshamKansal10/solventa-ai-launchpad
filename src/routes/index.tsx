@@ -8,12 +8,9 @@ import { Hero } from "@/components/solventia/Hero";
 import { FounderSignal } from "@/components/solventia/FounderSignal";
 import { HowItWorks } from "@/components/solventia/HowItWorks";
 import { AdaptiveRoadmap } from "@/components/solventia/AdaptiveRoadmap";
-import { WhySolventia } from "@/components/solventia/WhySolventia";
 import { FinalCTA } from "@/components/solventia/FinalCTA";
 import { FAQ } from "@/components/solventia/FAQ";
 import { Footer } from "@/components/solventia/Footer";
-import { SectionTransition } from "@/components/solventia/SectionTransition";
-import { StoryConnector } from "@/components/solventia/StoryConnector";
 import { OpportunityDemo } from "@/components/solventia/OpportunityDemo";
 import { ProofDemo } from "@/components/solventia/ProofDemo";
 import { PopOnScroll, ScrollProgress } from "@/components/solventia/ScrollEffects";
@@ -94,7 +91,6 @@ export const Route = createFileRoute("/")({
 /** The homepage is one continuous product story: Hero → founder signals become
  * opportunities → one direction in focus → the five-step process → the adaptive
  * roadmap → the proof engine → Ask Sol in context → closing CTA → FAQ → Footer.
- * Each seam is a StoryConnector naming what the previous section turns into.
  * Nothing here is generic marketing filler. */
 function Index() {
   const { next } = Route.useSearch();
@@ -119,17 +115,10 @@ function Index() {
       <main>
         <Hero />
         <FounderSignal />
-        <StoryConnector from="#FCFAF7" to="#F7F2EA" labelKey="story.link.1" />
         <OpportunityDemo />
-        <StoryConnector from="#F7F2EA" to="#FCFAF7" labelKey="story.link.2" />
         <HowItWorks />
-        <StoryConnector from="#FCFAF7" to="#F7F2EA" labelKey="story.link.3" />
         <AdaptiveRoadmap />
-        <StoryConnector from="#F7F2EA" to="var(--workspace)" labelKey="story.link.4" />
         <ProofDemo />
-        <StoryConnector from="var(--workspace)" to="#F5EFE6" labelKey="story.link.5" />
-        <WhySolventia />
-        <SectionTransition from="#F5EFE6" to="#17203D" line="violet" />
         <FinalCTA />
         <FAQ />
       </main>

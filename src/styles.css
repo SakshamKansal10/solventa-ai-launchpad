@@ -749,3 +749,33 @@
     scale: 1;
   }
 }
+.pop-pre.pop-in[data-pop="left"] {
+  animation-name: sol-pop-left;
+}
+.pop-pre.pop-in[data-pop="right"] {
+  animation-name: sol-pop-right;
+}
+@keyframes sol-pop-left {
+  from {
+    opacity: 0;
+    translate: -36px 20px;
+    scale: 0.88;
+  }
+  to {
+    opacity: 1;
+    translate: 0 0;
+    scale: 1;
+  }
+}
+@keyframes sol-pop-right {
+  from {
+    opacity: 0;
+    translate: 36px 20px;
+    scale: 0.88;
+  }
+  to {
+    opacity: 1;
+    translate: 0 0;
+    scale: 1;
+  }
+}

@@ -30,7 +30,7 @@ function ThinkingDots() {
   );
 }
 
-/** Why Ask Sol is not a generic chatbot: the same question, asked twice. The
+/** Rendered inside the proof section. Why Ask Sol is not a generic chatbot: the same question, asked twice. The
  * Ask Sol side already knows the opportunity, the week and the evidence — turn
  * those context chips off and the answer drops back to generic advice. */
 export function WhySolventia() {
@@ -65,27 +65,27 @@ export function WhySolventia() {
   };
 
   return (
-    <section
+    <div
       id="ask-sol-demo"
-      className="scroll-mt-[76px] bg-sol-hp-why px-[18px] py-[72px] sm:px-6 lg:px-9 lg:py-[96px]"
+      className="mt-10 scroll-mt-[76px] rounded-[32px] bg-sol-hp-why p-5 sm:p-8"
     >
-      <div className="mx-auto max-w-[1120px]">
+      <div>
         <p className="text-center text-[14px] font-semibold uppercase tracking-[0.14em] text-sol-champagne-deep">
           {t("whySolventia.eyebrow")}
         </p>
-        <h2
+        <h3
           className={cn(
-            "mt-4 text-center font-display text-[34px] font-semibold text-sol-ink sm:text-[40px] lg:text-[48px]",
-            locale === "hi" ? "leading-[1.35]" : "leading-[1.1]",
+            "mt-3 text-center font-display text-[26px] font-semibold text-sol-ink sm:text-[30px] lg:text-[34px]",
+            locale === "hi" ? "leading-[1.35]" : "leading-[1.15]",
           )}
         >
           {t("whySolventia.headline")}
-        </h2>
+        </h3>
 
         <motion.div
           onViewportEnter={() => setEntered(true)}
           viewport={{ once: true, margin: "-100px" }}
-          className="mt-12 grid gap-5 lg:grid-cols-2"
+          className="mt-8 grid gap-5 lg:grid-cols-2"
           data-testid="asksol-demo"
         >
           {/* Generic chatbot */}
@@ -190,6 +190,6 @@ export function WhySolventia() {
           </div>
         </motion.div>
       </div>
-    </section>
+    </div>
   );
 }
