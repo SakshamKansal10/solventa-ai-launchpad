@@ -1,11 +1,12 @@
 import { useState } from "react";
-import { ChevronDown, Check } from "lucide-react";
+import { ChevronDown, Check, CircleHelp, ListChecks } from "lucide-react";
 
 import { useLocale } from "@/lib/i18n/LocaleProvider";
 import type { MissionState } from "@/lib/roadmap/state";
 import type { MissionDTO } from "@/lib/roadmap/view";
 import { cn } from "@/lib/utils";
 import { Button, LinkButton, Pill } from "../ui";
+import { MissionScene } from "./illustrations";
 
 interface MissionText {
   title?: string;
@@ -143,17 +144,38 @@ export function MissionCard({
 
       <div className="relative flex items-center gap-4">
         <span
-          aria-hidden="true"
           className={cn(
-            "flex size-9 shrink-0 items-center justify-center rounded-full border-2 text-[0.9375rem] font-bold transition-colors",
+            "relative flex shrink-0 items-center justify-center overflow-hidden rounded-2xl border-2 transition-all",
+            open && !done ? "size-20 sm:size-24" : "size-14 sm:size-16",
             done
-              ? "border-sol-champagne bg-sol-champagne text-sol-ink"
+              ? "border-sol-champagne"
               : inProgress
-                ? "border-sol-violet bg-sol-violet text-white"
-                : "border-sol-border-strong bg-sol-surface text-sol-secondary",
+                ? "border-sol-violet"
+                : "border-sol-border-strong",
           )}
         >
-          {done ? <Check className="size-4" strokeWidth={3} /> : index + 1}
+          <MissionScene category={mission.assumptionCategory} className="absolute inset-0 size-full" />
+          {done && (
+            <span
+              aria-hidden="true"
+              className="absolute inset-0 grid place-items-center bg-sol-champagne/80"
+            >
+              <Check className="size-6 text-sol-ink" strokeWidth={3} />
+            </span>
+          )}
+          <span
+            aria-hidden="true"
+            className={cn(
+              "absolute -bottom-1.5 -right-1.5 flex size-5 items-center justify-center rounded-full border text-[0.6875rem] font-bold",
+              done
+                ? "border-sol-champagne bg-sol-surface text-sol-champagne-deep"
+                : inProgress
+                  ? "border-sol-violet bg-sol-surface text-sol-violet-deep"
+                  : "border-sol-border-strong bg-sol-surface text-sol-secondary",
+            )}
+          >
+            {index + 1}
+          </span>
         </span>
 
         <div className="min-w-0 flex-1">
@@ -215,42 +237,47 @@ export function MissionCard({
 
       {open && (
         <div className="relative mt-5 pl-0 sm:pl-[3.25rem]">
-          <dl className="grid gap-5" data-testid="mission-details">
-            <div>
-              <dt className="text-[0.875rem] font-bold uppercase tracking-[0.1em] text-sol-champagne-deep">
-                {t("rm.mission.whyShort")}
-              </dt>
-              <dd className="mt-1 max-w-[62ch] text-[1.0625rem] leading-relaxed text-sol-ink">
-                {text?.why ?? mission.why}
-              </dd>
-            </div>
-            {steps.length > 0 && (
-              <div>
-                <dt className="text-[0.875rem] font-bold uppercase tracking-[0.1em] text-sol-champagne-deep">
-                  {t("rm.mission.do")}
-                </dt>
-                <dd>
-                  <ul className="mt-1.5 flex flex-col gap-2">
-                    {steps.map((s) => (
-                      <li key={s} className="flex gap-3 text-[1.0625rem] leading-snug text-sol-ink">
-                        <span
-                          className="mt-2 size-1.5 shrink-0 rounded-full bg-sol-violet"
-                          aria-hidden="true"
-                        />
-                        {s}
-                      </li>
-                    ))}
-                  </ul>
+          <dl className="grid gap-4" data-testid="mission-details">
+            <div className="flex items-start gap-2.5">
+              <CircleHelp
+                className="mt-0.5 size-4 shrink-0 text-sol-champagne-deep"
+                aria-hidden="true"
+              />
+              <div className="min-w-0">
+                <dt className="sr-only">{t("rm.mission.whyShort")}</dt>
+                <dd className="max-w-[62ch] text-[1rem] leading-snug text-sol-ink">
+                  {text?.why ?? mission.why}
                 </dd>
               </div>
+            </div>
+            {steps.length > 0 && (
+              <div className="flex items-start gap-2.5">
+                <ListChecks
+                  className="mt-0.5 size-4 shrink-0 text-sol-champagne-deep"
+                  aria-hidden="true"
+                />
+                <div className="min-w-0">
+                  <dt className="sr-only">{t("rm.mission.do")}</dt>
+                  <dd>
+                    <ul className="flex flex-col gap-1.5">
+                      {steps.map((s) => (
+                        <li key={s} className="text-[1rem] leading-snug text-sol-ink">
+                          {s}
+                        </li>
+                      ))}
+                    </ul>
+                  </dd>
+                </div>
+              </div>
             )}
-            <div>
-              <dt className="text-[0.875rem] font-bold uppercase tracking-[0.1em] text-sol-champagne-deep">
-                {t("rm.mission.capture")}
-              </dt>
-              <dd className="mt-1 max-w-[62ch] text-[1.0625rem] leading-relaxed text-sol-ink">
-                {text?.doneWhen ?? mission.doneWhen}
-              </dd>
+            <div className="flex items-start gap-2.5">
+              <Check className="mt-0.5 size-4 shrink-0 text-sol-champagne-deep" aria-hidden="true" />
+              <div className="min-w-0">
+                <dt className="sr-only">{t("rm.mission.capture")}</dt>
+                <dd className="max-w-[62ch] text-[1rem] leading-snug text-sol-ink">
+                  {text?.doneWhen ?? mission.doneWhen}
+                </dd>
+              </div>
             </div>
           </dl>
 

@@ -373,7 +373,10 @@ export function DashboardShell({ children }: { children: ReactNode }) {
             </div>
           </header>
 
-          <div className="min-h-0 flex-1 overflow-y-auto" data-testid="scroll-area">
+          <div
+            className="min-h-0 flex-1 overflow-y-auto overscroll-y-contain"
+            data-testid="scroll-area"
+          >
             <main
               id="main"
               data-testid="main-content"

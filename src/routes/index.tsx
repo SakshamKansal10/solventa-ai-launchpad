@@ -16,6 +16,7 @@ import { SectionTransition } from "@/components/solventia/SectionTransition";
 import { StoryConnector } from "@/components/solventia/StoryConnector";
 import { OpportunityDemo } from "@/components/solventia/OpportunityDemo";
 import { ProofDemo } from "@/components/solventia/ProofDemo";
+import { PopOnScroll, ScrollProgress } from "@/components/solventia/ScrollEffects";
 import { scrollToSection } from "@/hooks/use-active-section";
 
 export const Route = createFileRoute("/")({
@@ -112,6 +113,8 @@ function Index() {
 
   return (
     <div className="min-h-screen bg-sol-page">
+      <ScrollProgress />
+      <PopOnScroll />
       <Header pendingNext={pendingNext} />
       <main>
         <Hero />

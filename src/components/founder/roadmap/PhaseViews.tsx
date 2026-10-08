@@ -1,4 +1,13 @@
-import { Check } from "lucide-react";
+import {
+  Check,
+  Code2,
+  Compass,
+  Rocket,
+  TelescopeIcon,
+  TrendingUp,
+  Users,
+  type LucideIcon,
+} from "lucide-react";
 
 import {
   Accordion,
@@ -19,6 +28,18 @@ const NODE_STYLE: Record<PhaseDTO["state"], string> = {
   completed: "border-sol-champagne bg-sol-champagne text-sol-ink",
   future: "border-sol-border-strong bg-sol-surface text-sol-secondary",
 };
+
+/** One small icon per phase key — the same visual anchor MissionCard gives
+ * each mission category. Never a generated illustration. */
+const PHASE_ICON: Record<string, LucideIcon> = {
+  understand: TelescopeIcon,
+  explore: Compass,
+  validate: Users,
+  build: Code2,
+  launch: Rocket,
+  improve: TrendingUp,
+};
+const phaseIcon = (key: string): LucideIcon => PHASE_ICON[key] ?? Compass;
 
 const weekTone = (w: WeekDTO) =>
   w.state === "completed" ? "champagne" : w.state === "locked" ? "neutral" : "violet";
@@ -44,6 +65,7 @@ export function PhaseStrip({
         {view.phases.map((p, i) => {
           const selected = selectedId === p.id;
           const last = i === view.phases.length - 1;
+          const Icon = phaseIcon(p.key);
           return (
             <li key={p.id} className="relative min-w-[10.5rem] flex-1 snap-start">
               {!last && (
@@ -73,15 +95,27 @@ export function PhaseStrip({
               >
                 <span
                   className={cn(
-                    "relative z-10 flex size-10 items-center justify-center rounded-full border-2 font-display text-[1.125rem] font-semibold transition-transform duration-200 group-hover:scale-105",
+                    "relative z-10 flex size-11 items-center justify-center rounded-full border-2 transition-transform duration-200 group-hover:scale-105",
                     NODE_STYLE[p.state],
                   )}
                 >
                   {p.state === "completed" ? (
                     <Check className="size-5" strokeWidth={3} aria-hidden="true" />
                   ) : (
-                    String(i + 1).padStart(2, "0")
+                    <Icon className="size-5" aria-hidden="true" />
                   )}
+                  <span
+                    className={cn(
+                      "absolute -bottom-1.5 -right-1.5 flex size-5 items-center justify-center rounded-full border text-[0.6875rem] font-bold",
+                      p.state === "completed"
+                        ? "border-sol-champagne bg-sol-surface text-sol-champagne-deep"
+                        : p.state === "current"
+                          ? "border-sol-violet bg-sol-surface text-sol-violet-deep"
+                          : "border-sol-border-strong bg-sol-surface text-sol-secondary",
+                    )}
+                  >
+                    {i + 1}
+                  </span>
                 </span>
                 <span
                   className={cn(
@@ -172,19 +206,28 @@ export function PhasePreview({
 }) {
   const { t } = useLocale();
   const weeks = view.weeks.filter((w) => w.phaseId === phase.id);
+  const Icon = phaseIcon(phase.key);
   return (
     <Card feature className="flex flex-col gap-4 p-6" data-testid="phase-preview">
       <div className="flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <p className="sol-eyebrow">
-            {t("rm.phase.n", { n: view.phases.findIndex((p) => p.id === phase.id) + 1 })}
-          </p>
-          <h3 className="sol-h2 mt-1">{text.phaseTitle(phase.id, phase.title)}</h3>
-          {phase.description && (
-            <p className="mt-2 text-[1.0625rem] leading-snug text-sol-secondary">
-              {phase.description}
+        <div className="flex items-start gap-3">
+          <span
+            aria-hidden="true"
+            className="flex size-9 shrink-0 items-center justify-center rounded-xl border-2 border-sol-border-strong bg-sol-surface text-sol-secondary"
+          >
+            <Icon className="size-4" />
+          </span>
+          <div>
+            <p className="sol-eyebrow">
+              {t("rm.phase.n", { n: view.phases.findIndex((p) => p.id === phase.id) + 1 })}
             </p>
-          )}
+            <h3 className="sol-h2 mt-1">{text.phaseTitle(phase.id, phase.title)}</h3>
+            {phase.description && (
+              <p className="mt-2 text-[1.0625rem] leading-snug text-sol-secondary">
+                {phase.description}
+              </p>
+            )}
+          </div>
         </div>
         <Button variant="secondary" size="sm" onClick={onClose}>
           {t("rm.phase.back")}
@@ -226,6 +269,7 @@ export function PlanTab({
         {view.phases.map((p, i) => {
           const weeks = view.weeks.filter((w) => w.phaseId === p.id);
           const done = weeks.filter((w) => w.state === "completed").length;
+          const Icon = phaseIcon(p.key);
           return (
             <AccordionItem
               key={p.id}
@@ -235,6 +279,19 @@ export function PlanTab({
             >
               <AccordionTrigger className="px-4 py-5 text-left hover:no-underline">
                 <span className="flex min-w-0 flex-1 flex-wrap items-center gap-x-4 gap-y-1 font-sans">
+                  <span
+                    aria-hidden="true"
+                    className={cn(
+                      "flex size-8 shrink-0 items-center justify-center rounded-lg border-2",
+                      p.state === "completed"
+                        ? "border-sol-champagne bg-sol-champagne-soft text-sol-champagne-deep"
+                        : p.state === "current"
+                          ? "border-sol-violet bg-sol-violet-soft text-sol-violet-deep"
+                          : "border-sol-border-strong bg-sol-surface text-sol-secondary",
+                    )}
+                  >
+                    <Icon className="size-4" />
+                  </span>
                   <span className="sol-eyebrow">{t("rm.phase.n", { n: i + 1 })}</span>
                   <span className="min-w-0 font-display text-[1.375rem] font-semibold leading-snug text-sol-ink">
                     {text.phaseTitle(p.id, p.title)}

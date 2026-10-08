@@ -150,18 +150,34 @@ export function InterestsScreen() {
   );
 }
 
+// "All of the above" is a shortcut, not a stored answer — it never appears in
+// `answers.refuse` itself. It just fills in (or clears) every real industry in
+// one tap, and shows as checked whenever that set happens to already be full.
+const REFUSE_REAL_IDS = REFUSE_IDS.filter((id) => id !== "none");
+
 export function RefuseRelocationScreen() {
   const { t } = useLocale();
   const L = useLabels();
   const { answers, setAnswer } = useConsultation();
+  const refuseList = answers.refuse ?? [];
+  const allSelected = REFUSE_REAL_IDS.every((id) => refuseList.includes(id));
+
+  const toggleRefuse = (id: string) => {
+    if (id === "all") {
+      setAnswer("refuse", allSelected ? [] : [...REFUSE_REAL_IDS]);
+      return;
+    }
+    setAnswer("refuse", toggleMulti("refuse", answers.refuse, id));
+  };
+
   return (
     <ScreenBody title={t("q.refuseReloc.title")}>
       <Question label={t("q.refuse.label")} helper={t("q.refuse.helper")} optional>
         <ChipCloud
           name="refuse"
-          options={L.opts("refuse", REFUSE_IDS)}
-          value={answers.refuse}
-          onToggle={(id) => setAnswer("refuse", toggleMulti("refuse", answers.refuse, id))}
+          options={[{ id: "all", label: t("opt.refuse.all") }, ...L.opts("refuse", REFUSE_IDS)]}
+          value={allSelected ? [...refuseList, "all"] : refuseList}
+          onToggle={toggleRefuse}
         />
       </Question>
       <Question label={t("q.relocation.label")}>

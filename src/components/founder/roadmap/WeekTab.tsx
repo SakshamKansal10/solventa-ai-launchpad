@@ -9,40 +9,29 @@ import { useLocale } from "@/lib/i18n/LocaleProvider";
 import { qk, useInvalidateFounder } from "@/lib/queries";
 import type { MissionState } from "@/lib/roadmap/state";
 import { applyMissionState, type RoadmapView, type WeekDTO } from "@/lib/roadmap/view";
-import { cn } from "@/lib/utils";
 import { useAskSol } from "../DashboardShell";
+import { ProgressRing } from "../dashboard/graphics";
 import { Button, Card, Eyebrow, LinkButton, Pill } from "../ui";
+import { WeekHeroScene } from "./illustrations";
 import { MissionCard } from "./MissionCard";
 import { ReviewWeekDialog } from "./ReviewWeekDialog";
 import type { useRoadmapText } from "./text";
 
 type RoadmapText = ReturnType<typeof useRoadmapText>;
 
-/** Segmented progress: one segment per mission, champagne when done. */
+/** This week's missions as a donut: champagne fills in as each one completes. */
 function ProgressSegments({ week }: { week: WeekDTO }) {
   const { t } = useLocale();
-  const total = Math.max(week.progress.total, 1);
   return (
-    <div>
-      <div
-        role="progressbar"
-        aria-valuemin={0}
-        aria-valuemax={week.progress.total}
-        aria-valuenow={week.progress.completed}
-        aria-label={t("rm.rail.progress")}
-        className="flex gap-1.5"
-      >
-        {Array.from({ length: total }, (_, i) => (
-          <span
-            key={i}
-            className={cn(
-              "h-2.5 flex-1 rounded-full transition-colors duration-[240ms]",
-              i < week.progress.completed ? "bg-sol-champagne" : "bg-sol-ivory-depth",
-            )}
-          />
-        ))}
-      </div>
-      <p className="mt-2 text-[1.125rem] font-semibold text-sol-ink" data-testid="week-progress">
+    <div className="flex items-center gap-4">
+      <ProgressRing
+        value={week.progress.completed}
+        total={week.progress.total}
+        label={t("rm.rail.progress")}
+        tone="champagne"
+        testId="week-progress-ring"
+      />
+      <p className="text-[1.0625rem] font-semibold text-sol-ink" data-testid="week-progress">
         {t("rm.rail.missions", { x: week.progress.completed, y: week.progress.total })}
       </p>
     </div>
@@ -138,6 +127,9 @@ export function WeekTab({
       data-week-state={week.state}
     >
       <div className="flex min-w-0 flex-col gap-6">
+        <div className="overflow-hidden rounded-[1.5rem] border border-sol-border" data-testid="week-hero">
+          <WeekHeroScene className="h-36 w-full sm:h-48" />
+        </div>
         <header>
           <div className="flex flex-wrap items-center gap-3">
             <Eyebrow>{t("common.weekN", { n: pad })}</Eyebrow>

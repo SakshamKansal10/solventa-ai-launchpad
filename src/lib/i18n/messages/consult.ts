@@ -352,6 +352,7 @@ const en = {
   "opt.interests.housing": "Housing & urban life",
   "opt.interests.community": "Community & social connection",
 
+  "opt.refuse.all": "All of the above",
   "opt.refuse.alcohol": "Alcohol",
   "opt.refuse.tobacco": "Tobacco",
   "opt.refuse.gambling": "Gambling",
@@ -748,6 +749,7 @@ const hi: Record<keyof typeof en, string> = {
   "opt.interests.housing": "आवास और शहरी जीवन",
   "opt.interests.community": "समुदाय और सामाजिक जुड़ाव",
 
+  "opt.refuse.all": "उपरोक्त सभी",
   "opt.refuse.alcohol": "शराब",
   "opt.refuse.tobacco": "तंबाकू",
   "opt.refuse.gambling": "जुआ",
