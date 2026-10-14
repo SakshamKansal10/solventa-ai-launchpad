@@ -1,27 +1,17 @@
-import { useEffect } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { z } from "zod";
 import { getSiteUrl } from "@/lib/actions/site-url.server";
 import { sanitizeNextPath } from "@/lib/safe-redirect";
-import { Header } from "@/components/solventia/Header";
-import { Hero } from "@/components/solventia/Hero";
-import { FounderSignal } from "@/components/solventia/FounderSignal";
-import { HowItWorks } from "@/components/solventia/HowItWorks";
-import { AdaptiveRoadmap } from "@/components/solventia/AdaptiveRoadmap";
-import { WhySolventia } from "@/components/solventia/WhySolventia";
-import { BrandMoment } from "@/components/solventia/BrandMoment";
-import { FinalCTA } from "@/components/solventia/FinalCTA";
-import { FAQ } from "@/components/solventia/FAQ";
-import { Footer } from "@/components/solventia/Footer";
-import { SectionTransition } from "@/components/solventia/SectionTransition";
-import { scrollToSection } from "@/hooks/use-active-section";
+import { CinematicPage } from "@/components/cinematic-home/CinematicPage";
+import { CINEMATIC_FONTS, cinematicSearch } from "@/components/cinematic-home/cinematic-route";
 
 export const Route = createFileRoute("/")({
   component: Index,
   // Set only by requireAuthLoader bouncing a signed-out visitor here from
   // a protected route (e.g. a dashboard link from an email) — re-validated
   // with the same same-origin check on the way out, never trusted as-is.
-  validateSearch: z.object({ next: z.string().optional() }),
+  // (The cinematic's review params — tier / debug / freeze — work here too.)
+  validateSearch: z.object({ next: z.string().optional(), ...cinematicSearch }),
   loader: () => getSiteUrl(),
   head: ({ loaderData: siteUrl }) => {
     const url = siteUrl ?? "/";
@@ -61,7 +51,7 @@ export const Route = createFileRoute("/")({
         },
         { name: "twitter:image", content: image },
       ],
-      links: [{ rel: "canonical", href: url }],
+      links: [{ rel: "canonical", href: url }, CINEMATIC_FONTS],
       scripts: [
         {
           type: "application/ld+json",
@@ -88,43 +78,13 @@ export const Route = createFileRoute("/")({
   },
 });
 
-/** Exactly eight sections, one continuous product story — see the
- * homepage reconstruction spec this implements. Nothing here is a
- * generic marketing filler section; every block earns its place in the
- * HERO -> FOUNDER SIGNAL -> HOW IT WORKS -> ADAPTIVE ROADMAP -> WHY
- * SOLVENTIA -> BRAND MOMENT -> CTA -> FAQ narrative. */
+/**
+ * The official homepage: the cinematic experience — the founder's reality, the possibilities, one
+ * direction, validation, evidence, the product, the identity. A signed-out visitor bounced here
+ * from a protected route (`/?next=…`) still gets the sign-in prompt straight away.
+ */
 function Index() {
-  const { next } = Route.useSearch();
+  const { next, tier, debug, freeze } = Route.useSearch();
   const pendingNext = sanitizeNextPath(next);
-
-  // A nav link clicked from another page (or the footer) navigates here
-  // with a hash — scroll to it ourselves, at the same header-offset used
-  // for in-page clicks, rather than relying on the browser's own
-  // (header-unaware) fragment jump.
-  useEffect(() => {
-    const hash = window.location.hash.replace("#", "");
-    if (!hash) return;
-    const id = window.setTimeout(() => scrollToSection(hash), 80);
-    return () => window.clearTimeout(id);
-  }, []);
-
-  return (
-    <div className="min-h-screen bg-sol-page">
-      <Header pendingNext={pendingNext} />
-      <main>
-        <Hero />
-        <FounderSignal />
-        <SectionTransition from="#FCFAF7" to="#F7F2EA" line="champagne" />
-        <HowItWorks />
-        <AdaptiveRoadmap />
-        <SectionTransition from="#FCFAF7" to="#F5EFE6" />
-        <WhySolventia />
-        <BrandMoment />
-        <SectionTransition from="#F7F2EA" to="#17203D" line="violet" />
-        <FinalCTA />
-        <FAQ />
-      </main>
-      <Footer />
-    </div>
-  );
+  return <CinematicPage tier={tier} debug={debug} freeze={freeze} pendingNext={pendingNext} />;
 }

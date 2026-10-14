@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AboutRouteImport } from './routes/about'
+import { Route as CinematicRouteImport } from './routes/cinematic'
 import { Route as ConsultationRouteImport } from './routes/consultation'
 import { Route as DataDeletionRouteImport } from './routes/data-deletion'
 import { Route as FindMyBusinessIdeaRouteImport } from './routes/find-my-business-idea'
@@ -39,6 +40,11 @@ const IndexRoute = IndexRouteImport.update({
 const AboutRoute = AboutRouteImport.update({
   id: '/about',
   path: '/about',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CinematicRoute = CinematicRouteImport.update({
+  id: '/cinematic',
+  path: '/cinematic',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ConsultationRoute = ConsultationRouteImport.update({
@@ -144,6 +150,7 @@ const DashboardOpportunitiesIdProofRoute =
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
+  '/cinematic': typeof CinematicRoute
   '/consultation': typeof ConsultationRoute
   '/data-deletion': typeof DataDeletionRoute
   '/find-my-business-idea': typeof FindMyBusinessIdeaRoute
@@ -167,6 +174,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
+  '/cinematic': typeof CinematicRoute
   '/consultation': typeof ConsultationRoute
   '/data-deletion': typeof DataDeletionRoute
   '/find-my-business-idea': typeof FindMyBusinessIdeaRoute
@@ -191,6 +199,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
+  '/cinematic': typeof CinematicRoute
   '/consultation': typeof ConsultationRoute
   '/data-deletion': typeof DataDeletionRoute
   '/find-my-business-idea': typeof FindMyBusinessIdeaRoute
@@ -216,6 +225,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/about'
+    | '/cinematic'
     | '/consultation'
     | '/data-deletion'
     | '/find-my-business-idea'
@@ -239,6 +249,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/about'
+    | '/cinematic'
     | '/consultation'
     | '/data-deletion'
     | '/find-my-business-idea'
@@ -262,6 +273,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/about'
+    | '/cinematic'
     | '/consultation'
     | '/data-deletion'
     | '/find-my-business-idea'
@@ -286,6 +298,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AboutRoute: typeof AboutRoute
+  CinematicRoute: typeof CinematicRoute
   ConsultationRoute: typeof ConsultationRoute
   DataDeletionRoute: typeof DataDeletionRoute
   FindMyBusinessIdeaRoute: typeof FindMyBusinessIdeaRoute
@@ -321,6 +334,13 @@ declare module '@tanstack/react-router' {
       path: '/about'
       fullPath: '/about'
       preLoaderRoute: typeof AboutRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/cinematic': {
+      id: '/cinematic'
+      path: '/cinematic'
+      fullPath: '/cinematic'
+      preLoaderRoute: typeof CinematicRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/consultation': {
@@ -462,6 +482,7 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AboutRoute: AboutRoute,
+  CinematicRoute: CinematicRoute,
   ConsultationRoute: ConsultationRoute,
   DataDeletionRoute: DataDeletionRoute,
   FindMyBusinessIdeaRoute: FindMyBusinessIdeaRoute,
