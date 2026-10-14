@@ -38,6 +38,8 @@ const N = {
 } as const;
 
 const TAU = 0.25;
+/** Breaths are felt only if they are crisp: the master level follows the score faster. */
+const TAU_MASTER = 0.08;
 const LOOKAHEAD = 0.15;
 
 export class SoundEngine {
@@ -182,8 +184,8 @@ export class SoundEngine {
     this.mix = mix;
     const m = mix.master;
     // Breaths reach the tails too: a near-silence is not filled by ringing reverb.
-    this.dry.gain.setTargetAtTime(0.9 * (0.2 + 0.8 * m), time, TAU);
-    this.verbOut.gain.setTargetAtTime(0.55 * (0.12 + 0.88 * m), time, TAU);
+    this.dry.gain.setTargetAtTime(0.9 * (0.2 + 0.8 * m), time, TAU_MASTER);
+    this.verbOut.gain.setTargetAtTime(0.55 * (0.12 + 0.88 * m), time, TAU_MASTER);
     this.bedGain.gain.setTargetAtTime(mix.bed * 0.5 * m, time, TAU);
     this.bedFilter.frequency.setTargetAtTime(mix.cutoff, time, TAU * 1.6);
     this.tensionGain.gain.setTargetAtTime(mix.tension * 0.42 * m, time, TAU * 1.4);
@@ -223,11 +225,17 @@ export class SoundEngine {
     const m = this.mix?.master ?? 1;
     switch (cue.kind) {
       case "motif":
-        // The signature motif: two delicate bell tones, a fifth apart, in a large space
-        // (index 1: its return in scene 22 — the same phrase, quieter, further away).
-        this.bell(N.D5, time, 0.06 * (1 - 0.35 * i), 3.8, -0.25);
-        this.bell(N.A5, time + 0.42, 0.045 * (1 - 0.35 * i), 4.2, 0.25);
-        this.tone(N.D2, time, 0.06, { attack: 2, decay: 5, wet: 0.5 + 0.3 * i });
+        if (i < 1) {
+          // The signature motif: two delicate bell tones, a fifth apart, in a large space.
+          this.bell(N.D5, time, 0.06, 3.8, -0.25);
+          this.bell(N.A5, time + 0.42, 0.045, 4.2, 0.25);
+          this.tone(N.D2, time, 0.06, { attack: 2, decay: 5, wet: 0.5 });
+        } else {
+          // Its return on the approach: the same fifth, low and far away — no bright detail.
+          this.tone(N.D3, time, 0.03 * m, { attack: 1.6, decay: 4.5, wet: 0.85, pan: -0.15 });
+          this.tone(N.A3, time + 0.4, 0.022 * m, { attack: 1.6, decay: 4.5, wet: 0.85, pan: 0.15 });
+          this.tone(N.D2, time, 0.05 * m, { attack: 2.2, decay: 5, wet: 0.6 });
+        }
         break;
       case "kernel":
         // The Engine is complete: a deep, refined harmonic activation.
@@ -361,24 +369,34 @@ export class SoundEngine {
         break;
       case "link": {
         const notes = [N.D5, N.E5, N.Fs5, N.A5, N.B5];
-        this.bell(notes[Math.round(i * 4)], time, 0.035 * m, 1.1, i * 1.2 - 0.6);
+        this.bell(notes[Math.round(i * 4)], time, 0.025 * m, 1.1, i * 1.2 - 0.6);
         break;
       }
       case "signature":
-        // The emblem resolves: the opening motif returns, now complete — over the full chord.
-        this.bell(N.D5, time, 0.07, 4.5, -0.25);
-        this.bell(N.A5, time + 0.42, 0.055, 5, 0.25);
-        this.bell(N.D6, time + 0.84, 0.035, 5.5, 0);
-        this.tone(N.D2, time, 0.15 * m, { attack: 1.4, decay: 9, wet: 0.5 });
-        [N.D3, N.A3, N.Fs4, N.A4, N.E5].forEach((f, k) =>
-          this.tone(f, time + k * 0.08, 0.05 * m, {
-            attack: 1.2,
-            decay: 9,
+        // The S completes — ONE identity sound, on the frame its edge closes: a soft low body,
+        // a short precise metallic transient, and the faintest upper shimmer. No boom, no riser.
+        // (It lands as the breath releases, so it is written at full level, not ducked.)
+        this.tone(N.D2, time, 0.15, { attack: 0.012, decay: 3.4, wet: 0.35 });
+        this.tone(N.A1, time, 0.06, { attack: 0.02, decay: 2.6, wet: 0.2 });
+        this.click(time, 0.045, 5200, 0);
+        this.bell(N.A5, time, 0.03, 1.1, 0);
+        this.bell(N.D6 * 2, time + 0.06, 0.007, 2.6, 0.15);
+        break;
+      case "wordmark":
+        // SOLVENTIA: the opening motif returns, complete and softer — the tension resolved into
+        // a warm, open chord that settles under the line and the CTA (no loop, nothing pending).
+        this.bell(N.D5, time, 0.045, 4.5, -0.2);
+        this.bell(N.A5, time + 0.42, 0.034, 5, 0.2);
+        [N.D3, N.A3, N.Fs4, N.A4].forEach((f, k) =>
+          this.tone(f, time + 0.1 + k * 0.08, 0.04 * m, {
+            attack: 1.1,
+            decay: 8,
             pan: (k % 2 ? 1 : -1) * (0.15 + k * 0.1),
             wet: 0.9,
-            type: k > 2 ? "triangle" : "sine",
+            type: k > 1 ? "triangle" : "sine",
           }),
         );
+        this.tone(N.D2, time, 0.09 * m, { attack: 1.2, decay: 8, wet: 0.5 });
         break;
     }
   }

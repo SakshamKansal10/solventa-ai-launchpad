@@ -25,10 +25,13 @@ export const SIGNALS: { id: SignalId; label: string; value: string }[] = [
   { id: "access", label: "Customer access", value: "Limited" },
 ];
 
-/** Each signal's window inside the Context scene (local 0 → 1). */
+/**
+ * Each signal's window inside the Context scene (local 0 → 1). Windows overlap a little: the next
+ * instrument is already arriving as the previous one docks, but only one is ever being read.
+ */
 export function signalWindow(index: number): [number, number] {
-  const start = 0.06 + index * 0.148;
-  return [start, start + 0.22];
+  const start = 0.03 + index * 0.142;
+  return [start, start + 0.25];
 }
 
 /** 0 → 1 travel of signal `index` toward the core (1 = docked). */
@@ -62,9 +65,9 @@ export function contextResponse(p: number): ContextResponse {
   };
   SIGNALS.forEach((s, i) => {
     const t = signalTravel(p, i);
-    const docked = t <= 0.72 ? 0 : (t - 0.72) / 0.28;
+    const docked = t <= 0.8 ? 0 : (t - 0.8) / 0.2;
     out[s.id] = docked * docked * (3 - 2 * docked);
-    const d = (t - 0.8) / 0.12;
+    const d = (t - 0.88) / 0.1;
     out.pulse += t > 0 && t < 1 ? Math.exp(-d * d) : 0;
   });
   return out;

@@ -7,7 +7,31 @@ import { quadToMatrix3d, SLAB } from "../world/product/product-model";
 import { STAGE_COUNTS } from "../world/universe/universe-model";
 import { universePhases } from "../world/universe/universe-state";
 import { useWorld } from "../world/WorldContext";
-import { CAPTIONS, captionOpacity, WAVE_LABELS } from "./copy";
+import { CAPTIONS, captionOpacity, COUNT_SPAN, type Caption } from "./copy";
+import { PEARL, STAGE, TONE, VIOLET } from "./palette";
+
+/** The count fades like a statement over its own span. */
+const COUNT: Caption = {
+  id: "count",
+  kind: "statement",
+  text: "",
+  span: COUNT_SPAN,
+  place: "title",
+};
+/** World labels stay below the site bar (its height plus a margin). */
+const NAV_CLEARANCE = 96;
+
+/** The statements' own legibility shadow (kept under the count's brief violet edge). */
+const SHADOWS = "0 2px 30px rgba(5,8,14,0.9), 0 1px 2px rgba(5,8,14,0.55)";
+
+/** Mixes two #rrggbb colours (t 0 → 1). */
+function mixHex(a: string, b: string, t: number): string {
+  const ca = parseInt(a.slice(1), 16);
+  const cb = parseInt(b.slice(1), 16);
+  const ch = (shift: number) =>
+    Math.round(((ca >> shift) & 255) + (((cb >> shift) & 255) - ((ca >> shift) & 255)) * t);
+  return `#${((1 << 24) | (ch(16) << 16) | (ch(8) << 8) | ch(0)).toString(16).slice(1)}`;
+}
 
 /** Writes a style only when it changed — keeps per-frame DOM work to a handful of writes. */
 const last = new WeakMap<HTMLElement, Record<string, string>>();
@@ -61,13 +85,16 @@ export function DomSync() {
     () => ({ v: new Vector3(), m: new Matrix4(), corners: [0, 1, 2, 3].map(() => new Vector3()) }),
     [],
   );
-  const countFrom = progressOf("universe", 0.55);
   /** The panel's first rasterisation is done right after load, invisibly, instead of mid-handoff. */
   const warmUntil = useMemo(() => ({ t: 0 }), []);
-  const countTo = progressOf("selection", 0.68);
-  const finaleFrom = progressOf("finale", 0.3);
+  const count = useMemo(() => ({ el: null as HTMLElement | null, value: "" }), []);
+  // The finale composition: the S completes alone (≈ finale 0.335), holds a breath, and only
+  // then does its name arrive — wordmark → promise → line → CTA across finale 0.38 → 0.78.
+  const finaleFrom = progressOf("finale", 0.38);
   const nav = useMemo(() => ({ el: null as HTMLElement | null, value: "" }), []);
-  const finaleTo = progressOf("finale", 0.62);
+  const finaleTo = progressOf("finale", 0.78);
+  /** Per caption: the stage last lit, the kicker tone last written. */
+  const marks = useMemo(() => new Map<string, string>(), []);
 
   useFrame((state) => {
     const s = store.state;
@@ -80,7 +107,8 @@ export function DomSync() {
     if (nav.el) {
       const immerse = Math.max(
         ramp(p, "void", 0.25, "void", 0.85) * (1 - ramp(p, "handoff", 0.6, "product", 0.1)),
-        ramp(p, "connected", 0.4, "return", 0.2) * (1 - ramp(p, "finale", 0.72, "finale", 0.86)),
+        // …and stays away through the identity: it returns only once the CTA is there.
+        ramp(p, "connected", 0.4, "return", 0.2) * (1 - ramp(p, "finale", 0.8, "finale", 0.92)),
       ).toFixed(2);
       if (immerse !== nav.value) {
         nav.value = immerse;
@@ -99,6 +127,38 @@ export function DomSync() {
       if (!el) continue;
       let o = captionOpacity(c, p);
       if (c.id === "void" && p < progressOf("void", 0.12)) o = 1;
+      // The finale composition stages its own parts; the container itself is simply present.
+      if (c.kind === "finale") o = o > 0 ? 1 : 0;
+      // Validate · Build · Elevate: only the stage being travelled is lit.
+      if (c.stages && o > 0.002) {
+        let at = 0;
+        c.stages.forEach((st, i) => {
+          if (p >= progressOf(st.scene, 0)) at = i;
+        });
+        const key = String(at);
+        if (marks.get(c.id) !== key) {
+          marks.set(c.id, key);
+          el.querySelectorAll<HTMLElement>("[data-stage]").forEach((sp) => {
+            const i = Number(sp.dataset.stage);
+            sp.style.color = i === at ? STAGE.active : i < at ? STAGE.done : STAGE.ahead;
+          });
+        }
+      }
+      // A reasoning kicker resolves to conviction once the new route holds (violet → champagne).
+      if (c.resolveAt && o > 0.002) {
+        const at = progressOf(c.resolveAt[0], c.resolveAt[1]);
+        const t = Math.min(1, Math.max(0, (p - at) / 0.01 + 0.5));
+        const key = t.toFixed(2);
+        if (marks.get(c.id) !== key) {
+          marks.set(c.id, key);
+          const dot = el.querySelector<HTMLElement>("[data-kicker-dot]");
+          if (dot) {
+            const col = mixHex(TONE.violet, TONE.gold, t * t * (3 - 2 * t));
+            dot.style.background = col;
+            dot.style.boxShadow = `0 0 10px ${col}66`;
+          }
+        }
+      }
       show(el, o);
       if (o > 0.02 && c.kind !== "finale") shown.push({ box: boxOf(el, sizeKey), o });
       setStyle(el, "transform", `translate3d(0, ${((1 - o) * 10).toFixed(1)}px, 0)`);
@@ -115,13 +175,43 @@ export function DomSync() {
         if (cta) setStyle(cta, "visibility", r > 0.62 ? "visible" : "hidden");
       }
     }
-    for (const w of WAVE_LABELS) {
-      const el = dom.captions.get(w.id);
-      if (el)
-        show(
-          el,
-          captionOpacity({ id: w.id, kind: "line", text: "", span: w.span, place: "title" }, p),
-        );
+
+    // The narrowing count: one figure that changes only as a stage completes.
+    if (dom.counter) {
+      const ph = universePhases(p);
+      let k = 0;
+      while (k < 5 && ph.stages[k] > 0.5) k++;
+      const o = captionOpacity(COUNT, p);
+      show(dom.counter, o);
+      setStyle(dom.counter, "transform", `translate3d(0, ${((1 - o) * 10).toFixed(1)}px, 0)`);
+      if (o > 0.02) shown.push({ box: boxOf(dom.counter, sizeKey), o });
+      count.el ??= dom.counter.querySelector<HTMLElement>("[data-count]");
+      const text = String(STAGE_COUNTS[k]);
+      if (count.el && count.value !== text) {
+        const changed = count.value !== "";
+        count.value = text;
+        count.el.textContent = text;
+        // Each new figure settles in rather than snapping, catching a brief violet edge while the
+        // filter works, then returning to pearl (not under ?freeze).
+        if (changed && animate && o > 0.02)
+          count.el.animate?.(
+            [
+              {
+                opacity: 0.25,
+                transform: "translateY(0.08em)",
+                color: "#C9C3F7",
+                textShadow: `0 0 22px ${VIOLET}80, ${SHADOWS}`,
+              },
+              {
+                opacity: 1,
+                transform: "none",
+                color: PEARL,
+                textShadow: `0 0 22px ${VIOLET}00, ${SHADOWS}`,
+              },
+            ],
+            { duration: 640, easing: "cubic-bezier(0.2, 0.7, 0.2, 1)" },
+          );
+      }
     }
 
     // Labels follow their world anchors. Earlier labels (copy order) keep their place; a later
@@ -138,7 +228,11 @@ export function DomSync() {
       const behind = scratch.v.z > 1 || scratch.v.z < -1;
       const x = (scratch.v.x * 0.5 + 0.5) * width;
       const y = (-scratch.v.y * 0.5 + 0.5) * height;
-      const inside = x > -80 && x < width + 80 && y > 40 && y < height + 40;
+      const inside =
+        x > -80 &&
+        x < width + 80 &&
+        y - (labelHeight.get(el) ?? 0) > NAV_CLEARANCE &&
+        y < height + 40;
       // Phones keep the stage captions clear: milestone tags are left to the narrative there.
       const crowded = width < 640 && id.startsWith("milestone-");
       // Labels never clip at the screen edge (their size is measured once — text is fixed).
@@ -169,20 +263,6 @@ export function DomSync() {
       }
       show(el, o);
       setStyle(el, "transform", `translate3d(${cx.toFixed(1)}px, ${y.toFixed(1)}px, 0)`);
-    }
-
-    // The convergence count: changes only as a stage completes.
-    if (dom.counter) {
-      const ph = universePhases(p);
-      let k = 0;
-      while (k < 5 && ph.stages[k] > 0.5) k++;
-      const o =
-        p > countFrom && p < countTo
-          ? Math.min(1, (p - countFrom) * 60, (countTo - p) * 60) * 0.85
-          : 0;
-      show(dom.counter, o);
-      const text = String(STAGE_COUNTS[k]);
-      if (dom.counter.textContent !== text) dom.counter.textContent = text;
     }
 
     // The product panel: mapped onto the slab while it is 3D, released once it faces the screen.

@@ -33,8 +33,11 @@ const APPROACH: { from: [number, number, number]; bow: [number, number, number] 
   { from: [7, -15, 12], bow: [4, -4, 4] }, // customer access
 ];
 const DOCKS = SIGNALS.map((_, i) => portPosition(i));
-/** Where each instrument pauses to be read: one reading position in the open left of frame. */
-const HOLDS = DOCKS.map((_, i) => new Vector3(-7.4, -0.6 + (i % 2 ? 0.5 : -0.5), 6));
+/**
+ * Where each instrument pauses to be read: two reading positions in the open left of frame, used
+ * alternately, so the next instrument never arrives on top of the one still being read.
+ */
+const HOLDS = DOCKS.map((_, i) => new Vector3(-7.4, i % 2 ? -1.7 : 1.9, 6));
 
 const quadBezier = (a: number, b: number, c: number, t: number) =>
   (1 - t) * (1 - t) * a + 2 * (1 - t) * t * b + t * t * c;
@@ -82,16 +85,18 @@ export function ContextSignals() {
       const d = DOCKS[i];
       const a = APPROACH[i];
       // Flight: in along a curve to a presentation point off its port (decelerating), held there
-      // long enough to be read, then a short precise slide into the port, and absorbed.
+      // long enough to be read — category and value — then a short precise slide into the port,
+      // and absorbed.
       const hp = HOLDS[i];
-      const fly = 1 - Math.pow(1 - smoothstep(0, 0.45, t), 2.2);
-      const dock = smoothstep(0.66, 0.88, t);
+      // It stays out of view until the previous signal's label has had its moment.
+      const fly = 1 - Math.pow(1 - smoothstep(0.06, 0.36, t), 2.2);
+      const dock = smoothstep(0.74, 0.92, t);
       const f = 0.82 * fly + 0.18 * dock;
       const x = quadBezier(a.from[0], hp.x + a.bow[0], hp.x, fly) + (d.x - hp.x) * dock;
       const y = quadBezier(a.from[1], hp.y + a.bow[1], hp.y, fly) + (d.y - hp.y) * dock;
       const z = quadBezier(a.from[2], hp.z + a.bow[2], hp.z, fly) + (d.z - hp.z) * dock;
-      const absorb = smoothstep(0.8, 1, t);
-      const present = t > 0 && t < 1;
+      const absorb = smoothstep(0.86, 1, t);
+      const present = t > 0.06 && t < 1;
       if (g) {
         g.visible = present;
         g.position.set(x, y, z);
@@ -99,13 +104,15 @@ export function ContextSignals() {
         const cam = s.camera;
         tmp.set(cam.x, cam.y, cam.z).lerp(look.set(0, 0, 0), dock);
         g.lookAt(tmp);
-        g.scale.setScalar(1.9 * (1 - absorb) * (0.55 + 0.45 * smoothstep(0, 0.3, t)));
+        g.scale.setScalar(1.9 * (1 - absorb) * (0.55 + 0.45 * smoothstep(0.06, 0.36, t)));
       }
+      // Its label is read while it holds still: in as it arrives, out as it slides to its port —
+      // so one signal is the clear focus at a time.
       s.anchors.set(`signal-${sig.id}`, {
         x,
         y: y + 1.6,
         z,
-        o: smoothstep(0.2, 0.4, t) * (1 - smoothstep(0.7, 0.84, t)),
+        o: smoothstep(0.24, 0.34, t) * (1 - smoothstep(0.74, 0.84, t)),
       });
 
       // The carrier trace: a fine line of light behind the module, drawn from the dark.

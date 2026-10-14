@@ -86,12 +86,10 @@ const INDIGO = new Color(COLORS.indigo);
 const VIOLET = new Color(COLORS.violetGlow);
 
 function buildEngine() {
-  // The channel: a machined shell (s-shell.ts) with its face detail and the gold inner light.
-  const [detailDark, detailLit] = buildFaceDetail();
+  // The channel: a machined shell (s-shell.ts) with its groove and the gold inner light.
   return {
     shell: buildShell(),
-    detailDark,
-    detailLit,
+    detail: buildFaceDetail(),
     seam: buildSeamLight(),
     // The optical kernel (lens.ts) and its warm core light.
     ...buildLens(),
@@ -231,8 +229,7 @@ export function IntelligenceCore({ variant = "origin" }: { variant?: "origin" | 
     () => () => {
       [
         built.shell,
-        built.detailDark,
-        built.detailLit,
+        built.detail,
         built.seam,
         built.bezel,
         built.lip,
@@ -394,11 +391,14 @@ export function IntelligenceCore({ variant = "origin" }: { variant?: "origin" | 
         (1 - smoothstep(0, 0.4, opening));
       o.position.set(0, 0, LENS.irisZ - 0.07 + settleZ(0));
       o.rotation.set(0, 0, 0);
-      o.scale.setScalar(lum > 0.01 ? 1 : 0.0001);
+      // In the emblem the core is a small, deep point of light — it never competes with the S.
+      o.scale.setScalar(lum > 0.01 ? (finale ? 0.62 : 1) : 0.0001);
       o.updateMatrix();
       core.current.matrix.multiplyMatrices(place, o.matrix);
       core.current.matrixWorldNeedsUpdate = true;
-      coreMaterial.color.copy(SEAM_GOLD).multiplyScalar(0.4 + 1.4 * lum);
+      coreMaterial.color
+        .copy(SEAM_GOLD)
+        .multiplyScalar(finale ? 0.3 + 0.95 * lum : 0.4 + 1.4 * lum);
     }
 
     // Connectors: precision struts from each channel's inner edge into the counter.
@@ -454,13 +454,15 @@ export function IntelligenceCore({ variant = "origin" }: { variant?: "origin" | 
       if (portLights.current.instanceColor) portLights.current.instanceColor.needsUpdate = true;
     }
 
-    // The gold inner light, and the two constant-count lights.
+    // The gold inner light, and the two constant-count lights. In the emblem the lit band blooms
+    // only as the champagne edge closes — the light is the result, not the decoration.
+    const band = finale ? smoothstep(0.7, 1, pose.seam) : pose.seam;
     seamMaterial.color
       .copy(SEAM_GOLD)
-      .multiplyScalar(pose.seam * (finale ? 1.3 : 0.95 + 0.25 * pose.pulse));
+      .multiplyScalar(band * (finale ? 1.2 : 0.95 + 0.25 * pose.pulse));
     for (const g of channelGroups.current) {
       const seam = g?.children.find((ch) => ch.userData.seam);
-      if (seam) seam.visible = pose.seam > 0.01;
+      if (seam) seam.visible = band > 0.01;
     }
     if (violetLight.current) {
       violetLight.current.position.setFromMatrixPosition(place);
@@ -471,7 +473,7 @@ export function IntelligenceCore({ variant = "origin" }: { variant?: "origin" | 
     }
     if (goldLight.current) {
       goldLight.current.position.copy(v.set(0, 0, 0.9).applyMatrix4(place));
-      goldLight.current.intensity = pose.seam * (finale ? 10 : 7);
+      goldLight.current.intensity = band * (finale ? 9 : 7);
     }
 
     // ---- Filaments ------------------------------------------------------------------
@@ -530,6 +532,35 @@ export function IntelligenceCore({ variant = "origin" }: { variant?: "origin" | 
           for (let sIdx = 0; sIdx < 4; sIdx++) {
             const idx = base + k * 8 + ci * 4 + sIdx;
             const grow = Math.min(1, Math.max(0, drawn * 4 - sIdx));
+            if (finale && innerChain) {
+              // The emblem's inner edge: first the violet trace (it calms with the outer one),
+              // then the champagne edge drawing tip to tip — the S closes when it arrives.
+              const seamGrow = Math.min(1, Math.max(0, pose.seam * 4 - sIdx));
+              const trace = grow * (1 - pose.blueprintFade) * 1.15;
+              const gold = seamGrow > 0.001;
+              if (!gold && trace <= 0.01) {
+                filaments.hide(idx);
+                continue;
+              }
+              const mtx = pose.channels[k].arrive >= 1 ? ch[k] : lock[k];
+              spanTo(mtx, S_INNER, sIdx / 4, (sIdx + 1) / 4, 0);
+              const [nx, ny] = chainNormal(S_INNER, S_OUTER, (sIdx + 0.5) / 4);
+              w.set(nx * 0.08, ny * 0.08, 0)
+                .transformDirection(mtx)
+                .multiplyScalar(0.08);
+              pts.forEach((pt) => pt.add(w));
+              cubicThrough(idx, pts[0], pts[1], pts[2], pts[3]);
+              filaments.params(idx, {
+                s1: gold ? seamGrow : grow,
+                width: gold ? 0.04 : 0.034,
+                intensity: gold ? 1.15 : trace,
+                violet: gold ? 0 : 0.85,
+                pulse: gold ? 0.25 : 1.4,
+                phase: (k * 8 + ci * 4 + sIdx) * 0.07,
+                speed: 0.4,
+              });
+              continue;
+            }
             const fadeOuter = innerChain ? 0 : pose.blueprintFade;
             const seamOn = innerChain ? pose.seam : 0;
             const intensity =
@@ -720,8 +751,7 @@ export function IntelligenceCore({ variant = "origin" }: { variant?: "origin" | 
             }}
           >
             <mesh geometry={built.shell} material={shellMaterials} />
-            <mesh geometry={built.detailDark} material={materials.graphite} />
-            <mesh geometry={built.detailLit} material={materials.champagne} />
+            <mesh geometry={built.detail} material={materials.graphite} />
             <mesh geometry={built.seam} material={seamMaterial} userData={{ seam: true }} />
           </group>
         ))}
@@ -730,7 +760,12 @@ export function IntelligenceCore({ variant = "origin" }: { variant?: "origin" | 
           args={[built.bezel, materials.titanium, 2]}
           frustumCulled={false}
         />
-        <instancedMesh ref={lip} args={[built.lip, materials.champagne, 1]} frustumCulled={false} />
+        <instancedMesh
+          ref={lip}
+          args={[built.lip, materials.champagne, 1]}
+          frustumCulled={false}
+          visible={!finale}
+        />
         <instancedMesh
           ref={barrel}
           args={[built.barrel, barrelMaterial, 1]}
@@ -758,31 +793,37 @@ export function IntelligenceCore({ variant = "origin" }: { variant?: "origin" | 
           ref={traces}
           args={[built.unit, materials.energy, LENS_TRACES.length]}
           frustumCulled={false}
+          visible={!finale}
         />
         <instancedMesh
           ref={pads}
           args={[built.pad, materials.energy, LENS_TRACES.length]}
           frustumCulled={false}
+          visible={!finale}
         />
         <instancedMesh
           ref={struts}
           args={[built.strut, materials.titanium, 4]}
           frustumCulled={false}
+          visible={!finale}
         />
         <instancedMesh
           ref={collars}
           args={[built.collar, materials.champagne, 4]}
           frustumCulled={false}
+          visible={!finale}
         />
         <instancedMesh
           ref={sockets}
           args={[built.socket, materials.graphite, PORTS.length]}
           frustumCulled={false}
+          visible={!finale}
         />
         <instancedMesh
           ref={portLights}
           args={[built.unit, materials.energy, PORTS.length]}
           frustumCulled={false}
+          visible={!finale}
         />
       </group>
       {/* Always in the scene (intensity only): toggling a light changes the light count and

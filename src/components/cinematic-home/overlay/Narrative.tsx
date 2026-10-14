@@ -13,10 +13,10 @@ export function Narrative() {
       </p>
       <section>
         <h2>Every founder begins with uncertainty.</h2>
-        <p>There is a direction hidden inside your reality.</p>
+        <p>Solventia turns uncertainty into direction.</p>
       </section>
       <section>
-        <h2>Solventia starts with you.</h2>
+        <h2>It starts with your real situation.</h2>
         <p>
           An illustrative founder profile: capital of ₹50,000, digital development skills, based in
           India, 12 hours a week, beginner experience, limited customer access.
@@ -25,28 +25,29 @@ export function Narrative() {
       <section>
         <h2>Hundreds of possible directions.</h2>
         <p>
-          Your context reshapes every one of them. In this illustration, 360 possibilities narrow to
-          120, then 36, then 9, then 3 — and finally one direction worth testing.
+          Your reality narrows them. In this illustration, 360 possibilities narrow to 120, then 36,
+          then 9, then 3 — and finally one direction worth testing.
         </p>
       </section>
       <section>
-        <h2>Validate, build, elevate.</h2>
+        <h2>Prove it before you build it.</h2>
         <p>
-          Validate: discover what reality supports — speak to potential customers, test the problem,
-          test willingness to pay. Build: turn evidence into execution — create a first prototype,
-          gather early feedback, improve the offering. Elevate: improve what proves valuable.
+          Validate, build, elevate: speak to customers, test willingness to pay, then build a first
+          prototype on what the evidence supports.
         </p>
       </section>
       <section>
-        <h2>Plans are assumptions until reality responds.</h2>
+        <h2>When evidence changes, your path changes.</h2>
         <p>
           When evidence contradicts an assumption — for example a customer saying “I wouldn’t pay
-          for this version” — the path changes when the evidence changes.
+          for this version” — Solventia adapts the path.
         </p>
       </section>
       <section>
-        <h2>A chatbot answers. Solventia carries the journey forward.</h2>
-        <p>Context, opportunity, evidence, path and progress stay connected in one workspace.</p>
+        <h2>It doesn’t stop at the idea.</h2>
+        <p>
+          Your context, evidence and progress stay connected — and your next move is always clear.
+        </p>
       </section>
       <section>
         <h2>Find the direction worth building.</h2>

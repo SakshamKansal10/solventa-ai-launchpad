@@ -86,8 +86,9 @@ export function createMaterials(preset: QualityPreset): Materials {
         sheenRoughness: 0.55,
       })
     : new MeshStandardMaterial({ color: "#E9E5DB", roughness: 0.5, metalness: 0 });
+  // Brushed, not polished: a softer highlight roll-off, so gold reads as a machined edge.
   const champagne = withRim(
-    new MeshStandardMaterial({ color: COLORS.champagne, metalness: 1, roughness: 0.24 }),
+    new MeshStandardMaterial({ color: COLORS.champagne, metalness: 1, roughness: 0.3 }),
     "#f3dcaa",
     3,
     0.28,
@@ -178,9 +179,10 @@ export function createMaterials(preset: QualityPreset): Materials {
     0.42,
   );
   titaniumDissolve.alphaHash = true;
-  // The S: the logo's navy-slate metal, a brighter machined cover, a champagne pinstripe.
+  // The S: the logo's navy-slate metal — anodised, not chrome (less mirror, more material) —
+  // a brighter machined cover, a champagne pinstripe.
   const sMetal = withRim(
-    metal({ color: COLORS.sMetal, metalness: 0.86, roughness: 0.3, clearcoat: 0.5, env: 1.4 }),
+    metal({ color: COLORS.sMetal, metalness: 0.74, roughness: 0.37, clearcoat: 0.28, env: 1.2 }),
     "#9fb3d2",
     3,
     0.5,

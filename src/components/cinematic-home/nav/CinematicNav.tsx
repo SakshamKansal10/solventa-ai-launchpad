@@ -1,11 +1,11 @@
 import { Link } from "@tanstack/react-router";
 import { ArrowRight } from "lucide-react";
 
-import mark from "@/assets/solventia-mark.png";
 import { SignInDialog } from "@/components/solventia/SignInDialog";
 import { useCurrentUserQuery } from "@/lib/queries";
 
 import { SoundToggle } from "../sound/SoundToggle";
+import { Wordmark } from "./Wordmark";
 
 /**
  * Navigation for the cinematic homepage only — the shared Header (used by
@@ -15,7 +15,12 @@ import { SoundToggle } from "../sound/SoundToggle";
  * Immersion: while the film plays the canvas' DomSync sets --immerse (0 → 1) and
  * the site bar leaves the stage — links and calls to action fade out entirely,
  * the wordmark and the sound control stay, quietly. It returns for the product
- * and the final hold. Hover or keyboard focus restores the whole bar at once.
+ * and the final hold. Hover or keyboard focus restores the whole bar at once (keyboard focus only:
+ * a click on the sound control must not leave the whole bar pinned open for the rest of the film).
+ *
+ * Layout: on wide screens three columns (identity · links · actions), so the links stay centred
+ * on the page whatever the actions' width; the actions themselves keep a constant footprint
+ * (the sound control never changes size), so nothing shifts as the bar resolves.
  */
 const recede = (amount: number) => ({
   opacity: `calc(1 - var(--immerse, 0) * var(--immerse-allow, 1) * ${amount})`,
@@ -31,7 +36,7 @@ export function CinematicNav() {
   const signedIn = Boolean(user.data);
   return (
     <header
-      className="fixed inset-x-0 top-0 z-50 [--immerse-allow:1] focus-within:[--immerse-allow:0] hover:[--immerse-allow:0]"
+      className="fixed inset-x-0 top-0 z-50 [--immerse-allow:1] hover:[--immerse-allow:0] has-[:focus-visible]:[--immerse-allow:0]"
       data-testid="cinematic-nav"
     >
       <div
@@ -41,18 +46,16 @@ export function CinematicNav() {
       />
       <nav
         aria-label="Primary"
-        className="relative flex h-[76px] items-center justify-between gap-4 px-5 sm:px-10"
+        className="relative flex h-[76px] items-center justify-between gap-3 px-4 sm:gap-4 sm:px-10 xl:grid xl:grid-cols-[1fr_auto_1fr]"
+        style={{ fontFamily: "var(--font-tech)" }}
       >
         <Link
           to="/"
-          className="flex items-center gap-3 rounded-lg transition-opacity duration-700"
+          className="flex w-max items-center rounded-lg transition-opacity duration-700"
           aria-label="Solventia home"
           style={recede(0.45)}
         >
-          <img src={mark} alt="" width={30} height={30} className="size-[30px]" />
-          <span className="font-display text-[1.05rem] tracking-[0.22em] text-[#F1EEE6] sm:text-[1.2rem] sm:tracking-[0.32em]">
-            SOLVENTIA
-          </span>
+          <Wordmark size="md" />
         </Link>
         <ul
           className="hidden items-center gap-8 transition-opacity duration-700 lg:flex"
@@ -62,19 +65,19 @@ export function CinematicNav() {
             <li key={l.to}>
               <Link
                 to={l.to}
-                className="text-[0.9rem] font-medium tracking-[0.04em] text-[#d8d1c4] transition-colors hover:text-white"
+                className="text-[0.9rem] font-medium tracking-[-0.005em] text-[#c9ccd4] transition-colors hover:text-white"
               >
                 {l.label}
               </Link>
             </li>
           ))}
         </ul>
-        <div className="flex items-center gap-3 sm:gap-5">
+        <div className="flex items-center justify-end gap-2.5 sm:gap-4">
           <div className="transition-opacity duration-700" style={recede(0.35)}>
             <SoundToggle />
           </div>
           <div
-            className="flex items-center gap-3 transition-opacity duration-700 sm:gap-5"
+            className="flex items-center gap-2.5 transition-opacity duration-700 sm:gap-4"
             style={recede(1)}
           >
             {signedIn ? (

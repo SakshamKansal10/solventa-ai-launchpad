@@ -79,9 +79,10 @@ describe("the score", () => {
     }
   });
 
-  it("opens with the signature motif and resolves it with the emblem at the end", () => {
+  it("opens with the signature motif and resolves it with the emblem and its name at the end", () => {
     expect(CUES[0].kind).toBe("motif");
-    expect(CUES.at(-1)!.kind).toBe("signature");
+    expect(CUES.at(-2)!.kind).toBe("signature");
+    expect(CUES.at(-1)!.kind).toBe("wordmark");
     expect(CUES.filter((c) => c.major).map((c) => c.kind)).toEqual(
       expect.arrayContaining([
         "kernel",
@@ -112,6 +113,27 @@ describe("the score", () => {
     expect(mixAt(progressOf("selection", 0.4)).master).toBeLessThan(0.6);
     expect(mixAt(progressOf("selection", 0.4)).bed).toBeLessThan(0.2);
     expect(resolve.at).toBeGreaterThan(progressOf("selection", 0.55));
+  });
+
+  it("approaches the identity narrowly, breathes, lands the S, then resolves into its name", () => {
+    const signature = CUES.find((c) => c.kind === "signature")!;
+    const wordmark = CUES.find((c) => c.kind === "wordmark")!;
+    // The approach: the busy top end is gone and the space is narrow.
+    expect(mixAt(progressOf("return", 0.8)).cutoff).toBeLessThan(500);
+    expect(mixAt(progressOf("return", 0.8)).width).toBeLessThan(0.3);
+    // The breath: a controlled reduction immediately before the S completes — not silence.
+    const breath = mixAt(signature.at - 0.002).master;
+    expect(breath).toBeLessThan(0.4);
+    expect(breath).toBeGreaterThan(0.1);
+    expect(mixAt(signature.at + 0.0005).master).toBe(1);
+    // The tension is released with the S; nothing pending under the name and the CTA.
+    expect(mixAt(signature.at + 0.001).tension).toBe(0);
+    expect(mixAt(progressOf("finale", 0.9)).tension).toBe(0);
+    // The name arrives a breath after the S (never the same sonic moment).
+    expect(wordmark.at - signature.at).toBeGreaterThan(
+      progressOf("finale", 0.06) - progressOf("finale", 0),
+    );
+    expect(signature.major && wordmark.major).toBe(true);
   });
 
   it("takes a breath of near-silence inside the lens, just before the universe opens", () => {

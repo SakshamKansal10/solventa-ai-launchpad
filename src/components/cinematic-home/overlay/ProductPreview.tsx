@@ -1,20 +1,23 @@
+import { Check } from "lucide-react";
 import { useId, useRef, useState, type KeyboardEvent } from "react";
 
 import { FIT_ICONS, FIT_PIPS } from "@/components/founder/dashboard/fit-constants";
-import { StepPath, type PathStep } from "@/components/founder/dashboard/graphics";
 import type { FitRow } from "@/lib/fit/matrix";
 import type { MessageKey } from "@/lib/i18n";
 import { useLocale } from "@/lib/i18n/LocaleProvider";
 
+import { Wordmark } from "../nav/Wordmark";
 import { soundController } from "../sound/controller";
 
 /**
- * ILLUSTRATIVE, READ-ONLY preview of the Solventia workspace as a founder
- * intelligence system — the cinematic world, become an interface. Built from
- * the product's own vocabulary and components (Founder Fit pips, the step
- * path) with sample content for the demonstration founder. Real, semantic,
- * keyboard-operable HTML; it reads and writes no account data, and every
- * value is labelled as illustrative.
+ * ILLUSTRATIVE, READ-ONLY preview of the Solventia workspace — the cinematic world, become an
+ * interface. Where the film resolves into clarity the surface turns pearl: the same Solventia
+ * system, now human-facing. Built from the product's own vocabulary (Founder Fit pips) with
+ * sample content for the demonstration founder. Real, semantic, keyboard-operable HTML; it reads
+ * and writes no account data, and every value is labelled as illustrative.
+ *
+ * Colour: ink on pearl; champagne for conviction (the chosen direction, the next move, strong
+ * fit); violet only for the live, reasoning state.
  */
 const reason = { code: "illustrative", params: {} };
 const FIT: FitRow[] = [
@@ -24,57 +27,30 @@ const FIT: FitRow[] = [
   { key: "ambition", status: "moderate", reason },
 ];
 
-/** The demonstration founder's context, with each signal's weight in the illustrative model. */
+/** The demonstration founder's context. */
 const CONTEXT = [
-  { label: "Capital", value: "₹50,000", weight: 0.22 },
-  { label: "Skills", value: "Digital development", weight: 0.22 },
-  { label: "Time", value: "12 h / week", weight: 0.16 },
-  { label: "Access", value: "Limited", weight: 0.16 },
-  { label: "Experience", value: "Beginner", weight: 0.14 },
-  { label: "Location", value: "India", weight: 0.1 },
+  { label: "Capital", value: "₹50,000" },
+  { label: "Skills", value: "Digital development" },
+  { label: "Time", value: "12 h / week" },
+  { label: "Access", value: "Limited" },
+  { label: "Experience", value: "Beginner" },
+  { label: "Location", value: "India" },
 ];
 
 const NARROWING = [360, 120, 36, 9, 3, 1];
 
 const ROADMAP = [
-  { stage: "Validate", line: "Discover what reality supports", state: "current" },
-  { stage: "Build", line: "Turn evidence into execution", state: "future" },
-  { stage: "Elevate", line: "Improve what proves valuable", state: "future" },
+  { stage: "Validate", state: "current" },
+  { stage: "Build", state: "future" },
+  { stage: "Elevate", state: "future" },
 ] as const;
 
-const STEPS: PathStep[] = [
+const STEPS = [
   { id: "speak", label: "Speak to potential customers", state: "done" },
   { id: "problem", label: "Test the problem", state: "done" },
   { id: "pay", label: "Test willingness to pay", state: "current", note: "Revised after evidence" },
   { id: "prototype", label: "Create first prototype", state: "future" },
-];
-
-/** The evidence timeline: what reality said, what it contradicted, how the path adapted. */
-const LEARNING = [
-  {
-    week: "Wk 2",
-    tag: "Evidence",
-    text: "“I wouldn’t pay for this version.”",
-    tone: "text-[#c9c2f5]",
-    dot: "bg-[#8b7ff2]",
-  },
-  {
-    week: "Wk 2",
-    tag: "Assumption",
-    text: "Full version price — contradicted",
-    tone: "text-[#f0b79a]",
-    dot: "bg-[#f0b79a]",
-    delta: "0.62 → 0.41",
-  },
-  {
-    week: "Wk 3",
-    tag: "Adapted",
-    text: "Test a lighter starter offer first",
-    tone: "text-[#e9cf98]",
-    dot: "bg-[#e3c68e]",
-    delta: "0.41 → 0.68",
-  },
-];
+] as const;
 
 /** Illustrative direction confidence: when selected, once the evidence landed, after adapting. */
 const CONFIDENCE = [
@@ -89,34 +65,39 @@ const TABS = [
   { id: "evidence", label: "Evidence" },
 ] as const;
 
-const label = "font-mono text-[10.5px] uppercase tracking-[0.24em] text-[#8f98ab]";
-/** Machined surface: a faint top light and a hairline edge, like the slab it came from. */
+const INK = "text-[#12161F]";
+const SECONDARY = "text-[#555C6B]";
+const GOLD_TEXT = "text-[#77592A]";
+const label = "font-mono text-[11px] uppercase tracking-[0.2em] text-[#5E6575]";
 const card =
-  "rounded-xl border border-white/[0.08] bg-linear-to-b from-white/[0.045] to-white/[0.012] shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]";
+  "rounded-2xl border border-[#12161F]/[0.07] bg-white/80 shadow-[0_1px_2px_rgba(18,22,31,0.04)]";
+const warm = "rounded-2xl border border-[#C9AA79]/45 bg-[#F4ECDD]";
 
 /** Confidence through the evidence loop: a dip when reality disagreed, a recovery after adapting. */
 function ConfidenceTrace() {
-  const W = 132;
-  const H = 34;
+  const W = 120;
+  const H = 30;
   const pts = CONFIDENCE.map((c, i) => [
-    6 + (i * (W - 12)) / (CONFIDENCE.length - 1),
-    H - 5 - ((c.value - 0.3) / 0.45) * (H - 10),
+    5 + (i * (W - 10)) / (CONFIDENCE.length - 1),
+    H - 4 - ((c.value - 0.3) / 0.45) * (H - 8),
   ]);
   const last = CONFIDENCE[CONFIDENCE.length - 1];
   return (
     <figure
-      className={`${card} shrink-0 px-3.5 py-2.5`}
+      className={`${card} shrink-0 px-4 py-3`}
       aria-label={`Illustrative direction confidence: ${CONFIDENCE.map((c) => `${c.value.toFixed(2)} ${c.at.toLowerCase()}`).join(", ")}`}
     >
-      <div className="flex items-baseline justify-between gap-4" aria-hidden="true">
+      <div className="flex items-baseline justify-between gap-5" aria-hidden="true">
         <span className={label}>Confidence</span>
-        <span className="font-mono text-[15px] text-[#e9cf98]">{last.value.toFixed(2)}</span>
+        <span className={`text-[20px] font-semibold tracking-[-0.02em] tabular-nums ${GOLD_TEXT}`}>
+          {last.value.toFixed(2)}
+        </span>
       </div>
-      <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`} className="mt-1" aria-hidden="true">
+      <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`} className="mt-1.5" aria-hidden="true">
         <polyline
           points={pts.map((p) => p.join(",")).join(" ")}
           fill="none"
-          stroke="rgba(201,194,245,0.55)"
+          stroke="rgba(18,22,31,0.28)"
           strokeWidth="1.25"
         />
         {pts.map(([x, y], i) => (
@@ -124,19 +105,11 @@ function ConfidenceTrace() {
             key={i}
             cx={x}
             cy={y}
-            r={i === pts.length - 1 ? 3 : 2.25}
-            fill={i === 1 ? "#f0b79a" : i === pts.length - 1 ? "#e3c68e" : "#8b7ff2"}
+            r={i === pts.length - 1 ? 3.2 : 2.4}
+            fill={i === 1 ? "#C2643C" : i === pts.length - 1 ? "#B8924F" : "#9AA0AD"}
           />
         ))}
       </svg>
-      <figcaption
-        className="flex justify-between font-mono text-[9.5px] uppercase tracking-[0.14em] text-[#8f98ab]"
-        aria-hidden="true"
-      >
-        <span>Sel</span>
-        <span>Evid</span>
-        <span>Adapt</span>
-      </figcaption>
     </figure>
   );
 }
@@ -158,181 +131,161 @@ export function ProductPreview() {
     <section
       aria-label="Illustrative Solventia workspace preview"
       data-testid="product-preview"
-      className="flex h-full w-full flex-col overflow-hidden rounded-[20px] border border-white/10 bg-[#0a0f19] text-[#ece7dd] shadow-[0_24px_70px_rgba(0,0,0,0.55)]"
+      className={`flex h-full w-full flex-col overflow-hidden rounded-[22px] bg-[linear-gradient(180deg,#F8F6F1_0%,#EEEAE2_100%)] ${INK} shadow-[0_0_0_1px_rgba(255,255,255,0.5),0_40px_120px_rgba(0,0,0,0.55)]`}
       style={{ fontFamily: "var(--font-tech)" }}
     >
-      {/* System bar */}
-      <header className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 border-b border-white/[0.07] bg-white/[0.02] px-4 py-3 sm:px-5">
-        <div className="flex items-center gap-3">
-          <span aria-hidden="true" className="relative flex size-2">
-            <span className="absolute inset-0 rounded-full bg-[#8b7ff2]" />
-            <span className="absolute -inset-1 rounded-full bg-[#8b7ff2]/25" />
-          </span>
-          <p className="font-mono text-[11px] uppercase tracking-[0.28em] text-[#d9cfbe]">
-            Solventia · Founder OS
-          </p>
-          <p className="hidden font-mono text-[11px] tracking-[0.12em] text-[#8f98ab] md:block">
+      {/* System bar: the same identity as the site bar. */}
+      <header className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 border-b border-[#12161F]/[0.07] px-5 py-3.5 sm:px-6">
+        <div className="flex min-w-0 items-center gap-4">
+          <Wordmark size="sm" tone="ink" />
+          <span aria-hidden="true" className="hidden h-4 w-px bg-[#12161F]/12 md:block" />
+          <p className={`hidden items-center gap-2 text-[13px] md:flex ${SECONDARY}`}>
+            <span aria-hidden="true" className="relative flex size-1.5">
+              <span className="absolute inset-0 rounded-full bg-[#6A5CE0]" />
+              <span className="absolute -inset-1 rounded-full bg-[#6A5CE0]/20" />
+            </span>
             Direction 02 <span aria-hidden="true">›</span> Validate{" "}
             <span aria-hidden="true">›</span> Week 3
           </p>
         </div>
-        <p className="rounded-full border border-white/12 px-3 py-1 text-[11.5px] font-medium text-[#c8c2b6]">
+        <p
+          className={`rounded-full border border-[#12161F]/10 px-3 py-1 text-[12px] font-medium ${SECONDARY}`}
+        >
           Illustrative preview · sample founder
         </p>
       </header>
 
       <div className="flex min-h-0 flex-1">
-        {/* Founder context + learning log: what the system knows, and what it has learned. */}
+        {/* What the system knows about the founder, and how far it narrowed. */}
         <aside
           aria-label="Founder context"
-          className="hidden w-[248px] shrink-0 flex-col gap-5 border-r border-white/[0.07] px-5 py-5 lg:flex"
+          className="hidden w-[236px] shrink-0 flex-col border-r border-[#12161F]/[0.07] bg-white/35 px-6 py-6 lg:flex"
         >
-          <div>
-            <h4 className={label}>Founder context</h4>
-            <ul className="mt-3 space-y-2.5">
-              {CONTEXT.map((c) => (
-                <li key={c.label}>
-                  <div className="flex items-baseline justify-between gap-2">
-                    <span className="text-[12.5px] text-[#a9b0bf]">{c.label}</span>
-                    <span className="text-[12.5px] font-medium text-[#ece7dd]">{c.value}</span>
-                  </div>
-                  <div className="mt-1 flex items-center gap-2" aria-hidden="true">
-                    <span className="h-[3px] flex-1 rounded-full bg-white/[0.07]">
-                      <span
-                        className="block h-full rounded-full bg-[#8b7ff2]"
-                        style={{ width: `${(c.weight / 0.22) * 100}%` }}
-                      />
-                    </span>
-                    <span className="w-7 text-right font-mono text-[10.5px] text-[#8f98ab]">
-                      {c.weight.toFixed(2).slice(1)}
-                    </span>
-                  </div>
-                </li>
-              ))}
-            </ul>
-          </div>
-          <div className="mt-auto">
-            <h4 className={label}>Evidence timeline</h4>
-            <ol className="relative mt-3 space-y-3 pl-4">
-              <span
-                aria-hidden="true"
-                className="absolute bottom-1.5 left-[3px] top-1.5 w-px bg-linear-to-b from-[#8b7ff2]/50 via-[#f0b79a]/40 to-[#e3c68e]/60"
-              />
-              {LEARNING.map((l) => (
-                <li key={l.tag} className="relative">
+          <h4 className={label}>Your reality</h4>
+          <dl className="mt-3 divide-y divide-[#12161F]/[0.06]">
+            {CONTEXT.map((c) => (
+              <div key={c.label} className="flex items-baseline justify-between gap-3 py-3">
+                <dt className={`text-[13.5px] ${SECONDARY}`}>{c.label}</dt>
+                <dd className="text-right text-[13.5px] font-medium">{c.value}</dd>
+              </div>
+            ))}
+          </dl>
+          <div className="mt-auto" aria-label="Narrowed from 360 directions to 1">
+            <h4 className={label}>Narrowed</h4>
+            <ol
+              className="mt-2.5 flex items-center gap-1.5 font-mono text-[11.5px] tabular-nums text-[#5E6575]"
+              aria-hidden="true"
+            >
+              {NARROWING.map((n, i) => (
+                <li key={n} className="flex items-center gap-1.5">
                   <span
-                    aria-hidden="true"
-                    className={`absolute -left-4 top-[3px] size-[7px] rounded-full ring-2 ring-[#0a0f19] ${l.dot}`}
-                  />
-                  <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-[#8f98ab]">
-                    {l.week} · {l.tag}
-                  </p>
-                  <p className={`mt-0.5 text-[12.5px] leading-snug ${l.tone}`}>{l.text}</p>
-                  {l.delta && (
-                    <p className="mt-0.5 font-mono text-[10px] tracking-[0.06em] text-[#8f98ab]">
-                      Confidence {l.delta}
-                    </p>
-                  )}
+                    className={
+                      i === NARROWING.length - 1 ? `font-semibold ${GOLD_TEXT}` : undefined
+                    }
+                  >
+                    {n}
+                  </span>
+                  {i < NARROWING.length - 1 && <span className="h-px w-2.5 bg-[#12161F]/15" />}
                 </li>
               ))}
             </ol>
+            <p className={`mt-2 text-[12px] leading-snug ${SECONDARY}`}>
+              Against your context, then tested — not assumed.
+            </p>
           </div>
         </aside>
 
         <div className="flex min-w-0 flex-1 flex-col">
-          <div role="tablist" aria-label="Workspace views" className="flex gap-1 px-4 pt-3 sm:px-6">
-            {TABS.map((tb, i) => (
-              <button
-                key={tb.id}
-                ref={(el) => {
-                  tabRefs.current[i] = el;
-                }}
-                role="tab"
-                type="button"
-                id={`${base}-tab-${tb.id}`}
-                aria-selected={tab === tb.id}
-                aria-controls={`${base}-panel-${tb.id}`}
-                tabIndex={tab === tb.id ? 0 : -1}
-                onClick={() => {
-                  setTab(tb.id);
-                  soundController.ui();
-                }}
-                onKeyDown={(e) => onKey(e, i)}
-                className={`rounded-full px-4 py-1.5 text-[0.875rem] font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#8b7ff2] ${
-                  tab === tb.id
-                    ? "bg-[#ece7dd] text-[#0a0f19]"
-                    : "text-[#a9b0bf] hover:bg-white/[0.06] hover:text-[#ece7dd]"
-                }`}
-              >
-                {tb.label}
-              </button>
-            ))}
+          <div className="px-5 pt-4 sm:px-7 sm:pt-5">
+            <div
+              role="tablist"
+              aria-label="Workspace views"
+              className="inline-flex gap-1 rounded-full bg-[#12161F]/[0.045] p-1"
+            >
+              {TABS.map((tb, i) => (
+                <button
+                  key={tb.id}
+                  ref={(el) => {
+                    tabRefs.current[i] = el;
+                  }}
+                  role="tab"
+                  type="button"
+                  id={`${base}-tab-${tb.id}`}
+                  aria-selected={tab === tb.id}
+                  aria-controls={`${base}-panel-${tb.id}`}
+                  tabIndex={tab === tb.id ? 0 : -1}
+                  onClick={() => {
+                    setTab(tb.id);
+                    soundController.ui();
+                  }}
+                  onKeyDown={(e) => onKey(e, i)}
+                  className={`rounded-full px-4 py-1.5 text-[0.875rem] font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#6A5CE0] ${
+                    tab === tb.id
+                      ? `bg-white ${INK} shadow-[0_1px_3px_rgba(18,22,31,0.12)]`
+                      : `${SECONDARY} hover:text-[#12161F]`
+                  }`}
+                >
+                  {tb.label}
+                </button>
+              ))}
+            </div>
           </div>
 
-          <div className="min-h-0 flex-1 overflow-auto px-4 py-4 sm:px-6 sm:py-5">
+          <div className="flex min-h-0 flex-1 flex-col overflow-auto px-5 py-4 sm:px-7 sm:py-6">
             {tab === "direction" && (
               <div
                 role="tabpanel"
                 id={`${base}-panel-direction`}
                 aria-labelledby={`${base}-tab-direction`}
+                className="flex flex-1 flex-col"
               >
-                <div className="flex flex-wrap items-start justify-between gap-4">
-                  <div className="min-w-0">
+                <div className="flex items-start justify-between gap-6">
+                  <div className="min-w-0 flex-1">
                     <p className={label}>Chosen direction · 02</p>
-                    <h3 className="mt-1.5 font-display text-[1.45rem] leading-tight text-[#f3eee4] sm:text-[1.9rem]">
+                    <h3
+                      className="mt-2.5 text-[1.6rem] font-semibold leading-[1.08] tracking-[-0.035em] text-balance sm:text-[1.95rem]"
+                      style={{ fontFamily: "var(--font-tech)" }}
+                    >
                       A digital service for local businesses
                     </h3>
-                    {/* The selection trace: the same narrowing the visitor just watched. */}
-                    <div className="mt-4" aria-label="Narrowed from 360 directions to 1">
-                      <ol
-                        className="flex items-center gap-1.5 font-mono text-[11.5px] text-[#a9b0bf]"
-                        aria-hidden="true"
-                      >
-                        {NARROWING.map((n, i) => (
-                          <li key={n} className="flex items-center gap-1.5">
-                            <span
-                              className={i === NARROWING.length - 1 ? "text-[#e9cf98]" : undefined}
-                            >
-                              {n}
-                            </span>
-                            {i < NARROWING.length - 1 && (
-                              <span className="h-px w-4 bg-white/20 sm:w-7" />
-                            )}
-                          </li>
-                        ))}
-                      </ol>
-                      <p className="mt-1.5 text-[12.5px] text-[#8f98ab]">
-                        Narrowed against your context, compared, then sent to be tested — not
-                        assumed.
-                      </p>
-                    </div>
+                    <p className={`mt-2.5 text-[14px] ${SECONDARY}`}>
+                      Chosen over Directions 01 and 03 on the same six signals.
+                    </p>
                   </div>
                   <div className="hidden sm:block">
                     <ConfidenceTrace />
                   </div>
                 </div>
-                <div className="mt-5 grid gap-5 sm:grid-cols-2">
-                  <div className={`${card} flex flex-col p-4`}>
+                <div className="mt-6 grid gap-4 sm:grid-cols-2">
+                  <div className={`${card} p-5`}>
                     <h4 className={label}>Why it fits</h4>
-                    <ul className="mt-3 space-y-2 text-[13.5px] text-[#d4cfc5]">
-                      <li>Starts within ₹50,000</li>
-                      <li>Uses your digital development skills</li>
-                      <li>Fits 12 hours a week</li>
+                    <ul className="mt-3.5 space-y-2.5 text-[14.5px]">
+                      {[
+                        "Starts within ₹50,000",
+                        "Uses your digital skills",
+                        "Fits 12 hours a week",
+                      ].map((line) => (
+                        <li key={line} className="flex items-center gap-2.5">
+                          <Check
+                            className="size-3.5 text-[#B8924F]"
+                            strokeWidth={2.5}
+                            aria-hidden="true"
+                          />
+                          {line}
+                        </li>
+                      ))}
                     </ul>
-                    <p className="mt-auto border-t border-white/[0.06] pt-2.5 text-[12px] leading-snug text-[#8f98ab]">
-                      Chosen over Directions 01 and 03 on the same six signals.
-                    </p>
                   </div>
-                  <div className={`${card} p-4`}>
+                  <div className={`${card} p-5`}>
                     <h4 className={label}>Founder fit</h4>
-                    <ul className="mt-3 space-y-2.5" data-testid="fit-signals">
+                    <ul className="mt-3.5 space-y-2.5" data-testid="fit-signals">
                       {FIT.map((row) => {
                         const Icon = FIT_ICONS[row.key];
                         const status = t(`fit.status.${row.status}` as MessageKey);
                         return (
                           <li key={row.key} className="flex items-center justify-between gap-3">
-                            <span className="flex items-center gap-2.5 text-[13.5px] text-[#ece7dd]">
-                              <Icon className="size-4 text-[#e3c68e]" aria-hidden="true" />
+                            <span className="flex items-center gap-2.5 text-[14.5px]">
+                              <Icon className="size-4 text-[#5E6575]" aria-hidden="true" />
                               {t(`fit.row.${row.key}` as MessageKey)}
                             </span>
                             <span role="img" aria-label={status} title={status}>
@@ -341,11 +294,7 @@ export function ProductPreview() {
                                   <span
                                     key={n}
                                     className={`h-1.5 w-5 rounded-full ${
-                                      n > FIT_PIPS[row.status]
-                                        ? "bg-white/10"
-                                        : row.status === "strong"
-                                          ? "bg-[#e3c68e]"
-                                          : "bg-[#8b7ff2]"
+                                      n > FIT_PIPS[row.status] ? "bg-[#12161F]/10" : "bg-[#C9AA79]"
                                     }`}
                                   />
                                 ))}
@@ -357,57 +306,93 @@ export function ProductPreview() {
                     </ul>
                   </div>
                 </div>
-                {/* Execution: where this direction is on its path, and the move that matters now. */}
-                <div className={`${card} mt-5 p-4`}>
-                  <div className="flex flex-wrap items-center justify-between gap-3">
-                    <h4 className={label}>Roadmap</h4>
-                    <p className="font-mono text-[10.5px] tracking-[0.16em] text-[#8f98ab]">
-                      Revised after evidence
+                {/* The move that matters now — the strongest thing on the surface: this is what
+                    the software tells the founder to do next. Where it sits on the path, below. */}
+                <div className={`${warm} mt-auto px-6 py-5 max-sm:mt-4`}>
+                  <div className="flex items-center justify-between gap-4">
+                    <p
+                      className={`font-mono text-[11px] font-medium uppercase tracking-[0.2em] ${GOLD_TEXT}`}
+                    >
+                      Your next move
+                    </p>
+                    <p className="font-mono text-[11px] uppercase tracking-[0.18em] text-[#5E6575]">
+                      Validate · Week 3
                     </p>
                   </div>
-                  <ol className="mt-3 grid grid-cols-3 gap-2" aria-label="Roadmap stages">
+                  <p className="mt-2 text-[19px] font-semibold leading-snug tracking-[-0.02em]">
+                    Test willingness to pay with a lighter starter offer.
+                  </p>
+                  <ol className="mt-4 grid grid-cols-3 gap-2" aria-label="Roadmap stages">
                     {ROADMAP.map((r) => (
                       <li key={r.stage}>
                         <span
                           aria-hidden="true"
-                          className={`block h-[3px] rounded-full ${r.state === "current" ? "bg-[#8b7ff2]" : "bg-white/10"}`}
+                          className={`block h-[3px] rounded-full ${r.state === "current" ? "bg-[#B8924F]" : "bg-[#12161F]/12"}`}
                         />
                         <p
-                          className={`mt-2 font-mono text-[10.5px] uppercase tracking-[0.22em] ${r.state === "current" ? "text-[#c9c2f5]" : "text-[#8f98ab]"}`}
+                          className={`mt-2 font-mono text-[10.5px] uppercase tracking-[0.18em] ${r.state === "current" ? GOLD_TEXT : "text-[#5E6575]"}`}
                         >
                           {r.stage}
                           {r.state === "current" && (
                             <span className="sr-only"> (current stage)</span>
                           )}
                         </p>
-                        <p className="mt-0.5 text-[12.5px] text-[#d4cfc5]">{r.line}</p>
                       </li>
                     ))}
                   </ol>
-                  <p className="mt-4 border-t border-white/[0.06] pt-3 text-[13px] text-[#ece7dd]">
-                    <span className="font-mono text-[10.5px] uppercase tracking-[0.2em] text-[#e3c68e]">
-                      Current move ·{" "}
-                    </span>
-                    Test willingness to pay with a lighter starter offer.
-                  </p>
                 </div>
               </div>
             )}
             {tab === "week" && (
               <div role="tabpanel" id={`${base}-panel-week`} aria-labelledby={`${base}-tab-week`}>
                 <p className={label}>Validate · this week</p>
-                <div className={`${card} mt-4 px-4 py-5 sm:px-5`}>
-                  <StepPath steps={STEPS} ariaLabel="Validation path" />
-                </div>
-                <div className="mt-4 flex items-start gap-3 rounded-xl border border-[#e3c68e]/25 bg-[#e3c68e]/[0.06] p-4">
-                  <span
-                    className="mt-1 size-1.5 shrink-0 rounded-full bg-[#e3c68e]"
-                    aria-hidden="true"
-                  />
-                  <p className="text-[13.5px] text-[#ece7dd]">
-                    <span className="font-mono text-[10.5px] uppercase tracking-[0.2em] text-[#e3c68e]">
-                      Today’s move ·{" "}
-                    </span>
+                <nav aria-label="Validation path" className={`${card} mt-4 px-5 py-5`}>
+                  <ol className="grid gap-4 sm:grid-cols-4">
+                    {STEPS.map((s, i) => (
+                      <li
+                        key={s.id}
+                        className="flex items-start gap-3 sm:flex-col sm:gap-2.5"
+                        data-status={s.state}
+                      >
+                        <span
+                          className={`flex size-8 shrink-0 items-center justify-center rounded-full text-[13px] font-semibold ${
+                            s.state === "done"
+                              ? "bg-[#12161F] text-[#F8F6F1]"
+                              : s.state === "current"
+                                ? "border-2 border-[#B8924F] text-[#77592A]"
+                                : "border border-[#12161F]/15 text-[#5E6575]"
+                          }`}
+                        >
+                          {s.state === "done" ? (
+                            <Check className="size-4" strokeWidth={3} aria-hidden="true" />
+                          ) : (
+                            i + 1
+                          )}
+                        </span>
+                        <span className="min-w-0">
+                          <span
+                            className={`block text-[13.5px] font-medium leading-snug ${s.state === "future" ? "text-[#5E6575]" : ""}`}
+                          >
+                            {s.label}
+                            {s.state === "current" && (
+                              <span className="sr-only"> (current step)</span>
+                            )}
+                          </span>
+                          {"note" in s && (
+                            <span className={`mt-0.5 block text-[12.5px] font-medium ${GOLD_TEXT}`}>
+                              {s.note}
+                            </span>
+                          )}
+                        </span>
+                      </li>
+                    ))}
+                  </ol>
+                </nav>
+                <div className={`${warm} mt-4 px-5 py-4`}>
+                  <p className={`font-mono text-[10.5px] uppercase tracking-[0.22em] ${GOLD_TEXT}`}>
+                    Today’s move
+                  </p>
+                  <p className="mt-1.5 text-[15px] font-medium tracking-[-0.01em]">
                     Ask three clinic owners what a lighter starter version would need to do.
                   </p>
                 </div>
@@ -423,31 +408,35 @@ export function ProductPreview() {
                 <ol className="mt-4 grid gap-3 sm:grid-cols-3">
                   <li className={`${card} p-4`}>
                     <p className={label}>Assumption</p>
-                    <p className="mt-2 text-[14px] font-medium text-[#ece7dd]">
+                    <p className="mt-2 text-[14px] font-medium">
                       Owners will pay for the full version
                     </p>
-                    <p className="mt-3 inline-flex rounded-full bg-[#f0b79a]/12 px-2.5 py-0.5 text-[12px] font-semibold text-[#f0b79a]">
+                    <p className="mt-3 inline-flex rounded-full bg-[#C2643C]/12 px-2.5 py-0.5 text-[12px] font-semibold text-[#A4482A]">
                       Contradicted
                     </p>
-                    <p className="mt-3 font-mono text-[11px] text-[#8f98ab]">
+                    <p className="mt-3 font-mono text-[11px] text-[#5E6575]">
                       Confidence 0.62 → 0.41
                     </p>
                   </li>
                   <li className={`${card} p-4`}>
                     <p className={label}>Evidence · Wk 2</p>
-                    <blockquote className="mt-2 font-display text-[1.2rem] italic leading-snug text-[#f3eee4]">
+                    <blockquote className="mt-2 text-[1.15rem] font-medium leading-snug tracking-[-0.02em]">
                       “I wouldn’t pay for this version.”
                     </blockquote>
-                    <p className="mt-3 text-[12px] text-[#8f98ab]">
+                    <p className={`mt-3 text-[12px] ${SECONDARY}`}>
                       Illustrative customer response
                     </p>
                   </li>
-                  <li className="rounded-xl border border-[#e3c68e]/25 bg-[#e3c68e]/[0.06] p-4">
-                    <p className={label}>Adaptation · Wk 3</p>
-                    <p className="mt-2 text-[14px] text-[#ece7dd]">
+                  <li className={`${warm} p-4`}>
+                    <p
+                      className={`font-mono text-[10.5px] uppercase tracking-[0.22em] ${GOLD_TEXT}`}
+                    >
+                      Adaptation · Wk 3
+                    </p>
+                    <p className="mt-2 text-[14px] font-medium">
                       Path updated: test a lighter starter offer first.
                     </p>
-                    <p className="mt-3 font-mono text-[11px] text-[#e3c68e]">
+                    <p className={`mt-3 font-mono text-[11px] ${GOLD_TEXT}`}>
                       Confidence 0.41 → 0.68
                     </p>
                   </li>

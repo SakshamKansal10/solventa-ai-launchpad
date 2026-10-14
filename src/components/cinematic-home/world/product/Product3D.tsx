@@ -1,6 +1,7 @@
 import { useFrame } from "@react-three/fiber";
 import { useEffect, useMemo, useRef } from "react";
 import {
+  Color,
   Euler,
   Group,
   MeshBasicMaterial,
@@ -27,41 +28,59 @@ export const CHAIN = ["Context", "Opportunity", "Evidence", "Path", "Progress"] 
 /**
  * The slab's face IS the interface's silhouette: the real panel's structure (measured from
  * the DOM at desktop size, normalised x, y, w, h from its top-left) in the panel's own flat
- * colours, unlit. When the real DOM fades in on top, only its type and icons appear — the
- * surfaces were already there.
+ * colours, unlit. It travels out of the rebuilt path in graphite and lights to pearl as it
+ * squares up — the moment the story reaches clarity — so when the real DOM fades in on top,
+ * only its type and icons appear: the surfaces were already there.
  */
-type Tone = "base" | "band" | "card" | "line" | "pill";
+type Tone = "base" | "band" | "card" | "line" | "pill" | "warm";
 const FACE: { r: [number, number, number, number]; tone: Tone }[] = [
   { r: [0, 0, 1, 1], tone: "base" },
-  { r: [0, 0, 1, 0.081], tone: "band" },
-  { r: [0, 0.0805, 1, 0.0018], tone: "line" },
-  { r: [0.2375, 0.082, 0.0018, 0.918], tone: "line" },
-  { r: [0.2624, 0.1008, 0.0878, 0.0508], tone: "pill" },
-  { r: [0.8121, 0.1819, 0.1638, 0.1489], tone: "card" },
-  { r: [0.2623, 0.394, 0.3471, 0.2657], tone: "card" },
-  { r: [0.6286, 0.3939, 0.3473, 0.2658], tone: "card" },
-  { r: [0.2623, 0.6904, 0.7136, 0.2427], tone: "card" },
+  // System bar and its hairline.
+  { r: [0, 0, 1, 0.0882], tone: "band" },
+  { r: [0, 0.0874, 1, 0.0018], tone: "line" },
+  // "Your reality" rail and its edge.
+  { r: [0, 0.0881, 0.2268, 0.9119], tone: "band" },
+  { r: [0.2259, 0.0881, 0.0018, 0.9119], tone: "line" },
+  // Tabs (segmented control, active tab).
+  { r: [0.2537, 0.1187, 0.2852, 0.0632], tone: "pill" },
+  { r: [0.2575, 0.1249, 0.0878, 0.0508], tone: "card" },
+  // Confidence, the two fit cards and the next move.
+  { r: [0.7976, 0.2185, 0.1755, 0.1416], tone: "card" },
+  { r: [0.2537, 0.397, 0.3519, 0.2914], tone: "card" },
+  { r: [0.6209, 0.3969, 0.3521, 0.2915], tone: "card" },
+  { r: [0.2536, 0.7547, 0.7194, 0.2084], tone: "warm" },
 ];
-const TONES: Record<Tone, string> = {
+/** In the dark, before clarity: graphite tones of the same layout. */
+const DARK: Record<Tone, string> = {
   base: "#0a0f19",
   band: "#0e131c",
   card: "#121720",
   line: "#1a1f29",
-  pill: "#ece7dd",
+  pill: "#1c2230",
+  warm: "#17171a",
+};
+/** The pearl interface's own flat colours (ProductPreview). */
+const PEARL: Record<Tone, string> = {
+  base: "#F2EFE9",
+  band: "#F5F3EE",
+  card: "#FBFAF8",
+  line: "#DEDAD3",
+  pill: "#E6E3DD",
+  warm: "#F4ECDD",
 };
 
 /**
  * Connected: the interface's own relationships, drawn as gold routing across the surface it
  * already is — no new objects. Normalised face points (from the panel's layout, CHAIN order):
- * the founder context in the sidebar, the direction's headline, the confidence card (evidence),
- * the roadmap (path) and its stages (progress).
+ * the founder's reality in the rail, the direction's headline, the confidence card (evidence),
+ * the next move (path) and its stages (progress).
  */
 const ROUTE: [number, number][] = [
-  [0.12, 0.4],
-  [0.5, 0.26],
-  [0.89, 0.26],
-  [0.45, 0.82],
-  [0.85, 0.82],
+  [0.11, 0.4],
+  [0.46, 0.24],
+  [0.885, 0.29],
+  [0.42, 0.83],
+  [0.86, 0.93],
 ];
 
 const RIGHT = new Vector3()
@@ -129,13 +148,23 @@ export function Product3D() {
   const faceTones = useMemo(
     () =>
       Object.fromEntries(
-        (Object.keys(TONES) as Tone[]).map((t) => [
+        (Object.keys(DARK) as Tone[]).map((t) => [
           t,
-          new MeshBasicMaterial({ color: TONES[t], toneMapped: false, fog: false }),
+          new MeshBasicMaterial({ color: DARK[t], toneMapped: false, fog: false }),
         ]),
       ) as Record<Tone, MeshBasicMaterial>,
     [],
   );
+  const toneColors = useMemo(
+    () =>
+      (Object.keys(DARK) as Tone[]).map((t) => ({
+        tone: t,
+        dark: new Color(DARK[t]),
+        pearl: new Color(PEARL[t]),
+      })),
+    [],
+  );
+  const light = useMemo(() => ({ value: -1 }), []);
   useEffect(() => () => Object.values(faceTones).forEach((m) => m.dispose()), [faceTones]);
   const scratch = useMemo(
     () => ({
@@ -182,6 +211,15 @@ export function Product3D() {
     // The abstract layout recedes as the real interface takes over.
     if (face.current) face.current.visible = st.dom < 0.98;
     if (face.current) face.current.scale.setScalar(1 - 0.02 * st.dom);
+    // Clarity: the face lights to pearl as it squares up, and returns to graphite as the type
+    // leaves it (Connected), so the gold routing reads on a dark surface again.
+    const clarity =
+      smoothstep(0.3, 0.82, local(p, "handoff")) *
+      (1 - smoothstep(0.04, 0.36, local(p, "connected")));
+    if (Math.abs(clarity - light.value) > 0.001) {
+      light.value = clarity;
+      for (const c of toneColors) faceTones[c.tone].color.copy(c.dark).lerp(c.pearl, clarity);
+    }
 
     // Connected: as the type leaves the surface, its relationships light up across it — context
     // → opportunity → evidence → path → progress — one continuous gold route, node by node.

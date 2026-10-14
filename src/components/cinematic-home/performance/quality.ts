@@ -10,7 +10,7 @@ export interface QualityPreset {
   /** Device-pixel-ratio range: [floor the governor may drop to, ceiling]. */
   dpr: [number, number];
   antialias: boolean;
-  /** Rendered opportunities in the universe (logically always 360). */
+  /** Rendered opportunities in the universe (logically always 360) — a restrained field, not a crowd. */
   universeCount: number;
   /** Max filaments alive at once, and Bézier samples per filament. */
   filamentCapacity: number;
@@ -29,7 +29,7 @@ export const QUALITY_PRESETS: Record<QualityTier, QualityPreset> = {
   high: {
     dpr: [1, 2],
     antialias: true,
-    universeCount: 360,
+    universeCount: 140,
     filamentCapacity: 900,
     filamentSegments: 24,
     coreSegments: 72,
@@ -40,7 +40,7 @@ export const QUALITY_PRESETS: Record<QualityTier, QualityPreset> = {
   medium: {
     dpr: [1, 1.5],
     antialias: true,
-    universeCount: 240,
+    universeCount: 124,
     filamentCapacity: 700,
     filamentSegments: 20,
     coreSegments: 56,
@@ -51,7 +51,7 @@ export const QUALITY_PRESETS: Record<QualityTier, QualityPreset> = {
   low: {
     dpr: [0.75, 1.25],
     antialias: false,
-    universeCount: 120,
+    universeCount: 96,
     filamentCapacity: 460,
     filamentSegments: 14,
     coreSegments: 36,

@@ -5,13 +5,13 @@ import { DPR_STEP, governDpr, GOVERNOR, QUALITY_PRESETS, type GovernorState } fr
 const { high, medium, low } = QUALITY_PRESETS;
 
 describe("quality presets", () => {
-  it("spend less at every lower tier, within the directive's universe ranges", () => {
-    expect(high.universeCount).toBeGreaterThanOrEqual(300);
-    expect(high.universeCount).toBeLessThanOrEqual(450);
-    expect(medium.universeCount).toBeGreaterThanOrEqual(180);
-    expect(medium.universeCount).toBeLessThanOrEqual(280);
+  it("spend less at every lower tier, within a restrained universe (clarity over density)", () => {
+    expect(high.universeCount).toBeGreaterThanOrEqual(130);
+    expect(high.universeCount).toBeLessThanOrEqual(220);
+    expect(medium.universeCount).toBeGreaterThanOrEqual(110);
+    expect(medium.universeCount).toBeLessThan(high.universeCount);
     expect(low.universeCount).toBeGreaterThanOrEqual(80);
-    expect(low.universeCount).toBeLessThanOrEqual(150);
+    expect(low.universeCount).toBeLessThan(medium.universeCount);
     expect(high.filamentCapacity).toBeGreaterThan(low.filamentCapacity);
     expect(high.coreSegments).toBeGreaterThan(low.coreSegments);
     expect(high.dpr[1]).toBeGreaterThanOrEqual(medium.dpr[1]);

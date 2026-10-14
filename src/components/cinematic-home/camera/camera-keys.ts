@@ -68,15 +68,10 @@ export const CAMERA_PATH_KEYS: CameraKey[] = [
   // F/G — toward the promising region; the nine.
   key("convergence", 0.5, [6, 3.2, -21], [7, -1, -42]),
   key("convergence", 1, [6.2, 2.6, -24], [6, 0.8, -46]),
-  // H — the three futures grow out of the lattice columns while the camera keeps moving along
-  // the same axis, into the space between them: the side futures sweep past the frame edges, the
-  // nest forms ahead and above; then it eases back, below them, for the comparison.
-  key("three", 0.18, [6.1, 1.2, -30.5], [6, 1.6, -47]),
-  key("three", 0.34, [6, 0.4, -35.5], [6, 3.2, -52]),
-  key("three", 0.5, [6, 0.1, -31], [6, 1.8, -48]),
-  // The comparison: all three held in one frame, seen from below, while the six signals rise
-  // into each — then the camera stops and waits.
-  key("three", 0.64, [6, 0.4, -25.5], [FINALS_HUB[0], FINALS_HUB[1] + 2.2, FINALS_HUB[2] - 2]),
+  // H — the three futures grow out of the lattice columns in front of a camera that only settles:
+  // no push in and back out. It eases down, below them, for the comparison — all three held in
+  // one frame while the six signals rise into each — then it stops and waits.
+  key("three", 0.5, [6, 0.4, -25.5], [FINALS_HUB[0], FINALS_HUB[1] + 2.2, FINALS_HUB[2] - 2]),
   key("three", 1, [6.02, 0.45, -26], [FINALS_HUB[0], FINALS_HUB[1] + 2.2, FINALS_HUB[2] - 2]),
   key("selection", 0.3, [6.05, 0.55, -27], [FINALS_HUB[0], FINALS_HUB[1] + 2.3, FINALS_HUB[2] - 2]),
   // I — settle on the one; silence.
@@ -86,16 +81,13 @@ export const CAMERA_PATH_KEYS: CameraKey[] = [
   key("unfold", 0.3, [11.5, 4.6, -45], [WINNER_POS[0], WINNER_POS[1] + 0.8, WINNER_POS[2] - 2]),
   key("unfold", 0.62, [8.6, 5.2, -47], [...pathEye(18).target]),
   { at: progressOf("unfold", 1), ...pathEye(4) },
-  // Validate → Build → Elevate → evidence: ONE carried camera, always on the left of the road.
-  // It rises out of the corridor it was inside; the provisional plan is seen in open space;
-  // it drops low alongside as the gates lock (Build); it climbs as the branches grow out of the
-  // gates it has just passed (Elevate); and over the network it watches the evidence travel in.
+  // Validate → Build → Elevate → evidence: ONE carried camera, always on the left of the road,
+  // in one steady glide — it rises out of the corridor it was inside, travels alongside at a
+  // constant height while the gates lock, and only climbs once, as the branches grow (Elevate);
+  // over the network it watches the evidence travel in.
   { at: progressOf("validate", 0.4), ...sideEye(24, -8.5, 6, 16) },
-  { at: progressOf("validate", 0.75), ...sideEye(42, -10, 7.5, 20) },
-  { at: progressOf("validate", 1), ...sideEye(58, -8, 5, 18) },
-  { at: progressOf("build", 0.4), ...sideEye(74, -7.5, 2, 16) },
-  { at: progressOf("build", 1), ...sideEye(96, -9, 3.5, 18) },
-  { at: progressOf("elevate", 0.5), ...sideEye(108, -12, 11, 22) },
+  { at: progressOf("validate", 1), ...sideEye(52, -9, 5.5, 18) },
+  { at: progressOf("build", 1), ...sideEye(88, -9.5, 5, 18) },
   { at: progressOf("elevate", 1), ...frameEye(118, -15, 16, 138, -14, 8) },
   // The camera's aim follows the evidence in: out along the branch channel, then over the last
   // gate's crown, then down into the assumption.
@@ -118,8 +110,9 @@ export const CAMERA_PATH_KEYS: CameraKey[] = [
   { at: progressOf("product", 1), ...productEye(0) },
   { at: progressOf("connected", 1), ...productEye(3.5) },
   { at: progressOf("return", 1), ...productEye(14, 4) },
-  { at: progressOf("finale", 0.3), ...lower(productEye(27.5, 5.3), 2.4) },
+  // The camera arrives as the S's edge closes, then only drifts — a slow settle through the name.
+  { at: progressOf("finale", 0.32), ...lower(productEye(27.5, 5.3), 2.4) },
   // The protected hold: the composition is still while the identity and CTA land.
-  { at: progressOf("finale", 0.62), ...lower(productEye(25.5, 5), 2.25) },
+  { at: progressOf("finale", 0.72), ...lower(productEye(25.5, 5), 2.25) },
   { at: progressOf("finale", 1), ...lower(productEye(25.7, 5), 2.27) },
 ];

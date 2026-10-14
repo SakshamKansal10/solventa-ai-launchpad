@@ -1,7 +1,7 @@
 import { Matrix4, Quaternion, Vector3 } from "three";
 
 import { smoothstep } from "../../math";
-import { local, ramp } from "../../timeline/timeline";
+import { local, progressOf, ramp } from "../../timeline/timeline";
 import { GATE_SPACING, revisedPath, UNSTABLE } from "../path/path-model";
 
 /**
@@ -67,7 +67,8 @@ export function slabState(p: number): SlabState {
     dom: smoothstep(0.62, 0.9, hand) * (1 - smoothstep(0.0, 0.22, connected)),
     released: hand >= 0.93 && connected <= 0.001,
     recede: ramp(p, "connected", 0.3, "return", 1),
-    visible: hand > 0 && ramp(p, "finale", 0, "finale", 0.3) < 1,
+    // Gone as the finale begins: nothing drifts beside the S while it forms.
+    visible: hand > 0 && p < progressOf("finale", 0.02),
   };
 }
 

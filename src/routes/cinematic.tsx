@@ -33,10 +33,10 @@ export const Route = createFileRoute("/cinematic")({
       { name: "robots", content: "noindex, nofollow" },
     ],
     links: [
-      // The technical typeface (signals, states, data); the editorial serif comes from the root.
+      // The experience typeface (statements, interface, data); the wordmark face comes from the root.
       {
         rel: "stylesheet",
-        href: "https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500&display=swap",
+        href: "https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600&family=Geist+Mono:wght@400;500&display=swap",
       },
     ],
   }),

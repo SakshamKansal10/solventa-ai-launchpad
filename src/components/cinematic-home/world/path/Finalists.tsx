@@ -250,10 +250,11 @@ export function Finalists() {
           const mesh = solid.current.light;
           if (!mesh) return;
           mesh.setMatrixAt(slot[0], m);
+          // The side futures are lit a step below the chosen one: comparable, never equal.
           col
             .copy(violet)
             .lerp(gold, 0.35)
-            .multiplyScalar(1.4 * grow * (1 - lose) * (1 - gone));
+            .multiplyScalar(1.1 * grow * (1 - lose) * (1 - gone));
           mesh.setColorAt(slot[0]++, col);
           return;
         }

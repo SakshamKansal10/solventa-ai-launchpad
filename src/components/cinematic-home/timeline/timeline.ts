@@ -43,28 +43,34 @@ export interface SceneDef {
   lengthVh: number;
 }
 
+/**
+ * Eight moments, each one message: identity · your reality · possibilities · one direction ·
+ * validate · evidence · the product · the finale. The scenes between them are transitions and
+ * are kept short; Build and Elevate pass inside Validate's moment, Crisis inside Evidence's.
+ */
 export const SCENES: readonly SceneDef[] = [
-  { id: "void", label: "Void", lengthVh: 110 },
-  { id: "awakening", label: "Core awakening", lengthVh: 190 },
-  { id: "context", label: "Context", lengthVh: 210 },
-  { id: "passage", label: "Core → universe", lengthVh: 200 },
-  { id: "universe", label: "Opportunity universe", lengthVh: 130 },
-  { id: "computation", label: "Computation", lengthVh: 160 },
-  { id: "convergence", label: "Convergence", lengthVh: 210 },
-  { id: "three", label: "Final three", lengthVh: 190 },
-  { id: "selection", label: "One direction", lengthVh: 150 },
-  { id: "unfold", label: "Opportunity → path", lengthVh: 170 },
-  { id: "validate", label: "Validate", lengthVh: 150 },
-  { id: "build", label: "Build", lengthVh: 150 },
-  { id: "elevate", label: "Elevate", lengthVh: 150 },
-  { id: "evidence", label: "Evidence", lengthVh: 130 },
-  { id: "crisis", label: "Evidence crisis", lengthVh: 130 },
-  { id: "adaptation", label: "Adaptation", lengthVh: 190 },
-  { id: "handoff", label: "3D → interface", lengthVh: 140 },
-  { id: "product", label: "Product", lengthVh: 150 },
-  { id: "connected", label: "Connected intelligence", lengthVh: 150 },
-  { id: "return", label: "Product → cinema", lengthVh: 120 },
-  { id: "finale", label: "Finale", lengthVh: 240 },
+  { id: "void", label: "Void", lengthVh: 45 },
+  { id: "awakening", label: "Core awakening", lengthVh: 105 },
+  // Long enough to read each founder signal — its category and its value — one at a time.
+  { id: "context", label: "Context", lengthVh: 150 },
+  { id: "passage", label: "Core → universe", lengthVh: 85 },
+  { id: "universe", label: "Opportunity universe", lengthVh: 75 },
+  { id: "computation", label: "Computation", lengthVh: 65 },
+  { id: "convergence", label: "Convergence", lengthVh: 95 },
+  { id: "three", label: "Final three", lengthVh: 85 },
+  { id: "selection", label: "One direction", lengthVh: 75 },
+  { id: "unfold", label: "Opportunity → path", lengthVh: 45 },
+  { id: "validate", label: "Validate", lengthVh: 75 },
+  { id: "build", label: "Build", lengthVh: 38 },
+  { id: "elevate", label: "Elevate", lengthVh: 38 },
+  { id: "evidence", label: "Evidence", lengthVh: 48 },
+  { id: "crisis", label: "Evidence crisis", lengthVh: 48 },
+  { id: "adaptation", label: "Adaptation", lengthVh: 75 },
+  { id: "handoff", label: "3D → interface", lengthVh: 55 },
+  { id: "product", label: "Product", lengthVh: 100 },
+  { id: "connected", label: "Connected intelligence", lengthVh: 45 },
+  { id: "return", label: "Product → cinema", lengthVh: 35 },
+  { id: "finale", label: "Finale", lengthVh: 120 },
 ];
 
 export interface SceneRange extends SceneDef {

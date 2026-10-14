@@ -6,9 +6,11 @@ Local checkpoints: `e02195c` (Phase 1 foundation), `686c42c` (21-scene experienc
 art-direction pass), then the art-direction pass commit.
 
 ## Resume order
+
 1. This file → 2. `git status` → 3. only the files for the next unfinished item.
 
 ## Architecture decisions (durable)
+
 - One canvas; everything a PURE function of scroll progress (reversible); only bounded ambient
   motion uses time. `?freeze=1` zeroes time + damping for deterministic frames and exposes
   `window.__cine` (scenes, state, and `three` = scene/gl for profiling).
@@ -23,11 +25,14 @@ art-direction pass), then the art-direction pass commit.
 - Sound = Web Audio synthesis (`sound/engine.ts`) rendering a pure score (`sound/score.ts`);
   off by default, gesture-started, session preference (`sound/controller.ts`).
 - Stage is `position: fixed`; past the section it is lifted with the page (protected ending).
-- Nav immersion via `--immerse` written by DomSync (never below AA contrast).
+- Film chrome via `--immerse` written by DomSync: during the film the site links and calls to action
+  leave the frame (opacity 0); the wordmark (≥ 0.55) and sound control stay. Hover or keyboard focus
+  restores the whole bar; it returns for the product and the final hold.
 - Keep three.js out of the eager route graph: modules imported by the route chunk (overlay,
   sound, nav) must not import three-dependent modules (check the build: see PERFORMANCE).
 
 ## Art-direction pass (2026-10-07) — DONE
+
 - [x] material system: titanium, graphite, smoked/provisional glass, edge hairlines, pearl sparingly
 - [x] Engine (core) redesign: gimbal frames + kernel lattice; fly-past assembly; ports; passage aperture
 - [x] context modules (skill matrix, connector array) docking into ports; weighted labels
@@ -46,14 +51,38 @@ art-direction pass), then the art-direction pass commit.
 - [x] tests: unit (62 cinematic), cinematic E2E (16), visual baselines (local), full suite
 - [x] docs: ART_DIRECTION, STORYBOARD, SURPRISE_MAP, PERFORMANCE, TEST_REPORT
 
+## V2 + continuity correction (2026-10-07) — DONE locally
+
+Commits: `e948ae0`, `660533e` (V2 checkpoints), `f97b2ad` (continuity pass), `df2e86d`, `6d2da93`.
+Audits: `docs/CINEMATIC_V2_AUDIT.md` (V1 grades + programme) and `docs/CINEMATIC_CONTINUITY_AUDIT.md`
+(every section-boundary moment: current / why it reads as a website / replacement / what changed).
+
+- [x] film chrome (G1), lower-third film titles + chapter marks (G2), time scroll: hidden scrollbar on
+      the route, film-time hairline, smoothing λ 3 (G3)
+- [x] void signals draw the S's own edges; camera opens close and draws back; metal lands on the lines
+- [x] reveal → computation → nine: one camera arc, always forward
+- [x] the three futures grow out of the lattice columns; camera pushes between them
+- [x] one left-side camera Validate → crisis; evidence travels in through the branch network
+- [x] connected = gold routing on the product surface; it leaves and converges into the S; the S
+      lands on its lines exactly as in the opening
+- [x] tier policy: integrated GPUs stay medium; lighter Elevate branch frames; restraint on labels
+- [x] review package `review-v2/` (same structure as `review/`, plus `comparison/` and a no-text
+      walkthrough)
+
 ## Next (human review)
+
 - Visual review of `/cinematic` on real devices (phones, Safari) — not done here.
 - Decide whether to keep or tone down: the fly-past frames in Awakening, the kernel's indigo
   seam glow, the selection-scene filament density on phones.
 
 ## Tools (local, gitignored .e2e-tmp)
+
 - `frames.mjs <base> <out> 1440x810 scene:local …` (?freeze=1; env TIER, DPR, HUD, WAIT)
 - `shoot.sh <name> <cols> <WxH> scene:at …` → `.e2e-tmp/art/<name>/sheet.jpg` (env BASE, TILE)
+- `review/export-v2.sh` (all V2 stills + sheets) · `review/compare-v2.sh` (V1/V2 sheets) ·
+  `review/record.mjs` + `review/encode.mjs` (walkthroughs; env SOUND=1, NOTEXT=1) ·
+  `review/frame-sheets.mjs` (sheets straight from recorded frames) · `flow.mjs <base> <out>`
+  (continuity strip, one frame every 1.5 %)
 - `review29.mjs <base> <out>` (29 reference frames) · `sheet.mjs out cols tileW files…` (env RATIO)
 - `perf.mjs <base>` → perf-results.json (baseline: perf-before.json, final: perf-after.json)
 - `profile.mjs <base> <tier> scene:at …` (per-material frame-time cost)

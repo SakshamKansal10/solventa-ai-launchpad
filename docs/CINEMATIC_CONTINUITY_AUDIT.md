@@ -130,19 +130,51 @@
 
 ## What was changed
 
-| Moment                   | Now                                                                                                                                                                                                                                                                                                      |
-| ------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| G1 site bar              | Full bar on arrival; links, Sign In and CTA fade out completely once the film starts (`DomSync` `--immerse`); the wordmark (≥ 0.55) and sound control (0.65) stay. Bar returns for the product and in the final hold. Hover or keyboard focus restores it at once.                                       |
-| G2 captions              | One title slot, centred in the lower third, ~40 % smaller, with spans cut to roughly half. Validate / Build / Elevate are one-line chapter marks (name · hairline · promise). Wave readouts sit under the title, and the count moved to the lower-right corner as film data.                             |
-| G3 scroll                | Document scrollbar hidden on `/cinematic` only. A hairline film-time indicator replaces it. Smoothing λ 4.2 → 3. Product hold 200 → 150 vh.                                                                                                                                                              |
-| 1 Void → Engine          | The signals run along the S's own edges and draw them (the blueprint) from the first frame. The camera opens close (abstract curves) and draws back until they resolve into the S. The metal descends onto those lines from just in front instead of flying in.                                          |
-| 3 Universe → computation | No dive: the overlook glides down and across the same world while the waves cross it.                                                                                                                                                                                                                    |
-| 4 Nine → three           | The six rivals are absorbed where they stand. Every piece of each future leaves one of its column's lattice nodes and travels into place (tower bottom-up, ring around, nest front-to-back). The camera pushes along the centre axis between the growing structures, then eases back for the comparison. |
-| 5–8 Validate → evidence  | One carried camera on the left of the road throughout. The evidence tablet travels in through the branch frames on that side, leaving a trace, into the assumption gate.                                                                                                                                 |
-| 10–12 Product → S        | The connected chain's five floating tokens and the "isolated answer" tile are gone. The interface's own relationships are drawn as gold routing across the surface (context → opportunity → evidence → path → progress). That routing then leaves the surface and converges into the S.                  |
-| 13 Finale                | Bar returns only after the emblem has resolved (finale 0.72 → 0.86).                                                                                                                                                                                                                                     |
+| Moment                   | Now                                                                                                                                                                                                                                                                                                                                                                                                                            |
+| ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| G1 site bar              | Full bar on arrival; links, Sign In and CTA fade out completely once the film starts (`DomSync` `--immerse`); the wordmark (≥ 0.55) and sound control (0.65) stay. Bar returns for the product and in the final hold. Hover or keyboard focus restores it at once.                                                                                                                                                             |
+| G2 captions              | One title slot, centred in the lower third, ~40 % smaller, with spans cut to roughly half. Validate / Build / Elevate are one-line chapter marks (name · hairline · promise). Wave readouts sit under the title, and the count moved to the lower-right corner as film data.                                                                                                                                                   |
+| G3 scroll                | Document scrollbar hidden on `/cinematic` only. A hairline film-time indicator replaces it. Smoothing λ 4.2 → 3. Product hold 200 → 150 vh.                                                                                                                                                                                                                                                                                    |
+| 1 Void → Engine          | The signals run along the S's own edges and draw them (the blueprint) from the first frame. The camera opens close (abstract curves) and draws back until they resolve into the S. The metal descends onto those lines from just in front instead of flying in.                                                                                                                                                                |
+| 3 Universe → computation | No dive: one camera arc from the reveal to the nine — a gentle rise to the crest of the overlook, then a steady forward descent while the waves cross the same world. Universe and computation are 13 % and 16 % shorter (150 → 130 vh, 190 → 160 vh). Territory names appear once, during the reveal.                                                                                                                         |
+| 4 Nine → three           | The six rivals are absorbed where they stand. Every piece of each future leaves one of its column's lattice nodes and travels into place (tower bottom-up, ring around, nest front-to-back). The camera pushes along the centre axis between the growing structures, then eases back for the comparison.                                                                                                                       |
+| 5–8 Validate → evidence  | One carried camera on the left of the road throughout. The evidence tablet travels in through the branch frames on that side, leaving a trace, into the assumption gate; the camera's aim follows it in.                                                                                                                                                                                                                       |
+| 10–12 Product → S        | The connected chain's five floating tokens and the "isolated answer" tile are gone. The interface's own relationships are drawn as gold routing across the surface (context → opportunity → evidence → path → progress). That routing then leaves the surface and converges into the S, which is drawn in light first; each half of the S then descends onto its line from just in front — the same landing as in the opening. |
+| 13 Finale                | Bar returns only after the emblem has resolved (finale 0.72 → 0.86).                                                                                                                                                                                                                                                                                                                                                           |
 
 Partly changed: moment 2 — the heading is now a brief title and the instruments still dock into the Engine's own ports, but each still pauses once at a reading position beside the S (kept for legibility). Not changed: moment 9 — after the camera passes through the last rebuilt gate the slab is briefly alone against the dark before the interface fills it.
+
+## Continuity test — result
+
+**Status: complete.** All six steps of the order of work are done (commits `f97b2ad`, `df2e86d`,
+`6d2da93`).
+
+**Method.** The full walkthrough was recorded with every caption, world label and the site bar
+hidden (`review-v2/final-v2-walkthrough-no-text.webm`, 6 min 17 s, production build). It was then
+reviewed as a sheet of one frame every 4 s, asking at each step: _where does a section end?_
+
+**Reads as one continuous film:**
+
+- signals become the S
+- the S assembles while the instruments dock
+- through the lens into the universe
+- one arc down to the nine
+- the columns grow into the three futures
+- the losers fall away; the one is held
+- the one unfolds into the corridor
+- one camera on the left from Validate to the crisis, with the evidence travelling in through the network
+- the crisis rebuilds into the adaptation
+- the gate releases the surface
+- the surface's routing leaves for the S
+- the S lands on its lines
+
+**Weakest remaining stretches (not section breaks, but slow or sparse):**
+
+- **Universe and computation.** The view changes gradually, but the territory boards are dense and
+  technical-looking.
+- **The product hold.** A static interface for about 15 s of the walkthrough (11 s of scrolling plus a 4 s hold).
+- **The start of the return.** Only the converging routes are on screen before the S begins to draw.
+- **Moment 9 (not changed).** The slab is briefly alone against the dark.
 
 ## Order of work
 

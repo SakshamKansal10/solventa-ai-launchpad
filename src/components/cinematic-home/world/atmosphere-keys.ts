@@ -7,8 +7,9 @@ export const FOG_KEYS = [
   k("awakening", 1, 0.01),
   k("passage", 0.5, 0.02),
   k("passage", 1, 0.024),
-  k("universe", 0.6, 0.016),
-  k("computation", 0.6, 0.014),
+  // Slightly deeper inside the universe: far architecture recedes, the near field reads first.
+  k("universe", 0.6, 0.02),
+  k("computation", 0.6, 0.018),
   k("convergence", 0.7, 0.024),
   k("three", 1, 0.03),
   k("unfold", 1, 0.022),

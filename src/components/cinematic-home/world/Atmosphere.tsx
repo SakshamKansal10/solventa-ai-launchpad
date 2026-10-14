@@ -54,7 +54,8 @@ export function Atmosphere() {
         uniforms: {
           uLow: { value: new Color(COLORS.black) },
           uHigh: { value: new Color(COLORS.navy) },
-          uLift: { value: 0.55 },
+          // Black that still holds detail: the deep navy of the sky is never crushed to nothing.
+          uLift: { value: 0.6 },
         },
         side: BackSide,
         depthWrite: false,
@@ -94,7 +95,7 @@ export function Atmosphere() {
   return (
     <>
       <mesh ref={sky} geometry={skyGeometry} material={skyMaterial} renderOrder={-10} />
-      <hemisphereLight args={["#2a3a55", "#05070c", 0.16]} />
+      <hemisphereLight args={["#2a3a55", "#05070c", 0.2]} />
       <directionalLight ref={key} color="#ffeed6" intensity={2.6} position={[-14, 16, 18]} />
       <directionalLight color="#9fb2d6" intensity={1.25} position={[14, 4, -20]} />
       <directionalLight color="#c9a873" intensity={0.35} position={[6, -14, 10]} />

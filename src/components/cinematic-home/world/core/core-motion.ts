@@ -64,6 +64,12 @@ export const FINALE_PLACE: [number, number, number] = [
   SLAB_CENTRE.y + 1.4,
   SLAB_CENTRE.z - 6,
 ];
+/**
+ * The moment the S is complete in the finale (finale-local): its champagne edge closes. The
+ * identity sound is pinned here, and the wordmark waits a breath beyond it.
+ */
+export const FINALE_COMPLETE = 0.335;
+
 /** The finale engine faces the visitor (who stands on the product's normal). */
 export const FINALE_YAW = Math.atan2(SLAB_NORMAL.x, SLAB_NORMAL.z);
 
@@ -78,21 +84,27 @@ function restChannel(arrive: number): ChannelPose {
 
 export function enginePose(p: number, finale: boolean): EnginePose {
   if (finale) {
-    // The return: the S reappears — first as light, then as structure — and resolves.
-    const a = ramp(p, "return", 0.3, "finale", 0.5);
-    const resolve = smoothstep(0.62, 0.95, a);
+    // The signature, beat by beat (finale-local unless noted):
+    //   return 0.1 → finale 0.06  the S is drawn in light where the product's routes converge
+    //   0 → 0.23                   the two halves land on their lines
+    //   0.14 → 0.24                the violet trace has finished its journey and calms
+    //   0.24 → FINALE_COMPLETE     the champagne edge draws along the inner curve and closes
+    //   … then the S holds alone; its name arrives only after (overlay, from finale 0.4).
+    const fin = (x0: number, x1: number) => ramp(p, "finale", x0, "finale", x1);
+    const f = local(p, "finale");
+    const resolve = fin(0.1, 0.32);
     const wafers = WAFER_Z.map((z, j) => ({
-      arrive: settle((a - 0.42 - j * 0.04) / 0.24),
+      arrive: settle((f - 0.06 - j * 0.02) / 0.12),
       z,
       slide: 0,
       split: 0,
       // In the emblem the kernel is quiet: the counter reads as lit space, as on the logo.
-      glow: 0.3 * smoothstep(0.6, 0.9, a),
+      glow: 0.3 * fin(0.15, 0.3),
     }));
-    const c0 = settle((a - 0.14) / 0.34);
-    const c1 = settle((a - 0.24) / 0.34);
+    const c0 = settle(f / 0.18);
+    const c1 = settle((f - 0.05) / 0.18);
     return {
-      visible: p > progressOf("return", 0.28),
+      visible: p > progressOf("return", 0.08),
       position: FINALE_PLACE,
       yaw: FINALE_YAW + 0.16 * (1 - resolve) + 0.07,
       pitch: -0.03,
@@ -119,13 +131,13 @@ export function enginePose(p: number, finale: boolean): EnginePose {
         },
       ],
       wafers,
-      blueprint: smoothstep(0.0, 0.3, a),
-      blueprintFade: smoothstep(0.5, 0.75, a),
-      connectors: smoothstep(0.5, 0.68, a),
-      kernel: smoothstep(0.55, 0.85, a),
+      blueprint: ramp(p, "return", 0.1, "finale", 0.06),
+      blueprintFade: fin(0.14, 0.24),
+      connectors: fin(0.1, 0.2),
+      kernel: fin(0.1, 0.25),
       energy: 0.6 + 0.4 * resolve,
-      seam: smoothstep(0.58, 0.95, a),
-      route: smoothstep(0.62, 0.95, a),
+      seam: fin(0.24, FINALE_COMPLETE),
+      route: fin(0.12, 0.24),
       docked: [1, 1, 1, 1, 1, 1],
       pulse: 0,
       signal: 0,

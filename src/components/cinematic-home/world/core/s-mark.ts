@@ -108,7 +108,7 @@ const RAW_INNER: readonly P2[] = [
  * neighbour averaging (tips pinned) keep the mark's exact shape while giving machined surfaces
  * a clean, continuous edge.
  */
-function smooth(chain: readonly P2[], passes = 6): readonly P2[] {
+function smooth(chain: readonly P2[], passes = 10): readonly P2[] {
   let pts = chain.map(([x, y]) => [x, y] as [number, number]);
   for (let k = 0; k < passes; k++) {
     pts = pts.map((p, i) =>

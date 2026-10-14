@@ -23,25 +23,25 @@ const CHAPTERS: Chapter[] = [
   {
     still: "core",
     title: "Every founder begins with uncertainty.",
-    line: "There is a direction hidden inside your reality.",
+    line: "Solventia turns uncertainty into direction.",
     alt: "The Solventia S Engine: two machined titanium channels traced from the Solventia S, a gold seam along their inner edges, around a smoked-glass computing kernel.",
   },
   {
     still: "context",
-    title: "Solventia starts with you.",
+    title: "It starts with your real situation.",
     line: "Illustrative profile — ₹50,000 · digital development · India · 12 hours a week · beginner · limited customer access.",
     alt: "Six founder signals — capital, skills, location, time, experience and customer access — each acquired by a port on the S Engine's outer edge.",
   },
   {
     still: "universe",
     title: "Hundreds of possible directions.",
-    line: "Your context reshapes every one of them.",
+    line: "Your reality narrows them.",
     alt: "The opportunity universe: five territories of engineered decision modules — a capability matrix, a capital-threshold terrace, a market-access ring, execution-complexity frames and an emerging-possibilities horizon — linked by weighted gold routes.",
   },
   {
     still: "nine",
     title: "360 → 120 → 36 → 9 → 3 → 1",
-    line: "Directions that don’t fit you lose energy; the ones that do come into alignment.",
+    line: "Directions that don’t fit fall away; the ones that do come into alignment.",
     alt: "Nine remaining opportunities held on one elliptical decision ring.",
   },
   {
@@ -51,25 +51,25 @@ const CHAPTERS: Chapter[] = [
   },
   {
     still: "build",
-    title: "Validate · Build · Elevate",
-    line: "Discover what reality supports. Turn evidence into execution. Improve what proves valuable.",
+    title: "Prove it before you build it.",
+    line: "Validate · Build · Elevate — discover what reality supports, then build on the evidence.",
     alt: "The opportunity unfolded into a path of machined portal gates locking together over a deck, with gold rails running through them.",
   },
   {
     still: "crisis",
-    title: "Plans are assumptions until reality responds.",
-    line: "“I wouldn’t pay for this version.” — an illustrative customer response.",
+    title: "“I wouldn’t pay for this version.”",
+    line: "An illustrative customer response — the evidence that contradicts an assumption.",
     alt: "Gates ahead on the path unlocking and losing alignment after contradictory evidence; the assumption node turns amber and inactive alternative routes appear.",
   },
   {
     still: "adapted",
-    title: "The path changes when the evidence changes.",
+    title: "When evidence changes, your path changes.",
     alt: "The gates rebuilt along a new direction, its route turning from indigo to gold.",
   },
   {
     product: true,
-    title: "A chatbot answers. Solventia carries the journey forward.",
-    line: "Context, opportunity, evidence, path and progress — connected in one workspace.",
+    title: "It doesn’t stop at the idea.",
+    line: "Your context, evidence and progress stay connected — and your next move is always clear.",
   },
   {
     still: "identity",
@@ -105,11 +105,19 @@ export function StaticFallback() {
                 />
               )}
               <div className={c.cta ? "text-center" : "max-w-3xl"}>
-                <Heading className="font-display text-[clamp(1.9rem,4vw,3.4rem)] leading-[1.08] text-[#F1EEE6]">
+                <Heading
+                  className="text-[clamp(2.1rem,4.4vw,4rem)] font-medium leading-[1.04] tracking-[-0.035em] text-balance text-[#F3F0E8]"
+                  style={{ fontFamily: "var(--font-tech)" }}
+                >
                   {c.title}
                 </Heading>
                 {c.line && (
-                  <p className="mt-4 text-[clamp(1rem,1.5vw,1.2rem)] text-[#cfc6b6]">{c.line}</p>
+                  <p
+                    className="mt-4 text-[clamp(1.05rem,1.5vw,1.3rem)] text-[#A3ABBA]"
+                    style={{ fontFamily: "var(--font-tech)" }}
+                  >
+                    {c.line}
+                  </p>
                 )}
                 {c.cta && (
                   <Link

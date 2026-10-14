@@ -16,6 +16,10 @@ import { S_INNER, S_OUTER } from "./s-mark";
  *
  * Front and back are mirrored. Facets are separate strips (hard, machined edges); each strip is
  * smooth across its own width. Group 0 = body metal, group 1 = champagne chamfers and lips.
+ *
+ * The champagne edges are machined to a CONSTANT width in world units (not a fraction of the
+ * channel's width), so the gold line that defines the S never swells in the wide middle of a
+ * blade — it only narrows where the blade itself closes to its point.
  */
 export const SHELL = {
   /** Thickness at the crescent's widest point (world units). */
@@ -25,10 +29,13 @@ export const SHELL = {
   bevelTop: 0.9,
   /** Height of the thin inner edge (× half-depth). */
   edge: 0.2,
-  /** Outer chamfer width (v) and the rim height it starts from (× half-depth). */
+  /** Outer chamfer: the widest it may be (v), and the rim height it starts from (× half-depth). */
   chamfer: 0.035,
   rim: 0.8,
 } as const;
+
+/** World widths of the champagne edges: outer chamfer, inner lip, and the lit inner band. */
+export const GOLD_EDGE = { chamfer: 0.06, lip: 0.028, band: 0.11 } as const;
 
 const SAMPLES = 200;
 const outerCurve = new CatmullRomCurve3(
@@ -42,16 +49,38 @@ const innerCurve = new CatmullRomCurve3(
   "centripetal",
 );
 
+/** Channel width (world) at u: outer edge to inner edge. */
+const widthCache = new Map<number, number>();
+export function channelWidth(u: number): number {
+  const key = Math.round(Math.min(1, Math.max(0, u)) * 4000);
+  let w = widthCache.get(key);
+  if (w === undefined) {
+    w = outerCurve.getPointAt(key / 4000).distanceTo(innerCurve.getPointAt(key / 4000));
+    widthCache.set(key, w);
+  }
+  return w;
+}
+
+/** A constant world width expressed as a fraction (v) of the channel at u, capped. */
+function edgeV(u: number, world: number, cap: number): number {
+  return Math.min(cap, world / Math.max(1e-3, channelWidth(u)));
+}
+
+/** The outer chamfer's extent (v) at u. */
+export function chamferAt(u: number): number {
+  return edgeV(u, GOLD_EDGE.chamfer, SHELL.chamfer * 2);
+}
+
 /** Thickness (world) at u: full in the middle, closing to a point at each tip. */
 export function shellThickness(u: number): number {
   return SHELL.depth * Math.pow(Math.max(0, Math.sin(Math.PI * Math.min(1, Math.max(0, u)))), 0.7);
 }
 
-/** Front-face height (× half-thickness) at v across the channel. */
-export function faceHeight(v: number): number {
-  if (v <= SHELL.chamfer) return SHELL.rim + ((1 - SHELL.rim) * v) / SHELL.chamfer;
+/** Front-face height (× half-thickness) at v across the channel (cv: the chamfer's extent). */
+export function faceHeight(v: number, cv: number = SHELL.chamfer): number {
+  if (v <= cv) return SHELL.rim + ((1 - SHELL.rim) * v) / cv;
   if (v <= SHELL.bevelAt) {
-    const s = (v - SHELL.chamfer) / (SHELL.bevelAt - SHELL.chamfer);
+    const s = (v - cv) / (SHELL.bevelAt - cv);
     return 1 - (1 - SHELL.bevelTop) * s * s;
   }
   const s = (Math.min(1, v) - SHELL.bevelAt) / (1 - SHELL.bevelAt);
@@ -72,7 +101,7 @@ export function shellPoint(
   outerCurve.getPointAt(uu, o);
   innerCurve.getPointAt(uu, i);
   out.copy(o).lerp(i, v);
-  out.z = side * (shellThickness(uu) * 0.5 * faceHeight(v) + lift);
+  out.z = side * (shellThickness(uu) * 0.5 * faceHeight(v, chamferAt(uu)) + lift);
   return out;
 }
 
@@ -120,27 +149,35 @@ export function buildShell(): BufferGeometry {
   const idx: number[] = [];
   const groups: { start: number; count: number; group: number }[] = [];
   const us = Array.from({ length: SAMPLES + 1 }, (_, k) => 0.002 + (0.996 * k) / SAMPLES);
-  const face = (vs: number[], side: 1 | -1): Vector3[][] =>
-    us.map((u) => vs.map((v) => shellPoint(u, v, side)));
+  // Each row's v samples may depend on u (the gold edges keep a constant world width).
+  const face = (vs: (u: number) => number[], side: 1 | -1): Vector3[][] =>
+    us.map((u) => vs(u).map((v) => shellPoint(u, v, side)));
+  const lip = (u: number) => 1 - edgeV(u, GOLD_EDGE.lip, 0.04);
   const lin = (a: number, b: number, n: number) =>
     Array.from({ length: n + 1 }, (_, k) => a + ((b - a) * k) / n);
 
   for (const side of [1, -1] as const) {
     const flip = side > 0;
-    // Champagne chamfer from the rim to the face.
-    addStrip(pos, idx, groups, { rows: face([0, SHELL.chamfer], side), group: 1 }, flip);
+    // Champagne chamfer from the rim to the face (constant world width).
+    addStrip(pos, idx, groups, { rows: face((u) => [0, chamferAt(u)], side), group: 1 }, flip);
     // The convex main face.
     addStrip(
       pos,
       idx,
       groups,
-      { rows: face(lin(SHELL.chamfer, SHELL.bevelAt, 14), side), group: 0 },
+      { rows: face((u) => lin(chamferAt(u), SHELL.bevelAt, 14), side), group: 0 },
       flip,
     );
     // The inner bevel — one crisp facet.
-    addStrip(pos, idx, groups, { rows: face([SHELL.bevelAt, 0.985], side), group: 0 }, flip);
-    // A fine champagne lip on the inner edge (it catches the counter's light).
-    addStrip(pos, idx, groups, { rows: face([0.985, 1], side), group: 1 }, flip);
+    addStrip(
+      pos,
+      idx,
+      groups,
+      { rows: face((u) => [SHELL.bevelAt, lip(u)], side), group: 0 },
+      flip,
+    );
+    // A fine champagne lip on the inner edge (it catches the counter's light), constant width.
+    addStrip(pos, idx, groups, { rows: face((u) => [lip(u), 1], side), group: 1 }, flip);
   }
   // Outer wall: a rounded rim between the two chamfers (bulging slightly outward).
   const n = new Vector3();
@@ -171,15 +208,13 @@ export function buildShell(): BufferGeometry {
 }
 
 /**
- * Machined detail on the front and back faces: a precision groove along the channel's midline
- * (where its energy runs), with a champagne lip, and transverse panel seams. Thin strips lying
- * on the surface. Returns [dark parts, champagne parts].
+ * Machined detail on the front and back faces: one precision groove along the channel's midline,
+ * where its energy runs — nothing else. The gold belongs to the S's edges, and the blade is one
+ * continuous part (no panel seams added for complexity's sake). A thin strip lying on the surface.
  */
-export function buildFaceDetail(): [BufferGeometry, BufferGeometry] {
+export function buildFaceDetail(): BufferGeometry {
   const dark: number[] = [];
   const darkIdx: number[] = [];
-  const lit: number[] = [];
-  const litIdx: number[] = [];
   const quadStrip = (pos: number[], idx: number[], rows: [Vector3, Vector3][], flip: boolean) => {
     const base = pos.length / 3;
     for (const [a, b] of rows) pos.push(a.x, a.y, a.z, b.x, b.y, b.z);
@@ -192,42 +227,22 @@ export function buildFaceDetail(): [BufferGeometry, BufferGeometry] {
   const width = (u: number) => outerCurve.getPointAt(u).distanceTo(innerCurve.getPointAt(u));
   for (const side of [1, -1] as const) {
     const flip = side > 0;
-    // The groove: a dark channel along v ≈ 0.42, about 0.07 wide, from tip to tip (narrowing).
+    // The groove: a dark channel along v ≈ 0.42, a constant 0.05 wide, from tip to tip.
     const groove: [Vector3, Vector3][] = [];
-    const lip: [Vector3, Vector3][] = [];
     for (let k = 0; k <= 160; k++) {
       const u = 0.07 + (0.86 * k) / 160;
       const w = Math.max(0.2, width(u));
-      const half = Math.min(0.035, 0.04 * w) / w;
+      const half = Math.min(0.025, 0.03 * w) / w;
       const c = 0.42;
       groove.push([shellPoint(u, c - half, side, 0.004), shellPoint(u, c + half, side, 0.004)]);
-      lip.push([
-        shellPoint(u, c - half - 0.012 / w, side, 0.005),
-        shellPoint(u, c - half, side, 0.005),
-      ]);
     }
     quadStrip(dark, darkIdx, groove, flip);
-    quadStrip(lit, litIdx, lip, flip);
-    // Panel seams across the main face.
-    for (const su of [0.31, 0.5, 0.69]) {
-      const w = width(su);
-      const du = 0.006 / Math.max(0.5, w);
-      const rows: [Vector3, Vector3][] = [];
-      for (let k = 0; k <= 12; k++) {
-        const v = SHELL.chamfer + 0.01 + ((SHELL.bevelAt - SHELL.chamfer - 0.02) * k) / 12;
-        rows.push([shellPoint(su - du, v, side, 0.004), shellPoint(su + du, v, side, 0.004)]);
-      }
-      quadStrip(dark, darkIdx, rows, !flip);
-    }
   }
-  const make = (pos: number[], idx: number[]) => {
-    const g = new BufferGeometry();
-    g.setAttribute("position", new Float32BufferAttribute(pos, 3));
-    g.setIndex(idx);
-    g.computeVertexNormals();
-    return g;
-  };
-  return [make(dark, darkIdx), make(lit, litIdx)];
+  const g = new BufferGeometry();
+  g.setAttribute("position", new Float32BufferAttribute(dark, 3));
+  g.setIndex(darkIdx);
+  g.computeVertexNormals();
+  return g;
 }
 
 /**
@@ -239,7 +254,8 @@ export function buildSeamLight(): BufferGeometry {
   const pos: number[] = [];
   const col: number[] = [];
   const idx: number[] = [];
-  const glow = (u: number) => Math.pow(Math.max(0, Math.sin(Math.PI * u)), 0.6);
+  // An even light along the curve, easing off only into the tips (no hot spot mid-blade).
+  const glow = (u: number) => Math.pow(Math.max(0, Math.sin(Math.PI * u)), 0.3);
   const M = 120;
   const band = (at: (u: number, s: 0 | 1) => Vector3, fade: boolean, flip: boolean) => {
     const base = pos.length / 3;
@@ -259,8 +275,14 @@ export function buildSeamLight(): BufferGeometry {
       }
     }
   };
+  // The lit band keeps one world width along the inner bevel (narrowing only at the tips).
   for (const side of [1, -1] as const) {
-    band((u, s) => shellPoint(u, s === 0 ? 0.998 : 0.93, side, 0.006), true, side < 0);
+    band(
+      (u, s) =>
+        shellPoint(u, s === 0 ? 0.998 : 0.998 - edgeV(u, GOLD_EDGE.band, 0.12), side, 0.006),
+      true,
+      side < 0,
+    );
   }
   band(
     (u, s) => {

@@ -1,5 +1,6 @@
 import { k, progressOf, sampleKeys, type SceneId } from "../timeline/timeline";
 import { arrivalWindow, ASSEMBLY, WAFER_Z } from "../world/core/core-design";
+import { FINALE_COMPLETE } from "../world/core/core-motion";
 import { SIGNALS, signalWindow } from "../world/context/context-model";
 import { TERRITORIES, TRUNK_ORIGIN } from "../world/universe/universe-model";
 
@@ -79,7 +80,14 @@ const CUTOFF = [
   K("crisis", 0.6, 380),
   K("adaptation", 0.9, 1600),
   K("product", 0.4, 900),
-  K("finale", 0.5, 1800),
+  // The approach: as the interface resolves back toward the S, the busy top end is taken away —
+  // the space narrows and focuses — and only opens again, warm rather than bright, for the name.
+  K("connected", 0.8, 700),
+  K("return", 0.6, 420),
+  K("finale", 0.2, 300),
+  K("finale", 0.34, 300),
+  K("finale", 0.5, 1100),
+  K("finale", 0.8, 1400),
 ];
 const TENSION = [
   K("context", 0.9, 0),
@@ -94,6 +102,10 @@ const TENSION = [
   K("crisis", 0.4, 0.28),
   K("adaptation", 0.6, 0.12),
   K("adaptation", 1, 0),
+  // An almost imperceptible rise under the approach, released the moment the S completes.
+  K("return", 0.3, 0),
+  K("finale", 0.26, 0.12),
+  K("finale", 0.335, 0),
 ];
 const PAD = [
   K("passage", 0.74, 0),
@@ -109,9 +121,12 @@ const PAD = [
   K("crisis", 0.4, 0),
   K("adaptation", 0.9, 0.18),
   K("product", 0.4, 0.06),
-  K("return", 0.8, 0.12),
-  K("finale", 0.45, 0.48),
-  K("finale", 1, 0.4),
+  K("return", 0.5, 0.05),
+  K("finale", 0.34, 0.04),
+  // Resolution: the harmony arrives with the name and settles into warmth for the CTA.
+  K("finale", 0.5, 0.4),
+  K("finale", 0.8, 0.42),
+  K("finale", 1, 0.38),
 ];
 const WIDTH = [
   K("passage", 0.74, 0.15),
@@ -120,6 +135,8 @@ const WIDTH = [
   K("selection", 0.5, 0.2),
   K("elevate", 0.8, 0.95),
   K("product", 0.5, 0.4),
+  K("return", 0.6, 0.15),
+  K("finale", 0.34, 0.15),
   K("finale", 0.6, 0.85),
 ];
 const PULSE = [
@@ -142,15 +159,17 @@ const MASTER = [
   K("selection", 0.27, 0.12),
   K("selection", 0.56, 0.12),
   K("selection", 0.64, 1),
-  // … and before the identity resolves (the signature lands as the space returns).
-  K("finale", 0.24, 1),
-  K("finale", 0.29, 0.14),
-  K("finale", 0.345, 0.14),
-  K("finale", 0.365, 1),
-  // Evidence: the normal soundscape briefly contracts.
+  // Evidence: the normal soundscape briefly contracts. (Keys must stay in film order.)
   K("evidence", 0.56, 1),
   K("evidence", 0.62, 0.62),
   K("evidence", 0.8, 1),
+  // The breath: a short, controlled reduction immediately before the S completes — not digital
+  // silence — and the space returns exactly as its champagne edge closes.
+  // The space is back a hair before the edge closes, so the identity sound lands in full.
+  K("finale", 0.26, 1),
+  K("finale", 0.285, 0.22),
+  K("finale", 0.318, 0.22),
+  K("finale", FINALE_COMPLETE - 0.003, 1),
 ];
 
 export function mixAt(p: number): Mix {
@@ -185,7 +204,8 @@ export type CueKind =
   | "stabilize"
   | "handoff"
   | "link"
-  | "signature";
+  | "signature"
+  | "wordmark";
 
 export interface Cue {
   at: number;
@@ -254,7 +274,7 @@ function buildCues(): Cue[] {
   // The founder's signals are acquired, one by one.
   SIGNALS.forEach((_, i) => {
     const [a, b] = signalWindow(i);
-    out.push(cue("context", a + (b - a) * 0.8, "signal", i / 5));
+    out.push(cue("context", a + (b - a) * 0.88, "signal", i / 5));
   });
   // The channels part around the aperture; each wafer opens, front first; the world opens.
   out.push(cue("passage", 0.12, "align", 0));
@@ -284,11 +304,13 @@ function buildCues(): Cue[] {
   out.push(cue("adaptation", 0.8, "stabilize", 0, { major: true }));
   out.push(cue("handoff", 0.62, "handoff"));
   for (let i = 0; i < 5; i++) out.push(cue("connected", 0.12 + i * 0.1, "link", i / 4));
-  // The interface's pathways converge where the emblem will form: the identity theme returns,
-  // softly (the motif's second voice) — then, as the emblem resolves, complete.
+  // The interface's pathways converge where the emblem will form: the identity theme returns as
+  // a low, distant fifth (no bright detail — the space is narrowing toward the S).
   out.push(cue("return", 0.45, "motif", 1));
-  // The emblem resolves: the opening motif returns, complete.
-  out.push(cue("finale", 0.37, "signature", 0, { major: true }));
+  // The S completes: ONE restrained identity sound, exactly as its champagne edge closes.
+  out.push(cue("finale", FINALE_COMPLETE, "signature", 0, { major: true }));
+  // A breath later, SOLVENTIA: the motif, now complete — the tension resolved.
+  out.push(cue("finale", 0.4, "wordmark", 0, { major: true }));
   return out.sort((a, b) => a.at - b.at);
 }
 

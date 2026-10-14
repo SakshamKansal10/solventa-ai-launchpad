@@ -79,7 +79,7 @@ describe("opportunity universe", () => {
   });
 
   it("renders a tier's budget but always every survivor of 120 → 36", () => {
-    for (const count of [360, 240, 120]) {
+    for (const count of [360, 140, 96]) {
       const m = createUniverse(count);
       expect(m.rendered).toHaveLength(count);
       for (const o of m.opportunities.filter((x) => x.rank <= 36))

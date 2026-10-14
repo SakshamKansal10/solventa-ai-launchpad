@@ -74,7 +74,7 @@ test.describe("cinematic homepage", () => {
       ["context", 0.5, "context"],
       ["selection", 0.85, "selection"],
       ["validate", 0.5, "validate"],
-      ["crisis", 0.6, "evidence"],
+      ["crisis", 0.6, "adaptation"],
       ["adaptation", 0.7, "adaptation"],
       ["finale", 0.9, "finale"],
     ] as const) {
@@ -202,7 +202,8 @@ test.describe("cinematic homepage", () => {
       await expect(home).toHaveAttribute("data-mode", "fallback", { timeout: 45_000 });
       await expect(page.locator("canvas")).toHaveCount(0);
       const fallback = page.getByTestId("cinematic-fallback");
-      await expect(fallback.locator("img")).toHaveCount(9);
+      // The nine still compositions (the product panel carries its own brand mark besides).
+      await expect(fallback.locator('img[src^="/cinematic/"]')).toHaveCount(9);
       await expect(fallback.getByRole("heading", { level: 1 })).toHaveText(
         "Every founder begins with uncertainty.",
       );
@@ -317,12 +318,12 @@ test.describe("cinematic homepage", () => {
       return max;
     };
     const toggle = page.getByTestId("sound-toggle");
-    await expect(toggle).toContainText(/enable cinematic sound|sound/i);
+    await expect(toggle).toContainText(/sound/i);
     // No autoplay: nothing exists until the visitor asks.
     expect(await sound((s) => s.context())).toBe("none");
     await goTo(page, "awakening", 0.7);
     await toggle.click();
-    await expect(toggle).toContainText(/sound on/i);
+    await expect(toggle).toHaveAttribute("aria-pressed", "true");
     await expect.poll(() => sound((s) => s.context())).toBe("running");
     // Real signal reaches the destination.
     await expect.poll(peak, { timeout: 10_000 }).toBeGreaterThan(0.005);

@@ -70,6 +70,8 @@ export interface NodeFrame {
   align: number;
   /** 0 = cool/neutral light, 1 = warm champagne. */
   warm: number;
+  /** 0 → 1 while a founder-context wave is passing it: the system is reasoning about it. */
+  active: number;
   scale: number;
   /** Revealed weight of its worst conflicting signal (0 if no conflict). */
   conflict: number;
@@ -87,6 +89,7 @@ export function createNodeFrame(): NodeFrame {
     solid: 0,
     align: 0,
     warm: 0,
+    active: 0,
     scale: 0,
     conflict: 0,
     falling: 0,
@@ -130,10 +133,13 @@ export function nodeFrame(
   const d = trunkDistance(o);
   const appear = smoothstep(d - 4, d + 6, ph.revealFront);
   let know = 0;
+  let active = 0;
   SIGNALS.forEach((sig, k) => {
     const r = smoothstep(d - 6, d + 3, ph.waves[k]);
     revealed[sig.id] = r;
     know += r / SIGNALS.length;
+    // Peaks as the wave front crosses it, and is quiet again once the signal is known.
+    active = Math.max(active, 4 * r * (1 - r));
   });
   const s = partialScore(o.fits, revealed);
   const q = Math.min(1, Math.max(0, (s - 0.38) / (0.86 - 0.38)));
@@ -232,6 +238,7 @@ export function nodeFrame(
   out.solid = solid;
   out.align = align;
   out.warm = know * q;
+  out.active = active * appear;
   out.scale = scale;
   out.conflict = conflict;
   out.falling = falling;

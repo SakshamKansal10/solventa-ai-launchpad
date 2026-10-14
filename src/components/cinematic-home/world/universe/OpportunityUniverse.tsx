@@ -23,7 +23,9 @@ const PARTS = ["seed", "frame", "pearl", "glass", "energy"] as const;
 /** Aligned = one shared, designed three-quarter attitude (never flat-on to the lens). */
 const ALIGNED = new Quaternion().setFromEuler(new Euler(-0.22, 0.62, 0.08));
 const WARM = new Color("#f0cf94");
-const COOL = new Color("#7f72e6");
+/** Resting light: a quiet cool steel. Violet only while the system is reasoning about a module. */
+const NEUTRAL = new Color("#8f9ab8");
+const VIOLET = new Color("#7f72e6");
 
 /**
  * The Opportunity Universe: every rendered opportunity as five instanced parts
@@ -89,7 +91,7 @@ export function OpportunityUniverse() {
     for (let f = 0; f < 5; f++) {
       const energy = meshes.current[f * 5 + 4];
       if (!energy) continue;
-      for (let i = 0; i < energy.count; i++) energy.setColorAt(i, COOL);
+      for (let i = 0; i < energy.count; i++) energy.setColorAt(i, NEUTRAL);
       energy.instanceColor?.setUsage(DynamicDrawUsage);
     }
   }, [model, scratch]);
@@ -147,7 +149,8 @@ export function OpportunityUniverse() {
         m.compose(pos, q, scl);
         parts[3]!.setMatrixAt(slot, nf.solid < 0.99 ? m : zero);
         color
-          .copy(COOL)
+          .copy(NEUTRAL)
+          .lerp(VIOLET, nf.active)
           .lerp(WARM, nf.warm)
           .multiplyScalar(nf.energy * 2.8);
         parts[4]!.setColorAt(slot, color);
@@ -161,12 +164,13 @@ export function OpportunityUniverse() {
       if (parts[4]?.instanceColor) parts[4].instanceColor.needsUpdate = true;
     }
 
-    // Connections: trunks from the core, branches inside territories, strands into the dark.
+    // Connections: trunks from the core and the branches inside territories.
     model.connections.forEach((c, j) => {
       const idx = fil.start + j;
       const A = c.a >= 0 ? frames[c.a] : null;
       const B = c.b >= 0 ? frames[c.b] : null;
-      if ((A && !A.visible) || (B && !B.visible)) {
+      // Restraint: no strands trailing off into the dark — only the routes that carry meaning.
+      if (c.kind === "dark" || (A && !A.visible) || (B && !B.visible)) {
         filaments.hide(idx);
         return;
       }
@@ -215,11 +219,11 @@ export function OpportunityUniverse() {
         len * (0.06 + c.phase * 0.08),
         0,
       );
-      const base = c.kind === "trunk" ? 0.55 : c.kind === "dark" ? 0.38 : 0.58;
+      const base = c.kind === "trunk" ? 0.55 : 0.58;
       // Hierarchical weighting: high-value routes dominate, weak ones fade to almost nothing.
       const value = Math.min(1, Math.min(eA, eB) / 1.4);
       // Selective: weak links are not drawn at all — the network shows only what matters.
-      if (c.kind !== "trunk" && value < 0.3 && wave < 0.2) {
+      if (c.kind !== "trunk" && value < 0.48 && wave < 0.4) {
         filaments.hide(idx);
         return;
       }
