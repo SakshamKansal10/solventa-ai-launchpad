@@ -1,10 +1,14 @@
 /** Roadmap: This Week / Plan / Progress, missions, week review, building page. */
 const en = {
   "rm.subtitle": "Roadmap",
+  "rm.week.prev": "Previous week",
+  "rm.week.next": "Next week",
   "rm.header.current": "Current",
   "rm.header.currentValue": "Phase {phase} • Week {week}",
   "rm.header.checkpoint": "Next checkpoint",
   "rm.header.checkpointReview": "Review Week {n}",
+  "rm.header.phase": "Phase {n}",
+  "rm.header.weekOf": "Week {n} of {total}",
   "rm.mission.whyShort": "Why",
   "rm.mission.do": "Do",
   "rm.mission.capture": "Capture",
@@ -171,10 +175,14 @@ const en = {
 
 const hi: Record<keyof typeof en, string> = {
   "rm.subtitle": "रोडमैप",
+  "rm.week.prev": "पिछला सप्ताह",
+  "rm.week.next": "अगला सप्ताह",
   "rm.header.current": "वर्तमान",
   "rm.header.currentValue": "चरण {phase} • सप्ताह {week}",
   "rm.header.checkpoint": "अगला चेकपॉइंट",
   "rm.header.checkpointReview": "सप्ताह {n} की समीक्षा",
+  "rm.header.phase": "चरण {n}",
+  "rm.header.weekOf": "सप्ताह {n} / {total}",
   "rm.mission.whyShort": "क्यों",
   "rm.mission.do": "करें",
   "rm.mission.capture": "दर्ज करें",

@@ -1,5 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
+import { ArrowRight, CalendarDays } from "lucide-react";
 import { toast } from "sonner";
 import { z } from "zod";
 
@@ -7,6 +8,7 @@ import { PhasePreview, PhaseStrip, PlanTab } from "@/components/founder/roadmap/
 import { ProgressTab } from "@/components/founder/roadmap/ProgressTab";
 import { useRoadmapText } from "@/components/founder/roadmap/text";
 import { WeekTab } from "@/components/founder/roadmap/WeekTab";
+import { OpportunityPhoto, useOpportunityImage } from "@/components/founder/OpportunityImage";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Button,
@@ -146,6 +148,7 @@ function RoadmapWorkspace({
     staleTime: 15_000,
   });
 
+  const image = useOpportunityImage(opportunityId);
   const view = query.data ?? null;
   const currentWeek = view?.weeks.find((w) => w.id === view.currentWeekId) ?? null;
   const shownWeek =
@@ -186,66 +189,77 @@ function RoadmapWorkspace({
 
   return (
     <div
-      className="flex flex-col gap-8"
+      className="flex flex-col gap-10"
       data-testid="roadmap-page"
       data-roadmap-status={view.roadmap.status}
     >
-      <header className="flex flex-wrap items-end justify-between gap-6">
-        <div className="min-w-0">
-          <Eyebrow>{t("rm.subtitle")}</Eyebrow>
-          <h1 className="sol-page-title mt-2 max-w-[24ch]">{opportunityTitle}</h1>
-          {view.roadmap.northStar && (
-            <p className="sol-body sol-prose mt-3 text-sol-secondary" data-testid="north-star">
-              <span className="font-semibold text-sol-ink">{t("rm.northStar")}: </span>
-              {text.northStar(view.roadmap.northStar)}
-            </p>
-          )}
-        </div>
-        <dl
-          className="grid min-w-[16rem] max-w-[24rem] gap-4 rounded-2xl border border-sol-border bg-sol-surface px-5 py-4 sm:grid-cols-2"
-          data-testid="roadmap-now"
-        >
-          <div className="min-w-0">
-            <dt className="text-[0.875rem] font-bold uppercase tracking-[0.1em] text-sol-secondary">
-              {t("rm.header.current")}
-            </dt>
-            <dd
-              className="mt-1 text-[1.125rem] font-semibold leading-snug text-sol-ink"
+      <header
+        className="relative grid overflow-hidden rounded-[1.5rem] border border-sol-border bg-sol-surface md:min-h-[13rem] md:grid-cols-[3fr_2fr]"
+        data-testid="roadmap-header"
+      >
+        <div className="relative z-10 flex min-w-0 flex-col justify-center gap-4 p-6 sm:p-8">
+          <div>
+            <h1 className="sol-page-title max-w-[24ch]">{opportunityTitle}</h1>
+            {view.roadmap.northStar && (
+              <p
+                className="sol-body sol-prose mt-2 line-clamp-2 text-sol-secondary"
+                data-testid="north-star"
+                title={text.northStar(view.roadmap.northStar) ?? undefined}
+              >
+                {text.northStar(view.roadmap.northStar)}
+              </p>
+            )}
+          </div>
+          <div className="flex flex-wrap items-center gap-2" data-testid="roadmap-now">
+            <p
+              className="flex items-center gap-2 rounded-full border border-sol-border bg-sol-pearl px-3.5 py-1.5 text-[0.875rem] font-medium text-sol-ink"
               data-testid="current-week-number"
             >
+              <span className="size-2 rounded-full bg-sol-violet" aria-hidden="true" />
               {currentWeek && currentPhaseNumber
                 ? t("rm.header.currentValue", {
                     phase: currentPhaseNumber,
                     week: String(currentWeek.number).padStart(2, "0"),
                   })
                 : "—"}
-            </dd>
-            <dd className="truncate text-[0.9375rem] text-sol-secondary">
-              {currentPhase ? text.phaseTitle(currentPhase.id, currentPhase.title) : ""}
-            </dd>
+            </p>
+            {currentWeek && (
+              <>
+                <span className="flex items-center gap-2 rounded-full border border-sol-border bg-sol-pearl px-3.5 py-1.5 text-[0.875rem] font-medium text-sol-ink">
+                  <CalendarDays className="size-4" aria-hidden="true" />
+                  {t("rm.header.weekOf", {
+                    n: String(currentWeek.number).padStart(2, "0"),
+                    total: view.weeks.length,
+                  })}
+                </span>
+                <button
+                  type="button"
+                  data-testid="next-checkpoint"
+                  onClick={() => openWeek(currentWeek.number)}
+                  className="flex items-center gap-2 rounded-full border border-sol-border bg-sol-pearl px-3.5 py-1.5 text-[0.875rem] font-medium text-sol-violet-deep transition-colors hover:border-sol-violet/50"
+                >
+                  {t("rm.week.review")}
+                  <ArrowRight className="size-4" aria-hidden="true" />
+                </button>
+              </>
+            )}
           </div>
-          <div className="min-w-0" data-testid="next-checkpoint">
-            <dt className="text-[0.875rem] font-bold uppercase tracking-[0.1em] text-sol-secondary">
-              {t("rm.header.checkpoint")}
-            </dt>
-            <dd className="mt-1 text-[1.125rem] font-semibold leading-snug text-sol-ink">
-              {currentWeek ? t("rm.header.checkpointReview", { n: currentWeek.number }) : "—"}
-            </dd>
-            <dd className="line-clamp-2 text-[0.9375rem] text-sol-secondary">
-              {currentWeek
-                ? shownWeek?.id === currentWeek.id
-                  ? text.detail.successThreshold(currentWeek.successThreshold)
-                  : currentWeek.successThreshold
-                : ""}
-            </dd>
+        </div>
+        {image.url && (
+          <div className="relative h-40 md:order-last md:h-auto" data-testid="roadmap-header-image">
+            <OpportunityPhoto image={image} title={opportunityTitle ?? ""} />
+            <div
+              className="pointer-events-none absolute inset-0 hidden bg-gradient-to-r from-sol-surface via-transparent to-transparent md:block"
+              aria-hidden="true"
+            />
           </div>
-        </dl>
+        )}
       </header>
 
       {view.roadmap.status === "completed" && (
         <div
           role="status"
-          className="rounded-2xl border border-sol-champagne/60 bg-sol-champagne-soft px-5 py-4 text-[1.0625rem] text-sol-ink"
+          className="rounded-2xl border border-sol-champagne/60 bg-sol-champagne-soft px-5 py-4 text-[1rem] text-sol-ink"
         >
           <Pill tone="champagne" className="mr-2">
             {t("rm.state.completed")}
@@ -257,21 +271,21 @@ function RoadmapWorkspace({
       <Tabs value={tab} onValueChange={(next) => setSearch({ tab: next as Tab })}>
         <TabsList
           aria-label={t("rm.tabs.aria")}
-          className="h-auto w-full justify-start gap-1 rounded-2xl bg-sol-ivory p-1.5 sm:w-fit"
+          className="h-auto w-full justify-start gap-1 rounded-2xl border border-sol-border bg-sol-surface p-1.5 sm:w-fit"
         >
           {TABS.map((key) => (
             <TabsTrigger
               key={key}
               value={key}
               data-testid={`tab-${key}`}
-              className="min-h-11 flex-1 rounded-xl px-2 text-[0.9375rem] font-semibold uppercase tracking-[0.02em] sm:px-6 sm:text-[1rem] sm:tracking-[0.05em] text-sol-secondary data-[state=active]:bg-sol-surface data-[state=active]:text-sol-violet-deep data-[state=active]:shadow-sm sm:flex-none"
+              className="min-h-10 flex-1 rounded-xl px-2 text-[0.875rem] font-medium sm:px-5 text-sol-secondary transition-colors duration-200 data-[state=active]:bg-sol-violet-soft data-[state=active]:text-sol-violet-deep sm:flex-none"
             >
               {t(`rm.tab.${key}` as const)}
             </TabsTrigger>
           ))}
         </TabsList>
 
-        <div className="mt-6 flex flex-col gap-6">
+        <div className="mt-8 flex flex-col gap-8">
           <PhaseStrip
             view={view}
             text={text}
@@ -289,7 +303,7 @@ function RoadmapWorkspace({
           )}
         </div>
 
-        <TabsContent value="week" className="mt-8">
+        <TabsContent value="week" className="mt-10">
           {shownWeek ? (
             <WeekTab
               key={shownWeek.id}

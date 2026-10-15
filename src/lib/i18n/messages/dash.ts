@@ -42,6 +42,16 @@ const en = {
   "cc.b.resumeCta": "Resume roadmap",
   "cc.b.openOpportunity": "Review this opportunity",
 
+  // ── Contextual idea images ─────────────────────────────────────────────
+  "cc.hero.label": "Current idea",
+  "cc.hero.continue": "Continue idea",
+  "cc.hero.viewRoadmap": "View roadmap",
+  "img.alt": "Photo representing {title}",
+  "img.generating": "Creating a visual for this idea…",
+  "img.failed": "We couldn't create the image.",
+  "img.retry": "Try again",
+  "img.regenerate": "Regenerate image",
+
   // ── State C: roadmap exists — "Your next move" ─────────────────────────
   "cc.c.title": "Your next move",
   "cc.c.completedTitle": "Roadmap complete",
@@ -91,6 +101,12 @@ const en = {
   "cc.greet.evening": "Good evening, {name}.",
   "cc.greet.generic": "Welcome back, {name}.",
   "cc.c.titleClear": "Your next move is clear.",
+  "cc.focus.label": "Current focus",
+  "cc.week.heading": "This week",
+  "cc.week.missionsOf": "{x} of {y} missions",
+  "cc.viewAll": "View all",
+  "cc.activity.heading": "Recent activity",
+  "cc.activity.empty": "Nothing yet. Finish a mission or add evidence and it will show up here.",
   "cc.surface.evidenceLine": "{captured} captured · {supported} supported · {testing} testing",
 
   "cc.today.heading": "Today's move",
@@ -166,10 +182,16 @@ const en = {
 
   // ── Opportunities: list ────────────────────────────────────────────────
   "opp.list.title": "Opportunities",
+  "opp.list.heroTitle": "Find your next big idea.",
+  "opp.list.heroSubtitle": "Opportunities matched to your interests.",
+  "opp.list.imageAlt": "A founder's desk with a laptop, notebook and plants",
   "opp.list.subtitle": "Every direction Solventia found for you, and the one you chose.",
   "opp.list.selected": "Selected",
   "opp.list.alternatives": "Alternatives",
   "opp.list.previous": "Previous consultations",
+  "opp.list.previousSub": "Ideas you have explored earlier.",
+  "opp.status.consulted": "Consulted",
+  "opp.revisit": "Revisit",
   "opp.status.selected": "Selected",
   "opp.status.previous": "Earlier consultation",
   "opp.status.dismissed": "Not chosen",
@@ -209,6 +231,10 @@ const en = {
 
   // Founder Fit
   "opp.fit.overall": "Founder fit",
+  "opp.fit.subtitle": "How well does {title} fit your strengths, time, and resources?",
+  "opp.fit.nextSteps": "Your next steps",
+  "opp.fit.nextStepsBody": "Take these steps to improve your founder fit.",
+  "opp.fit.counts": "{s} strengths · {g} gaps",
   "opp.fit.advantages": "Your advantages",
   "opp.fit.gaps": "Gaps to close",
   "opp.fit.noGaps": "Nothing in your profile stands in the way of this direction.",
@@ -402,6 +428,16 @@ const hi: Record<keyof typeof en, string> = {
   "cc.b.resumeCta": "रोडमैप फिर शुरू करें",
   "cc.b.openOpportunity": "इस अवसर को देखें",
 
+  // ── Contextual idea images ─────────────────────────────────────────────
+  "cc.hero.label": "मौजूदा आइडिया",
+  "cc.hero.continue": "आइडिया आगे बढ़ाएँ",
+  "cc.hero.viewRoadmap": "रोडमैप देखें",
+  "img.alt": "{title} को दर्शाने वाली तस्वीर",
+  "img.generating": "इस आइडिया के लिए तस्वीर बन रही है…",
+  "img.failed": "हम तस्वीर नहीं बना सके।",
+  "img.retry": "फिर कोशिश करें",
+  "img.regenerate": "तस्वीर दोबारा बनाएँ",
+
   "cc.c.title": "आपका अगला कदम",
   "cc.c.completedTitle": "रोडमैप पूरा हुआ",
   "cc.c.completedBody": "आपने हर सप्ताह पूरा कर लिया है। प्रमाण में देखिए कि आपने क्या सीखा।",
@@ -450,6 +486,12 @@ const hi: Record<keyof typeof en, string> = {
   "cc.greet.evening": "शुभ संध्या, {name}।",
   "cc.greet.generic": "वापसी पर स्वागत है, {name}।",
   "cc.c.titleClear": "आपका अगला कदम स्पष्ट है।",
+  "cc.focus.label": "मौजूदा फ़ोकस",
+  "cc.week.heading": "यह सप्ताह",
+  "cc.week.missionsOf": "{y} में से {x} मिशन",
+  "cc.viewAll": "सभी देखें",
+  "cc.activity.heading": "हाल की गतिविधि",
+  "cc.activity.empty": "अभी कुछ नहीं। कोई मिशन पूरा करें या साक्ष्य जोड़ें, वह यहाँ दिखेगा।",
   "cc.surface.evidenceLine": "{captured} दर्ज · {supported} समर्थित · {testing} परीक्षण में",
 
   "cc.today.heading": "आज का कदम",
@@ -522,10 +564,16 @@ const hi: Record<keyof typeof en, string> = {
   "cc.earlier.history": "इतिहास देखें",
 
   "opp.list.title": "अवसर",
+  "opp.list.heroTitle": "अपना अगला बड़ा विचार खोजें।",
+  "opp.list.heroSubtitle": "आपकी रुचियों से मेल खाते अवसर।",
+  "opp.list.imageAlt": "लैपटॉप, नोटबुक और पौधों वाला एक संस्थापक का डेस्क",
   "opp.list.subtitle": "Solventia को आपके लिए जो भी दिशाएं मिलीं, और वह जो आपने चुनी।",
   "opp.list.selected": "चुनी हुई",
   "opp.list.alternatives": "विकल्प",
   "opp.list.previous": "पिछली कंसल्टेशन",
+  "opp.list.previousSub": "वे आइडिया जो आप पहले देख चुके हैं।",
+  "opp.status.consulted": "देखा गया",
+  "opp.revisit": "फिर देखें",
   "opp.status.selected": "चुनी हुई",
   "opp.status.previous": "पुरानी कंसल्टेशन",
   "opp.status.dismissed": "चुनी नहीं गई",
@@ -561,6 +609,10 @@ const hi: Record<keyof typeof en, string> = {
   "opp.ov.detail": "और विवरण",
 
   "opp.fit.overall": "फाउंडर फ़िट",
+  "opp.fit.subtitle": "{title} आपकी ताकतों, समय और संसाधनों से कितना मेल खाता है?",
+  "opp.fit.nextSteps": "आपके अगले कदम",
+  "opp.fit.nextStepsBody": "अपना फाउंडर फ़िट बेहतर करने के लिए ये कदम उठाएं।",
+  "opp.fit.counts": "{s} ताकतें · {g} कमियां",
   "opp.fit.advantages": "आपकी ताकतें",
   "opp.fit.gaps": "जो कमियां भरनी हैं",
   "opp.fit.noGaps": "आपकी प्रोफ़ाइल में ऐसा कुछ नहीं जो इस दिशा के आड़े आए।",

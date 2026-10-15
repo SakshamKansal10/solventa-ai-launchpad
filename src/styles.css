@@ -779,3 +779,81 @@
     scale: 1;
   }
 }
+
+/* Quiet hover lift for cards and a soft image zoom. Motion is removed globally
+   under prefers-reduced-motion (rule above). */
+@utility sol-lift {
+  transition:
+    transform 200ms var(--sol-ease),
+    box-shadow 200ms var(--sol-ease),
+    border-color 200ms var(--sol-ease);
+  &:hover {
+    transform: translateY(-2px);
+    border-color: var(--sol-border-strong);
+    box-shadow: 0 8px 24px oklch(0.2211 0.0259 274.1 / 0.06);
+  }
+}
+
+@utility sol-zoom {
+  transition: transform 500ms var(--sol-ease);
+  :is(.group:hover) > & {
+    transform: scale(1.03);
+  }
+}
+
+/* Founder dashboard: Inter throughout for a clean, professional product feel.
+   The serif stays on the Solventia wordmark (.keep-serif) and the marketing site. */
+.app-inter {
+  --font-display: "Inter", "Noto Sans Devanagari", ui-sans-serif, system-ui, sans-serif;
+  --font-sans: "Inter", "Noto Sans Devanagari", ui-sans-serif, system-ui, sans-serif;
+  font-family: var(--font-sans);
+}
+.app-inter h1,
+.app-inter h2,
+.app-inter h3,
+.app-inter h4,
+.app-inter .font-display:not(.keep-serif),
+.app-inter .sol-page-title,
+.app-inter .sol-h2,
+.app-inter .sol-h3 {
+  font-family: var(--font-sans);
+  letter-spacing: -0.015em;
+}
+
+/* Calmer, easier-to-scan hierarchy inside the dashboard: capped heading sizes,
+   and sentence-case labels instead of shouting tracked-out capitals. */
+.app-inter h1:not(.sol-h-hero) {
+  font-size: clamp(1.5rem, 1.3rem + 0.6vw, 1.875rem) !important;
+  line-height: 1.2 !important;
+  font-weight: 600;
+}
+.app-inter h2:not(.sol-eyebrow):not(.sol-h3):not(.sol-h-sm) {
+  font-size: clamp(1.1875rem, 1.1rem + 0.35vw, 1.375rem) !important;
+  line-height: 1.3 !important;
+  font-weight: 500;
+}
+.app-inter .sol-h-sm {
+  font-size: 1rem;
+  line-height: 1.4;
+  font-weight: 500;
+}
+.app-inter .sol-h-hero {
+  font-size: clamp(1.875rem, 1.4rem + 1.3vw, 2.5rem) !important;
+  line-height: 1.15 !important;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+/* One step lighter everywhere inside the dashboard. */
+.app-inter .font-bold,
+.app-inter .font-extrabold {
+  font-weight: 600;
+}
+.app-inter .font-semibold {
+  font-weight: 500;
+}
+.app-inter .uppercase,
+.app-inter .sol-eyebrow {
+  text-transform: none !important;
+  letter-spacing: 0 !important;
+  font-weight: 600;
+}

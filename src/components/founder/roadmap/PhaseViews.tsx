@@ -119,14 +119,16 @@ export function PhaseStrip({
                 </span>
                 <span
                   className={cn(
-                    "line-clamp-2 text-[0.9375rem] font-semibold leading-snug",
+                    "text-[0.9375rem] font-semibold leading-snug",
                     p.state === "future" ? "text-sol-secondary" : "text-sol-ink",
                   )}
                 >
-                  {text.phaseTitle(p.id, p.title)}
+                  <span title={text.phaseTitle(p.id, p.title)}>
+                    {text.phaseTitle(p.id, p.title).split(/\s+/)[0]}
+                  </span>
                 </span>
                 {p.range && (
-                  <span className="text-[0.875rem] text-sol-secondary">
+                  <span className="text-[0.8125rem] text-sol-secondary">
                     {t("common.weeksRange", { from: p.range.first, to: p.range.last })}
                   </span>
                 )}
@@ -152,14 +154,14 @@ export function WeekRow({
   const openable = week.state !== "locked";
   const body = (
     <>
-      <span className="w-20 shrink-0 text-[0.9375rem] font-semibold text-sol-secondary">
+      <span className="w-20 shrink-0 text-[0.875rem] font-semibold text-sol-secondary">
         {t("common.weekN", { n: String(week.number).padStart(2, "0") })}
       </span>
       <span className="min-w-0 flex-1">
-        <span className="block text-[1.0625rem] font-semibold leading-snug text-sol-ink">
+        <span className="block text-[1rem] font-semibold leading-snug text-sol-ink">
           {text.weekTitle(week.id, week.title)}
         </span>
-        <span className="mt-0.5 block text-[0.9375rem] leading-snug text-sol-secondary">
+        <span className="mt-0.5 block text-[0.875rem] leading-snug text-sol-secondary">
           {text.weekObjective(week.id, week.objective)}
         </span>
       </span>
@@ -223,7 +225,7 @@ export function PhasePreview({
             </p>
             <h3 className="sol-h2 mt-1">{text.phaseTitle(phase.id, phase.title)}</h3>
             {phase.description && (
-              <p className="mt-2 text-[1.0625rem] leading-snug text-sol-secondary">
+              <p className="mt-2 text-[1rem] leading-snug text-sol-secondary">
                 {phase.description}
               </p>
             )}
@@ -233,7 +235,6 @@ export function PhasePreview({
           {t("rm.phase.back")}
         </Button>
       </div>
-      <p className="text-[0.9375rem] text-sol-secondary">{t("rm.phase.previewNote")}</p>
       <ul className="flex flex-col divide-y divide-sol-border">
         {weeks.map((w) => (
           <li key={w.id}>
@@ -293,11 +294,11 @@ export function PlanTab({
                     <Icon className="size-4" />
                   </span>
                   <span className="sol-eyebrow">{t("rm.phase.n", { n: i + 1 })}</span>
-                  <span className="min-w-0 font-display text-[1.375rem] font-semibold leading-snug text-sol-ink">
+                  <span className="min-w-0 font-display text-[1.3125rem] font-semibold leading-snug text-sol-ink">
                     {text.phaseTitle(p.id, p.title)}
                   </span>
                   {p.range && (
-                    <span className="text-[0.9375rem] text-sol-secondary">
+                    <span className="text-[0.875rem] text-sol-secondary">
                       {t("common.weeksRange", { from: p.range.first, to: p.range.last })}
                     </span>
                   )}

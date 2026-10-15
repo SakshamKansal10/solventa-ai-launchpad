@@ -1,12 +1,37 @@
 import { useState } from "react";
-import { ChevronDown, Check, CircleHelp, ListChecks } from "lucide-react";
+import {
+  ChevronDown,
+  Check,
+  CircleHelp,
+  Clock,
+  Compass,
+  ListChecks,
+  Search,
+  Tag,
+  Users,
+  Wallet,
+  Route,
+  Repeat,
+  ShieldCheck,
+  type LucideIcon,
+} from "lucide-react";
 
 import { useLocale } from "@/lib/i18n/LocaleProvider";
 import type { MissionState } from "@/lib/roadmap/state";
 import type { MissionDTO } from "@/lib/roadmap/view";
 import { cn } from "@/lib/utils";
 import { Button, LinkButton, Pill } from "../ui";
-import { MissionScene } from "./illustrations";
+
+const CATEGORY_ICON: Record<string, LucideIcon> = {
+  problem: Search,
+  willingness_to_pay: Wallet,
+  distribution: Route,
+  delivery: Route,
+  retention: Repeat,
+  pricing: Tag,
+  competition: ShieldCheck,
+  customer: Users,
+};
 
 interface MissionText {
   title?: string;
@@ -57,7 +82,7 @@ export function MissionCard({
   const { t, locale } = useLocale();
   const [open, setOpen] = useState(defaultOpen);
   const title = text?.title ?? mission.title;
-  const steps = (text?.steps && text.steps.length > 0 ? text.steps : mission.steps).slice(0, 4);
+  const steps = (text?.steps && text.steps.length > 0 ? text.steps : mission.steps).slice(0, 3);
   const time = text?.timeEstimate ?? mission.timeEstimate;
   const done = mission.state === "completed";
   const inProgress = mission.state === "in_progress";
@@ -130,8 +155,8 @@ export function MissionCard({
       className={cn(
         "relative overflow-hidden rounded-[1.25rem] border transition-all duration-[240ms]",
         open && !done
-          ? "border-sol-violet/45 bg-sol-surface p-6 shadow-[0_14px_36px_rgba(114,87,216,0.1)]"
-          : "border-sol-border bg-sol-surface/70 px-5 py-4",
+          ? "border-sol-violet/40 bg-sol-surface p-5 shadow-[0_8px_24px_rgba(114,87,216,0.08)]"
+          : "border-sol-border bg-sol-surface px-5 py-4 hover:border-sol-border-strong",
         done && "border-sol-champagne/50 bg-sol-champagne-soft/30",
       )}
     >
@@ -145,47 +170,27 @@ export function MissionCard({
       <div className="relative flex items-center gap-4">
         <span
           className={cn(
-            "relative flex shrink-0 items-center justify-center overflow-hidden rounded-2xl border-2 transition-all",
-            open && !done ? "size-20 sm:size-24" : "size-14 sm:size-16",
+            "relative flex size-14 shrink-0 items-center justify-center rounded-2xl",
             done
-              ? "border-sol-champagne"
+              ? "bg-sol-champagne text-sol-ink"
               : inProgress
-                ? "border-sol-violet"
-                : "border-sol-border-strong",
+                ? "bg-sol-violet text-white"
+                : "bg-sol-violet-soft text-sol-violet-deep",
           )}
         >
-          <MissionScene category={mission.assumptionCategory} className="absolute inset-0 size-full" />
-          {done && (
-            <span
-              aria-hidden="true"
-              className="absolute inset-0 grid place-items-center bg-sol-champagne/80"
-            >
-              <Check className="size-6 text-sol-ink" strokeWidth={3} />
-            </span>
+          {done ? (
+            <Check className="size-6" strokeWidth={3} aria-hidden="true" />
+          ) : (
+            (() => {
+              const Icon = CATEGORY_ICON[mission.assumptionCategory ?? ""] ?? Compass;
+              return <Icon className="size-6" strokeWidth={1.75} aria-hidden="true" />;
+            })()
           )}
-          <span
-            aria-hidden="true"
-            className={cn(
-              "absolute -bottom-1.5 -right-1.5 flex size-5 items-center justify-center rounded-full border text-[0.6875rem] font-bold",
-              done
-                ? "border-sol-champagne bg-sol-surface text-sol-champagne-deep"
-                : inProgress
-                  ? "border-sol-violet bg-sol-surface text-sol-violet-deep"
-                  : "border-sol-border-strong bg-sol-surface text-sol-secondary",
-            )}
-          >
-            {index + 1}
-          </span>
         </span>
 
         <div className="min-w-0 flex-1">
           <p className="sol-eyebrow flex flex-wrap items-center gap-x-2">
             <span>{t("rm.mission.n", { n: pad })}</span>
-            {time && (
-              <span className="font-medium normal-case tracking-normal text-sol-secondary">
-                · {time}
-              </span>
-            )}
             {inProgress && !open && (
               <span className="font-semibold normal-case tracking-normal text-sol-violet-deep">
                 · {t("rm.mission.in_progress")}
@@ -202,8 +207,8 @@ export function MissionCard({
           </p>
           <h3
             className={cn(
-              "mt-1 font-display font-semibold leading-[1.2] text-sol-ink",
-              open && !done ? "text-[1.625rem]" : "text-[1.25rem]",
+              "mt-0.5 font-semibold leading-[1.2] text-sol-ink",
+              "text-[1.0625rem] sm:text-[1.125rem]",
             )}
           >
             <button
@@ -227,6 +232,12 @@ export function MissionCard({
             </Pill>
           )}
           {!mission.required && <Pill tone="neutral">{t("common.optional")}</Pill>}
+          {time && (
+            <span className="mr-2 hidden items-center gap-1.5 text-[0.875rem] text-sol-secondary sm:inline-flex">
+              <Clock className="size-4" aria-hidden="true" />
+              {time}
+            </span>
+          )}
           {!open && primary}
           <ChevronDown
             className={cn("size-5 text-sol-secondary transition-transform", open && "rotate-180")}
@@ -236,8 +247,8 @@ export function MissionCard({
       </div>
 
       {open && (
-        <div className="relative mt-5 pl-0 sm:pl-[3.25rem]">
-          <dl className="grid gap-4" data-testid="mission-details">
+        <div className="relative mt-5 pl-0 sm:pl-[4.5rem]">
+          <dl className="grid gap-5" data-testid="mission-details">
             <div className="flex items-start gap-2.5">
               <CircleHelp
                 className="mt-0.5 size-4 shrink-0 text-sol-champagne-deep"
@@ -245,7 +256,7 @@ export function MissionCard({
               />
               <div className="min-w-0">
                 <dt className="sr-only">{t("rm.mission.whyShort")}</dt>
-                <dd className="max-w-[62ch] text-[1rem] leading-snug text-sol-ink">
+                <dd className="max-w-[62ch] text-[0.9375rem] leading-snug text-sol-ink">
                   {text?.why ?? mission.why}
                 </dd>
               </div>
@@ -261,7 +272,7 @@ export function MissionCard({
                   <dd>
                     <ul className="flex flex-col gap-1.5">
                       {steps.map((s) => (
-                        <li key={s} className="text-[1rem] leading-snug text-sol-ink">
+                        <li key={s} className="text-[0.9375rem] leading-snug text-sol-ink">
                           {s}
                         </li>
                       ))}
@@ -271,10 +282,13 @@ export function MissionCard({
               </div>
             )}
             <div className="flex items-start gap-2.5">
-              <Check className="mt-0.5 size-4 shrink-0 text-sol-champagne-deep" aria-hidden="true" />
+              <Check
+                className="mt-0.5 size-4 shrink-0 text-sol-champagne-deep"
+                aria-hidden="true"
+              />
               <div className="min-w-0">
                 <dt className="sr-only">{t("rm.mission.capture")}</dt>
-                <dd className="max-w-[62ch] text-[1rem] leading-snug text-sol-ink">
+                <dd className="max-w-[62ch] text-[0.9375rem] leading-snug text-sol-ink">
                   {text?.doneWhen ?? mission.doneWhen}
                 </dd>
               </div>
@@ -300,7 +314,7 @@ export function MissionCard({
               </div>
               {needsEvidence && inProgress && (
                 <p
-                  className="text-[0.9375rem] font-medium text-sol-secondary"
+                  className="text-[0.875rem] font-medium text-sol-secondary"
                   data-testid="mission-evidence-hint"
                 >
                   {t("rm.mission.needEvidenceHint")}

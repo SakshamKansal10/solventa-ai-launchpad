@@ -19,6 +19,9 @@ export const qk = {
    * opportunity also refreshes the fit comparison built from it. */
   directionFits: (ids: string[]) => ["opportunity", "fits", ...[...ids].sort()] as const,
   opportunityAll: ["opportunity"] as const,
+  /** Deliberately NOT under the "opportunity" prefix: the generated photo never
+   * changes when direction/roadmap data is invalidated. */
+  opportunityImage: (id: string) => ["opportunity-image", id] as const,
   opportunityEconomics: (opportunityId: string) =>
     ["opportunity-economics", opportunityId] as const,
   notifications: ["notifications"] as const,

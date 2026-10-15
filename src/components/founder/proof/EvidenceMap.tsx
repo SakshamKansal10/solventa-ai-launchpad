@@ -76,7 +76,7 @@ export function EvidenceMap({
 
   return (
     <div
-      className="flex flex-col gap-4 rounded-[1.25rem] border border-sol-border bg-sol-surface p-5 sm:p-6"
+      className="flex flex-col gap-3"
       data-testid="evidence-map"
       role="group"
       aria-label={t("pf.map.aria")}
@@ -142,7 +142,7 @@ export function EvidenceMap({
       </div>
 
       <div
-        className="min-h-[4.75rem] rounded-2xl bg-sol-ivory px-4 py-3"
+        className="min-h-[3.25rem] rounded-xl bg-sol-ivory px-4 py-2.5"
         aria-live="polite"
         data-testid="evidence-map-summary"
       >

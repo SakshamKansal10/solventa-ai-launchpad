@@ -134,9 +134,7 @@ test.describe("This Week", () => {
     const rail = page.getByTestId("week-rail");
     await expect(rail).toBeVisible();
     await expect(page.getByTestId("success-threshold")).toContainText("5 of 8");
-    await expect(page.getByTestId("week-evidence")).toBeVisible();
     await expect(page.getByTestId("week-avoid")).toBeVisible();
-    await expect(page.getByTestId("rail-ask-sol")).toBeVisible();
   });
 
   test("finishing the week, reviewing it and preparing Week 02 creates exactly one Week 02 — even on a double click", async ({

@@ -1,7 +1,9 @@
 /** Proof: assumptions, evidence, and the deterministic state each one is in. */
 const en = {
   "pf.title": "Proof",
-  "pf.subtitle": "Turn assumptions into evidence.",
+  "pf.collected": "Evidence collected",
+  "pf.moreToValidate": "More to validate",
+  "pf.subtitle": "Validate assumptions with real evidence.",
   "pf.addEvidenceCta": "+ Add evidence",
   "pf.showMore": "Show more",
   "pf.stream.title": "Evidence stream",
@@ -135,6 +137,8 @@ const en = {
 
 const hi: Record<keyof typeof en, string> = {
   "pf.title": "प्रमाण",
+  "pf.collected": "जुटाया गया साक्ष्य",
+  "pf.moreToValidate": "और जाँचने बाकी",
   "pf.subtitle": "अनुमानों को साक्ष्य में बदलें।",
   "pf.addEvidenceCta": "+ साक्ष्य जोड़ें",
   "pf.showMore": "और दिखाएं",

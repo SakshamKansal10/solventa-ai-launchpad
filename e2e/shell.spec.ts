@@ -151,12 +151,6 @@ test.describe("Ask Sol", () => {
       { timeout: 45_000 },
     );
   });
-
-  test("the Ask Sol button on the roadmap rail opens the panel", async ({ page, context }) => {
-    await founderWithRoadmap(page, context);
-    await page.getByTestId("rail-ask-sol").click();
-    await expect(page.getByTestId("ask-sol-panel")).toBeVisible();
-  });
 });
 
 test.describe("notifications", () => {

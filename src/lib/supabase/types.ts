@@ -100,6 +100,25 @@ export interface Database {
         Update: Partial<Database["public"]["Tables"]["opportunities"]["Row"]>;
         Relationships: [];
       };
+      opportunity_images: {
+        Row: {
+          opportunity_id: string;
+          user_id: string;
+          image_path: string;
+          prompt_hash: string;
+          ai_model: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: Partial<Database["public"]["Tables"]["opportunity_images"]["Row"]> & {
+          opportunity_id: string;
+          user_id: string;
+          image_path: string;
+          prompt_hash: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["opportunity_images"]["Row"]>;
+        Relationships: [];
+      };
       opportunity_details: {
         Row: {
           id: string;
