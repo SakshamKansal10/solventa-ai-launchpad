@@ -28,6 +28,8 @@ export interface OpportunityFitFactors {
    * somewhere specific (a shop, a client's site, a particular city) — true
    * for anything that can be run from wherever the founder already is. */
   locationFlexible: boolean;
+  /** Realistic ceiling if the business works. Absent on older opportunities. */
+  ceiling?: "income" | "national" | "venture";
 }
 
 export interface FitScoreBreakdown {

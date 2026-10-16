@@ -78,65 +78,85 @@ export interface OpportunityDisplayDetail {
 function isPackageShape(
   detail: OpportunityPackage | OpportunityDetail,
 ): detail is OpportunityPackage {
-  return "plainEnglishSummary" in detail;
+  return Boolean(detail) && "plainEnglishSummary" in detail;
 }
 
+const FALLBACK_DIFFICULTY: OpportunityDisplayDetail["difficulty"] = "Moderate";
+
+/** A row's stored `candidate`/`detail` JSON is only as trustworthy as whatever
+ * schema was live the day it was written — a founder-profile field like
+ * `capital` can be absent on a genuinely old row, and nothing here should
+ * ever throw because of it. Every read below tolerates a missing/null value
+ * with the same plain-language "not recorded" fallback the UI already shows
+ * for other optional facts, instead of crashing the page that renders it. */
 export function toDisplayDetail(
-  detail: OpportunityPackage | OpportunityDetail,
+  detail: OpportunityPackage | OpportunityDetail | null | undefined,
 ): OpportunityDisplayDetail {
+  detail ??= {} as OpportunityDetail;
   if (isPackageShape(detail)) {
+    const problem = detail.problem ?? "";
+    const solution = detail.solution ?? "";
+    const customer = detail.customer ?? "";
+    const businessModel = detail.businessModelPlainEnglish ?? "";
     return {
-      summary: detail.plainEnglishSummary,
-      customer: detail.customer,
-      problem: detail.problem,
-      solution: detail.solution,
-      problemHeadline: detail.problemHeadline || detail.problem,
-      solutionHeadline: detail.solutionHeadline || detail.solution,
-      customerHeadline: detail.customerHeadline || detail.customer,
-      moneyHeadline: detail.moneyHeadline || detail.businessModelPlainEnglish,
-      whyThisFounder: detail.whyThisFounder,
-      businessModel: detail.businessModelPlainEnglish,
-      startingCapital: detail.startingCapital,
-      weeklyTime: detail.weeklyTime,
-      difficulty: detail.difficulty,
-      skillsAlreadyOwned: detail.skillsAlreadyOwned,
-      skillsToLearn: detail.skillsToLearn,
-      resourceRequirements: detail.resourceRequirements,
-      advantages: detail.advantages,
-      tradeoffs: detail.tradeoffs,
-      risks: detail.risks,
-      unknowns: detail.unknowns,
-      validationNeeded: detail.validationNeeded,
-      revenuePath: detail.revenuePath,
-      firstExperiment: detail.firstExperiment,
+      summary: detail.plainEnglishSummary ?? "",
+      customer,
+      problem,
+      solution,
+      problemHeadline: detail.problemHeadline || problem,
+      solutionHeadline: detail.solutionHeadline || solution,
+      customerHeadline: detail.customerHeadline || customer,
+      moneyHeadline: detail.moneyHeadline || businessModel,
+      whyThisFounder: detail.whyThisFounder ?? [],
+      businessModel,
+      startingCapital: detail.startingCapital ?? "",
+      weeklyTime: detail.weeklyTime ?? "",
+      difficulty: detail.difficulty ?? FALLBACK_DIFFICULTY,
+      skillsAlreadyOwned: detail.skillsAlreadyOwned ?? [],
+      skillsToLearn: detail.skillsToLearn ?? [],
+      resourceRequirements: detail.resourceRequirements ?? [],
+      advantages: detail.advantages ?? [],
+      tradeoffs: detail.tradeoffs ?? [],
+      risks: detail.risks ?? [],
+      unknowns: detail.unknowns ?? [],
+      validationNeeded: detail.validationNeeded ?? [],
+      revenuePath: detail.revenuePath ?? "",
+      firstExperiment: detail.firstExperiment ?? "",
     };
   }
 
   // Legacy pre-migration shape — mapped onto the same display contract so
-  // old founders' saved analyses keep rendering correctly.
+  // old founders' saved analyses keep rendering correctly. `startingRequirements`
+  // itself (and every field inside it) predates several later columns and can
+  // be entirely absent on the oldest rows.
+  const requirements = detail.startingRequirements ?? undefined;
+  const theOpportunity = detail.theOpportunity ?? "";
+  const theProblem = detail.theProblem ?? "";
+  const whoItIsFor = detail.whoItIsFor ?? "";
+  const howItCanMakeMoney = detail.howItCanMakeMoney ?? "";
   return {
-    summary: detail.theOpportunity,
-    customer: detail.whoItIsFor,
-    problem: detail.theProblem,
-    solution: detail.theOpportunity,
-    problemHeadline: detail.theProblem,
-    solutionHeadline: detail.theOpportunity,
-    customerHeadline: detail.whoItIsFor,
-    moneyHeadline: detail.howItCanMakeMoney,
-    whyThisFounder: detail.whyThisFitsYou,
-    businessModel: detail.howItCanMakeMoney,
-    startingCapital: detail.startingRequirements.capital,
-    weeklyTime: detail.startingRequirements.time,
-    difficulty: detail.difficulty,
-    skillsAlreadyOwned: detail.whatYouAlreadyHave,
-    skillsToLearn: [...detail.whatYouStillNeed, ...detail.startingRequirements.skills],
-    resourceRequirements: detail.startingRequirements.equipment,
+    summary: theOpportunity,
+    customer: whoItIsFor,
+    problem: theProblem,
+    solution: theOpportunity,
+    problemHeadline: theProblem,
+    solutionHeadline: theOpportunity,
+    customerHeadline: whoItIsFor,
+    moneyHeadline: howItCanMakeMoney,
+    whyThisFounder: detail.whyThisFitsYou ?? [],
+    businessModel: howItCanMakeMoney,
+    startingCapital: requirements?.capital ?? "",
+    weeklyTime: requirements?.time ?? "",
+    difficulty: detail.difficulty ?? FALLBACK_DIFFICULTY,
+    skillsAlreadyOwned: detail.whatYouAlreadyHave ?? [],
+    skillsToLearn: [...(detail.whatYouStillNeed ?? []), ...(requirements?.skills ?? [])],
+    resourceRequirements: requirements?.equipment ?? [],
     advantages: [],
     tradeoffs: [],
-    risks: detail.risks,
+    risks: detail.risks ?? [],
     unknowns: [],
-    validationNeeded: detail.needsValidation,
-    revenuePath: detail.howItCanMakeMoney,
-    firstExperiment: detail.firstExperiment,
+    validationNeeded: detail.needsValidation ?? [],
+    revenuePath: howItCanMakeMoney,
+    firstExperiment: detail.firstExperiment ?? "",
   };
 }

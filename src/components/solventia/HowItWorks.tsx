@@ -1,174 +1,183 @@
-import { useState } from "react";
-import { motion, useReducedMotion } from "motion/react";
-import { Compass, FlaskConical, Map, Sparkles } from "lucide-react";
-import { useLocale } from "@/lib/i18n/LocaleProvider";
+import { useRef, useState } from "react";
+import {
+  AnimatePresence,
+  motion,
+  useMotionValueEvent,
+  useReducedMotion,
+  useScroll,
+  useSpring,
+} from "motion/react";
+import {
+  Compass,
+  FlaskConical,
+  ListChecks,
+  RefreshCw,
+  Sparkles,
+  type LucideIcon,
+} from "lucide-react";
 
-/** Four stages only — the seven internal onboarding chapters don't need
- * individual advertising; what matters publicly is the shape of the
- * whole journey, not a chapter-by-chapter inventory. */
-const STAGES = [
-  {
-    n: "01",
-    icon: Compass,
-    titleKey: "howItWorks.stage1.title",
-    bodyKey: "howItWorks.stage1.body",
-  },
-  {
-    n: "02",
-    icon: Sparkles,
-    titleKey: "howItWorks.stage2.title",
-    bodyKey: "howItWorks.stage2.body",
-  },
-  {
-    n: "03",
-    icon: FlaskConical,
-    titleKey: "howItWorks.stage3.title",
-    bodyKey: "howItWorks.stage3.body",
-  },
-  { n: "04", icon: Map, titleKey: "howItWorks.stage4.title", bodyKey: "howItWorks.stage4.body" },
+import type { MessageKey } from "@/lib/i18n";
+import { useLocale } from "@/lib/i18n/LocaleProvider";
+import { cn } from "@/lib/utils";
+
+/** Five steps. The rail fills and the current step lights up as the section is
+ * scrolled through — progress is driven by scroll position, not a timer. */
+const STEPS: { n: string; icon: LucideIcon; title: MessageKey; body: MessageKey }[] = [
+  { n: "01", icon: Compass, title: "howItWorks.step1.title", body: "howItWorks.step1.body" },
+  { n: "02", icon: Sparkles, title: "howItWorks.step2.title", body: "howItWorks.step2.body" },
+  { n: "03", icon: FlaskConical, title: "howItWorks.step3.title", body: "howItWorks.step3.body" },
+  { n: "04", icon: ListChecks, title: "howItWorks.step4.title", body: "howItWorks.step4.body" },
+  { n: "05", icon: RefreshCw, title: "howItWorks.step5.title", body: "howItWorks.step5.body" },
 ];
 
-const VIEW_WIDTH = 1000;
-const NODE_Y = 20;
-function nodeX(i: number) {
-  return (VIEW_WIDTH / (STAGES.length - 1)) * i + 30;
-}
-/** A shallow sine-based dip so the path reads as one real curved journey
- * rather than a ruled line with dots on it. */
-function nodeYAt(i: number) {
-  return NODE_Y + Math.sin((i / (STAGES.length - 1)) * Math.PI) * -8;
-}
-function curvePath(): string {
-  const points = STAGES.map((_, i) => ({ x: nodeX(i), y: nodeYAt(i) }));
-  let d = `M ${points[0].x},${points[0].y}`;
-  for (let i = 1; i < points.length; i++) {
-    const prev = points[i - 1];
-    const curr = points[i];
-    const midX = (prev.x + curr.x) / 2;
-    d += ` C ${midX},${prev.y} ${midX},${curr.y} ${curr.x},${curr.y}`;
-  }
-  return d;
-}
-const PATH_D = curvePath();
-const DRAW_DURATION = 1.2;
-
-/** One continuous journey — a shallow curved path drawn once across all
- * four nodes as the section scrolls into view, each node briefly lighting
- * violet as the path reaches it before settling to champagne — replacing
- * the old seven isolated circle-plus-paragraph grid, which read as a list
- * rather than a transformation. */
 export function HowItWorks() {
-  const { t } = useLocale();
+  const { t, locale } = useLocale();
   const reduceMotion = useReducedMotion();
-  const [entered, setEntered] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+  const [active, setActive] = useState(0);
+  const { scrollYProgress } = useScroll({ target: ref, offset: ["start 80%", "end 45%"] });
+  const fill = useSpring(0, { stiffness: 140, damping: 26, mass: 0.6 });
+
+  useMotionValueEvent(scrollYProgress, "change", (p) => {
+    const next = Math.min(STEPS.length - 1, Math.max(0, Math.floor(p * STEPS.length)));
+    setActive(next);
+    fill.set(next / (STEPS.length - 1));
+  });
 
   return (
     <section
       id="how-it-works"
-      className="scroll-mt-[84px] bg-sol-hp-ivory px-[18px] py-[96px] sm:px-6 lg:px-9 lg:pb-[104px] lg:pt-[96px]"
+      className="scroll-mt-[76px] bg-sol-hp-pearl px-[18px] py-[72px] sm:px-6 lg:px-9 lg:py-[96px]"
     >
       <div className="mx-auto max-w-[1180px]">
-        <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-sol-champagne-deep">
+        <p className="text-center text-[14px] font-semibold uppercase tracking-[0.14em] text-sol-champagne-deep">
           {t("howItWorks.eyebrow")}
         </p>
-        <h2 className="mt-4 font-display text-[32px] font-semibold leading-[1.15] text-sol-ink sm:text-[40px] sm:leading-[46px]">
+        <h2
+          className={cn(
+            "mx-auto mt-4 max-w-[18ch] text-center font-display text-[34px] font-semibold text-sol-ink sm:text-[40px] lg:text-[48px]",
+            locale === "hi" ? "leading-[1.35]" : "leading-[1.1]",
+          )}
+        >
           {t("howItWorks.headline")}
         </h2>
-        <p className="mt-4 max-w-[560px] text-[17px] leading-[27px] text-sol-secondary">
-          {t("howItWorks.subhead")}
-        </p>
-
-        <motion.div
-          onViewportEnter={() => setEntered(true)}
-          viewport={{ once: true, margin: "-100px" }}
-          className="relative mt-16"
+        <div
+          ref={ref}
+          className="relative mt-14"
+          data-testid="how-it-works-steps"
+          data-active={active}
+          role="group"
+          aria-label={t("story.how.aria")}
         >
-          <svg
-            viewBox={`0 0 ${VIEW_WIDTH + 60} 40`}
-            className="pointer-events-none absolute inset-x-0 top-[26px] hidden h-[40px] w-full lg:block"
-            preserveAspectRatio="none"
+          {/* Desktop rail: sits behind the node row. */}
+          <div
+            className="pointer-events-none absolute left-[10%] right-[10%] top-[27px] hidden h-[3px] rounded-full bg-sol-hp-ivory-deep lg:block"
             aria-hidden="true"
           >
-            <defs>
-              <linearGradient id="how-it-works-path" x1="0" y1="0" x2="1" y2="0">
-                <stop offset="0%" stopColor="var(--sol-champagne)" />
-                <stop offset="50%" stopColor="var(--sol-violet)" />
-                <stop offset="100%" stopColor="var(--sol-champagne)" />
-              </linearGradient>
-            </defs>
-            <path d={PATH_D} fill="none" stroke="rgba(197,163,106,.34)" strokeWidth={1.4} />
-            <motion.path
-              d={PATH_D}
-              fill="none"
-              stroke="url(#how-it-works-path)"
-              strokeWidth={2}
-              strokeLinecap="round"
-              initial={{ pathLength: 0 }}
-              animate={entered ? { pathLength: 1 } : {}}
-              transition={{ duration: reduceMotion ? 0 : DRAW_DURATION, ease: [0.22, 1, 0.36, 1] }}
+            <motion.span
+              className="absolute inset-0 origin-left rounded-full bg-gradient-to-r from-sol-champagne via-sol-violet to-sol-violet"
+              style={{ scaleX: reduceMotion ? active / (STEPS.length - 1) : fill }}
             />
-          </svg>
+          </div>
+          {/* Mobile rail: down the left edge. */}
+          <div
+            className="pointer-events-none absolute bottom-6 left-[26px] top-6 w-[3px] rounded-full bg-sol-hp-ivory-deep lg:hidden"
+            aria-hidden="true"
+          >
+            <motion.span
+              className="absolute inset-0 origin-top rounded-full bg-gradient-to-b from-sol-champagne to-sol-violet"
+              style={{ scaleY: reduceMotion ? active / (STEPS.length - 1) : fill }}
+            />
+          </div>
 
-          <ol className="relative grid gap-10 sm:grid-cols-2 lg:grid-cols-4">
-            {STAGES.map((stage, i) => {
-              // When the drawing path reaches this node, in seconds.
-              const reachDelay = reduceMotion ? 0 : (i / (STAGES.length - 1)) * DRAW_DURATION;
+          <ol className="relative grid gap-8 lg:grid-cols-5 lg:gap-4">
+            {STEPS.map((step, i) => {
+              const reached = i <= active;
+              const current = i === active;
               return (
-                <motion.li
-                  key={stage.n}
-                  initial={{ opacity: 0, y: 16 }}
-                  animate={entered ? { opacity: 1, y: 0 } : {}}
-                  transition={{
-                    duration: reduceMotion ? 0 : 0.5,
-                    delay: reduceMotion ? 0 : 0.15 + i * 0.1,
-                    ease: [0.22, 1, 0.36, 1],
-                  }}
-                  className="flex max-w-[255px] flex-col gap-4"
+                <li
+                  key={step.n}
+                  className="relative flex gap-5 lg:flex-col lg:items-center lg:gap-5 lg:text-center"
+                  data-testid={`how-step-${i + 1}`}
+                  data-state={current ? "current" : reached ? "done" : "upcoming"}
                 >
-                  <div className="flex items-center gap-3">
-                    <span className="text-[12px] font-semibold text-sol-champagne-deep">
-                      {stage.n}
-                    </span>
+                  <span className="relative flex size-[54px] shrink-0 items-center justify-center">
+                    {current && !reduceMotion && (
+                      <motion.span
+                        aria-hidden="true"
+                        className="absolute inset-0 rounded-full border-2 border-sol-violet/50"
+                        animate={{ scale: [1, 1.35], opacity: [0.7, 0] }}
+                        transition={{ duration: 1.8, repeat: Infinity, ease: "easeOut" }}
+                      />
+                    )}
                     <motion.span
-                      className="flex size-12 items-center justify-center rounded-full"
-                      style={{
-                        border: "1px solid rgba(197,163,106,.45)",
-                        background: "rgba(255,253,249,.86)",
-                      }}
-                      animate={
-                        entered && !reduceMotion
-                          ? {
-                              borderColor: [
-                                "rgba(197,163,106,.45)",
-                                "rgba(114,87,216,.9)",
-                                "rgba(197,163,106,.45)",
-                              ],
-                              boxShadow: [
-                                "0 0 0 0px rgba(114,87,216,0)",
-                                "0 0 0 7px rgba(114,87,216,.055)",
-                                "0 0 0 0px rgba(114,87,216,0)",
-                              ],
-                            }
-                          : undefined
-                      }
-                      transition={{ duration: 0.35, delay: reachDelay, ease: "easeOut" }}
+                      animate={{ scale: current ? 1.08 : 1 }}
+                      transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
+                      className={cn(
+                        "relative flex size-full items-center justify-center rounded-full border-2 transition-colors duration-300",
+                        reached
+                          ? "border-sol-violet bg-sol-violet text-white shadow-[0_10px_26px_rgba(114,87,216,0.3)]"
+                          : "border-sol-border-strong bg-sol-hp-surface text-sol-muted",
+                      )}
                     >
-                      <stage.icon className="size-[18px] text-sol-violet-deep" aria-hidden="true" />
+                      <motion.span
+                        key={`${i}-${current}`}
+                        initial={
+                          current && i === STEPS.length - 1 && !reduceMotion
+                            ? { rotate: -180 }
+                            : false
+                        }
+                        animate={{ rotate: 0 }}
+                        transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+                        className="flex"
+                      >
+                        <step.icon className="size-6" aria-hidden="true" />
+                      </motion.span>
                     </motion.span>
-                  </div>
-                  <div>
-                    <h3 className="font-display text-[18px] font-semibold leading-[26px] text-sol-ink">
-                      {t(stage.titleKey)}
-                    </h3>
-                    <p className="mt-1.5 text-[16px] leading-[24px] text-[#66616A]">
-                      {t(stage.bodyKey)}
+                  </span>
+
+                  <div className="min-w-0">
+                    <p
+                      className={cn(
+                        "font-display text-[15px] font-semibold tracking-[0.12em] transition-colors duration-300",
+                        reached ? "text-sol-champagne-deep" : "text-sol-secondary",
+                      )}
+                    >
+                      {step.n}
                     </p>
+                    <h3
+                      className={cn(
+                        "mt-1 font-display text-[26px] font-semibold leading-[1.15] transition-colors duration-300",
+                        reached ? "text-sol-ink" : "text-sol-secondary",
+                      )}
+                    >
+                      {t(step.title)}
+                    </h3>
+                    {/* One line per step, read aloud here; shown once, below, for the
+                        step in view — so five paragraphs never compete at once. */}
+                    <p className="sr-only">{t(step.body)}</p>
                   </div>
-                </motion.li>
+                </li>
               );
             })}
           </ol>
-        </motion.div>
+
+          <div className="mt-10 flex min-h-[3.5rem] justify-center" aria-hidden="true">
+            <AnimatePresence mode="wait" initial={false}>
+              <motion.p
+                key={active}
+                initial={reduceMotion ? false : { opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={reduceMotion ? undefined : { opacity: 0, y: -6 }}
+                transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
+                className="max-w-[34ch] text-center text-[19px] leading-[28px] text-sol-ink"
+                data-testid="how-caption"
+              >
+                {t(STEPS[active].body)}
+              </motion.p>
+            </AnimatePresence>
+          </div>
+        </div>
       </div>
     </section>
   );

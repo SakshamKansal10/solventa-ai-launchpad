@@ -3,9 +3,8 @@ import { ArrowRight } from "lucide-react";
 import mark from "@/assets/solventia-mark.png";
 import { useLocale } from "@/lib/i18n/LocaleProvider";
 
-/** The one closing dark section — deliberately the only major dark block
- * on the whole page, so it reads as a real ending rather than one of
- * several similar-weight dark surfaces. */
+/** The closing dark section: one headline, one action. (The Proof engine is the
+ * page's other dark moment; everything between them stays light.) */
 export function FinalCTA() {
   const navigate = useNavigate();
   const { t } = useLocale();
@@ -41,25 +40,31 @@ export function FinalCTA() {
 
       <div className="relative mx-auto flex max-w-[560px] flex-col items-center py-16">
         <img src={mark} alt="" width={298} height={436} className="h-10 w-auto" />
-        <h2 className="mt-6 font-display text-[36px] font-semibold leading-[1.1] text-white sm:text-[48px]">
-          {t("finalCta.headline1")}
-          <br />
-          {t("finalCta.headline2")}
+        <h2 className="mt-6 font-display text-[36px] font-semibold leading-[1.1] text-white sm:text-[52px]">
+          {t("finalCta.headline")}
         </h2>
-        <p className="mt-4 text-[16px] text-white/70">{t("finalCta.subhead")}</p>
-        <button
-          type="button"
-          onClick={() => navigate({ to: "/consultation" })}
-          className="group mt-8 inline-flex h-14 items-center gap-2.5 rounded-2xl bg-sol-champagne px-7 text-[15px] font-semibold text-sol-ink transition-all duration-200 hover:-translate-y-0.5 hover:bg-[oklch(0.7809_0.0814_81.8)] hover:shadow-[0_10px_26px_rgba(197,163,106,.20)]"
-        >
-          {t("finalCta.cta")}
-          <ArrowRight
-            className="size-4 transition-transform duration-200 group-hover:translate-x-[3px]"
-            aria-hidden="true"
-          />
-        </button>
+        <div className="mt-9 flex flex-wrap items-center justify-center gap-3">
+          {/* One action to end on — the same ivory-champagne surface as the hero's. */}
+          <button
+            type="button"
+            onClick={() => navigate({ to: "/consultation" })}
+            className="group relative inline-flex h-[60px] items-center gap-3 overflow-hidden rounded-2xl px-[34px] text-[16.5px] font-bold text-sol-navy shadow-[0_16px_40px_rgba(0,0,0,.38),inset_0_1px_0_rgba(255,255,255,.9)] ring-1 ring-white/50 transition-[transform,box-shadow] duration-150 ease-[cubic-bezier(.22,1,.36,1)] hover:-translate-y-0.5 hover:shadow-[0_20px_52px_rgba(220,192,139,.42),inset_0_1px_0_rgba(255,255,255,.9)] active:translate-y-0 active:scale-[0.985] active:duration-100"
+            style={{
+              background: "linear-gradient(135deg, #FFFDFB 0%, #F2ECE2 55%, #DCC08B 100%)",
+            }}
+          >
+            <span
+              aria-hidden="true"
+              className="pointer-events-none absolute inset-y-0 -left-2/3 w-1/2 -skew-x-12 bg-gradient-to-r from-transparent via-white/70 to-transparent transition-[left] duration-700 ease-[cubic-bezier(.22,1,.36,1)] group-hover:left-[130%]"
+            />
+            <span className="relative">{t("finalCta.cta")}</span>
+            <span className="sol-nudge relative flex" aria-hidden="true">
+              <ArrowRight className="size-[19px] text-sol-violet-deep transition-transform duration-150 group-hover:translate-x-[5px]" />
+            </span>
+          </button>
+        </div>
 
-        <p className="mt-6 text-[13px] text-white/55">
+        <p className="mt-6 text-[14px] text-white/70">
           {t("finalCta.orgPrompt")}{" "}
           <Link to="/for-organizations" className="font-medium text-white/80 hover:text-white">
             {t("finalCta.orgLink")}

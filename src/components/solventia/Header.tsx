@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useRouterState, Link } from "@tanstack/react-router";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
 import { motion } from "motion/react";
 import {
   ArrowRight,
@@ -12,6 +12,7 @@ import {
   Sparkles,
 } from "lucide-react";
 import mark from "@/assets/solventia-mark.png";
+import { Avatar } from "@/components/founder/Avatar";
 import { useActiveSection, scrollToSection } from "@/hooks/use-active-section";
 import { SignInDialog } from "./SignInDialog";
 import { LanguageSwitcher } from "./LanguageSwitcher";
@@ -23,23 +24,22 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { getCurrentUser, signOut } from "@/lib/actions/auth";
+import { signOut } from "@/lib/actions/auth";
+import { useCurrentUserQuery } from "@/lib/queries";
 import { useLocale } from "@/lib/i18n/LocaleProvider";
+import type { MessageKey } from "@/lib/i18n";
+import { cn } from "@/lib/utils";
 
 /** Exactly four items, exactly these anchors — PRODUCT and HOW IT WORKS
  * are same-page scrolls (only meaningful on "/"), FOR ORGANIZATIONS and
  * ABOUT are real routes. No "Explore Ideas" (Solventia isn't a public
  * idea catalogue) and no top-level "Roadmaps" (roadmaps live inside
  * Product / How It Works). */
-const SCROLL_NAV: { labelKey: string; id: string }[] = [
+const SCROLL_NAV: { labelKey: MessageKey; id: string }[] = [
   { labelKey: "nav.product", id: "founder-signal" },
   { labelKey: "nav.howItWorks", id: "how-it-works" },
 ];
 const SCROLL_IDS = SCROLL_NAV.map((item) => item.id);
-
-function initials(email: string | null): string {
-  return email ? email[0].toUpperCase() : "S";
-}
 
 interface HeaderProps {
   /** A sanitized, same-origin destination carried in via `?next=` — set
@@ -63,13 +63,21 @@ export function Header({ pendingNext }: HeaderProps = {}) {
   // deliberately NOT re-derived on every render, so dismissing the
   // auto-opened dialog (without signing in) doesn't keep reopening it.
   const [nextPromptOpen, setNextPromptOpen] = useState(() => Boolean(pendingNext));
+  // Remembered from the first render: the address bar is tidied below, and the
+  // router reacts to that by dropping `?next=` from its own state — which used
+  // to send a founder bounced from /dashboard/settings to plain /dashboard.
+  const [returnTo] = useState(() => pendingNext ?? null);
   const activeId = useActiveSection(SCROLL_IDS);
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const isHome = pathname === "/";
-  const currentUser = useQuery({ queryKey: ["current-user"], queryFn: () => getCurrentUser() });
+  const currentUser = useCurrentUserQuery();
   const isSignedIn = Boolean(currentUser.data);
+  // Only true while floating transparent over the hero photograph — every
+  // other state (scrolled, or any non-home route) sits on the pearl/ivory
+  // background these colors were designed for.
+  const overDarkHero = isHome && !scrolled;
 
   useEffect(() => {
     const onScroll = () => {
@@ -110,7 +118,7 @@ export function Header({ pendingNext }: HeaderProps = {}) {
 
   return (
     <header
-      className={`fixed inset-x-0 top-0 z-50 h-[68px] transition-all duration-500 md:h-[84px] ${
+      className={`fixed inset-x-0 top-0 z-50 h-[76px] transition-all duration-500 ${
         scrolled || !isHome
           ? "border-b border-[rgba(228,221,212,0.72)] bg-[rgba(252,250,247,0.88)] backdrop-blur-[18px] backdrop-saturate-[1.05]"
           : "border-b border-transparent"
@@ -119,28 +127,48 @@ export function Header({ pendingNext }: HeaderProps = {}) {
         scrolledPastShadowThreshold ? { boxShadow: "0 6px 28px rgba(23,32,61,0.045)" } : undefined
       }
     >
-      <div className="mx-auto grid h-full max-w-[1920px] grid-cols-[auto_1fr_auto] items-center gap-6 px-[18px] sm:px-6 lg:px-10">
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
+        className="mx-auto grid h-full max-w-[1920px] grid-cols-[auto_1fr_auto] items-center gap-6 px-[18px] sm:px-6 lg:px-10"
+      >
         <Link
           to="/"
           className="flex shrink-0 items-center gap-4"
-          aria-label="Solventia home"
+          aria-label={t("nav.homeAria")}
           onClick={() => setMobileOpen(false)}
         >
           <motion.img
             src={mark}
-            alt="Solventia logo"
+            alt="Solventia"
             width={298}
             height={436}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.9, ease: [0.22, 1, 0.36, 1] }}
-            className="h-[38px] w-auto drop-shadow-[0_1px_2px_rgba(23,32,61,0.18)] md:h-[44px]"
+            className={cn(
+              "h-[38px] w-auto md:h-[44px]",
+              overDarkHero
+                ? "drop-shadow-[0_0_14px_rgba(255,255,255,0.4)]"
+                : "drop-shadow-[0_1px_2px_rgba(23,32,61,0.18)]",
+            )}
           />
           <span className="hidden leading-none sm:block">
-            <span className="block font-display text-[1.4rem] font-semibold tracking-[0.22em] text-sol-ink">
+            <span
+              className={cn(
+                "block font-display text-[1.4rem] font-semibold tracking-[0.22em]",
+                overDarkHero ? "text-white" : "text-sol-ink",
+              )}
+            >
               SOLVENTIA
             </span>
-            <span className="mt-1.5 block text-[0.56rem] font-medium tracking-[0.34em] text-sol-champagne-deep">
+            <span
+              className={cn(
+                "mt-1.5 block text-[0.6875rem] font-medium tracking-[0.26em]",
+                overDarkHero ? "text-sol-champagne" : "text-sol-champagne-deep",
+              )}
+            >
               VALIDATE • BUILD • ELEVATE
             </span>
           </span>
@@ -152,11 +180,16 @@ export function Header({ pendingNext }: HeaderProps = {}) {
               key={item.id}
               type="button"
               onClick={() => handleScrollNav(item.id)}
-              className={`relative text-[14px] font-[550] uppercase tracking-[0.04em] transition-colors duration-300 ${
+              className={cn(
+                "relative text-[14px] font-[550] uppercase tracking-[0.04em] transition-colors duration-300",
                 isHome && activeId === item.id
-                  ? "text-sol-ink"
-                  : "text-sol-ink/80 hover:text-sol-navy"
-              }`}
+                  ? overDarkHero
+                    ? "text-white"
+                    : "text-sol-ink"
+                  : overDarkHero
+                    ? "text-white/80 hover:text-white"
+                    : "text-sol-ink/80 hover:text-sol-navy",
+              )}
             >
               {t(item.labelKey)}
               <span
@@ -168,22 +201,39 @@ export function Header({ pendingNext }: HeaderProps = {}) {
           ))}
           <Link
             to="/for-organizations"
-            className="text-[14px] font-[550] uppercase tracking-[0.04em] text-sol-ink/80 transition-colors duration-300 hover:text-sol-navy"
-            activeProps={{ className: "text-sol-ink" }}
+            className={cn(
+              "text-[14px] font-[550] uppercase tracking-[0.04em] transition-colors duration-300",
+              overDarkHero
+                ? "text-white/80 hover:text-white"
+                : "text-sol-ink/80 hover:text-sol-navy",
+            )}
+            activeProps={{ className: overDarkHero ? "text-white" : "text-sol-ink" }}
           >
             {t("nav.forOrganizations")}
           </Link>
           <Link
             to="/about"
-            className="text-[14px] font-[550] uppercase tracking-[0.04em] text-sol-ink/80 transition-colors duration-300 hover:text-sol-navy"
-            activeProps={{ className: "text-sol-ink" }}
+            className={cn(
+              "text-[14px] font-[550] uppercase tracking-[0.04em] transition-colors duration-300",
+              overDarkHero
+                ? "text-white/80 hover:text-white"
+                : "text-sol-ink/80 hover:text-sol-navy",
+            )}
+            activeProps={{ className: overDarkHero ? "text-white" : "text-sol-ink" }}
           >
             {t("nav.about")}
           </Link>
         </nav>
 
         <div className="flex items-center gap-3">
-          <LanguageSwitcher className="hidden text-[13px] font-medium text-sol-ink/70 transition-colors hover:text-sol-navy sm:inline-flex sm:items-center sm:gap-1" />
+          <LanguageSwitcher
+            className={cn(
+              "hidden text-[14px] font-medium transition-colors sm:inline-flex sm:items-center sm:gap-1",
+              overDarkHero
+                ? "text-white/80 hover:text-white"
+                : "text-sol-ink/70 hover:text-sol-navy",
+            )}
+          />
           {isSignedIn ? (
             <>
               <button
@@ -198,21 +248,21 @@ export function Header({ pendingNext }: HeaderProps = {}) {
                 <DropdownMenuTrigger asChild>
                   <button
                     type="button"
-                    aria-label="Account menu"
-                    className="hidden size-10 items-center justify-center rounded-full text-[0.85rem] font-semibold text-white sm:flex"
-                    style={{
-                      background:
-                        "linear-gradient(135deg, var(--sol-champagne), var(--sol-violet))",
-                    }}
+                    aria-label={t("nav.accountMenu")}
+                    className="hidden size-10 items-center justify-center rounded-full sm:flex"
                   >
-                    {initials(currentUser.data?.email ?? null)}
+                    <Avatar
+                      url={currentUser.data?.avatar.url ?? null}
+                      initials={currentUser.data?.initials ?? "S"}
+                      size={40}
+                    />
                   </button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-56">
                   <DropdownMenuItem asChild>
                     <Link to="/dashboard" className="cursor-pointer">
                       <LayoutDashboard className="size-4" aria-hidden="true" />
-                      Dashboard
+                      {t("nav.dashboard")}
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
@@ -247,22 +297,30 @@ export function Header({ pendingNext }: HeaderProps = {}) {
                 trigger={
                   <button
                     type="button"
-                    className="hidden text-[15px] font-semibold text-sol-ink transition-colors hover:text-sol-violet-deep sm:inline-flex"
+                    className={cn(
+                      "hidden text-[15px] font-semibold transition-colors sm:inline-flex",
+                      overDarkHero
+                        ? "text-white hover:text-sol-champagne"
+                        : "text-sol-ink hover:text-sol-violet-deep",
+                    )}
                   >
                     {t("nav.signIn")}
                   </button>
                 }
-                nextPath={pendingNext}
+                nextPath={returnTo}
                 open={nextPromptOpen}
                 onOpenChange={setNextPromptOpen}
               />
               <button
                 type="button"
                 onClick={() => navigate({ to: "/consultation" })}
-                className="hidden h-12 items-center gap-2 rounded-full bg-sol-navy px-[22px] text-[15px] font-semibold text-white transition-all duration-[180ms] hover:-translate-y-px hover:shadow-[0_10px_30px_rgba(23,32,61,.13)] sm:inline-flex"
+                className="hidden h-12 items-center gap-2 rounded-full px-[22px] text-[15px] font-bold text-sol-navy shadow-[0_8px_22px_rgba(23,32,61,.22)] transition-all duration-[180ms] hover:-translate-y-px hover:shadow-[0_12px_28px_rgba(23,32,61,.3)] sm:inline-flex"
+                style={{
+                  background: "linear-gradient(135deg, #FFFDFB 0%, #F2ECE2 55%, #DCC08B 100%)",
+                }}
               >
                 {t("nav.findMyBusinessIdea")}
-                <ArrowRight className="size-4 text-sol-champagne" aria-hidden="true" />
+                <ArrowRight className="size-4 text-sol-violet-deep" aria-hidden="true" />
               </button>
             </>
           )}
@@ -271,14 +329,19 @@ export function Header({ pendingNext }: HeaderProps = {}) {
             <SheetTrigger asChild>
               <button
                 type="button"
-                aria-label="Open menu"
-                className="flex size-10 items-center justify-center rounded-full border border-sol-border text-sol-ink transition-colors hover:border-sol-champagne/50 xl:hidden"
+                aria-label={t("nav.openMenu")}
+                className={cn(
+                  "flex size-10 items-center justify-center rounded-full border transition-colors xl:hidden",
+                  overDarkHero
+                    ? "border-white/30 text-white hover:border-sol-champagne/70"
+                    : "border-sol-border text-sol-ink hover:border-sol-champagne/50",
+                )}
               >
                 <Menu className="size-5" aria-hidden="true" />
               </button>
             </SheetTrigger>
             <SheetContent side="right" className="w-[85vw] max-w-sm border-sol-border bg-sol-page">
-              <SheetTitle className="font-display text-xl text-sol-ink">Menu</SheetTitle>
+              <SheetTitle className="font-display text-xl text-sol-ink">{t("nav.menu")}</SheetTitle>
               <nav className="mt-8 flex flex-col gap-1">
                 {SCROLL_NAV.map((item) => (
                   <button
@@ -359,7 +422,7 @@ export function Header({ pendingNext }: HeaderProps = {}) {
                           {t("nav.signIn")}
                         </button>
                       }
-                      nextPath={pendingNext}
+                      nextPath={returnTo}
                     />
                     <button
                       type="button"
@@ -367,10 +430,14 @@ export function Header({ pendingNext }: HeaderProps = {}) {
                         setMobileOpen(false);
                         navigate({ to: "/consultation" });
                       }}
-                      className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-sol-navy text-[15px] font-semibold text-white"
+                      className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-xl text-[15px] font-bold text-sol-navy shadow-[0_8px_22px_rgba(23,32,61,.18)]"
+                      style={{
+                        background:
+                          "linear-gradient(135deg, #FFFDFB 0%, #F2ECE2 55%, #DCC08B 100%)",
+                      }}
                     >
                       {t("nav.findMyBusinessIdea")}
-                      <ArrowRight className="size-4 text-sol-champagne" aria-hidden="true" />
+                      <ArrowRight className="size-4 text-sol-violet-deep" aria-hidden="true" />
                     </button>
                   </>
                 )}
@@ -378,7 +445,7 @@ export function Header({ pendingNext }: HeaderProps = {}) {
             </SheetContent>
           </Sheet>
         </div>
-      </div>
+      </motion.div>
     </header>
   );
 }

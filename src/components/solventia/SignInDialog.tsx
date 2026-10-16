@@ -15,11 +15,7 @@ import { Label } from "@/components/ui/label";
 import { PremiumButton } from "./PremiumButton";
 import { GoogleSignInButton } from "./GoogleSignInButton";
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
-import {
-  getOtpSendErrorMessage,
-  getOtpVerifyErrorMessage,
-  getPasswordSignInErrorMessage,
-} from "@/lib/auth-error-messages";
+import { authErrorKey } from "@/lib/auth-error-messages";
 import { OTP_MAX_LENGTH, sanitizeOtpInput, isOtpLengthPlausible } from "@/lib/otp";
 import { useLocale } from "@/lib/i18n/LocaleProvider";
 
@@ -98,13 +94,13 @@ export function SignInDialog({ trigger, nextPath, open, onOpenChange }: SignInDi
       const { error: signInError } = await supabase.auth.signInWithPassword({ email, password });
       if (signInError) {
         console.error("[sign-in] failed:", signInError);
-        setError(getPasswordSignInErrorMessage(signInError));
+        setError(t(authErrorKey("password", signInError)));
         return;
       }
       finishSignIn();
     } catch (err) {
       console.error("[sign-in] failed:", err);
-      setError(getPasswordSignInErrorMessage(err));
+      setError(t(authErrorKey("password", err)));
     } finally {
       setLoading(false);
     }
@@ -121,14 +117,14 @@ export function SignInDialog({ trigger, nextPath, open, onOpenChange }: SignInDi
       });
       if (otpError) {
         console.error("[sign-in] sending code failed:", otpError);
-        setError(getOtpSendErrorMessage(otpError));
+        setError(t(authErrorKey("otp-send", otpError)));
         return;
       }
       setMode("otp");
       tickCooldown();
     } catch (err) {
       console.error("[sign-in] sending code failed:", err);
-      setError(getOtpSendErrorMessage(err));
+      setError(t(authErrorKey("otp-send", err)));
     } finally {
       setLoading(false);
     }
@@ -147,13 +143,13 @@ export function SignInDialog({ trigger, nextPath, open, onOpenChange }: SignInDi
       });
       if (verifyError) {
         console.error("[sign-in] code verification failed:", verifyError);
-        setError(getOtpVerifyErrorMessage(verifyError));
+        setError(t(authErrorKey("otp-verify", verifyError)));
         return;
       }
       finishSignIn();
     } catch (err) {
       console.error("[sign-in] code verification failed:", err);
-      setError(getOtpVerifyErrorMessage(err));
+      setError(t(authErrorKey("otp-verify", err)));
     } finally {
       setLoading(false);
     }
@@ -179,13 +175,13 @@ export function SignInDialog({ trigger, nextPath, open, onOpenChange }: SignInDi
               <DialogTitle className="font-display text-2xl text-primary">
                 {t("signin.checkEmail")}
               </DialogTitle>
-              <DialogDescription>
-                We sent a verification code to <span className="text-foreground">{email}</span>.
-              </DialogDescription>
+              <DialogDescription>{t("auth.otp.bodyShort", { email })}</DialogDescription>
             </DialogHeader>
             <form onSubmit={handleVerify} className="mt-2 flex flex-col gap-4">
               <div className="flex flex-col gap-1.5">
-                <Label htmlFor="signin-otp">Verification code</Label>
+                <Label htmlFor="signin-otp" className="text-[0.9375rem]">
+                  {t("auth.otp.label")}
+                </Label>
                 <Input
                   id="signin-otp"
                   autoFocus
@@ -194,11 +190,15 @@ export function SignInDialog({ trigger, nextPath, open, onOpenChange }: SignInDi
                   required
                   value={code}
                   onChange={(e) => setCode(sanitizeOtpInput(e.target.value))}
-                  placeholder="Enter your code"
+                  placeholder={t("auth.otp.placeholder")}
                   className="text-center text-[1.2rem] font-semibold tracking-[0.4em]"
                 />
               </div>
-              {error && <p className="text-[0.82rem] text-destructive">{error}</p>}
+              {error && (
+                <p role="alert" className="text-[0.9375rem] font-medium text-destructive">
+                  {error}
+                </p>
+              )}
               <PremiumButton
                 type="submit"
                 tone="solid"
@@ -210,7 +210,7 @@ export function SignInDialog({ trigger, nextPath, open, onOpenChange }: SignInDi
                 {loading && <Loader2 className="size-4 animate-spin" aria-hidden="true" />}
                 {t("signin.verify")}
               </PremiumButton>
-              <div className="flex items-center justify-between text-[0.8rem]">
+              <div className="flex items-center justify-between text-[0.9375rem]">
                 <button
                   type="button"
                   onClick={() => {
@@ -229,7 +229,7 @@ export function SignInDialog({ trigger, nextPath, open, onOpenChange }: SignInDi
                   className="font-medium text-primary disabled:text-muted-foreground"
                 >
                   {resendCooldown > 0
-                    ? `${t("signin.resendCode")} (${resendCooldown}s)`
+                    ? t("auth.otp.resendIn", { s: resendCooldown })
                     : t("signin.resendCode")}
                 </button>
               </div>
@@ -242,7 +242,7 @@ export function SignInDialog({ trigger, nextPath, open, onOpenChange }: SignInDi
                 {t("signin.welcomeBack")}
               </DialogTitle>
               <DialogDescription>
-                {nextPath ? "Sign in to pick up exactly where you left off." : t("signin.subhead")}
+                {nextPath ? t("auth.signin.nextSubhead") : t("signin.subhead")}
               </DialogDescription>
             </DialogHeader>
             <div className="mt-2">
@@ -250,23 +250,27 @@ export function SignInDialog({ trigger, nextPath, open, onOpenChange }: SignInDi
             </div>
             <div className="my-3 flex items-center gap-3">
               <div className="h-px flex-1 bg-border" />
-              <span className="text-[0.75rem] text-muted-foreground">{t("signin.or")}</span>
+              <span className="text-[0.875rem] text-muted-foreground">{t("signin.or")}</span>
               <div className="h-px flex-1 bg-border" />
             </div>
             <form onSubmit={handlePasswordSubmit} className="flex flex-col gap-4">
               <div className="flex flex-col gap-1.5">
-                <Label htmlFor="signin-email">{t("signin.email")}</Label>
+                <Label htmlFor="signin-email" className="text-[0.9375rem]">
+                  {t("signin.email")}
+                </Label>
                 <Input
                   id="signin-email"
                   type="email"
-                  placeholder="you@example.com"
+                  placeholder={t("auth.emailPlaceholder")}
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                 />
               </div>
               <div className="flex flex-col gap-1.5">
-                <Label htmlFor="signin-password">{t("signin.password")}</Label>
+                <Label htmlFor="signin-password" className="text-[0.9375rem]">
+                  {t("signin.password")}
+                </Label>
                 <Input
                   id="signin-password"
                   type="password"
@@ -276,7 +280,11 @@ export function SignInDialog({ trigger, nextPath, open, onOpenChange }: SignInDi
                   onChange={(e) => setPassword(e.target.value)}
                 />
               </div>
-              {error && <p className="text-[0.82rem] text-destructive">{error}</p>}
+              {error && (
+                <p role="alert" className="text-[0.9375rem] font-medium text-destructive">
+                  {error}
+                </p>
+              )}
               <PremiumButton
                 type="submit"
                 tone="solid"
@@ -292,7 +300,7 @@ export function SignInDialog({ trigger, nextPath, open, onOpenChange }: SignInDi
                 type="button"
                 disabled={!email || loading}
                 onClick={requestCode}
-                className="text-center text-[0.8rem] text-muted-foreground hover:text-primary disabled:opacity-50"
+                className="text-center text-[0.9375rem] text-muted-foreground hover:text-primary disabled:opacity-50"
               >
                 {t("signin.forgotPassword")}
               </button>

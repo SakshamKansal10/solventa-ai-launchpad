@@ -34,3 +34,20 @@ export function getPasswordSignInErrorMessage(error: unknown): string {
   if (isRateLimited(e)) return "Too many attempts. Please wait before trying again.";
   return "Invalid email or password.";
 }
+
+/** Message KEYS for the same three cases, so components can render them in the
+ * reader's language. The English functions above remain the canonical text
+ * (and what the tests pin); these only choose which localized key applies. */
+export type AuthErrorKey =
+  "auth.error.rate" | "auth.error.sendCode" | "auth.error.verify" | "auth.error.password";
+
+export function authErrorKey(
+  kind: "otp-send" | "otp-verify" | "password",
+  error: unknown,
+): AuthErrorKey {
+  const e = (error ?? {}) as AuthErrorLike;
+  if (isRateLimited(e)) return "auth.error.rate";
+  if (kind === "otp-send") return "auth.error.sendCode";
+  if (kind === "otp-verify") return "auth.error.verify";
+  return "auth.error.password";
+}

@@ -75,13 +75,16 @@ export function computeFounderGenome(profile: NormalizedProfile): FounderGenome 
   // favor founders in high-denomination currencies), plus tangible
   // assets already owned. ---
   const brackets = getInvestmentBrackets(profile.identity.currency);
-  const bracketIndex = Math.max(
-    0,
-    brackets.findIndex((b) => b.label === profile.resources.capitalBracket),
-  );
+  const v2 = profile.v2;
+  // v2 stores a capital TIER; legacy stored a currency-specific label.
+  const tierPosition = v2
+    ? (v2.capitalTier ?? 0) / Math.max(1, v2.capitalTierCount - 1)
+    : Math.max(
+        0,
+        brackets.findIndex((b) => b.label === profile.resources.capitalBracket),
+      ) / Math.max(1, brackets.length - 1);
   const resourceLeverage = clamp01to100(
-    (bracketIndex / Math.max(1, brackets.length - 1)) * 65 +
-      Math.min(profile.resources.assets.length, 4) * (35 / 4),
+    tierPosition * 65 + Math.min(profile.resources.assets.length, 4) * (35 / 4),
   );
 
   // --- Commercial Confidence: comfort actually selling/pitching, plus a
@@ -90,7 +93,10 @@ export function computeFounderGenome(profile: NormalizedProfile): FounderGenome 
   // self-reported. ---
   const commercialConfidence = clamp01to100(
     (SALES_COMFORT_SCORE[profile.workStyle.salesComfort ?? ""] ?? 40) * 0.7 +
-      (profile.identity.currentBusiness ? 30 : 0),
+      (profile.identity.currentBusiness ? 30 : 0) +
+      (typeof v2?.position.business?.turnoverTier === "number"
+        ? v2.position.business.turnoverTier * 3
+        : 0),
   );
 
   // --- Risk Appetite: the founder's own stated spectrum position. ---
@@ -108,10 +114,24 @@ export function computeFounderGenome(profile: NormalizedProfile): FounderGenome 
   // travel isn't part of how they intend to reach customers anyway. */
   const internetScore = INTERNET_SCORE[profile.resources.internetQuality ?? ""] ?? 55;
   const transportScore = TRANSPORT_SCORE[profile.resources.transportation ?? ""] ?? 55;
+  const networkAccess = (v2?.access ?? []).filter((a) =>
+    [
+      "Existing customer network",
+      "Existing audience",
+      "Suppliers / vendors",
+      "Existing business",
+      "Industry mentors",
+      "Manufacturing access",
+    ].includes(a),
+  ).length;
   const marketAccessibility = clamp01to100(
-    profile.workStyle.location === "Remote"
-      ? internetScore
-      : internetScore * 0.5 + transportScore * 0.5,
+    v2
+      ? // v2 no longer asks about internet/transport — access to customers,
+        // suppliers and mentors is the real market-access signal.
+        40 + networkAccess * 12
+      : profile.workStyle.location === "Remote"
+        ? internetScore
+        : internetScore * 0.5 + transportScore * 0.5,
   );
 
   const executionStyle =

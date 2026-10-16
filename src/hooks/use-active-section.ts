@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 
 /** Fixed header height (h-24 = 96px) plus a little breathing room. */
-export const HEADER_OFFSET = 104;
+export const HEADER_OFFSET = 96;
 
 /**
  * Tracks which of the given section ids is currently most prominent near

@@ -1,510 +1,1044 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { z } from "zod";
-import { ArrowRight, Compass, Loader2 } from "lucide-react";
-import { DashboardShell } from "@/components/dashboard/DashboardShell";
-import { FounderFitOrbit } from "@/components/dashboard/FounderFitOrbit";
-import { SolventiaLoadingState } from "@/components/dashboard/SolventiaLoadingState";
-import { PremiumButton } from "@/components/solventia/PremiumButton";
-import { Button } from "@/components/ui/button";
-import { requireAuthLoader } from "@/lib/route-guards";
-import { getDashboard } from "@/lib/actions/dashboard";
-import { exploreMoreOpportunities, switchSelectedOpportunity } from "@/lib/actions/opportunities";
-import { getFitFactors, getFlagshipEssentials } from "@/lib/opportunity-display";
-import { getConstraintWarnings, type FitScoreResult } from "@/lib/profile/scoring";
-import type { OpportunityCandidate, OpportunityPackage } from "@/lib/ai/schemas";
-import { cn } from "@/lib/utils";
+import {
+  ArrowRight,
+  Check,
+  Clock3,
+  Compass,
+  FileCheck2,
+  FlaskConical,
+  Loader2,
+  Map as MapIcon,
+  Rocket,
+  UserRound,
+} from "lucide-react";
+import { Line, LineChart, ReferenceDot, ResponsiveContainer } from "recharts";
+
+import {
+  AlternativeCard,
+  BriefChain,
+  FitPill,
+  FlagshipCard,
+} from "@/components/founder/OpportunityCards";
+import { DirectionCompare } from "@/components/founder/dashboard/DirectionCompare";
+import { FitSignals } from "@/components/founder/dashboard/fit-visual";
+import {
+  GhostChart,
+  GhostNodes,
+  JourneyPreview,
+  JourneyRibbon,
+  MomentumBars,
+  ProgressRing,
+  StackedBar,
+  StepPath,
+  WeekTrack,
+  type MomentumDay,
+  type PathStep,
+  type PreviewStep,
+  type RibbonPhase,
+} from "@/components/founder/dashboard/graphics";
+import { ExecutionPath } from "@/components/founder/ExecutionPath";
+import { FitStatusPill } from "@/components/founder/fit";
+import { EvidenceMap } from "@/components/founder/proof/EvidenceMap";
+import {
+  Button,
+  Card,
+  ErrorPanel,
+  Eyebrow,
+  LinkButton,
+  PageHeader,
+  PageSkeleton,
+  Pill,
+  Skeleton,
+} from "@/components/founder/ui";
+import {
+  exploreMoreOpportunities,
+  chooseDirection,
+  getOpportunityDetail,
+} from "@/lib/actions/opportunities";
+import { getOpportunityEconomics } from "@/lib/actions/economics";
+import {
+  breakEvenCustomers,
+  contributionPerCustomer,
+  revenueSensitivityPoints,
+} from "@/lib/economics";
+import { getProofOverview, type AssumptionDTO } from "@/lib/actions/proof";
+import { getRoadmapView, type RoadmapView } from "@/lib/actions/roadmap";
 import { useLocale } from "@/lib/i18n/LocaleProvider";
-import { translateDashboardText } from "@/lib/i18n/dashboard-dictionary";
+import { qk, useCurrentUserQuery, useFounderState, useInvalidateFounder } from "@/lib/queries";
+import { useTranslatedBrief } from "@/lib/use-translation";
+import { useTranslatedEntity } from "@/lib/use-translation";
+import { useTranslatedTitle } from "@/lib/use-translation";
 
 export const Route = createFileRoute("/dashboard/")({
-  beforeLoad: requireAuthLoader,
-  component: DashboardHome,
-  // Set only by a deep link to one specific consultation's ideas (e.g.
-  // the "ideas ready" email) — pins the dashboard to THAT consultation
-  // instead of always-latest, so a founder who ran a newer consultation
-  // before clicking an older email still sees what that email described.
+  // Set by a deep link to ONE consultation's ideas (the "ideas ready" email or
+  // History → Review). It pins the view to that consultation; without it the
+  // dashboard is always the newest consultation.
   validateSearch: z.object({ consultation: z.string().uuid().optional() }),
+  component: CommandCenter,
   head: () => ({
-    meta: [{ title: "Dashboard — Solventia" }, { name: "robots", content: "noindex" }],
+    meta: [{ title: "Command Center — Solventia" }, { name: "robots", content: "noindex" }],
   }),
 });
 
-function greeting(): string {
-  const hour = new Date().getHours();
-  if (hour < 12) return "Good morning";
-  if (hour < 18) return "Good afternoon";
-  return "Good evening";
-}
+function CommandCenter() {
+  const { t } = useLocale();
+  const founder = useFounderState();
 
-type Candidate = OpportunityPackage | OpportunityCandidate;
+  if (founder.isPending) return <PageSkeleton label={t("shell.skeleton.loading")} />;
+  if (founder.isError || !founder.data) {
+    return <ErrorPanel onRetry={() => void founder.refetch()} retrying={founder.isFetching} />;
+  }
+  const { direction, briefs } = founder.data;
+  const readOnly = !direction.isLatestConsultation && direction.stage !== "roadmap_active";
 
-/** Four plain values read left to right with separators, not icon badges —
- * capital/time/skill-gap only exist on the current one-call
- * OpportunityPackage shape, not pre-migration OpportunityCandidate rows,
- * so each is included only when present. */
-function getIdeaMetrics(
-  candidate: Candidate,
-  riskLevel: string,
-): { label: string; value: string }[] {
-  const metrics: { label: string; value: string }[] = [];
-  if ("startingCapital" in candidate) {
-    metrics.push({ label: "Capital", value: candidate.startingCapital });
-  }
-  if ("weeklyTime" in candidate) {
-    metrics.push({ label: "Time", value: candidate.weeklyTime });
-  }
-  metrics.push({ label: "Risk", value: riskLevel.charAt(0).toUpperCase() + riskLevel.slice(1) });
-  if ("skillsToLearn" in candidate && candidate.skillsToLearn.length > 0) {
-    metrics.push({ label: "Skill Gap", value: `${candidate.skillsToLearn.length} to learn` });
-  }
-  return metrics;
-}
-
-/** A small SVG orbit motif — the flagship card's only decoration, built
- * from plain circles/arcs (never stock imagery), positioned to sit behind
- * the fit orbit without competing with the real content. */
-function FlagshipOrbitMotif() {
   return (
-    <svg
-      className="pointer-events-none absolute -right-16 -top-16 opacity-[0.35]"
-      width={360}
-      height={360}
-      viewBox="0 0 360 360"
-      aria-hidden="true"
-    >
-      <circle cx={180} cy={180} r={160} fill="none" stroke="var(--sol-champagne)" strokeWidth={1} />
-      <circle cx={180} cy={180} r={120} fill="none" stroke="var(--sol-violet)" strokeWidth={1} />
-      <circle cx={180} cy={180} r={80} fill="none" stroke="var(--sol-champagne)" strokeWidth={1} />
-      <circle cx={340} cy={180} r={4} fill="var(--sol-champagne)" />
-      <circle cx={180} cy={20} r={3} fill="var(--sol-violet)" />
-    </svg>
+    <div className="flex flex-col gap-10" data-testid="command-center" data-stage={direction.stage}>
+      {!direction.isLatestConsultation && <EarlierConsultationBanner />}
+
+      {direction.stage === "no_consultation" && <NoConsultation />}
+      {direction.stage === "ideas_ready" && direction.flagshipId && (
+        <IdeasReady
+          flagshipId={direction.flagshipId}
+          alternativeIds={direction.alternativeIds}
+          readOnly={readOnly}
+        />
+      )}
+      {(direction.stage === "direction_selected" ||
+        direction.stage === "roadmap_building" ||
+        direction.stage === "roadmap_failed") &&
+        direction.selectedId && (
+          <DirectionSelected
+            opportunityId={direction.selectedId}
+            stage={direction.stage}
+            hasArchivedRoadmap={direction.hasArchivedRoadmap}
+            readOnly={readOnly}
+          />
+        )}
+      {(direction.stage === "roadmap_active" || direction.stage === "roadmap_completed") &&
+        direction.roadmap &&
+        direction.selectedId && (
+          <NextMove
+            roadmapId={direction.roadmap.id}
+            opportunityId={direction.selectedId}
+            completed={direction.stage === "roadmap_completed"}
+          />
+        )}
+      {/* Defensive: a stage whose ids somehow resolved to nothing must never render blank. */}
+      {direction.stage === "ideas_ready" && !direction.flagshipId && briefs && <NoConsultation />}
+    </div>
   );
 }
 
-function DashboardHome() {
-  const navigate = useNavigate();
-  const queryClient = useQueryClient();
-  const { consultation } = Route.useSearch();
-  const { locale } = useLocale();
-  const dashboardQuery = useQuery({
-    queryKey: ["dashboard", consultation ?? null, locale],
-    queryFn: () => getDashboard({ data: { consultationId: consultation, locale } }),
-  });
-  const [exploring, setExploring] = useState(false);
-  const [switching, setSwitching] = useState<string | null>(null);
-  const tr = (s: string) => translateDashboardText(s, locale) ?? s;
+function EarlierConsultationBanner() {
+  const { t } = useLocale();
+  return (
+    <div
+      role="status"
+      data-testid="earlier-consultation-banner"
+      className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-sol-champagne/50 bg-sol-champagne-soft px-5 py-4"
+    >
+      <p className="text-[1.0625rem] font-medium text-sol-ink">{t("cc.earlier.body")}</p>
+      <div className="flex flex-wrap gap-2">
+        <LinkButton to="/dashboard" variant="secondary" size="sm" search={{}}>
+          {t("cc.earlier.back")}
+        </LinkButton>
+        <LinkButton to="/dashboard/history" variant="soft" size="sm">
+          {t("cc.earlier.history")}
+        </LinkButton>
+      </div>
+    </div>
+  );
+}
 
-  async function refresh() {
-    await queryClient.invalidateQueries({ queryKey: ["dashboard"] });
-  }
+/** What follows the consultation, as a path of stops — the first is lit. */
+function usePreviewSteps(): PreviewStep[] {
+  const { t } = useLocale();
+  return [
+    { id: "you", label: t("cc.none.step.you"), icon: UserRound },
+    { id: "directions", label: t("cc.none.step.directions"), icon: Compass },
+    { id: "roadmap", label: t("cc.none.step.roadmap"), icon: MapIcon },
+    { id: "proof", label: t("cc.none.step.proof"), icon: FlaskConical },
+    { id: "next", label: t("cc.none.step.next"), icon: Rocket },
+  ];
+}
 
-  async function handleExploreMore() {
-    setExploring(true);
-    try {
-      await exploreMoreOpportunities({ data: { locale } });
-      await refresh();
-      toast.success(tr("Sol found a few more directions worth considering."));
-    } catch (err) {
-      console.error("[dashboard] explore more failed:", err);
-      toast.error(tr("Sol couldn't find more opportunities right now — try again in a moment."));
-    } finally {
-      setExploring(false);
-    }
-  }
-
-  async function handleSwitch(opportunityId: string) {
-    setSwitching(opportunityId);
-    try {
-      await switchSelectedOpportunity({ data: { opportunityId } });
-      await refresh();
-      toast.success(
-        tr(
-          "Set as your primary direction. Your previous roadmap, if any, has been archived — you can revisit it anytime.",
-        ),
-      );
-    } catch (err) {
-      console.error("[dashboard] switch opportunity failed:", err);
-      toast.error(tr("Couldn't switch opportunities — try again."));
-    } finally {
-      setSwitching(null);
-    }
-  }
-
-  // The actual generation now happens on its own dedicated full-page
-  // route (branded, no dashboard chrome) rather than inline here — see
-  // /dashboard/roadmap/building.
-  function handleBuildRoadmap(opportunityId: string) {
-    navigate({ to: "/dashboard/roadmap/building", search: { opportunityId } });
-  }
-
-  if (dashboardQuery.isLoading) {
-    return (
-      <DashboardShell>
-        <div className="flex flex-1 items-center justify-center">
-          <SolventiaLoadingState message={tr("Opening your workspace…")} />
+function NoConsultation() {
+  const { t } = useLocale();
+  const steps = usePreviewSteps();
+  return (
+    <>
+      <PageHeader title={t("cc.none.title")} subtitle={t("cc.none.body")} />
+      <Card className="flex flex-col gap-8 p-6 sm:p-10" data-testid="no-consultation">
+        <JourneyPreview steps={steps} ariaLabel={t("cc.none.step.aria")} />
+        <div className="flex flex-col items-start gap-3 border-t border-sol-border pt-8">
+          <p className="sol-h3">{t("cc.none.cardTitle")}</p>
+          <p className="sol-body sol-prose text-sol-secondary">{t("cc.none.cardBody")}</p>
+          <div className="mt-2">
+            <LinkButton to="/consultation" variant="primary" size="lg">
+              {t("nav.findMyBusinessIdea")}
+              <ArrowRight className="size-4 text-sol-champagne" aria-hidden="true" />
+            </LinkButton>
+          </div>
         </div>
-      </DashboardShell>
-    );
-  }
+      </Card>
+    </>
+  );
+}
 
-  const data = dashboardQuery.data;
-  if (!data) {
-    return (
-      <DashboardShell>
-        <p className="text-dashboard-body">{tr("Something went wrong loading your dashboard.")}</p>
-      </DashboardShell>
-    );
-  }
+/** STATE A — ideas ready, nothing chosen yet. */
+function IdeasReady({
+  flagshipId,
+  alternativeIds,
+  readOnly,
+}: {
+  flagshipId: string;
+  alternativeIds: string[];
+  readOnly: boolean;
+}) {
+  const { t, locale } = useLocale();
+  const founder = useFounderState();
+  const invalidate = useInvalidateFounder();
+  const navigate = useNavigate();
+  const briefs = founder.data!.briefs;
 
-  const displayName =
-    data.profile?.full_name?.split(" ")[0] || data.profile?.email?.split("@")[0] || "there";
-  const primary = data.primary;
-  const alternatives = data.alternatives;
-  const primaryCandidate: Candidate | null = primary
-    ? (primary.candidate as unknown as Candidate)
-    : null;
-  const fitFactors = primaryCandidate ? getFitFactors(primaryCandidate) : null;
-  const constraintWarnings =
-    primaryCandidate && data.businessDna
-      ? getConstraintWarnings(data.businessDna.signals, getFitFactors(primaryCandidate))
-      : [];
-  const ideaMetrics =
-    primaryCandidate && fitFactors ? getIdeaMetrics(primaryCandidate, fitFactors.riskLevel) : [];
-  const essentials = primaryCandidate ? getFlagshipEssentials(primaryCandidate) : null;
-  const primaryScore = primary?.score_breakdown
-    ? (primary.score_breakdown as unknown as FitScoreResult)
-    : null;
-  const currentPhase = data.roadmap?.phases.find((p) => p.isCurrent) ?? null;
-  const missionProgress =
-    currentPhase && currentPhase.totalTasks > 0
-      ? currentPhase.doneTasks / currentPhase.totalTasks
-      : 0;
+  const choose = useMutation({
+    mutationFn: (opportunityId: string) => chooseDirection({ data: { opportunityId } }),
+    onSuccess: async () => {
+      await invalidate();
+      toast.success(t("cc.chosen.toast"));
+    },
+    onError: (err) => {
+      console.error("[command-center] choose failed:", err);
+      toast.error(t("cc.chosen.error"));
+    },
+  });
+  const explore = useMutation({
+    mutationFn: () => exploreMoreOpportunities({ data: { locale } }),
+    onSuccess: async (res) => {
+      await invalidate();
+      toast.success(t("cc.explore.done", { n: res.added }));
+      void navigate({ to: "/dashboard/opportunities" });
+    },
+    onError: (err) => {
+      console.error("[command-center] explore more failed:", err);
+      toast.error(t("cc.explore.error"));
+    },
+  });
 
-  const headline = !primary
-    ? "Let's find your direction."
-    : !data.roadmap
-      ? "Time to build your roadmap."
-      : "Your next move is clear.";
-  const subheading = !primary
-    ? "Sol has a set of directions worth considering below."
-    : !data.roadmap
-      ? `${primary.title} is selected — turn it into a week-by-week plan.`
-      : data.roadmap.currentWeek
-        ? data.roadmap.currentWeek.objective
-        : `Keep moving on ${primary.title}.`;
+  const busy = choose.isPending || explore.isPending;
+  const flagship = briefs[flagshipId];
+  if (!flagship) return <NoConsultation />;
+  const alternatives = alternativeIds.flatMap((id) => (briefs[id] ? [briefs[id]] : []));
 
   return (
-    <DashboardShell
-      opportunityId={data.selected?.id ?? primary?.id ?? null}
-      opportunityTitle={primary?.title ?? null}
-      hasRoadmap={primary ? Boolean(data.roadmap) : undefined}
-    >
-      {/* ===== HEADER — small label, then a real headline, then one line ===== */}
-      <div className="flex flex-col gap-2">
-        <p className="text-[16px] font-semibold uppercase tracking-[0.1em] text-sol-champagne-deep">
-          {tr(greeting())}, {displayName}
-        </p>
-        <h1 className="font-display text-[clamp(2rem,3.6vw,2.75rem)] font-semibold leading-[1.08] text-sol-ink">
-          {tr(headline)}
-        </h1>
-        <p className="max-w-2xl text-[1.02rem] text-sol-secondary">{tr(subheading)}</p>
-      </div>
-
-      {!primary && !data.selected ? (
-        <section className="mt-10 rounded-[24px] border border-sol-border bg-sol-surface px-8 py-14 text-center">
-          <Compass className="mx-auto size-9 text-sol-champagne-deep" aria-hidden="true" />
-          <h2 className="mt-5 font-display text-[1.4rem] font-semibold text-sol-ink">
-            {tr("We haven't found a strong enough match yet.")}
+    <>
+      <PageHeader title={t("cc.a.title")} subtitle={t("cc.a.subtitle")} />
+      <FlagshipCard
+        brief={flagship}
+        readOnly={readOnly}
+        disabled={busy}
+        choosing={choose.isPending && choose.variables === flagshipId}
+        onChoose={() => choose.mutate(flagshipId)}
+      />
+      <DirectionCompare briefs={[flagship, ...alternatives]} />
+      {alternatives.length > 0 && (
+        <section aria-labelledby="alts-heading" className="flex flex-col gap-4">
+          <h2 id="alts-heading" className="sol-eyebrow">
+            {t("cc.alternatives")}
           </h2>
-          <p className="mx-auto mt-2.5 max-w-md text-[1rem] text-sol-secondary">
-            {tr("Let's explore a wider set of possibilities, or refine your profile.")}
-          </p>
-          <div className="mt-7 flex justify-center gap-3">
-            <PremiumButton
-              tone="solid"
-              shape="rounded"
-              size="sm"
-              onClick={handleExploreMore}
-              disabled={exploring}
-            >
-              {exploring && <Loader2 className="size-4 animate-spin" aria-hidden="true" />}
-              {tr("Explore More Ideas")}
-            </PremiumButton>
-            <Button asChild variant="outline">
-              <Link to="/consultation">{tr("Refine My Profile")}</Link>
-            </Button>
+          <div className="grid gap-5 md:grid-cols-2">
+            {alternatives.map((alt, i) => (
+              <AlternativeCard
+                key={alt.id}
+                brief={alt}
+                rank={i + 2}
+                readOnly={readOnly}
+                disabled={busy}
+                choosing={choose.isPending && choose.variables === alt.id}
+                onChoose={() => choose.mutate(alt.id)}
+              />
+            ))}
           </div>
         </section>
-      ) : (
-        <>
-          {/* ===== FLAGSHIP IDEA — light gradient card, badge-free ===== */}
-          {primary && (
-            <section
-              className="relative mt-8 overflow-hidden rounded-[28px] p-8 sm:p-10"
-              style={{
-                background: "linear-gradient(135deg, #FFFDF9 0%, #F8F3FF 55%, #F4EBDD 100%)",
-                border: "1px solid rgba(197,163,106,0.35)",
-                minHeight: 440,
-              }}
-            >
-              <FlagshipOrbitMotif />
-
-              <div className="relative flex flex-col gap-8 lg:flex-row lg:items-start lg:justify-between">
-                <div className="min-w-0 flex-1">
-                  <p className="text-[12px] font-semibold uppercase tracking-[0.12em] text-sol-champagne-deep">
-                    {tr("Your Strongest Founder Match")}
-                  </p>
-                  <h2 className="mt-4 max-w-xl font-display text-[clamp(1.9rem,3.4vw,2.6rem)] font-semibold leading-[1.12] text-sol-ink">
-                    {primary.title}
-                  </h2>
-                  {primary.one_liner && (
-                    <p className="mt-4 max-w-xl text-[1.02rem] leading-relaxed text-sol-secondary">
-                      {primary.one_liner}
-                    </p>
-                  )}
-
-                  {essentials && (
-                    <div className="mt-6 grid max-w-xl gap-4 sm:grid-cols-3">
-                      <div>
-                        <p className="text-[11px] font-semibold uppercase tracking-[0.1em] text-sol-muted">
-                          {tr("Who Pays")}
-                        </p>
-                        <p className="mt-1.5 text-[0.9rem] leading-snug text-sol-ink">
-                          {essentials.whoPays}
-                        </p>
-                      </div>
-                      <div>
-                        <p className="text-[11px] font-semibold uppercase tracking-[0.1em] text-sol-muted">
-                          {tr("Start With")}
-                        </p>
-                        <p className="mt-1.5 text-[0.9rem] leading-snug text-sol-ink">
-                          {essentials.startWith}
-                        </p>
-                      </div>
-                      {essentials.howItGrows && (
-                        <div>
-                          <p className="text-[11px] font-semibold uppercase tracking-[0.1em] text-sol-muted">
-                            {tr("How It Grows")}
-                          </p>
-                          <p className="mt-1.5 text-[0.9rem] leading-snug text-sol-ink">
-                            {essentials.howItGrows}
-                          </p>
-                        </div>
-                      )}
-                    </div>
-                  )}
-
-                  {ideaMetrics.length > 0 && (
-                    <div className="mt-6 flex flex-wrap items-center gap-x-5 gap-y-2">
-                      {ideaMetrics.map((m, i) => (
-                        <span key={m.label} className="flex items-center gap-5">
-                          {i > 0 && (
-                            <span className="text-sol-border-strong" aria-hidden="true">
-                              |
-                            </span>
-                          )}
-                          <span className="text-[0.85rem] text-sol-secondary">
-                            <span className="font-semibold text-sol-ink">{m.value}</span>{" "}
-                            {tr(m.label)}
-                          </span>
-                        </span>
-                      ))}
-                    </div>
-                  )}
-
-                  {constraintWarnings.length > 0 && (
-                    <div className="mt-5 max-w-xl rounded-xl border border-sol-champagne/30 bg-sol-champagne-soft/40 px-4 py-3">
-                      <p className="text-[0.85rem] text-sol-ink">{constraintWarnings[0]}</p>
-                    </div>
-                  )}
-
-                  <div className="mt-8">
-                    <Link
-                      to="/dashboard/opportunities/$id"
-                      params={{ id: primary.id }}
-                      className="inline-flex items-center gap-2 rounded-xl bg-sol-navy px-6 py-3.5 text-[0.92rem] font-semibold text-white transition-colors hover:bg-sol-navy-soft"
-                    >
-                      {tr("View Full Opportunity")}
-                      <ArrowRight className="size-4 text-sol-champagne" aria-hidden="true" />
-                    </Link>
-                  </div>
-                </div>
-
-                {primaryScore && (
-                  <div className="mx-auto shrink-0 lg:mx-0">
-                    <FounderFitOrbit score={primary.fit_score} breakdown={primaryScore.breakdown} />
-                  </div>
-                )}
-              </div>
-            </section>
-          )}
-
-          {/* ===== BUILD MY ROADMAP — primary selected but no roadmap yet ===== */}
-          {primary && !data.roadmap && (
-            <section className="mt-6 rounded-[18px] border border-sol-border bg-sol-surface p-6 text-center sm:p-7">
-              <p className="text-[12px] font-semibold uppercase tracking-[0.12em] text-sol-champagne-deep">
-                {tr("Ready to Execute")}
-              </p>
-              <h3 className="mt-2.5 font-display text-[1.35rem] font-semibold text-sol-ink">
-                {tr("Turn this into a week-by-week plan.")}
-              </h3>
-              <p className="mx-auto mt-2 max-w-md text-[0.92rem] leading-relaxed text-sol-secondary">
-                {tr(
-                  "Sol designs it around your real time and capital — it unlocks one week at a time as you make progress.",
-                )}
-              </p>
-              <button
-                type="button"
-                className="mt-5 inline-flex items-center gap-2 rounded-xl bg-sol-navy px-6 py-3 text-[0.9rem] font-semibold text-white transition-colors hover:bg-sol-navy-soft"
-                onClick={() => handleBuildRoadmap(primary.id)}
-              >
-                {tr("Build My Roadmap")}
-                <ArrowRight className="size-4 text-sol-champagne" aria-hidden="true" />
-              </button>
-            </section>
-          )}
-
-          {/* ===== CURRENT MISSION STRIP — deliberately dark, full-width focal point ===== */}
-          {data.roadmap && data.roadmap.currentWeek && (
-            <section
-              className="relative mt-8 flex flex-col items-start gap-5 overflow-hidden rounded-[24px] px-7 py-8 sm:flex-row sm:items-center sm:justify-between sm:px-10"
-              style={{ background: "#17203D", minHeight: 180 }}
-            >
-              <div className="min-w-0">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-sol-champagne">
-                  {tr("This Week")}
-                </p>
-                <h3 className="mt-3 max-w-xl font-display text-[1.5rem] font-semibold leading-snug text-white sm:text-[1.7rem]">
-                  {data.roadmap.currentWeek.title}
-                </h3>
-                <p className="mt-2 max-w-lg text-[0.92rem] leading-relaxed text-white/70">
-                  {data.roadmap.currentWeek.objective}
-                </p>
-              </div>
-
-              <div className="flex shrink-0 items-center gap-6">
-                <div className="relative flex size-16 items-center justify-center">
-                  <svg width={64} height={64} viewBox="0 0 64 64" className="-rotate-90">
-                    <circle
-                      cx={32}
-                      cy={32}
-                      r={27}
-                      fill="none"
-                      stroke="rgba(255,255,255,0.14)"
-                      strokeWidth={5}
-                    />
-                    <circle
-                      cx={32}
-                      cy={32}
-                      r={27}
-                      fill="none"
-                      stroke="var(--sol-champagne)"
-                      strokeWidth={5}
-                      strokeLinecap="round"
-                      strokeDasharray={2 * Math.PI * 27}
-                      strokeDashoffset={2 * Math.PI * 27 * (1 - missionProgress)}
-                      className="transition-[stroke-dashoffset] duration-700 ease-out"
-                    />
-                  </svg>
-                  <span className="absolute text-[0.78rem] font-semibold text-white">
-                    {Math.round(missionProgress * 100)}%
-                  </span>
-                </div>
-                <Link
-                  to="/dashboard/roadmap"
-                  className="inline-flex items-center gap-1.5 whitespace-nowrap text-[0.92rem] font-semibold text-sol-champagne hover:text-white"
-                >
-                  {tr("Continue")} {data.roadmap.currentWeek.title}
-                  <ArrowRight className="size-4" aria-hidden="true" />
-                </Link>
-              </div>
-            </section>
-          )}
-
-          {/* ===== ALTERNATIVE FOUNDER PATHS — minimal cards, no paragraphs ===== */}
-          {alternatives.length > 0 && (
-            <section className="mt-9">
-              <p className="text-[12px] font-semibold uppercase tracking-[0.12em] text-sol-muted">
-                {tr("Alternative Founder Paths")}
-              </p>
-              <div className="mt-4 grid gap-4 sm:grid-cols-2">
-                {alternatives.map((opp) => {
-                  const candidate = opp.candidate as unknown as Candidate;
-                  const capital = "startingCapital" in candidate ? candidate.startingCapital : null;
-                  const time = "weeklyTime" in candidate ? candidate.weeklyTime : null;
-                  return (
-                    <div
-                      key={opp.id}
-                      className="flex min-h-[205px] flex-col justify-between gap-4 rounded-[18px] border border-sol-border bg-sol-surface p-5"
-                    >
-                      <div>
-                        <div className="flex items-start justify-between gap-3">
-                          <h3 className="font-display text-[1.05rem] font-semibold leading-tight text-sol-ink">
-                            {opp.title}
-                          </h3>
-                          <span className="shrink-0 rounded-full border border-sol-champagne/30 bg-sol-champagne-soft/50 px-2.5 py-1 text-[0.72rem] font-semibold text-sol-champagne-deep">
-                            {opp.fit_score}/100
-                          </span>
-                        </div>
-                        {(capital || time) && (
-                          <div className="mt-3 flex items-center gap-4 text-[0.8rem] text-sol-secondary">
-                            {capital && <span>{capital}</span>}
-                            {capital && time && <span className="text-sol-border-strong">|</span>}
-                            {time && <span>{time}</span>}
-                          </div>
-                        )}
-                      </div>
-                      <div className="flex gap-2">
-                        <Button asChild variant="outline" size="sm" className="flex-1">
-                          <Link to="/dashboard/opportunities/$id" params={{ id: opp.id }}>
-                            {tr("Explore")}
-                          </Link>
-                        </Button>
-                        <button
-                          type="button"
-                          className="flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-sol-navy px-3 py-2 text-[0.82rem] font-semibold text-white transition-colors hover:bg-sol-navy-soft disabled:opacity-60"
-                          onClick={() => handleSwitch(opp.id)}
-                          disabled={switching === opp.id}
-                        >
-                          {switching === opp.id && (
-                            <Loader2 className="size-3.5 animate-spin" aria-hidden="true" />
-                          )}
-                          {tr("Choose Direction")}
-                        </button>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </section>
-          )}
-
-          <section className="mt-8 flex flex-col items-center gap-3 text-center">
-            <p className="text-[0.9rem] text-sol-secondary">
-              {tr("Not seeing yourself in these?")}
-            </p>
-            <button
-              type="button"
-              onClick={handleExploreMore}
-              disabled={exploring}
-              className={cn(
-                "inline-flex items-center gap-2 rounded-full border border-sol-violet/35 bg-sol-violet-mist/70 px-6 py-3 text-[0.92rem] font-semibold text-sol-violet-deep shadow-[0_6px_20px_-10px_rgba(114,87,216,.45)] transition-all duration-200 hover:-translate-y-px hover:border-sol-violet/55 hover:bg-sol-violet-mist hover:shadow-[0_10px_26px_-10px_rgba(114,87,216,.55)]",
-                exploring && "pointer-events-none opacity-60",
-              )}
-            >
-              {exploring ? (
-                <Loader2 className="size-4 animate-spin" aria-hidden="true" />
-              ) : (
-                <Compass className="size-4" aria-hidden="true" />
-              )}
-              {tr("Explore More Opportunities")}
-            </button>
-          </section>
-        </>
       )}
-    </DashboardShell>
+      {!readOnly && (
+        <div className="flex flex-col items-start gap-2">
+          <Button
+            variant="soft"
+            size="lg"
+            onClick={() => explore.mutate()}
+            loading={explore.isPending}
+            disabled={choose.isPending}
+            data-testid="explore-more"
+          >
+            <Compass className="size-5" aria-hidden="true" />
+            {t("cc.exploreMore")}
+          </Button>
+          {explore.isPending && (
+            <p role="status" className="text-[1rem] text-sol-secondary">
+              {t("cc.explore.working")}
+            </p>
+          )}
+        </div>
+      )}
+    </>
+  );
+}
+
+/** STATE B — a direction is chosen but the roadmap isn't built (or failed / is building). */
+function DirectionSelected({
+  opportunityId,
+  stage,
+  hasArchivedRoadmap,
+  readOnly,
+}: {
+  opportunityId: string;
+  stage: "direction_selected" | "roadmap_building" | "roadmap_failed";
+  hasArchivedRoadmap: boolean;
+  readOnly: boolean;
+}) {
+  const { t } = useLocale();
+  const navigate = useNavigate();
+  const founder = useFounderState();
+  const brief = useTranslatedBrief(founder.data!.briefs[opportunityId]);
+  const detail = useQuery({
+    queryKey: qk.opportunity(opportunityId),
+    queryFn: () => getOpportunityDetail({ data: { id: opportunityId } }),
+    staleTime: 30_000,
+  });
+  if (!brief) return <NoConsultation />;
+
+  const building = stage === "roadmap_building";
+  const failed = stage === "roadmap_failed";
+  const goBuild = () => navigate({ to: "/dashboard/roadmap/building", search: { opportunityId } });
+  const matrix = detail.data?.fit.matrix ?? null;
+
+  // Where the founder is: direction chosen, roadmap next — then week 1, evidence, adapt.
+  const steps: PathStep[] = [
+    { id: "direction", label: t("cc.path.direction"), state: "done", note: t("cc.path.chosen") },
+    {
+      id: "roadmap",
+      label: t("cc.b.step.roadmap"),
+      state: "current",
+      busy: building,
+      warn: failed,
+      note: building
+        ? t("cc.b.step.building")
+        : failed
+          ? t("cc.b.step.failed")
+          : t("cc.path.state.current"),
+    },
+    { id: "week1", label: t("common.weekN", { n: "01" }), state: "future" },
+    { id: "evidence", label: t("cc.b.step.evidence"), state: "future" },
+    { id: "adapt", label: t("howItWorks.step5.title"), state: "future" },
+  ];
+
+  return (
+    <>
+      <PageHeader title={t("cc.b.title")} />
+
+      <section
+        className="relative overflow-hidden rounded-[24px] bg-workspace p-6 sm:p-8"
+        data-testid="next-step"
+      >
+        <div
+          className="pointer-events-none absolute inset-0"
+          style={{
+            background:
+              "radial-gradient(ellipse 480px 320px at 85% -10%, var(--workspace-violet-glow), transparent 70%)",
+          }}
+          aria-hidden="true"
+        />
+        <div className="relative flex flex-wrap items-start justify-between gap-4">
+          <div className="min-w-0">
+            <p className="text-[0.875rem] font-bold uppercase tracking-[0.1em] text-workspace-muted">
+              {t("cc.surface.direction")}
+            </p>
+            <h2
+              className="mt-1.5 max-w-[32ch] font-display text-[clamp(1.5rem,1.2rem+1.2vw,2.125rem)] font-semibold leading-[1.15] text-workspace-foreground"
+              data-testid="surface-direction"
+            >
+              {brief.title}
+            </h2>
+          </div>
+          <FitPill fit={brief.fit} />
+        </div>
+
+        {failed && (
+          <div
+            role="alert"
+            className="relative mt-5 rounded-2xl border border-sol-warning/50 bg-sol-warning/15 px-4 py-3 text-[1rem] text-workspace-foreground"
+          >
+            {t("cc.b.failed")}
+          </div>
+        )}
+        {building && (
+          <div
+            role="status"
+            className="relative mt-5 rounded-2xl border border-sol-violet/40 bg-sol-violet/15 px-4 py-3 text-[1rem] text-workspace-foreground"
+          >
+            {t("cc.b.building")}
+          </div>
+        )}
+
+        <div className="relative mt-6 border-t border-workspace-border pt-6">
+          <StepPath steps={steps} ariaLabel={t("cc.b.step.aria")} testId="build-path" />
+        </div>
+
+        <div className="relative mt-6 flex flex-wrap items-center justify-between gap-4 border-t border-workspace-border pt-6">
+          <p className="min-w-0 flex-1 basis-60 text-[0.9375rem] text-workspace-muted">
+            {hasArchivedRoadmap ? t("cc.b.resumeHint") : t("cc.b.hint")}
+          </p>
+          <div className="flex w-full flex-wrap gap-3 sm:w-auto">
+            {!readOnly && (
+              <Button
+                size="lg"
+                variant="champagne"
+                onClick={goBuild}
+                data-testid="build-roadmap"
+                className="w-full sm:w-auto"
+              >
+                {building
+                  ? t("cc.b.viewProgress")
+                  : failed
+                    ? t("common.retry")
+                    : hasArchivedRoadmap
+                      ? t("cc.b.resumeCta")
+                      : t("cc.b.buildCta")}
+                <ArrowRight className="size-4" aria-hidden="true" />
+              </Button>
+            )}
+            <LinkButton
+              to="/dashboard/opportunities/$id"
+              params={{ id: opportunityId }}
+              variant="secondary"
+              size="lg"
+              className="w-full border-workspace-border bg-transparent text-workspace-foreground hover:border-sol-violet/50 sm:w-auto"
+            >
+              {t("cc.b.openOpportunity")}
+            </LinkButton>
+          </div>
+        </div>
+      </section>
+
+      <Card className="flex flex-col gap-6 p-6 sm:p-8" data-testid="chosen-direction">
+        <Eyebrow>{t("cc.b.chosen")}</Eyebrow>
+        <BriefChain brief={brief} />
+      </Card>
+      <Card className="flex flex-col gap-4 p-6" data-testid="chosen-fit">
+        <h2 className="sol-eyebrow">{t("cc.oppPulse.heading")}</h2>
+        {detail.isPending ? (
+          <Skeleton className="h-28" />
+        ) : matrix ? (
+          <FitSignals rows={matrix.rows} layout="tiles" />
+        ) : null}
+      </Card>
+    </>
+  );
+}
+
+const localKey = (d: Date) =>
+  `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+
+/** The last 14 days, one entry per day: missions finished (from their completion
+ * time) and evidence captured (from the date the founder gave it). */
+function buildMomentum(view: RoadmapView, assumptions: AssumptionDTO[]): MomentumDay[] {
+  const now = new Date();
+  const days: MomentumDay[] = [];
+  for (let i = 13; i >= 0; i--) {
+    const d = new Date(now.getFullYear(), now.getMonth(), now.getDate() - i);
+    days.push({ key: localKey(d), missions: 0, evidence: 0, today: i === 0 });
+  }
+  const byKey = new Map(days.map((d) => [d.key, d]));
+  for (const w of view.weeks) {
+    for (const m of w.missions) {
+      if (!m.completedAt) continue;
+      const day = byKey.get(localKey(new Date(m.completedAt)));
+      if (day) day.missions += 1;
+    }
+  }
+  for (const a of assumptions) {
+    for (const e of a.evidence) {
+      const day = byKey.get(e.occurredOn);
+      if (day) day.evidence += 1;
+    }
+  }
+  return days;
+}
+
+interface WeekOverlay {
+  mission?: string;
+  missions?: Record<string, { title?: string }>;
+}
+interface SkeletonOverlay {
+  phases?: Record<string, { title?: string }>;
+  weeks?: Record<string, { title?: string; objective?: string }>;
+}
+
+/** STATE C — the returning founder's dashboard: this week's mission, and three
+ * small modules. No setup CTAs, no giant idea report. */
+function NextMove({
+  roadmapId,
+  opportunityId,
+  completed,
+}: {
+  roadmapId: string;
+  opportunityId: string;
+  completed: boolean;
+}) {
+  const { t } = useLocale();
+  const navigate = useNavigate();
+  const currentUser = useCurrentUserQuery();
+  const [hour, setHour] = useState<number | null>(null);
+  useEffect(() => setHour(new Date().getHours()), []);
+  const firstName = currentUser.data?.fullName?.trim().split(/\s+/)[0] ?? null;
+  const greeting = firstName
+    ? t(
+        hour === null
+          ? "cc.greet.generic"
+          : hour < 12
+            ? "cc.greet.morning"
+            : hour < 17
+              ? "cc.greet.afternoon"
+              : "cc.greet.evening",
+        { name: firstName },
+      )
+    : "";
+  const roadmap = useQuery({
+    queryKey: qk.roadmap(roadmapId),
+    queryFn: () => getRoadmapView({ data: { roadmapId } }),
+    staleTime: 15_000,
+  });
+  const proof = useQuery({
+    queryKey: qk.proof(opportunityId),
+    queryFn: () => getProofOverview({ data: { opportunityId } }),
+    staleTime: 15_000,
+  });
+  const detail = useQuery({
+    queryKey: qk.opportunity(opportunityId),
+    queryFn: () => getOpportunityDetail({ data: { id: opportunityId } }),
+    staleTime: 30_000,
+  });
+  const economics = useQuery({
+    queryKey: qk.opportunityEconomics(opportunityId),
+    queryFn: () => getOpportunityEconomics({ data: { opportunityId } }),
+    staleTime: 30_000,
+  });
+  const view: RoadmapView | null | undefined = roadmap.data;
+  const currentWeekId = view?.currentWeekId ?? null;
+  const skeleton = useTranslatedEntity<SkeletonOverlay>("roadmap_skeleton", roadmapId);
+  const weekDetail = useTranslatedEntity<WeekOverlay>("week_detail", currentWeekId);
+  const rawOpportunityTitle = useFounderState().data?.briefs[opportunityId]?.title ?? "";
+  const opportunityTitle = useTranslatedTitle(opportunityId, rawOpportunityTitle) ?? "";
+
+  if (roadmap.isPending) {
+    return (
+      <>
+        <PageHeader title={t("cc.c.title")} />
+        <Skeleton className="h-72 w-full rounded-[1.5rem]" />
+        <div className="grid gap-5 md:grid-cols-3">
+          <Skeleton className="h-40" />
+          <Skeleton className="h-40" />
+          <Skeleton className="h-40" />
+        </div>
+      </>
+    );
+  }
+  if (roadmap.isError || !view) {
+    return <ErrorPanel onRetry={() => void roadmap.refetch()} retrying={roadmap.isFetching} />;
+  }
+
+  const week = view.weeks.find((w) => w.id === view.currentWeekId) ?? null;
+  const phase = view.phases.find((p) => p.id === view.currentPhaseId) ?? null;
+  const mission =
+    week?.missions.find((m) => m.state === "in_progress") ??
+    week?.missions.find((m) => m.state === "not_started" && m.required) ??
+    week?.missions.find((m) => m.state === "not_started") ??
+    null;
+  const weekTitle = skeleton.data?.weeks?.[week?.id ?? ""]?.title ?? week?.title;
+  const phaseTitle = skeleton.data?.phases?.[phase?.id ?? ""]?.title ?? phase?.title;
+  const missionTitle = weekDetail.data?.missions?.[mission?.id ?? ""]?.title ?? mission?.title;
+  const adaptation = week?.adaptationNote ?? null;
+  const counts = proof.data?.counts;
+  const assumptions = proof.data?.assumptions ?? [];
+  const weekMissions = week?.missions ?? [];
+  const missionsDone = weekMissions.filter((m) => m.state === "completed").length;
+  const requiredMissions = weekMissions.filter((m) => m.required);
+  const econ = economics.data ?? null;
+  const contribution = econ ? contributionPerCustomer(econ) : null;
+  const breakEven = econ ? breakEvenCustomers(econ) : null;
+  const sensPoints = econ ? revenueSensitivityPoints(econ) : [];
+  const matrix = detail.data?.fit.matrix ?? null;
+  const supportedN = counts?.supported ?? 0;
+  const testingN = (counts?.weak ?? 0) + (counts?.mixed ?? 0);
+  const untestedN = counts?.untested ?? 0;
+  const contradictedN = counts?.contradicted ?? 0;
+  const momentum = buildMomentum(view, assumptions);
+  const momentumTotal = momentum.reduce((n, d) => n + d.missions + d.evidence, 0);
+  const weekDone = weekMissions.length > 0 && missionsDone === weekMissions.length;
+  const nextWeekLabel =
+    week && week.number < view.totals.weeks
+      ? t("common.weekN", { n: String(week.number + 1).padStart(2, "0") })
+      : t("rm.state.completed");
+  const phaseRibbon: RibbonPhase[] = view.phases.map((p, i) => ({
+    id: p.id,
+    number: i + 1,
+    title: skeleton.data?.phases?.[p.id]?.title ?? p.title,
+    current: p.id === view.currentPhaseId,
+    weeks: p.weekIds.flatMap((wid) => {
+      const w = view.weeks.find((x) => x.id === wid);
+      return w
+        ? [
+            {
+              id: w.id,
+              state: (w.state === "completed"
+                ? "completed"
+                : w.id === view.currentWeekId
+                  ? "current"
+                  : "future") as "completed" | "current" | "future",
+            },
+          ]
+        : [];
+    }),
+  }));
+
+  return (
+    <>
+      <header className="flex flex-col gap-1.5" data-testid="dashboard-header">
+        <p
+          className="min-h-[1.75rem] text-[1.1875rem] font-semibold text-sol-secondary"
+          data-testid="greeting"
+        >
+          {greeting}
+        </p>
+        <h1 className="sol-page-title">
+          {completed ? t("cc.c.completedTitle") : t("cc.c.titleClear")}
+        </h1>
+        {completed && (
+          <p className="sol-body sol-prose mt-2 text-sol-secondary">{t("cc.c.completedBody")}</p>
+        )}
+      </header>
+
+      {week && !completed && (
+        <section
+          className="relative overflow-hidden rounded-[24px] bg-workspace p-6 sm:p-8"
+          data-testid="founder-command-surface"
+        >
+          {/* Subtle violet illumination only — the surface itself stays the
+              deliberate navy/near-black, never a gradient background. */}
+          <div
+            className="pointer-events-none absolute inset-0"
+            style={{
+              background:
+                "radial-gradient(ellipse 480px 320px at 85% -10%, var(--workspace-violet-glow), transparent 70%)",
+            }}
+            aria-hidden="true"
+          />
+
+          {/* Top row: Active Direction / Current Week / Evidence — real data only. */}
+          <div className="relative grid gap-5 border-b border-workspace-border pb-5 sm:grid-cols-[1.35fr_1fr_1.15fr]">
+            <div className="min-w-0">
+              <p className="text-[0.875rem] font-bold uppercase tracking-[0.1em] text-workspace-muted">
+                {t("cc.surface.direction")}
+              </p>
+              <p
+                className="mt-1.5 line-clamp-2 text-[1.1875rem] font-semibold leading-snug text-workspace-foreground"
+                data-testid="surface-direction"
+              >
+                {opportunityTitle}
+              </p>
+            </div>
+            <div className="min-w-0">
+              <p className="text-[0.875rem] font-bold uppercase tracking-[0.1em] text-workspace-muted">
+                {t("cc.surface.week")}
+              </p>
+              <p className="mt-1.5 text-[1.1875rem] font-semibold leading-snug text-workspace-foreground">
+                {t("common.weekN", { n: String(week.number).padStart(2, "0") })}
+              </p>
+              <p className="truncate text-[0.9375rem] text-workspace-muted">{weekTitle}</p>
+            </div>
+            <div className="min-w-0">
+              <p className="text-[0.875rem] font-bold uppercase tracking-[0.1em] text-workspace-muted">
+                {t("cc.surface.evidence")}
+              </p>
+              <p
+                className="mt-1.5 text-[1.1875rem] font-semibold leading-snug text-workspace-foreground"
+                data-testid="surface-evidence"
+              >
+                {proof.data && assumptions.length > 0
+                  ? t("cc.surface.evidenceLine", {
+                      captured: view.totals.evidence,
+                      supported: supportedN,
+                      testing: testingN,
+                    })
+                  : t("cc.surface.evidenceNone")}
+              </p>
+              <div className="mt-2.5">
+                <StackedBar
+                  ariaLabel={t("cc.surface.evidenceAria")}
+                  track="bg-white/10"
+                  segments={[
+                    {
+                      value: supportedN,
+                      className: "bg-sol-champagne",
+                      label: t("cc.map.legend.supported"),
+                    },
+                    {
+                      value: testingN,
+                      className: "bg-sol-violet",
+                      label: t("cc.map.legend.testing"),
+                    },
+                    {
+                      value: contradictedN,
+                      className: "bg-sol-warning",
+                      label: t("pf.state.contradicted"),
+                    },
+                    {
+                      value: untestedN,
+                      className: "bg-white/25",
+                      label: t("cc.map.legend.untested"),
+                    },
+                  ]}
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* The execution path — each stop read off the founder's real assumptions. */}
+          <div className="relative mt-5">
+            <p className="mb-3 text-[0.875rem] font-bold uppercase tracking-[0.1em] text-sol-champagne">
+              {t("cc.path.heading")}
+            </p>
+            <ExecutionPath
+              opportunityId={opportunityId}
+              assumptions={assumptions}
+              loading={proof.isPending}
+            />
+          </div>
+
+          <div className="relative mt-5 flex flex-wrap items-center justify-between gap-3 border-t border-workspace-border pt-5">
+            <div className="min-w-0 flex-1">
+              {week.state === "generating_next" ? (
+                <p className="sol-body text-workspace-muted" role="status">
+                  {week.generationStatus === "failed"
+                    ? t("rm.gen.failedShort")
+                    : t("rm.gen.preparingShort")}
+                </p>
+              ) : week.state === "ready_to_close" ? (
+                <p className="sol-body text-workspace-foreground">{t("cc.c.readyToClose")}</p>
+              ) : (
+                <p className="text-[0.9375rem] text-workspace-muted">
+                  {t(`rm.state.${week.state}` as const)}
+                </p>
+              )}
+            </div>
+            <LinkButton
+              to="/dashboard/roadmap"
+              search={{ week: week.number, mission: mission?.id }}
+              variant="secondary"
+              size="lg"
+              className="border-workspace-border bg-transparent text-workspace-foreground hover:border-sol-violet/50"
+              data-testid="continue-mission"
+            >
+              {week.state === "ready_to_close" ? t("rm.week.review") : t("cc.c.openWeek")}
+            </LinkButton>
+          </div>
+        </section>
+      )}
+
+      {/* Today's Move + this week as a track that ends at the next unlock. */}
+      {week && !completed && (
+        <div className="grid gap-5 lg:grid-cols-[1.35fr_1fr]">
+          {mission && week.state !== "generating_next" ? (
+            <Card
+              className="relative overflow-hidden border-l-[6px] border-l-sol-champagne p-6 sm:p-8"
+              data-testid="todays-move"
+            >
+              {/* Keyed by mission: when one is finished the next one arrives as a
+                  state change (480ms reveal), not a silent text swap. */}
+              <div key={mission.id} className="sol-reveal">
+                <Eyebrow className="text-sol-champagne-deep">{t("cc.today.heading")}</Eyebrow>
+                <h2
+                  className="mt-3 max-w-[30ch] font-display text-[clamp(1.5rem,1.2rem+1.2vw,2.125rem)] font-semibold leading-[1.15] text-sol-ink"
+                  data-testid="current-mission"
+                >
+                  {missionTitle}
+                </h2>
+                <div className="mt-5 flex flex-wrap items-center gap-2">
+                  {mission.timeEstimate && (
+                    <Pill>
+                      <Clock3 className="size-3.5" aria-hidden="true" />
+                      {mission.timeEstimate}
+                    </Pill>
+                  )}
+                  {mission.evidenceRequired && (
+                    <Pill tone="violet">
+                      <FileCheck2 className="size-3.5" aria-hidden="true" />
+                      {t("rm.evidenceRequired")}
+                    </Pill>
+                  )}
+                </div>
+                <div className="mt-6">
+                  <LinkButton
+                    to="/dashboard/roadmap"
+                    search={{ week: week.number, mission: mission.id }}
+                    variant="primary"
+                    size="lg"
+                    data-testid="start-mission"
+                  >
+                    {mission.state === "not_started"
+                      ? t("rm.mission.start")
+                      : t("cc.c.continueMission")}
+                    <ArrowRight className="size-4 text-sol-champagne" aria-hidden="true" />
+                  </LinkButton>
+                </div>
+              </div>
+            </Card>
+          ) : (
+            <Card
+              className="flex flex-col items-start justify-center gap-5 border-l-[6px] border-l-sol-champagne p-6 sm:p-8"
+              data-testid="week-wrap"
+            >
+              {week.state === "generating_next" ? (
+                <p
+                  className="flex items-center gap-3 font-display text-[1.5rem] font-semibold text-sol-ink"
+                  role="status"
+                >
+                  <Loader2 className="size-6 animate-spin text-sol-violet" aria-hidden="true" />
+                  {t("rm.gen.preparingShort")}
+                </p>
+              ) : (
+                <>
+                  <span className="flex size-14 items-center justify-center rounded-full bg-sol-champagne text-sol-ink">
+                    <Check className="size-7" strokeWidth={3} aria-hidden="true" />
+                  </span>
+                  <h2 className="font-display text-[clamp(1.5rem,1.2rem+1.2vw,2.125rem)] font-semibold leading-[1.15] text-sol-ink">
+                    {t("rm.week.readyToClose")}
+                  </h2>
+                  <LinkButton
+                    to="/dashboard/roadmap"
+                    search={{ week: week.number }}
+                    size="lg"
+                    data-testid="review-from-dashboard"
+                  >
+                    {t("rm.week.review")}
+                    <ArrowRight className="size-4 text-sol-champagne" aria-hidden="true" />
+                  </LinkButton>
+                </>
+              )}
+            </Card>
+          )}
+
+          <Card className="flex flex-col gap-5 p-6" data-testid="next-unlock">
+            <h2 className="sol-eyebrow">{t("cc.unlock.heading")}</h2>
+            <div className="my-auto">
+              <WeekTrack
+                testId="week-track"
+                missions={weekMissions.map((m) => ({
+                  id: m.id,
+                  title: weekDetail.data?.missions?.[m.id]?.title ?? m.title,
+                  state: m.state,
+                }))}
+                unlocked={weekDone || week.state === "ready_to_close"}
+                nextLabel={nextWeekLabel}
+                onOpen={(missionId) =>
+                  navigate({
+                    to: "/dashboard/roadmap",
+                    search: { week: week.number, mission: missionId },
+                  })
+                }
+              />
+            </div>
+          </Card>
+        </div>
+      )}
+
+      {/* Pulse rings + evidence map — real counts and real assumptions. */}
+      <div className="grid gap-5 lg:grid-cols-[1fr_1.4fr]">
+        <Card className="flex flex-col gap-5 p-6" data-testid="business-pulse">
+          <h2 className="sol-eyebrow">{t("cc.pulse.heading")}</h2>
+          <div className="my-auto flex flex-wrap items-start justify-around gap-5">
+            <ProgressRing
+              testId="ring-missions"
+              label={t("cc.ring.missions")}
+              value={missionsDone}
+              total={weekMissions.length}
+              tone="violet"
+            />
+            <ProgressRing
+              testId="ring-supported"
+              label={t("cc.ring.supported")}
+              value={supportedN}
+              total={assumptions.length}
+              tone="champagne"
+            />
+            <ProgressRing
+              testId="ring-weeks"
+              label={t("cc.ring.weeks")}
+              value={view.totals.completedWeeks}
+              total={view.totals.weeks}
+              tone="violet"
+            />
+          </div>
+        </Card>
+
+        <Card className="flex flex-col gap-4 p-6" data-testid="dashboard-evidence-map">
+          <div className="flex items-center justify-between gap-3">
+            <h2 className="sol-eyebrow">{t("cc.map.heading")}</h2>
+            <LinkButton
+              to="/dashboard/proof"
+              search={{ opportunity: opportunityId }}
+              variant="ghost"
+              size="sm"
+              aria-label={t("cc.c.openProof")}
+              title={t("cc.c.openProof")}
+            >
+              <ArrowRight className="size-4" aria-hidden="true" />
+            </LinkButton>
+          </div>
+          {proof.isPending ? (
+            <Skeleton className="h-28" />
+          ) : assumptions.length > 0 ? (
+            <EvidenceMap
+              assumptions={assumptions}
+              onSelect={(id) =>
+                navigate({
+                  to: "/dashboard/proof",
+                  search: { opportunity: opportunityId, assumption: id },
+                })
+              }
+            />
+          ) : (
+            <div className="flex flex-col items-start gap-3">
+              <GhostNodes />
+              <p className="sr-only">{t("cc.map.empty")}</p>
+            </div>
+          )}
+        </Card>
+      </div>
+
+      {/* Founder fit as four bars; economics as a chart (or the shape of one). */}
+      <div className="grid gap-5 md:grid-cols-2">
+        <Card className="flex flex-col gap-4 p-6" data-testid="opportunity-pulse">
+          <h2 className="sol-eyebrow">{t("cc.oppPulse.heading")}</h2>
+          {detail.isPending || !matrix ? (
+            <Skeleton className="h-28" />
+          ) : (
+            <FitSignals rows={matrix.rows} />
+          )}
+        </Card>
+
+        <Card className="flex flex-col gap-4 p-6" data-testid="economics-snapshot">
+          <div className="flex items-center justify-between gap-3">
+            <h2 className="sol-eyebrow">{t("cc.econ.heading")}</h2>
+            {econ?.exists && <Pill>{t("opp.econ.assumptionBadge")}</Pill>}
+          </div>
+          {economics.isPending ? (
+            <Skeleton className="h-28" />
+          ) : econ && econ.exists && econ.pricePerCustomer != null ? (
+            <>
+              <dl className="grid grid-cols-2 gap-x-4 gap-y-3">
+                <div>
+                  <dt className="text-[0.875rem] font-semibold text-sol-secondary">
+                    {t("opp.econ.contribution")}
+                  </dt>
+                  <dd className="mt-1 font-display text-[1.5rem] font-semibold text-sol-ink">
+                    {contribution != null
+                      ? `${econ.currency} ${contribution.toLocaleString()}`
+                      : "—"}
+                  </dd>
+                </div>
+                <div>
+                  <dt className="text-[0.875rem] font-semibold text-sol-secondary">
+                    {t("opp.econ.breakEven")}
+                  </dt>
+                  <dd className="mt-1 font-display text-[1.5rem] font-semibold text-sol-ink">
+                    {breakEven != null ? breakEven : "—"}
+                  </dd>
+                </div>
+              </dl>
+              {sensPoints.length > 1 && (
+                <div className="h-24 w-full" aria-hidden="true">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <LineChart data={sensPoints}>
+                      <Line
+                        type="monotone"
+                        dataKey="revenue"
+                        stroke="var(--sol-violet)"
+                        strokeWidth={2}
+                        dot={false}
+                      />
+                      {breakEven != null && (
+                        <ReferenceDot
+                          x={breakEven}
+                          y={econ.pricePerCustomer * breakEven}
+                          r={4}
+                          fill="var(--sol-champagne-deep)"
+                          stroke="none"
+                        />
+                      )}
+                    </LineChart>
+                  </ResponsiveContainer>
+                </div>
+              )}
+            </>
+          ) : (
+            <GhostChart />
+          )}
+          <LinkButton
+            to="/dashboard/opportunities/$id"
+            params={{ id: opportunityId }}
+            search={{ tab: "economics" }}
+            variant="ghost"
+            size="sm"
+            className="mt-auto self-start"
+          >
+            {econ?.exists ? t("opp.econ.edit") : t("opp.econ.add")}
+          </LinkButton>
+        </Card>
+      </div>
+
+      {/* The whole roadmap on one line, and the last fortnight's momentum. */}
+      <div className="grid gap-5 lg:grid-cols-[1.5fr_1fr]">
+        <Card className="flex flex-col gap-5 p-6" data-testid="mini-roadmap">
+          <div className="flex items-center justify-between gap-3">
+            <h2 className="sol-eyebrow">{t("cc.mini.heading")}</h2>
+            <LinkButton
+              to="/dashboard/roadmap"
+              variant="ghost"
+              size="sm"
+              aria-label={t("cc.mini.openFull")}
+              title={t("cc.mini.openFull")}
+            >
+              <ArrowRight className="size-4" aria-hidden="true" />
+            </LinkButton>
+          </div>
+          <JourneyRibbon
+            phases={phaseRibbon}
+            onOpenPhase={(id) => navigate({ to: "/dashboard/roadmap", search: { phase: id } })}
+          />
+          {phaseTitle && (
+            <p className="truncate text-[0.9375rem] font-semibold text-sol-secondary">
+              {phaseTitle}
+            </p>
+          )}
+        </Card>
+
+        <Card className="flex flex-col gap-4 p-6" data-testid="recent-changes">
+          <h2 className="sol-eyebrow">{t("cc.mom.heading")}</h2>
+          <MomentumBars
+            days={momentum}
+            ariaLabel={t("cc.mom.aria")}
+            missionsLabel={t("cc.mom.missions")}
+            evidenceLabel={t("cc.mom.evidence")}
+          />
+          {momentumTotal === 0 && <p className="sr-only">{t("cc.mom.empty")}</p>}
+        </Card>
+      </div>
+    </>
   );
 }

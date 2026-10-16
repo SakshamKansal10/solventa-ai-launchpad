@@ -6,34 +6,16 @@ import { PageBreadcrumb } from "@/components/solventia/PageBreadcrumb";
 import { PremiumButton } from "@/components/solventia/PremiumButton";
 import { getSiteUrl } from "@/lib/actions/site-url.server";
 import { breadcrumbJsonLd } from "@/lib/breadcrumb-jsonld";
+import type { MessageKey } from "@/lib/i18n";
+import { useLocale } from "@/lib/i18n/LocaleProvider";
 
-const STEPS = [
-  {
-    n: "01",
-    title: "Founder Profile",
-    body: "Your skills, resources, time, and goals — shared once.",
-  },
-  {
-    n: "02",
-    title: "Personalized Directions",
-    body: "Sol reasons through your profile into real business directions.",
-  },
-  {
-    n: "03",
-    title: "Select Opportunity",
-    body: "Pick the direction that actually fits where you are.",
-  },
-  { n: "04", title: "Validate", body: "Real-world evidence before you commit time or money." },
-  {
-    n: "05",
-    title: "Build Adaptive Roadmap",
-    body: "A staged plan that adjusts as you learn, not a fixed script.",
-  },
-  {
-    n: "06",
-    title: "Execute Week by Week",
-    body: "One unlocked week at a time, calibrated to your real pace.",
-  },
+const STEPS: { n: string; title: MessageKey; body: MessageKey }[] = [
+  { n: "01", title: "hiwPage.step1.title", body: "hiwPage.step1.body" },
+  { n: "02", title: "hiwPage.step2.title", body: "hiwPage.step2.body" },
+  { n: "03", title: "hiwPage.step3.title", body: "hiwPage.step3.body" },
+  { n: "04", title: "hiwPage.step4.title", body: "hiwPage.step4.body" },
+  { n: "05", title: "hiwPage.step5.title", body: "hiwPage.step5.body" },
+  { n: "06", title: "hiwPage.step6.title", body: "hiwPage.step6.body" },
 ];
 
 export const Route = createFileRoute("/how-it-works")({
@@ -63,18 +45,19 @@ export const Route = createFileRoute("/how-it-works")({
 });
 
 function HowItWorksPage() {
+  const { t } = useLocale();
   return (
     <div className="min-h-screen bg-sol-page">
       <Header />
-      <main className="pt-[68px] md:pt-[84px]">
+      <main className="pt-[76px]">
         <section className="mx-auto max-w-[960px] px-[18px] py-20 sm:px-6 lg:px-10">
-          <PageBreadcrumb page="How It Works" />
+          <PageBreadcrumb page={t("hiwPage.crumb")} />
           <div className="text-center">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-sol-champagne-deep">
-              How It Works
+            <p className="text-[14px] font-semibold uppercase tracking-[0.14em] text-sol-champagne-deep">
+              {t("hiwPage.eyebrow")}
             </p>
             <h1 className="mx-auto mt-4 max-w-[640px] font-display text-[34px] font-semibold leading-[1.15] text-sol-ink sm:text-[44px]">
-              From Founder Profile to Real Execution
+              {t("hiwPage.h1")}
             </h1>
           </div>
 
@@ -86,10 +69,10 @@ function HowItWorksPage() {
                 </span>
                 <div className="pt-1.5">
                   <p className="font-display text-[1.4rem] font-semibold text-sol-ink sm:text-[1.6rem]">
-                    {s.title}
+                    {t(s.title)}
                   </p>
-                  <p className="mt-2 max-w-[520px] text-[1rem] leading-[1.7] text-sol-secondary">
-                    {s.body}
+                  <p className="mt-2 max-w-[560px] text-[1.0625rem] leading-[1.7] text-sol-secondary">
+                    {t(s.body)}
                   </p>
                 </div>
               </li>
@@ -98,7 +81,7 @@ function HowItWorksPage() {
 
           <div className="mt-16 text-center">
             <PremiumButton href="/find-my-business-idea" tone="solid" shape="rounded" size="lg">
-              Find My Business Idea
+              {t("hiwPage.cta")}
               <ArrowRight className="size-4 text-sol-champagne" aria-hidden="true" />
             </PremiumButton>
           </div>

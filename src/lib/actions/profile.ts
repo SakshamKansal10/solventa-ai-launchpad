@@ -18,6 +18,19 @@ import type { Json } from "@/lib/supabase/types";
 // the real interpretation.
 const onboardingAnswersSchema = z.record(z.string(), z.unknown());
 
+/** The consultation is now a real, saved analysis — its in-progress server
+ * draft has done its job. Best-effort: a leftover draft is harmless. */
+async function clearConsultationDraft(
+  supabase: Awaited<ReturnType<typeof requireUser>>["supabase"],
+  userId: string,
+) {
+  try {
+    await supabase.from("consultation_drafts").delete().eq("user_id", userId);
+  } catch {
+    // Table missing (migration 0010 not applied) or transient — ignore.
+  }
+}
+
 function hashProfile(profile: NormalizedProfile): string {
   return crypto.createHash("sha256").update(JSON.stringify(profile)).digest("hex");
 }
@@ -71,6 +84,7 @@ export const completeConsultation = createServerFn({ method: "POST" })
       .eq("profile_hash", profileHash)
       .maybeSingle();
     if (existingDna) {
+      await clearConsultationDraft(supabase, user.id);
       return {
         businessDnaId: existingDna.id as string,
         founderDNA: existingDna.founder_analysis as unknown as Awaited<
@@ -135,6 +149,7 @@ export const completeConsultation = createServerFn({ method: "POST" })
     // committed. Converge on its row rather than surface an error after a
     // Gemini call that (in this one narrow case) turned out to be wasted.
     if (dnaError?.code === "23505") {
+      await clearConsultationDraft(supabase, user.id);
       const { data: winner, error: winnerError } = await supabase
         .from("business_dna")
         .select("id, founder_analysis")
@@ -222,7 +237,6 @@ export const completeConsultation = createServerFn({ method: "POST" })
             status: "active",
             batch_number: 1,
             ai_model: MODEL,
-            origin_locale: data.locale ?? "en",
           })
           .select("id")
           .single();
@@ -292,6 +306,7 @@ export const completeConsultation = createServerFn({ method: "POST" })
       link: `/dashboard?consultation=${dnaRow.id}`,
     });
 
+    await clearConsultationDraft(supabase, user.id);
     return { businessDnaId: dnaRow.id as string, founderDNA: pkg.founderDNA };
   });
 
@@ -322,7 +337,15 @@ export const getLatestBusinessDna = createServerFn({ method: "GET" }).handler(as
  * a single-field edit has nothing to do with.
  */
 export const updateFounderProfileAnswers = createServerFn({ method: "POST" })
-  .validator(z.object({ answers: z.record(z.string(), z.unknown()) }))
+  .validator(
+    z.object({
+      answers: z.record(z.string(), z.unknown()),
+      /** Replace the stored answers instead of merging. The Settings edit sheets
+       * start from the full stored answers, so what they send back is the whole
+       * truth — including answers a branch change legitimately cleared. */
+      replace: z.boolean().optional(),
+    }),
+  )
   .handler(async ({ data }) => {
     const { supabase, user } = await requireUser();
     const { data: latest, error: latestError } = await supabase
@@ -335,10 +358,15 @@ export const updateFounderProfileAnswers = createServerFn({ method: "POST" })
     if (latestError) throw new Error(latestError.message);
     if (!latest) throw new Error("No consultation found to edit — complete one first.");
 
-    const mergedAnswers = {
-      ...(latest.onboarding_answers as Record<string, unknown>),
-      ...data.answers,
-    };
+    if (data.replace && data.answers.v !== 2) {
+      throw new Error("Replacing a profile requires the current answer schema.");
+    }
+    const mergedAnswers = data.replace
+      ? { ...data.answers }
+      : {
+          ...(latest.onboarding_answers as Record<string, unknown>),
+          ...data.answers,
+        };
     const normalized = normalizeProfile(mergedAnswers as Parameters<typeof normalizeProfile>[0]);
 
     const { error: updateError } = await supabase
@@ -346,6 +374,9 @@ export const updateFounderProfileAnswers = createServerFn({ method: "POST" })
       .update({
         onboarding_answers: mergedAnswers as unknown as Json,
         normalized_signals: normalized as unknown as Json,
+        // No DB trigger maintains this column; Settings compares it with
+        // created_at to know the profile changed after the directions.
+        updated_at: new Date().toISOString(),
       })
       .eq("id", latest.id);
     if (updateError) throw new Error(updateError.message);

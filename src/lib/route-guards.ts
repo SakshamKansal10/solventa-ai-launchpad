@@ -1,6 +1,9 @@
 import { redirect } from "@tanstack/react-router";
+import type { QueryClient } from "@tanstack/react-query";
+
 import { getCurrentUser } from "@/lib/actions/auth";
 import { env } from "@/lib/env.server";
+import { qk } from "@/lib/queries";
 import { sanitizeNextPath } from "@/lib/safe-redirect";
 
 /** Shared `beforeLoad` for every authenticated dashboard route — bounces
@@ -8,9 +11,27 @@ import { sanitizeNextPath } from "@/lib/safe-redirect";
  * that has nothing to show them. Carries the exact path they were trying
  * to reach (a dashboard deep link from an email, say) along as `?next=`
  * so the homepage's sign-in flow can return them there once they're
- * signed in, instead of stranding them on the homepage. */
-export async function requireAuthLoader({ location }: { location: { href: string } }) {
-  const user = await getCurrentUser();
+ * signed in, instead of stranding them on the homepage.
+ *
+ * The user comes from the shared query cache when it is fresh, so moving
+ * between dashboard pages does not pay a server round trip just to re-ask
+ * "who is this?". Every server function still authenticates independently —
+ * this guard is about routing, never about authorisation. */
+export async function requireAuthLoader({
+  location,
+  context,
+}: {
+  location: { href: string };
+  context?: { queryClient?: QueryClient };
+}) {
+  const fetchUser = () => getCurrentUser();
+  const user = context?.queryClient
+    ? await context.queryClient.ensureQueryData({
+        queryKey: qk.currentUser,
+        queryFn: fetchUser,
+        staleTime: 5 * 60_000,
+      })
+    : await fetchUser();
   if (!user) {
     const next = sanitizeNextPath(location.href);
     throw redirect({ to: "/", search: next ? { next } : undefined });

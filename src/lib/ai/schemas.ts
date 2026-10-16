@@ -30,6 +30,13 @@ export const FitFactorsSchema = z.object({
     .describe(
       "True if this can be run from wherever the founder already lives. False only if it genuinely requires being physically present somewhere specific (a shop, a client's site, a particular city).",
     ),
+  // Optional so every stored opportunity from before this field keeps validating.
+  ceiling: z
+    .enum(["income", "national", "venture"])
+    .optional()
+    .describe(
+      "The realistic ceiling of THIS business if it works: 'income' = a strong income business, 'national' = a scalable national company, 'venture' = a venture-scale / global company.",
+    ),
 });
 export type FitFactors = z.infer<typeof FitFactorsSchema>;
 
@@ -137,6 +144,32 @@ export const RoadmapTaskSchema = z.object({
     .describe(
       "The exact 'what' text of a prior task this depends on, or null if it can start independently.",
     ),
+  // Added with the mission-card redesign. Optional so any older stored plan
+  // (and the diagnostics tool's single-call shape) keeps validating.
+  steps: z
+    .array(z.string())
+    .min(2)
+    .max(4)
+    .optional()
+    .describe("2-4 SHORT action bullets (each under 12 words) shown on the mission card."),
+  evidenceRequired: z
+    .boolean()
+    .optional()
+    .describe("True when completing this mission should produce a piece of recorded evidence."),
+  assumptionCategory: z
+    .enum([
+      "problem",
+      "willingness_to_pay",
+      "distribution",
+      "delivery",
+      "retention",
+      "pricing",
+      "competition",
+      "other",
+    ])
+    .nullable()
+    .optional()
+    .describe("Which kind of business assumption the evidence from this mission speaks to."),
 });
 export type RoadmapTaskPlan = z.infer<typeof RoadmapTaskSchema>;
 
@@ -231,6 +264,23 @@ export const RoadmapWeekDetailSchema = z.object({
       "What real-world evidence this week should produce — plain words, or 'None — this is a pure execution week' if there's genuinely nothing to collect.",
     ),
   successThreshold: z.string().describe("What 'this week worked' concretely looks like."),
+  evidenceTarget: z
+    .number()
+    .int()
+    .min(0)
+    .max(50)
+    .nullable()
+    .optional()
+    .describe(
+      "The number of separate pieces of evidence this week aims to capture (e.g. 8 customer conversations), or null for a pure-execution week.",
+    ),
+  adaptationNote: z
+    .string()
+    .nullable()
+    .optional()
+    .describe(
+      "One plain sentence explaining how THIS week changed because of what happened last week (e.g. 'Week 2 focuses on pricing because 5 interviews repeated the same problem'). Null for Week 1 or when nothing changed.",
+    ),
 });
 export type RoadmapWeekDetailPlan = z.infer<typeof RoadmapWeekDetailSchema>;
 

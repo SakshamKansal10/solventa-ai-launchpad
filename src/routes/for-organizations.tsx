@@ -37,7 +37,7 @@ function ForOrganizationsPage() {
   return (
     <div className="min-h-screen bg-sol-page">
       <Header />
-      <main className="pt-[68px] md:pt-[84px]">
+      <main className="pt-[76px]">
         <ForOrganizations />
       </main>
       <Footer />

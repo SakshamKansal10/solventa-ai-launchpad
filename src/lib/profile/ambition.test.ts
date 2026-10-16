@@ -25,8 +25,6 @@ function baseProfile(overrides: Partial<NormalizedProfile> = {}): NormalizedProf
       currentStatusDetail: null,
       languages: [],
       currentBusiness: null,
-      industry: null,
-      major: null,
       currency: "INR",
       currencySymbol: "₹",
     },

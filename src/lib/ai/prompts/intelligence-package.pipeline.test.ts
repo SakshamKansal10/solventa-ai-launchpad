@@ -52,7 +52,7 @@ describe("Stage 7 generation call path (mocked Gemini, no live network call)", (
     generateContentMock.mockReset();
   });
 
-  it("calls generateContent exactly once and fails without 'after retry' when Gemini returns 400", async () => {
+  it("retries once on the same model and fails WITH 'after retry' when Gemini returns 400 both times", async () => {
     generateContentMock.mockImplementation(() => {
       throw new ApiError({ message: "Request contains an invalid argument.", status: 400 });
     });
@@ -67,14 +67,14 @@ describe("Stage 7 generation call path (mocked Gemini, no live network call)", (
       caught = err;
     }
 
-    expect(generateContentMock).toHaveBeenCalledTimes(1);
+    // Bounded retry: up to 2 total attempts on the primary model, never more.
+    expect(generateContentMock).toHaveBeenCalledTimes(2);
     expect(caught).toBeInstanceOf(Error);
-    expect((caught as Error).message).toContain("Gemini request failed:");
-    expect((caught as Error).message).not.toContain("after retry");
+    expect((caught as Error).message).toContain("Gemini request failed after retry:");
     expect((caught as { category?: string }).category).toBe("GEMINI_INVALID_REQUEST");
   });
 
-  it("503 (model overload) with no fallback model configured -> fails without 'after fallback', category GEMINI_UNAVAILABLE, no raw provider text required to identify it", async () => {
+  it("503 (model overload) with no fallback model configured -> retries once, fails with 'after retry' (not 'after fallback'), category GEMINI_UNAVAILABLE", async () => {
     generateContentMock.mockImplementation(() => {
       throw new ApiError({
         message: "This model is currently experiencing high demand.",
@@ -92,13 +92,14 @@ describe("Stage 7 generation call path (mocked Gemini, no live network call)", (
       caught = err;
     }
 
-    expect(generateContentMock).toHaveBeenCalledTimes(1);
+    expect(generateContentMock).toHaveBeenCalledTimes(2);
     expect(caught).toBeInstanceOf(Error);
+    expect((caught as Error).message).toContain("after retry");
     expect((caught as Error).message).not.toContain("after fallback");
     expect((caught as { category?: string }).category).toBe("GEMINI_UNAVAILABLE");
   });
 
-  it("sends the request WITHOUT a provider-side responseSchema (JSON-contract-in-prompt mode)", async () => {
+  it("sends the request WITH a provider-side responseSchema attached (re-verified live to be accepted for this flat, post-split shape)", async () => {
     generateContentMock.mockImplementation(() => {
       throw new ApiError({ message: "Request contains an invalid argument.", status: 400 });
     });
@@ -107,19 +108,22 @@ describe("Stage 7 generation call path (mocked Gemini, no live network call)", (
     const ambition = computeAmbitionCalibration(profile, computeFounderGenome(profile));
     await generateIntelligencePackage(profile, ambition).catch(() => {});
 
-    expect(generateContentMock).toHaveBeenCalledTimes(1);
+    expect(generateContentMock).toHaveBeenCalledTimes(2);
     const requestArg = generateContentMock.mock.calls[0][0] as {
       model: string;
       contents: string;
       config: Record<string, unknown>;
     };
-    expect(requestArg.config.responseSchema).toBeUndefined();
+    expect(requestArg.config.responseSchema).toBeDefined();
+    const schema = requestArg.config.responseSchema as { type?: string; properties?: object };
+    expect(schema.type).toBe("object");
+    expect(schema.properties).toBeDefined();
     expect(requestArg.config.responseMimeType).toBe("application/json");
     expect(typeof requestArg.model).toBe("string");
     expect(requestArg.model.length).toBeGreaterThan(0);
-    // The JSON contract has to actually be IN the prompt, since nothing
-    // else enforces the response shape without a provider-side schema.
-    // This is the ideas-only contract now — no roadmap fields at all.
+    // The hand-written JSON contract still lives in the prompt too (belt and
+    // braces: the model reads it even though the backend now also enforces
+    // the shape) — this is the ideas-only contract, no roadmap fields.
     expect(requestArg.contents).toContain("founderDNA");
     expect(requestArg.contents).toContain("opportunityIndex");
     expect(requestArg.contents).not.toContain("roadmapPhases");
@@ -161,11 +165,15 @@ describe("Stage 7 generation call path (mocked Gemini, no live network call)", (
       anyUndefinedConfigValues: Object.entries(requestArg.config).some(([, v]) => v === undefined),
     };
 
-    // Exactly the three request-level keys the SDK expects — nothing extra,
+    // Exactly the request-level keys the SDK expects — nothing extra,
     // nothing missing, nothing accidentally serialized as `undefined`.
     expect(shapeReport.topLevelKeys).toEqual(["config", "contents", "model"]);
-    expect(shapeReport.configKeys).toEqual(["responseMimeType", "systemInstruction"]);
-    expect(shapeReport.hasResponseSchema).toBe(false);
+    expect(shapeReport.configKeys).toEqual([
+      "responseMimeType",
+      "responseSchema",
+      "systemInstruction",
+    ]);
+    expect(shapeReport.hasResponseSchema).toBe(true);
     expect(shapeReport.anyUndefinedConfigValues).toBe(false);
     expect(shapeReport.contentsType).toBe("string");
     expect(shapeReport.systemInstructionType).toBe("string");

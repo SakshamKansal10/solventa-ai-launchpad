@@ -14,7 +14,7 @@ import {
 export function PageBreadcrumb({ page }: { page: string }) {
   return (
     <Breadcrumb className="mb-5">
-      <BreadcrumbList className="text-[0.8rem]">
+      <BreadcrumbList className="text-[0.9375rem]">
         <BreadcrumbItem>
           <BreadcrumbLink asChild>
             <Link to="/" className="text-sol-secondary transition-colors hover:text-sol-ink">

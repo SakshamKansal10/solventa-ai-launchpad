@@ -19,11 +19,22 @@ export default defineConfig({
   // some build contexts — hard-pinning removes that ambiguity entirely.
   // Does not affect `vite dev` (localhost/ngrok): this preset only
   // applies to `vite build`.
-  nitro: { preset: "vercel" },
+  //
+  // The one exception: the E2E harness builds a local Node server from this
+  // same code (E2E_BUILD=1) so browser tests run against a real production
+  // bundle. That build never runs on Vercel and never sets this variable there.
+  nitro:
+    process.env.E2E_BUILD === "1"
+      ? { preset: "node-server", output: { dir: ".e2e-tmp/output" } }
+      : { preset: "vercel" },
 
   vite: {
     server: {
       allowedHosts: ["lagged-catching-prayer.ngrok-free.dev"],
+      // Playwright writes traces/screenshots inside the project; without this
+      // the dev server treats every artifact as a source change and hot-reloads
+      // the page in the middle of an E2E run.
+      watch: { ignored: ["**/e2e-results/**", "**/e2e-report/**", "**/.e2e-tmp/**"] },
     },
   },
 });

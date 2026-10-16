@@ -16,9 +16,9 @@ import {
   type PublicTwoProfileResult,
   type PipelineStep,
 } from "@/lib/actions/review-public";
-import { FitRing, FitScoreBreakdownList } from "@/components/dashboard/FitScore";
-import { RoadmapStageTimeline } from "@/components/dashboard/RoadmapStageTimeline";
-import { BusinessDnaPanel } from "@/components/dashboard/BusinessDnaPanel";
+import { FitRing, FitScoreBreakdownList } from "@/components/review-tools/FitScore";
+import { RoadmapStageTimeline } from "@/components/review-tools/RoadmapStageTimeline";
+import { BusinessDnaPanel } from "@/components/review-tools/BusinessDnaPanel";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
