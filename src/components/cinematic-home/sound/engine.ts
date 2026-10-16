@@ -212,8 +212,7 @@ export class SoundEngine {
 
   /** A soft confirmation for a real interface interaction (tabs in the product preview). */
   ui(time: number) {
-    this.click(time, 0.05, 4200, 0);
-    this.tone(N.E5, time, 0.025, { decay: 0.35, wet: 0.3 });
+    this.tone(N.E5, time, 0.022, { attack: 0.006, decay: 0.4, wet: 0.35 });
   }
 
   /** One-shot cue at `time`. Minor cues yield when too many voices already sound. */
@@ -349,8 +348,7 @@ export class SoundEngine {
         break;
       case "disruption":
         // A clean intelligent interruption: a held tone that loses its footing. Never an alarm.
-        this.bend(N.Fs4, N.F4, time, 0.08 * m, 2.2);
-        this.sweep(time, 0.05 * m, [900, 260], 1.6, 0);
+        this.bend(N.Fs4, N.F4, time, 0.07 * m, 2.4);
         break;
       case "reroute": {
         const notes = [N.D4, N.Fs4, N.A4, N.Cs5, N.E5];
@@ -363,9 +361,9 @@ export class SoundEngine {
         break;
       }
       case "handoff":
-        this.click(time, 0.07 * m, 3200, 0);
-        this.tone(N.A3, time, 0.05 * m, { attack: 0.01, decay: 1.4, wet: 0.35 });
-        this.tone(N.E4, time + 0.05, 0.04 * m, { attack: 0.01, decay: 1.4, wet: 0.35 });
+        // The world becomes the interface: a warm open fifth, no transient.
+        this.tone(N.A3, time, 0.045 * m, { attack: 0.08, decay: 1.8, wet: 0.5 });
+        this.tone(N.E4, time + 0.06, 0.035 * m, { attack: 0.08, decay: 1.8, wet: 0.5 });
         break;
       case "link": {
         const notes = [N.D5, N.E5, N.Fs5, N.A5, N.B5];
@@ -373,12 +371,11 @@ export class SoundEngine {
         break;
       }
       case "signature":
-        // The S completes — ONE identity sound, on the frame its edge closes: a soft low body,
-        // a short precise metallic transient, and the faintest upper shimmer. No boom, no riser.
+        // The S completes — ONE restrained identity tone, on the frame its edge closes: a soft
+        // low body, a clear bell and the faintest upper shimmer. No boom, no riser, no click.
         // (It lands as the breath releases, so it is written at full level, not ducked.)
         this.tone(N.D2, time, 0.15, { attack: 0.012, decay: 3.4, wet: 0.35 });
         this.tone(N.A1, time, 0.06, { attack: 0.02, decay: 2.6, wet: 0.2 });
-        this.click(time, 0.045, 5200, 0);
         this.bell(N.A5, time, 0.03, 1.1, 0);
         this.bell(N.D6 * 2, time + 0.06, 0.007, 2.6, 0.15);
         break;

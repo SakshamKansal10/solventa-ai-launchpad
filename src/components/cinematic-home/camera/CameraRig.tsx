@@ -6,7 +6,14 @@ import { damp } from "../math";
 import type { ExperienceStore } from "../scroll/experience-store";
 import { MAX_FRAME_DT } from "../scroll/progress-math";
 import { sampleKeys } from "../timeline/timeline";
-import { createCameraPath, FOCUS_KEYS, FOV_KEYS, fovForAspect, NEAR_KEYS } from "./camera-path";
+import {
+  createCameraPath,
+  FOCUS_KEYS,
+  FOV_KEYS,
+  fovForAspect,
+  FRAME_KEYS,
+  NEAR_KEYS,
+} from "./camera-path";
 
 /**
  * Pointer parallax: the furthest the camera leans (world units, along its own
@@ -30,6 +37,8 @@ export function CameraRig({ store, parallax }: { store: ExperienceStore; paralla
     [],
   );
   const lean = useRef({ x: 0, y: 0 });
+  /** The lens shift last applied (and for which viewport), so it is only set when it changes. */
+  const frame = useRef({ key: "" });
 
   useFrame((state, delta) => {
     const s = store.state;
@@ -45,6 +54,18 @@ export function CameraRig({ store, parallax }: { store: ExperienceStore; paralla
       camera.near = near;
       camera.far = 1600;
       camera.updateProjectionMatrix();
+    }
+
+    // Composition: a horizontal lens shift (landscape only) — the subject slides right to give
+    // the editorial type its column. setViewOffset keeps the projection exact for the labels
+    // and the product panel, which project through the same camera.
+    const { width: w, height: h } = state.size;
+    const shift = aspect >= 1 ? sampleKeys(FRAME_KEYS, p) : 0;
+    const frameKey = `${shift.toFixed(4)}:${w}x${h}`;
+    if (frameKey !== frame.current.key) {
+      frame.current.key = frameKey;
+      if (Math.abs(shift) < 1e-4) camera.clearViewOffset();
+      else camera.setViewOffset(w, h, -shift * w, 0, w, h);
     }
 
     const { position, target, forward, right, up } = scratch;

@@ -1,20 +1,27 @@
 import { Link } from "@tanstack/react-router";
 import { ArrowRight } from "lucide-react";
 
+import { Wordmark } from "../nav/Wordmark";
+import { Signature } from "../overlay/CinematicOverlay";
 import { ProductPreview } from "../overlay/ProductPreview";
+import { SIGNALS } from "../world/context/context-model";
 
 /**
  * The same story without WebGL or motion — for prefers-reduced-motion, devices
- * without WebGL2 or with a software GPU, and any WebGL failure. Each chapter is
- * a still composition rendered from the real scene (public/cinematic/*.webp),
- * with the same words. Semantic, readable, keyboard-operable; the product
+ * without WebGL2 or with a software GPU, and any WebGL failure. The same editorial
+ * system as the film (pearl ground, very large type, one idea per block); each
+ * chapter's image is a still rendered from the real scene (public/cinematic/*.webp),
+ * set in a hairline frame. Semantic, readable, keyboard-operable; the product
  * preview is the same real, interactive DOM.
  */
 interface Chapter {
   still?: string;
-  title: string;
+  /** The statement, one entry per deliberate line. */
+  lines: string[];
   line?: string;
   alt?: string;
+  signals?: boolean;
+  signature?: boolean;
   product?: boolean;
   cta?: boolean;
 }
@@ -22,75 +29,125 @@ interface Chapter {
 const CHAPTERS: Chapter[] = [
   {
     still: "core",
-    title: "Every founder begins with uncertainty.",
-    line: "Solventia turns uncertainty into direction.",
-    alt: "The Solventia S Engine: two machined titanium channels traced from the Solventia S, a gold seam along their inner edges, around a smoked-glass computing kernel.",
+    lines: ["Your reality.", "Made actionable."],
+    line: "Every founder begins with uncertainty. Solventia turns it into direction.",
+    alt: "The Solventia S Engine: two machined channels traced from the Solventia S, a fine champagne edge along their inner curves, around a smoked-glass computing kernel.",
   },
   {
     still: "context",
-    title: "It starts with your real situation.",
-    line: "Illustrative profile — ₹50,000 · digital development · India · 12 hours a week · beginner · limited customer access.",
+    lines: ["It starts with", "your real situation."],
+    signals: true,
     alt: "Six founder signals — capital, skills, location, time, experience and customer access — each acquired by a port on the S Engine's outer edge.",
   },
   {
     still: "universe",
-    title: "Hundreds of possible directions.",
-    line: "Your reality narrows them.",
-    alt: "The opportunity universe: five territories of engineered decision modules — a capability matrix, a capital-threshold terrace, a market-access ring, execution-complexity frames and an emerging-possibilities horizon — linked by weighted gold routes.",
-  },
-  {
-    still: "nine",
-    title: "360 → 120 → 36 → 9 → 3 → 1",
-    line: "Directions that don’t fit fall away; the ones that do come into alignment.",
-    alt: "Nine remaining opportunities held on one elliptical decision ring.",
+    lines: ["360", "possibilities."],
+    line: "Your reality narrows them: 360 → 120 → 36 → 9 → 3 directions.",
+    alt: "The opportunity universe: five territories of engineered decision modules linked by weighted routes.",
   },
   {
     still: "one",
-    title: "One direction worth testing.",
-    alt: "The chosen direction: a woven ring of portal frames, joined to the system by an S-shaped gold pathway.",
+    lines: ["One worth", "testing."],
+    alt: "The chosen direction: a woven ring of portal frames, joined to the system by an S-shaped pathway.",
   },
   {
     still: "build",
-    title: "Prove it before you build it.",
-    line: "Validate · Build · Elevate — discover what reality supports, then build on the evidence.",
-    alt: "The opportunity unfolded into a path of machined portal gates locking together over a deck, with gold rails running through them.",
+    lines: ["Prove it", "before you build it."],
+    signature: true,
+    line: "Discover what reality supports, then build on the evidence.",
+    alt: "The opportunity unfolded into a path of machined portal gates locking together over a deck.",
   },
   {
     still: "crisis",
-    title: "“I wouldn’t pay for this version.”",
+    lines: ["“I wouldn’t pay", "for this version.”"],
     line: "An illustrative customer response — the evidence that contradicts an assumption.",
-    alt: "Gates ahead on the path unlocking and losing alignment after contradictory evidence; the assumption node turns amber and inactive alternative routes appear.",
+    alt: "Gates ahead on the path unlocking and losing alignment after contradictory evidence.",
   },
   {
     still: "adapted",
-    title: "When evidence changes, your path changes.",
-    alt: "The gates rebuilt along a new direction, its route turning from indigo to gold.",
+    lines: ["Evidence changes.", "Your path adapts."],
+    alt: "The gates rebuilt along a new direction.",
   },
   {
     product: true,
-    title: "It doesn’t stop at the idea.",
-    line: "Your context, evidence and progress stay connected — and your next move is always clear.",
+    lines: ["Your next move,", "always clear."],
+    line: "Your context, evidence and progress stay connected — so you never have to guess what to build next.",
   },
   {
     still: "identity",
-    title: "Find the direction worth building.",
-    line: "Your reality. Your evidence. Your path forward.",
-    alt: "The Solventia S emblem resolved: two titanium channels with a gold inner seam around a quiet kernel.",
+    lines: ["Find the direction", "worth building."],
+    alt: "The Solventia S emblem resolved, pearl on graphite, with a fine champagne edge.",
     cta: true,
   },
 ];
+
+const MAJOR =
+  "text-[clamp(2.3rem,9vw,3.4rem)] font-medium uppercase leading-[0.95] tracking-[-0.045em] text-balance sm:text-[clamp(3rem,6.6vw,6.75rem)]";
 
 export function StaticFallback() {
   return (
     <div
       data-testid="cinematic-fallback"
-      className="bg-[#070B13] px-5 pb-24 pt-[112px] text-[#F1EEE6] sm:px-10"
+      className="px-5 pb-24 pt-[124px] sm:px-[clamp(1.25rem,4.4vw,4.5rem)]"
+      style={{ color: "var(--ink)", fontFamily: "var(--font-tech)" }}
     >
-      <ol className="mx-auto flex max-w-6xl flex-col gap-24 sm:gap-32">
+      <div className="mx-auto mb-20 flex max-w-6xl flex-col items-center text-center sm:mb-28">
+        <Wordmark size="hero" tone="ink" showMark={false} />
+        <p className="mt-6 text-[clamp(1rem,1.4vw,1.25rem)]" style={{ color: "var(--quiet)" }}>
+          Every founder begins with uncertainty.
+        </p>
+      </div>
+      <ol className="mx-auto flex max-w-6xl flex-col gap-24 sm:gap-36">
         {CHAPTERS.map((c, i) => {
           const Heading = i === 0 ? "h1" : "h2";
           return (
-            <li key={c.title} className="flex flex-col gap-7">
+            <li key={c.lines.join(" ")} className="flex flex-col gap-8">
+              <div className={c.cta ? "text-center" : ""}>
+                {c.signature && <Signature className="mb-5" />}
+                {/* The film’s face (the site’s headings default to the display serif). */}
+                <Heading className={MAJOR} style={{ fontFamily: "var(--font-tech)" }}>
+                  {/* One line per span, read as one sentence (spaces between the lines). */}
+                  {c.lines.map((l, k) => (
+                    <span key={k} className="block">
+                      {l}
+                      {k < c.lines.length - 1 ? " " : ""}
+                    </span>
+                  ))}
+                </Heading>
+                {c.line && (
+                  <p
+                    className="mt-5 max-w-2xl text-[clamp(1.05rem,1.5vw,1.3rem)]"
+                    style={{ color: "var(--quiet)" }}
+                  >
+                    {c.line}
+                  </p>
+                )}
+              </div>
+              {c.signals && (
+                <div className="border-t border-[color:var(--hair)] pt-8">
+                  <dl className="grid grid-cols-2 gap-x-6 gap-y-8 sm:grid-cols-3">
+                    {SIGNALS.map((s) => (
+                      <div key={s.id}>
+                        <dt
+                          className="font-mono text-[11.5px] uppercase tracking-[0.26em]"
+                          style={{ color: "var(--label)" }}
+                        >
+                          {s.label}
+                        </dt>
+                        <dd className="mt-2 text-[clamp(1.5rem,3.2vw,2.6rem)] font-normal leading-none tracking-[-0.04em]">
+                          {s.value}
+                        </dd>
+                      </div>
+                    ))}
+                  </dl>
+                  <p
+                    className="mt-8 font-mono text-[11px] uppercase tracking-[0.26em]"
+                    style={{ color: "var(--label)" }}
+                  >
+                    Illustrative founder profile
+                  </p>
+                </div>
+              )}
               {c.still && (
                 <img
                   src={`/cinematic/${c.still}-1600.webp`}
@@ -101,37 +158,24 @@ export function StaticFallback() {
                   alt={c.alt ?? ""}
                   loading={i === 0 ? "eager" : "lazy"}
                   decoding="async"
-                  className="aspect-[16/9] w-full rounded-[20px] object-cover"
+                  className="aspect-[16/9] w-full rounded-[18px] object-cover ring-1 ring-[#15181F]/12"
                 />
               )}
-              <div className={c.cta ? "text-center" : "max-w-3xl"}>
-                <Heading
-                  className="text-[clamp(2.1rem,4.4vw,4rem)] font-medium leading-[1.04] tracking-[-0.035em] text-balance text-[#F3F0E8]"
-                  style={{ fontFamily: "var(--font-tech)" }}
-                >
-                  {c.title}
-                </Heading>
-                {c.line && (
-                  <p
-                    className="mt-4 text-[clamp(1.05rem,1.5vw,1.3rem)] text-[#A3ABBA]"
-                    style={{ fontFamily: "var(--font-tech)" }}
-                  >
-                    {c.line}
-                  </p>
-                )}
-                {c.cta && (
+              {c.product && (
+                <div className="h-[min(620px,80svh)] w-full">
+                  <ProductPreview />
+                </div>
+              )}
+              {c.cta && (
+                <div className="flex flex-col items-center gap-7 text-center">
+                  <Signature />
                   <Link
                     to="/consultation"
-                    className="mt-9 inline-flex h-14 items-center gap-3 rounded-full bg-[linear-gradient(135deg,#FFFDFB_0%,#F2ECE2_55%,#DCC08B_100%)] px-8 text-[1.0625rem] font-semibold text-sol-navy"
+                    className="inline-flex h-14 items-center gap-3 rounded-full bg-[#15181F] px-8 text-[1.0625rem] font-semibold text-[#F4F2ED] shadow-[inset_0_0_0_1px_rgba(201,170,121,0.6)] transition-colors hover:bg-[#0B1F3B] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#B8924F]"
                   >
                     Find My Business Idea
                     <ArrowRight className="size-5" aria-hidden="true" />
                   </Link>
-                )}
-              </div>
-              {c.product && (
-                <div className="h-[min(620px,80svh)] w-full">
-                  <ProductPreview />
                 </div>
               )}
             </li>

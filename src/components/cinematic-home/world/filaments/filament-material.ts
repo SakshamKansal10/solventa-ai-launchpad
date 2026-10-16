@@ -1,12 +1,25 @@
-import { AdditiveBlending, Color, DoubleSide, ShaderMaterial, type DataTexture } from "three";
+import {
+  Color,
+  CustomBlending,
+  DoubleSide,
+  OneFactor,
+  OneMinusSrcAlphaFactor,
+  ShaderMaterial,
+  type DataTexture,
+} from "three";
 
 import { COLORS } from "../layout";
+import { TONE_UNIFORMS } from "../tone";
 
 /**
  * Screen-facing ribbons built entirely in the vertex shader from the
  * FilamentPool data texture. Thin filaments never shimmer: below ~1.4 px the
- * ribbon keeps a 1.4 px width and fades instead. Additive, fog-aware (it fades
- * to nothing in the distance rather than to the fog colour), tone-mapped.
+ * ribbon keeps a 1.4 px width and fades instead. Fog-aware (it fades to nothing in
+ * the distance rather than to the fog colour), tone-mapped.
+ *
+ * Two worlds, one blend (premultiplied alpha): in the dark the lines are light (additive); in the
+ * pearl world they are drawn in ink — graphite, with champagne only where the line is resolved
+ * and a faint violet trace where it reasons — so a line never vanishes into a light ground.
  */
 const vertexShader = /* glsl */ `
 uniform sampler2D uData;
@@ -82,6 +95,9 @@ void main() {
 const fragmentShader = /* glsl */ `
 uniform vec3 uGold;
 uniform vec3 uViolet;
+uniform vec3 uInkGold;
+uniform vec3 uInkViolet;
+uniform float uLight;
 uniform float uFogDensity;
 varying float vSide;
 varying float vAlpha;
@@ -99,9 +115,14 @@ void main() {
   fog *= smoothstep(0.5, 3.2, vDepth);
   vec3 col = mix(uGold, uViolet, vViolet);
   col = col * vEnergy + vec3(1.0, 0.94, 0.84) * core * 0.08 * vEnergy;
-  gl_FragColor = vec4(col, body * vAlpha * fog);
+  float a = body * vAlpha * fog;
+  // Ink: a crisp line, never a glow (energy sets its weight, not its brightness).
+  vec3 ink = mix(uInkGold, uInkViolet, vViolet);
+  float inkA = a * min(1.0, 0.25 + vEnergy * 0.75);
+  gl_FragColor = vec4(mix(col, ink, uLight), 1.0);
   #include <tonemapping_fragment>
   #include <colorspace_fragment>
+  gl_FragColor = vec4(gl_FragColor.rgb * mix(a, inkA, uLight), inkA * uLight);
 }
 `;
 
@@ -116,10 +137,16 @@ export function createFilamentMaterial(data: DataTexture): ShaderMaterial {
       uFogDensity: { value: 0.02 },
       uGold: { value: new Color(COLORS.gold) },
       uViolet: { value: new Color(COLORS.violetGlow) },
+      uInkGold: { value: new Color("#9A7A48") },
+      uInkViolet: { value: new Color("#3A3F55") },
+      uLight: TONE_UNIFORMS.uLight,
     },
     transparent: true,
     depthWrite: false,
-    blending: AdditiveBlending,
+    // Premultiplied: rgb is added, alpha occludes — additive at uLight 0, normal at uLight 1.
+    blending: CustomBlending,
+    blendSrc: OneFactor,
+    blendDst: OneMinusSrcAlphaFactor,
     // Ribbons face the camera, so their winding flips with the view: never cull them.
     side: DoubleSide,
   });

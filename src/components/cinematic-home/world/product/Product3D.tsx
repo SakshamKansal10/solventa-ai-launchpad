@@ -5,6 +5,7 @@ import {
   Euler,
   Group,
   MeshBasicMaterial,
+  MeshStandardMaterial,
   Matrix4,
   PlaneGeometry,
   Quaternion,
@@ -19,6 +20,7 @@ import { FINALE_PLACE, FINALE_YAW } from "../core/core-motion";
 import { S_INNER, S_OUTER } from "../core/s-mark";
 import { frameGeometry } from "../geometry/frames";
 import { revisedFrame, UNSTABLE } from "../path/path-model";
+import { lightAt } from "../tone";
 import { useWorld } from "../WorldContext";
 import { SLAB, SLAB_CENTRE, SLAB_NORMAL, SLAB_QUATERNION, slabState } from "./product-model";
 
@@ -75,6 +77,10 @@ const PEARL: Record<Tone, string> = {
  * the founder's reality in the rail, the direction's headline, the confidence card (evidence),
  * the next move (path) and its stages (progress).
  */
+/** The frame's colour in each world (lerped in linear light by three). */
+const BEZEL_DARK = new Color("#5C6A7C");
+const BEZEL_LIGHT = new Color("#C9C4BA");
+
 const ROUTE: [number, number][] = [
   [0.11, 0.4],
   [0.46, 0.24],
@@ -130,12 +136,13 @@ export function Product3D() {
   const face = useRef<Group>(null);
   const geo = useMemo(
     () => ({
+      // A hairline frame, not a device bezel.
       bezel: frameGeometry({
-        hw: SLAB.width / 2 + 0.08,
-        hh: SLAB.height / 2 + 0.08,
-        bar: 0.16,
-        depth: SLAB.depth + 0.08,
-        radius: 0.24,
+        hw: SLAB.width / 2 + 0.03,
+        hh: SLAB.height / 2 + 0.03,
+        bar: 0.05,
+        depth: SLAB.depth + 0.02,
+        radius: 0.16,
       }),
       body: new RoundedBoxGeometry(SLAB.width, SLAB.height, SLAB.depth, 4, 0.12),
       facePlane: new PlaneGeometry(1, 1),
@@ -143,6 +150,12 @@ export function Product3D() {
     [],
   );
   useEffect(() => () => Object.values(geo).forEach((g) => g.dispose()), [geo]);
+  // The frame follows the world: a quiet light edge on the pearl, machined metal in the dark.
+  const bezelMaterial = useMemo(
+    () => new MeshStandardMaterial({ color: "#5C6A7C", metalness: 0.4, roughness: 0.45 }),
+    [],
+  );
+  useEffect(() => () => bezelMaterial.dispose(), [bezelMaterial]);
   const fil = useMemo(() => filaments.range("product", 8 + CHAIN.length), [filaments]);
   // Flat, unlit, untoned: exactly the DOM panel's colours, so the handoff adds only type.
   const faceTones = useMemo(
@@ -213,9 +226,12 @@ export function Product3D() {
     if (face.current) face.current.scale.setScalar(1 - 0.02 * st.dom);
     // Clarity: the face lights to pearl as it squares up, and returns to graphite as the type
     // leaves it (Connected), so the gold routing reads on a dark surface again.
+    // In the pearl world the face stays pearl: the routing is drawn in ink on it instead.
+    const L = lightAt(p);
     const clarity =
       smoothstep(0.3, 0.82, local(p, "handoff")) *
-      (1 - smoothstep(0.04, 0.36, local(p, "connected")));
+      Math.max(1 - smoothstep(0.04, 0.36, local(p, "connected")), L);
+    bezelMaterial.color.set(BEZEL_DARK).lerp(BEZEL_LIGHT, L);
     if (Math.abs(clarity - light.value) > 0.001) {
       light.value = clarity;
       for (const c of toneColors) faceTones[c.tone].color.copy(c.dark).lerp(c.pearl, clarity);
@@ -298,7 +314,7 @@ export function Product3D() {
   return (
     <group ref={slab}>
       <mesh geometry={geo.body} material={materials.graphite} />
-      <mesh geometry={geo.bezel} material={materials.titanium} />
+      <mesh geometry={geo.bezel} material={bezelMaterial} />
       <group ref={face} position={[0, 0, SLAB.depth / 2 + 0.006]}>
         {FACE.map(({ r: [x, y, w, h], tone }, i) => (
           <mesh

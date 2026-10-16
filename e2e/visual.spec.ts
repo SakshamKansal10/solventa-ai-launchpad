@@ -264,8 +264,9 @@ test.describe("text is never unreadably small", () => {
       });
       found.forEach((f) => tiny.push(`${label}: ${f}`));
     };
+    // `/` is the cinematic film: its small mono kickers are a deliberate third type level
+    // (checked for contrast in cinematic.spec.ts), so the product's 14px floor applies elsewhere.
     for (const route of [
-      "/",
       "/about",
       "/consultation",
       "/dashboard",

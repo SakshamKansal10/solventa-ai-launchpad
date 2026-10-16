@@ -38,8 +38,9 @@ describe("the score", () => {
     }
   });
 
-  it("places every cue inside the film, in order", () => {
-    expect(CUES.length).toBeGreaterThan(40);
+  it("places every cue inside the film, in order — and keeps the score sparse", () => {
+    expect(CUES.length).toBeGreaterThan(12);
+    expect(CUES.length).toBeLessThan(30);
     CUES.forEach((c, i) => {
       expect(c.at).toBeGreaterThan(0);
       expect(c.at).toBeLessThan(1);
@@ -70,13 +71,19 @@ describe("the score", () => {
     expect(gate.step(reveal.at + 0.001).map((c) => c.kind)).toContain("reveal");
   });
 
-  it("marks computation with discrete events — one per context wave reaching each territory", () => {
-    const evaluations = CUES.filter((c) => c.kind === "evaluate");
-    expect(evaluations).toHaveLength(30);
-    for (const c of evaluations) {
-      expect(c.at).toBeGreaterThan(progressOf("computation", 0));
-      expect(c.at).toBeLessThan(progressOf("computation", 1));
-    }
+  it("is soothing and minimal: no clicks, ticks, sweeps or risers, and no forward pulse", () => {
+    const mechanical = [
+      "evaluate",
+      "compare",
+      "gate",
+      "flyby",
+      "lock",
+      "align",
+      "unlock",
+      "unfold",
+    ];
+    expect(CUES.filter((c) => mechanical.includes(c.kind))).toEqual([]);
+    for (let i = 0; i <= 200; i++) expect(mixAt(i / 200).pulse).toBe(0);
   });
 
   it("opens with the signature motif and resolves it with the emblem and its name at the end", () => {
@@ -104,11 +111,9 @@ describe("the score", () => {
     expect(motifs[1].at).toBeLessThan(signature.at);
   });
 
-  it("compares the three futures with one focused pulse each, before the near-silent pause", () => {
-    const pulses = CUES.filter((c) => c.kind === "compare");
-    expect(pulses.map((c) => c.index)).toEqual([0, 0.5, 1]);
+  it("weighs the three futures in a near-silent pause, then resolves once", () => {
     const resolve = CUES.find((c) => c.kind === "resolve")!;
-    for (const c of pulses) expect(c.at).toBeLessThan(progressOf("selection", 0));
+    expect(CUES.filter((c) => c.kind === "resolve")).toHaveLength(1);
     // The pause: the space drops to near-silence between the comparison and the resolution.
     expect(mixAt(progressOf("selection", 0.4)).master).toBeLessThan(0.6);
     expect(mixAt(progressOf("selection", 0.4)).bed).toBeLessThan(0.2);

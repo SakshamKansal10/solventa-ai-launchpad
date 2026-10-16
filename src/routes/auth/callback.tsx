@@ -1,9 +1,9 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { Loader2 } from "lucide-react";
 import { z } from "zod";
 
+import mark from "@/assets/solventia-mark.png";
 import { exchangeCodeForSession } from "@/lib/actions/auth";
 import { CONSULTATION_STORAGE_KEY } from "@/lib/consultation/store";
 import { useLocale } from "@/lib/i18n/LocaleProvider";
@@ -121,13 +121,29 @@ function AuthCallback() {
     );
   }
 
+  // A calm holding screen: the mark (quieted to graphite), one clear line, and a slim champagne
+  // line that travels while the session is confirmed (still under reduced motion).
   return (
     <div
       role="status"
-      className="flex min-h-dvh items-center justify-center gap-2 bg-sol-pearl text-[1.0625rem] text-sol-secondary"
+      className="flex min-h-dvh flex-col items-center justify-center bg-sol-pearl px-6 text-center"
     >
-      <Loader2 className="size-5 animate-spin" aria-hidden="true" />
-      {resuming ? t("auth.callback.resuming") : t("auth.callback.confirming")}
+      <img
+        src={mark}
+        alt=""
+        width={298}
+        height={436}
+        className="h-12 w-auto [filter:grayscale(1)_brightness(0.62)_contrast(1.18)]"
+      />
+      <p className="mt-8 text-[1.25rem] font-semibold tracking-[-0.01em] text-sol-ink">
+        {resuming ? t("auth.callback.resuming") : t("auth.callback.confirming")}
+      </p>
+      <span
+        aria-hidden="true"
+        className="mt-6 block h-[2px] w-44 overflow-hidden rounded-full bg-sol-ink/10"
+      >
+        <span className="block h-full w-1/3 rounded-full bg-sol-champagne motion-safe:animate-[sol-progress_1.6s_cubic-bezier(0.45,0,0.2,1)_infinite] motion-reduce:w-full motion-reduce:opacity-60" />
+      </span>
     </div>
   );
 }

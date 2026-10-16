@@ -21,7 +21,7 @@ import {
 import { useScrollController } from "./scroll/useScrollController";
 import { soundController } from "./sound/controller";
 import { SCENE_RANGES, TIMELINE_SCROLL_VH } from "./timeline/timeline";
-import { COLORS } from "./world/layout";
+import { PEARL_WORLD } from "./world/tone";
 
 // three.js + React Three Fiber load only in the browser, after hydration, and
 // only for devices that get the WebGL experience. The HUD is dev tooling.
@@ -125,7 +125,8 @@ export function CinematicHome({
         data-mode={mode}
         data-tier={capability?.tier ?? ""}
         data-ready={String(ready || mode === "fallback")}
-        style={{ backgroundColor: COLORS.black }}
+        // The first paint is the pearl opening; the world fades up over it once it renders.
+        style={{ backgroundColor: PEARL_WORLD.sky }}
       >
         {/* The fallback is itself the semantic story — never read it twice. */}
         {mode !== "fallback" && <Narrative />}

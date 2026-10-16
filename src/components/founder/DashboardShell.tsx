@@ -115,7 +115,7 @@ function SidebarContent({
       >
         <img src={mark} alt="" width={298} height={436} className="h-9 w-auto" />
         <span className="flex flex-col leading-none">
-          <span className="font-display text-[1.15rem] font-semibold tracking-[0.16em] text-sol-ink">
+          <span className="font-wordmark text-[1.05rem] font-medium tracking-[0.13em] text-sol-ink">
             SOLVENTIA
           </span>
         </span>

@@ -1,8 +1,7 @@
 import { k, progressOf, sampleKeys, type SceneId } from "../timeline/timeline";
-import { arrivalWindow, ASSEMBLY, WAFER_Z } from "../world/core/core-design";
+import { ASSEMBLY } from "../world/core/core-design";
 import { FINALE_COMPLETE } from "../world/core/core-motion";
 import { SIGNALS, signalWindow } from "../world/context/context-model";
-import { TERRITORIES, TRUNK_ORIGIN } from "../world/universe/universe-model";
 
 /**
  * The score — what the soundtrack does at every point of the film, as PURE
@@ -16,6 +15,11 @@ import { TERRITORIES, TRUNK_ORIGIN } from "../world/universe/universe-model";
  * (tension, master dips) · D structural interaction (locks, aligns, gates) ·
  * E reveal impact · F resolution. One SIGNATURE MOTIF opens the film and returns,
  * resolved, with the Solventia emblem at the end.
+ *
+ * Character: soothing, warm and minimal — a calm ambient bed that keeps breathing while the
+ * visitor rests (idle never means silence), tonal events only where the picture resolves
+ * something, ONE restrained signature tone for the emblem. No mechanical clicks or ticks, no
+ * noise sweeps or risers (nothing that reads as reversed), no forward pulse.
  */
 
 export interface Mix {
@@ -91,20 +95,20 @@ const CUTOFF = [
 ];
 const TENSION = [
   K("context", 0.9, 0),
-  K("passage", 0.3, 0.1),
-  K("passage", 0.54, 0.5),
+  K("passage", 0.3, 0.06),
+  K("passage", 0.54, 0.42),
   K("passage", 0.6, 0),
   K("three", 0.3, 0),
-  K("three", 0.95, 0.38),
-  K("selection", 0.2, 0.3),
+  K("three", 0.95, 0.22),
+  K("selection", 0.2, 0.18),
   K("selection", 0.26, 0),
   K("evidence", 0.5, 0),
-  K("crisis", 0.4, 0.28),
-  K("adaptation", 0.6, 0.12),
+  K("crisis", 0.4, 0.16),
+  K("adaptation", 0.6, 0.06),
   K("adaptation", 1, 0),
   // An almost imperceptible rise under the approach, released the moment the S completes.
   K("return", 0.3, 0),
-  K("finale", 0.26, 0.12),
+  K("finale", 0.26, 0.06),
   K("finale", 0.335, 0),
 ];
 const PAD = [
@@ -139,14 +143,8 @@ const WIDTH = [
   K("finale", 0.34, 0.15),
   K("finale", 0.6, 0.85),
 ];
-const PULSE = [
-  K("unfold", 0.7, 0),
-  K("validate", 0.2, 0.16),
-  K("build", 0.4, 0.24),
-  K("elevate", 0.8, 0.2),
-  K("evidence", 0.3, 0.05),
-  K("evidence", 0.6, 0),
-];
+/** The forward pulse is retired (minimal score): kept as a silent layer for the mix shape. */
+const PULSE = [K("void", 0, 0)];
 const MASTER = [
   K("void", 0, 1),
   // Near-silence inside the lens, immediately before the universe opens…
@@ -226,84 +224,28 @@ const cue = (
   extra: Partial<Pick<Cue, "phase" | "major">> = {},
 ): Cue => ({ at: progressOf(scene, at), kind, index, ...extra });
 
-/**
- * Computation events: the moment each founder-context wave reaches each territory
- * (its routes flare visibly then) — mirrors universe-state's wave fronts.
- */
-function evaluationCues(): Cue[] {
-  const out: Cue[] = [];
-  const smooth = (a: number, b: number, x: number) => {
-    const t = Math.min(1, Math.max(0, (x - a) / (b - a)));
-    return t * t * (3 - 2 * t);
-  };
-  SIGNALS.forEach((_, w) => {
-    const start = 0.04 + w * 0.115;
-    TERRITORIES.forEach((t, ti) => {
-      const d = Math.hypot(
-        t.centre[0] - TRUNK_ORIGIN[0],
-        t.centre[1] - TRUNK_ORIGIN[1],
-        t.centre[2] - TRUNK_ORIGIN[2],
-      );
-      for (let s = 0; s <= 400; s++) {
-        const local = start + (0.38 * s) / 400;
-        if (96 * smooth(start, start + 0.38, local) >= d) {
-          out.push(cue("computation", local, "evaluate", ti / (TERRITORIES.length - 1)));
-          break;
-        }
-      }
-    });
-  });
-  return out;
-}
-
 function buildCues(): Cue[] {
   // The signature motif: one delicate phrase as the first signal appears in the void.
   const out: Cue[] = [cue("void", 0.17, "motif", 0)];
-  // The S's two channels arrive and lock; connectors join; the wafers settle.
-  for (let c = 0; c < 2; c++) {
-    const [w0, w1] = arrivalWindow(c);
-    out.push(cue("awakening", w0 + 0.04, "flyby", c));
-    out.push(cue("awakening", w1 - 0.01, "lock", c * 0.5));
-  }
-  out.push(cue("awakening", ASSEMBLY.connectors[1] - 0.01, "lock", 0.8));
-  WAFER_Z.forEach((_, j) =>
-    out.push(cue("awakening", ASSEMBLY.wafer(j)[1] - 0.01, "align", j / 4)),
-  );
-  // The Engine is complete: a deep, refined harmonic activation as the kernel lights.
+  // The S assembles in silence over the bed (no flybys, no lock clicks). The Engine is complete: a deep, refined harmonic activation as the kernel lights.
   out.push(cue("awakening", ASSEMBLY.kernel[0] + 0.03, "kernel", 0, { major: true }));
   // The founder's signals are acquired, one by one.
   SIGNALS.forEach((_, i) => {
     const [a, b] = signalWindow(i);
     out.push(cue("context", a + (b - a) * 0.88, "signal", i / 5));
   });
-  // The channels part around the aperture; each wafer opens, front first; the world opens.
-  out.push(cue("passage", 0.12, "align", 0));
-  WAFER_Z.forEach((_, j) => out.push(cue("passage", 0.42 + j * 0.045, "align", 0.3 + j * 0.15)));
-  out.push(cue("passage", 0.56, "unlock"));
+  // The world opens: one wide, warm swell.
   out.push(cue("passage", 0.735, "reveal", 0, { major: true }));
-  // Computation: discrete evaluation events, as each wave reaches each territory.
-  out.push(...evaluationCues());
   // The narrowing, stage by stage; the nine; the three.
   [0.04, 0.29, 0.54, 0.86].forEach((at, i) => out.push(cue("convergence", at, "narrow", i / 3)));
   out.push(cue("three", 0.06, "narrow", 1));
-  // The comparison: as the six signals land in each future, one focused processing pulse —
-  // panned left, centre, right, where each future stands — then the near-silent pause.
-  [0, 0.5, 1].forEach((i, k) => out.push(cue("three", 0.84 + k * 0.04, "compare", i)));
+  // The near-silent pause, then the one.
   out.push(cue("selection", 0.645, "resolve", 0, { major: true }));
-  out.push(cue("unfold", 0.12, "unfold"));
-  // Gates passed along the path — a different voice in each phase.
-  for (const [phase, n] of [
-    ["validate", 6],
-    ["build", 6],
-    ["elevate", 5],
-  ] as const) {
-    for (let i = 0; i < n; i++) out.push(cue(phase, (i + 0.5) / n, "gate", i / (n - 1), { phase }));
-  }
+  // The path itself is carried by the bed and the pad (no gate ticks). Evidence: one held tone
+  // that loses its footing; the revised path: one resolved chord.
   out.push(cue("evidence", 0.62, "disruption", 0, { major: true }));
-  for (let i = 0; i < 5; i++) out.push(cue("adaptation", 0.28 + i * 0.09, "reroute", i / 4));
   out.push(cue("adaptation", 0.8, "stabilize", 0, { major: true }));
   out.push(cue("handoff", 0.62, "handoff"));
-  for (let i = 0; i < 5; i++) out.push(cue("connected", 0.12 + i * 0.1, "link", i / 4));
   // The interface's pathways converge where the emblem will form: the identity theme returns as
   // a low, distant fifth (no bright detail — the space is narrowing toward the S).
   out.push(cue("return", 0.45, "motif", 1));

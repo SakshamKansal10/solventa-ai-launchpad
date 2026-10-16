@@ -16,6 +16,7 @@ import {
   Matrix4,
   Mesh,
   MeshBasicMaterial,
+  MeshStandardMaterial,
   Object3D,
   PlaneGeometry,
   Quaternion,
@@ -30,6 +31,7 @@ import { smoothstep } from "../../math";
 import { local } from "../../timeline/timeline";
 import { frameGeometry, plateGeometry } from "../geometry/frames";
 import { COLORS } from "../layout";
+import { lightAt } from "../tone";
 import { useWorld } from "../WorldContext";
 import {
   CHANNEL,
@@ -84,6 +86,14 @@ const GOLD = new Color(COLORS.edgeGold);
 const SEAM_GOLD = new Color("#E9C48A");
 const INDIGO = new Color(COLORS.indigo);
 const VIOLET = new Color(COLORS.violetGlow);
+/**
+ * The symbol's surface follows the world: graphite on pearl, pearl on graphite — matte and
+ * calm, with a fraction of the old metallic reflection (the mark is never redrawn, only lit).
+ */
+const S_ON_LIGHT = new Color("#2B3039");
+const S_ON_DARK = new Color("#E4E0D6");
+/** Glow budget of the mark — the warm core, the inner light, the point lights (≈ 25% of before). */
+const GLOW = 0.25;
 
 function buildEngine() {
   // The channel: a machined shell (s-shell.ts) with its groove and the gold inner light.
@@ -167,10 +177,21 @@ export function IntelligenceCore({ variant = "origin" }: { variant?: "origin" | 
       toneMapped: false,
     });
   }, []);
-  // Body metal (group 0) and champagne chamfers / lips (group 1).
+  // Body (group 0) and the chamfers / lips (group 1): a razor champagne edge, brushed and quiet
+  // rather than mirror-bright.
+  const edgeMaterial = useMemo(
+    () =>
+      new MeshStandardMaterial({
+        color: COLORS.champagne,
+        metalness: 0.55,
+        roughness: 0.46,
+        envMapIntensity: 0.45,
+      }),
+    [],
+  );
   const shellMaterials = useMemo(
-    () => [materials.sMetal, materials.champagne],
-    [materials.sMetal, materials.champagne],
+    () => [materials.sMetal, edgeMaterial],
+    [materials.sMetal, edgeMaterial],
   );
 
   // Flights in (origin): fixed points derived from the camera path, so pure in scroll. The first
@@ -244,11 +265,12 @@ export function IntelligenceCore({ variant = "origin" }: { variant?: "origin" | 
         built.socket,
       ].forEach((g) => g.dispose());
       seamMaterial.dispose();
+      edgeMaterial.dispose();
       barrelMaterial.dispose();
       coreMaterial.map?.dispose();
       coreMaterial.dispose();
     },
-    [built, seamMaterial, barrelMaterial, coreMaterial],
+    [built, seamMaterial, edgeMaterial, barrelMaterial, coreMaterial],
   );
 
   useFrame(() => {
@@ -266,6 +288,14 @@ export function IntelligenceCore({ variant = "origin" }: { variant?: "origin" | 
     }
     const t = animate ? s.time : 0;
     const { place, ch, rest, lock, m, q, q2, e, v, w, pos, scl, o, c, pts } = scratch;
+
+    // The symbol's surface for the current world (shared by both variants: same tone, same value).
+    const L = lightAt(p);
+    const sm = materials.sMetal;
+    sm.color.copy(S_ON_DARK).lerp(S_ON_LIGHT, L);
+    sm.metalness = 0.18 + 0.4 * L;
+    sm.roughness = 0.5 - 0.08 * L;
+    sm.envMapIntensity = 0.42;
 
     // Engine placement.
     e.set(pose.pitch, pose.yaw, 0, "YXZ");
@@ -398,7 +428,7 @@ export function IntelligenceCore({ variant = "origin" }: { variant?: "origin" | 
       core.current.matrixWorldNeedsUpdate = true;
       coreMaterial.color
         .copy(SEAM_GOLD)
-        .multiplyScalar(finale ? 0.3 + 0.95 * lum : 0.4 + 1.4 * lum);
+        .multiplyScalar((finale ? 0.3 + 0.95 * lum : 0.4 + 1.4 * lum) * GLOW);
     }
 
     // Connectors: precision struts from each channel's inner edge into the counter.
@@ -457,9 +487,11 @@ export function IntelligenceCore({ variant = "origin" }: { variant?: "origin" | 
     // The gold inner light, and the two constant-count lights. In the emblem the lit band blooms
     // only as the champagne edge closes — the light is the result, not the decoration.
     const band = finale ? smoothstep(0.7, 1, pose.seam) : pose.seam;
+    // A thin champagne line, not a lit band: full colour on pearl (it is ink there), restrained
+    // in the dark.
     seamMaterial.color
       .copy(SEAM_GOLD)
-      .multiplyScalar(band * (finale ? 1.2 : 0.95 + 0.25 * pose.pulse));
+      .multiplyScalar(band * (0.42 + 0.4 * L) * (finale ? 1 : 1 + 0.1 * pose.pulse));
     for (const g of channelGroups.current) {
       const seam = g?.children.find((ch) => ch.userData.seam);
       if (seam) seam.visible = band > 0.01;
@@ -469,11 +501,11 @@ export function IntelligenceCore({ variant = "origin" }: { variant?: "origin" | 
       // Close to the aperture the kernel light yields: the lens is lit by its own traces.
       const near = finale ? 0 : smoothstep(0.4, 0.5, local(p, "passage"));
       violetLight.current.intensity =
-        pose.kernel * (2 + pose.energy * 4 + pose.pulse * 3) * (1 - 0.9 * near);
+        pose.kernel * (2 + pose.energy * 4 + pose.pulse * 3) * (1 - 0.9 * near) * GLOW;
     }
     if (goldLight.current) {
       goldLight.current.position.copy(v.set(0, 0, 0.9).applyMatrix4(place));
-      goldLight.current.intensity = band * (finale ? 9 : 7);
+      goldLight.current.intensity = band * (finale ? 9 : 7) * GLOW;
     }
 
     // ---- Filaments ------------------------------------------------------------------
@@ -536,7 +568,7 @@ export function IntelligenceCore({ variant = "origin" }: { variant?: "origin" | 
               // The emblem's inner edge: first the violet trace (it calms with the outer one),
               // then the champagne edge drawing tip to tip — the S closes when it arrives.
               const seamGrow = Math.min(1, Math.max(0, pose.seam * 4 - sIdx));
-              const trace = grow * (1 - pose.blueprintFade) * 1.15;
+              const trace = grow * (1 - pose.blueprintFade) * 0.6;
               const gold = seamGrow > 0.001;
               if (!gold && trace <= 0.01) {
                 filaments.hide(idx);
@@ -552,8 +584,8 @@ export function IntelligenceCore({ variant = "origin" }: { variant?: "origin" | 
               cubicThrough(idx, pts[0], pts[1], pts[2], pts[3]);
               filaments.params(idx, {
                 s1: gold ? seamGrow : grow,
-                width: gold ? 0.04 : 0.034,
-                intensity: gold ? 1.15 : trace,
+                width: gold ? 0.024 : 0.026,
+                intensity: gold ? 0.85 : trace,
                 violet: gold ? 0 : 0.85,
                 pulse: gold ? 0.25 : 1.4,
                 phase: (k * 8 + ci * 4 + sIdx) * 0.07,
@@ -677,11 +709,12 @@ export function IntelligenceCore({ variant = "origin" }: { variant?: "origin" | 
           const len = 0.4;
           spanTo(rest[r.k], chain, qi / 4, (qi + 1) / 4, 0);
           cubicThrough(idx, pts[0], pts[1], pts[2], pts[3]);
-          const glow = appear * fade * (2.2 + 0.4 * Math.sin(t * 1.7 + j));
+          // On the pearl the head is drawn in ink: a fine, quiet stroke rather than a bright one.
+          const glow = appear * fade * (2.2 + 0.4 * Math.sin(t * 1.7 + j)) * (1 - 0.6 * L);
           filaments.params(idx, {
             s0: Math.max(0, u - len),
             s1: u,
-            width: 0.07,
+            width: 0.07 - 0.03 * L,
             intensity: glow,
             violet: j === 1 ? 0.8 : 0.15,
             pulse: 0,
@@ -692,7 +725,7 @@ export function IntelligenceCore({ variant = "origin" }: { variant?: "origin" | 
             filaments.params(tail, {
               s0: 1 - (len - u),
               s1: 1,
-              width: 0.07,
+              width: 0.07 - 0.03 * L,
               intensity: glow,
               violet: j === 1 ? 0.8 : 0.15,
               pulse: 0,

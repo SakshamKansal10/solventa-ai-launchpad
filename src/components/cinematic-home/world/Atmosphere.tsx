@@ -8,6 +8,7 @@ import {
   ShaderMaterial,
   SphereGeometry,
   type DirectionalLight,
+  type HemisphereLight,
   type Mesh,
 } from "three";
 import { RoomEnvironment } from "three/examples/jsm/environments/RoomEnvironment.js";
@@ -15,7 +16,19 @@ import { RoomEnvironment } from "three/examples/jsm/environments/RoomEnvironment
 import { sampleKeys } from "../timeline/timeline";
 import { EXPOSURE_KEYS, FOG_KEYS } from "./atmosphere-keys";
 import { COLORS } from "./layout";
+import { lightAt, PEARL_WORLD, TONE_UNIFORMS } from "./tone";
 import { useWorld } from "./WorldContext";
+
+const DARK_LOW = new Color(COLORS.black);
+const DARK_HIGH = new Color(COLORS.navy);
+const PEARL_LOW = new Color(PEARL_WORLD.horizon);
+const PEARL_HIGH = new Color(PEARL_WORLD.sky);
+const DARK_FOG = new Color(COLORS.black);
+const PEARL_FOG = new Color(PEARL_WORLD.fog);
+const HEMI = {
+  sky: [new Color("#2a3a55"), new Color("#ffffff")],
+  ground: [new Color("#05070c"), new Color("#d9d4ca")],
+} as const;
 
 const skyVertex = /* glsl */ `
 varying vec3 vDir;
@@ -38,13 +51,18 @@ void main() {
   #include <colorspace_fragment>
 }`;
 
-/** Environment light, sky gradient, fog and the two key lights. */
+/**
+ * Environment light, sky gradient, fog and the key lights — all following the film's tone
+ * (tone.ts): a deep navy-black space for reasoning, a warm pearl studio for clarity, and every
+ * state in between a continuous blend.
+ */
 export function Atmosphere() {
   const { store } = useWorld();
   const gl = useThree((s) => s.gl);
   const scene = useThree((s) => s.scene);
   const sky = useRef<Mesh>(null);
   const key = useRef<DirectionalLight>(null);
+  const hemi = useRef<HemisphereLight>(null);
 
   const skyMaterial = useMemo(
     () =>
@@ -86,16 +104,34 @@ export function Atmosphere() {
 
   useFrame((state) => {
     const p = store.state.progress;
+    const L = lightAt(p);
+    TONE_UNIFORMS.uLight.value = L;
     const fog = scene.fog as FogExp2 | null;
-    if (fog) fog.density = sampleKeys(FOG_KEYS, p);
-    state.gl.toneMappingExposure = sampleKeys(EXPOSURE_KEYS, p);
+    if (fog) {
+      // A pearl haze is thinner than a dark one: distance reads as air, not as a wall.
+      fog.density = sampleKeys(FOG_KEYS, p) * (1 - 0.45 * L);
+      fog.color.copy(DARK_FOG).lerp(PEARL_FOG, L);
+    }
+    const u = skyMaterial.uniforms;
+    (u.uLow.value as Color).copy(DARK_LOW).lerp(PEARL_LOW, L);
+    (u.uHigh.value as Color).copy(DARK_HIGH).lerp(PEARL_HIGH, L);
+    u.uLift.value = 0.6 + 0.4 * L;
+    // Exposure keys stage the dark reveals; the pearl studio sits at a calm, even 1.
+    state.gl.toneMappingExposure = sampleKeys(EXPOSURE_KEYS, p) * (1 - L) + 1 * L;
+    // Soft studio light in the pearl world (shapes stay legible without glow).
+    scene.environmentIntensity = 0.38 + 0.22 * L;
+    if (hemi.current) {
+      hemi.current.intensity = 0.2 + 1.1 * L;
+      hemi.current.color.copy(HEMI.sky[0]).lerp(HEMI.sky[1], L);
+      hemi.current.groundColor.copy(HEMI.ground[0]).lerp(HEMI.ground[1], L);
+    }
     sky.current?.position.copy(state.camera.position);
   }, -1);
 
   return (
     <>
       <mesh ref={sky} geometry={skyGeometry} material={skyMaterial} renderOrder={-10} />
-      <hemisphereLight args={["#2a3a55", "#05070c", 0.2]} />
+      <hemisphereLight ref={hemi} args={["#2a3a55", "#05070c", 0.2]} />
       <directionalLight ref={key} color="#ffeed6" intensity={2.6} position={[-14, 16, 18]} />
       <directionalLight color="#9fb2d6" intensity={1.25} position={[14, 4, -20]} />
       <directionalLight color="#c9a873" intensity={0.35} position={[6, -14, 10]} />

@@ -130,7 +130,7 @@ function BuildingPage() {
       <header className="flex h-[72px] items-center justify-between px-5 sm:px-10">
         <Link to="/" className="flex items-center gap-3" aria-label={t("nav.homeAria")}>
           <img src={mark} alt="" width={298} height={436} className="h-9 w-auto" />
-          <span className="hidden font-display text-[1.25rem] font-semibold tracking-[0.2em] sm:block">
+          <span className="hidden font-wordmark text-[1.15rem] font-medium tracking-[0.14em] sm:block">
             SOLVENTIA
           </span>
         </Link>

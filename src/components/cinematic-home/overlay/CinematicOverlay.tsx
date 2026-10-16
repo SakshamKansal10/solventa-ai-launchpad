@@ -1,6 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import { ArrowRight } from "lucide-react";
-import type { CSSProperties } from "react";
+import type { CSSProperties, ReactNode } from "react";
 
 import { Wordmark } from "../nav/Wordmark";
 import { useExperienceStore } from "../scroll/experience-store";
@@ -12,31 +12,58 @@ import {
   type Caption,
   type WorldLabelDef,
 } from "./copy";
-import { ACCENT, LABEL, PEARL, QUIET, STAGE, TONE } from "./palette";
+import { TONE_VAR } from "./palette";
 
 /**
- * The DOM layer above the canvas: the statements, labels that follow the world, the narrowing
- * count and the finale CTA. React renders it ONCE; the canvas' DomSync writes opacity/position
- * every frame straight to these elements. Visible copy is decorative duplication (aria-hidden)
- * of the server-rendered narrative — except the finale CTA, which is a real, focusable link.
+ * The DOM layer above the canvas: the statements, the labels that follow the world, the
+ * narrowing count and the finale. React renders it ONCE; the canvas' DomSync drives it every
+ * frame through CSS variables — `--o` (a caption's presence, 0 → 1), `--d` (+1 arriving, −1
+ * leaving) and the tone (`--ink`, `--quiet`, `--accent`, `--dark` …, set on the page). Visible
+ * copy is decorative duplication (aria-hidden) of the server-rendered narrative — except the
+ * finale CTA, a real, focusable link.
  *
- * Type system: Geist for every statement (large, tight, balanced), Geist Mono for the small
- * chapter kickers and world labels, the site's display face only for the SOLVENTIA wordmark.
- * Colour is semantic and sparse: pearl for what is resolved, champagne for conviction (one or
- * two words, the CTA), violet only for the moments the system is reasoning.
+ * Type: editorial. One dominant idea per viewport, set very large in Geist (uppercase, tight,
+ * a few deliberate lines), each line revealed through its own mask as the story arrives and
+ * carried out the top as it leaves — continuous with the scroll, never a fade, never a bounce.
+ * Geist Mono for the small kickers and labels; the brand face only for SOLVENTIA.
  */
 const TECH: CSSProperties = { fontFamily: "var(--font-tech)" };
 
+// Flex columns: the line masks' negative margins must never collapse into the leading.
 const PLACE: Record<Caption["place"], string> = {
-  // The statement block: centred in the lower third, sized to its words, never a full-width bar.
-  title:
-    "left-1/2 bottom-[9svh] w-max max-w-[min(62rem,calc(100vw-2.5rem))] -translate-x-1/2 text-center max-sm:bottom-[7svh]",
+  // The opening identity: centred on the stage.
+  hero: "inset-x-[var(--gutter)] inset-y-0 flex flex-col items-center justify-center text-center",
+  // The editorial block: bottom-left on the page grid, as wide as its longest line.
+  low: "left-[var(--gutter)] right-[var(--gutter)] bottom-[clamp(1.5rem,7.5svh,4.75rem)] flex flex-col items-start text-left",
+  // Top-left, under the site bar — where the scene fills the lower frame.
+  top: "left-[var(--gutter)] right-[var(--gutter)] top-[clamp(6.5rem,17svh,10.5rem)] flex flex-col items-start text-left",
   // The finale scales with the viewport HEIGHT too, so on short screens it never rises into the S.
-  end: "inset-x-5 bottom-[6svh] text-center sm:inset-x-[10vw]",
+  end: "inset-x-[var(--gutter)] bottom-[5.5svh] text-center",
 };
-const SHADOW = "[text-shadow:0_2px_30px_rgba(5,8,14,0.9),0_1px_2px_rgba(5,8,14,0.55)]";
-const STATEMENT = "font-medium leading-[1.04] tracking-[-0.035em] text-balance";
-const STATEMENT_SIZE = "text-[clamp(2.15rem,4.3vw,4.4rem)]";
+/**
+ * Legibility without decoration: over the dark world a soft dark shadow; over the pearl world a
+ * halo in the ground's own colour — invisible on the pearl, a quiet separation wherever graphite
+ * type crosses a graphite object. Never a visible shadow on a light ground.
+ */
+const SHADOW: CSSProperties = {
+  textShadow:
+    "0 2px 30px rgb(5 8 14 / calc(0.85 * var(--dark, 0))), 0 1px 2px rgb(5 8 14 / calc(0.4 * var(--dark, 0))), 0 0 20px rgb(246 244 239 / calc(0.9 * (1 - var(--dark, 0)))), 0 0 6px rgb(246 244 239 / calc(0.7 * (1 - var(--dark, 0))))",
+};
+const VEIL_MASK = "linear-gradient(to right, #000 0%, #000 38%, transparent 82%)";
+/** Major statements: clamp(72px, 8vw, 145px) on desktop — short lines, tight leading. */
+const MAJOR =
+  "font-medium uppercase leading-[0.93] tracking-[-0.045em] text-[clamp(2.4rem,10.4vw,3.6rem)] sm:text-[clamp(2.75rem,8vw,9.05rem)]";
+/** A statement beside one large object: the same voice in a narrower column. */
+const MEDIUM =
+  "font-medium uppercase leading-[0.93] tracking-[-0.045em] text-[clamp(2.4rem,10.4vw,3.6rem)] sm:text-[clamp(2.6rem,6.3vw,7.4rem)]";
+/** A voice from the world: sentence case, large, never shouted. */
+const QUOTE =
+  "font-medium leading-[1] tracking-[-0.04em] text-[clamp(2.1rem,8.6vw,3rem)] sm:text-[clamp(2.4rem,5.2vw,6rem)]";
+/** One founder signal's value: the single data point that dominates the frame. */
+const DATUM =
+  "font-normal uppercase leading-[0.9] tracking-[-0.05em] text-[clamp(2.9rem,12vw,4.4rem)] sm:text-[clamp(3.25rem,8vw,9rem)]";
+const KICKER =
+  "font-mono text-[11px] uppercase tracking-[0.3em] sm:text-[12.5px] [margin-right:-0.3em]";
 
 export function CinematicOverlay() {
   const store = useExperienceStore();
@@ -47,16 +74,43 @@ export function CinematicOverlay() {
 
   return (
     <div
-      className="pointer-events-none absolute inset-0 overflow-hidden"
+      className="pointer-events-none absolute inset-0 overflow-hidden [--gutter:clamp(1.25rem,4.4vw,4.5rem)]"
       data-testid="cinematic-overlay"
     >
-      {/* Edge vignette and a low scrim: legibility for the statements, depth for the frame. */}
+      {/* Edge vignette and a low scrim — in the dark world only. */}
       <div
         aria-hidden="true"
         className="absolute inset-0"
         style={{
+          opacity: "var(--dark, 0)",
           background:
-            "radial-gradient(120% 90% at 50% 42%, transparent 55%, rgba(5,8,14,0.55) 100%), linear-gradient(to top, rgba(5,8,14,0.78), rgba(5,8,14,0.32) 24%, transparent 42%)",
+            "radial-gradient(120% 90% at 50% 42%, transparent 55%, rgba(5,8,14,0.5) 100%), linear-gradient(to top, rgba(5,8,14,0.7), rgba(5,8,14,0.26) 26%, transparent 44%)",
+        }}
+      />
+      {/* The pearl world's counterpart: a soft veil in the ground's own colour behind a statement,
+          only while one is on screen (--veil-low / --veil-top, written by DomSync). */}
+      <div
+        aria-hidden="true"
+        className="absolute inset-x-0 bottom-0 h-[62%]"
+        style={{
+          opacity: "calc(var(--veil-low, 0) * (1 - var(--dark, 0)))",
+          // Only behind the type (the left of the grid): the subject on the right stays whole.
+          maskImage: VEIL_MASK,
+          WebkitMaskImage: VEIL_MASK,
+          background:
+            "linear-gradient(to top, rgb(246 244 239 / 0.9), rgb(246 244 239 / 0.72) 30%, rgb(246 244 239 / 0) 100%)",
+        }}
+      />
+      <div
+        aria-hidden="true"
+        className="absolute inset-x-0 top-0 h-[55%]"
+        style={{
+          opacity: "calc(var(--veil-top, 0) * (1 - var(--dark, 0)))",
+          // Only behind the type (the left of the grid): the subject on the right stays whole.
+          maskImage: VEIL_MASK,
+          WebkitMaskImage: VEIL_MASK,
+          background:
+            "linear-gradient(to bottom, rgb(246 244 239 / 0.88), rgb(246 244 239 / 0.7) 34%, rgb(246 244 239 / 0) 100%)",
         }}
       />
       {CAPTIONS.map((c) => (
@@ -65,40 +119,45 @@ export function CinematicOverlay() {
           ref={reg(store.state.dom.captions, c.id)}
           data-caption={c.id}
           aria-hidden={c.kind === "finale" ? undefined : true}
-          className={`absolute ${PLACE[c.place]} will-change-[opacity,transform] ${SHADOW}`}
+          className={`absolute ${PLACE[c.place]}`}
           style={{
             ...TECH,
-            opacity: c.id === "void" ? 1 : 0,
-            visibility: c.id === "void" ? "visible" : "hidden",
+            ...SHADOW,
+            // The opening is on screen from the very first (server-rendered) paint.
+            ["--o" as string]: c.kind === "hero" ? 1 : 0,
+            visibility: c.kind === "hero" ? "visible" : "hidden",
           }}
         >
           <CaptionBody caption={c} />
         </div>
       ))}
-      {/* The narrowing count: one figure, read like a statement. */}
+      {/* The narrowing count: one very large figure, read like a statement. */}
       <div
         ref={(el) => {
           store.state.dom.counter = el;
         }}
         aria-hidden="true"
         data-testid="cinematic-count"
-        className={`absolute bottom-[9svh] left-1/2 w-max -translate-x-1/2 text-center max-sm:bottom-[7svh] ${SHADOW}`}
-        style={{ ...TECH, opacity: 0, visibility: "hidden" }}
+        className={`absolute ${PLACE.low}`}
+        style={{ ...TECH, ...SHADOW, ["--o" as string]: 0, visibility: "hidden" }}
       >
-        <Kicker text="Possibilities" tone="violet" />
-        <p
-          data-count
-          className="text-[clamp(3.6rem,7.4vw,7rem)] font-light leading-none tracking-[-0.04em] tabular-nums"
-          style={{ color: PEARL }}
-        >
-          360
-        </p>
-        <p
-          className="mt-3 font-mono text-[12.5px] uppercase tracking-[0.3em]"
-          style={{ color: QUIET, marginRight: "-0.3em" }}
-        >
-          {COUNT_LABEL}
-        </p>
+        <Reveal i={0} n={3}>
+          <Kicker text="Possibilities" tone="violet" />
+        </Reveal>
+        <Reveal i={1} n={3}>
+          <p
+            data-count
+            className="text-[clamp(6rem,30vw,9rem)] font-light leading-[0.86] tracking-[-0.06em] tabular-nums sm:text-[clamp(8rem,16vw,16.5rem)]"
+            style={{ color: "var(--ink)" }}
+          >
+            360
+          </p>
+        </Reveal>
+        <Reveal i={2} n={3}>
+          <p className={`mt-3 ${KICKER}`} style={{ color: "var(--quiet)" }}>
+            {COUNT_LABEL}
+          </p>
+        </Reveal>
       </div>
       {LABELS.map((l) => (
         <div
@@ -109,7 +168,10 @@ export function CinematicOverlay() {
           className="absolute left-0 top-0 will-change-transform"
           style={{ opacity: 0, visibility: "hidden" }}
         >
-          <div className="-translate-x-1/2 -translate-y-full whitespace-nowrap text-center [text-shadow:0_0_14px_rgba(5,8,14,0.95),0_1px_3px_rgba(5,8,14,0.9)]">
+          <div
+            className="-translate-x-1/2 -translate-y-full whitespace-nowrap text-center"
+            style={SHADOW}
+          >
             <WorldLabel label={l} />
           </div>
         </div>
@@ -117,68 +179,92 @@ export function CinematicOverlay() {
       {/* Film time: a hairline where the page scrollbar would be. */}
       <div
         aria-hidden="true"
-        className="absolute right-3 top-1/2 h-[38svh] w-px -translate-y-1/2 bg-[#F1EEE6]/[0.09] sm:right-5"
+        className="absolute right-3 top-1/2 h-[38svh] w-px -translate-y-1/2 sm:right-5"
+        style={{ background: "var(--hair)" }}
       >
         <div
           ref={(el) => {
             store.state.dom.time = el;
           }}
-          className="absolute inset-0 origin-top bg-[#d9c39b]/70"
-          style={{ transform: "scaleY(0)" }}
+          className="absolute inset-0 origin-top"
+          style={{ transform: "scaleY(0)", background: "var(--accent)", opacity: 0.75 }}
         />
       </div>
     </div>
   );
 }
 
+/**
+ * One line of a statement behind its own mask. It rises into view as the caption arrives
+ * (--d = 1) and continues up and out as it leaves (--d = −1); lines follow one another by a
+ * fraction of the span — the composition assembles and clears in reading order.
+ */
+function Reveal({ i, n, children }: { i: number; n: number; children: ReactNode }) {
+  const lag = n > 1 ? Math.min(0.14, 0.42 / (n - 1)) : 0;
+  const u = `clamp(0, calc((var(--o, 1) - ${(i * lag).toFixed(3)}) / ${(1 - (n - 1) * lag).toFixed(3)}), 1)`;
+  return (
+    // The mask is a little larger than the line (negative margin, same padding): room for the
+    // legibility halo, no change to the layout.
+    <div className="-m-[0.2em] overflow-hidden p-[0.2em]">
+      <div
+        className="will-change-transform"
+        style={{
+          transform: `translate3d(0, calc((1 - ${u}) * 112% * var(--d, 1)), 0)`,
+          // The mask does the work; opacity only softens the first and last few pixels.
+          opacity: `clamp(0, calc(${u} * 4), 1)`,
+        }}
+      >
+        {children}
+      </div>
+    </div>
+  );
+}
+
 /** Where we are in the journey: a small mono line with a semantic mark. */
-function Kicker({ text, tone }: { text: string; tone: keyof typeof TONE }) {
+function Kicker({ text, tone }: { text: string; tone: keyof typeof TONE_VAR }) {
   return (
     <p
-      className="mb-5 inline-flex items-center gap-3 font-mono text-[12.5px] uppercase tracking-[0.3em] max-sm:mb-3.5 max-sm:text-[11px]"
-      style={{ color: QUIET, marginRight: "-0.3em" }}
+      className={`mb-4 inline-flex items-center gap-3 sm:mb-6 ${KICKER}`}
+      style={{ color: "var(--quiet)" }}
     >
       <span
         aria-hidden="true"
         data-kicker-dot
         className="size-[6px] rounded-full"
-        style={{ background: TONE[tone], boxShadow: `0 0 10px ${TONE[tone]}66` }}
+        style={{ background: TONE_VAR[tone] }}
       />
       {text}
     </p>
   );
 }
 
-/** A kicker made of stages: DomSync lights the one being travelled (one dominant state). */
-function StageKicker({ stages }: { stages: NonNullable<Caption["stages"]> }) {
+/** Validate · Build · Elevate: three equal words; only the separators carry champagne. */
+export function Signature({ className = "" }: { className?: string }) {
   return (
     <p
-      className="mb-5 inline-flex items-center gap-3.5 font-mono text-[12.5px] uppercase tracking-[0.3em] max-sm:mb-3.5 max-sm:gap-2.5 max-sm:text-[11px]"
-      style={{ marginRight: "-0.3em" }}
+      className={`font-wordmark text-[11px] font-normal uppercase tracking-[0.42em] [margin-right:-0.42em] sm:text-[13px] ${className}`}
+      style={{ color: "var(--ink)" }}
     >
-      {stages.map((s, i) => (
-        <span key={s.label} className="inline-flex items-center gap-3.5 max-sm:gap-2.5">
-          {i > 0 && <span aria-hidden="true" className="h-px w-5 bg-[#5F6878]/70 max-sm:w-3" />}
-          <span
-            data-stage={i}
-            className="transition-colors duration-500 ease-out"
-            style={{ color: i === 0 ? STAGE.active : STAGE.ahead }}
-          >
-            {s.label}
-          </span>
-        </span>
-      ))}
+      Validate
+      <span aria-hidden="true" className="mx-[0.9em]" style={{ color: "var(--accent-soft)" }}>
+        •
+      </span>
+      Build
+      <span aria-hidden="true" className="mx-[0.9em]" style={{ color: "var(--accent-soft)" }}>
+        •
+      </span>
+      Elevate
     </p>
   );
 }
 
-/** A statement with its *accented* words in champagne. */
+/** A line with its *accented* words in champagne. */
 function Accented({ text }: { text: string }) {
   return (
     <>
       {accentRuns(text).map((r, i) =>
         r.accent ? (
-          <span key={i} style={{ color: ACCENT }}>
+          <span key={i} style={{ color: "var(--accent)" }}>
             {r.text}
           </span>
         ) : (
@@ -192,117 +278,65 @@ function Accented({ text }: { text: string }) {
 /** Small, crisp, intentional: the third level of the type system. */
 const LABEL_CLASS = "font-mono text-[11.5px] uppercase tracking-[0.26em]";
 
+/** A milestone on the path: small, crisp, it follows its point in the world. */
 function WorldLabel({ label: l }: { label: WorldLabelDef }) {
-  switch (l.kind) {
-    case "quote":
-      return (
-        <div style={TECH}>
-          <p
-            className="text-[clamp(1.7rem,2.8vw,2.6rem)] font-medium leading-tight tracking-[-0.025em]"
-            style={{ color: PEARL }}
-          >
-            {l.text}
-          </p>
-          <p className={`mt-2.5 ${LABEL_CLASS}`} style={{ color: LABEL }}>
-            {l.sub}
-          </p>
-        </div>
-      );
-    case "signal":
-      // The category is the label; the founder's value is what is read.
-      return (
-        <div style={TECH}>
-          <p className={LABEL_CLASS} style={{ color: LABEL }}>
-            {l.text}
-          </p>
-          <p
-            className="mt-1.5 text-[clamp(1.45rem,2.05vw,1.9rem)] font-semibold leading-none tracking-[-0.025em]"
-            style={{ color: PEARL }}
-          >
-            {l.sub}
-          </p>
-        </div>
-      );
-    case "direction":
-      return l.chosen ? (
-        <p
-          className="font-mono text-[13.5px] font-medium uppercase tracking-[0.34em]"
-          style={{ color: ACCENT }}
-        >
-          {l.text}
-        </p>
-      ) : (
-        <p
-          className="font-mono text-[12.5px] uppercase tracking-[0.34em]"
-          style={{ color: "#B9C0CC" }}
-        >
-          {l.text}
-        </p>
-      );
-    case "fit":
-      // The result is the value; what failed is the label beneath it.
-      return (
-        <div style={TECH}>
-          <p
-            className={`tracking-[-0.015em] ${l.chosen ? "text-[19px] font-semibold" : "text-[17px] font-medium"}`}
-            style={{ color: l.chosen ? ACCENT : "#DCD9D1" }}
-          >
-            {l.text}
-          </p>
-          {l.sub && (
-            <p
-              className="mt-1 font-mono text-[11px] uppercase tracking-[0.24em]"
-              style={{ color: LABEL }}
-            >
-              {l.sub}
-            </p>
-          )}
-        </div>
-      );
-    case "step":
-      return (
-        <p className="text-[16px] font-medium tracking-[-0.01em]" style={{ ...TECH, color: PEARL }}>
-          {l.text}
-        </p>
-      );
-  }
+  return (
+    <p
+      className="text-[15px] font-medium tracking-[-0.01em]"
+      style={{ ...TECH, color: "var(--ink)" }}
+    >
+      {l.text}
+    </p>
+  );
 }
 
 function CaptionBody({ caption: c }: { caption: Caption }) {
+  if (c.kind === "hero") {
+    return (
+      <div className="flex flex-col items-center">
+        <Reveal i={0} n={2}>
+          <Wordmark size="hero" showMark={false} />
+        </Reveal>
+        {c.sub && (
+          <Reveal i={1} n={2}>
+            <p
+              className="mt-5 text-[clamp(1rem,1.35vw,1.3rem)] tracking-[-0.01em] sm:mt-7"
+              style={{ color: "var(--quiet)" }}
+            >
+              {c.sub}
+            </p>
+          </Reveal>
+        )}
+      </div>
+    );
+  }
   if (c.kind === "finale") {
     return (
       <div className="pointer-events-auto flex flex-col items-center">
-        {/* The S completes alone; then its name settles in — the site's own wordmark, its
-            tracking closing as it arrives — then the promise, the line and the CTA. */}
-        <div aria-hidden="true" style={stage(0.02, 0.2)}>
-          <Wordmark size="lg" showMark={false} textStyle={WORDMARK_SETTLE} />
+        {/* The S completes alone; then its name settles in — the wordmark, its tracking closing
+            as it arrives — the signature, the line, the CTA. */}
+        <div aria-hidden="true" style={stage(0.02, 0.22)}>
+          <Wordmark size="hero" showMark={false} textStyle={WORDMARK_SETTLE} />
+        </div>
+        <div
+          aria-hidden="true"
+          className="mt-[clamp(0.9rem,2.6svh,1.6rem)]"
+          style={stage(0.16, 0.34)}
+        >
+          <Signature />
         </div>
         <p
           aria-hidden="true"
-          className="mt-3 font-mono text-[11.5px] uppercase tracking-[0.42em]"
-          style={{ ...stage(0.16, 0.32), color: "#C9AA79", marginRight: "-0.42em" }}
+          className="mt-[clamp(1.1rem,3.4svh,2.2rem)] text-[clamp(1.15rem,1.7vw,1.6rem)] font-medium tracking-[-0.02em]"
+          style={{ ...stage(0.32, 0.52), color: "var(--ink)" }}
         >
-          Validate · Build · Elevate
+          <Accented text={c.lines[0]} />
         </p>
-        <p
-          aria-hidden="true"
-          className={`mt-[clamp(1rem,3.4svh,2rem)] ${STATEMENT} text-[clamp(2.3rem,min(5vw,7.4svh),5.2rem)]`}
-          style={{ ...stage(0.3, 0.52), color: PEARL }}
-        >
-          <Accented text={c.text} />
-        </p>
-        <p
-          aria-hidden="true"
-          className="mt-[clamp(0.75rem,2svh,1.25rem)] text-[clamp(1.05rem,1.4vw,1.3rem)] tracking-[-0.005em]"
-          style={{ ...stage(0.44, 0.64), color: QUIET }}
-        >
-          {c.sub}
-        </p>
-        <div style={stage(0.6, 0.86)}>
+        <div style={stage(0.5, 0.78)}>
           <Link
             to="/consultation"
             data-testid="cinematic-cta"
-            className="mt-[clamp(1.25rem,4svh,2.25rem)] inline-flex h-14 items-center gap-3 rounded-full bg-[linear-gradient(180deg,#FBF8F2_0%,#EDE5D6_100%)] px-8 text-[1.0625rem] font-semibold tracking-[-0.01em] text-sol-navy shadow-[inset_0_0_0_1px_rgba(201,170,121,0.9),0_0_0_4px_rgba(201,170,121,0.12),0_14px_40px_rgba(196,166,122,0.16)] transition-[filter,transform,box-shadow] duration-200 hover:brightness-105 hover:shadow-[inset_0_0_0_1px_rgba(201,170,121,1),0_0_0_6px_rgba(201,170,121,0.16),0_14px_40px_rgba(196,166,122,0.22)] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#DCC08B] active:scale-[0.98]"
+            className="mt-[clamp(1.1rem,3.4svh,2rem)] inline-flex h-14 items-center gap-3 rounded-full bg-[#F4F2ED] px-8 text-[1.0625rem] font-semibold tracking-[-0.01em] text-[#15181F] shadow-[inset_0_0_0_1px_rgba(201,170,121,0.85)] transition-[background-color,transform] duration-200 hover:bg-white focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#DCC08B] active:scale-[0.98]"
           >
             Find My Business Idea
             <ArrowRight className="size-5" aria-hidden="true" />
@@ -311,29 +345,66 @@ function CaptionBody({ caption: c }: { caption: Caption }) {
       </div>
     );
   }
+  const n = c.lines.length + (c.kicker || c.stages ? 1 : 0) + (c.sub ? 1 : 0);
+  let i = 0;
   return (
     <>
       {c.stages ? (
-        <StageKicker stages={c.stages} />
+        <Reveal i={i++} n={n}>
+          <Signature className="mb-4 sm:mb-6" />
+        </Reveal>
       ) : (
-        c.kicker && c.tone && <Kicker text={c.kicker} tone={c.tone} />
-      )}
-      <p className={`${STATEMENT} ${STATEMENT_SIZE}`} style={{ color: PEARL }}>
-        <Accented text={c.text} />
-      </p>
-      {c.sub &&
-        (c.subTone === "note" ? (
-          <p className={`mt-4 ${LABEL_CLASS}`} style={{ color: LABEL }}>
-            {c.sub}
-          </p>
+        c.kicker &&
+        (c.kind === "datum" ? (
+          <Reveal i={i++} n={n}>
+            <p className={`mb-3 sm:mb-5 ${KICKER}`} style={{ color: "var(--quiet)" }}>
+              {c.kicker}
+            </p>
+          </Reveal>
         ) : (
-          <p
-            className={`mt-4 text-[clamp(1.15rem,1.6vw,1.5rem)] tracking-[-0.015em] ${c.subTone === "accent" ? "font-medium" : ""}`}
-            style={{ color: c.subTone === "accent" ? ACCENT : QUIET }}
-          >
-            {c.sub}
-          </p>
-        ))}
+          c.tone && (
+            <Reveal i={i++} n={n}>
+              <Kicker text={c.kicker} tone={c.tone} />
+            </Reveal>
+          )
+        ))
+      )}
+      {c.lines.length > 0 && (
+        <div
+          className={`flex flex-col items-start ${
+            c.kind === "datum"
+              ? DATUM
+              : c.kind === "quote"
+                ? QUOTE
+                : c.size === "medium"
+                  ? MEDIUM
+                  : MAJOR
+          }`}
+          style={{ color: "var(--ink)" }}
+        >
+          {c.lines.map((line) => (
+            <Reveal key={line} i={i++} n={n}>
+              <Accented text={line} />
+            </Reveal>
+          ))}
+        </div>
+      )}
+      {c.sub && (
+        <Reveal i={i++} n={n}>
+          {c.subTone === "note" ? (
+            <p className={`mt-4 ${LABEL_CLASS}`} style={{ color: "var(--label)" }}>
+              {c.sub}
+            </p>
+          ) : (
+            <p
+              className="mt-5 max-w-[34rem] text-[clamp(1.05rem,1.4vw,1.35rem)] tracking-[-0.012em] sm:mt-7"
+              style={{ color: "var(--quiet)" }}
+            >
+              {c.sub}
+            </p>
+          )}
+        </Reveal>
+      )}
     </>
   );
 }
@@ -341,8 +412,8 @@ function CaptionBody({ caption: c }: { caption: Caption }) {
 /** The wordmark's tracking closes from slightly open to its final measure as it appears. */
 const WORDMARK_U = "clamp(0, calc((var(--reveal, 1) - 0.02) / 0.24), 1)";
 const WORDMARK_SETTLE: CSSProperties = {
-  letterSpacing: `calc(0.42em + (1 - ${WORDMARK_U}) * (1 - ${WORDMARK_U}) * 0.22em)`,
-  marginRight: `calc(-0.42em - (1 - ${WORDMARK_U}) * (1 - ${WORDMARK_U}) * 0.22em)`,
+  letterSpacing: `calc(0.12em + (1 - ${WORDMARK_U}) * (1 - ${WORDMARK_U}) * 0.16em)`,
+  marginRight: `calc(-0.12em - (1 - ${WORDMARK_U}) * (1 - ${WORDMARK_U}) * 0.16em)`,
 };
 
 /**

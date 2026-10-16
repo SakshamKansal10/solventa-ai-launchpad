@@ -1,5 +1,6 @@
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { Mail } from "lucide-react";
+import { Fragment } from "react";
 import mark from "@/assets/solventia-mark.png";
 import { scrollToSection } from "@/hooks/use-active-section";
 import { useLocale } from "@/lib/i18n/LocaleProvider";
@@ -55,11 +56,23 @@ export function Footer() {
               className="h-9 w-auto"
             />
             <div className="leading-tight">
-              <p className="font-display text-[1rem] font-semibold tracking-[0.1em] text-sol-ink">
+              <p className="font-wordmark text-[1.05rem] font-medium tracking-[0.14em] text-sol-ink">
                 SOLVENTIA
               </p>
-              <p className="mt-0.5 text-[0.75rem] font-medium tracking-[0.24em] text-sol-champagne-deep">
-                {t("footer.tagline")}
+              {/* Validate • Build • Elevate: three equal words; only the separators are champagne. */}
+              <p className="mt-1 font-wordmark text-[0.6875rem] font-normal uppercase tracking-[0.3em] text-sol-ink">
+                {t("footer.tagline")
+                  .split("•")
+                  .map((word, i, all) => (
+                    <Fragment key={i}>
+                      {word.trim()}
+                      {i < all.length - 1 && (
+                        <span aria-hidden="true" className="mx-[0.7em] text-sol-champagne">
+                          •
+                        </span>
+                      )}
+                    </Fragment>
+                  ))}
               </p>
             </div>
           </div>

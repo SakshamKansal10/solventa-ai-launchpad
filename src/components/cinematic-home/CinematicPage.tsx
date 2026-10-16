@@ -4,11 +4,20 @@ import { Footer } from "@/components/solventia/Footer";
 
 import { CinematicHome } from "./CinematicHome";
 import { CinematicNav } from "./nav/CinematicNav";
+import { PEARL_DEFAULTS } from "./overlay/palette";
+import { PEARL_WORLD } from "./world/tone";
 
-/** The cinematic homepage as a page: its own navigation, the film and the shared footer. */
+/**
+ * The cinematic homepage as a page: its own navigation, the film and the shared footer.
+ *
+ * `data-cine-tone` is where the film writes its tone every frame (the overlay and the site bar
+ * read the same variables). Its defaults are the pearl world — the opening, the still version and
+ * any device without WebGL all start in clarity.
+ */
 const TECH_TYPE = {
   "--font-tech": '"Geist", var(--font-sans)',
   "--font-mono": '"Geist Mono", ui-monospace, SFMono-Regular, Menlo, monospace',
+  ...PEARL_DEFAULTS,
 } as CSSProperties;
 
 export function CinematicPage({
@@ -24,9 +33,9 @@ export function CinematicPage({
   pendingNext?: string | null;
 }) {
   return (
-    <div className="min-h-screen bg-[#070B13]">
+    <div className="min-h-screen" style={{ backgroundColor: PEARL_WORLD.sky }}>
       {/* Technical typography is scoped to the experience; the shared footer keeps its own. */}
-      <div style={TECH_TYPE}>
+      <div data-cine-tone style={TECH_TYPE}>
         <CinematicNav pendingNext={pendingNext} />
         <CinematicHome tierOverride={tier} debug={debug} freeze={freeze} />
       </div>

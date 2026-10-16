@@ -95,7 +95,7 @@ export function ConsultationShell({
       <header className="sticky top-0 z-30 flex h-[72px] items-center gap-4 border-b border-sol-border bg-sol-pearl/95 px-4 backdrop-blur sm:px-8">
         <Link to="/" className="flex shrink-0 items-center gap-3" aria-label={t("nav.homeAria")}>
           <img src={mark} alt="" width={298} height={436} className="h-9 w-auto" />
-          <span className="hidden font-display text-[1.25rem] font-semibold tracking-[0.2em] text-sol-ink md:block">
+          <span className="hidden font-wordmark text-[1.15rem] font-medium tracking-[0.14em] text-sol-ink md:block">
             SOLVENTIA
           </span>
         </Link>

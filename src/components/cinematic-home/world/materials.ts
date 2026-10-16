@@ -11,6 +11,7 @@ import {
 
 import type { QualityPreset } from "../performance/quality";
 import { COLORS } from "./layout";
+import { TONE_UNIFORMS } from "./tone";
 
 /**
  * The material language (shared, created once per canvas). Every material has
@@ -27,7 +28,8 @@ import { COLORS } from "./layout";
  *
  * STRUCTURAL LIGHTING: metals and glass carry a fresnel rim (a precise highlight
  * where a surface turns away from the eye), so machined silhouettes stay readable
- * against deep black without flooding anything with glow.
+ * against deep black without flooding anything with glow. In the pearl world (tone.ts) the rim
+ * recedes and glass edges are drawn in ink instead of light: shape by line, not by halo.
  */
 export interface Materials {
   pearl: MeshStandardMaterial;
@@ -179,13 +181,13 @@ export function createMaterials(preset: QualityPreset): Materials {
     0.42,
   );
   titaniumDissolve.alphaHash = true;
-  // The S: the logo's navy-slate metal — anodised, not chrome (less mirror, more material) —
-  // a brighter machined cover, a champagne pinstripe.
+  // The S: a matte, calm surface — anodised, never chrome. Its colour, metalness and roughness
+  // follow the film's tone every frame (IntelligenceCore): graphite on pearl, pearl on graphite.
   const sMetal = withRim(
-    metal({ color: COLORS.sMetal, metalness: 0.74, roughness: 0.37, clearcoat: 0.28, env: 1.2 }),
+    metal({ color: COLORS.sMetal, metalness: 0.5, roughness: 0.44, clearcoat: 0.08, env: 0.42 }),
     "#9fb3d2",
     3,
-    0.5,
+    0.18,
   );
   const sCover = withRim(
     metal({ color: COLORS.sCover, metalness: 0.94, roughness: 0.2, clearcoat: 0.6, env: 1.6 }),
@@ -281,14 +283,17 @@ function withGlassEdge<T extends MeshStandardMaterial>(
   const c = new Color(color);
   return addPatch(material, `glass-edge:${color}:${gain}`, (shader) => {
     shader.uniforms.edgeColor = { value: c };
+    shader.uniforms.uEdgeLight = TONE_UNIFORMS.uLight;
     shader.fragmentShader = shader.fragmentShader
-      .replace("void main() {", "uniform vec3 edgeColor;\nvoid main() {")
+      .replace("void main() {", "uniform vec3 edgeColor;\nuniform float uEdgeLight;\nvoid main() {")
       .replace(
         "#include <opaque_fragment>",
         [
           "  float edgeF = pow(1.0 - clamp(abs(dot(normal, normalize(vViewPosition))), 0.0, 1.0), 2.2);",
           `  float edgeA = diffuseColor.a * edgeF * ${gain.toFixed(2)};`,
-          "  outgoingLight += edgeColor * edgeA;",
+          // Dark world: the edge gathers light. Pearl world: the edge is a fine graphite line.
+          "  vec3 edgeInk = mix(outgoingLight, vec3(0.045, 0.05, 0.07), min(1.0, edgeF * 1.5));",
+          "  outgoingLight = mix(outgoingLight + edgeColor * edgeA, edgeInk, uEdgeLight);",
           "  diffuseColor.a = clamp(diffuseColor.a + edgeA, 0.0, 1.0);",
           "#include <opaque_fragment>",
         ].join("\n"),
@@ -306,14 +311,16 @@ function withRim<T extends MeshStandardMaterial>(
   const c = new Color(color);
   return addPatch(material, `rim:${color}:${power}:${strength}`, (shader) => {
     shader.uniforms.rimColor = { value: c };
+    shader.uniforms.uRimLight = TONE_UNIFORMS.uLight;
     shader.fragmentShader = shader.fragmentShader
-      .replace("void main() {", "uniform vec3 rimColor;\nvoid main() {")
+      .replace("void main() {", "uniform vec3 rimColor;\nuniform float uRimLight;\nvoid main() {")
       .replace(
         "#include <emissivemap_fragment>",
         [
           "#include <emissivemap_fragment>",
           `  float rimF = pow(1.0 - clamp(abs(dot(normal, normalize(vViewPosition))), 0.0, 1.0), ${power.toFixed(2)});`,
-          `  totalEmissiveRadiance += rimColor * rimF * ${strength.toFixed(3)};`,
+          // A light ground needs no halo to separate a silhouette: the rim recedes in the pearl.
+          `  totalEmissiveRadiance += rimColor * rimF * ${strength.toFixed(3)} * (1.0 - 0.8 * uRimLight);`,
         ].join("\n"),
       );
   });

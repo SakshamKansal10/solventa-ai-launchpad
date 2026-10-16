@@ -173,6 +173,32 @@ export const FOCUS_KEYS: Key[] = [
 ];
 
 /**
+ * Composition: where the subject stands across the frame, as a fraction of the screen width
+ * (+ = toward the right). The editorial statements are set on the left of the page grid; in the
+ * scenes where they share the frame with one large object, the image slides right to give the
+ * type its column (a lens shift — the camera itself does not move). Landscape only.
+ */
+export const FRAME_KEYS: Key[] = [
+  k("void", 0, 0),
+  // The S assembles at the centre, then makes room for "Your reality. Made actionable."
+  k("awakening", 0.42, 0),
+  k("awakening", 0.66, 0.17),
+  k("context", 0.2, 0.08),
+  k("context", 1, 0.08),
+  k("passage", 0.12, 0),
+  // The one direction stands right of "One worth testing."
+  k("three", 0.7, 0),
+  k("selection", 0.32, 0.15),
+  k("unfold", 0.3, 0.15),
+  k("unfold", 0.9, 0),
+  k("connected", 0.12, 0),
+  // The interface returns to the world on the right while "Don't guess…" holds the left.
+  k("connected", 0.42, 0.17),
+  k("return", 0.3, 0.17),
+  k("return", 0.8, 0),
+];
+
+/**
  * Vertical field of view for a viewport aspect ratio. Landscape keeps the
  * scene's lens; portrait widens it so the horizontal framing stays what a
  * square viewport would see — the subject is never cropped on a phone.

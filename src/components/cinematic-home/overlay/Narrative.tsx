@@ -13,7 +13,7 @@ export function Narrative() {
       </p>
       <section>
         <h2>Every founder begins with uncertainty.</h2>
-        <p>Solventia turns uncertainty into direction.</p>
+        <p>Your reality, made actionable.</p>
       </section>
       <section>
         <h2>It starts with your real situation.</h2>
@@ -23,10 +23,10 @@ export function Narrative() {
         </p>
       </section>
       <section>
-        <h2>Hundreds of possible directions.</h2>
+        <h2>360 possibilities.</h2>
         <p>
-          Your reality narrows them. In this illustration, 360 possibilities narrow to 120, then 36,
-          then 9, then 3 — and finally one direction worth testing.
+          Your reality narrows them. In this illustration, 360 possible directions narrow to 120,
+          then 36, then 9, then 3 directions — and finally one worth testing.
         </p>
       </section>
       <section>
@@ -37,21 +37,22 @@ export function Narrative() {
         </p>
       </section>
       <section>
-        <h2>When evidence changes, your path changes.</h2>
+        <h2>Evidence changes. Your path adapts.</h2>
         <p>
           When evidence contradicts an assumption — for example a customer saying “I wouldn’t pay
           for this version” — Solventia adapts the path.
         </p>
       </section>
       <section>
-        <h2>It doesn’t stop at the idea.</h2>
+        <h2>Your next move, always clear.</h2>
         <p>
-          Your context, evidence and progress stay connected — and your next move is always clear.
+          The Command Center keeps your context, evidence and progress connected, so you never have
+          to guess what to build next.
         </p>
       </section>
       <section>
         <h2>Find the direction worth building.</h2>
-        <p>Your reality. Your evidence. Your path forward.</p>
+        <p>Validate · Build · Elevate.</p>
       </section>
     </article>
   );

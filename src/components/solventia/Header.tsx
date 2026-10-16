@@ -157,7 +157,7 @@ export function Header({ pendingNext }: HeaderProps = {}) {
           <span className="hidden leading-none sm:block">
             <span
               className={cn(
-                "block font-display text-[1.4rem] font-semibold tracking-[0.22em]",
+                "block font-wordmark text-[1.25rem] font-medium tracking-[0.14em]",
                 overDarkHero ? "text-white" : "text-sol-ink",
               )}
             >
@@ -165,11 +165,13 @@ export function Header({ pendingNext }: HeaderProps = {}) {
             </span>
             <span
               className={cn(
-                "mt-1.5 block text-[0.6875rem] font-medium tracking-[0.26em]",
-                overDarkHero ? "text-sol-champagne" : "text-sol-champagne-deep",
+                "mt-1.5 block font-wordmark text-[0.625rem] font-normal tracking-[0.28em]",
+                overDarkHero ? "text-white" : "text-sol-ink",
               )}
             >
-              VALIDATE • BUILD • ELEVATE
+              {/* Three equal words; only the separators carry champagne. */}
+              VALIDATE<span className="mx-[0.6em] text-sol-champagne">•</span>BUILD
+              <span className="mx-[0.6em] text-sol-champagne">•</span>ELEVATE
             </span>
           </span>
         </Link>

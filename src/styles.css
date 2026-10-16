@@ -25,6 +25,8 @@
   --font-display: "Cormorant Garamond", "Noto Serif Devanagari", Georgia, serif;
   --font-sans: "Manrope", "Noto Sans Devanagari", ui-sans-serif, system-ui, sans-serif;
   --font-script: "Dancing Script", cursive;
+  /* The SOLVENTIA wordmark (brand board): a wide geometric sans, uppercase, medium weight. */
+  --font-wordmark: "Montserrat", "Manrope", ui-sans-serif, system-ui, sans-serif;
   --color-gold: var(--gold);
   --color-gold-soft: var(--gold-soft);
   --color-navy: var(--navy);
@@ -489,6 +491,16 @@
 }
 
 /* Section reveal — state transition, not decoration. */
+/* An indeterminate progress line: travels across its track, never bounces. */
+@keyframes sol-progress {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(300%);
+  }
+}
+
 @keyframes sol-reveal {
   from {
     opacity: 0;

@@ -4,34 +4,24 @@ import { Matrix4, Vector3 } from "three";
 
 import { progressOf, ramp } from "../timeline/timeline";
 import { quadToMatrix3d, SLAB } from "../world/product/product-model";
+import { inkAt, lightAt } from "../world/tone";
 import { STAGE_COUNTS } from "../world/universe/universe-model";
 import { universePhases } from "../world/universe/universe-state";
 import { useWorld } from "../world/WorldContext";
 import { CAPTIONS, captionOpacity, COUNT_SPAN, type Caption } from "./copy";
-import { PEARL, STAGE, TONE, VIOLET } from "./palette";
+import { mixHex, ROLE_VAR, WORLD, type WorldRole } from "./palette";
 
-/** The count fades like a statement over its own span. */
+/** The count arrives and leaves like a statement over its own span. */
 const COUNT: Caption = {
   id: "count",
   kind: "statement",
-  text: "",
+  lines: [],
   span: COUNT_SPAN,
-  place: "title",
+  place: "low",
 };
+const ROLES = Object.keys(WORLD) as WorldRole[];
 /** World labels stay below the site bar (its height plus a margin). */
 const NAV_CLEARANCE = 96;
-
-/** The statements' own legibility shadow (kept under the count's brief violet edge). */
-const SHADOWS = "0 2px 30px rgba(5,8,14,0.9), 0 1px 2px rgba(5,8,14,0.55)";
-
-/** Mixes two #rrggbb colours (t 0 → 1). */
-function mixHex(a: string, b: string, t: number): string {
-  const ca = parseInt(a.slice(1), 16);
-  const cb = parseInt(b.slice(1), 16);
-  const ch = (shift: number) =>
-    Math.round(((ca >> shift) & 255) + (((cb >> shift) & 255) - ((ca >> shift) & 255)) * t);
-  return `#${((1 << 24) | (ch(16) << 16) | (ch(8) << 8) | ch(0)).toString(16).slice(1)}`;
-}
 
 /** Writes a style only when it changed — keeps per-frame DOM work to a handful of writes. */
 const last = new WeakMap<HTMLElement, Record<string, string>>();
@@ -72,6 +62,31 @@ const show = (el: HTMLElement, o: number) => {
   setStyle(el, "opacity", o.toFixed(3));
   setStyle(el, "visibility", o > 0.002 ? "visible" : "hidden");
 };
+/** Writes a CSS custom property only when it changed. */
+const lastVar = new WeakMap<HTMLElement, Record<string, string>>();
+function setVar(el: HTMLElement, name: string, value: string) {
+  let cache = lastVar.get(el);
+  if (!cache) {
+    cache = {};
+    lastVar.set(el, cache);
+  }
+  if (cache[name] === value) return;
+  cache[name] = value;
+  el.style.setProperty(name, value);
+}
+/**
+ * A caption's presence for the masked reveal: --o (0 → 1) and --d (+1 while it arrives, −1 while
+ * it leaves — the lines continue upward and out instead of reversing).
+ */
+function present(el: HTMLElement, o: number, leaving: boolean) {
+  setVar(el, "--o", o.toFixed(3));
+  setVar(el, "--d", leaving ? "-1" : "1");
+  setStyle(el, "visibility", o > 0.002 ? "visible" : "hidden");
+}
+/** Middle of a span (global progress): before it a caption is arriving, after it leaving. */
+function spanMid(span: Caption["span"]): number {
+  return (progressOf(span[0], span[1]) + progressOf(span[2], Math.min(1, span[3]))) / 2;
+}
 
 /**
  * Inside the canvas, after every world has moved: drives the DOM overlay —
@@ -93,8 +108,10 @@ export function DomSync() {
   const finaleFrom = progressOf("finale", 0.38);
   const nav = useMemo(() => ({ el: null as HTMLElement | null, value: "" }), []);
   const finaleTo = progressOf("finale", 0.78);
-  /** Per caption: the stage last lit, the kicker tone last written. */
+  /** Per caption: the kicker tone last written. */
   const marks = useMemo(() => new Map<string, string>(), []);
+  /** The page element the tone variables are written on (nav and overlay inherit them). */
+  const tone = useMemo(() => ({ el: null as HTMLElement | null, key: "" }), []);
 
   useFrame((state) => {
     const s = store.state;
@@ -116,52 +133,53 @@ export function DomSync() {
       }
     }
 
+    // The tone: one set of colours for the current world, inherited by the overlay and the bar.
+    tone.el ??= document.querySelector<HTMLElement>("[data-cine-tone]");
+    if (tone.el) {
+      const L = lightAt(p);
+      const ink = inkAt(L);
+      const key = `${L.toFixed(3)}:${ink.toFixed(3)}`;
+      if (key !== tone.key) {
+        tone.key = key;
+        for (const r of ROLES) setVar(tone.el, ROLE_VAR[r], mixHex(WORLD[r][0], WORLD[r][1], ink));
+        setVar(tone.el, "--dark", (1 - ink).toFixed(3));
+        setVar(tone.el, "--light", L.toFixed(3));
+      }
+    }
+
     // Film time (the rendered progress, not the raw scroll position).
     if (dom.time) setStyle(dom.time, "transform", `scaleY(${p.toFixed(4)})`);
 
     // Visible captions, so world labels can step aside instead of colliding with the copy.
     const sizeKey = `${width}x${height}`;
     const shown: { box: Box; o: number }[] = [];
+    let veilLow = 0;
+    let veilTop = 0;
     for (const c of CAPTIONS) {
       const el = dom.captions.get(c.id);
       if (!el) continue;
       let o = captionOpacity(c, p);
-      if (c.id === "void" && p < progressOf("void", 0.12)) o = 1;
+      // The opening identity is there from the first paint.
+      if (c.kind === "hero" && p < 0.01) o = 1;
       // The finale composition stages its own parts; the container itself is simply present.
       if (c.kind === "finale") o = o > 0 ? 1 : 0;
-      // Validate · Build · Elevate: only the stage being travelled is lit.
-      if (c.stages && o > 0.002) {
-        let at = 0;
-        c.stages.forEach((st, i) => {
-          if (p >= progressOf(st.scene, 0)) at = i;
-        });
-        const key = String(at);
-        if (marks.get(c.id) !== key) {
-          marks.set(c.id, key);
-          el.querySelectorAll<HTMLElement>("[data-stage]").forEach((sp) => {
-            const i = Number(sp.dataset.stage);
-            sp.style.color = i === at ? STAGE.active : i < at ? STAGE.done : STAGE.ahead;
-          });
-        }
-      }
       // A reasoning kicker resolves to conviction once the new route holds (violet → champagne).
       if (c.resolveAt && o > 0.002) {
         const at = progressOf(c.resolveAt[0], c.resolveAt[1]);
         const t = Math.min(1, Math.max(0, (p - at) / 0.01 + 0.5));
-        const key = t.toFixed(2);
+        const key = (t * t * (3 - 2 * t)).toFixed(2);
         if (marks.get(c.id) !== key) {
           marks.set(c.id, key);
           const dot = el.querySelector<HTMLElement>("[data-kicker-dot]");
-          if (dot) {
-            const col = mixHex(TONE.violet, TONE.gold, t * t * (3 - 2 * t));
-            dot.style.background = col;
-            dot.style.boxShadow = `0 0 10px ${col}66`;
-          }
+          if (dot)
+            dot.style.background = `color-mix(in srgb, var(--accent) ${Math.round(Number(key) * 100)}%, var(--violet))`;
         }
       }
-      show(el, o);
+      present(el, o, c.kind !== "finale" && p > spanMid(c.span));
+      // Statements (not the small context note) calm the frame behind them in the pearl world.
+      if (c.place === "low" && c.lines.length > 0) veilLow = Math.max(veilLow, o);
+      if (c.place === "top" && c.lines.length > 0) veilTop = Math.max(veilTop, o);
       if (o > 0.02 && c.kind !== "finale") shown.push({ box: boxOf(el, sizeKey), o });
-      setStyle(el, "transform", `translate3d(0, ${((1 - o) * 10).toFixed(1)}px, 0)`);
       if (c.kind === "finale") {
         // The finale stages its own parts (identity → line → promise → CTA) from one value.
         const r = Math.min(1, Math.max(0, (p - finaleFrom) / (finaleTo - finaleFrom)));
@@ -172,18 +190,24 @@ export function DomSync() {
         }
         // The CTA is only focusable once it is visibly there.
         const cta = el.querySelector<HTMLElement>("[data-testid=cinematic-cta]");
-        if (cta) setStyle(cta, "visibility", r > 0.62 ? "visible" : "hidden");
+        if (cta) setStyle(cta, "visibility", r > 0.56 ? "visible" : "hidden");
       }
     }
 
-    // The narrowing count: one figure that changes only as a stage completes.
+    const overlay = dom.counter?.parentElement;
+    if (overlay) {
+      setVar(overlay, "--veil-low", veilLow.toFixed(3));
+      setVar(overlay, "--veil-top", veilTop.toFixed(3));
+    }
+
+    // The narrowing count: one figure that changes only as a stage completes (360 → 120 → 36 →
+    // 9; the three that remain are then named by the statement).
     if (dom.counter) {
       const ph = universePhases(p);
       let k = 0;
-      while (k < 5 && ph.stages[k] > 0.5) k++;
+      while (k < 3 && ph.stages[k] > 0.5) k++;
       const o = captionOpacity(COUNT, p);
-      show(dom.counter, o);
-      setStyle(dom.counter, "transform", `translate3d(0, ${((1 - o) * 10).toFixed(1)}px, 0)`);
+      present(dom.counter, o, p > spanMid(COUNT_SPAN));
       if (o > 0.02) shown.push({ box: boxOf(dom.counter, sizeKey), o });
       count.el ??= dom.counter.querySelector<HTMLElement>("[data-count]");
       const text = String(STAGE_COUNTS[k]);
@@ -191,25 +215,15 @@ export function DomSync() {
         const changed = count.value !== "";
         count.value = text;
         count.el.textContent = text;
-        // Each new figure settles in rather than snapping, catching a brief violet edge while the
-        // filter works, then returning to pearl (not under ?freeze).
+        // Each new figure rises into place rather than snapping — briefly in the reasoning
+        // violet, then resolved (not under ?freeze). No glow.
         if (changed && animate && o > 0.02)
           count.el.animate?.(
             [
-              {
-                opacity: 0.25,
-                transform: "translateY(0.08em)",
-                color: "#C9C3F7",
-                textShadow: `0 0 22px ${VIOLET}80, ${SHADOWS}`,
-              },
-              {
-                opacity: 1,
-                transform: "none",
-                color: PEARL,
-                textShadow: `0 0 22px ${VIOLET}00, ${SHADOWS}`,
-              },
+              { opacity: 0, transform: "translateY(0.12em)", color: WORLD.violet[0] },
+              { opacity: 1, transform: "none", color: WORLD.ink[0] },
             ],
-            { duration: 640, easing: "cubic-bezier(0.2, 0.7, 0.2, 1)" },
+            { duration: 720, easing: "cubic-bezier(0.2, 0.7, 0.2, 1)" },
           );
       }
     }
