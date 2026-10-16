@@ -18,8 +18,9 @@ import { TONE_UNIFORMS } from "../tone";
  * the distance rather than to the fog colour), tone-mapped.
  *
  * Two worlds, one blend (premultiplied alpha): in the dark the lines are light (additive); in the
- * pearl world they are drawn in ink — graphite, with champagne only where the line is resolved
- * and a faint violet trace where it reasons — so a line never vanishes into a light ground.
+ * pearl world they are drawn in ink — Solventia's trajectory blue (light electric blue → cobalt →
+ * deep navy along the line) where information flows, champagne only where a line is resolved —
+ * so a line never vanishes into a light ground.
  */
 const vertexShader = /* glsl */ `
 uniform sampler2D uData;
@@ -33,6 +34,7 @@ varying float vAlpha;
 varying float vEnergy;
 varying float vViolet;
 varying float vDepth;
+varying float vAlong;
 
 vec4 fetchTexel(int f, int i) { return texelFetch(uData, ivec2(i, f), 0); }
 vec3 bez(vec3 a, vec3 b, vec3 c, vec3 d, float t) {
@@ -62,6 +64,7 @@ void main() {
     vAlpha = 0.0;
     vEnergy = 0.0;
     vDepth = 0.0;
+    vAlong = 0.0;
     return;
   }
   float tt = mix(s0, s1, aT);
@@ -86,6 +89,8 @@ void main() {
   float dp = tt - head;
   float pulse = t4.x * exp(-dp * dp / 0.0016);
   vAlpha = alpha;
+  // 0 at the line's tail → 1 at its head: the trajectory's colour travels with it.
+  vAlong = clamp((tt - s0) / max(s1 - s0, 1e-4), 0.0, 1.0);
   // Capped so bright filaments stay champagne instead of clipping to white.
   vEnergy = min(intensity * (1.0 + pulse * 2.6), 1.35);
   vDepth = dist;
@@ -96,7 +101,9 @@ const fragmentShader = /* glsl */ `
 uniform vec3 uGold;
 uniform vec3 uViolet;
 uniform vec3 uInkGold;
-uniform vec3 uInkViolet;
+uniform vec3 uInkBlue;
+uniform vec3 uInkCobalt;
+uniform vec3 uInkNavy;
 uniform float uLight;
 uniform float uFogDensity;
 varying float vSide;
@@ -104,6 +111,7 @@ varying float vAlpha;
 varying float vEnergy;
 varying float vViolet;
 varying float vDepth;
+varying float vAlong;
 
 void main() {
   if (vAlpha <= 0.0) discard;
@@ -117,7 +125,10 @@ void main() {
   col = col * vEnergy + vec3(1.0, 0.94, 0.84) * core * 0.08 * vEnergy;
   float a = body * vAlpha * fog;
   // Ink: a crisp line, never a glow (energy sets its weight, not its brightness).
-  vec3 ink = mix(uInkGold, uInkViolet, vViolet);
+  vec3 trajectory = vAlong < 0.5
+    ? mix(uInkBlue, uInkCobalt, vAlong * 2.0)
+    : mix(uInkCobalt, uInkNavy, vAlong * 2.0 - 1.0);
+  vec3 ink = mix(uInkGold, trajectory, vViolet);
   float inkA = a * min(1.0, 0.25 + vEnergy * 0.75);
   gl_FragColor = vec4(mix(col, ink, uLight), 1.0);
   #include <tonemapping_fragment>
@@ -138,7 +149,10 @@ export function createFilamentMaterial(data: DataTexture): ShaderMaterial {
       uGold: { value: new Color(COLORS.gold) },
       uViolet: { value: new Color(COLORS.violetGlow) },
       uInkGold: { value: new Color("#9A7A48") },
-      uInkViolet: { value: new Color("#3A3F55") },
+      // Solventia's trajectory blue: light electric blue → cobalt → deep navy.
+      uInkBlue: { value: new Color("#5FB2FF") },
+      uInkCobalt: { value: new Color("#2F62D9") },
+      uInkNavy: { value: new Color("#0E2A6B") },
       uLight: TONE_UNIFORMS.uLight,
     },
     transparent: true,

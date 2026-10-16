@@ -1,7 +1,8 @@
 import { Link } from "@tanstack/react-router";
 import { ArrowRight } from "lucide-react";
 
-import { Wordmark } from "../nav/Wordmark";
+import { BrandMark, BrandSignature, BrandWordmark } from "@/components/brand/Brand";
+
 import { Signature } from "../overlay/CinematicOverlay";
 import { ProductPreview } from "../overlay/ProductPreview";
 import { SIGNALS } from "../world/context/context-model";
@@ -74,9 +75,7 @@ const CHAPTERS: Chapter[] = [
     line: "Your context, evidence and progress stay connected — so you never have to guess what to build next.",
   },
   {
-    still: "identity",
     lines: ["Find the direction", "worth building."],
-    alt: "The Solventia S emblem resolved, pearl on graphite, with a fine champagne edge.",
     cta: true,
   },
 ];
@@ -91,12 +90,6 @@ export function StaticFallback() {
       className="px-5 pb-24 pt-[124px] sm:px-[clamp(1.25rem,4.4vw,4.5rem)]"
       style={{ color: "var(--ink)", fontFamily: "var(--font-tech)" }}
     >
-      <div className="mx-auto mb-20 flex max-w-6xl flex-col items-center text-center sm:mb-28">
-        <Wordmark size="hero" tone="ink" showMark={false} />
-        <p className="mt-6 text-[clamp(1rem,1.4vw,1.25rem)]" style={{ color: "var(--quiet)" }}>
-          Every founder begins with uncertainty.
-        </p>
-      </div>
       <ol className="mx-auto flex max-w-6xl flex-col gap-24 sm:gap-36">
         {CHAPTERS.map((c, i) => {
           const Heading = i === 0 ? "h1" : "h2";
@@ -168,7 +161,12 @@ export function StaticFallback() {
               )}
               {c.cta && (
                 <div className="flex flex-col items-center gap-7 text-center">
-                  <Signature />
+                  {/* The identity, as in the film's finale: the approved emblem, whole. */}
+                  <div aria-hidden="true" className="flex flex-col items-center gap-5 py-6">
+                    <BrandMark height={112} />
+                    <BrandWordmark className="mt-4 text-[clamp(34px,8vw,64px)]" />
+                    <BrandSignature className="text-[clamp(9.5px,2.4vw,13px)]" />
+                  </div>
                   <Link
                     to="/consultation"
                     className="inline-flex h-14 items-center gap-3 rounded-full bg-[#15181F] px-8 text-[1.0625rem] font-semibold text-[#F4F2ED] shadow-[inset_0_0_0_1px_rgba(201,170,121,0.6)] transition-colors hover:bg-[#0B1F3B] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#B8924F]"

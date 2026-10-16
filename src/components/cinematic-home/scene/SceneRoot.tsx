@@ -67,7 +67,7 @@ export function SceneRoot({
       <ExecutionPath />
       <Evidence />
       <Product3D />
-      <IntelligenceCore variant="finale" />
+      {/* The finale presents the approved emblem itself (overlay), not a constructed S. */}
       <FilamentSystem />
       <DomSync />
       <PerformanceGovernor store={store} preset={preset} />

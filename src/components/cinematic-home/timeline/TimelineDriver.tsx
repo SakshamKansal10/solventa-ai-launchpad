@@ -3,12 +3,13 @@ import { useRef } from "react";
 
 import { damp } from "../math";
 import type { ExperienceStore } from "../scroll/experience-store";
-import { MAX_FRAME_DT, PROGRESS_SMOOTHING } from "../scroll/progress-math";
-import { sceneAt, type ScenePosition } from "./timeline";
+import { MAX_FRAME_DT, pacedStep, PROGRESS_SMOOTHING } from "../scroll/progress-math";
+import { dwellAt, sceneAt, type ScenePosition } from "./timeline";
 
 /**
  * The per-frame heartbeat, first in the frame: smooths raw scroll into the
- * progress the scene renders and publishes it for every later frame callback.
+ * progress the scene renders (paced through the moments that must be read — see pacedStep)
+ * and publishes it for every later frame callback.
  * Only a scene change reaches React. With `freeze`, progress snaps to scroll
  * and ambient time stops — deterministic frames for review and tests.
  */
@@ -33,7 +34,13 @@ export function TimelineDriver({
       started.current = true;
     }
     const previous = s.progress;
-    s.progress = damp(s.progress, s.targetProgress, PROGRESS_SMOOTHING, dt);
+    s.progress = pacedStep(
+      s.progress,
+      s.targetProgress,
+      PROGRESS_SMOOTHING,
+      dwellAt(s.progress),
+      dt,
+    );
     if (Math.abs(s.targetProgress - s.progress) < 1e-5) s.progress = s.targetProgress;
     s.velocity = damp(s.velocity, dt > 0 ? (s.progress - previous) / dt : 0, 6, dt);
     if (animate && !freeze) s.time += dt;

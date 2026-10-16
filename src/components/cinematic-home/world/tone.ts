@@ -6,7 +6,8 @@ import { k, sampleKeys } from "../timeline/timeline";
  * all read it, so a change of world is a single continuous gradient, never a cut.
  *
  *   light · light with colour · light → dark (into the Engine) · dark reasoning ·
- *   dark → light resolution · light path · mixed evidence · light product · controlled dark finale
+ *   dark → light resolution · light path · mixed evidence · light product · a dark return that
+ *   resolves into the light brand field of the finale (the approved emblem is made for light)
  *
  * Roughly 60–65% of the film is pearl. Pure data.
  */
@@ -23,8 +24,11 @@ export const LIGHT_KEYS = [
   k("crisis", 0.55, 0.5),
   k("adaptation", 0.82, 1),
   k("return", 0.05, 1),
-  // The finale is a controlled dark: the emblem resolves out of graphite.
-  k("finale", 0.14, 0),
+  // The return is a brief, controlled dark; the trajectories begin in it…
+  k("return", 0.55, 0),
+  k("finale", 0.02, 0),
+  // …and the finale resolves into a warm light field, where the approved emblem lands crisp.
+  k("finale", 0.22, 1),
 ];
 
 export const lightAt = (p: number) => sampleKeys(LIGHT_KEYS, p);

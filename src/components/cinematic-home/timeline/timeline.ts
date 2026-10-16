@@ -192,3 +192,30 @@ export const k = (id: SceneId, at: number, value: number): Key => ({
   at: progressOf(id, at),
   value,
 });
+
+/**
+ * Where the story asks to be read (0 = travel freely, 1 = a moment that must register): the
+ * founder's signals, the narrowing count, the one direction, the evidence turn, the emblem.
+ * Consumed by the progress pacing (scroll/progress-math.ts → pacedStep).
+ */
+export const DWELL_KEYS: Key[] = [
+  k("void", 0, 0),
+  k("context", 0.08, 0),
+  k("context", 0.16, 0.75),
+  k("context", 0.9, 0.75),
+  k("passage", 0.1, 0),
+  k("computation", 0.55, 0),
+  k("computation", 0.72, 1),
+  k("three", 0.3, 1),
+  k("selection", 0.25, 0.4),
+  k("selection", 0.55, 0.8),
+  k("unfold", 0.25, 0),
+  k("crisis", 0.25, 0),
+  k("adaptation", 0.45, 0.55),
+  k("adaptation", 0.95, 0),
+  k("finale", 0.12, 0),
+  k("finale", 0.3, 0.6),
+  k("finale", 0.62, 0),
+];
+
+export const dwellAt = (p: number) => sampleKeys(DWELL_KEYS, p);

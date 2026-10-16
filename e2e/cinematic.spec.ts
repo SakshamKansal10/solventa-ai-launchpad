@@ -75,7 +75,10 @@ test.describe("cinematic homepage", () => {
     const home = await open(page);
     await expect(home).toHaveAttribute("data-mode", "webgl");
     await expect(page.locator("canvas")).toHaveCount(1);
-    expect(await captionOpacity(page, "void")).toBeGreaterThan(0.9);
+    // The opening is the identity alone, centred: one SOLVENTIA on screen, not two.
+    await expect(page.locator("[data-brand-opening] [data-brand-part=word]")).toBeVisible();
+    await expect(page.locator("[data-nav-brand]")).toHaveCSS("opacity", "0");
+    await expect(page.locator("[data-brand-cue]")).toContainText(/scroll to explore/i);
     for (const [scene, at, caption] of [
       ["awakening", 0.8, "awakening"],
       ["context", 0.5, "context"],
@@ -89,6 +92,31 @@ test.describe("cinematic homepage", () => {
       await expect.poll(() => captionOpacity(page, caption)).toBeGreaterThan(0.9);
     }
     expect(errors).toEqual([]);
+  });
+
+  test("the opening identity travels into the site bar — one object — and comes back on the way up", async ({
+    page,
+  }) => {
+    await open(page);
+    const word = page.locator("[data-brand-opening] [data-brand-part=word]");
+    const target = page.locator("[data-nav-brand] [data-brand-part=word]");
+    const centre = await word.boundingBox();
+    await goTo(page, "awakening", 0.3);
+    await expect
+      .poll(async () => {
+        const [a, b] = [await word.boundingBox(), await target.boundingBox()];
+        return a && b
+          ? Math.abs(a.x - b.x) + Math.abs(a.y - b.y) + Math.abs(a.width - b.width)
+          : 1e9;
+      })
+      .toBeLessThan(3);
+    await goTo(page, "void", 0);
+    await expect
+      .poll(async () => {
+        const a = await word.boundingBox();
+        return a && centre ? Math.abs(a.x - centre.x) + Math.abs(a.y - centre.y) : 1e9;
+      })
+      .toBeLessThan(3);
   });
 
   test("every transformation is reversible: back, forward and jumps land on the same frame", async ({
@@ -210,8 +238,10 @@ test.describe("cinematic homepage", () => {
       await expect(home).toHaveAttribute("data-mode", "fallback", { timeout: 45_000 });
       await expect(page.locator("canvas")).toHaveCount(0);
       const fallback = page.getByTestId("cinematic-fallback");
-      // The eight still compositions (the product panel carries its own brand mark besides).
-      await expect(fallback.locator('img[src^="/cinematic/"]')).toHaveCount(8);
+      // The seven still compositions (the finale presents the approved emblem itself).
+      await expect(fallback.locator('img[src^="/cinematic/"]')).toHaveCount(7);
+      // The still version's bar carries the identity on its pearl bar.
+      await expect(page.locator("[data-nav-brand]")).toHaveCSS("opacity", "1");
       await expect(fallback.getByRole("heading", { level: 1 })).toHaveText(
         "Your reality. Made actionable.",
       );
@@ -285,29 +315,32 @@ test.describe("cinematic homepage", () => {
     await expect.poll(async () => (await cameraState(page)).scene).toBe(before.scene);
   });
 
-  test("sound is off until asked for, plays on request, and is remembered for the visit", async ({
+  test("sound belongs to the experience: no control on arrival, it starts with the first interaction, mute is remembered", async ({
     page,
   }) => {
     await open(page);
     const toggle = page.getByTestId("sound-toggle");
+    // Arriving: nothing plays and no utility competes with the film.
+    await expect(toggle).toHaveCount(0);
+    // The first real interaction starts it; only then does the quiet mute control appear.
+    await page.mouse.click(400, 400);
+    await expect(toggle).toHaveAttribute("data-audio", "running");
+    await expect(toggle).toHaveAttribute("aria-pressed", "true");
+    // Muting is immediate…
+    await toggle.click();
     await expect(toggle).toHaveAttribute("aria-pressed", "false");
     await expect(toggle).toHaveAttribute("data-audio", "idle");
-    await toggle.click();
-    await expect(toggle).toHaveAttribute("aria-pressed", "true");
-    await expect(toggle).toHaveAttribute("data-audio", "running");
-    // A reload keeps the choice, but audio waits for the visitor's next interaction.
+    // …and remembered for the visit: after a reload an interaction does not start it, and the
+    // control is there to turn it back on.
     await page.reload();
     await expect(page.getByTestId("cinematic-home")).toHaveAttribute("data-ready", "true", {
       timeout: 45_000,
     });
-    await expect(toggle).toHaveAttribute("aria-pressed", "true");
-    await expect(toggle).toHaveAttribute("data-audio", "idle");
     await page.mouse.click(400, 400);
-    await expect(toggle).toHaveAttribute("data-audio", "running");
-    // Muting is immediate and also remembered.
-    await toggle.click();
     await expect(toggle).toHaveAttribute("aria-pressed", "false");
     await expect(toggle).toHaveAttribute("data-audio", "idle");
+    await toggle.click();
+    await expect(toggle).toHaveAttribute("data-audio", "running");
   });
 
   test("live sound: real output follows the scene, cues play once, mute is silence, leaving tears it down", async ({
@@ -329,12 +362,12 @@ test.describe("cinematic homepage", () => {
       return max;
     };
     const toggle = page.getByTestId("sound-toggle");
-    await expect(toggle).toContainText(/sound/i);
-    // No autoplay: nothing exists until the visitor asks.
+    // No autoplay: nothing exists before the visitor's first interaction.
     expect(await sound((s) => s.context())).toBe("none");
     await goTo(page, "awakening", 0.7);
-    await toggle.click();
+    await page.mouse.click(400, 400);
     await expect(toggle).toHaveAttribute("aria-pressed", "true");
+    await expect(toggle).toHaveAttribute("aria-label", "Mute sound");
     await expect.poll(() => sound((s) => s.context())).toBe("running");
     // Real signal reaches the destination.
     await expect.poll(peak, { timeout: 10_000 }).toBeGreaterThan(0.005);
@@ -403,15 +436,17 @@ test.describe("cinematic homepage", () => {
     const actions = nav.getByRole("link", { name: /Find My Business Idea/ }).locator("..");
     const opacity = () => actions.evaluate((el) => Number(getComputedStyle(el).opacity));
     const wordmark = nav.getByRole("link", { name: "Solventia home" });
+    // In the film the visible identity is the opening lockup, now resting in the bar.
+    const identity = page.locator("[data-brand-opening] [data-brand-part=word]");
     // On arrival the full bar is there.
     expect(await opacity()).toBeGreaterThan(0.99);
     // During the film the calls to action leave the frame entirely; the wordmark stays,
     // quietly, never below AA contrast.
     await goTo(page, "computation", 0.5);
     await expect.poll(opacity).toBeLessThan(0.05);
-    expect(
-      await wordmark.evaluate((el) => Number(getComputedStyle(el).opacity)),
-    ).toBeGreaterThanOrEqual(0.54);
+    await expect
+      .poll(() => identity.evaluate((el) => Number(getComputedStyle(el).opacity)))
+      .toBeGreaterThanOrEqual(0.54);
     // Pointer and keyboard both bring the whole bar back at once.
     await nav.hover();
     await expect.poll(opacity).toBeGreaterThan(0.99);

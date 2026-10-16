@@ -1,0 +1,106 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1254 1254" width="1254" height="1254" role="img" aria-labelledby="title">
+  <title id="title">S logo with golden edge glow</title>
+
+  <defs>
+    <!-- Navy body fills -->
+    <linearGradient id="navy-top" x1="420" y1="300" x2="700" y2="650" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#2d3e75"/>
+      <stop offset="0.55" stop-color="#1c2b5e"/>
+      <stop offset="1" stop-color="#0d1738"/>
+    </linearGradient>
+    <linearGradient id="navy-bottom" x1="860" y1="640" x2="560" y2="960" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#1d2c60"/>
+      <stop offset="0.5" stop-color="#14214c"/>
+      <stop offset="1" stop-color="#0e1a40"/>
+    </linearGradient>
+
+    <!-- Shapes -->
+    <path id="half-top"
+          d="M 622 272 L 866 272 Q 884 274 872 292 L 655 437
+             C 565 490 500 565 506 640 C 510 690 532 720 556 742
+             C 480 700 398 625 395 525 C 392 390 495 272 622 272 Z"/>
+    <path id="half-bottom"
+          d="M 668 514 C 716 560 734 640 716 700 C 702 745 672 770 632 796
+             L 404 948 Q 384 964 404 972 L 640 972
+             C 772 972 860 860 858 722 C 856 620 786 554 668 514 Z"/>
+
+    <!-- Inner edges that catch the light -->
+    <path id="rim-top" d="M 690 416 L 655 437 C 565 490 500 565 506 640 C 510 690 532 720 556 742"/>
+    <path id="rim-bottom" d="M 668 514 C 716 560 734 640 716 700 C 702 745 672 770 632 796 L 600 817"/>
+
+    <!-- Gold light, fading out toward the ends of each edge -->
+    <linearGradient id="gold-top" x1="690" y1="416" x2="556" y2="742" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#f3d27c" stop-opacity="0"/>
+      <stop offset="0.3" stop-color="#f3d27c"/>
+      <stop offset="0.75" stop-color="#f3d27c"/>
+      <stop offset="1" stop-color="#f3d27c" stop-opacity="0"/>
+    </linearGradient>
+    <linearGradient id="gold-bottom" x1="668" y1="514" x2="600" y2="817" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#f3d27c" stop-opacity="0"/>
+      <stop offset="0.25" stop-color="#f3d27c"/>
+      <stop offset="0.7" stop-color="#f3d27c"/>
+      <stop offset="1" stop-color="#f3d27c" stop-opacity="0"/>
+    </linearGradient>
+    <linearGradient id="gold-line-top" x1="690" y1="416" x2="556" y2="742" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#d8a93f" stop-opacity="0"/>
+      <stop offset="0.25" stop-color="#d8a93f"/>
+      <stop offset="0.55" stop-color="#f2d27a"/>
+      <stop offset="0.8" stop-color="#d8a93f"/>
+      <stop offset="1" stop-color="#d8a93f" stop-opacity="0"/>
+    </linearGradient>
+    <linearGradient id="gold-line-bottom" x1="668" y1="514" x2="600" y2="817" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#d8a93f" stop-opacity="0"/>
+      <stop offset="0.2" stop-color="#d8a93f"/>
+      <stop offset="0.5" stop-color="#f2d27a"/>
+      <stop offset="0.75" stop-color="#d8a93f"/>
+      <stop offset="1" stop-color="#d8a93f" stop-opacity="0"/>
+    </linearGradient>
+
+    <filter id="bloom" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="16"/>
+    </filter>
+    <filter id="glow-soft" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="6"/>
+    </filter>
+    <filter id="glow-tight" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="1.2"/>
+    </filter>
+    <filter id="soft-shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur in="SourceAlpha" stdDeviation="6"/>
+      <feOffset dy="6"/>
+      <feComponentTransfer><feFuncA type="linear" slope="0.16"/></feComponentTransfer>
+      <feMerge><feMergeNode/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+
+    <clipPath id="clip-top"><use href="#half-top"/></clipPath>
+    <clipPath id="clip-bottom"><use href="#half-bottom"/></clipPath>
+
+    <!-- Everything except the two shapes: keeps the outer halo off the navy -->
+    <mask id="outside-shapes" maskUnits="userSpaceOnUse" x="0" y="0" width="1254" height="1254">
+      <rect width="1254" height="1254" fill="#fff"/>
+      <use href="#half-top" fill="#000"/>
+      <use href="#half-bottom" fill="#000"/>
+    </mask>
+  </defs>
+
+  <rect width="1254" height="1254" fill="#ffffff"/>
+
+  <!-- Navy body -->
+  <g filter="url(#soft-shadow)">
+    <use href="#half-top" fill="url(#navy-top)"/>
+    <use href="#half-bottom" fill="url(#navy-bottom)"/>
+  </g>
+
+  <!-- Golden edge light, radiating from each edge into the white center -->
+  <g fill="none" stroke-linecap="round" mask="url(#outside-shapes)">
+    <!-- wide, faint bloom -->
+    <use href="#rim-top" stroke="url(#gold-top)" stroke-width="44" filter="url(#bloom)" opacity="0.45"/>
+    <use href="#rim-bottom" stroke="url(#gold-bottom)" stroke-width="44" filter="url(#bloom)" opacity="0.45"/>
+    <!-- tighter glow hugging the edge -->
+    <use href="#rim-top" stroke="url(#gold-top)" stroke-width="16" filter="url(#glow-soft)" opacity="0.95"/>
+    <use href="#rim-bottom" stroke="url(#gold-bottom)" stroke-width="16" filter="url(#glow-soft)" opacity="0.95"/>
+    <!-- crisp gold accent line on the edge -->
+    <use href="#rim-top" stroke="url(#gold-line-top)" stroke-width="6" filter="url(#glow-tight)"/>
+    <use href="#rim-bottom" stroke="url(#gold-line-bottom)" stroke-width="6" filter="url(#glow-tight)"/>
+  </g>
+</svg>

@@ -1,7 +1,7 @@
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { Mail } from "lucide-react";
-import { Fragment } from "react";
-import mark from "@/assets/solventia-mark.png";
+
+import { BrandLockup } from "@/components/brand/Brand";
 import { scrollToSection } from "@/hooks/use-active-section";
 import { useLocale } from "@/lib/i18n/LocaleProvider";
 import type { MessageKey } from "@/lib/i18n";
@@ -46,36 +46,8 @@ export function Footer() {
     >
       <div className="mx-auto max-w-[1360px]">
         <div className="flex flex-col gap-10 sm:flex-row sm:items-start sm:justify-between">
-          <div className="flex items-center gap-3">
-            <img
-              src={mark}
-              alt="Solventia"
-              width={298}
-              height={436}
-              loading="lazy"
-              className="h-9 w-auto"
-            />
-            <div className="leading-tight">
-              <p className="font-wordmark text-[1.05rem] font-medium tracking-[0.14em] text-sol-ink">
-                SOLVENTIA
-              </p>
-              {/* Validate • Build • Elevate: three equal words; only the separators are champagne. */}
-              <p className="mt-1 font-wordmark text-[0.6875rem] font-normal uppercase tracking-[0.3em] text-sol-ink">
-                {t("footer.tagline")
-                  .split("•")
-                  .map((word, i, all) => (
-                    <Fragment key={i}>
-                      {word.trim()}
-                      {i < all.length - 1 && (
-                        <span aria-hidden="true" className="mx-[0.7em] text-sol-champagne">
-                          •
-                        </span>
-                      )}
-                    </Fragment>
-                  ))}
-              </p>
-            </div>
-          </div>
+          {/* The one Solventia identity: the approved emblem, SOLVENTIA, the signature. */}
+          <BrandLockup preset="footer" />
 
           <nav className="flex flex-wrap gap-x-7 gap-y-2">
             {FOOTER_LINKS.map((link) =>

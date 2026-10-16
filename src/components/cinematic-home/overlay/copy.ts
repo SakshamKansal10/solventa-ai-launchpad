@@ -8,20 +8,20 @@ import { SIGNALS, signalWindow } from "../world/context/context-model";
  * the story reaches conviction. Pure data.
  *
  * The journey: identity → your reality → 360 possibilities → three → one → validate → evidence →
- * the product → don't guess → the finale.
+ * the product → don't guess → the finale. (The opening identity is the brand lockup itself — see
+ * BrandOpening — not a caption.)
  */
 export type Span = [SceneId, number, SceneId, number];
 
 export interface Caption {
   id: string;
   /**
-   * hero      — the opening identity (the wordmark, centred)
    * statement — a major editorial statement
    * datum     — one founder signal, read large (value) under its label
    * quote     — a voice from the world (sentence case, never shouted)
    * finale    — the closing composition
    */
-  kind: "hero" | "statement" | "datum" | "quote" | "finale";
+  kind: "statement" | "datum" | "quote" | "finale";
   /** "medium": a statement that shares the frame with one large object (a narrower column). */
   size?: "major" | "medium";
   /** Small line above the statement (chapter, or a datum's label). */
@@ -39,12 +39,11 @@ export interface Caption {
   resolveAt?: [SceneId, number];
   span: Span;
   /**
-   * hero — centred on the stage
    * low  — the editorial block, bottom-left on the page grid
    * top  — top-left, under the site bar (where the scene fills the lower frame)
    * end  — the finale composition
    */
-  place: "hero" | "low" | "top" | "end";
+  place: "low" | "top" | "end";
 }
 
 /** Each founder signal's value as deliberate lines (set very large, one data point at a time). */
@@ -72,14 +71,6 @@ const DATA: Caption[] = SIGNALS.map((s, i) => {
 });
 
 export const CAPTIONS: Caption[] = [
-  {
-    id: "void",
-    kind: "hero",
-    lines: ["Solventia"],
-    sub: "Every founder begins with uncertainty.",
-    span: ["void", 0, "awakening", 0.12],
-    place: "hero",
-  },
   {
     id: "awakening",
     kind: "statement",
@@ -177,12 +168,22 @@ export const CAPTIONS: Caption[] = [
     id: "finale",
     kind: "finale",
     lines: ["Find the direction *worth building*."],
-    // Staged inside one composition — the S completes alone first; then the wordmark, the
-    // signature, the line and the CTA — then a protected hold.
-    span: ["finale", 0.36, "finale", 1.01],
+    // Staged inside one composition — the trajectories resolve on the approved emblem; then the
+    // wordmark, the signature, the line and the CTA — then a protected hold.
+    span: ["finale", 0, "finale", 1.01],
     place: "end",
   },
 ];
+
+/**
+ * The finale's reveal runs across this part of its scene (finale-local): the trajectories draw
+ * in (0 → 0.32 of the reveal), the emblem lands (≈ 0.3), then the wordmark, the signature, the
+ * line and the CTA. The score's identity tone is pinned to the emblem's arrival.
+ */
+export const FINALE_REVEAL = { from: 0, to: 0.7 } as const;
+/** Finale-local position of a point of the reveal (0 → 1). */
+export const finaleAt = (r: number) =>
+  FINALE_REVEAL.from + (FINALE_REVEAL.to - FINALE_REVEAL.from) * r;
 
 /** A line split into plain and accented (champagne) runs: "*One* worth testing." */
 export function accentRuns(text: string): { text: string; accent: boolean }[] {

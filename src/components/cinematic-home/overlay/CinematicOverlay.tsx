@@ -2,13 +2,15 @@ import { Link } from "@tanstack/react-router";
 import { ArrowRight } from "lucide-react";
 import type { CSSProperties, ReactNode } from "react";
 
-import { Wordmark } from "../nav/Wordmark";
+import { BrandMark, BrandSignature, BrandWordmark } from "@/components/brand/Brand";
+
 import { useExperienceStore } from "../scroll/experience-store";
 import {
   accentRuns,
   CAPTIONS,
   COUNT_LABEL,
   LABELS,
+  plainText,
   type Caption,
   type WorldLabelDef,
 } from "./copy";
@@ -26,19 +28,22 @@ import { TONE_VAR } from "./palette";
  * a few deliberate lines), each line revealed through its own mask as the story arrives and
  * carried out the top as it leaves — continuous with the scroll, never a fade, never a bounce.
  * Geist Mono for the small kickers and labels; the brand face only for SOLVENTIA.
+ *
+ * Identity: the opening lockup (the approved emblem, SOLVENTIA, the signature) is the SAME object
+ * as the site bar's — DomSync carries it from the centre into the bar as the visitor starts, and
+ * it stays there. The finale presents the approved emblem itself on a light field, the film's
+ * trajectories converging on it.
  */
 const TECH: CSSProperties = { fontFamily: "var(--font-tech)" };
 
 // Flex columns: the line masks' negative margins must never collapse into the leading.
 const PLACE: Record<Caption["place"], string> = {
-  // The opening identity: centred on the stage.
-  hero: "inset-x-[var(--gutter)] inset-y-0 flex flex-col items-center justify-center text-center",
   // The editorial block: bottom-left on the page grid, as wide as its longest line.
   low: "left-[var(--gutter)] right-[var(--gutter)] bottom-[clamp(1.5rem,7.5svh,4.75rem)] flex flex-col items-start text-left",
   // Top-left, under the site bar — where the scene fills the lower frame.
   top: "left-[var(--gutter)] right-[var(--gutter)] top-[clamp(6.5rem,17svh,10.5rem)] flex flex-col items-start text-left",
-  // The finale scales with the viewport HEIGHT too, so on short screens it never rises into the S.
-  end: "inset-x-[var(--gutter)] bottom-[5.5svh] text-center",
+  // The finale: one centred brand composition, below the site bar, scaled with the HEIGHT too.
+  end: "inset-x-[var(--gutter)] bottom-0 top-[76px] flex flex-col items-center justify-center pb-[4svh] text-center sm:top-[88px]",
 };
 /**
  * Legibility without decoration: over the dark world a soft dark shadow; over the pearl world a
@@ -113,6 +118,7 @@ export function CinematicOverlay() {
             "linear-gradient(to bottom, rgb(246 244 239 / 0.88), rgb(246 244 239 / 0.7) 34%, rgb(246 244 239 / 0) 100%)",
         }}
       />
+      <BrandOpening />
       {CAPTIONS.map((c) => (
         <div
           key={c.id}
@@ -122,10 +128,10 @@ export function CinematicOverlay() {
           className={`absolute ${PLACE[c.place]}`}
           style={{
             ...TECH,
-            ...SHADOW,
-            // The opening is on screen from the very first (server-rendered) paint.
-            ["--o" as string]: c.kind === "hero" ? 1 : 0,
-            visibility: c.kind === "hero" ? "visible" : "hidden",
+            // The finale sits on its light field: no legibility shadow, nothing over the emblem.
+            ...(c.kind === "finale" ? null : SHADOW),
+            ["--o" as string]: 0,
+            visibility: "hidden",
           }}
         >
           <CaptionBody caption={c} />
@@ -238,23 +244,142 @@ function Kicker({ text, tone }: { text: string; tone: keyof typeof TONE_VAR }) {
   );
 }
 
-/** Validate · Build · Elevate: three equal words; only the separators carry champagne. */
+/** Validate · Build · Elevate, in the film: the brand signature in the current world's ink. */
 export function Signature({ className = "" }: { className?: string }) {
   return (
-    <p
-      className={`font-wordmark text-[11px] font-normal uppercase tracking-[0.42em] [margin-right:-0.42em] sm:text-[13px] ${className}`}
-      style={{ color: "var(--ink)" }}
+    <BrandSignature
+      className={`text-[11px] sm:text-[13px] ${className}`}
+      color="var(--ink)"
+      separator="var(--accent-soft)"
+    />
+  );
+}
+
+/**
+ * The opening: the brand lockup alone at the centre of the pearl field, and a quiet cue below.
+ * Its three parts (emblem, wordmark, signature) are what DomSync carries into the site bar —
+ * each part moves and scales from here to its place in the bar's own lockup, so the visitor sees
+ * one identity travel, not one fading out while another fades in. Visible from the first paint.
+ */
+function BrandOpening() {
+  return (
+    <div
+      data-brand-opening
+      aria-hidden="true"
+      className="absolute inset-x-[var(--gutter)] inset-y-0 flex flex-col items-center justify-center"
     >
-      Validate
-      <span aria-hidden="true" className="mx-[0.9em]" style={{ color: "var(--accent-soft)" }}>
-        •
-      </span>
-      Build
-      <span aria-hidden="true" className="mx-[0.9em]" style={{ color: "var(--accent-soft)" }}>
-        •
-      </span>
-      Elevate
-    </p>
+      <div className="flex items-center gap-[clamp(0.9rem,2.4vw,2.4rem)] [--mark-h:clamp(52px,14vw,82px)] sm:[--mark-h:clamp(84px,10.4vw,152px)]">
+        {/* The element that moves carries the blend itself (see Brand.tsx). */}
+        <span data-brand-part="mark" className="block origin-top-left mix-blend-multiply">
+          <BrandMark />
+        </span>
+        <div className="flex flex-col gap-[clamp(0.55rem,1.4vw,1.4rem)]">
+          <span data-brand-part="word" className="block origin-top-left">
+            <BrandWordmark
+              className="text-[clamp(38px,10.4vw,62px)] sm:text-[clamp(62px,7.8vw,116px)]"
+              color="var(--ink)"
+            />
+          </span>
+          <span data-brand-part="sig" className="block origin-top-left">
+            <BrandSignature
+              className="text-[clamp(9px,2.5vw,13px)] sm:text-[clamp(13px,1.45vw,22px)]"
+              color="var(--ink)"
+              separator="var(--accent-soft)"
+            />
+          </span>
+        </div>
+      </div>
+      <div
+        data-brand-cue
+        className="absolute bottom-[clamp(1.75rem,6svh,3.5rem)] flex flex-col items-center gap-3"
+      >
+        <span className="relative block h-10 w-px overflow-hidden bg-[color:var(--hair)]">
+          <span className="absolute inset-x-0 top-0 block h-1/2 bg-[color:var(--ink)] motion-safe:animate-[sol-cue_2.4s_cubic-bezier(0.45,0,0.2,1)_infinite]" />
+        </span>
+        <span
+          className="font-mono text-[11px] uppercase tracking-[0.32em] [margin-right:-0.32em] sm:text-[12px]"
+          style={{ color: "var(--quiet)" }}
+        >
+          Scroll to explore
+        </span>
+      </div>
+    </div>
+  );
+}
+
+/**
+ * The finale's trajectories: four engineered paths — light electric blue at the edges, cobalt,
+ * deep navy where they arrive — drawn in as the world resolves, converging on the emblem; a
+ * champagne point marks each arrival. Pure SVG, 1 unit = 1 CSS px, centred on the emblem.
+ */
+const FINALE_PATHS = [
+  { d: "M -1000 380 C -660 360 -380 170 -128 36", side: "l" },
+  { d: "M -1000 -300 C -700 -282 -420 -96 -132 -26", side: "l" },
+  { d: "M 1000 -360 C 680 -342 396 -146 128 -40", side: "r" },
+  { d: "M 1000 300 C 720 290 430 96 134 22", side: "r" },
+] as const;
+const PATH_END = [
+  [-128, 36],
+  [-132, -26],
+  [128, -40],
+  [134, 22],
+] as const;
+
+function FinalePaths() {
+  const draw = "clamp(0, calc(var(--reveal, 1) / 0.28), 1)";
+  const settle = "clamp(0, calc((var(--reveal, 1) - 0.34) / 0.3), 1)";
+  return (
+    <svg
+      aria-hidden="true"
+      className="pointer-events-none absolute left-1/2 top-1/2 h-[1400px] w-[2400px] -translate-x-1/2 -translate-y-1/2 overflow-visible"
+      viewBox="-1200 -700 2400 1400"
+      fill="none"
+    >
+      <defs>
+        <linearGradient
+          id="fin-l"
+          x1="-1000"
+          y1="0"
+          x2="-130"
+          y2="0"
+          gradientUnits="userSpaceOnUse"
+        >
+          <stop offset="0" stopColor="#8CCBFF" />
+          <stop offset="0.55" stopColor="#3D6FE0" />
+          <stop offset="1" stopColor="#0E2A6B" />
+        </linearGradient>
+        <linearGradient id="fin-r" x1="1000" y1="0" x2="130" y2="0" gradientUnits="userSpaceOnUse">
+          <stop offset="0" stopColor="#8CCBFF" />
+          <stop offset="0.55" stopColor="#3D6FE0" />
+          <stop offset="1" stopColor="#0E2A6B" />
+        </linearGradient>
+      </defs>
+      <g style={{ opacity: `calc(1 - 0.62 * ${settle})` }}>
+        {FINALE_PATHS.map((p) => (
+          <path
+            key={p.d}
+            d={p.d}
+            pathLength={1}
+            stroke={`url(#fin-${p.side})`}
+            strokeWidth={1.6}
+            strokeLinecap="round"
+            style={{ strokeDasharray: 1, strokeDashoffset: `calc(1 - ${draw})` }}
+          />
+        ))}
+      </g>
+      {PATH_END.map(([x, y]) => (
+        <circle
+          key={`${x}:${y}`}
+          cx={x}
+          cy={y}
+          r={2.6}
+          fill="#B8924F"
+          style={{
+            opacity: `calc(clamp(0, calc((var(--reveal, 1) - 0.26) / 0.08), 1) * (1 - 0.7 * ${settle}))`,
+          }}
+        />
+      ))}
+    </svg>
   );
 }
 
@@ -291,52 +416,51 @@ function WorldLabel({ label: l }: { label: WorldLabelDef }) {
 }
 
 function CaptionBody({ caption: c }: { caption: Caption }) {
-  if (c.kind === "hero") {
-    return (
-      <div className="flex flex-col items-center">
-        <Reveal i={0} n={2}>
-          <Wordmark size="hero" showMark={false} />
-        </Reveal>
-        {c.sub && (
-          <Reveal i={1} n={2}>
-            <p
-              className="mt-5 text-[clamp(1rem,1.35vw,1.3rem)] tracking-[-0.01em] sm:mt-7"
-              style={{ color: "var(--quiet)" }}
-            >
-              {c.sub}
-            </p>
-          </Reveal>
-        )}
-      </div>
-    );
-  }
   if (c.kind === "finale") {
     return (
       <div className="pointer-events-auto flex flex-col items-center">
-        {/* The S completes alone; then its name settles in — the wordmark, its tracking closing
-            as it arrives — the signature, the line, the CTA. */}
-        <div aria-hidden="true" style={stage(0.02, 0.22)}>
-          <Wordmark size="hero" showMark={false} textStyle={WORDMARK_SETTLE} />
+        {/* The trajectories resolve on the emblem; then its name, the signature, the line, the
+            CTA — each settling in over its own share of the reveal. */}
+        <div className="relative flex justify-center [--mark-h:clamp(92px,19svh,188px)]">
+          <FinalePaths />
+          {/* The approved emblem, whole and unaltered (the moving element carries the blend). */}
+          <span
+            aria-hidden="true"
+            className="relative block mix-blend-multiply"
+            style={stage(0.3, 0.46)}
+          >
+            <BrandMark />
+          </span>
         </div>
         <div
           aria-hidden="true"
-          className="mt-[clamp(0.9rem,2.6svh,1.6rem)]"
-          style={stage(0.16, 0.34)}
+          className="mt-[clamp(1.4rem,4.2svh,2.75rem)]"
+          style={stage(0.38, 0.54)}
         >
-          <Signature />
+          <BrandWordmark
+            className="text-[clamp(38px,10.4vw,62px)] sm:text-[clamp(56px,min(7.6vw,12.5svh),112px)]"
+            style={WORDMARK_SETTLE}
+          />
+        </div>
+        <div
+          aria-hidden="true"
+          className="mt-[clamp(0.9rem,2.4svh,1.5rem)]"
+          style={stage(0.46, 0.6)}
+        >
+          <BrandSignature className="text-[clamp(9.5px,2.5vw,13px)] sm:text-[clamp(12px,1.3vw,19px)]" />
         </div>
         <p
           aria-hidden="true"
-          className="mt-[clamp(1.1rem,3.4svh,2.2rem)] text-[clamp(1.15rem,1.7vw,1.6rem)] font-medium tracking-[-0.02em]"
-          style={{ ...stage(0.32, 0.52), color: "var(--ink)" }}
+          className="mt-[clamp(1.4rem,4svh,2.5rem)] text-[clamp(1.1rem,1.6vw,1.5rem)] font-medium tracking-[-0.02em] text-[#15181F]"
+          style={stage(0.56, 0.7)}
         >
-          <Accented text={c.lines[0]} />
+          {plainText(c.lines[0])}
         </p>
-        <div style={stage(0.5, 0.78)}>
+        <div style={stage(0.66, 0.84)}>
           <Link
             to="/consultation"
             data-testid="cinematic-cta"
-            className="mt-[clamp(1.1rem,3.4svh,2rem)] inline-flex h-14 items-center gap-3 rounded-full bg-[#F4F2ED] px-8 text-[1.0625rem] font-semibold tracking-[-0.01em] text-[#15181F] shadow-[inset_0_0_0_1px_rgba(201,170,121,0.85)] transition-[background-color,transform] duration-200 hover:bg-white focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#DCC08B] active:scale-[0.98]"
+            className="mt-[clamp(1.1rem,3.2svh,2rem)] inline-flex h-14 items-center gap-3 rounded-full bg-[#15181F] px-8 text-[1.0625rem] font-semibold tracking-[-0.01em] text-[#F6F4EF] shadow-[inset_0_0_0_1px_rgba(201,170,121,0.55)] transition-[background-color,transform] duration-200 hover:bg-[#0B1F3B] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#B8924F] active:scale-[0.98]"
           >
             Find My Business Idea
             <ArrowRight className="size-5" aria-hidden="true" />
@@ -410,10 +534,10 @@ function CaptionBody({ caption: c }: { caption: Caption }) {
 }
 
 /** The wordmark's tracking closes from slightly open to its final measure as it appears. */
-const WORDMARK_U = "clamp(0, calc((var(--reveal, 1) - 0.02) / 0.24), 1)";
+const WORDMARK_U = "clamp(0, calc((var(--reveal, 1) - 0.38) / 0.2), 1)";
 const WORDMARK_SETTLE: CSSProperties = {
-  letterSpacing: `calc(0.12em + (1 - ${WORDMARK_U}) * (1 - ${WORDMARK_U}) * 0.16em)`,
-  marginRight: `calc(-0.12em - (1 - ${WORDMARK_U}) * (1 - ${WORDMARK_U}) * 0.16em)`,
+  letterSpacing: `calc(0.13em + (1 - ${WORDMARK_U}) * (1 - ${WORDMARK_U}) * 0.12em)`,
+  marginRight: `calc(-0.13em - (1 - ${WORDMARK_U}) * (1 - ${WORDMARK_U}) * 0.12em)`,
 };
 
 /**

@@ -1,6 +1,6 @@
 import { k, progressOf, sampleKeys, type SceneId } from "../timeline/timeline";
 import { ASSEMBLY } from "../world/core/core-design";
-import { FINALE_COMPLETE } from "../world/core/core-motion";
+import { finaleAt } from "../overlay/copy";
 import { SIGNALS, signalWindow } from "../world/context/context-model";
 
 /**
@@ -40,6 +40,11 @@ export interface Mix {
 }
 
 const K = k;
+
+/** The finale's identity moment: where the approved emblem lands (finale-local). */
+const EMBLEM_AT = finaleAt(0.3);
+/** …and where its name has settled, a breath later. */
+const NAME_AT = finaleAt(0.42);
 
 const BED = [
   K("void", 0, 0),
@@ -89,8 +94,8 @@ const CUTOFF = [
   K("connected", 0.8, 700),
   K("return", 0.6, 420),
   K("finale", 0.2, 300),
-  K("finale", 0.34, 300),
-  K("finale", 0.5, 1100),
+  K("finale", EMBLEM_AT, 300),
+  K("finale", NAME_AT + 0.03, 1100),
   K("finale", 0.8, 1400),
 ];
 const TENSION = [
@@ -106,10 +111,10 @@ const TENSION = [
   K("crisis", 0.4, 0.16),
   K("adaptation", 0.6, 0.06),
   K("adaptation", 1, 0),
-  // An almost imperceptible rise under the approach, released the moment the S completes.
+  // An almost imperceptible rise under the approach, released the moment the emblem lands.
   K("return", 0.3, 0),
-  K("finale", 0.26, 0.06),
-  K("finale", 0.335, 0),
+  K("finale", EMBLEM_AT - 0.07, 0.06),
+  K("finale", EMBLEM_AT, 0),
 ];
 const PAD = [
   K("passage", 0.74, 0),
@@ -126,9 +131,9 @@ const PAD = [
   K("adaptation", 0.9, 0.18),
   K("product", 0.4, 0.06),
   K("return", 0.5, 0.05),
-  K("finale", 0.34, 0.04),
+  K("finale", EMBLEM_AT, 0.04),
   // Resolution: the harmony arrives with the name and settles into warmth for the CTA.
-  K("finale", 0.5, 0.4),
+  K("finale", NAME_AT + 0.03, 0.4),
   K("finale", 0.8, 0.42),
   K("finale", 1, 0.38),
 ];
@@ -140,8 +145,8 @@ const WIDTH = [
   K("elevate", 0.8, 0.95),
   K("product", 0.5, 0.4),
   K("return", 0.6, 0.15),
-  K("finale", 0.34, 0.15),
-  K("finale", 0.6, 0.85),
+  K("finale", EMBLEM_AT, 0.15),
+  K("finale", 0.66, 0.85),
 ];
 /** The forward pulse is retired (minimal score): kept as a silent layer for the mix shape. */
 const PULSE = [K("void", 0, 0)];
@@ -161,13 +166,12 @@ const MASTER = [
   K("evidence", 0.56, 1),
   K("evidence", 0.62, 0.62),
   K("evidence", 0.8, 1),
-  // The breath: a short, controlled reduction immediately before the S completes — not digital
-  // silence — and the space returns exactly as its champagne edge closes.
-  // The space is back a hair before the edge closes, so the identity sound lands in full.
-  K("finale", 0.26, 1),
-  K("finale", 0.285, 0.22),
-  K("finale", 0.318, 0.22),
-  K("finale", FINALE_COMPLETE - 0.003, 1),
+  // The breath: a short, controlled reduction immediately before the emblem lands — not digital
+  // silence — and the space is back a hair before it arrives, so the identity tone lands in full.
+  K("finale", EMBLEM_AT - 0.07, 1),
+  K("finale", EMBLEM_AT - 0.045, 0.22),
+  K("finale", EMBLEM_AT - 0.012, 0.22),
+  K("finale", EMBLEM_AT - 0.003, 1),
 ];
 
 export function mixAt(p: number): Mix {
@@ -249,10 +253,10 @@ function buildCues(): Cue[] {
   // The interface's pathways converge where the emblem will form: the identity theme returns as
   // a low, distant fifth (no bright detail — the space is narrowing toward the S).
   out.push(cue("return", 0.45, "motif", 1));
-  // The S completes: ONE restrained identity sound, exactly as its champagne edge closes.
-  out.push(cue("finale", FINALE_COMPLETE, "signature", 0, { major: true }));
+  // The approved emblem lands: ONE restrained identity tone.
+  out.push(cue("finale", EMBLEM_AT, "signature", 0, { major: true }));
   // A breath later, SOLVENTIA: the motif, now complete — the tension resolved.
-  out.push(cue("finale", 0.4, "wordmark", 0, { major: true }));
+  out.push(cue("finale", NAME_AT, "wordmark", 0, { major: true }));
   return out.sort((a, b) => a.at - b.at);
 }
 

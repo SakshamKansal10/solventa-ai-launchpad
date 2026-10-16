@@ -3,16 +3,21 @@ import { Link } from "@tanstack/react-router";
 import { ArrowRight } from "lucide-react";
 import { useEffect, useState } from "react";
 
+import { BrandLockup } from "@/components/brand/Brand";
 import { SignInDialog } from "@/components/solventia/SignInDialog";
 import { getCurrentUser } from "@/lib/actions/auth";
 
 import { SoundToggle } from "../sound/SoundToggle";
-import { Wordmark } from "./Wordmark";
 
 /**
  * Navigation for the cinematic homepage only — the shared Header (used by the other pages) is
- * untouched. Very little chrome: SOLVENTIA anchors the top-left; sound, sign-in and the one call
- * to action sit on the right. The site's other destinations live in the footer.
+ * untouched. Very little chrome: the Solventia lockup anchors the top-left; sign-in and the one
+ * call to action sit on the right (a quiet mute control joins them once sound is playing). The
+ * site's other destinations live in the footer.
+ *
+ * Identity: during the film the bar's lockup is the DESTINATION of the opening identity — the
+ * film carries the centred lockup here (DomSync), so the bar's own copy stays invisible and only
+ * provides the link and the measured place. In the still version it is shown, on a pearl bar.
  *
  * Tone: every colour is a variable the film writes (`--ink`, `--quiet`, `--accent`, `--dark`),
  * so the bar is graphite over the pearl world and pearl over the dark one, continuously.
@@ -46,6 +51,7 @@ export function CinematicNav({ pendingNext }: { pendingNext?: string | null } = 
     <header
       className="fixed inset-x-0 top-0 z-50 [--immerse-allow:1] hover:[--immerse-allow:0] has-[:focus-visible]:[--immerse-allow:0]"
       data-testid="cinematic-nav"
+      data-nav-bar
     >
       {/* A soft top scrim — only over the dark world, where pearl type needs it. */}
       <div
@@ -66,10 +72,13 @@ export function CinematicNav({ pendingNext }: { pendingNext?: string | null } = 
           aria-label="Solventia home"
           style={recede(0.45)}
         >
-          <Wordmark size="md" />
+          <span data-nav-brand className="block">
+            <BrandLockup preset="nav" wordColor="var(--ink)" signatureColor="var(--ink)" />
+          </span>
         </Link>
         <div className="flex items-center justify-end gap-2 sm:gap-5">
-          <div className="transition-opacity duration-700" style={recede(0.35)}>
+          {/* The mute control appears once sound plays; its place is kept so nothing shifts. */}
+          <div className="size-9 transition-opacity duration-700" style={recede(0.35)}>
             <SoundToggle />
           </div>
           <div

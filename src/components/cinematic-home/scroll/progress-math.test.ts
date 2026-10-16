@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import { damp, mulberry32, smoothstep } from "../math";
-import { sectionProgress } from "./progress-math";
+import { DWELL_PACE, pacedStep, sectionProgress } from "./progress-math";
 
 describe("sectionProgress", () => {
   // A 1100-unit section starting at 0, seen through a 100-unit viewport: 1000 of scroll.
@@ -59,5 +59,34 @@ describe("helpers", () => {
       expect(v).toBeGreaterThanOrEqual(0);
       expect(v).toBeLessThan(1);
     }
+  });
+});
+
+describe("pacedStep (story pacing)", () => {
+  const dt = 1 / 60;
+  it("is the plain smoothing where nothing has to be read", () => {
+    expect(pacedStep(0.2, 0.3, 3, 0, dt)).toBeCloseTo(damp(0.2, 0.3, 3, dt), 10);
+  });
+
+  it("never crosses a moment that must be read faster than a readable pace — even on a flick", () => {
+    const step = pacedStep(0.2, 0.5, 3, 1, dt) - 0.2;
+    expect(step).toBeGreaterThan(0);
+    expect(step).toBeLessThanOrEqual((DWELL_PACE.base + DWELL_PACE.catchUp * 0.3) * dt + 1e-12);
+  });
+
+  it("still travels faster the further behind it is (fast input stays fast)", () => {
+    const near = pacedStep(0.2, 0.22, 3, 1, dt) - 0.2;
+    const far = pacedStep(0.2, 0.6, 3, 1, dt) - 0.2;
+    expect(far).toBeGreaterThan(near);
+  });
+
+  it("is symmetric (reversing is just as coherent) and always arrives", () => {
+    expect(pacedStep(0.5, 0.2, 3, 1, dt) - 0.5).toBeCloseTo(
+      -(pacedStep(0.2, 0.5, 3, 1, dt) - 0.2),
+      12,
+    );
+    let p = 0.2;
+    for (let i = 0; i < 60 * 30; i++) p = pacedStep(p, 0.5, 3, 1, dt);
+    expect(p).toBeCloseTo(0.5, 4);
   });
 });

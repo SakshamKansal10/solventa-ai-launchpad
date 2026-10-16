@@ -491,6 +491,16 @@
 }
 
 /* Section reveal — state transition, not decoration. */
+/* The homepage scroll cue: a short segment travelling down its hairline. */
+@keyframes sol-cue {
+  from {
+    transform: translateY(-100%);
+  }
+  to {
+    transform: translateY(200%);
+  }
+}
+
 /* An indeterminate progress line: travels across its track, never bounces. */
 @keyframes sol-progress {
   from {
@@ -790,4 +800,18 @@
     translate: 0 0;
     scale: 1;
   }
+}
+
+/* The cinematic homepage's bar: during the film the opening lockup travels into the bar itself,
+   so the bar's own copy is only the link and the measured destination. The still version (no
+   film) shows it, on a pearl bar so the emblem sits on the light field it is made for. */
+[data-cine-tone] [data-nav-brand] {
+  opacity: 0;
+}
+[data-cine-tone]:has([data-mode="fallback"]) [data-nav-brand] {
+  opacity: 1;
+}
+[data-cine-tone]:has([data-mode="fallback"]) [data-nav-bar] {
+  background: rgb(246 244 239 / 0.94);
+  box-shadow: 0 1px 0 rgb(21 24 31 / 0.06);
 }

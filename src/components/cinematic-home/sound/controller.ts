@@ -6,9 +6,11 @@ import { createCueGate, mixAt } from "./score";
  * Owns the soundtrack for the page: the visitor's preference, the audio
  * context's lifecycle and the loop that follows the scroll.
  *
- * - OFF by default. Audio starts only from a user gesture (the toggle, or —
- *   when the visitor turned it on earlier in this visit — their first tap,
- *   click or key press), as browsers require. Autoplay rules are never bypassed.
+ * - Part of the experience, not a utility: ON unless the visitor muted it in this visit, but it
+ *   only ever STARTS from the visitor's first real interaction — a tap, click or key press — as
+ *   browsers require (scrolling alone is not one). Autoplay rules are never bypassed; a refused
+ *   start fails silently and waits for the next interaction.
+ * - The mute control appears only once sound has actually played (`active`).
  * - Follows the scroll every frame: continuous layers track the current scene,
  *   cues fire as their visible events are crossed (once — see createCueGate).
  * - Muting fades to silence and suspends the context; un-muting resumes the
@@ -26,10 +28,12 @@ export interface SoundState {
   enabled: boolean;
   /** Audio is actually playing (context running). */
   running: boolean;
+  /** Sound has played at least once on this page (the mute control is offered from then on). */
+  active: boolean;
 }
 
 class SoundController {
-  private state: SoundState = { available: false, enabled: false, running: false };
+  private state: SoundState = { available: false, enabled: false, running: false, active: false };
   private listeners = new Set<() => void>();
   private store: ExperienceStore | null = null;
   private ctx: AudioContext | null = null;
@@ -56,11 +60,11 @@ class SoundController {
   /** Called by the cinematic stage while it is mounted. Returns the detach. */
   attach(store: ExperienceStore): () => void {
     this.store = store;
-    let wanted = false;
+    let wanted = true;
     try {
-      wanted = sessionStorage.getItem(KEY) === "on";
+      wanted = sessionStorage.getItem(KEY) !== "off";
     } catch {
-      /* storage unavailable: default off */
+      /* storage unavailable: sound is still only started by an interaction */
     }
     this.set({ available: true, enabled: wanted });
     if (wanted) this.armGesture();
@@ -76,7 +80,7 @@ class SoundController {
       this.stop(true);
       this.disarm?.();
       this.store = null;
-      this.set({ available: false, running: false });
+      this.set({ available: false, running: false, active: false });
     };
   }
 
@@ -105,12 +109,17 @@ class SoundController {
     return this.ctx?.state ?? "none";
   }
 
-  /** Resume on the visitor's first interaction (an earlier "on" in this visit). */
+  /** Start on the visitor's first real interaction; keep listening until audio actually runs. */
   private armGesture() {
     this.disarm?.();
     const go = () => {
-      this.disarm?.();
-      if (this.state.enabled) void this.start();
+      if (!this.state.enabled) {
+        this.disarm?.();
+        return;
+      }
+      void this.start().then(() => {
+        if (this.state.running) this.disarm?.();
+      });
     };
     const events = ["pointerdown", "keydown", "touchend"] as const;
     events.forEach((e) => window.addEventListener(e, go, { passive: true }));
@@ -126,19 +135,22 @@ class SoundController {
       this.ctx = new AudioContext({ latencyHint: "interactive" });
       this.engine = new SoundEngine(this.ctx);
     }
-    try {
-      await this.ctx.resume();
-    } catch {
-      return;
+    const ctx = this.ctx;
+    if (ctx.state !== "running") {
+      // Only an interaction may start audio: never wait on a refused attempt.
+      await Promise.race([
+        ctx.resume().catch(() => undefined),
+        new Promise((resolve) => window.setTimeout(resolve, 300)),
+      ]);
     }
-    if (!this.state.enabled || !this.store) return;
+    if (ctx.state !== "running" || !this.state.enabled || !this.store) return;
     // Start from where the visitor is: the current scene's layers, no backlog of cues.
     this.gate = createCueGate(this.store.state.progress);
     this.engine!.update(mixAt(this.store.state.progress), this.ctx.currentTime);
     this.engine!.setLevel(1, this.ctx.currentTime, 0.6);
     cancelAnimationFrame(this.raf);
     this.raf = requestAnimationFrame(this.loop);
-    this.set({ running: this.ctx.state === "running" });
+    this.set({ running: true, active: true });
   }
 
   /** Hidden tab: fade out and suspend (the preference is unchanged). */
@@ -189,6 +201,11 @@ class SoundController {
   };
 }
 
-const SERVER_STATE: SoundState = { available: false, enabled: false, running: false };
+const SERVER_STATE: SoundState = {
+  available: false,
+  enabled: false,
+  running: false,
+  active: false,
+};
 
 export const soundController = new SoundController();

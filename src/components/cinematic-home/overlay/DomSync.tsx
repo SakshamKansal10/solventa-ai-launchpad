@@ -8,7 +8,7 @@ import { inkAt, lightAt } from "../world/tone";
 import { STAGE_COUNTS } from "../world/universe/universe-model";
 import { universePhases } from "../world/universe/universe-state";
 import { useWorld } from "../world/WorldContext";
-import { CAPTIONS, captionOpacity, COUNT_SPAN, type Caption } from "./copy";
+import { CAPTIONS, captionOpacity, COUNT_SPAN, FINALE_REVEAL, type Caption } from "./copy";
 import { mixHex, ROLE_VAR, WORLD, type WorldRole } from "./palette";
 
 /** The count arrives and leaves like a statement over its own span. */
@@ -83,6 +83,26 @@ function present(el: HTMLElement, o: number, leaving: boolean) {
   setVar(el, "--d", leaving ? "-1" : "1");
   setStyle(el, "visibility", o > 0.002 ? "visible" : "hidden");
 }
+/**
+ * The opening identity's journey into the site bar: one object (emblem, wordmark, signature),
+ * each part interpolated from its place at the centre to its place in the bar's own lockup.
+ * Scroll-linked, so it reverses exactly; eased so it leaves and lands gently.
+ */
+const BRAND_PARTS = ["mark", "word", "sig"] as const;
+interface PartRect {
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+}
+function rectOf(el: HTMLElement): PartRect {
+  const prev = el.style.transform;
+  el.style.transform = "none";
+  const r = el.getBoundingClientRect();
+  el.style.transform = prev;
+  return { x: r.left, y: r.top, w: r.width, h: r.height };
+}
+
 /** Middle of a span (global progress): before it a caption is arriving, after it leaving. */
 function spanMid(span: Caption["span"]): number {
   return (progressOf(span[0], span[1]) + progressOf(span[2], Math.min(1, span[3]))) / 2;
@@ -105,9 +125,22 @@ export function DomSync() {
   const count = useMemo(() => ({ el: null as HTMLElement | null, value: "" }), []);
   // The finale composition: the S completes alone (≈ finale 0.335), holds a breath, and only
   // then does its name arrive — wordmark → promise → line → CTA across finale 0.38 → 0.78.
-  const finaleFrom = progressOf("finale", 0.38);
+  // The finale composition: the trajectories converge on the emblem, then its name arrives —
+  // emblem → wordmark → signature → line → CTA across the reveal.
+  const finaleFrom = progressOf("finale", FINALE_REVEAL.from);
   const nav = useMemo(() => ({ el: null as HTMLElement | null, value: "" }), []);
-  const finaleTo = progressOf("finale", 0.78);
+  const finaleTo = progressOf("finale", FINALE_REVEAL.to);
+  /** The travelling identity: its parts at the centre and in the bar, measured per layout. */
+  const brand = useMemo(
+    () => ({
+      key: "",
+      opening: null as HTMLElement | null,
+      cue: null as HTMLElement | null,
+      parts: [] as { el: HTMLElement; from: PartRect; to: PartRect | null }[],
+      state: "",
+    }),
+    [],
+  );
   /** Per caption: the kicker tone last written. */
   const marks = useMemo(() => new Map<string, string>(), []);
   /** The page element the tone variables are written on (nav and overlay inherit them). */
@@ -130,6 +163,50 @@ export function DomSync() {
       if (immerse !== nav.value) {
         nav.value = immerse;
         nav.el.style.setProperty("--immerse", immerse);
+      }
+    }
+
+    // The identity travels from the centre into the bar (and stays there). Measured once per
+    // layout — viewport size and web-font state both change the boxes.
+    brand.opening ??= document.querySelector<HTMLElement>("[data-brand-opening]");
+    if (brand.opening && nav.el) {
+      const fonts = typeof document !== "undefined" && document.fonts ? document.fonts.status : "";
+      const layoutKey = `${width}x${height}:${fonts}`;
+      if (layoutKey !== brand.key) {
+        brand.key = layoutKey;
+        brand.cue = brand.opening.querySelector<HTMLElement>("[data-brand-cue]");
+        brand.parts = BRAND_PARTS.flatMap((name) => {
+          const el = brand.opening!.querySelector<HTMLElement>(`[data-brand-part=${name}]`);
+          const target = nav.el!.querySelector<HTMLElement>(`[data-brand-part=${name}]`);
+          if (!el) return [];
+          const to = target ? rectOf(target) : null;
+          return [{ el, from: rectOf(el), to: to && to.w > 0 ? to : null }];
+        });
+        brand.state = "";
+      }
+      const travel = ramp(p, "void", 0.04, "void", 0.72);
+      const t = travel * travel * (3 - 2 * travel);
+      const dark = 1 - inkAt(lightAt(p));
+      const key = `${t.toFixed(4)}:${dark.toFixed(3)}`;
+      if (key !== brand.state) {
+        brand.state = key;
+        // The identity never fades into the film: it stays at full strength in the bar (only the
+        // calls to action recede during the deepest scenes).
+        const recede = 1;
+        for (const { el, from, to } of brand.parts) {
+          const name = el.dataset.brandPart;
+          // A part the bar does not show on this screen (the signature on small phones) fades
+          // as it travels; it never moves anywhere it is not.
+          const target = to ?? { x: from.x, y: from.y, w: from.w, h: from.h };
+          const sc = 1 + (target.w / from.w - 1) * t;
+          const dx = (target.x - from.x) * t;
+          const dy = (target.y - from.y) * t;
+          el.style.transform = `translate3d(${dx.toFixed(2)}px, ${dy.toFixed(2)}px, 0) scale(${sc.toFixed(5)})`;
+          // The emblem belongs to light fields: it rests while the world is dark.
+          const o = (to ? 1 : 1 - t) * recede * (name === "mark" ? 1 - dark : 1);
+          el.style.opacity = o.toFixed(3);
+        }
+        if (brand.cue) brand.cue.style.opacity = Math.max(0, 1 - t * 3).toFixed(3);
       }
     }
 
@@ -159,8 +236,6 @@ export function DomSync() {
       const el = dom.captions.get(c.id);
       if (!el) continue;
       let o = captionOpacity(c, p);
-      // The opening identity is there from the first paint.
-      if (c.kind === "hero" && p < 0.01) o = 1;
       // The finale composition stages its own parts; the container itself is simply present.
       if (c.kind === "finale") o = o > 0 ? 1 : 0;
       // A reasoning kicker resolves to conviction once the new route holds (violet → champagne).
@@ -190,7 +265,7 @@ export function DomSync() {
         }
         // The CTA is only focusable once it is visibly there.
         const cta = el.querySelector<HTMLElement>("[data-testid=cinematic-cta]");
-        if (cta) setStyle(cta, "visibility", r > 0.56 ? "visible" : "hidden");
+        if (cta) setStyle(cta, "visibility", r > 0.7 ? "visible" : "hidden");
       }
     }
 

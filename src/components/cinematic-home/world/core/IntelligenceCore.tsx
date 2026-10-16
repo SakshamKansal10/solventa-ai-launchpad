@@ -553,8 +553,12 @@ export function IntelligenceCore({ variant = "origin" }: { variant?: "origin" | 
       // 0–15: the S drawn in light — reference channels (outer + inner, both channels), then
       // the inner ones stay as the gold seam once the metal is in place.
       const heads = finale ? [0, 0, 0] : voidHeads(p);
-      // In the void the lines are faint traces; they gain presence as the S resolves.
-      const gain = finale ? 1 : 0.5 + 0.5 * smoothstep(0, 0.3, local(p, "awakening"));
+      // In the void the lines are faint traces — fainter still while the identity holds the
+      // centre — and they gain presence as the S resolves.
+      const gain = finale
+        ? 1
+        : (0.5 + 0.5 * smoothstep(0, 0.3, local(p, "awakening"))) *
+          (0.3 + 0.7 * smoothstep(0.05, 0.6, local(p, "void")));
       for (let k = 0; k < 2; k++) {
         const bp = Math.min(1, Math.max(0, (pose.blueprint - k * 0.12) / 0.88));
         for (let ci = 0; ci < 2; ci++) {
@@ -710,7 +714,12 @@ export function IntelligenceCore({ variant = "origin" }: { variant?: "origin" | 
           spanTo(rest[r.k], chain, qi / 4, (qi + 1) / 4, 0);
           cubicThrough(idx, pts[0], pts[1], pts[2], pts[3]);
           // On the pearl the head is drawn in ink: a fine, quiet stroke rather than a bright one.
-          const glow = appear * fade * (2.2 + 0.4 * Math.sin(t * 1.7 + j)) * (1 - 0.6 * L);
+          const glow =
+            appear *
+            fade *
+            (2.2 + 0.4 * Math.sin(t * 1.7 + j)) *
+            (1 - 0.6 * L) *
+            (0.3 + 0.7 * smoothstep(0.05, 0.6, vv));
           filaments.params(idx, {
             s0: Math.max(0, u - len),
             s1: u,
