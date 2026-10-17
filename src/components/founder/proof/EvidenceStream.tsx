@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
-import { TriangleAlert } from "lucide-react";
+import { Inbox, TriangleAlert } from "lucide-react";
 
 import type { AssumptionDTO, EvidenceDTO } from "@/lib/actions/proof";
 import { useLocale } from "@/lib/i18n/LocaleProvider";
@@ -21,11 +21,14 @@ export function EvidenceStream({
   onOpenAssumption,
   onAdd,
   onAskSol,
+  compact = false,
 }: {
   assumptions: AssumptionDTO[];
   onOpenAssumption: (id: string) => void;
   onAdd: () => void;
   onAskSol: (item: { summary: string }) => void;
+  /** Slim sidebar card: the latest few items as a timeline. */
+  compact?: boolean;
 }) {
   const { t, locale } = useLocale();
   const reduceMotion = useReducedMotion();
@@ -37,6 +40,84 @@ export function EvidenceStream({
       (x, y) =>
         y.e.occurredOn.localeCompare(x.e.occurredOn) || y.e.createdAt.localeCompare(x.e.createdAt),
     );
+
+  if (compact) {
+    return (
+      <section
+        aria-labelledby="stream-h"
+        className="flex flex-col gap-4 rounded-[1.25rem] border border-sol-border bg-sol-surface p-5"
+        data-testid={items.length === 0 ? "evidence-stream-empty" : "evidence-stream"}
+      >
+        <h2 id="stream-h" className="sol-h-sm flex items-center gap-3 text-sol-ink">
+          <span className="flex size-9 items-center justify-center rounded-xl bg-sol-violet-soft text-sol-violet-deep">
+            <Inbox className="size-[18px]" aria-hidden="true" />
+          </span>
+          {t("pf.stream.title")}
+        </h2>
+        {items.length === 0 ? (
+          <div className="flex flex-col items-start gap-2">
+            <p className="text-[0.9375rem] text-sol-secondary">{t("pf.stream.empty.body")}</p>
+            <Button size="sm" variant="secondary" onClick={onAdd}>
+              {t("pf.addEvidenceCta")}
+            </Button>
+          </div>
+        ) : (
+          <ol className="flex flex-col gap-4 border-l border-sol-border pl-4">
+            {items.slice(0, 3).map(({ e, a }) => {
+              const against = e.signal === "contradicts";
+              return (
+                <li
+                  key={e.id}
+                  data-testid="stream-item"
+                  data-signal={e.signal}
+                  className="relative"
+                >
+                  <span
+                    aria-hidden="true"
+                    className={cn(
+                      "absolute -left-[1.3125rem] top-1.5 size-2.5 rounded-full",
+                      against ? "bg-sol-warning" : "bg-sol-violet",
+                    )}
+                  />
+                  <div className="flex flex-wrap items-center gap-2">
+                    <Pill tone="neutral">{t(`pf.type.${e.type}` as const)}</Pill>
+                    <span className="text-[0.875rem] text-sol-secondary">
+                      {formatDate(e.occurredOn, locale)}
+                    </span>
+                    {against && <Pill tone="warning">{t("pf.stream.contradicts")}</Pill>}
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => onOpenAssumption(a.id)}
+                    className={cn(
+                      "mt-2 block w-full rounded-xl px-3 py-2 text-left text-[0.9375rem] leading-snug text-sol-ink",
+                      against ? "bg-sol-warning-soft/60" : "bg-sol-violet-soft/60",
+                    )}
+                  >
+                    {e.title ?? e.summary}
+                  </button>
+                  {e.sourcePerson && (
+                    <p className="mt-1.5 text-[0.875rem] text-sol-secondary">{e.sourcePerson}</p>
+                  )}
+                  {against && (
+                    <Button
+                      size="sm"
+                      variant="soft"
+                      className="mt-2"
+                      onClick={() => onAskSol({ summary: e.summary })}
+                      data-testid="stream-ask-sol"
+                    >
+                      {t("pf.stream.askSol")}
+                    </Button>
+                  )}
+                </li>
+              );
+            })}
+          </ol>
+        )}
+      </section>
+    );
+  }
 
   if (items.length === 0) {
     return (

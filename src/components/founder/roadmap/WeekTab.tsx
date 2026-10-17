@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Loader2 } from "lucide-react";
+import { ChevronLeft, ChevronRight, Loader2, Target, TrendingUp } from "lucide-react";
+import { useNavigate } from "@tanstack/react-router";
 
 import { retryWeek, setMissionState, type CloseWeekResult } from "@/lib/actions/roadmap";
 import type { ProofOverview } from "@/lib/actions/proof";
@@ -9,10 +10,9 @@ import { useLocale } from "@/lib/i18n/LocaleProvider";
 import { qk, useInvalidateFounder } from "@/lib/queries";
 import type { MissionState } from "@/lib/roadmap/state";
 import { applyMissionState, type RoadmapView, type WeekDTO } from "@/lib/roadmap/view";
-import { useAskSol } from "../DashboardShell";
 import { ProgressRing } from "../dashboard/graphics";
-import { Button, Card, Eyebrow, LinkButton, Pill } from "../ui";
-import { WeekHeroScene } from "./illustrations";
+import { cn } from "@/lib/utils";
+import { Button, Pill } from "../ui";
 import { MissionCard } from "./MissionCard";
 import { ReviewWeekDialog } from "./ReviewWeekDialog";
 import type { useRoadmapText } from "./text";
@@ -31,7 +31,7 @@ function ProgressSegments({ week }: { week: WeekDTO }) {
         tone="champagne"
         testId="week-progress-ring"
       />
-      <p className="text-[1.0625rem] font-semibold text-sol-ink" data-testid="week-progress">
+      <p className="text-[1rem] font-semibold text-sol-ink" data-testid="week-progress">
         {t("rm.rail.missions", { x: week.progress.completed, y: week.progress.total })}
       </p>
     </div>
@@ -62,7 +62,11 @@ export function WeekTab({
   const { t, locale } = useLocale();
   const queryClient = useQueryClient();
   const invalidate = useInvalidateFounder();
-  const askSol = useAskSol();
+  const navigate = useNavigate();
+  const goWeek = (n: number) =>
+    navigate({ to: "/dashboard/roadmap", search: { tab: "week", week: n } });
+  const prevWeek = view.weeks.find((w) => w.number === week.number - 1 && w.state !== "locked");
+  const nextWeek = view.weeks.find((w) => w.number === week.number + 1 && w.state !== "locked");
   const [review, setReview] = useState(false);
   const roadmapKey = qk.roadmap(view.roadmap.id);
 
@@ -104,7 +108,6 @@ export function WeekTab({
   });
 
   const title = text.weekTitle(week.id, week.title);
-  const objective = text.weekObjective(week.id, week.objective);
   const pad = String(week.number).padStart(2, "0");
   const detail = text.detail;
   const missionsLocked = week.state === "completed" || !isCurrent;
@@ -120,22 +123,30 @@ export function WeekTab({
   const assumptionFor = (category: string | null) =>
     proof?.assumptions.find((a) => a.category === category)?.id ?? proof?.assumptions[0]?.id;
 
+  const objective = text.weekObjective(week.id, week.objective);
+  const threshold = detail.successThreshold(week.successThreshold);
+  // Success criteria often arrive as one line of several outcomes; show them
+  // as separate lines only when the text really is a list.
+  const outcomes = threshold
+    ? threshold
+        .split(/;\s+|\n+/)
+        .map((x) => x.trim())
+        .filter(Boolean)
+    : [];
+  const pct = week.progress.total > 0 ? week.progress.completed / week.progress.total : 0;
+
   return (
     <div
-      className="grid gap-8 lg:grid-cols-[minmax(0,64fr)_minmax(0,36fr)]"
+      className="grid gap-x-10 gap-y-8 lg:grid-cols-[minmax(0,1fr)_21rem]"
       data-testid="week-tab"
       data-week-state={week.state}
     >
-      <div className="flex min-w-0 flex-col gap-6">
-        <div
-          className="overflow-hidden rounded-[1.5rem] border border-sol-border"
-          data-testid="week-hero"
-        >
-          <WeekHeroScene className="h-36 w-full sm:h-48" />
-        </div>
+      <div className="flex min-w-0 flex-col gap-7">
         <header>
           <div className="flex flex-wrap items-center gap-3">
-            <Eyebrow>{t("common.weekN", { n: pad })}</Eyebrow>
+            <span className="text-[0.9375rem] font-semibold text-sol-champagne-deep">
+              {t("common.weekN", { n: pad })}
+            </span>
             <Pill
               tone={
                 week.state === "completed"
@@ -147,32 +158,62 @@ export function WeekTab({
             >
               {t(`rm.state.${week.state}` as const)}
             </Pill>
+            {week.hasDetail && (
+              <span className="text-[0.8125rem] text-sol-secondary">
+                {t("rm.rail.missions", { x: week.progress.completed, y: week.progress.total })}
+              </span>
+            )}
+            <span className="ml-auto inline-flex overflow-hidden rounded-full border border-sol-border bg-sol-surface/90">
+              <button
+                type="button"
+                aria-label={t("rm.week.prev")}
+                disabled={!prevWeek}
+                onClick={() => prevWeek && goWeek(prevWeek.number)}
+                className="grid size-10 place-items-center text-sol-ink transition-colors hover:bg-sol-violet-soft disabled:opacity-35"
+              >
+                <ChevronLeft className="size-5" aria-hidden="true" />
+              </button>
+              <button
+                type="button"
+                aria-label={t("rm.week.next")}
+                disabled={!nextWeek}
+                onClick={() => nextWeek && goWeek(nextWeek.number)}
+                className="grid size-10 place-items-center border-l border-sol-border text-sol-ink transition-colors hover:bg-sol-violet-soft disabled:opacity-35"
+              >
+                <ChevronRight className="size-5" aria-hidden="true" />
+              </button>
+            </span>
           </div>
           <h2
-            className="mt-3 max-w-[22ch] font-display text-[clamp(2rem,1.5rem+1.8vw,3rem)] font-semibold leading-[1.06] text-sol-ink"
+            className="mt-2 max-w-[34ch] !text-[1.625rem] font-semibold leading-tight text-sol-ink"
             data-testid="week-title"
           >
             {title}
           </h2>
-          <p className="sol-body sol-prose mt-3 text-sol-secondary">{objective}</p>
+          {objective && (
+            <p className="mt-2 line-clamp-2 max-w-[62ch] text-[0.9375rem] leading-snug text-sol-secondary">
+              {objective}
+            </p>
+          )}
         </header>
 
         {detail.adaptationNote(week.adaptationNote) && (
           <div
-            className="rounded-2xl border border-sol-violet/25 bg-sol-violet-soft px-5 py-4"
+            className="border-l-2 border-sol-violet/50 bg-sol-violet-ultralight/70 py-3 pl-4 pr-3"
             data-testid="adaptation-note"
           >
-            <p className="text-[0.875rem] font-bold uppercase tracking-[0.1em] text-sol-violet-deep">
-              {t("rm.adapted")}
-            </p>
-            <p className="mt-1 text-[1.0625rem] leading-snug text-sol-ink">
+            <p className="sol-eyebrow !text-[0.6875rem] !text-sol-violet-deep">{t("rm.adapted")}</p>
+            <p className="mt-1 text-[0.9375rem] leading-snug text-sol-ink">
               {detail.adaptationNote(week.adaptationNote)}
             </p>
           </div>
         )}
 
         {week.state === "generating_next" ? (
-          <Card className="flex flex-col items-start gap-4 p-7" data-testid="week-generating">
+          <div
+            className="sol-atmosphere flex flex-col items-start gap-3 p-7"
+            data-testid="week-generating"
+          >
             {week.generationStatus === "failed" ? (
               <>
                 <p className="sol-h3">{t("rm.gen.failedTitle", { n: pad })}</p>
@@ -196,29 +237,29 @@ export function WeekTab({
                 </p>
               </>
             )}
-          </Card>
+          </div>
         ) : week.state === "locked" ? (
-          <Card className="p-7">
+          <div className="sol-atmosphere p-7">
             <p className="sol-h3">{t("rm.locked.title")}</p>
             <p className="sol-body sol-prose mt-2 text-sol-secondary">{t("rm.locked.body")}</p>
-          </Card>
+          </div>
         ) : (
           <>
             {week.state === "ready_to_close" && isCurrent && (
-              <Card
-                className="flex flex-col items-start gap-3 border-sol-champagne/60 bg-sol-champagne-soft/50 p-6"
+              <div
+                className="sol-complete-glow flex flex-col items-start gap-3 rounded-3xl border border-sol-champagne/60 bg-[linear-gradient(135deg,#fbf3e2_0%,#fffdfb_100%)] p-6"
                 data-testid="ready-to-close"
               >
                 <p className="sol-h3">{t("rm.week.readyToClose")}</p>
-                <p className="text-[1.0625rem] text-sol-ink">{t("rm.week.readyBody")}</p>
+                <p className="text-[1rem] text-sol-ink">{t("rm.week.readyBody")}</p>
                 <Button size="lg" onClick={() => setReview(true)} data-testid="review-week">
                   {t("rm.week.review")}
                 </Button>
-              </Card>
+              </div>
             )}
-            <ol className="flex flex-col gap-3" aria-label={t("rm.missions.aria")}>
+            <ol className="flex flex-col" aria-label={t("rm.missions.aria")}>
               {week.missions.map((m, i) => (
-                <li key={m.id}>
+                <li key={m.id} className="group/li pb-6 last:pb-0">
                   <MissionCard
                     mission={m}
                     index={i}
@@ -238,84 +279,84 @@ export function WeekTab({
         )}
       </div>
 
-      <aside
-        className="flex min-w-0 flex-col gap-5"
-        aria-label={t("rm.rail.aria")}
-        data-testid="week-rail"
-      >
+      <aside className="min-w-0 self-start" aria-label={t("rm.rail.aria")} data-testid="week-rail">
         {week.hasDetail && (
-          <>
-            <Card className="flex flex-col gap-3 p-6">
-              <h3 className="sol-eyebrow">{t("rm.rail.progress")}</h3>
+          <div className="flex flex-col divide-y divide-sol-border/70 rounded-3xl border border-sol-border bg-[linear-gradient(160deg,#fffdfb_0%,#f8f3fc_100%)] shadow-[0_16px_40px_-30px_rgba(88,64,185,0.45)]">
+            <section className="flex flex-col gap-4 p-5">
+              <h3 className="flex items-center gap-2.5 text-[0.9375rem] font-semibold text-sol-ink">
+                <TrendingUp className="size-4 text-sol-violet-deep" aria-hidden="true" />
+                {t("rm.rail.progress")}
+              </h3>
               <ProgressSegments week={week} />
-            </Card>
-            {detail.successThreshold(week.successThreshold) && (
-              <Card className="flex flex-col gap-2 p-6" data-testid="success-threshold">
-                <h3 className="sol-eyebrow">{t("rm.rail.threshold")}</h3>
-                <p className="text-[1.0625rem] leading-snug text-sol-ink">
-                  {detail.successThreshold(week.successThreshold)}
-                </p>
-              </Card>
+              <ol className="flex items-center gap-1.5" aria-hidden="true">
+                {week.missions.map((m) => (
+                  <li
+                    key={m.id}
+                    className={cn(
+                      "h-1.5 flex-1 rounded-full transition-colors duration-500",
+                      m.state === "completed"
+                        ? "bg-sol-champagne"
+                        : m.state === "in_progress"
+                          ? "bg-sol-violet"
+                          : "bg-sol-violet/15",
+                    )}
+                  />
+                ))}
+              </ol>
+            </section>
+            {threshold && (
+              <section className="flex flex-col gap-3 p-5" data-testid="success-threshold">
+                <h3 className="flex items-center gap-2.5 text-[0.9375rem] font-semibold text-sol-ink">
+                  <Target className="size-4 text-sol-champagne-deep" aria-hidden="true" />
+                  {t("rm.rail.threshold")}
+                </h3>
+                {outcomes.length > 1 ? (
+                  <ul className="flex flex-col gap-2">
+                    {outcomes.map((o) => (
+                      <li
+                        key={o}
+                        className="flex gap-2.5 text-[0.9375rem] leading-snug text-sol-ink"
+                      >
+                        <span
+                          className="mt-[0.5rem] size-1.5 shrink-0 rounded-full bg-sol-champagne"
+                          aria-hidden="true"
+                        />
+                        {o}
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p className="text-[0.9375rem] leading-snug text-sol-ink">{threshold}</p>
+                )}
+                <div
+                  className="h-1 overflow-hidden rounded-full bg-sol-violet/10"
+                  aria-hidden="true"
+                >
+                  <div
+                    className="h-full rounded-full bg-gradient-to-r from-sol-violet to-sol-champagne transition-[width] duration-700 ease-out"
+                    style={{ width: `${Math.round(pct * 100)}%` }}
+                  />
+                </div>
+              </section>
             )}
-            <Card className="flex flex-col gap-3 p-6" data-testid="week-evidence">
-              <h3 className="sol-eyebrow">{t("rm.rail.evidence")}</h3>
-              {week.evidenceTarget && week.evidenceTarget > 0 ? (
-                <p className="text-[1.0625rem] leading-snug text-sol-ink">
-                  <span className="font-semibold">
-                    {t("rm.rail.captured", { n: week.evidenceCount })}
-                  </span>
-                  <br />
-                  <span className="text-sol-secondary">
-                    {t("rm.rail.remaining", {
-                      n: Math.max(week.evidenceTarget - week.evidenceCount, 0),
-                    })}
-                  </span>
-                </p>
-              ) : (
-                <p className="text-[1.0625rem] leading-snug text-sol-ink">
-                  {t("rm.rail.captured", { n: week.evidenceCount })}
-                </p>
-              )}
-              <LinkButton
-                to="/dashboard/proof"
-                search={{ opportunity: opportunityId }}
-                variant="secondary"
-                size="sm"
-                className="self-start"
-              >
-                {t("cc.c.openProof")}
-              </LinkButton>
-            </Card>
             {detail.mistakes(week.mistakes).length > 0 && (
-              <Card className="flex flex-col gap-3 p-6" data-testid="week-avoid">
-                <h3 className="sol-eyebrow">{t("rm.rail.avoid")}</h3>
-                <ul className="flex flex-col gap-2.5">
+              <section className="flex flex-col gap-3 p-5" data-testid="week-avoid">
+                <h3 className="sol-eyebrow !text-[0.6875rem]">{t("rm.rail.avoid")}</h3>
+                <ul className="flex flex-col gap-2">
                   {detail.mistakes(week.mistakes).map((m) => (
-                    <li key={m} className="flex gap-3 text-[1.0625rem] leading-snug text-sol-ink">
+                    <li key={m} className="flex gap-2.5 text-[0.9375rem] leading-snug text-sol-ink">
                       <span
-                        className="mt-2 size-1.5 shrink-0 rounded-full bg-sol-warning"
+                        className="mt-[0.5rem] size-1.5 shrink-0 rounded-full bg-sol-warning"
                         aria-hidden="true"
                       />
                       {m}
                     </li>
                   ))}
                 </ul>
-              </Card>
+              </section>
             )}
-          </>
+          </div>
         )}
-        <Card className="flex flex-col gap-3 p-6">
-          <h3 className="sol-eyebrow">{t("askSol.title")}</h3>
-          <Button
-            variant="soft"
-            size="sm"
-            className="self-start"
-            onClick={() => askSol.open()}
-            data-testid="rail-ask-sol"
-          >
-            {t("askSol.open")}
-          </Button>
-        </Card>
       </aside>
 
       {isCurrent && week.state === "ready_to_close" && (

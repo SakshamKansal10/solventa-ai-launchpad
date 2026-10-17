@@ -143,6 +143,7 @@ export type GeminiCallPurpose =
   | "PROOF_ASSUMPTIONS"
   | "EVIDENCE_INTERPRETATION"
   | "CONTENT_TRANSLATION"
+  | "OPPORTUNITY_IMAGE"
   | "LEGACY_FALLBACK";
 
 type ThinkingLevel = "minimal" | "low" | "medium" | "high";
@@ -578,4 +579,85 @@ export async function generateGrounded(
     .filter((s): s is GroundedSource => s !== null && s.uri !== "");
 
   return { text, sources };
+}
+
+export interface GeneratedImage {
+  mimeType: string;
+  data: Buffer;
+  model: string;
+}
+
+/**
+ * One image from the configured image model (GEMINI_IMAGE_MODEL). Reuses the
+ * shared client/key and the GEMINI_CALL cost log. Exactly one request, never
+ * retried here — image calls are the expensive ones, so a failure goes back to
+ * the caller (and, from there, to a user-triggered retry button).
+ */
+export async function generateImage(params: {
+  prompt: string;
+  route?: string;
+  aspectRatio?: string;
+}): Promise<GeneratedImage> {
+  const model = env.GEMINI_IMAGE_MODEL;
+  const requestId = crypto.randomUUID();
+  const startedAt = Date.now();
+  const route = params.route ?? "unknown";
+  try {
+    const response = await getClient().models.generateContent({
+      model,
+      contents: params.prompt,
+      config: {
+        responseModalities: ["IMAGE"],
+        imageConfig: { aspectRatio: params.aspectRatio ?? "16:9" },
+      },
+    });
+    const part = response.candidates?.[0]?.content?.parts?.find((p) => p.inlineData?.data);
+    const inline = part?.inlineData;
+    if (!inline?.data) {
+      logCallCost({
+        requestId,
+        purpose: "OPPORTUNITY_IMAGE",
+        route,
+        model,
+        thinkingLevel: "default",
+        attempt: 0,
+        durationMs: Date.now() - startedAt,
+        success: false,
+        usage: response.usageMetadata,
+        errorCategory: "GEMINI_EMPTY_RESPONSE",
+      });
+      throw new AIGenerationError("Image model returned no image.", "GEMINI_EMPTY_RESPONSE");
+    }
+    logCallCost({
+      requestId,
+      purpose: "OPPORTUNITY_IMAGE",
+      route,
+      model,
+      thinkingLevel: "default",
+      attempt: 0,
+      durationMs: Date.now() - startedAt,
+      success: true,
+      usage: response.usageMetadata,
+    });
+    return {
+      mimeType: inline.mimeType ?? "image/png",
+      data: Buffer.from(inline.data, "base64"),
+      model,
+    };
+  } catch (err) {
+    if (err instanceof AIGenerationError) throw err;
+    const category = classifyGeminiFailure(err);
+    logCallCost({
+      requestId,
+      purpose: "OPPORTUNITY_IMAGE",
+      route,
+      model,
+      thinkingLevel: "default",
+      attempt: 0,
+      durationMs: Date.now() - startedAt,
+      success: false,
+      errorCategory: category,
+    });
+    throw new AIGenerationError("Image generation failed.", category, err);
+  }
 }

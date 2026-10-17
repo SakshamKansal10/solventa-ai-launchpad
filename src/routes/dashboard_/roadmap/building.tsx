@@ -1,3 +1,4 @@
+import { Gem3D } from "@/components/founder/three/Gem3D";
 import { useEffect, useRef, useState } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -126,11 +127,11 @@ function BuildingPage() {
     timedOut;
 
   return (
-    <div className="flex min-h-dvh flex-col bg-sol-pearl text-sol-ink">
+    <div className="sol-world-bg flex min-h-dvh flex-col text-sol-ink">
       <header className="flex h-[72px] items-center justify-between px-5 sm:px-10">
         <Link to="/" className="flex items-center gap-3" aria-label={t("nav.homeAria")}>
           <img src={mark} alt="" width={298} height={436} className="h-9 w-auto" />
-          <span className="hidden font-wordmark text-[1.15rem] font-medium tracking-[0.14em] sm:block">
+          <span className="hidden font-display text-[1.25rem] font-semibold tracking-[0.2em] sm:block">
             SOLVENTIA
           </span>
         </Link>
@@ -171,7 +172,7 @@ function BuildingPage() {
             </div>
           ) : (
             <>
-              <Loader2 className="size-9 animate-spin text-sol-violet" aria-hidden="true" />
+              <Gem3D variant="island" className="h-40 w-40" />
               <h1 className="sol-h2">{t("rm.build.title")}</h1>
               <p
                 key={statusIndex}

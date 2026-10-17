@@ -13,4 +13,3 @@ export const FIT_ICONS: Record<FitRowKey, LucideIcon> = {
 };
 
 /** How many of the three pips are filled — fit is a level, never a number. */
-export const FIT_PIPS: Record<FitStatus, number> = { strong: 3, moderate: 2, conditional: 1 };

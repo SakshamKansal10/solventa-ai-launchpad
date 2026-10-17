@@ -240,11 +240,12 @@ export function EvidenceDialog({
     },
   });
 
+  const urlValid = !draft.url.trim() || /^https?:\/\//i.test(draft.url.trim());
   const valid =
     draft.assumptionId &&
     draft.summary.trim().length > 0 &&
     draft.summary.length <= 2000 &&
-    (!draft.url.trim() || /^https?:\/\//i.test(draft.url.trim()));
+    urlValid;
 
   function pickFile(f: File | null) {
     setFileError(null);
@@ -485,8 +486,15 @@ export function EvidenceDialog({
               className={input}
               placeholder="https://"
               value={draft.url}
+              aria-invalid={!urlValid}
+              aria-describedby={urlValid ? undefined : "ev-url-error"}
               onChange={(e) => setDraft({ ...draft, url: e.target.value })}
             />
+            {!urlValid && (
+              <p id="ev-url-error" role="alert" className="text-[0.875rem] text-sol-warning">
+                {t("pf.dialog.urlInvalid")}
+              </p>
+            )}
           </div>
 
           {!editing && (

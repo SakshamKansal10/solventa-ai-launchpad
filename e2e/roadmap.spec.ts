@@ -24,7 +24,9 @@ test.describe("building a roadmap", () => {
 
     await expect(page.getByTestId("tab-week")).toHaveAttribute("data-state", "active");
     await expect(page.getByTestId("north-star")).toBeVisible();
-    await expect(page.getByTestId("phase-strip").getByRole("listitem")).toHaveCount(5);
+    // The journey scene only ever shows the first 3 phases as mountain peaks;
+    // the rest stay reachable from the Plan tab and History.
+    await expect(page.getByTestId("phase-strip").getByRole("listitem")).toHaveCount(3);
     await expect(page.getByTestId("mission-card")).toHaveCount(3);
 
     const roadmaps = await sql<{ status: string }>(
@@ -220,7 +222,7 @@ test.describe("Plan and Progress", () => {
     context,
   }) => {
     await founderWithRoadmap(page, context);
-    await page.getByTestId("phase-4").click();
+    await page.getByTestId("phase-3").click();
     await expect(page.getByTestId("phase-preview")).toBeVisible();
     expect(await gemini.countOf("WEEK_DETAIL")).toBe(1);
   });

@@ -132,3 +132,24 @@ export const restoreDirection = createServerFn({ method: "POST" })
     await setActivePointer(supabase, user.id, opp.id);
     return { roadmapRestored };
   });
+
+/** Permanently removes an OLDER consultation and everything it produced
+ * (directions, roadmaps, proof — foreign keys cascade). The consultation the
+ * dashboard currently shows can never be deleted. The caller must have
+ * confirmed; this cannot be undone. */
+export const deleteConsultation = createServerFn({ method: "POST" })
+  .validator(z.object({ consultationId: z.string().uuid() }))
+  .handler(async ({ data }): Promise<{ deleted: true }> => {
+    const { supabase, user } = await requireUser();
+    const state = await loadFounderState(supabase, user.id, null);
+    if (state.direction.consultationId === data.consultationId) {
+      throw new Error("The current consultation can't be deleted");
+    }
+    const { error } = await supabase
+      .from("business_dna")
+      .delete()
+      .eq("id", data.consultationId)
+      .eq("user_id", user.id);
+    if (error) throw new Error(error.message);
+    return { deleted: true };
+  });

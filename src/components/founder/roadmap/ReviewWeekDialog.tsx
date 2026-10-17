@@ -97,10 +97,10 @@ export function ReviewWeekDialog({
         className="max-h-[92dvh] overflow-y-auto rounded-3xl border-sol-border bg-sol-surface p-6 sm:max-w-[560px] sm:p-8"
       >
         <DialogHeader>
-          <DialogTitle className="font-display text-[1.75rem] font-semibold text-sol-ink">
+          <DialogTitle className="font-display text-[1.6875rem] font-semibold text-sol-ink">
             {t("rm.review.title")}
           </DialogTitle>
-          <DialogDescription className="text-[1rem] text-sol-secondary">
+          <DialogDescription className="text-[0.9375rem] text-sol-secondary">
             {t("rm.review.body")}
           </DialogDescription>
         </DialogHeader>
@@ -113,7 +113,7 @@ export function ReviewWeekDialog({
           }}
         >
           <fieldset>
-            <legend className="text-[1.0625rem] font-semibold text-sol-ink">
+            <legend className="text-[1rem] font-semibold text-sol-ink">
               {t("rm.review.happened")}
             </legend>
             <div role="radiogroup" className="mt-3 grid gap-2 sm:grid-cols-2">
@@ -126,7 +126,7 @@ export function ReviewWeekDialog({
                   data-testid={`outcome-${o}`}
                   onClick={() => setOutcome(o)}
                   className={cn(
-                    "min-h-12 rounded-2xl border px-4 text-left text-[1rem] font-semibold transition-colors",
+                    "min-h-12 rounded-2xl border px-4 text-left text-[0.9375rem] font-semibold transition-colors",
                     outcome === o
                       ? "border-sol-violet bg-sol-violet-soft text-sol-violet-deep"
                       : "border-sol-border bg-sol-surface text-sol-ink hover:border-sol-violet/45",
@@ -139,7 +139,7 @@ export function ReviewWeekDialog({
           </fieldset>
 
           <fieldset>
-            <legend className="text-[1.0625rem] font-semibold text-sol-ink">
+            <legend className="text-[1rem] font-semibold text-sol-ink">
               {t("rm.review.blocker")}
             </legend>
             <div role="radiogroup" className="mt-3 flex flex-wrap gap-2">
@@ -152,7 +152,7 @@ export function ReviewWeekDialog({
                   data-testid={`blocker-${b}`}
                   onClick={() => setBlocker(blocker === b ? null : b)}
                   className={cn(
-                    "min-h-11 rounded-full border px-4 text-[1rem] font-medium transition-colors",
+                    "min-h-11 rounded-full border px-4 text-[0.9375rem] font-medium transition-colors",
                     blocker === b
                       ? "border-sol-violet bg-sol-violet-soft text-sol-violet-deep"
                       : "border-sol-border bg-sol-surface text-sol-ink hover:border-sol-violet/45",
@@ -165,9 +165,9 @@ export function ReviewWeekDialog({
           </fieldset>
 
           <div className="flex flex-col gap-1.5">
-            <label htmlFor="review-note" className="text-[1.0625rem] font-semibold text-sol-ink">
+            <label htmlFor="review-note" className="text-[1rem] font-semibold text-sol-ink">
               {t("rm.review.note")}{" "}
-              <span className="text-[0.9375rem] font-medium text-sol-secondary">
+              <span className="text-[0.875rem] font-medium text-sol-secondary">
                 ({t("common.optional")})
               </span>
             </label>
@@ -178,14 +178,14 @@ export function ReviewWeekDialog({
               maxLength={600}
               value={note}
               onChange={(e) => setNote(e.target.value)}
-              className="w-full rounded-2xl border border-sol-border bg-sol-surface px-4 py-3 text-[1rem] text-sol-ink focus-visible:border-sol-violet focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sol-violet/30"
+              className="w-full rounded-2xl border border-sol-border bg-sol-surface px-4 py-3 text-[0.9375rem] text-sol-ink focus-visible:border-sol-violet focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sol-violet/30"
             />
           </div>
 
           {close.isError && (
             <p
               role="alert"
-              className="rounded-2xl bg-sol-warning-soft px-4 py-3 text-[1rem] text-sol-ink"
+              className="rounded-2xl bg-sol-warning-soft px-4 py-3 text-[0.9375rem] text-sol-ink"
             >
               {t("rm.review.error")}
             </p>
@@ -210,7 +210,7 @@ export function ReviewWeekDialog({
             </Button>
           </div>
           {close.isPending && (
-            <p role="status" className="text-center text-[0.9375rem] text-sol-secondary">
+            <p role="status" className="text-center text-[0.875rem] text-sol-secondary">
               {t("rm.review.working")}
             </p>
           )}

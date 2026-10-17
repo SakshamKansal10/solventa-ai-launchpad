@@ -3,7 +3,8 @@ import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { z } from "zod";
 
-import { PhasePreview, PhaseStrip, PlanTab } from "@/components/founder/roadmap/PhaseViews";
+import { PlanTab } from "@/components/founder/roadmap/PhaseViews";
+import { RoadmapJourney } from "@/components/founder/roadmap/journey/RoadmapJourney";
 import { ProgressTab } from "@/components/founder/roadmap/ProgressTab";
 import { useRoadmapText } from "@/components/founder/roadmap/text";
 import { WeekTab } from "@/components/founder/roadmap/WeekTab";
@@ -21,7 +22,6 @@ import { getProofOverview } from "@/lib/actions/proof";
 import { getRoadmapView, type CloseWeekResult } from "@/lib/actions/roadmap";
 import { useLocale } from "@/lib/i18n/LocaleProvider";
 import { qk, useFounderState } from "@/lib/queries";
-import { useTranslatedTitle } from "@/lib/use-translation";
 
 const TABS = ["week", "plan", "progress"] as const;
 type Tab = (typeof TABS)[number];
@@ -154,7 +154,6 @@ function RoadmapWorkspace({
     view?.weeks.filter((w) => w.state === "completed").at(-1) ??
     null;
   const text = useRoadmapText(view, shownWeek);
-  const opportunityTitle = useTranslatedTitle(opportunityId, view?.roadmap.opportunityTitle);
 
   if (query.isPending) return <PageSkeleton label={t("shell.skeleton.loading")} />;
   if (query.isError || !view) {
@@ -190,62 +189,25 @@ function RoadmapWorkspace({
       data-testid="roadmap-page"
       data-roadmap-status={view.roadmap.status}
     >
-      <header className="flex flex-wrap items-end justify-between gap-6">
-        <div className="min-w-0">
-          <Eyebrow>{t("rm.subtitle")}</Eyebrow>
-          <h1 className="sol-page-title mt-2 max-w-[24ch]">{opportunityTitle}</h1>
-          {view.roadmap.northStar && (
-            <p className="sol-body sol-prose mt-3 text-sol-secondary" data-testid="north-star">
-              <span className="font-semibold text-sol-ink">{t("rm.northStar")}: </span>
-              {text.northStar(view.roadmap.northStar)}
-            </p>
-          )}
-        </div>
-        <dl
-          className="grid min-w-[16rem] max-w-[24rem] gap-4 rounded-2xl border border-sol-border bg-sol-surface px-5 py-4 sm:grid-cols-2"
-          data-testid="roadmap-now"
-        >
-          <div className="min-w-0">
-            <dt className="text-[0.875rem] font-bold uppercase tracking-[0.1em] text-sol-secondary">
-              {t("rm.header.current")}
-            </dt>
-            <dd
-              className="mt-1 text-[1.125rem] font-semibold leading-snug text-sol-ink"
-              data-testid="current-week-number"
-            >
-              {currentWeek && currentPhaseNumber
-                ? t("rm.header.currentValue", {
-                    phase: currentPhaseNumber,
-                    week: String(currentWeek.number).padStart(2, "0"),
-                  })
-                : "—"}
-            </dd>
-            <dd className="truncate text-[0.9375rem] text-sol-secondary">
-              {currentPhase ? text.phaseTitle(currentPhase.id, currentPhase.title) : ""}
-            </dd>
-          </div>
-          <div className="min-w-0" data-testid="next-checkpoint">
-            <dt className="text-[0.875rem] font-bold uppercase tracking-[0.1em] text-sol-secondary">
-              {t("rm.header.checkpoint")}
-            </dt>
-            <dd className="mt-1 text-[1.125rem] font-semibold leading-snug text-sol-ink">
-              {currentWeek ? t("rm.header.checkpointReview", { n: currentWeek.number }) : "—"}
-            </dd>
-            <dd className="line-clamp-2 text-[0.9375rem] text-sol-secondary">
-              {currentWeek
-                ? shownWeek?.id === currentWeek.id
-                  ? text.detail.successThreshold(currentWeek.successThreshold)
-                  : currentWeek.successThreshold
-                : ""}
-            </dd>
-          </div>
-        </dl>
-      </header>
+      <RoadmapJourney
+        view={view}
+        text={text}
+        selectedPhaseId={selectedPhase?.id ?? null}
+        northStar={text.northStar(view.roadmap.northStar)}
+        onSelectPhase={(id, week) =>
+          setSearch({ phase: id ?? undefined, week: id ? week : undefined, tab: "week" })
+        }
+        onOpenWeek={openWeek}
+      />
+
+      <div aria-hidden="true" className="-my-3 flex flex-col items-center">
+        <span className="h-6 w-px bg-gradient-to-b from-sol-violet/40 to-transparent" />
+      </div>
 
       {view.roadmap.status === "completed" && (
         <div
           role="status"
-          className="rounded-2xl border border-sol-champagne/60 bg-sol-champagne-soft px-5 py-4 text-[1.0625rem] text-sol-ink"
+          className="rounded-2xl border border-sol-champagne/60 bg-sol-champagne-soft px-5 py-4 text-[1rem] text-sol-ink"
         >
           <Pill tone="champagne" className="mr-2">
             {t("rm.state.completed")}
@@ -254,70 +216,61 @@ function RoadmapWorkspace({
         </div>
       )}
 
-      <Tabs value={tab} onValueChange={(next) => setSearch({ tab: next as Tab })}>
-        <TabsList
-          aria-label={t("rm.tabs.aria")}
-          className="h-auto w-full justify-start gap-1 rounded-2xl bg-sol-ivory p-1.5 sm:w-fit"
-        >
-          {TABS.map((key) => (
-            <TabsTrigger
-              key={key}
-              value={key}
-              data-testid={`tab-${key}`}
-              className="min-h-11 flex-1 rounded-xl px-2 text-[0.9375rem] font-semibold uppercase tracking-[0.02em] sm:px-6 sm:text-[1rem] sm:tracking-[0.05em] text-sol-secondary data-[state=active]:bg-sol-surface data-[state=active]:text-sol-violet-deep data-[state=active]:shadow-sm sm:flex-none"
-            >
-              {t(`rm.tab.${key}` as const)}
-            </TabsTrigger>
-          ))}
-        </TabsList>
+      {selectedPhase?.state === "future" ? (
+        <EmptyState
+          title={t("rm.state.locked")}
+          body={t("rm.phase.lockedBody", {
+            n: view.phases.findIndex((p) => p.id === selectedPhase.id),
+          })}
+        />
+      ) : (
+        <Tabs value={tab} onValueChange={(next) => setSearch({ tab: next as Tab })}>
+          <TabsList
+            aria-label={t("rm.tabs.aria")}
+            className="h-auto w-full justify-start gap-1 rounded-full border border-sol-border bg-sol-surface/80 p-1 shadow-sm backdrop-blur-sm sm:w-fit"
+          >
+            {TABS.map((key) => (
+              <TabsTrigger
+                key={key}
+                value={key}
+                data-testid={`tab-${key}`}
+                className="min-h-10 flex-1 rounded-full px-2 text-[0.875rem] font-medium text-sol-secondary transition-all duration-300 hover:text-sol-ink data-[state=active]:bg-gradient-to-b data-[state=active]:from-sol-violet-soft data-[state=active]:to-[#e7defc] data-[state=active]:text-sol-violet-deep data-[state=active]:shadow-[inset_0_0_0_1px_rgba(118,85,245,0.25)] sm:flex-none sm:px-6"
+              >
+                {t(`rm.tab.${key}` as const)}
+              </TabsTrigger>
+            ))}
+          </TabsList>
 
-        <div className="mt-6 flex flex-col gap-6">
-          <PhaseStrip
-            view={view}
-            text={text}
-            selectedId={selectedPhase?.id ?? null}
-            onSelect={(id) => setSearch({ phase: id ?? undefined })}
-          />
-          {selectedPhase && (
-            <PhasePreview
+          <TabsContent value="week" className="mt-10">
+            {shownWeek ? (
+              <WeekTab
+                key={shownWeek.id}
+                view={view}
+                week={shownWeek}
+                text={text}
+                opportunityId={opportunityId}
+                proof={proof.data}
+                isCurrent={shownWeek.id === view.currentWeekId}
+                nextWeekNumber={nextWeekNumber}
+                onWeekChanged={onWeekChanged}
+              />
+            ) : (
+              <EmptyState title={t("rm.empty.noWeek")} />
+            )}
+          </TabsContent>
+          <TabsContent value="plan" className="mt-8">
+            <PlanTab
               view={view}
-              phase={selectedPhase}
               text={text}
-              onClose={() => setSearch({ phase: undefined })}
+              openPhaseId={selectedPhase?.id ?? null}
               onOpenWeek={openWeek}
             />
-          )}
-        </div>
-
-        <TabsContent value="week" className="mt-8">
-          {shownWeek ? (
-            <WeekTab
-              key={shownWeek.id}
-              view={view}
-              week={shownWeek}
-              text={text}
-              opportunityId={opportunityId}
-              proof={proof.data}
-              isCurrent={shownWeek.id === view.currentWeekId}
-              nextWeekNumber={nextWeekNumber}
-              onWeekChanged={onWeekChanged}
-            />
-          ) : (
-            <EmptyState title={t("rm.empty.noWeek")} />
-          )}
-        </TabsContent>
-        <TabsContent value="plan" className="mt-8">
-          <PlanTab
-            view={view}
-            text={text}
-            openPhaseId={selectedPhase?.id ?? null}
-            onOpenWeek={openWeek}
-          />
-        </TabsContent>
-        <TabsContent value="progress" className="mt-8">
-          <ProgressTab view={view} text={text} proof={proof.data} opportunityId={opportunityId} />
-        </TabsContent>
-      </Tabs>
+          </TabsContent>
+          <TabsContent value="progress" className="mt-8">
+            <ProgressTab view={view} text={text} proof={proof.data} opportunityId={opportunityId} />
+          </TabsContent>
+        </Tabs>
+      )}
     </div>
   );
 }

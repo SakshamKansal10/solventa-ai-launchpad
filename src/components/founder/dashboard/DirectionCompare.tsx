@@ -11,7 +11,6 @@ import { useTranslatedBrief } from "@/lib/use-translation";
 import { cn } from "@/lib/utils";
 import { Card } from "../ui";
 import { FIT_ICONS, FIT_ORDER } from "./fit-constants";
-import { FitPips } from "./fit-visual";
 
 /** A cell's surface follows the fit level, so the grid reads as a heatmap before
  * a single label is read: gold = strong, violet = moderate, dashed = a gap. */
@@ -68,6 +67,7 @@ function Cell({
   label: string;
 }) {
   const reduceMotion = useReducedMotion();
+  const { t } = useLocale();
   if (loading) {
     return (
       <span
@@ -92,8 +92,9 @@ function Cell({
       animate={{ opacity: 1, scale: 1 }}
       transition={{ duration: 0.35, delay: 0.05 * order, ease: [0.22, 1, 0.36, 1] }}
     >
-      <FitPips status={status} pipClassName="w-4 sm:w-6" />
-      <span className="sr-only">{label}</span>
+      <span className="text-[0.8125rem] font-semibold">
+        {t(`fit.status.${status}` as MessageKey)}
+      </span>
     </motion.span>
   );
 }
@@ -108,7 +109,6 @@ function Legend() {
           key={s}
           className="flex items-center gap-2 text-[0.875rem] font-semibold text-sol-secondary"
         >
-          <FitPips status={s} pipClassName="h-2 w-4" />
           {t(`fit.status.${s}` as MessageKey)}
         </li>
       ))}

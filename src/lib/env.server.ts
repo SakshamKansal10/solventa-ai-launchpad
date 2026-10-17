@@ -9,6 +9,9 @@ const fieldSchemas = {
    * model name in a prompt file. Defaults to a stable Flash-class model
    * confirmed available on this project's free tier. */
   GEMINI_MODEL: z.string().min(1).default("gemini-3.6-flash"),
+  /** Image-generation model for contextual opportunity photos. Must be a
+   * model that supports image output (a text model cannot). */
+  GEMINI_IMAGE_MODEL: z.string().min(1).default("gemini-2.5-flash-image"),
   /** Test-only: route Gemini calls to a local fake. Never set in production. */
   GEMINI_API_BASE_URL: z.string().url().optional(),
   /** Optional secondary model tried exactly once, only when the primary
@@ -78,6 +81,9 @@ export const env = {
   },
   get GEMINI_MODEL() {
     return readField("GEMINI_MODEL");
+  },
+  get GEMINI_IMAGE_MODEL() {
+    return readField("GEMINI_IMAGE_MODEL");
   },
   get GEMINI_API_BASE_URL() {
     return readField("GEMINI_API_BASE_URL");
