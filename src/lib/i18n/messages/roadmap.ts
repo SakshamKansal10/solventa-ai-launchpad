@@ -1,5 +1,15 @@
 /** Roadmap: This Week / Plan / Progress, missions, week review, building page. */
 const en = {
+  "rm.journey.eyebrow": "Roadmap",
+  "rm.journey.title": "Your Journey",
+  "rm.journey.subtitle": "From idea to impact. Complete each phase step by step.",
+  "rm.journey.timeline": "Timeline",
+  "rm.journey.map": "Map",
+  "rm.journey.viewAria": "Journey view",
+  "rm.journey.sceneAria": "Roadmap journey with {n} phases",
+  "rm.journey.missionsDone": "{x} of {y} missions done",
+  "rm.journey.here": "You are here",
+  "rm.journey.upcoming": "Upcoming",
   "rm.subtitle": "Roadmap",
   "rm.week.prev": "Previous week",
   "rm.week.next": "Next week",
@@ -51,6 +61,7 @@ const en = {
   "rm.phases.aria": "Roadmap phases",
   "rm.phase.n": "Phase {n}",
   "rm.phase.progress": "{x} of {y} weeks",
+  "rm.phase.lockedBody": "Locked. Finish phase {n} to unlock this one.",
   "rm.phase.back": "Back to this week",
   "rm.phase.previewNote":
     "This is only a preview. Later weeks are written when you get there, from what you've learned.",
@@ -174,6 +185,16 @@ const en = {
 };
 
 const hi: Record<keyof typeof en, string> = {
+  "rm.journey.eyebrow": "रोडमैप",
+  "rm.journey.title": "आपकी यात्रा",
+  "rm.journey.subtitle": "आइडिया से असर तक। हर चरण को एक-एक करके पूरा करें।",
+  "rm.journey.timeline": "टाइमलाइन",
+  "rm.journey.map": "मानचित्र",
+  "rm.journey.viewAria": "यात्रा का दृश्य",
+  "rm.journey.sceneAria": "{n} चरणों वाली रोडमैप यात्रा",
+  "rm.journey.missionsDone": "{y} में से {x} मिशन पूरे",
+  "rm.journey.here": "आप यहाँ हैं",
+  "rm.journey.upcoming": "आगामी",
   "rm.subtitle": "रोडमैप",
   "rm.week.prev": "पिछला सप्ताह",
   "rm.week.next": "अगला सप्ताह",
@@ -223,6 +244,7 @@ const hi: Record<keyof typeof en, string> = {
   "rm.phases.aria": "रोडमैप के चरण",
   "rm.phase.n": "चरण {n}",
   "rm.phase.progress": "{y} में से {x} सप्ताह",
+  "rm.phase.lockedBody": "बंद। इसे खोलने के लिए चरण {n} पूरा करें।",
   "rm.phase.back": "इस सप्ताह पर लौटें",
   "rm.phase.previewNote":
     "यह केवल एक झलक है। आगे के सप्ताह तब लिखे जाते हैं जब आप वहां पहुंचते हैं, आपकी सीख के आधार पर।",

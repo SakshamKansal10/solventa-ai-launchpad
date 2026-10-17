@@ -4,7 +4,6 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { z } from "zod";
 import {
-  BarChart3,
   ChevronDown,
   Compass,
   Loader2,
@@ -21,6 +20,7 @@ import { AssumptionSheet } from "@/components/founder/proof/AssumptionSheet";
 import { formatDate, StateBadge } from "@/components/founder/proof/bits";
 import { EvidenceDialog } from "@/components/founder/proof/EvidenceDialog";
 import { EvidenceMap } from "@/components/founder/proof/EvidenceMap";
+import { PageHero } from "@/components/founder/proof/PageHero";
 import { EvidenceStream } from "@/components/founder/proof/EvidenceStream";
 import { useAskSol } from "@/components/founder/DashboardShell";
 import { ProgressRing } from "@/components/founder/dashboard/graphics";
@@ -30,7 +30,6 @@ import {
   EmptyState,
   ErrorPanel,
   LinkButton,
-  PageHeader,
   PageSkeleton,
   Pill,
   Skeleton,
@@ -99,7 +98,7 @@ function ProofPage() {
   if (!opportunityId) {
     return (
       <div className="flex flex-col gap-8">
-        <PageHeader title={t("pf.title")} subtitle={t("pf.subtitle")} />
+        <PageHero title={t("pf.title")} subtitle={t("pf.subtitle")} gem="seal" />
         <EmptyState
           title={t("pf.noDirection.title")}
           body={t("pf.noDirection.body")}
@@ -175,7 +174,7 @@ function ProofWorkspace({ opportunityId }: { opportunityId: string }) {
   if (!data.available) {
     return (
       <div className="flex flex-col gap-8">
-        <PageHeader title={t("pf.title")} subtitle={t("pf.subtitle")} />
+        <PageHero title={t("pf.title")} subtitle={t("pf.subtitle")} gem="seal" />
         <ErrorPanel title={t("pf.unavailable.title")} body={t("pf.unavailable.body")} />
       </div>
     );
@@ -211,9 +210,10 @@ function ProofWorkspace({ opportunityId }: { opportunityId: string }) {
 
   return (
     <div className="flex flex-col gap-8" data-testid="proof-page">
-      <PageHeader
+      <PageHero
         title={opportunityTitle ?? t("pf.title")}
         subtitle={t("pf.subtitle")}
+        gem="seal"
         action={
           assumptions.length > 0 ? (
             <Button size="lg" onClick={() => openAdd(null)} data-testid="add-evidence-global">
@@ -221,7 +221,22 @@ function ProofWorkspace({ opportunityId }: { opportunityId: string }) {
             </Button>
           ) : undefined
         }
-      />
+      >
+        {assumptions.length > 0 && (
+          <div
+            className="flex items-center gap-5 rounded-2xl border border-sol-border bg-white/70 px-5 py-3 backdrop-blur"
+            data-testid="evidence-collected"
+          >
+            <ProgressRing value={collected} total={assumptions.length} label={t("pf.collected")} />
+            <p className="text-[0.9375rem] text-sol-secondary">
+              <span className="block text-[1.5rem] font-medium leading-none text-sol-ink">
+                {assumptions.length - collected}
+              </span>
+              <span className="mt-1 block">{t("pf.moreToValidate")}</span>
+            </p>
+          </div>
+        )}
+      </PageHero>
 
       {generate.isPending || (needsGeneration && !generate.isError) ? (
         <div
@@ -284,12 +299,12 @@ function ProofWorkspace({ opportunityId }: { opportunityId: string }) {
                     <li key={a.id}>
                       <Card
                         as="article"
-                        className="flex flex-wrap items-center gap-x-4 gap-y-3 px-5 py-4"
+                        className="flex flex-wrap items-center gap-x-4 gap-y-3 border-sol-border px-5 py-4 shadow-none transition-colors hover:border-sol-violet/40"
                         data-testid="assumption-card"
                         data-state={a.state}
                       >
-                        <span className="flex size-14 shrink-0 items-center justify-center rounded-2xl bg-sol-violet-soft text-sol-violet-deep">
-                          <Icon className="size-6" strokeWidth={1.75} aria-hidden="true" />
+                        <span className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-sol-violet-soft text-sol-violet-deep">
+                          <Icon className="size-5" strokeWidth={1.75} aria-hidden="true" />
                         </span>
                         <div className="min-w-[14rem] flex-1">
                           <div className="flex flex-wrap items-center gap-2">
@@ -330,27 +345,6 @@ function ProofWorkspace({ opportunityId }: { opportunityId: string }) {
           </div>
 
           <aside className="flex min-w-0 flex-col gap-6" aria-label={t("pf.stream.title")}>
-            <Card className="flex flex-col gap-4 p-5" data-testid="evidence-collected">
-              <h2 className="sol-h-sm flex items-center gap-3 text-sol-ink">
-                <span className="flex size-9 items-center justify-center rounded-xl bg-sol-violet-soft text-sol-violet-deep">
-                  <BarChart3 className="size-[18px]" aria-hidden="true" />
-                </span>
-                {t("pf.collected")}
-              </h2>
-              <div className="flex items-center gap-5">
-                <ProgressRing
-                  value={collected}
-                  total={assumptions.length}
-                  label={t("pf.collected")}
-                />
-                <p className="text-[0.9375rem] text-sol-secondary">
-                  <span className="block text-[1.75rem] font-semibold leading-none text-sol-ink">
-                    {assumptions.length - collected}
-                  </span>
-                  <span className="mt-1 block">{t("pf.moreToValidate")}</span>
-                </p>
-              </div>
-            </Card>
             <EvidenceStream
               compact
               assumptions={assumptions}

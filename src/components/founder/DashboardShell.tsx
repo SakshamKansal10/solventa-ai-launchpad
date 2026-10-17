@@ -388,13 +388,14 @@ export function DashboardShell({ children }: { children: ReactNode }) {
           </header>
 
           <div
-            className="min-h-0 flex-1 overflow-y-auto overscroll-y-contain"
+            className="sol-shell-wash min-h-0 flex-1 overflow-y-auto overscroll-y-contain"
             data-testid="scroll-area"
           >
             <main
               id="main"
+              key={pathname}
               data-testid="main-content"
-              className="mx-auto w-full max-w-[1440px] px-6 pb-28 pt-8 md:px-10 lg:px-14 lg:pt-10"
+              className="sol-page-in mx-auto w-full max-w-[1440px] px-6 pb-28 pt-8 md:px-10 lg:px-14 lg:pt-10"
             >
               {children}
             </main>

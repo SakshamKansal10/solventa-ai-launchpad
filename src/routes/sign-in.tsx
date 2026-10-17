@@ -1,3 +1,4 @@
+import { Gem3D } from "@/components/founder/three/Gem3D";
 import { useState, type FormEvent } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
@@ -148,8 +149,9 @@ function SignInPage() {
   return (
     <div className="min-h-screen bg-sol-page">
       <Header />
-      <main className="flex min-h-screen items-center justify-center px-[18px] pt-[76px] sm:px-6">
-        <div className="w-full max-w-[400px] rounded-2xl border border-sol-border bg-sol-surface px-6 py-8 sm:px-8">
+      <main className="sol-world-bg flex min-h-screen flex-col items-center justify-center gap-2 px-[18px] pt-[76px] sm:px-6">
+        <Gem3D variant="crystal" className="h-36 w-36" />
+        <div className="w-full max-w-[400px] rounded-3xl border border-sol-border bg-sol-surface/90 px-6 py-8 shadow-[0_18px_50px_-28px_rgba(88,64,185,0.4)] backdrop-blur-sm sm:px-8">
           {mode === "otp" ? (
             <>
               <h1 className="font-display text-2xl font-semibold text-sol-ink">

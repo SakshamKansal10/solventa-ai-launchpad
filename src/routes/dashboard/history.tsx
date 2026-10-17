@@ -23,7 +23,6 @@ import {
   EmptyState,
   ErrorPanel,
   LinkButton,
-  PageHeader,
   PageSkeleton,
   Pill,
 } from "@/components/founder/ui";
@@ -37,12 +36,18 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { getDecisionHistory, restoreDirection, type HistoryEntry } from "@/lib/actions/history";
+import {
+  deleteConsultation,
+  getDecisionHistory,
+  restoreDirection,
+  type HistoryEntry,
+} from "@/lib/actions/history";
 import { formatMoney } from "@/lib/country-currency";
 import { statusIdFromEnglish } from "@/components/consultation/labels";
 import { useLocale } from "@/lib/i18n/LocaleProvider";
 import { qk, useFounderState, useInvalidateFounder } from "@/lib/queries";
 import { formatDate } from "@/components/founder/proof/bits";
+import { PageHero } from "@/components/founder/proof/PageHero";
 import { useTranslatedTitle } from "@/lib/use-translation";
 import { cn } from "@/lib/utils";
 
@@ -59,7 +64,7 @@ function TranslatedTitle({ id, title }: { id: string; title: string }) {
 }
 
 function HistoryPage() {
-  const { t } = useLocale();
+  const { t, locale } = useLocale();
   const query = useQuery({
     queryKey: qk.history,
     queryFn: () => getDecisionHistory(),
@@ -67,6 +72,7 @@ function HistoryPage() {
   });
   const founder = useFounderState();
   const [restoring, setRestoring] = useState<HistoryEntry | null>(null);
+  const [deleting, setDeleting] = useState<HistoryEntry | null>(null);
   const invalidate = useInvalidateFounder();
   const navigate = useNavigate();
   const restoringTitle = useTranslatedTitle(restoring?.selected?.id, restoring?.selected?.title);
@@ -91,15 +97,36 @@ function HistoryPage() {
     },
   });
 
+  const remove = useMutation({
+    mutationFn: (consultationId: string) => deleteConsultation({ data: { consultationId } }),
+    onSuccess: async () => {
+      await Promise.all([invalidate(), query.refetch()]);
+      toast.success(t("hist.deleted"));
+      setDeleting(null);
+    },
+    onError: (err) => {
+      console.error("[history] delete failed:", err);
+      toast.error(t("hist.deleteError"));
+    },
+  });
+
   if (query.isPending) return <PageSkeleton label={t("shell.skeleton.loading")} />;
   if (query.isError || !query.data) {
     return <ErrorPanel onRetry={() => void query.refetch()} retrying={query.isFetching} />;
   }
   const currentTitle = currentDirectionTitle;
+  const monthFmt = new Intl.DateTimeFormat(locale === "hi" ? "hi-IN" : "en-IN", {
+    month: "long",
+    year: "numeric",
+  });
+  const monthOf = (iso: string) => {
+    const d = new Date(iso);
+    return Number.isNaN(d.getTime()) ? "" : monthFmt.format(d);
+  };
 
   return (
     <div className="flex flex-col gap-8" data-testid="history-page">
-      <PageHeader title={t("hist.title")} subtitle={t("hist.subtitle")} />
+      <PageHero title={t("hist.title")} subtitle={t("hist.subtitle")} gem="trail" />
 
       {query.data.length === 0 ? (
         <EmptyState
@@ -116,28 +143,40 @@ function HistoryPage() {
           {/* The rail the consultations hang from, newest first. */}
           <span
             aria-hidden="true"
-            className="absolute bottom-8 left-5 top-8 w-0.5 rounded-full bg-gradient-to-b from-sol-violet/60 via-sol-border-strong to-sol-border"
+            className="absolute bottom-8 left-5 top-8 w-0.5 rounded-full bg-gradient-to-b from-sol-violet/50 via-sol-border-strong to-transparent"
           />
-          {query.data.map((entry) => (
-            <li key={entry.consultationId} className="relative pl-12 sm:pl-14">
-              <span
-                aria-hidden="true"
-                className={cn(
-                  "absolute left-0 top-6 flex size-10 items-center justify-center rounded-full border-2",
-                  entry.isCurrent
-                    ? "border-sol-violet bg-sol-violet text-white shadow-[0_6px_18px_rgba(112,88,215,0.3)]"
-                    : "border-sol-border-strong bg-sol-surface text-sol-secondary",
+          {query.data.map((entry, i) => {
+            const month = monthOf(entry.createdAt);
+            const showMonth = month && (i === 0 || monthOf(query.data[i - 1].createdAt) !== month);
+            return (
+              <li key={entry.consultationId} className="relative pl-12 sm:pl-14">
+                {showMonth && (
+                  <p className="mb-3 text-[0.875rem] font-medium text-sol-secondary">{month}</p>
                 )}
-              >
-                {entry.isCurrent ? (
-                  <Compass className="size-5" />
-                ) : (
-                  <HistoryIcon className="size-5" />
-                )}
-              </span>
-              <EntryCard entry={entry} onRestore={() => setRestoring(entry)} />
-            </li>
-          ))}
+                <span
+                  aria-hidden="true"
+                  className={cn(
+                    "absolute left-0 flex size-10 items-center justify-center rounded-full border",
+                    showMonth ? "top-14" : "top-6",
+                    entry.isCurrent
+                      ? "border-sol-violet bg-sol-violet text-white shadow-[0_6px_18px_rgba(112,88,215,0.3)]"
+                      : "border-sol-border-strong bg-sol-surface text-sol-secondary",
+                  )}
+                >
+                  {entry.isCurrent ? (
+                    <Compass className="size-5" />
+                  ) : (
+                    <HistoryIcon className="size-5" />
+                  )}
+                </span>
+                <EntryCard
+                  entry={entry}
+                  onRestore={() => setRestoring(entry)}
+                  onDelete={() => setDeleting(entry)}
+                />
+              </li>
+            );
+          })}
         </ol>
       )}
 
@@ -170,13 +209,46 @@ function HistoryPage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <AlertDialog
+        open={Boolean(deleting)}
+        onOpenChange={(open) => !open && !remove.isPending && setDeleting(null)}
+      >
+        <AlertDialogContent data-testid="delete-dialog">
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t("hist.deleteTitle")}</AlertDialogTitle>
+            <AlertDialogDescription>{t("hist.deleteBody")}</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={remove.isPending}>{t("common.cancel")}</AlertDialogCancel>
+            <AlertDialogAction
+              data-testid="confirm-delete"
+              disabled={remove.isPending}
+              onClick={(e) => {
+                e.preventDefault();
+                if (deleting) remove.mutate(deleting.consultationId);
+              }}
+            >
+              {remove.isPending ? t("common.saving") : t("hist.deleteConfirm")}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
 
 /** One consultation as a small flow: what was found → what was chosen → where the
  * roadmap stands, so the history reads as a path rather than a table of text. */
-function EntryCard({ entry, onRestore }: { entry: HistoryEntry; onRestore: () => void }) {
+function EntryCard({
+  entry,
+  onRestore,
+  onDelete,
+}: {
+  entry: HistoryEntry;
+  onRestore: () => void;
+  onDelete: () => void;
+}) {
   const { t, td, locale } = useLocale();
   const p = entry.profile;
   const statusId = p.status ? statusIdFromEnglish(p.status) : null;
@@ -219,7 +291,7 @@ function EntryCard({ entry, onRestore }: { entry: HistoryEntry; onRestore: () =>
   return (
     <Card
       as="article"
-      className="flex flex-col gap-5 p-5 sm:p-7"
+      className="flex flex-col gap-5 border-sol-border p-5 shadow-none sm:p-7"
       data-testid="history-entry"
       data-current={entry.isCurrent}
     >
@@ -313,6 +385,11 @@ function EntryCard({ entry, onRestore }: { entry: HistoryEntry; onRestore: () =>
         {entry.canRestore && (
           <Button variant="soft" onClick={onRestore} data-testid="history-restore">
             {t("hist.restore")}
+          </Button>
+        )}
+        {!entry.isCurrent && (
+          <Button variant="danger" onClick={onDelete} data-testid="history-delete">
+            {t("hist.delete")}
           </Button>
         )}
       </div>

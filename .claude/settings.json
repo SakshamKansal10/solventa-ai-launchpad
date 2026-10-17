@@ -1,0 +1,25 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(cd /Users/anushkashah744/solventa-ai-launchpad-1/src/components/solventia && wc -l Hero.tsx FounderSignal.tsx OpportunityDemo.tsx HowItWorks.tsx AdaptiveRoadmap.tsx ProofDemo.tsx WhySolventia.tsx FinalCTA.tsx FAQ.tsx StoryConnector.tsx; grep -n \"<h2\" -A3 FounderSignal.tsx OpportunityDemo.tsx HowItWorks.tsx AdaptiveRoadmap.tsx ProofDemo.tsx WhySolventia.tsx FinalCTA.tsx | grep -E \"t\\\\\\(|\\\\{\" | head -30; sed -n 1,30p ../../routes/index.tsx | grep import)",
+      "Read(//Users/routes/**)",
+      "Bash(npx prettier *)",
+      "Bash(npx tsc *)",
+      "Bash(npx eslint *)",
+      "Bash(npm run *)",
+      "Bash(git status*)",
+      "Bash(git diff*)",
+      "Bash(git log*)"
+    ],
+    "deny": [
+      "Bash(git push*)",
+      "Bash(git reset --hard*)",
+      "Bash(git clean*)",
+      "Bash(git checkout -- *)",
+      "Bash(rm -rf *)",
+      "Bash(git rebase*)",
+      "Bash(git commit --amend*)"
+    ],
+    "defaultMode": "acceptEdits"
+  }
+}

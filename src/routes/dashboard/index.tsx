@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { useEffect, useState, type ReactNode } from "react";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { z } from "zod";
@@ -18,6 +18,7 @@ import {
   Map as MapIcon,
   Rocket,
   UserRound,
+  type LucideIcon,
 } from "lucide-react";
 
 import {
@@ -52,6 +53,7 @@ import {
   chooseDirection,
   getOpportunityDetail,
 } from "@/lib/actions/opportunities";
+import type { OpportunityBrief } from "@/lib/actions/founder";
 import { getProofOverview, type AssumptionDTO } from "@/lib/actions/proof";
 import { getRoadmapView, type RoadmapView } from "@/lib/actions/roadmap";
 import { useLocale } from "@/lib/i18n/LocaleProvider";
@@ -502,17 +504,12 @@ function NextMove({
     queryFn: () => getProofOverview({ data: { opportunityId } }),
     staleTime: 15_000,
   });
-  const detail = useQuery({
-    queryKey: qk.opportunity(opportunityId),
-    queryFn: () => getOpportunityDetail({ data: { id: opportunityId } }),
-    staleTime: 30_000,
-  });
   const view: RoadmapView | null | undefined = roadmap.data;
   const currentWeekId = view?.currentWeekId ?? null;
   const skeleton = useTranslatedEntity<SkeletonOverlay>("roadmap_skeleton", roadmapId);
   const weekDetail = useTranslatedEntity<WeekOverlay>("week_detail", currentWeekId);
-  const rawBrief = useFounderState().data?.briefs[opportunityId];
-  const briefForHero = useTranslatedBrief(rawBrief);
+  const founderState = useFounderState().data;
+  const rawBrief = founderState?.briefs[opportunityId];
   const rawOpportunityTitle = rawBrief?.title ?? "";
   const opportunityTitle = useTranslatedTitle(opportunityId, rawOpportunityTitle) ?? "";
 
@@ -534,18 +531,15 @@ function NextMove({
   }
 
   const week = view.weeks.find((w) => w.id === view.currentWeekId) ?? null;
-  const phase = view.phases.find((p) => p.id === view.currentPhaseId) ?? null;
   const mission =
     week?.missions.find((m) => m.state === "in_progress") ??
     week?.missions.find((m) => m.state === "not_started" && m.required) ??
     week?.missions.find((m) => m.state === "not_started") ??
     null;
-  const phaseTitle = skeleton.data?.phases?.[phase?.id ?? ""]?.title ?? phase?.title;
   const missionTitle = weekDetail.data?.missions?.[mission?.id ?? ""]?.title ?? mission?.title;
   const assumptions = proof.data?.assumptions ?? [];
   const weekMissions = week?.missions ?? [];
   const missionsDone = weekMissions.filter((m) => m.state === "completed").length;
-  const matrix = detail.data?.fit.matrix ?? null;
   const activity = [
     ...assumptions.flatMap((a) =>
       a.evidence.map((e) => ({
@@ -566,10 +560,18 @@ function NextMove({
     .sort((x, y) => y.at.localeCompare(x.at))
     .slice(0, 3);
 
+  const otherBriefs = (founderState?.direction.alternativeIds ?? []).flatMap((id) =>
+    founderState?.briefs[id] ? [founderState.briefs[id]] : [],
+  );
+  const weekCount = view.totals.weeks;
+  const weekProgress = weekMissions.length ? (missionsDone / weekMissions.length) * 100 : 0;
+  const journeyProgress = weekCount ? (view.totals.completedWeeks / weekCount) * 100 : 0;
+  const headline = mission && week?.state !== "generating_next" ? missionTitle : null;
+
   return (
     <>
       <header className="flex flex-col gap-1" data-testid="dashboard-header">
-        <p className="min-h-[1.5rem] text-[1.0625rem] text-sol-secondary" data-testid="greeting">
+        <p className="min-h-[1.5rem] text-[1rem] text-sol-secondary" data-testid="greeting">
           {greeting}
         </p>
         <h1 className="sol-page-title">
@@ -580,165 +582,141 @@ function NextMove({
         )}
       </header>
 
-      {briefForHero && (
-        <IdeaHero
-          id={opportunityId}
-          title={briefForHero.title}
-          description={briefForHero.oneLiner || briefForHero.customer}
-          badge={<FitPill fit={briefForHero.fit} />}
-          aside={matrix ? <FitSignals rows={matrix.rows} layout="chips" /> : undefined}
-          actions={
-            <>
-              <LinkButton
-                to="/dashboard/roadmap"
-                search={week && mission ? { week: week.number, mission: mission.id } : {}}
-                variant="primary"
-                size="md"
-              >
-                {t("cc.hero.continue")}
-                <ArrowRight className="size-4" aria-hidden="true" />
-              </LinkButton>
-              <LinkButton to="/dashboard/roadmap" search={{}} variant="secondary" size="md">
-                {t("cc.hero.viewRoadmap")}
-              </LinkButton>
-            </>
-          }
-        />
-      )}
-
-      {week && !completed && (
-        <div className="grid gap-5 lg:grid-cols-[1.35fr_1fr_1fr]">
-          {mission && week.state !== "generating_next" ? (
-            <Card
-              className="border-sol-violet/20 bg-sol-violet-soft/50 p-6"
-              data-testid="todays-move"
-            >
-              <div key={mission.id} className="sol-reveal flex items-start gap-4">
-                <span className="flex size-14 shrink-0 items-center justify-center rounded-2xl bg-sol-violet-soft text-sol-violet-deep">
-                  <FileCheck2 className="size-6" strokeWidth={1.75} aria-hidden="true" />
-                </span>
-                <div className="min-w-0">
-                  <Pill tone="violet">{t("cc.focus.label")}</Pill>
-                  <h2 className="sol-h-sm mt-2 !text-[1.25rem]" data-testid="current-mission">
-                    {missionTitle}
-                  </h2>
-                  {mission.timeEstimate && (
-                    <p className="mt-2 inline-flex items-center gap-1.5 text-[0.9375rem] text-sol-secondary">
-                      <Clock3 className="size-4" aria-hidden="true" />
-                      {mission.timeEstimate}
-                    </p>
-                  )}
-                  <div>
-                    <LinkButton
-                      to="/dashboard/roadmap"
-                      search={{ week: week.number, mission: mission.id }}
-                      variant="primary"
-                      size="md"
-                      className="mt-4"
-                      data-testid="start-mission"
-                    >
-                      {mission.state === "not_started"
-                        ? t("rm.mission.start")
-                        : t("cc.c.continueMission")}
-                      <ArrowRight className="size-4" aria-hidden="true" />
-                    </LinkButton>
-                  </div>
-                </div>
-              </div>
-            </Card>
-          ) : (
-            <Card
-              className="flex flex-col items-start justify-center gap-4 p-6"
-              data-testid="week-wrap"
-            >
-              {week.state === "generating_next" ? (
-                <p className="flex items-center gap-3 text-[1.25rem] text-sol-ink" role="status">
-                  <Loader2 className="size-6 animate-spin text-sol-violet" aria-hidden="true" />
-                  {t("rm.gen.preparingShort")}
-                </p>
-              ) : (
-                <>
-                  <span className="flex size-12 items-center justify-center rounded-full bg-sol-champagne text-sol-ink">
-                    <Check className="size-6" strokeWidth={3} aria-hidden="true" />
-                  </span>
-                  <h2 className="sol-h-sm !text-[1.25rem]">{t("rm.week.readyToClose")}</h2>
+      <section
+        className="sol-atmosphere p-6 sm:p-8"
+        data-testid={week && !completed && !mission ? "week-wrap" : "todays-move"}
+      >
+        <div className="relative z-10 flex flex-col gap-6 sm:min-h-[13rem] sm:pr-72 lg:pr-88">
+          {opportunityTitle && (
+            <p className="text-[0.9375rem] text-sol-secondary">
+              {t("cc.hero.label")}
+              <span className="mx-2 text-sol-champagne-deep" aria-hidden="true">
+                ·
+              </span>
+              <span className="font-medium text-sol-ink">{opportunityTitle}</span>
+            </p>
+          )}
+          {week && !completed ? (
+            headline ? (
+              <div key={mission!.id} className="sol-reveal flex flex-col items-start gap-3">
+                <Pill tone="violet">{t("cc.focus.label")}</Pill>
+                <h2 className="sol-h-sm max-w-xl !text-[1.5rem]" data-testid="current-mission">
+                  {headline}
+                </h2>
+                {mission!.timeEstimate && (
+                  <p className="inline-flex items-center gap-1.5 text-[0.9375rem] text-sol-secondary">
+                    <Clock3 className="size-4" aria-hidden="true" />
+                    {mission!.timeEstimate}
+                  </p>
+                )}
+                <div className="mt-1 flex flex-wrap gap-3">
                   <LinkButton
                     to="/dashboard/roadmap"
-                    search={{ week: week.number }}
+                    search={{ week: week.number, mission: mission!.id }}
+                    variant="primary"
                     size="md"
-                    data-testid="review-from-dashboard"
+                    data-testid="start-mission"
                   >
-                    {t("rm.week.review")}
-                    <ArrowRight className="size-4" aria-hidden="true" />
+                    {mission!.state === "not_started"
+                      ? t("rm.mission.start")
+                      : t("cc.c.continueMission")}
+                    <ArrowRight className="size-4 text-sol-champagne" aria-hidden="true" />
                   </LinkButton>
-                </>
-              )}
-            </Card>
-          )}
-
-          <Card className="flex items-start gap-4 p-6" data-testid="business-pulse">
-            <span className="flex size-14 shrink-0 items-center justify-center rounded-2xl bg-sol-champagne-soft text-sol-champagne-deep">
-              <CalendarDays className="size-6" strokeWidth={1.75} aria-hidden="true" />
-            </span>
-            <div className="min-w-0 flex-1">
-              <p className="text-[0.9375rem] text-sol-secondary">{t("cc.week.heading")}</p>
-              <p className="mt-2 text-[1.25rem] font-medium text-sol-ink">
-                {t("common.weekN", { n: String(week.number).padStart(2, "0") })}
-              </p>
-              <div
-                className="mt-3 h-2 overflow-hidden rounded-full bg-sol-ivory-depth"
-                role="progressbar"
-                aria-valuemin={0}
-                aria-valuemax={weekMissions.length}
-                aria-valuenow={missionsDone}
-                aria-label={t("cc.ring.missions")}
-              >
-                <span
-                  className="block h-full rounded-full bg-sol-violet transition-[width] duration-300"
-                  style={{
-                    width: `${weekMissions.length ? (missionsDone / weekMissions.length) * 100 : 0}%`,
-                  }}
-                />
+                  <LinkButton to="/dashboard/roadmap" search={{}} variant="secondary" size="md">
+                    {t("cc.hero.viewRoadmap")}
+                  </LinkButton>
+                </div>
               </div>
-              <p className="mt-3 text-[0.9375rem] text-sol-secondary">
-                {t("cc.week.missionsOf", { x: missionsDone, y: weekMissions.length })}
+            ) : week.state === "generating_next" ? (
+              <p className="flex items-center gap-3 text-[1.25rem] text-sol-ink" role="status">
+                <Loader2 className="size-6 animate-spin text-sol-violet" aria-hidden="true" />
+                {t("rm.gen.preparingShort")}
               </p>
+            ) : (
+              <div className="flex flex-col items-start gap-3">
+                <span className="flex size-11 items-center justify-center rounded-full bg-sol-champagne text-sol-ink">
+                  <Check className="size-5" strokeWidth={3} aria-hidden="true" />
+                </span>
+                <h2 className="sol-h-sm !text-[1.5rem]">{t("rm.week.readyToClose")}</h2>
+                <LinkButton
+                  to="/dashboard/roadmap"
+                  search={{ week: week.number }}
+                  size="md"
+                  data-testid="review-from-dashboard"
+                >
+                  {t("rm.week.review")}
+                  <ArrowRight className="size-4 text-sol-champagne" aria-hidden="true" />
+                </LinkButton>
+              </div>
+            )
+          ) : (
+            <div className="flex flex-wrap gap-3">
+              <LinkButton to="/dashboard/roadmap" search={{}} variant="primary" size="md">
+                {t("cc.hero.viewRoadmap")}
+                <ArrowRight className="size-4 text-sol-champagne" aria-hidden="true" />
+              </LinkButton>
+              <LinkButton
+                to="/dashboard/proof"
+                search={{ opportunity: opportunityId }}
+                size="md"
+                variant="secondary"
+              >
+                {t("cc.c.openProof")}
+              </LinkButton>
             </div>
-          </Card>
+          )}
+        </div>
+      </section>
 
-          <Card className="flex items-start gap-4 p-6" data-testid="surface-evidence">
-            <span className="flex size-14 shrink-0 items-center justify-center rounded-2xl bg-sol-champagne-soft text-sol-champagne-deep">
-              <Database className="size-6" strokeWidth={1.75} aria-hidden="true" />
-            </span>
-            <div className="min-w-0 flex-1">
-              <p className="text-[0.9375rem] text-sol-secondary">{t("cc.surface.evidence")}</p>
-              <p className="mt-2 text-[1.25rem] font-medium text-sol-ink">
-                {t("rm.rail.captured", { n: view.totals.evidence })}
-              </p>
+      {week && (
+        <div className="grid gap-4 sm:grid-cols-3">
+          <MetricTile
+            testId="business-pulse"
+            icon={CalendarDays}
+            label={t("cc.week.heading")}
+            value={t("common.weekN", { n: String(week.number).padStart(2, "0") })}
+            note={t("cc.week.missionsOf", { x: missionsDone, y: weekMissions.length })}
+            progress={weekProgress}
+            progressLabel={t("cc.ring.missions")}
+          />
+          <MetricTile
+            icon={MapIcon}
+            label={t("cc.c.roadmap")}
+            value={t("cc.c.weekOf", { x: week.number, y: weekCount })}
+            note={t("cc.mini.heading")}
+            progress={journeyProgress}
+            progressLabel={t("cc.c.roadmap")}
+          />
+          <MetricTile
+            testId="surface-evidence"
+            icon={Database}
+            label={t("cc.surface.evidence")}
+            value={t("rm.rail.captured", { n: view.totals.evidence })}
+            action={
               <LinkButton
                 to="/dashboard/proof"
                 search={{ opportunity: opportunityId, add: true }}
                 variant="ghost"
                 size="sm"
-                className="-ml-3 mt-3 text-sol-violet-deep"
+                className="-ml-3 text-sol-violet-deep"
               >
                 {t("pf.addEvidence")}
                 <ArrowRight className="size-4" aria-hidden="true" />
               </LinkButton>
-            </div>
-          </Card>
+            }
+          />
         </div>
       )}
 
       <Card className="flex flex-col gap-6 p-6" data-testid="mini-roadmap">
         <div className="flex items-center justify-between gap-3">
-          <h2 className="sol-h-sm flex items-center gap-3">
-            <span className="flex size-10 items-center justify-center rounded-xl bg-sol-violet-soft text-sol-violet-deep">
-              <MapIcon className="size-5" aria-hidden="true" />
-            </span>
-            {t("cc.mini.heading")}
-          </h2>
-          <LinkButton to="/dashboard/roadmap" variant="secondary" size="sm">
+          <h2 className="sol-h-sm">{t("cc.mini.heading")}</h2>
+          <LinkButton
+            to="/dashboard/roadmap"
+            variant="ghost"
+            size="sm"
+            className="text-sol-violet-deep"
+          >
             {t("cc.mini.openFull")}
             <ArrowRight className="size-4" aria-hidden="true" />
           </LinkButton>
@@ -771,7 +749,7 @@ function NextMove({
                       done
                         ? "border-sol-champagne bg-sol-champagne text-sol-ink"
                         : current
-                          ? "border-sol-violet bg-sol-violet text-white"
+                          ? "border-sol-violet bg-sol-violet text-white shadow-[0_0_0_5px_rgba(155,130,255,0.18)]"
                           : "border-sol-border-strong bg-sol-surface text-sol-secondary",
                     )}
                   >
@@ -790,15 +768,10 @@ function NextMove({
         </ol>
       </Card>
 
-      <div className="grid gap-5">
+      <div className={cn("grid gap-5", otherBriefs.length > 0 && "lg:grid-cols-2")}>
         <Card className="flex flex-col gap-5 p-6" data-testid="recent-changes">
           <div className="flex items-center justify-between gap-3">
-            <h2 className="sol-h-sm flex items-center gap-3">
-              <span className="flex size-10 items-center justify-center rounded-xl bg-sol-violet-soft text-sol-violet-deep">
-                <History className="size-5" aria-hidden="true" />
-              </span>
-              {t("cc.activity.heading")}
-            </h2>
+            <h2 className="sol-h-sm">{t("cc.activity.heading")}</h2>
             <LinkButton
               to="/dashboard/proof"
               search={{ opportunity: opportunityId }}
@@ -841,7 +814,94 @@ function NextMove({
             </ol>
           )}
         </Card>
+
+        {otherBriefs.length > 0 && (
+          <Card className="flex flex-col gap-4 p-6" data-testid="other-directions">
+            <div className="flex items-center justify-between gap-3">
+              <h2 className="sol-h-sm">{t("cc.alternatives")}</h2>
+              <LinkButton
+                to="/dashboard/opportunities"
+                variant="ghost"
+                size="sm"
+                className="text-sol-violet-deep"
+              >
+                {t("cc.viewAll")}
+                <ArrowRight className="size-4" aria-hidden="true" />
+              </LinkButton>
+            </div>
+            <ul className="flex flex-col gap-2">
+              {otherBriefs.slice(0, 3).map((b) => (
+                <OpportunityRow key={b.id} brief={b} />
+              ))}
+            </ul>
+          </Card>
+        )}
       </div>
     </>
+  );
+}
+
+function OpportunityRow({ brief }: { brief: OpportunityBrief }) {
+  const translated = useTranslatedBrief(brief) ?? brief;
+  return (
+    <li>
+      <Link
+        to="/dashboard/opportunities/$id"
+        params={{ id: brief.id }}
+        className="flex items-center justify-between gap-3 rounded-xl border border-sol-border px-4 py-3 transition-colors hover:border-sol-violet/40 hover:bg-sol-violet-soft/40"
+      >
+        <span className="min-w-0 flex-1 truncate text-[1rem] font-medium text-sol-ink">
+          {translated.title}
+        </span>
+        <FitPill fit={brief.fit} />
+      </Link>
+    </li>
+  );
+}
+
+function MetricTile({
+  icon: Icon,
+  label,
+  value,
+  note,
+  progress,
+  progressLabel,
+  action,
+  testId,
+}: {
+  icon: LucideIcon;
+  label: string;
+  value: string;
+  note?: string;
+  progress?: number;
+  progressLabel?: string;
+  action?: ReactNode;
+  testId?: string;
+}) {
+  return (
+    <Card className="flex flex-col gap-2 p-5" data-testid={testId}>
+      <div className="flex items-center gap-2 text-[0.9375rem] text-sol-secondary">
+        <Icon className="size-4 text-sol-violet-deep" strokeWidth={1.75} aria-hidden="true" />
+        {label}
+      </div>
+      <p className="text-[1.375rem] font-medium text-sol-ink">{value}</p>
+      {progress !== undefined && (
+        <div
+          className="h-1.5 overflow-hidden rounded-full bg-sol-ivory-depth"
+          role="progressbar"
+          aria-valuemin={0}
+          aria-valuemax={100}
+          aria-valuenow={Math.round(progress)}
+          aria-label={progressLabel}
+        >
+          <span
+            className="block h-full rounded-full bg-sol-violet transition-[width] duration-300"
+            style={{ width: `${progress}%` }}
+          />
+        </div>
+      )}
+      {note && <p className="text-[0.875rem] text-sol-secondary">{note}</p>}
+      {action}
+    </Card>
   );
 }

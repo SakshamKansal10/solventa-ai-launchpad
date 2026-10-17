@@ -182,14 +182,22 @@ const en = {
 
   // ── Opportunities: list ────────────────────────────────────────────────
   "opp.list.title": "Opportunities",
-  "opp.list.heroTitle": "Find your next big idea.",
-  "opp.list.heroSubtitle": "Opportunities matched to your interests.",
   "opp.list.imageAlt": "A founder's desk with a laptop, notebook and plants",
   "opp.list.subtitle": "Every direction Solventia found for you, and the one you chose.",
   "opp.list.selected": "Selected",
   "opp.list.alternatives": "Alternatives",
   "opp.list.previous": "Previous consultations",
   "opp.list.previousSub": "Ideas you have explored earlier.",
+  "opp.list.search": "Search opportunities",
+  "opp.list.searchPlaceholder": "Search by name or description",
+  "opp.list.filterAll": "All fits",
+  "opp.list.filterAria": "Filter by fit",
+  "opp.list.noMatch": "No opportunities match your search.",
+  "opp.list.featured": "Your chosen direction",
+  "opp.detail.eyebrow": "Opportunity",
+  "opp.ov.groupWhy": "Why it matters",
+  "opp.ov.groupWhat": "What you would build",
+  "opp.ov.groupNext": "How to start and grow",
   "opp.status.consulted": "Consulted",
   "opp.revisit": "Revisit",
   "opp.status.selected": "Selected",
@@ -386,6 +394,13 @@ const en = {
   "hist.restoreConfirm": "Restore direction",
   "hist.restored": "Direction restored.",
   "hist.restoreError": "We couldn't restore that direction. Please try again.",
+  "hist.delete": "Delete",
+  "hist.deleteTitle": "Delete this consultation?",
+  "hist.deleteBody":
+    "This permanently removes the consultation, its directions, roadmap and proof. This can't be undone.",
+  "hist.deleteConfirm": "Delete permanently",
+  "hist.deleted": "Consultation deleted.",
+  "hist.deleteError": "We couldn't delete that consultation. Please try again.",
 };
 
 const hi: Record<keyof typeof en, string> = {
@@ -564,14 +579,22 @@ const hi: Record<keyof typeof en, string> = {
   "cc.earlier.history": "इतिहास देखें",
 
   "opp.list.title": "अवसर",
-  "opp.list.heroTitle": "अपना अगला बड़ा विचार खोजें।",
-  "opp.list.heroSubtitle": "आपकी रुचियों से मेल खाते अवसर।",
   "opp.list.imageAlt": "लैपटॉप, नोटबुक और पौधों वाला एक संस्थापक का डेस्क",
   "opp.list.subtitle": "Solventia को आपके लिए जो भी दिशाएं मिलीं, और वह जो आपने चुनी।",
   "opp.list.selected": "चुनी हुई",
   "opp.list.alternatives": "विकल्प",
   "opp.list.previous": "पिछली कंसल्टेशन",
   "opp.list.previousSub": "वे आइडिया जो आप पहले देख चुके हैं।",
+  "opp.list.search": "अवसर खोजें",
+  "opp.list.searchPlaceholder": "नाम या विवरण से खोजें",
+  "opp.list.filterAll": "सभी मेल",
+  "opp.list.filterAria": "मेल के अनुसार फ़िल्टर करें",
+  "opp.list.noMatch": "आपकी खोज से कोई अवसर मेल नहीं खाता।",
+  "opp.list.featured": "आपकी चुनी हुई दिशा",
+  "opp.detail.eyebrow": "अवसर",
+  "opp.ov.groupWhy": "यह क्यों मायने रखता है",
+  "opp.ov.groupWhat": "आप क्या बनाएंगे",
+  "opp.ov.groupNext": "शुरू कैसे करें और बढ़ें कैसे",
   "opp.status.consulted": "देखा गया",
   "opp.revisit": "फिर देखें",
   "opp.status.selected": "चुनी हुई",
@@ -757,6 +780,13 @@ const hi: Record<keyof typeof en, string> = {
   "hist.restoreConfirm": "दिशा बहाल करें",
   "hist.restored": "दिशा बहाल हो गई।",
   "hist.restoreError": "वह दिशा बहाल नहीं कर पाए। कृपया फिर कोशिश करें।",
+  "hist.delete": "हटाएँ",
+  "hist.deleteTitle": "क्या यह परामर्श हटाएँ?",
+  "hist.deleteBody":
+    "यह परामर्श, उसकी दिशाएँ, रोडमैप और प्रमाण हमेशा के लिए हट जाएँगे। इसे वापस नहीं किया जा सकता।",
+  "hist.deleteConfirm": "हमेशा के लिए हटाएँ",
+  "hist.deleted": "परामर्श हटा दिया गया।",
+  "hist.deleteError": "वह परामर्श हटा नहीं पाए। कृपया फिर कोशिश करें।",
 };
 
 export default { en, hi };

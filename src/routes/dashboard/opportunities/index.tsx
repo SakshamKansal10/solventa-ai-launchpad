@@ -7,15 +7,15 @@ import {
   BookOpen,
   Check,
   Compass,
+  Search,
   FileText,
   PlayCircle,
   ShoppingCart,
   Smartphone,
   type LucideIcon,
 } from "lucide-react";
-import type { ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 
-import workspaceImage from "@/assets/hero-founder-workspace.png";
 import { cn } from "@/lib/utils";
 
 import { OpportunityPhoto, useOpportunityImage } from "@/components/founder/OpportunityImage";
@@ -30,7 +30,7 @@ import {
   Pill,
 } from "@/components/founder/ui";
 import type { OpportunityBrief } from "@/lib/actions/founder";
-import { chooseDirection, exploreMoreOpportunities } from "@/lib/actions/opportunities";
+import { chooseDirection } from "@/lib/actions/opportunities";
 import { useLocale } from "@/lib/i18n/LocaleProvider";
 import { useFounderState, useInvalidateFounder } from "@/lib/queries";
 import { useTranslatedBrief } from "@/lib/use-translation";
@@ -46,9 +46,9 @@ export const Route = createFileRoute("/dashboard/opportunities/")({
 
 type Section = "selected" | "alternative" | "previous";
 
-/** One opportunity: title, status, a two-line description, the four-row fit strip
- * (drawn from the same deterministic matrix as the opportunity page) and one
- * primary action. The selected one is highlighted in lavender. */
+/** One opportunity. The selected one is a featured hero with its photo; the
+ * alternatives are image cards: photo (only if one already exists), name, short
+ * description, fit, and the Open / Choose actions. */
 function OpportunityRow({
   brief: raw,
   section,
@@ -70,33 +70,55 @@ function OpportunityRow({
   // only show a thumbnail if one already exists — browsing never spends credits.
   const image = useOpportunityImage(raw.id, { generate: selected });
   const showThumb = selected ? !image.unavailable : image.url !== null && section === "alternative";
+
+  if (selected) {
+    return (
+      <article className="sol-atmosphere" data-testid="opp-selected" aria-label={brief.title}>
+        <div className="relative z-10 flex flex-col justify-center gap-4 p-6 sm:p-8">
+          <div className="flex flex-wrap items-center gap-2.5">
+            <p className="sol-eyebrow flex items-center gap-2 !text-[0.6875rem] !uppercase !tracking-[0.14em]">
+              <span className="h-3 w-0.5 rounded-full bg-sol-violet" aria-hidden="true" />
+              {t("opp.list.featured")}
+            </p>
+            <Pill tone="violet">{t("opp.status.selected")}</Pill>
+          </div>
+          <h3 className="max-w-[24ch] font-display text-[clamp(1.5rem,1.2rem+1.2vw,2.125rem)] font-medium leading-[1.12] text-sol-ink">
+            {brief.title}
+          </h3>
+          {description && (
+            <p className="line-clamp-3 max-w-[56ch] text-[0.9375rem] leading-snug text-sol-secondary">
+              {description}
+            </p>
+          )}
+          <div>
+            <LinkButton to="/dashboard/opportunities/$id" params={{ id: brief.id }} size="md">
+              {t("common.open")}
+              <ArrowRight className="size-4" aria-hidden="true" />
+            </LinkButton>
+          </div>
+        </div>
+      </article>
+    );
+  }
+
   return (
     <Card
       as="article"
-      className={cn(
-        "flex h-full flex-col gap-4 p-5 sm:p-6",
-        selected &&
-          "border-sol-violet/40 bg-sol-violet-ultralight sm:flex-row sm:items-center sm:justify-between sm:gap-8 sm:p-5",
-      )}
+      className="group flex h-full flex-col overflow-hidden p-0 transition-colors hover:border-sol-violet/40"
       data-testid={`opp-${section}`}
     >
       {showThumb && (
         <div
-          className={cn(
-            "shrink-0 overflow-hidden rounded-xl border border-sol-border",
-            selected ? "h-36 w-full sm:h-24 sm:w-40 sm:order-first" : "h-16 w-24 self-start",
-          )}
+          className="h-36 w-full overflow-hidden border-b border-sol-border"
           data-testid="opp-thumb"
         >
-          <OpportunityPhoto image={image} title={brief.title} compact={!selected} />
+          <OpportunityPhoto image={image} title={brief.title} compact />
         </div>
       )}
-      <div className="min-w-0 flex-1">
-        <div className="flex flex-wrap items-center gap-2.5">
-          <h3 className="sol-h3">{brief.title}</h3>
-          {selected ? (
-            <Pill tone="violet">{t("opp.status.selected")}</Pill>
-          ) : section === "previous" ? (
+      <div className="flex min-w-0 flex-1 flex-col gap-3 p-5">
+        <div className="flex items-start justify-between gap-3">
+          <h3 className="sol-h3 min-w-0">{brief.title}</h3>
+          {section === "previous" ? (
             <Pill tone="neutral">
               {brief.status === "dismissed" ? t("opp.status.dismissed") : t("opp.status.previous")}
             </Pill>
@@ -105,26 +127,26 @@ function OpportunityRow({
           )}
         </div>
         {description && (
-          <p className="mt-2 line-clamp-2 text-[0.9375rem] leading-snug text-sol-secondary">
+          <p className="line-clamp-3 text-[0.9375rem] leading-snug text-sol-secondary">
             {description}
           </p>
         )}
-      </div>
-      <div className={cn("flex shrink-0 flex-wrap gap-3", !selected && "mt-auto [&>*]:flex-1")}>
-        <LinkButton
-          to="/dashboard/opportunities/$id"
-          params={{ id: brief.id }}
-          variant={selected ? "primary" : "secondary"}
-          size="sm"
-        >
-          {t("common.open")}
-          <ArrowRight className="size-4" aria-hidden="true" />
-        </LinkButton>
-        {section === "alternative" && canChoose && onChoose && (
-          <Button variant="soft" size="sm" onClick={onChoose} loading={choosing}>
-            {t("cc.choose")}
-          </Button>
-        )}
+        <div className="mt-auto flex flex-wrap items-center gap-3 pt-2">
+          <LinkButton
+            to="/dashboard/opportunities/$id"
+            params={{ id: brief.id }}
+            variant="secondary"
+            size="sm"
+          >
+            {t("common.open")}
+            <ArrowRight className="size-4" aria-hidden="true" />
+          </LinkButton>
+          {section === "alternative" && canChoose && onChoose && (
+            <Button variant="soft" size="sm" onClick={onChoose} loading={choosing}>
+              {t("cc.choose")}
+            </Button>
+          )}
+        </div>
       </div>
     </Card>
   );
@@ -187,41 +209,13 @@ function PreviousCard({ brief: raw, index }: { brief: OpportunityBrief; index: n
   );
 }
 
-/** Compact hero: heading, subtitle, the explore action and one workspace photo that
- * fades into the page background. The photo is decorative, so it is hidden on small
- * screens and never pushes content below the fold. */
-function Hero({ action }: { action?: ReactNode }) {
-  const { t } = useLocale();
-  return (
-    <header className="relative overflow-hidden rounded-[1.25rem] border border-sol-border bg-gradient-to-br from-sol-violet-ultralight via-sol-pearl to-sol-ivory-light">
-      <div className="relative z-10 flex flex-col items-start gap-4 p-6 sm:py-8 sm:pl-8 md:max-w-[62%]">
-        <div>
-          <h1 className="sol-page-title sol-h-hero">{t("opp.list.heroTitle")}</h1>
-          <p className="mt-2 max-w-[48ch] text-[0.9375rem] leading-snug text-sol-secondary sm:text-[1rem]">
-            {t("opp.list.heroSubtitle")}
-          </p>
-        </div>
-        {action}
-      </div>
-      <div className="absolute inset-y-0 right-0 hidden w-[38%] md:block">
-        <img
-          src={workspaceImage}
-          alt={t("opp.list.imageAlt")}
-          loading="eager"
-          width={1774}
-          height={887}
-          className="size-full object-cover object-[70%_60%] opacity-95 [mask-image:linear-gradient(to_right,transparent,black_45%)]"
-        />
-      </div>
-    </header>
-  );
-}
-
 function OpportunitiesPage() {
   const { t, locale } = useLocale();
   const founder = useFounderState();
   const invalidate = useInvalidateFounder();
   const navigate = useNavigate();
+  const [query, setQuery] = useState("");
+  const [fitFilter, setFitFilter] = useState<OpportunityBrief["fit"] | "all">("all");
 
   const choose = useMutation({
     mutationFn: (opportunityId: string) => chooseDirection({ data: { opportunityId } }),
@@ -233,17 +227,6 @@ function OpportunitiesPage() {
     onError: (err) => {
       console.error("[opportunities] choose failed:", err);
       toast.error(t("cc.chosen.error"));
-    },
-  });
-  const explore = useMutation({
-    mutationFn: () => exploreMoreOpportunities({ data: { locale } }),
-    onSuccess: async (res) => {
-      await invalidate();
-      toast.success(t("cc.explore.done", { n: res.added }));
-    },
-    onError: (err) => {
-      console.error("[opportunities] explore more failed:", err);
-      toast.error(t("cc.explore.error"));
     },
   });
 
@@ -267,25 +250,22 @@ function OpportunitiesPage() {
     )
     .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
   const canChoose = direction.isLatestConsultation;
+  const q = query.trim().toLowerCase();
+  const textMatch = (b: OpportunityBrief) =>
+    q === "" || `${b.title} ${b.oneLiner ?? ""} ${b.customer ?? ""}`.toLowerCase().includes(q);
+  const shownAlternatives = alternatives.filter(
+    (b) => (fitFilter === "all" || b.fit === fitFilter) && textMatch(b),
+  );
+  const shownPrevious = previous.filter(textMatch);
+  const filtering = q !== "" || fitFilter !== "all";
+  const fitOptions = (["strong", "moderate", "conditional"] as const).filter((f) =>
+    alternatives.some((b) => b.fit === f),
+  );
+  const showToolbar = alternatives.length + previous.length > 2;
 
   return (
     <div className="flex flex-col gap-8" data-testid="opportunities-page">
-      <Hero
-        action={
-          canChoose && all.length > 0 ? (
-            <Button
-              variant="soft"
-              onClick={() => explore.mutate()}
-              loading={explore.isPending}
-              disabled={choose.isPending}
-              data-testid="explore-more"
-            >
-              <Compass className="size-5" aria-hidden="true" />
-              {t("cc.exploreMore")}
-            </Button>
-          ) : undefined
-        }
-      />
+      <h1 className="sr-only">{t("shell.nav.opportunities")}</h1>
 
       {all.length === 0 && (
         <EmptyState
@@ -300,26 +280,73 @@ function OpportunitiesPage() {
       )}
 
       {selected && (
-        <section aria-labelledby="sel-h" className="flex flex-col gap-3">
-          <h2 id="sel-h" className="sol-h-sm !text-[1.125rem]">
-            {t("opp.list.selected")}
-          </h2>
+        <section aria-label={t("opp.list.selected")} className="flex flex-col gap-3">
           <OpportunityRow brief={selected} section="selected" canChoose={false} />
         </section>
       )}
 
-      {alternatives.length > 0 && (
+      {showToolbar && (
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <label className="relative block w-full sm:max-w-sm">
+            <span className="sr-only">{t("opp.list.search")}</span>
+            <Search
+              className="pointer-events-none absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-sol-secondary"
+              aria-hidden="true"
+            />
+            <input
+              type="search"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder={t("opp.list.searchPlaceholder")}
+              data-testid="opp-search"
+              className="h-11 w-full rounded-full border border-sol-border bg-sol-surface pl-10 pr-4 text-[0.9375rem] text-sol-ink outline-none placeholder:text-sol-secondary/70 focus-visible:border-sol-violet/60 focus-visible:ring-2 focus-visible:ring-sol-violet/30"
+            />
+          </label>
+          {fitOptions.length > 1 && (
+            <div
+              role="group"
+              aria-label={t("opp.list.filterAria")}
+              className="flex flex-wrap gap-2"
+            >
+              {(["all", ...fitOptions] as const).map((f) => (
+                <button
+                  key={f}
+                  type="button"
+                  aria-pressed={fitFilter === f}
+                  onClick={() => setFitFilter(f)}
+                  className={cn(
+                    "min-h-9 cursor-pointer rounded-full border px-3.5 text-[0.8125rem] font-medium transition-colors",
+                    fitFilter === f
+                      ? "border-sol-violet/50 bg-sol-violet-soft text-sol-violet-deep"
+                      : "border-sol-border bg-sol-surface text-sol-secondary hover:border-sol-violet/40",
+                  )}
+                >
+                  {f === "all" ? t("opp.list.filterAll") : t(`fit.${f}` as const)}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {filtering && shownAlternatives.length === 0 && shownPrevious.length === 0 && (
+        <p className="text-[0.9375rem] text-sol-secondary" role="status">
+          {t("opp.list.noMatch")}
+        </p>
+      )}
+
+      {shownAlternatives.length > 0 && (
         <section aria-labelledby="alt-h" className="flex flex-col gap-4">
           <div className="flex items-center gap-3">
-            <h2 id="alt-h" className="sol-h-sm !text-[1.125rem]">
+            <h2 id="alt-h" className="sol-h-sm !text-[1.0625rem]">
               {t("opp.list.alternatives")}
             </h2>
-            <span className="rounded-full bg-sol-ivory px-3 py-0.5 text-[0.875rem] font-semibold text-sol-secondary">
-              {alternatives.length}
+            <span className="rounded-full bg-sol-ivory px-2.5 py-0.5 text-[0.8125rem] font-medium text-sol-secondary">
+              {shownAlternatives.length}
             </span>
           </div>
           <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
-            {alternatives.map((b) => (
+            {shownAlternatives.map((b) => (
               <OpportunityRow
                 key={b.id}
                 brief={b}
@@ -333,16 +360,16 @@ function OpportunitiesPage() {
         </section>
       )}
 
-      {previous.length > 0 && (
+      {shownPrevious.length > 0 && (
         <section aria-labelledby="prev-h" className="flex flex-col gap-4">
           <div className="flex items-start justify-between gap-3">
             <div>
               <div className="flex items-center gap-3">
-                <h2 id="prev-h" className="sol-h-sm !text-[1.375rem]">
+                <h2 id="prev-h" className="sol-h-sm !text-[1.0625rem]">
                   {t("opp.list.previous")}
                 </h2>
-                <span className="rounded-full bg-sol-violet-soft px-3 py-0.5 text-[0.9375rem] font-medium text-sol-violet-deep">
-                  {previous.length}
+                <span className="rounded-full bg-sol-violet-soft px-2.5 py-0.5 text-[0.8125rem] font-medium text-sol-violet-deep">
+                  {shownPrevious.length}
                 </span>
               </div>
               <p className="mt-1 text-[0.9375rem] text-sol-secondary">
@@ -360,7 +387,7 @@ function OpportunitiesPage() {
             </LinkButton>
           </div>
           <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
-            {previous.map((b, i) => (
+            {shownPrevious.map((b, i) => (
               <PreviousCard key={b.id} brief={b} index={i} />
             ))}
           </div>

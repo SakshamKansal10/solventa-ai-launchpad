@@ -17,7 +17,7 @@ test.describe("Opportunities", () => {
   }) => {
     await founderWithDirections(context);
     await gotoApp(page, "/dashboard/opportunities");
-    await expect(page.locator("h1")).toHaveText("Find your next big idea.");
+    await expect(page.locator("h1")).toHaveText("Opportunities");
     await expect(
       page.getByTestId("sidebar").getByRole("link", { name: "Opportunities" }),
     ).toBeVisible();

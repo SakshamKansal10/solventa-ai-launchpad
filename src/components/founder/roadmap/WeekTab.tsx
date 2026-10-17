@@ -11,7 +11,8 @@ import { qk, useInvalidateFounder } from "@/lib/queries";
 import type { MissionState } from "@/lib/roadmap/state";
 import { applyMissionState, type RoadmapView, type WeekDTO } from "@/lib/roadmap/view";
 import { ProgressRing } from "../dashboard/graphics";
-import { Button, Card, Eyebrow, Pill } from "../ui";
+import { cn } from "@/lib/utils";
+import { Button, Pill } from "../ui";
 import { MissionCard } from "./MissionCard";
 import { ReviewWeekDialog } from "./ReviewWeekDialog";
 import type { useRoadmapText } from "./text";
@@ -122,16 +123,28 @@ export function WeekTab({
   const assumptionFor = (category: string | null) =>
     proof?.assumptions.find((a) => a.category === category)?.id ?? proof?.assumptions[0]?.id;
 
+  const objective = text.weekObjective(week.id, week.objective);
+  const threshold = detail.successThreshold(week.successThreshold);
+  // Success criteria often arrive as one line of several outcomes; show them
+  // as separate lines only when the text really is a list.
+  const outcomes = threshold
+    ? threshold
+        .split(/;\s+|\n+/)
+        .map((x) => x.trim())
+        .filter(Boolean)
+    : [];
+  const pct = week.progress.total > 0 ? week.progress.completed / week.progress.total : 0;
+
   return (
     <div
-      className="grid gap-10 lg:grid-cols-[minmax(0,64fr)_minmax(0,36fr)]"
+      className="grid gap-x-10 gap-y-8 lg:grid-cols-[minmax(0,1fr)_21rem]"
       data-testid="week-tab"
       data-week-state={week.state}
     >
-      <div className="flex min-w-0 flex-col gap-8">
+      <div className="flex min-w-0 flex-col gap-7">
         <header>
           <div className="flex flex-wrap items-center gap-3">
-            <span className="text-[1rem] font-semibold text-sol-champagne-deep">
+            <span className="text-[0.9375rem] font-semibold text-sol-champagne-deep">
               {t("common.weekN", { n: pad })}
             </span>
             <Pill
@@ -145,13 +158,18 @@ export function WeekTab({
             >
               {t(`rm.state.${week.state}` as const)}
             </Pill>
-            <span className="ml-auto inline-flex overflow-hidden rounded-xl border border-sol-border bg-sol-surface">
+            {week.hasDetail && (
+              <span className="text-[0.8125rem] text-sol-secondary">
+                {t("rm.rail.missions", { x: week.progress.completed, y: week.progress.total })}
+              </span>
+            )}
+            <span className="ml-auto inline-flex overflow-hidden rounded-full border border-sol-border bg-sol-surface/90">
               <button
                 type="button"
                 aria-label={t("rm.week.prev")}
                 disabled={!prevWeek}
                 onClick={() => prevWeek && goWeek(prevWeek.number)}
-                className="grid size-10 place-items-center text-sol-ink transition-colors hover:bg-sol-ivory disabled:opacity-35"
+                className="grid size-10 place-items-center text-sol-ink transition-colors hover:bg-sol-violet-soft disabled:opacity-35"
               >
                 <ChevronLeft className="size-5" aria-hidden="true" />
               </button>
@@ -160,33 +178,42 @@ export function WeekTab({
                 aria-label={t("rm.week.next")}
                 disabled={!nextWeek}
                 onClick={() => nextWeek && goWeek(nextWeek.number)}
-                className="grid size-10 place-items-center border-l border-sol-border text-sol-ink transition-colors hover:bg-sol-ivory disabled:opacity-35"
+                className="grid size-10 place-items-center border-l border-sol-border text-sol-ink transition-colors hover:bg-sol-violet-soft disabled:opacity-35"
               >
                 <ChevronRight className="size-5" aria-hidden="true" />
               </button>
             </span>
           </div>
-          <h2 className="mt-3 max-w-[30ch] font-semibold text-sol-ink" data-testid="week-title">
+          <h2
+            className="mt-2 max-w-[34ch] !text-[1.625rem] font-semibold leading-tight text-sol-ink"
+            data-testid="week-title"
+          >
             {title}
           </h2>
+          {objective && (
+            <p className="mt-2 line-clamp-2 max-w-[62ch] text-[0.9375rem] leading-snug text-sol-secondary">
+              {objective}
+            </p>
+          )}
         </header>
 
         {detail.adaptationNote(week.adaptationNote) && (
           <div
-            className="rounded-2xl border border-sol-violet/25 bg-sol-violet-soft px-5 py-4"
+            className="border-l-2 border-sol-violet/50 bg-sol-violet-ultralight/70 py-3 pl-4 pr-3"
             data-testid="adaptation-note"
           >
-            <p className="text-[0.8125rem] font-bold uppercase tracking-[0.1em] text-sol-violet-deep">
-              {t("rm.adapted")}
-            </p>
-            <p className="mt-1 text-[1rem] leading-snug text-sol-ink">
+            <p className="sol-eyebrow !text-[0.6875rem] !text-sol-violet-deep">{t("rm.adapted")}</p>
+            <p className="mt-1 text-[0.9375rem] leading-snug text-sol-ink">
               {detail.adaptationNote(week.adaptationNote)}
             </p>
           </div>
         )}
 
         {week.state === "generating_next" ? (
-          <Card className="flex flex-col items-start gap-4 p-7" data-testid="week-generating">
+          <div
+            className="sol-atmosphere flex flex-col items-start gap-3 p-7"
+            data-testid="week-generating"
+          >
             {week.generationStatus === "failed" ? (
               <>
                 <p className="sol-h3">{t("rm.gen.failedTitle", { n: pad })}</p>
@@ -210,17 +237,17 @@ export function WeekTab({
                 </p>
               </>
             )}
-          </Card>
+          </div>
         ) : week.state === "locked" ? (
-          <Card className="p-7">
+          <div className="sol-atmosphere p-7">
             <p className="sol-h3">{t("rm.locked.title")}</p>
             <p className="sol-body sol-prose mt-2 text-sol-secondary">{t("rm.locked.body")}</p>
-          </Card>
+          </div>
         ) : (
           <>
             {week.state === "ready_to_close" && isCurrent && (
-              <Card
-                className="flex flex-col items-start gap-3 border-sol-champagne/60 bg-sol-champagne-soft/50 p-6"
+              <div
+                className="sol-complete-glow flex flex-col items-start gap-3 rounded-3xl border border-sol-champagne/60 bg-[linear-gradient(135deg,#fbf3e2_0%,#fffdfb_100%)] p-6"
                 data-testid="ready-to-close"
               >
                 <p className="sol-h3">{t("rm.week.readyToClose")}</p>
@@ -228,11 +255,11 @@ export function WeekTab({
                 <Button size="lg" onClick={() => setReview(true)} data-testid="review-week">
                   {t("rm.week.review")}
                 </Button>
-              </Card>
+              </div>
             )}
-            <ol className="flex flex-col gap-4" aria-label={t("rm.missions.aria")}>
+            <ol className="flex flex-col" aria-label={t("rm.missions.aria")}>
               {week.missions.map((m, i) => (
-                <li key={m.id}>
+                <li key={m.id} className="group/li pb-6 last:pb-0">
                   <MissionCard
                     mission={m}
                     index={i}
@@ -252,52 +279,83 @@ export function WeekTab({
         )}
       </div>
 
-      <aside
-        className="flex min-w-0 flex-col gap-6"
-        aria-label={t("rm.rail.aria")}
-        data-testid="week-rail"
-      >
+      <aside className="min-w-0 self-start" aria-label={t("rm.rail.aria")} data-testid="week-rail">
         {week.hasDetail && (
-          <>
-            <Card className="flex flex-col gap-4 p-6">
-              <h3 className="flex items-center gap-3 text-[1rem] font-semibold text-sol-ink">
-                <span className="flex size-9 items-center justify-center rounded-xl bg-sol-violet-soft text-sol-violet-deep">
-                  <TrendingUp className="size-[18px]" aria-hidden="true" />
-                </span>
+          <div className="flex flex-col divide-y divide-sol-border/70 rounded-3xl border border-sol-border bg-[linear-gradient(160deg,#fffdfb_0%,#f8f3fc_100%)] shadow-[0_16px_40px_-30px_rgba(88,64,185,0.45)]">
+            <section className="flex flex-col gap-4 p-5">
+              <h3 className="flex items-center gap-2.5 text-[0.9375rem] font-semibold text-sol-ink">
+                <TrendingUp className="size-4 text-sol-violet-deep" aria-hidden="true" />
                 {t("rm.rail.progress")}
               </h3>
               <ProgressSegments week={week} />
-            </Card>
-            {detail.successThreshold(week.successThreshold) && (
-              <Card className="flex flex-col gap-2 p-6" data-testid="success-threshold">
-                <h3 className="flex items-center gap-3 text-[1rem] font-semibold text-sol-ink">
-                  <span className="flex size-9 items-center justify-center rounded-xl bg-sol-warning-soft text-sol-warning">
-                    <Target className="size-[18px]" aria-hidden="true" />
-                  </span>
+              <ol className="flex items-center gap-1.5" aria-hidden="true">
+                {week.missions.map((m) => (
+                  <li
+                    key={m.id}
+                    className={cn(
+                      "h-1.5 flex-1 rounded-full transition-colors duration-500",
+                      m.state === "completed"
+                        ? "bg-sol-champagne"
+                        : m.state === "in_progress"
+                          ? "bg-sol-violet"
+                          : "bg-sol-violet/15",
+                    )}
+                  />
+                ))}
+              </ol>
+            </section>
+            {threshold && (
+              <section className="flex flex-col gap-3 p-5" data-testid="success-threshold">
+                <h3 className="flex items-center gap-2.5 text-[0.9375rem] font-semibold text-sol-ink">
+                  <Target className="size-4 text-sol-champagne-deep" aria-hidden="true" />
                   {t("rm.rail.threshold")}
                 </h3>
-                <p className="text-[1rem] leading-snug text-sol-ink">
-                  {detail.successThreshold(week.successThreshold)}
-                </p>
-              </Card>
+                {outcomes.length > 1 ? (
+                  <ul className="flex flex-col gap-2">
+                    {outcomes.map((o) => (
+                      <li
+                        key={o}
+                        className="flex gap-2.5 text-[0.9375rem] leading-snug text-sol-ink"
+                      >
+                        <span
+                          className="mt-[0.5rem] size-1.5 shrink-0 rounded-full bg-sol-champagne"
+                          aria-hidden="true"
+                        />
+                        {o}
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p className="text-[0.9375rem] leading-snug text-sol-ink">{threshold}</p>
+                )}
+                <div
+                  className="h-1 overflow-hidden rounded-full bg-sol-violet/10"
+                  aria-hidden="true"
+                >
+                  <div
+                    className="h-full rounded-full bg-gradient-to-r from-sol-violet to-sol-champagne transition-[width] duration-700 ease-out"
+                    style={{ width: `${Math.round(pct * 100)}%` }}
+                  />
+                </div>
+              </section>
             )}
             {detail.mistakes(week.mistakes).length > 0 && (
-              <Card className="flex flex-col gap-3 p-6" data-testid="week-avoid">
-                <h3 className="sol-eyebrow">{t("rm.rail.avoid")}</h3>
-                <ul className="flex flex-col gap-2.5">
+              <section className="flex flex-col gap-3 p-5" data-testid="week-avoid">
+                <h3 className="sol-eyebrow !text-[0.6875rem]">{t("rm.rail.avoid")}</h3>
+                <ul className="flex flex-col gap-2">
                   {detail.mistakes(week.mistakes).map((m) => (
-                    <li key={m} className="flex gap-3 text-[1rem] leading-snug text-sol-ink">
+                    <li key={m} className="flex gap-2.5 text-[0.9375rem] leading-snug text-sol-ink">
                       <span
-                        className="mt-2 size-1.5 shrink-0 rounded-full bg-sol-warning"
+                        className="mt-[0.5rem] size-1.5 shrink-0 rounded-full bg-sol-warning"
                         aria-hidden="true"
                       />
                       {m}
                     </li>
                   ))}
                 </ul>
-              </Card>
+              </section>
             )}
-          </>
+          </div>
         )}
       </aside>
 
