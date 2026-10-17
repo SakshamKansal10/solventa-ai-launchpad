@@ -12,8 +12,8 @@ import {
   YAxis,
 } from "recharts";
 
-import { GhostChart } from "@/components/founder/dashboard/graphics";
 import { Button, Card, Pill, Skeleton } from "@/components/founder/ui";
+import { ActionArrow, primaryActionClass } from "@/components/os/os";
 import { useLocale } from "@/lib/i18n/LocaleProvider";
 import {
   getOpportunityEconomics,
@@ -419,35 +419,20 @@ export function EconomicsTab({ opportunityId }: { opportunityId: string }) {
 
   const dto = query.data;
 
+  // Nothing entered yet: the section's own heading already says why — one clear action.
   if (!dto.exists && !editing) {
     return (
-      <Card
-        className="grid items-center gap-8 p-6 sm:p-8 md:grid-cols-2"
-        data-testid="economics-tab"
-      >
-        <div className="flex flex-col items-start gap-3">
-          <p className="sol-h3">{t("opp.econ.empty.title")}</p>
-          <p className="sol-body sol-prose text-sol-secondary">{t("opp.econ.empty.body")}</p>
-          <Button className="mt-2" onClick={() => setEditing(true)} data-testid="econ-add">
-            {t("opp.econ.add")}
-          </Button>
-        </div>
-        {/* The shape of what the three numbers will become — dashed, never data. */}
-        <div
-          className="rounded-2xl border border-dashed border-sol-border-strong bg-sol-pearl p-4"
-          aria-hidden="true"
+      <div data-testid="economics-tab">
+        <button
+          type="button"
+          className={primaryActionClass}
+          onClick={() => setEditing(true)}
+          data-testid="econ-add"
         >
-          <GhostChart />
-          <div className="mt-3 grid grid-cols-3 gap-2">
-            {[0, 1, 2].map((i) => (
-              <span
-                key={i}
-                className="h-10 rounded-lg border border-dashed border-sol-border-strong"
-              />
-            ))}
-          </div>
-        </div>
-      </Card>
+          {t("os.opp.money.add")}
+          <ActionArrow />
+        </button>
+      </div>
     );
   }
 

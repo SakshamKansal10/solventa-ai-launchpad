@@ -4,15 +4,11 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
 import { FounderProfileSection } from "@/components/founder/settings/FounderProfileSection";
+import { useDirection } from "@/components/os/direction";
+import { FlashCard, OsDisplay, OsEyebrow, OsLead } from "@/components/os/os";
+import { useFounderState } from "@/lib/queries";
 import { PhotoSection } from "@/components/founder/settings/PhotoSection";
-import {
-  Button,
-  Card,
-  ErrorPanel,
-  LinkButton,
-  PageHeader,
-  PageSkeleton,
-} from "@/components/founder/ui";
+import { Button, Card, ErrorPanel, LinkButton, PageSkeleton } from "@/components/founder/ui";
 import { Switch } from "@/components/ui/switch";
 import { signOut } from "@/lib/actions/auth";
 import {
@@ -54,14 +50,33 @@ function SettingsPage() {
   const data = query.data;
 
   return (
-    <div className="flex max-w-[52rem] flex-col gap-8" data-testid="settings-page">
-      <PageHeader title={t("set.title")} subtitle={t("set.subtitle")} />
-      <ProfileSection data={data} />
-      <PhotoSection available={data.extrasAvailable} />
+    <div className="flex max-w-[60rem] flex-col gap-16" data-testid="settings-page">
+      <div className="flex flex-col gap-6">
+        <OsDisplay>
+          {t("os.set.title.a")}
+          <span className="block text-[#454B59]">{t("os.set.title.b")}</span>
+        </OsDisplay>
+        <OsLead>{t("os.set.lead")}</OsLead>
+      </div>
       <FounderProfileSection data={data} />
-      <LanguageSection />
-      <NotificationSection data={data} />
-      <AccountSection />
+      <GoalSection />
+      <KnowsSection />
+      <section className="flex flex-col gap-6" aria-labelledby="account-group-h">
+        <h2
+          id="account-group-h"
+          className="font-os text-[clamp(1.5rem,1.15rem+1vw,2.1rem)] font-medium uppercase leading-[1.02] tracking-[-0.02em] text-[#171A27]"
+        >
+          {t("os.set.account")}
+        </h2>
+        {/* The account cards keep their forms; inside the OS they speak its typography. */}
+        <div className="flex flex-col gap-6 [&_.sol-h3]:font-os [&_.sol-h3]:font-medium [&_.sol-h3]:uppercase [&_.sol-h3]:tracking-[-0.01em]">
+          <ProfileSection data={data} />
+          <PhotoSection available={data.extrasAvailable} />
+          <LanguageSection />
+          <NotificationSection data={data} />
+          <AccountSection />
+        </div>
+      </section>
     </div>
   );
 }
@@ -288,5 +303,103 @@ function AccountSection() {
         {out.isPending ? t("set.account.signingOut") : t("set.account.signOut")}
       </Button>
     </Card>
+  );
+}
+
+const GOALS = ["find", "validate", "launch", "first", "grow"] as const;
+type Goal = (typeof GOALS)[number];
+const GOAL_KEY = "solventia:current-goal";
+
+/**
+ * What the founder is trying to do right now. Kept on this device for now (no account field
+ * exists for it yet); the Command Center reads it to order what it shows first.
+ */
+function GoalSection() {
+  const { t } = useLocale();
+  const [goal, setGoal] = useState<Goal | null>(null);
+  useEffect(() => {
+    try {
+      const saved = window.localStorage.getItem(GOAL_KEY) as Goal | null;
+      if (saved && GOALS.includes(saved)) setGoal(saved);
+    } catch {
+      /* storage unavailable */
+    }
+  }, []);
+  const choose = (g: Goal) => {
+    setGoal(g);
+    try {
+      window.localStorage.setItem(GOAL_KEY, g);
+    } catch {
+      /* the choice still applies for this visit */
+    }
+  };
+  return (
+    <section className="flex flex-col gap-5" aria-labelledby="goal-h" data-testid="goal-section">
+      <h2
+        id="goal-h"
+        className="font-os text-[clamp(1.4rem,1.1rem+1vw,2rem)] font-medium uppercase tracking-[-0.02em] text-[#171A27]"
+      >
+        {t("os.set.goal")}
+      </h2>
+      <div role="radiogroup" aria-labelledby="goal-h" className="flex flex-wrap gap-2.5">
+        {GOALS.map((g) => (
+          <button
+            key={g}
+            type="button"
+            role="radio"
+            aria-checked={goal === g}
+            onClick={() => choose(g)}
+            data-testid={`goal-${g}`}
+            className={cn(
+              "min-h-12 rounded-full border px-5 text-[1rem] font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#2F62D9]",
+              goal === g
+                ? "border-[#171A27] bg-[#171A27] text-white"
+                : "border-[#171A27]/15 text-[#171A27] hover:border-[#171A27]/40",
+            )}
+          >
+            {t(`os.set.goal.${g}` as const)}
+          </button>
+        ))}
+      </div>
+      {goal && <p className="text-[0.9375rem] text-[#454B59]">{t("os.set.goal.saved")}</p>}
+    </section>
+  );
+}
+
+/** What Solventia has understood about the founder — its own reasons, in plain words. */
+function KnowsSection() {
+  const { t } = useLocale();
+  const founder = useFounderState();
+  const id = founder.data?.direction.selectedId ?? founder.data?.direction.flagshipId ?? null;
+  const { direction } = useDirection(id ? founder.data?.briefs[id] : null);
+  const facts = direction?.why ?? [];
+  if (facts.length === 0) return null;
+  return (
+    <section className="flex flex-col gap-5" aria-labelledby="knows-h" data-testid="knows-section">
+      <h2
+        id="knows-h"
+        className="font-os text-[clamp(1.4rem,1.1rem+1vw,2rem)] font-medium uppercase tracking-[-0.02em] text-[#171A27]"
+      >
+        {t("os.set.knows")}
+      </h2>
+      <div className="grid gap-3 @2xl:grid-cols-2">
+        {facts.map((fact, i) => (
+          <FlashCard
+            key={fact}
+            label={`${String(i + 1).padStart(2, "0")}`}
+            headline={fact}
+            points={[]}
+            action={
+              <a
+                href="#founder-section"
+                className="text-[1rem] font-semibold text-[#171A27] underline-offset-[6px] hover:underline"
+              >
+                {t("set.founder.edit")}
+              </a>
+            }
+          />
+        ))}
+      </div>
+    </section>
   );
 }

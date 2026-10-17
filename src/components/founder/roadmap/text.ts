@@ -44,6 +44,7 @@ export function useRoadmapText(
     weekTitle: (id: string, fallback: string) => sk.data?.weeks?.[id]?.title || fallback,
     weekObjective: (id: string, fallback: string) => sk.data?.weeks?.[id]?.objective || fallback,
     detail: {
+      weekMission: (fallback: string | null) => wk.data?.mission || fallback,
       successThreshold: (fallback: string | null) => wk.data?.successThreshold || fallback,
       adaptationNote: (fallback: string | null) => wk.data?.adaptationNote || fallback,
       mistakes: (fallback: string[]) =>

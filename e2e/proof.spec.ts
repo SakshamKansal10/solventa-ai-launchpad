@@ -1,7 +1,7 @@
 import { expect, test, type Page } from "@playwright/test";
 import { gotoApp } from "./helpers/page";
 
-import { founderWithRoadmap } from "./helpers/flows";
+import { founderWithRoadmap, recordLearning } from "./helpers/flows";
 import { forbidRealBackends, gemini, resetStack, sql } from "./helpers/stack";
 
 test.beforeEach(async ({ page }) => {
@@ -197,29 +197,30 @@ test.describe("Proof — assumptions become evidence", () => {
     );
   });
 
-  test("Add Proof on a mission opens the evidence dialog with that mission's assumption preselected", async ({
+  test("what a founder learns on a mission becomes evidence — tied to the mission and its assumption", async ({
     page,
     context,
   }) => {
     await founderWithRoadmap(page, context);
-    // Missions that require evidence expose Add Proof once opened.
-    await page.getByTestId("mission-card").nth(1).getByTestId("mission-toggle").click();
-    const link = page.getByTestId("mission-add-proof").first();
-    await expect(link).toBeVisible();
-    await link.click();
+    // A mission that requires evidence asks "What did you learn?" once it is under way —
+    // and sets the founder's assumptions up first if Proof was never opened.
+    const second = page.getByTestId("mission-card").nth(1);
+    await second.getByTestId("mission-toggle").click();
+    await second.getByTestId("mission-primary").click();
+    await recordLearning(second, "Said the follow-up problem costs them patients.");
 
-    await expect(page).toHaveURL(/\/dashboard\/proof/);
-    await expect(page.getByTestId("evidence-dialog")).toBeVisible({ timeout: 45_000 });
-    const chosen = await page.getByTestId("ev-assumption").inputValue();
-    expect(chosen).not.toBe("");
-    // The evidence saved from here is tied to the mission.
-    await page.getByTestId("ev-person").fill("Customer 1");
-    await page.getByTestId("ev-summary").fill("Said the follow-up problem costs them patients.");
-    await page.getByTestId("ev-save").click();
-    await expect(page.getByTestId("evidence-dialog")).toBeHidden();
-    const rows = await sql<{ task_id: string | null }>("select task_id from proof_evidence");
+    const rows = await sql<{ task_id: string | null; assumption_id: string | null }>(
+      "select task_id, assumption_id from proof_evidence",
+    );
     expect(rows).toHaveLength(1);
     expect(rows[0].task_id).not.toBeNull();
+    expect(rows[0].assumption_id).not.toBeNull();
+    // The Proof workspace shows it under its assumption.
+    await openProof(page);
+    await expect(page.getByTestId("assumption-card").first()).toBeVisible({ timeout: 45_000 });
+    await expect(
+      page.getByText("Said the follow-up problem costs them patients.").first(),
+    ).toBeAttached();
   });
 
   test("a file can be attached, is stored under the founder's own folder, and only that founder can read it", async ({

@@ -41,14 +41,16 @@ test.describe("History", () => {
     await expect(entries.nth(1)).toHaveAttribute("data-current", "false");
 
     const oldEntry = entries.nth(1);
-    await expect(oldEntry).toContainText("1 Aug 2026");
+    await expect(oldEntry).toContainText("1 Aug");
+    await expect(oldEntry).toContainText("2026");
     await expect(oldEntry.getByTestId("history-profile")).toContainText("Haryana");
-    await expect(oldEntry).toContainText("3 directions found");
+    await expect(oldEntry).toContainText("Solventia found 3 directions");
     for (const title of older.titles) await expect(oldEntry).toContainText(title);
-    await expect(oldEntry).toContainText("You chose");
-    await expect(oldEntry).toContainText("Active"); // its roadmap
-    // The newer consultation has nothing chosen yet.
-    await expect(entries.nth(0)).toContainText("No direction chosen");
+    // The story around it: the choice, and the roadmap it started — each its own moment.
+    const timeline = page.getByTestId("history-timeline");
+    await expect(timeline).toContainText("You chose");
+    // That choice's roadmap still says where it stands, even after a newer consultation.
+    await expect(timeline.getByTestId("history-roadmap-status")).toHaveText("Roadmap: Active");
     for (const title of newer.titles) await expect(entries.nth(0)).toContainText(title);
     // Only an older consultation with a chosen direction can be restored.
     await expect(entries.nth(0).getByTestId("history-restore")).toHaveCount(0);
@@ -63,7 +65,8 @@ test.describe("History", () => {
     await expect(page.getByTestId("earlier-consultation-banner")).toBeVisible();
 
     await gotoApp(page, "/dashboard");
-    await expect(page.locator("h1")).toHaveText("Your directions are ready"); // still the newest
+    // Still the newest consultation: its directions, nothing chosen.
+    await expect(page.getByTestId("command-center")).toHaveAttribute("data-stage", "ideas_ready");
   });
 
   test("Restore Direction asks first; Cancel changes nothing; Confirm makes the older direction current and keeps its roadmap", async ({
@@ -79,7 +82,7 @@ test.describe("History", () => {
     await page.getByRole("button", { name: "Cancel" }).click();
     await expect(page.getByTestId("restore-dialog")).toBeHidden();
     await gotoApp(page, "/dashboard");
-    await expect(page.locator("h1")).toHaveText("Your directions are ready");
+    await expect(page.getByTestId("command-center")).toHaveAttribute("data-stage", "ideas_ready");
 
     await gotoApp(page, "/dashboard/history");
     await page.getByTestId("history-entry").nth(1).getByTestId("history-restore").click();
@@ -113,7 +116,9 @@ test.describe("History", () => {
     // A brand-new consultation completes AFTER the restore.
     await seedDirections(user.id);
     await gotoApp(page, "/dashboard");
-    await expect(page.locator("h1")).toHaveText("Your directions are ready", { timeout: 30_000 });
+    await expect(page.getByTestId("command-center")).toHaveAttribute("data-stage", "ideas_ready", {
+      timeout: 30_000,
+    });
   });
 
   test("an empty account shows an honest empty state", async ({ page, context }) => {

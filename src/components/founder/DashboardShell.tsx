@@ -3,18 +3,17 @@ import { Link, useNavigate, useParams, useRouterState } from "@tanstack/react-ro
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   Compass,
-  FlaskConical,
   History as HistoryIcon,
   LogOut,
   Map as MapIcon,
   Menu,
-  MessageCircle,
   Settings as SettingsIcon,
+  Sparkle,
   Target,
   type LucideIcon,
 } from "lucide-react";
 
-import mark from "@/assets/solventia-mark.png";
+import { BrandLockup, BrandMark } from "@/components/brand/Brand";
 import { LanguageSwitcher } from "@/components/solventia/LanguageSwitcher";
 import { Sheet, SheetContent, SheetDescription, SheetTitle } from "@/components/ui/sheet";
 import {
@@ -37,35 +36,28 @@ import { AskSolPanel, type AskSolRoute } from "./AskSol";
 import { Avatar } from "./Avatar";
 import { NotificationBell } from "./NotificationBell";
 
+/**
+ * Four destinations, nothing more: what to do (Command), what could be built (Opportunities),
+ * how to get there (Roadmap) and what has happened (History). Settings lives in the account
+ * menu; Ask Sol is contextual, never a destination.
+ */
 const NAV: { to: string; icon: LucideIcon; label: MessageKey; testId: string; exact?: boolean }[] =
   [
     {
       to: "/dashboard",
       icon: Compass,
-      label: "shell.nav.commandCenter",
+      label: "os.nav.command",
       testId: "nav-command",
       exact: true,
     },
     {
       to: "/dashboard/opportunities",
       icon: Target,
-      label: "shell.nav.opportunities",
+      label: "os.nav.opportunities",
       testId: "nav-opportunities",
     },
-    { to: "/dashboard/roadmap", icon: MapIcon, label: "shell.nav.roadmap", testId: "nav-roadmap" },
-    { to: "/dashboard/proof", icon: FlaskConical, label: "shell.nav.proof", testId: "nav-proof" },
-    {
-      to: "/dashboard/history",
-      icon: HistoryIcon,
-      label: "shell.nav.history",
-      testId: "nav-history",
-    },
-    {
-      to: "/dashboard/settings",
-      icon: SettingsIcon,
-      label: "shell.nav.settings",
-      testId: "nav-settings",
-    },
+    { to: "/dashboard/roadmap", icon: MapIcon, label: "os.nav.roadmap", testId: "nav-roadmap" },
+    { to: "/dashboard/history", icon: HistoryIcon, label: "os.nav.history", testId: "nav-history" },
   ];
 
 function titleKeyFor(pathname: string): MessageKey {
@@ -111,17 +103,12 @@ function SidebarContent({
         to="/"
         onClick={onNavigate}
         aria-label={t("nav.homeAria")}
-        className="flex h-[72px] shrink-0 items-center gap-3 px-6"
+        className="flex h-[84px] shrink-0 items-center px-6"
       >
-        <img src={mark} alt="" width={298} height={436} className="h-9 w-auto" />
-        <span className="flex flex-col leading-none">
-          <span className="font-wordmark text-[1.05rem] font-medium tracking-[0.13em] text-sol-ink">
-            SOLVENTIA
-          </span>
-        </span>
+        <BrandLockup preset="compact" signature={false} />
       </Link>
 
-      <nav aria-label={t("shell.nav.aria")} className="flex flex-1 flex-col gap-1 px-3 py-2">
+      <nav aria-label={t("shell.nav.aria")} className="flex flex-1 flex-col gap-1.5 px-3 py-4">
         {NAV.map((item) => {
           const active = item.exact ? pathname === item.to : pathname.startsWith(item.to);
           const Icon = item.icon;
@@ -133,10 +120,10 @@ function SidebarContent({
               data-testid={item.testId}
               aria-current={active ? "page" : undefined}
               className={cn(
-                "flex h-11 items-center gap-3 rounded-xl px-3.5 text-[1rem] font-medium transition-colors duration-[180ms]",
+                "relative flex h-12 items-center gap-3 rounded-xl px-3.5 text-[1.0625rem] transition-colors duration-[180ms]",
                 active
-                  ? "bg-sol-violet-soft text-sol-violet-deep"
-                  : "text-sol-ink hover:bg-sol-ivory",
+                  ? "bg-[#171A27]/[0.06] font-semibold text-[#171A27] before:absolute before:inset-y-2.5 before:left-0 before:w-[3px] before:rounded-full before:bg-[#B8924F]"
+                  : "font-medium text-[#2A2F3B] hover:bg-[#171A27]/[0.04]",
               )}
             >
               <Icon className="size-5 shrink-0" strokeWidth={1.75} aria-hidden="true" />
@@ -218,6 +205,7 @@ export function DashboardShell({ children }: { children: ReactNode }) {
   const founder = useFounderState();
   const user = useCurrentUserQuery();
   const wide = useMediaQuery("(min-width: 1280px)");
+  const phone = useMediaQuery("(max-width: 639px)");
   const [navOpen, setNavOpen] = useState(false);
   const [askOpen, setAskOpen] = useState(false);
 
@@ -271,7 +259,9 @@ export function DashboardShell({ children }: { children: ReactNode }) {
       ? "roadmap"
       : pathname.startsWith("/dashboard/opportunities/")
         ? "opportunity"
-        : "dashboard";
+        : pathname.startsWith("/dashboard/history")
+          ? "history"
+          : "dashboard";
 
   async function handleSignOut() {
     try {
@@ -297,7 +287,7 @@ export function DashboardShell({ children }: { children: ReactNode }) {
       <div className="flex h-dvh w-full overflow-hidden bg-sol-pearl text-sol-ink">
         <aside
           data-testid="sidebar"
-          className="hidden h-dvh w-[244px] shrink-0 border-r border-sol-border bg-gradient-to-b from-sol-ivory-light to-sol-pearl lg:block"
+          className="hidden h-dvh w-[244px] shrink-0 border-r border-[#171A27]/[0.08] bg-sol-pearl lg:block"
         >
           <SidebarContent onNavigate={() => undefined} onSignOut={handleSignOut} />
         </aside>
@@ -305,7 +295,7 @@ export function DashboardShell({ children }: { children: ReactNode }) {
         <div data-testid="main-column" className="flex h-dvh min-w-0 flex-1 flex-col">
           <header
             data-testid="topbar"
-            className="flex h-[72px] shrink-0 items-center justify-between gap-3 border-b border-sol-border bg-sol-pearl/95 px-5 backdrop-blur md:px-7 lg:px-10"
+            className="flex h-[72px] shrink-0 items-center justify-between gap-3 border-b border-[#171A27]/[0.08] bg-sol-pearl/95 px-5 backdrop-blur md:px-7 lg:px-10"
           >
             <div className="flex min-w-0 items-center gap-3">
               <button
@@ -316,14 +306,33 @@ export function DashboardShell({ children }: { children: ReactNode }) {
               >
                 <Menu className="size-5" aria-hidden="true" />
               </button>
+              {/* Phones: the emblem (each page's own heading says where you are); wider: the title. */}
+              <BrandMark height={28} className="sm:hidden" alt="Solventia" />
               <p
-                className="truncate text-[1.0625rem] font-semibold text-sol-ink"
+                className="hidden truncate text-[1.0625rem] font-semibold text-sol-ink sm:block"
                 data-testid="page-title"
               >
                 {t(titleKeyFor(pathname))}
               </p>
             </div>
             <div className="flex items-center gap-2 sm:gap-3">
+              {/* Ask Sol: built into the product, one quiet control — never a floating chatbot. */}
+              <button
+                type="button"
+                onClick={() => (askOpen ? closeAsk() : openAsk())}
+                aria-expanded={askOpen}
+                aria-label={t("askSol.open")}
+                data-testid="ask-sol-launcher"
+                className={cn(
+                  "inline-flex h-11 shrink-0 items-center gap-2 whitespace-nowrap rounded-full border px-3.5 text-[0.9375rem] font-semibold tracking-[0.02em] transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#2F62D9] sm:px-4",
+                  askOpen
+                    ? "border-[#171A27] bg-[#171A27] text-white"
+                    : "border-[#171A27]/15 text-[#171A27] hover:border-[#171A27]/40",
+                )}
+              >
+                <span className="uppercase">{t("os.askSol")}</span>
+                <Sparkle className="size-4 text-[#B8924F]" aria-hidden="true" />
+              </button>
               <LanguageSwitcher compact />
               <NotificationBell />
               <DropdownMenu>
@@ -380,7 +389,7 @@ export function DashboardShell({ children }: { children: ReactNode }) {
             <main
               id="main"
               data-testid="main-content"
-              className="mx-auto w-full max-w-[1440px] px-5 pb-28 pt-8 md:px-7 lg:px-10 lg:pt-10"
+              className="@container mx-auto w-full max-w-[1440px] px-5 pb-20 pt-10 md:px-8 lg:px-12 lg:pt-14"
             >
               {children}
             </main>
@@ -424,9 +433,12 @@ export function DashboardShell({ children }: { children: ReactNode }) {
       {!wide && (
         <Sheet open={askOpen} onOpenChange={setAskOpen}>
           <SheetContent
-            side="right"
+            side={phone ? "bottom" : "right"}
             data-testid="ask-sol-drawer"
-            className="w-full max-w-[26rem] border-sol-border bg-sol-surface p-0 sm:max-w-[26rem] [&>button]:hidden"
+            className={cn(
+              "border-sol-border bg-sol-surface p-0 [&>button]:hidden",
+              phone ? "h-[86dvh] rounded-t-[24px]" : "w-full max-w-[26rem] sm:max-w-[26rem]",
+            )}
           >
             <SheetTitle className="sr-only">{t("askSol.title")}</SheetTitle>
             <SheetDescription className="sr-only">{t("askSol.tagline")}</SheetDescription>
@@ -454,21 +466,6 @@ export function DashboardShell({ children }: { children: ReactNode }) {
           <SidebarContent onNavigate={() => setNavOpen(false)} onSignOut={handleSignOut} />
         </SheetContent>
       </Sheet>
-
-      {/* The launcher hides while the panel is open, and the page reserves 112px
-          at the bottom (pb-28) so it can never hide the last thing on a page. */}
-      {!askOpen && (
-        <button
-          type="button"
-          onClick={() => openAsk()}
-          aria-label={t("askSol.open")}
-          data-testid="ask-sol-launcher"
-          className="fixed bottom-5 right-4 z-30 flex h-14 items-center gap-2 rounded-full bg-sol-navy px-5 text-[1rem] font-semibold text-white shadow-[0_12px_32px_rgba(24,33,61,.28)] transition-transform duration-[180ms] hover:-translate-y-0.5 sm:right-7"
-        >
-          <MessageCircle className="size-5 text-sol-champagne" aria-hidden="true" />
-          <span className="hidden sm:inline">{t("askSol.open")}</span>
-        </button>
-      )}
     </AskSolContext.Provider>
   );
 }

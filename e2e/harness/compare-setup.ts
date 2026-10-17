@@ -181,6 +181,7 @@ export default async function compareSetup() {
     for (const account of [
       { email: "founder@solventia.local", fullName: "Local Founder" },
       { email: "demo@solventia.local", fullName: "Demo Founder" },
+      { email: "reveal@solventia.local", fullName: "Riya Sharma" },
     ]) {
       const exists = await stack.db.admin("select 1 from auth.users where email = $1", [
         account.email,

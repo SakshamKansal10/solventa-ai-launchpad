@@ -1,9 +1,9 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test, type Page } from "@playwright/test";
 
-import { chooseAndBuildRoadmap, founderWithDirections } from "./helpers/flows";
+import { chooseAndBuildRoadmap, founderWithDirections, skipRevealIntro } from "./helpers/flows";
 import { gotoApp } from "./helpers/page";
-import { createUser, forbidRealBackends, resetStack, signIn } from "./helpers/stack";
+import { createUser, forbidRealBackends, resetStack, signIn, sql } from "./helpers/stack";
 
 test.beforeEach(async ({ page }) => {
   forbidRealBackends(page);
@@ -17,7 +17,21 @@ interface Finding {
   sample: string;
 }
 
+/** Waits for every finite animation to finish, so the audit sees the settled frame (fully opaque
+ * text), not a mid-fade one — the rules are unchanged. Endless ones (a pulsing dot) are ignored. */
+async function settle(page: Page) {
+  await page.evaluate(() =>
+    Promise.all(
+      document
+        .getAnimations()
+        .filter((a) => a.effect?.getComputedTiming().iterations !== Infinity)
+        .map((a) => a.finished.catch(() => undefined)),
+    ),
+  );
+}
+
 async function audit(page: Page, label: string): Promise<Finding[]> {
+  await settle(page);
   const results = await new AxeBuilder({ page })
     .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"])
     .analyze();
@@ -63,40 +77,43 @@ test.describe("accessibility (WCAG 2.1 A/AA, serious and critical only)", () => 
   });
 
   test("the founder workspace", async ({ page, context }) => {
-    test.setTimeout(240_000);
+    test.setTimeout(300_000);
     const { seeded } = await founderWithDirections(context);
     const findings: Finding[] = [];
-    await gotoApp(page, "/dashboard");
-    await page.waitForLoadState("networkidle");
-    // The side-by-side fit table only exists once its cells have loaded.
-    await expect(page.getByTestId("direction-compare")).toBeVisible();
-    await expect(page.getByTestId("direction-compare").locator("[data-status]")).toHaveCount(12);
-    findings.push(...(await audit(page, "command-center A")));
 
-    // State B: the dark build surface, then on to the roadmap.
-    await page.getByTestId("flagship-choose").click();
-    await expect(page.getByTestId("build-roadmap")).toBeEnabled();
-    await expect(page.getByTestId("chosen-fit")).toBeVisible();
+    // State A: the idea reveal, and the three directions side by side.
+    await gotoApp(page, "/dashboard");
+    await skipRevealIntro(page);
     await page.waitForLoadState("networkidle");
-    // The customer → problem → product chain fades in. Audit the settled frame
-    // (every item fully opaque), not a mid-fade one — the rules are unchanged.
-    const chainItems = page.getByTestId("chosen-direction").getByRole("listitem");
-    await expect(chainItems).toHaveCount(3);
-    for (let i = 0; i < 3; i++) await expect(chainItems.nth(i)).toHaveCSS("opacity", "1");
-    findings.push(...(await audit(page, "command-center B")));
+    findings.push(...(await audit(page, "idea reveal")));
+    await page.getByTestId("compare-all").click();
+    // The plain-word fit cells only exist once they have loaded.
+    await expect(page.getByTestId("compare-table")).toContainText(/Strong|Medium|Needs work/);
+    findings.push(...(await audit(page, "compare sheet")));
+    await page.keyboard.press("Escape");
+
+    // State B: a direction chosen, its roadmap not built yet — then on to the roadmap.
+    await sql(`update opportunities set status = 'selected' where id = $1`, [
+      seeded.opportunityIds[0],
+    ]);
+    await gotoApp(page, "/dashboard");
+    await expect(page.getByTestId("build-roadmap")).toBeEnabled();
+    await page.waitForLoadState("networkidle");
+    findings.push(...(await audit(page, "direction chosen")));
     await page.getByTestId("build-roadmap").click();
-    await expect(page).toHaveURL(/\/dashboard\/roadmap/, { timeout: 60_000 });
+    await expect(page).toHaveURL(/\/dashboard\/roadmap/, { timeout: 90_000 });
     await expect(page.getByTestId("roadmap-page")).toBeVisible({ timeout: 30_000 });
 
+    const detail = `/dashboard/opportunities/${seeded.opportunityIds[0]}`;
     for (const route of [
       "/dashboard",
       "/dashboard/opportunities",
-      `/dashboard/opportunities/${seeded.opportunityIds[0]}`,
-      `/dashboard/opportunities/${seeded.opportunityIds[0]}?tab=fit`,
-      `/dashboard/opportunities/${seeded.opportunityIds[0]}?tab=market`,
+      detail,
+      `${detail}?tab=customer`,
+      `${detail}?tab=money`,
+      `${detail}?tab=offer`,
+      `${detail}?tab=risks`,
       "/dashboard/roadmap",
-      "/dashboard/roadmap?tab=plan",
-      "/dashboard/roadmap?tab=progress",
       "/dashboard/proof",
       "/dashboard/history",
       "/dashboard/settings",
@@ -124,8 +141,13 @@ test.describe("accessibility (WCAG 2.1 A/AA, serious and critical only)", () => 
     findings.push(...(await audit(page, "notifications")));
     await page.keyboard.press("Escape");
 
-    await page.getByTestId("mission-card").nth(1).getByTestId("mission-toggle").click();
+    const second = page.getByTestId("mission-card").nth(1);
+    await second.getByTestId("mission-toggle").click();
     findings.push(...(await audit(page, "mission details")));
+    // Started, a mission that needs evidence asks one question: what did you learn?
+    await second.getByTestId("mission-primary").click();
+    await expect(second.getByTestId("learning-summary")).toBeVisible();
+    findings.push(...(await audit(page, "what did you learn")));
 
     await gotoApp(page, "/dashboard/proof");
     await expect(page.getByTestId("assumption-card").first()).toBeVisible({ timeout: 45_000 });

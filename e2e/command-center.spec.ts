@@ -1,6 +1,7 @@
 import { expect, test } from "@playwright/test";
 import { gotoApp } from "./helpers/page";
 
+import { founderWithRoadmap, skipRevealIntro } from "./helpers/flows";
 import { seedDirections } from "./helpers/seed";
 import { createUser, forbidRealBackends, gemini, resetStack, signIn, sql } from "./helpers/stack";
 
@@ -9,8 +10,8 @@ test.beforeEach(async ({ page }) => {
   await resetStack();
 });
 
-test.describe("Command Center — state A: directions ready", () => {
-  test("shows one flagship, two alternatives and a single Explore More button — no scores", async ({
+test.describe("Command Center — state A: the idea reveal", () => {
+  test("opens with one line, then one flagship, two smaller alternatives and a single Explore More — no scores", async ({
     page,
     context,
   }) => {
@@ -19,9 +20,11 @@ test.describe("Command Center — state A: directions ready", () => {
     const seeded = await seedDirections(user.id);
     await gotoApp(page, "/dashboard");
 
-    await expect(page.locator("h1")).toHaveText("Your directions are ready");
-    await expect(page.getByTestId("flagship-card")).toBeVisible();
-    await expect(page.getByTestId("alternative-card")).toHaveCount(2);
+    await expect(page.getByTestId("reveal-continue")).toBeVisible();
+    await skipRevealIntro(page);
+    await expect(page.getByTestId("flagship")).toBeVisible();
+    await expect(page.getByTestId("first-offer")).toBeVisible();
+    await expect(page.getByTestId("alternative")).toHaveCount(2);
     await expect(page.getByTestId("explore-more")).toHaveCount(1);
 
     // No numeric fit score, percentage or Business DNA anywhere on the screen.
@@ -30,26 +33,30 @@ test.describe("Command Center — state A: directions ready", () => {
     expect(text).not.toMatch(/Business DNA/i);
     expect(text).not.toMatch(/\b\d{2}\s*\/\s*100\b/);
     // The flagship is one of the seeded directions.
-    const flagship = await page.getByTestId("flagship-card").innerText();
-    expect(seeded.titles.some((t) => flagship.includes(t))).toBe(true);
+    const flagship = await page.getByTestId("flagship-title").innerText();
+    expect(seeded.titles.some((t) => flagship.toLowerCase() === t.toLowerCase())).toBe(true);
+
+    // The opening line plays once per consultation.
+    await page.reload();
+    await expect(page.getByTestId("flagship")).toBeVisible();
+    await expect(page.getByTestId("reveal-continue")).toHaveCount(0);
   });
 
-  test("choosing a direction moves to state B and offers to build the roadmap", async ({
+  test("Compare all 3 puts the directions side by side in plain words", async ({
     page,
     context,
   }) => {
     const user = await createUser();
     await signIn(context, user);
-    await seedDirections(user.id);
+    const seeded = await seedDirections(user.id);
     await gotoApp(page, "/dashboard");
+    await skipRevealIntro(page);
 
-    await page.getByTestId("flagship-choose").click();
-    await expect(page.locator("h1")).toHaveText("Your direction is chosen");
-    await expect(page.getByTestId("chosen-direction")).toBeVisible();
-    await expect(page.getByTestId("build-roadmap")).toBeEnabled();
-    // Survives a reload (it is saved, not just local state).
-    await page.reload();
-    await expect(page.locator("h1")).toHaveText("Your direction is chosen");
+    await page.getByTestId("compare-all").click();
+    const table = page.getByTestId("compare-table");
+    await expect(table).toBeVisible();
+    for (const title of seeded.titles.slice(0, 3)) await expect(table).toContainText(title);
+    await expect(table).not.toContainText("%");
   });
 
   test("Explore More adds new directions through one Gemini call and lands on the Opportunities list", async ({
@@ -60,7 +67,8 @@ test.describe("Command Center — state A: directions ready", () => {
     await signIn(context, user);
     await seedDirections(user.id);
     await gotoApp(page, "/dashboard");
-    await expect(page.getByTestId("alternative-card")).toHaveCount(2);
+    await skipRevealIntro(page);
+    await expect(page.getByTestId("alternative")).toHaveCount(2);
 
     await page.getByTestId("explore-more").click();
     await expect(page).toHaveURL(/\/dashboard\/opportunities/, { timeout: 30_000 });
@@ -82,12 +90,64 @@ test.describe("Command Center — state A: directions ready", () => {
     await seedDirections(user.id);
     await gemini.failNext("EXPLORE_MORE", 3);
     await gotoApp(page, "/dashboard");
+    await skipRevealIntro(page);
 
     await page.getByTestId("explore-more").click();
     await expect(page.getByText(/couldn't find more directions/i)).toBeVisible({ timeout: 30_000 });
-    await expect(page.getByTestId("alternative-card")).toHaveCount(2);
+    await expect(page.getByTestId("alternative")).toHaveCount(2);
     await expect(page.getByTestId("explore-more")).toBeEnabled();
     await gemini.clearBehavior();
+  });
+});
+
+test.describe("Command Center — state B: a direction chosen, no roadmap yet", () => {
+  test("offers one clear next step — build the roadmap — and survives a reload", async ({
+    page,
+    context,
+  }) => {
+    const user = await createUser();
+    await signIn(context, user);
+    const seeded = await seedDirections(user.id);
+    // Chosen (as "Build my roadmap" chooses it), but the roadmap was never built.
+    await sql(`update opportunities set status = 'selected' where id = $1`, [
+      seeded.opportunityIds[0],
+    ]);
+    await gotoApp(page, "/dashboard");
+
+    await expect(page.getByTestId("command-center")).toHaveAttribute(
+      "data-stage",
+      "direction_selected",
+    );
+    await expect(page.getByTestId("surface-direction")).toHaveText(seeded.titles[0], {
+      ignoreCase: true,
+    });
+    await expect(page.getByTestId("build-roadmap")).toBeEnabled();
+    await page.reload();
+    await expect(page.getByTestId("build-roadmap")).toBeEnabled();
+  });
+});
+
+test.describe("Command Center — state C: a roadmap is running", () => {
+  test("says the next move in one line, with one action — supporting detail after it", async ({
+    page,
+    context,
+  }) => {
+    await founderWithRoadmap(page, context);
+    await gotoApp(page, "/dashboard");
+
+    await expect(page.getByTestId("greeting")).not.toBeEmpty();
+    await expect(page.getByTestId("current-mission")).toHaveText("Write your interview script");
+    await expect(page.getByTestId("start-mission")).toBeVisible();
+    // Supporting content: the direction, at most three priorities, what changed.
+    await expect(page.getByTestId("current-direction")).toBeVisible();
+    await expect(page.getByTestId("command-graphic")).toBeVisible();
+    await expect(page.getByTestId("this-week").getByTestId("track-node")).toHaveCount(3);
+    await expect(page.getByTestId("what-changed")).toBeVisible();
+
+    // The one action opens that mission on the roadmap.
+    await page.getByTestId("start-mission").click();
+    await expect(page).toHaveURL(/\/dashboard\/roadmap/);
+    await expect(page.getByTestId("mission-card").first()).toHaveAttribute("data-open", "true");
   });
 });
 
@@ -115,9 +175,9 @@ test.describe("current-consultation rule", () => {
     });
 
     await gotoApp(page, "/dashboard");
-    await expect(page.locator("h1")).toHaveText("Your directions are ready");
-    const flagship = await page.getByTestId("flagship-card").innerText();
-    expect(newer.titles.some((t) => flagship.includes(t))).toBe(true);
+    await skipRevealIntro(page);
+    const flagship = await page.getByTestId("flagship-title").innerText();
+    expect(newer.titles.some((t) => flagship.toLowerCase() === t.toLowerCase())).toBe(true);
   });
 
   test("a deep link to an earlier consultation pins that view and says so", async ({

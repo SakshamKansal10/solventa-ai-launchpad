@@ -9,7 +9,7 @@ test("serve the local comparison app until told to stop", async () => {
     `[compare] Claude local version → ${process.env.E2E_APP_URL}  (AI: ${process.env.COMPARE_AI_MODE})`,
   );
   console.log(
-    "[compare] accounts: founder@solventia.local / demo@solventia.local  password: Solventia-local-1  (email codes: 123456)",
+    "[compare] accounts: founder@ (empty) / reveal@ (idea reveal) / demo@ (roadmap) @solventia.local  password: Solventia-local-1  (email codes: 123456)",
   );
   console.log(`[compare] create ${STOP_FILE} to stop`);
   const until = Date.now() + 12 * 60 * 60_000;

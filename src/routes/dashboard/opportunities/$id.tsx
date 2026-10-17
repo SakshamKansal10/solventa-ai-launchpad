@@ -2,63 +2,78 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { z } from "zod";
-import {
-  ArrowLeft,
-  ArrowRight,
-  ArrowUpRight,
-  Check,
-  ChevronDown,
-  ExternalLink,
-  FlaskConical,
-  Flame,
-  Package,
-  TrendingUp,
-  Users,
-  Wallet,
-  type LucideIcon,
-} from "lucide-react";
+import { ArrowLeft, ExternalLink, Loader2 } from "lucide-react";
 
 import { EconomicsTab } from "@/components/founder/EconomicsTab";
-import { FIT_ICONS } from "@/components/founder/dashboard/fit-constants";
-import { FitPips } from "@/components/founder/dashboard/fit-visual";
-import { FitPill } from "@/components/founder/OpportunityCards";
-import { FitStatusPill, useFitReasonText } from "@/components/founder/fit";
+import { useAskSol } from "@/components/founder/DashboardShell";
+import { useFitReasonText } from "@/components/founder/fit";
+import { ErrorPanel, PageSkeleton } from "@/components/founder/ui";
+import { BusinessGraphic } from "@/components/os/graphics";
+import { modelKindOf, type GraphicNode } from "@/components/os/model";
 import {
-  Button,
-  Card,
-  ErrorPanel,
-  Eyebrow,
-  LinkButton,
-  PageSkeleton,
-  Pill,
-} from "@/components/founder/ui";
+  ActionArrow,
+  FlashCard,
+  OsDisplay,
+  OsEyebrow,
+  OsFrame,
+  OsLead,
+  OsPoints,
+  primaryActionClass,
+  textActionClass,
+} from "@/components/os/os";
 import {
   chooseDirection,
   getOpportunityDetail,
   refreshMarketEvidence,
   type OpportunityDetailDTO,
 } from "@/lib/actions/opportunities";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import type { FitStatus } from "@/lib/fit/matrix";
+import type { MessageKey } from "@/lib/i18n";
 import { useLocale } from "@/lib/i18n/LocaleProvider";
+import type { OpportunityDisplayDetail } from "@/lib/opportunity-display";
 import { qk, useInvalidateFounder } from "@/lib/queries";
 import { useTranslatedEntity, type OpportunityOverlay } from "@/lib/use-translation";
-import type { OpportunityDisplayDetail } from "@/lib/opportunity-display";
 import { cn } from "@/lib/utils";
 
-const TABS = ["overview", "fit", "market", "economics", "proof"] as const;
-type Tab = (typeof TABS)[number];
+/** The five sections — one question each. Older links (fit, market, economics, proof) land on
+ * the section that now answers them. */
+const SECTIONS = ["overview", "customer", "money", "offer", "risks"] as const;
+type Section = (typeof SECTIONS)[number];
+const LEGACY: Record<string, Section> = {
+  fit: "overview",
+  market: "customer",
+  economics: "money",
+  proof: "risks",
+};
+const SECTION_LABEL: Record<Section, MessageKey> = {
+  overview: "os.opp.tab.overview",
+  customer: "os.opp.tab.customer",
+  money: "os.opp.tab.money",
+  offer: "os.opp.tab.offer",
+  risks: "os.opp.tab.risks",
+};
 
 export const Route = createFileRoute("/dashboard/opportunities/$id")({
-  validateSearch: z.object({ tab: z.enum(TABS).optional() }),
+  validateSearch: z.object({
+    tab: z.enum([...SECTIONS, "fit", "market", "economics", "proof"]).optional(),
+  }),
   component: OpportunityPage,
   head: () => ({
     meta: [{ title: "Opportunity — Solventia" }, { name: "robots", content: "noindex" }],
   }),
 });
 
+/**
+ * OPPORTUNITY DETAIL — "Is this my business, and how would it actually work?"
+ * Opening: the name, why it fits, one action (Build my roadmap), and the model as a picture.
+ * Then five sections, one open at a time: Overview · Customer · Money · First offer · Risks.
+ */
 function OpportunityPage() {
   const { id } = Route.useParams();
-  const { tab = "overview" } = Route.useSearch();
+  const search = Route.useSearch();
+  const section: Section = search.tab
+    ? ((LEGACY[search.tab] ?? search.tab) as Section)
+    : "overview";
   const navigate = useNavigate();
   const { t } = useLocale();
 
@@ -74,267 +89,209 @@ function OpportunityPage() {
     return <ErrorPanel onRetry={() => void query.refetch()} retrying={query.isFetching} />;
   }
   const dto = query.data;
-  const brief = {
-    ...dto.brief,
-    title: overlay.data?.title ?? dto.brief.title,
-  };
+  const title = overlay.data?.title ?? dto.brief.title;
+  const oneLiner = overlay.data?.oneLiner ?? dto.brief.oneLiner;
   const detail: OpportunityDisplayDetail = { ...dto.detail, ...(overlay.data?.detail ?? {}) };
+  const setSection = (next: Section) =>
+    navigate({
+      to: "/dashboard/opportunities/$id",
+      params: { id },
+      search: { tab: next },
+      replace: true,
+    });
 
   return (
-    <div className="flex flex-col gap-8" data-testid="opportunity-page">
+    <div className="flex flex-col gap-14 sm:gap-20" data-testid="opportunity-page">
       <Link
         to="/dashboard/opportunities"
-        className="inline-flex min-h-10 w-fit items-center gap-2 text-[1rem] font-semibold text-sol-violet-deep hover:underline"
+        className="inline-flex min-h-10 w-fit items-center gap-2 text-[1rem] font-semibold text-[#171A27] hover:underline"
       >
         <ArrowLeft className="size-4" aria-hidden="true" />
         {t("opp.back")}
       </Link>
 
-      <HeaderBlock dto={dto} title={brief.title} />
+      <Opening dto={dto} title={title} oneLiner={oneLiner} detail={detail} />
 
-      <Tabs
-        value={tab}
-        onValueChange={(next) =>
-          navigate({
-            to: "/dashboard/opportunities/$id",
-            params: { id },
-            search: { tab: next as Tab },
-            replace: true,
-          })
-        }
-      >
-        <TabsList
+      <section className="flex flex-col gap-10">
+        <div
+          role="tablist"
           aria-label={t("opp.tabs.aria")}
-          className="h-auto w-full justify-start gap-1 overflow-x-auto rounded-2xl bg-sol-ivory p-1.5 sm:w-fit"
+          className="-mx-1 flex gap-1 overflow-x-auto border-b border-[#171A27]/10 px-1"
         >
-          {TABS.map((key) => (
-            <TabsTrigger
-              key={key}
-              value={key}
-              data-testid={`tab-${key}`}
-              className="min-h-11 rounded-xl px-5 text-[1rem] font-semibold text-sol-secondary data-[state=active]:bg-sol-surface data-[state=active]:text-sol-violet-deep data-[state=active]:shadow-sm"
-            >
-              {t(`opp.tab.${key}` as const)}
-            </TabsTrigger>
-          ))}
-        </TabsList>
-
-        <TabsContent value="overview" className="mt-8">
-          <Overview detail={detail} />
-        </TabsContent>
-        <TabsContent value="fit" className="mt-8">
-          <FounderFit dto={dto} detail={detail} />
-        </TabsContent>
-        <TabsContent value="market" className="mt-8">
-          <Market dto={dto} opportunityId={id} />
-        </TabsContent>
-        <TabsContent value="economics" className="mt-8">
-          <EconomicsTab opportunityId={id} />
-        </TabsContent>
-        <TabsContent value="proof" className="mt-8">
-          <ProofTab dto={dto} opportunityId={id} />
-        </TabsContent>
-      </Tabs>
+          {SECTIONS.map((key) => {
+            const active = key === section;
+            return (
+              <button
+                key={key}
+                type="button"
+                role="tab"
+                aria-selected={active}
+                data-testid={`tab-${key}`}
+                onClick={() => setSection(key)}
+                className={cn(
+                  "relative min-h-12 shrink-0 px-4 text-[1rem] font-semibold uppercase tracking-[0.06em] transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#2F62D9] sm:px-5",
+                  active
+                    ? "text-[#171A27] after:absolute after:inset-x-3 after:-bottom-px after:h-[2px] after:bg-[#171A27]"
+                    : "text-[#454B59] hover:text-[#171A27]",
+                )}
+              >
+                {t(SECTION_LABEL[key])}
+              </button>
+            );
+          })}
+        </div>
+        <div role="tabpanel" data-testid={`section-${section}`}>
+          {section === "overview" && <Overview dto={dto} detail={detail} />}
+          {section === "customer" && <Customer dto={dto} detail={detail} opportunityId={id} />}
+          {section === "money" && <Money detail={detail} opportunityId={id} />}
+          {section === "offer" && <FirstOffer detail={detail} title={title} />}
+          {section === "risks" && <Risks detail={detail} title={title} />}
+        </div>
+      </section>
     </div>
   );
 }
 
-function HeaderBlock({ dto, title }: { dto: OpportunityDetailDTO; title: string }) {
+function Opening({
+  dto,
+  title,
+  oneLiner,
+  detail,
+}: {
+  dto: OpportunityDetailDTO;
+  title: string;
+  oneLiner: string;
+  detail: OpportunityDisplayDetail;
+}) {
   const { t } = useLocale();
   const navigate = useNavigate();
   const invalidate = useInvalidateFounder();
   const choose = useMutation({
     mutationFn: () => chooseDirection({ data: { opportunityId: dto.brief.id } }),
     onSuccess: async () => {
-      await invalidate();
-      toast.success(t("cc.chosen.toast"));
+      await invalidate().catch(() => {});
+      void navigate({
+        to: "/dashboard/roadmap/building",
+        search: { opportunityId: dto.brief.id },
+      });
     },
     onError: (err) => {
       console.error("[opportunity] choose failed:", err);
       toast.error(t("cc.chosen.error"));
     },
   });
+  const why = (detail.whyThisFounder.length > 0 ? detail.whyThisFounder : dto.fit.advantages).slice(
+    0,
+    4,
+  );
+  const nodes: GraphicNode[] = [
+    { role: t("os.graphic.whoPays"), text: detail.customerHeadline },
+    { role: t("os.graphic.offer"), text: detail.solutionHeadline },
+    { role: t("os.graphic.earns"), text: detail.moneyHeadline },
+    { role: t("os.graphic.outcome"), text: t("os.graphic.paidCustomer") },
+  ].filter((n) => n.text);
+  const kind = modelKindOf(dto.brief.title, [dto.detail.summary, detail.businessModel].join(" "));
+
+  const action = dto.isSelected ? (
+    dto.roadmapStatus === "active" || dto.roadmapStatus === "completed" ? (
+      <Link to="/dashboard/roadmap" className={primaryActionClass}>
+        {t("os.opp.openRoadmap")}
+        <ActionArrow />
+      </Link>
+    ) : (
+      <button
+        type="button"
+        className={primaryActionClass}
+        onClick={() =>
+          navigate({ to: "/dashboard/roadmap/building", search: { opportunityId: dto.brief.id } })
+        }
+        data-testid="build-roadmap"
+      >
+        {dto.roadmapStatus === "archived" ? t("cc.b.resumeCta") : t("os.reveal.build")}
+        <ActionArrow />
+      </button>
+    )
+  ) : dto.isCurrentConsultation ? (
+    <button
+      type="button"
+      className={primaryActionClass}
+      onClick={() => choose.mutate()}
+      disabled={choose.isPending}
+      data-testid="choose-direction"
+    >
+      {choose.isPending && <Loader2 className="size-5 animate-spin" aria-hidden="true" />}
+      {t("os.reveal.build")}
+      <ActionArrow />
+    </button>
+  ) : (
+    <div className="flex flex-col items-start gap-3">
+      <p className="text-[1.0625rem] text-[#2A2F3B]">{t("opp.earlierNote")}</p>
+      <Link to="/dashboard/history" className={textActionClass}>
+        {t("cc.earlier.history")}
+        <ActionArrow />
+      </Link>
+    </div>
+  );
 
   return (
-    <header className="flex flex-col gap-5">
-      <div className="flex flex-wrap items-center gap-2.5">
-        {dto.isSelected ? (
-          <Pill tone="violet">{t("opp.status.selected")}</Pill>
-        ) : (
-          <FitPill fit={dto.brief.fit} />
+    <header className="grid items-center gap-10 @4xl:grid-cols-[1.12fr_1fr] @4xl:gap-14">
+      <div className="flex flex-col gap-7">
+        <OsEyebrow tone="champagne" data-testid="opportunity-fit">
+          {dto.isSelected ? t("os.opp.chosen") : t(`fit.overall.${dto.fit.matrix.overall}`)}
+        </OsEyebrow>
+        <OsDisplay size="title" data-testid="opportunity-title">
+          {title}
+        </OsDisplay>
+        <OsLead>{oneLiner}</OsLead>
+        {why.length > 0 && (
+          <div className="flex flex-col gap-3.5" data-testid="why-fits">
+            <OsEyebrow>{t("os.opp.whyFits")}</OsEyebrow>
+            <OsPoints points={why} />
+          </div>
         )}
-        {!dto.isCurrentConsultation && <Pill tone="neutral">{t("opp.status.previous")}</Pill>}
+        <div className="pt-1">{action}</div>
       </div>
-      <h1 className="sol-page-title max-w-[26ch]" data-testid="opportunity-title">
-        {title}
-      </h1>
-      <div className="flex flex-wrap gap-3">
-        {dto.isSelected ? (
-          dto.roadmapStatus === "active" || dto.roadmapStatus === "completed" ? (
-            <LinkButton to="/dashboard/roadmap" variant="primary" size="lg">
-              {t("opp.openRoadmap")}
-            </LinkButton>
-          ) : (
-            <Button
-              size="lg"
-              onClick={() =>
-                navigate({
-                  to: "/dashboard/roadmap/building",
-                  search: { opportunityId: dto.brief.id },
-                })
-              }
-              data-testid="build-roadmap"
-            >
-              {dto.roadmapStatus === "archived" ? t("cc.b.resumeCta") : t("cc.b.buildCta")}
-            </Button>
-          )
-        ) : dto.isCurrentConsultation ? (
-          <Button
-            size="lg"
-            onClick={() => choose.mutate()}
-            loading={choose.isPending}
-            data-testid="choose-direction"
-          >
-            {t("cc.chooseDirection")}
-          </Button>
-        ) : (
-          <p className="text-[1.0625rem] text-sol-secondary sol-prose">{t("opp.earlierNote")}</p>
-        )}
-        {!dto.isCurrentConsultation && (
-          <LinkButton to="/dashboard/history" variant="secondary" size="lg">
-            {t("cc.earlier.history")}
-          </LinkButton>
-        )}
-      </div>
+      <OsFrame className="p-4 sm:p-6">
+        <BusinessGraphic
+          kind={kind}
+          nodes={nodes}
+          label={t("os.graphic.aria", {
+            title,
+            a: detail.customerHeadline,
+            b: detail.solutionHeadline,
+            c: detail.moneyHeadline,
+            d: t("os.graphic.paidCustomer"),
+          })}
+          testId="opportunity-graphic"
+        />
+      </OsFrame>
     </header>
   );
 }
 
-/** The whole business as six connected tiles — customer, pain, product, revenue,
- * first test, growth. Each shows only its one-line headline; the longer
- * explanation is one tap away, so the page reads in ten seconds. */
-function Overview({ detail }: { detail: OpportunityDisplayDetail }) {
-  const { t } = useLocale();
-  const tiles: {
-    key: string;
-    icon: LucideIcon;
-    label: string;
-    headline: string;
-    sentence: string;
-  }[] = [
-    {
-      key: "customer",
-      icon: Users,
-      label: t("opp.ov.customer"),
-      headline: detail.customerHeadline,
-      sentence: detail.customer,
-    },
-    {
-      key: "pain",
-      icon: Flame,
-      label: t("opp.ov.pain"),
-      headline: detail.problemHeadline,
-      sentence: detail.problem,
-    },
-    {
-      key: "product",
-      icon: Package,
-      label: t("opp.ov.product"),
-      headline: detail.solutionHeadline,
-      sentence: detail.solution,
-    },
-    {
-      key: "revenue",
-      icon: Wallet,
-      label: t("opp.ov.revenue"),
-      headline: detail.moneyHeadline,
-      sentence: detail.businessModel,
-    },
-    {
-      key: "wedge",
-      icon: FlaskConical,
-      label: t("opp.ov.wedge"),
-      headline: detail.firstExperiment,
-      sentence: "",
-    },
-    {
-      key: "scale",
-      icon: TrendingUp,
-      label: t("opp.ov.scale"),
-      headline: detail.revenuePath,
-      sentence: "",
-    },
-  ];
+const FIT_STATUS_WORD: Record<FitStatus, MessageKey> = {
+  strong: "os.level.strong",
+  moderate: "os.level.medium",
+  conditional: "os.level.weak",
+};
+
+/** A large editorial fact: a readable label, the opportunity's own phrase, one sentence. */
+function Fact({ label, value, sentence }: { label: string; value: string; sentence?: string }) {
+  if (!value) return null;
   return (
-    <ol className="grid gap-5 md:grid-cols-2 xl:grid-cols-3" data-testid="overview-flow">
-      {tiles.map((tile, i) => {
-        const Icon = tile.icon;
-        // A headline that fell back to its own full sentence (older rows) must not be
-        // shown twice — the sentence is only offered when it adds something.
-        const more = tile.sentence && tile.sentence !== tile.headline;
-        return (
-          <li key={tile.key} className="relative">
-            <Card className="flex h-full flex-col gap-4 p-6" data-testid={`block-${tile.key}`}>
-              <div className="flex items-center justify-between gap-3">
-                <span className="flex size-12 items-center justify-center rounded-2xl bg-sol-champagne-soft text-sol-champagne-deep">
-                  <Icon className="size-6" aria-hidden="true" />
-                </span>
-                <span
-                  className="flex size-8 items-center justify-center rounded-full bg-sol-violet-soft font-display text-[1rem] font-semibold text-sol-violet-deep"
-                  aria-hidden="true"
-                >
-                  {i + 1}
-                </span>
-              </div>
-              <div>
-                <p className="text-[0.875rem] font-bold uppercase tracking-[0.1em] text-sol-champagne-deep">
-                  {tile.label}
-                </p>
-                <p
-                  className={cn(
-                    "mt-1.5 font-display font-semibold text-sol-ink",
-                    // A headline that is really a sentence (the first test, the growth path)
-                    // is set smaller so it doesn't swamp its tile.
-                    tile.headline.length > 70
-                      ? "text-[1.1875rem] leading-snug"
-                      : "text-[1.5rem] leading-[1.2]",
-                  )}
-                >
-                  {tile.headline}
-                </p>
-              </div>
-              {more && (
-                <details className="group mt-auto">
-                  <summary className="flex min-h-10 w-fit cursor-pointer list-none items-center gap-1.5 rounded-lg text-[0.9375rem] font-semibold text-sol-violet-deep outline-none focus-visible:ring-2 focus-visible:ring-sol-violet/50 [&::-webkit-details-marker]:hidden">
-                    <ChevronDown
-                      className="size-4 transition-transform duration-200 group-open:rotate-180"
-                      aria-hidden="true"
-                    />
-                    {t("opp.ov.detail")}
-                  </summary>
-                  <p className="mt-2 text-[1.0625rem] leading-relaxed text-sol-secondary">
-                    {tile.sentence}
-                  </p>
-                </details>
-              )}
-            </Card>
-            {/* The flow arrow between neighbouring tiles (three to a row). */}
-            {i % 3 !== 2 && i < tiles.length - 1 && (
-              <span
-                aria-hidden="true"
-                className="absolute -right-[1.65rem] top-1/2 z-10 hidden size-8 -translate-y-1/2 items-center justify-center rounded-full border border-sol-border bg-sol-surface text-sol-violet shadow-sm xl:flex"
-              >
-                <ArrowRight className="size-4" />
-              </span>
-            )}
-          </li>
-        );
-      })}
-    </ol>
+    <div className="flex min-w-0 flex-col gap-2 border-t border-[#171A27]/10 pt-5">
+      <OsEyebrow>{label}</OsEyebrow>
+      <p className="text-[clamp(1.25rem,1.05rem+0.6vw,1.6rem)] font-semibold leading-snug text-[#171A27]">
+        {value}
+      </p>
+      {sentence && sentence !== value && (
+        <p className="max-w-[52ch] text-[1.0625rem] leading-relaxed text-[#2A2F3B]">{sentence}</p>
+      )}
+    </div>
   );
 }
 
-function FounderFit({
+function Overview({
   dto,
   detail,
 }: {
@@ -344,106 +301,61 @@ function FounderFit({
   const { t } = useLocale();
   const reasonText = useFitReasonText();
   const { matrix } = dto.fit;
-  const advantages = (
-    detail.whyThisFounder.length > 0 ? detail.whyThisFounder : dto.fit.advantages
-  ).slice(0, 4);
-  const gaps = [
-    ...dto.fit.matrix.rows
-      .filter((r) => r.status !== "strong")
-      .map((r) => reasonText(r.reason, dto.fit.currency)),
-    ...detail.skillsToLearn.map((s) => t("opp.fit.learn", { skill: s })),
-  ].slice(0, 3);
-
   return (
-    <div className="flex flex-col gap-8" data-testid="founder-fit">
-      <div className="flex flex-col gap-3">
-        <Eyebrow>{t("opp.fit.overall")}</Eyebrow>
-        <div className="flex flex-wrap items-center gap-x-5 gap-y-3">
+    <div className="flex flex-col gap-14" data-testid="overview-flow">
+      <div className="grid gap-x-12 gap-y-10 @2xl:grid-cols-2">
+        <Fact
+          label={t("os.opp.problem")}
+          value={detail.problemHeadline}
+          sentence={detail.problem}
+        />
+        <Fact
+          label={t("os.opp.solution")}
+          value={detail.solutionHeadline}
+          sentence={detail.solution}
+        />
+        <Fact
+          label={t("os.opp.money.model")}
+          value={detail.moneyHeadline}
+          sentence={detail.businessModel}
+        />
+        <Fact label={t("os.opp.money.grows")} value={detail.revenuePath} />
+      </div>
+      <div className="flex flex-col gap-6" data-testid="founder-fit">
+        <div className="flex flex-wrap items-baseline gap-x-5 gap-y-2">
+          <OsEyebrow>{t("opp.fit.overall")}</OsEyebrow>
           <p
-            className="font-display text-[clamp(2rem,1.6rem+1.6vw,2.75rem)] font-semibold leading-none text-sol-ink"
+            className="font-os text-[clamp(1.6rem,1.2rem+1.2vw,2.3rem)] font-medium uppercase leading-none tracking-[-0.02em] text-[#171A27]"
             data-testid="fit-overall"
           >
             {t(`fit.overall.${matrix.overall}` as const)}
           </p>
-          <FitPips status={matrix.overall} pipClassName="h-3.5 w-10" />
         </div>
-        <p className="sol-body sol-prose text-sol-secondary">
-          {t(`fit.overallBody.${matrix.overall}` as const)}
-        </p>
-      </div>
-
-      <ul className="flex flex-col gap-3">
-        {matrix.rows.map((row) => (
-          <li key={row.key} data-testid={`fit-row-${row.key}`}>
-            <Card className="flex flex-col gap-3 p-5 sm:flex-row sm:items-start sm:justify-between sm:gap-6">
-              <div className="flex min-w-0 items-start gap-4 sm:w-1/3">
-                <span className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-sol-champagne-soft text-sol-champagne-deep">
-                  {(() => {
-                    const Icon = FIT_ICONS[row.key];
-                    return <Icon className="size-5" aria-hidden="true" />;
-                  })()}
-                </span>
-                <div className="min-w-0">
-                  <p className="text-[1.125rem] font-semibold text-sol-ink">
-                    {t(`fit.row.${row.key}` as const)}
-                  </p>
-                  <div className="mt-2 flex flex-wrap items-center gap-3">
-                    <FitPips status={row.status} />
-                    <FitStatusPill status={row.status} />
-                  </div>
-                </div>
-              </div>
-              <p className="text-[1.0625rem] leading-relaxed text-sol-ink sm:w-2/3">
-                {reasonText(row.reason, dto.fit.currency)}
-              </p>
-            </Card>
-          </li>
-        ))}
-      </ul>
-
-      <div className="grid gap-6 md:grid-cols-2">
-        <Card className="p-6">
-          <h3 className="sol-h3">{t("opp.fit.advantages")}</h3>
-          <ul className="mt-4 flex flex-col gap-3">
-            {advantages.map((a) => (
-              <li key={a} className="flex gap-3 text-[1.0625rem] leading-snug text-sol-ink">
-                <span
-                  className="mt-0.5 flex size-6 shrink-0 items-center justify-center rounded-full bg-sol-champagne-soft text-sol-champagne-deep"
-                  aria-hidden="true"
-                >
-                  <Check className="size-3.5" strokeWidth={3} />
-                </span>
-                {a}
-              </li>
-            ))}
-          </ul>
-        </Card>
-        <Card className="p-6">
-          <h3 className="sol-h3">{t("opp.fit.gaps")}</h3>
-          {gaps.length === 0 ? (
-            <p className="mt-4 text-[1.0625rem] text-sol-secondary">{t("opp.fit.noGaps")}</p>
-          ) : (
-            <ul className="mt-4 flex flex-col gap-3">
-              {gaps.map((g) => (
-                <li key={g} className="flex gap-3 text-[1.0625rem] leading-snug text-sol-ink">
-                  <span
-                    className="mt-0.5 flex size-6 shrink-0 items-center justify-center rounded-full bg-sol-warning-soft text-sol-warning"
-                    aria-hidden="true"
-                  >
-                    <ArrowUpRight className="size-3.5" strokeWidth={3} />
-                  </span>
-                  {g}
-                </li>
-              ))}
-            </ul>
-          )}
-        </Card>
+        <div className="grid gap-3 @2xl:grid-cols-2">
+          {matrix.rows.map((row) => (
+            <FlashCard
+              key={row.key}
+              testId={`fit-row-${row.key}`}
+              label={t(`fit.row.${row.key}` as const)}
+              headline={t(FIT_STATUS_WORD[row.status])}
+              points={[reasonText(row.reason, dto.fit.currency)]}
+            />
+          ))}
+        </div>
       </div>
     </div>
   );
 }
 
-function Market({ dto, opportunityId }: { dto: OpportunityDetailDTO; opportunityId: string }) {
+function Customer({
+  dto,
+  detail,
+  opportunityId,
+}: {
+  dto: OpportunityDetailDTO;
+  detail: OpportunityDisplayDetail;
+  opportunityId: string;
+}) {
   const { t } = useLocale();
   const invalidate = useInvalidateFounder();
   const research = useMutation({
@@ -458,116 +370,225 @@ function Market({ dto, opportunityId }: { dto: OpportunityDetailDTO; opportunity
     },
   });
   const hasSources = dto.sources.length > 0;
-
   return (
-    <div className="flex flex-col gap-8" data-testid="market-tab">
-      <div className="flex flex-col gap-2">
-        <h2 className="sol-h2">
-          {hasSources ? t("opp.market.sourcesTitle") : t("opp.market.none")}
-        </h2>
-        {!hasSources && (
-          <p className="sol-body sol-prose text-sol-secondary">{t("opp.market.noneBody")}</p>
-        )}
+    <div className="flex flex-col gap-14" data-testid="market-tab">
+      <div className="grid gap-10 @4xl:grid-cols-[1.1fr_1fr]">
+        <div className="flex flex-col gap-5">
+          <OsEyebrow>{t("os.opp.whoPays")}</OsEyebrow>
+          <OsDisplay as="h2" size="section">
+            {detail.customerHeadline}
+          </OsDisplay>
+          {detail.customer !== detail.customerHeadline && <OsLead>{detail.customer}</OsLead>}
+        </div>
+        <div className="flex flex-col gap-3 rounded-[24px] border border-[#B8924F]/40 bg-[#FBF8F2] p-6 sm:p-7">
+          <OsEyebrow tone="champagne">{t("os.opp.findThem")}</OsEyebrow>
+          <p className="text-[1.1875rem] font-semibold leading-snug text-[#171A27]">
+            {detail.firstExperiment}
+          </p>
+        </div>
       </div>
 
-      {hasSources && (
-        <ul className="flex flex-col gap-3">
-          {dto.sources.map((s) => (
-            <li key={s.id}>
-              <Card className="flex flex-col gap-2 p-5">
-                <p className="text-[1.0625rem] leading-snug text-sol-ink">{s.claim}</p>
-                <div className="flex flex-wrap items-center gap-3">
-                  <Pill tone="neutral">{t(`opp.market.label.${s.label}` as const)}</Pill>
+      <div className="flex flex-col gap-5">
+        <h3 className="font-os text-[1.375rem] font-medium uppercase tracking-[-0.01em] text-[#171A27]">
+          {hasSources ? t("opp.market.sourcesTitle") : t("opp.market.none")}
+        </h3>
+        {!hasSources && (
+          <p className="max-w-[60ch] text-[1.0625rem] text-[#2A2F3B]">{t("opp.market.noneBody")}</p>
+        )}
+        {hasSources && (
+          <ul className="flex flex-col divide-y divide-[#171A27]/10 border-y border-[#171A27]/10">
+            {dto.sources.map((s) => (
+              <li key={s.id} className="flex flex-col gap-2 py-5">
+                <p className="text-[1.0625rem] leading-snug text-[#171A27]">{s.claim}</p>
+                <div className="flex flex-wrap items-center gap-3 text-[0.9375rem]">
+                  <span className="font-semibold uppercase tracking-[0.1em] text-[#3C4250]">
+                    {t(`opp.market.label.${s.label}` as const)}
+                  </span>
                   {s.sourceUrl && (
                     <a
                       href={s.sourceUrl}
                       target="_blank"
                       rel="noreferrer noopener"
-                      className="inline-flex items-center gap-1.5 text-[0.9375rem] font-semibold text-sol-violet-deep hover:underline"
+                      className="inline-flex items-center gap-1.5 font-semibold text-[#2448A8] hover:underline"
                     >
                       {s.sourceTitle ?? s.sourceUrl}
                       <ExternalLink className="size-3.5" aria-hidden="true" />
                     </a>
                   )}
                 </div>
-              </Card>
-            </li>
-          ))}
-        </ul>
-      )}
-
-      <Card className="flex flex-col gap-4 p-6">
-        <h3 className="sol-h3">{t("opp.market.learnTitle")}</h3>
-        <ul className="flex flex-col gap-2.5">
-          {(["q1", "q2", "q3"] as const).map((q) => (
-            <li key={q} className="flex gap-3 text-[1.0625rem] leading-snug text-sol-ink">
-              <span
-                className="mt-2 size-1.5 shrink-0 rounded-full bg-sol-violet"
-                aria-hidden="true"
-              />
-              {t(`opp.market.${q}` as const)}
-            </li>
-          ))}
-        </ul>
-        <div className="flex flex-wrap gap-3">
-          <LinkButton
+              </li>
+            ))}
+          </ul>
+        )}
+        <div className="flex flex-wrap items-center gap-x-6 gap-y-3">
+          <button
+            type="button"
+            onClick={() => research.mutate()}
+            disabled={research.isPending}
+            className={cn(
+              primaryActionClass,
+              "bg-transparent text-[#0B1F3B] ring-1 ring-[#0B1F3B]/25 hover:bg-[#0B1F3B]/[0.04]",
+            )}
+            data-testid="look-for-sources"
+          >
+            {research.isPending && <Loader2 className="size-5 animate-spin" aria-hidden="true" />}
+            {hasSources ? t("opp.market.refresh") : t("opp.market.lookFor")}
+          </button>
+          <Link
             to="/dashboard/proof"
             search={{ opportunity: opportunityId }}
-            variant="primary"
-            size="lg"
+            className={textActionClass}
             data-testid="start-validation"
           >
             {t("opp.market.start")}
-          </LinkButton>
-          <Button
-            variant="secondary"
-            size="lg"
-            onClick={() => research.mutate()}
-            loading={research.isPending}
-            data-testid="look-for-sources"
-          >
-            {hasSources ? t("opp.market.refresh") : t("opp.market.lookFor")}
-          </Button>
+            <ActionArrow />
+          </Link>
         </div>
-        <p className="text-[0.9375rem] text-sol-secondary">{t("opp.market.sourcesNote")}</p>
-      </Card>
+        <p className="text-[0.9375rem] text-[#454B59]">{t("opp.market.sourcesNote")}</p>
+      </div>
     </div>
   );
 }
 
-function ProofTab({ dto, opportunityId }: { dto: OpportunityDetailDTO; opportunityId: string }) {
+function Money({
+  detail,
+  opportunityId,
+}: {
+  detail: OpportunityDisplayDetail;
+  opportunityId: string;
+}) {
   const { t } = useLocale();
-  const { proof } = dto;
-  const supported = proof.counts.supported;
-  const untested = proof.counts.untested;
   return (
-    <Card className="flex flex-col gap-5 p-6 sm:p-8" data-testid="proof-tab">
-      {!proof.available ? (
-        <p className="sol-body text-sol-secondary">{t("opp.proof.unavailable")}</p>
-      ) : proof.total === 0 ? (
-        <>
-          <h2 className="sol-h2">{t("opp.proof.noneTitle")}</h2>
-          <p className="sol-body sol-prose text-sol-secondary">{t("opp.proof.noneBody")}</p>
-        </>
-      ) : (
-        <>
-          <h2 className="sol-h2">{t("opp.proof.assumptions", { n: proof.total })}</h2>
-          <p className="text-[1.25rem] leading-snug text-sol-ink">
-            {t("opp.proof.summary", { supported, untested })}
-          </p>
-        </>
-      )}
-      <div>
-        <LinkButton
-          to="/dashboard/proof"
-          search={{ opportunity: opportunityId }}
-          variant="primary"
-          size="lg"
-          data-testid="open-proof-workspace"
-        >
-          {t("opp.proof.open")}
-        </LinkButton>
+    <div className="flex flex-col gap-14">
+      <div className="grid gap-x-12 gap-y-10 @2xl:grid-cols-2">
+        <Fact label={t("os.opp.money.start")} value={detail.startingCapital} />
+        <Fact label={t("os.opp.money.time")} value={detail.weeklyTime} />
+        <Fact
+          label={t("os.opp.money.model")}
+          value={detail.moneyHeadline}
+          sentence={detail.businessModel}
+        />
+        <Fact label={t("os.opp.money.grows")} value={detail.revenuePath} />
       </div>
-    </Card>
+      <div className="flex flex-col gap-4">
+        <h3 className="font-os text-[1.375rem] font-medium uppercase tracking-[-0.01em] text-[#171A27]">
+          {t("os.opp.money.yours")}
+        </h3>
+        <p className="max-w-[60ch] text-[1.0625rem] text-[#2A2F3B]">
+          {t("os.opp.money.yoursBody")}
+        </p>
+        <div className="pt-2">
+          <EconomicsTab opportunityId={opportunityId} />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function FirstOffer({ detail, title }: { detail: OpportunityDisplayDetail; title: string }) {
+  const { t } = useLocale();
+  const ask = useAskSol();
+  const needs = [...detail.resourceRequirements].slice(0, 5);
+  return (
+    <div className="grid gap-12 @4xl:grid-cols-[1.1fr_1fr]" data-testid="first-offer-section">
+      <div className="flex flex-col gap-6">
+        <OsEyebrow tone="champagne">{t("os.opp.offer.title")}</OsEyebrow>
+        <OsDisplay as="h2" size="section">
+          {detail.solutionHeadline}
+        </OsDisplay>
+        <OsLead>{detail.solution}</OsLead>
+        <dl className="grid gap-8 sm:grid-cols-2">
+          <div>
+            <dt className="text-[0.875rem] font-semibold uppercase tracking-[0.12em] text-[#3C4250]">
+              {t("os.reveal.sellTo")}
+            </dt>
+            <dd className="mt-2 text-[1.1875rem] font-semibold leading-snug text-[#171A27]">
+              {detail.customerHeadline}
+            </dd>
+          </div>
+          <div>
+            <dt className="text-[0.875rem] font-semibold uppercase tracking-[0.12em] text-[#3C4250]">
+              {t("os.reveal.startingCost")}
+            </dt>
+            <dd className="mt-2 text-[1.1875rem] font-semibold leading-snug text-[#171A27]">
+              {detail.startingCapital}
+            </dd>
+          </div>
+        </dl>
+        <div className="pt-2">
+          <button
+            type="button"
+            className={primaryActionClass}
+            data-testid="create-outreach"
+            onClick={() =>
+              ask.open(
+                t("os.opp.offer.ask", {
+                  offer: detail.solutionHeadline || title,
+                  customer: detail.customerHeadline,
+                }),
+              )
+            }
+          >
+            {t("os.opp.offer.cta")}
+            <ActionArrow />
+          </button>
+        </div>
+      </div>
+      <div className="flex flex-col gap-4">
+        <div className="flex flex-col gap-3 rounded-[24px] border border-[#B8924F]/40 bg-[#FBF8F2] p-6 sm:p-7">
+          <OsEyebrow tone="champagne">{t("os.opp.offer.startWith")}</OsEyebrow>
+          <p className="text-[1.1875rem] font-semibold leading-snug text-[#171A27]">
+            {detail.firstExperiment}
+          </p>
+        </div>
+        {needs.length > 0 && (
+          <div className="flex flex-col gap-4 rounded-[24px] border border-[#171A27]/10 bg-white/70 p-6 sm:p-7">
+            <OsEyebrow>{t("os.opp.offer.needs")}</OsEyebrow>
+            <OsPoints points={needs} />
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function Risks({ detail, title }: { detail: OpportunityDisplayDetail; title: string }) {
+  const { t } = useLocale();
+  const ask = useAskSol();
+  return (
+    <div className="flex flex-col gap-12" data-testid="risks-section">
+      <div className="flex flex-col gap-5">
+        <h2 className="font-os text-[clamp(1.4rem,1.1rem+1vw,2rem)] font-medium uppercase tracking-[-0.02em] text-[#171A27]">
+          {t("os.opp.risks.title")}
+        </h2>
+        <div className="grid gap-3 @2xl:grid-cols-2">
+          {detail.risks.map((risk, i) => (
+            <FlashCard
+              key={risk}
+              testId="risk-card"
+              label={t("os.opp.risk.n", { n: String(i + 1).padStart(2, "0") })}
+              headline={risk}
+              points={detail.tradeoffs[i] ? [detail.tradeoffs[i]] : []}
+              action={
+                <button
+                  type="button"
+                  className={textActionClass}
+                  onClick={() => ask.open(t("os.opp.risk.ask", { title, risk }))}
+                >
+                  {t("os.opp.risk.solve")}
+                  <ActionArrow />
+                </button>
+              }
+            />
+          ))}
+        </div>
+      </div>
+      {detail.unknowns.length > 0 && (
+        <div className="flex flex-col gap-4">
+          <OsEyebrow>{t("os.opp.risks.unknowns")}</OsEyebrow>
+          <OsPoints points={detail.unknowns} />
+        </div>
+      )}
+    </div>
   );
 }

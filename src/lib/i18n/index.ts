@@ -10,6 +10,7 @@ import roadmap from "./messages/roadmap";
 import settings from "./messages/settings";
 import pages from "./messages/pages";
 import story from "./messages/story";
+import os from "./messages/os";
 import { type Locale } from "./locale";
 
 /** Every domain module exports `{ en, hi }` with `hi` typed as
@@ -28,6 +29,7 @@ const modules = [
   settings,
   pages,
   story,
+  os,
 ] as const;
 
 type Module = (typeof modules)[number];

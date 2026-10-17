@@ -72,7 +72,7 @@ export function weekDetail(opts: {
     ? null
     : `Because "${opts.priorTitle ?? "last week"}" went ${opts.outcome ?? "differently than planned"}, this week leans on what you recorded.`;
   return {
-    mission: `Complete the work for ${opts.title}`,
+    mission: "Hear eight real customers describe the problem in their own words",
     tasks: [
       {
         what: "Write your interview script",

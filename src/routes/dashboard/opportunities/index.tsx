@@ -1,32 +1,28 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { useMutation } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Compass, Users } from "lucide-react";
-
-import { FitStrip } from "@/components/founder/dashboard/fit-visual";
-import { FitPill } from "@/components/founder/OpportunityCards";
-import {
-  Button,
-  Card,
-  EmptyState,
-  ErrorPanel,
-  LinkButton,
-  PageHeader,
-  PageSkeleton,
-  Pill,
-  Skeleton,
-} from "@/components/founder/ui";
-import type { OpportunityBrief } from "@/lib/actions/founder";
-import {
-  chooseDirection,
-  exploreMoreOpportunities,
-  getDirectionFits,
-} from "@/lib/actions/opportunities";
-import type { FitMatrix } from "@/lib/fit/matrix";
-import { useLocale } from "@/lib/i18n/LocaleProvider";
-import { qk, useFounderState, useInvalidateFounder } from "@/lib/queries";
-import { useTranslatedBrief } from "@/lib/use-translation";
+import { Loader2 } from "lucide-react";
 import { z } from "zod";
+
+import { ErrorPanel, PageSkeleton } from "@/components/founder/ui";
+import { FIT_WORD, useDirection, useFounderFits } from "@/components/os/direction";
+import { BusinessGraphic } from "@/components/os/graphics";
+import {
+  ActionArrow,
+  OsDisplay,
+  OsEyebrow,
+  OsFact,
+  OsFrame,
+  OsLead,
+  primaryActionClass,
+  textActionClass,
+} from "@/components/os/os";
+import type { OpportunityBrief } from "@/lib/actions/founder";
+import { chooseDirection, exploreMoreOpportunities } from "@/lib/actions/opportunities";
+import { useLocale } from "@/lib/i18n/LocaleProvider";
+import { useFounderState, useInvalidateFounder } from "@/lib/queries";
+import { useTranslatedBrief } from "@/lib/use-translation";
+import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/dashboard/opportunities/")({
   validateSearch: z.object({ consultation: z.string().uuid().optional() }),
@@ -36,89 +32,11 @@ export const Route = createFileRoute("/dashboard/opportunities/")({
   }),
 });
 
-type Section = "selected" | "alternative" | "previous";
-
-/** Title, who it is for, the four fit rows as a strip, and status. The fit strip is
- * drawn from the same deterministic matrix as the opportunity page. */
-function OpportunityRow({
-  brief: raw,
-  section,
-  onChoose,
-  choosing,
-  canChoose,
-  matrix,
-  fitLoading,
-}: {
-  brief: OpportunityBrief;
-  section: Section;
-  onChoose?: () => void;
-  choosing?: boolean;
-  canChoose: boolean;
-  /** Undefined for rows that do not show fit (earlier consultations). */
-  matrix?: FitMatrix | null;
-  fitLoading?: boolean;
-}) {
-  const { t } = useLocale();
-  const brief = useTranslatedBrief(raw) ?? raw;
-  return (
-    <Card
-      as="article"
-      className="flex flex-col gap-4 p-6 md:flex-row md:items-start md:justify-between"
-      data-testid={`opp-${section}`}
-    >
-      <div className="min-w-0 flex-1">
-        <div className="flex flex-wrap items-center gap-2.5">
-          <h3 className="sol-h3">{brief.title}</h3>
-          {section === "selected" ? (
-            <Pill tone="violet">{t("opp.status.selected")}</Pill>
-          ) : section === "previous" ? (
-            <Pill tone="neutral">
-              {brief.status === "dismissed" ? t("opp.status.dismissed") : t("opp.status.previous")}
-            </Pill>
-          ) : (
-            <FitPill fit={brief.fit} />
-          )}
-        </div>
-        {brief.customer && (
-          <p className="mt-3 flex items-start gap-3 text-[1.0625rem] leading-snug text-sol-ink">
-            <span className="mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-lg bg-sol-champagne-soft text-sol-champagne-deep">
-              <Users className="size-4" aria-hidden="true" />
-            </span>
-            <span className="line-clamp-2 min-w-0">
-              <span className="sr-only">{t("opp.fact.customer")}: </span>
-              {brief.customer}
-            </span>
-          </p>
-        )}
-        {section !== "previous" && (
-          <div className="mt-4">
-            {matrix ? (
-              <FitStrip rows={matrix.rows} />
-            ) : fitLoading ? (
-              <Skeleton className="h-9 w-72 max-w-full" />
-            ) : null}
-          </div>
-        )}
-      </div>
-      <div className="flex shrink-0 flex-wrap gap-3">
-        <LinkButton
-          to="/dashboard/opportunities/$id"
-          params={{ id: brief.id }}
-          variant={section === "selected" ? "primary" : "secondary"}
-          size="sm"
-        >
-          {t("common.open")}
-        </LinkButton>
-        {section === "alternative" && canChoose && onChoose && (
-          <Button variant="primary" size="sm" onClick={onChoose} loading={choosing}>
-            {t("cc.choose")}
-          </Button>
-        )}
-      </div>
-    </Card>
-  );
-}
-
+/**
+ * OPPORTUNITIES — "What could I build?" The direction that leads (the one chosen, else the
+ * strongest) dominates with its own model; the alternatives sit below it, smaller. Not a
+ * marketplace: a short list of real options, each with who pays, what it costs and how to start.
+ */
 function OpportunitiesPage() {
   const { t, locale } = useLocale();
   const founder = useFounderState();
@@ -149,20 +67,6 @@ function OpportunitiesPage() {
     },
   });
 
-  // Fit for every direction in view, in one call (hooks run before any early return).
-  const fitIds = Object.values(founder.data?.briefs ?? {})
-    .filter(
-      (b) =>
-        b.consultationId === founder.data?.direction.consultationId && b.status !== "dismissed",
-    )
-    .map((b) => b.id);
-  const fits = useQuery({
-    queryKey: qk.directionFits(fitIds),
-    queryFn: () => getDirectionFits({ data: { ids: fitIds } }),
-    staleTime: 30_000,
-    enabled: fitIds.length > 0,
-  });
-
   if (founder.isPending) return <PageSkeleton label={t("shell.skeleton.loading")} />;
   if (founder.isError || !founder.data) {
     return <ErrorPanel onRetry={() => void founder.refetch()} retrying={founder.isFetching} />;
@@ -172,9 +76,11 @@ function OpportunitiesPage() {
   const all = Object.values(briefs);
   const inView = all.filter((b) => b.consultationId === direction.consultationId);
   const selected = direction.selectedId ? briefs[direction.selectedId] : null;
-  const alternatives = inView
+  const ordered = inView
     .filter((b) => b.id !== selected?.id && b.status !== "dismissed")
     .sort((a, b) => direction.viewedIds.indexOf(a.id) - direction.viewedIds.indexOf(b.id));
+  const lead = selected ?? ordered[0] ?? null;
+  const alternatives = selected ? ordered : ordered.slice(1);
   const previous = all
     .filter(
       (b) =>
@@ -183,85 +89,251 @@ function OpportunitiesPage() {
     )
     .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
   const canChoose = direction.isLatestConsultation;
+  const count = (lead ? 1 : 0) + alternatives.length;
+
+  if (all.length === 0) {
+    return (
+      <div className="flex flex-col items-start gap-8" data-testid="opportunities-page">
+        <OsDisplay>{t("cc.none.cardTitle")}</OsDisplay>
+        <OsLead>{t("cc.none.cardBody")}</OsLead>
+        <Link to="/consultation" className={primaryActionClass}>
+          {t("nav.findMyBusinessIdea")}
+          <ActionArrow />
+        </Link>
+      </div>
+    );
+  }
 
   return (
-    <div className="flex flex-col gap-10" data-testid="opportunities-page">
-      <PageHeader
-        title={t("opp.list.title")}
-        subtitle={t("opp.list.subtitle")}
-        action={
-          canChoose && all.length > 0 ? (
-            <Button
-              variant="soft"
-              onClick={() => explore.mutate()}
-              loading={explore.isPending}
-              disabled={choose.isPending}
-              data-testid="explore-more"
-            >
-              <Compass className="size-5" aria-hidden="true" />
-              {t("cc.exploreMore")}
-            </Button>
-          ) : undefined
-        }
-      />
+    <div className="flex flex-col gap-16 sm:gap-20" data-testid="opportunities-page">
+      <OsDisplay>
+        {t("os.opps.title.n", { n: count })}
+        <span className="block text-[#454B59]">{t("os.opps.title.fit")}</span>
+      </OsDisplay>
 
-      {all.length === 0 && (
-        <EmptyState
-          title={t("cc.none.cardTitle")}
-          body={t("cc.none.cardBody")}
-          action={
-            <LinkButton to="/consultation" variant="primary" size="lg">
-              {t("nav.findMyBusinessIdea")}
-            </LinkButton>
-          }
+      {lead && (
+        <LeadDirection
+          brief={lead}
+          chosen={Boolean(selected)}
+          canChoose={canChoose && !selected}
+          choosing={choose.isPending && choose.variables === lead.id}
+          onChoose={() => choose.mutate(lead.id)}
         />
       )}
 
-      {selected && (
-        <section aria-labelledby="sel-h" className="flex flex-col gap-4">
-          <h2 id="sel-h" className="sol-eyebrow">
-            {t("opp.list.selected")}
-          </h2>
-          <OpportunityRow
-            brief={selected}
-            section="selected"
-            canChoose={false}
-            matrix={fits.data?.[selected.id]}
-            fitLoading={fits.isLoading}
-          />
-        </section>
-      )}
-
       {alternatives.length > 0 && (
-        <section aria-labelledby="alt-h" className="flex flex-col gap-4">
-          <h2 id="alt-h" className="sol-eyebrow">
-            {t("opp.list.alternatives")}
-          </h2>
+        <section className="grid gap-6 @2xl:grid-cols-2" aria-label={t("opp.list.alternatives")}>
           {alternatives.map((b) => (
-            <OpportunityRow
+            <AlternativeDirection
               key={b.id}
               brief={b}
-              section="alternative"
               canChoose={canChoose}
               choosing={choose.isPending && choose.variables === b.id}
               onChoose={() => choose.mutate(b.id)}
-              matrix={fits.data?.[b.id]}
-              fitLoading={fits.isLoading}
             />
           ))}
         </section>
       )}
 
+      {canChoose && (
+        <div className="flex flex-col items-start gap-2">
+          <button
+            type="button"
+            onClick={() => explore.mutate()}
+            disabled={explore.isPending || choose.isPending}
+            className={textActionClass}
+            data-testid="explore-more"
+          >
+            {explore.isPending && <Loader2 className="size-4 animate-spin" aria-hidden="true" />}
+            {t("os.reveal.more")}
+            <ActionArrow />
+          </button>
+        </div>
+      )}
+
       {previous.length > 0 && (
-        <section aria-labelledby="prev-h" className="flex flex-col gap-4">
-          <h2 id="prev-h" className="sol-eyebrow">
-            {t("opp.list.previous")}
+        <section className="flex flex-col gap-4" aria-labelledby="prev-h">
+          <h2
+            id="prev-h"
+            className="text-[0.875rem] font-semibold uppercase tracking-[0.12em] text-[#3C4250] [font-family:inherit]"
+          >
+            {t("os.opps.earlier")}
           </h2>
-          {previous.map((b) => (
-            <OpportunityRow key={b.id} brief={b} section="previous" canChoose={false} />
-          ))}
+          <ul className="flex flex-col border-t border-[#171A27]/10">
+            {previous.map((b) => (
+              <PreviousDirection key={b.id} brief={b} />
+            ))}
+          </ul>
         </section>
       )}
     </div>
+  );
+}
+
+function LeadDirection({
+  brief,
+  chosen,
+  canChoose,
+  choosing,
+  onChoose,
+}: {
+  brief: OpportunityBrief;
+  chosen: boolean;
+  canChoose: boolean;
+  choosing: boolean;
+  onChoose: () => void;
+}) {
+  const { t } = useLocale();
+  const { direction } = useDirection(brief);
+  const fit = useFounderFits([brief.id]).data?.[brief.id]?.overall;
+  if (!direction) return null;
+  const d = direction.detail;
+  return (
+    <article
+      className="grid items-center gap-10 @4xl:grid-cols-[1.12fr_1fr] @4xl:gap-14"
+      data-testid={chosen ? "opp-selected" : "opp-alternative"}
+    >
+      <div className="flex flex-col gap-6">
+        <OsEyebrow tone="champagne">
+          {chosen ? t("os.opps.yourDirection") : t("os.reveal.recommended")}
+        </OsEyebrow>
+        <OsDisplay as="h2" size="title">
+          {direction.title}
+        </OsDisplay>
+        <OsLead>{direction.oneLiner}</OsLead>
+        <dl className="grid gap-x-8 gap-y-5 sm:grid-cols-2">
+          {d?.customerHeadline && (
+            <OsFact label={t("os.opps.whoPays")} value={d.customerHeadline} />
+          )}
+          {d?.startingCapital && <OsFact label={t("os.opps.cost")} value={d.startingCapital} />}
+          {fit && <OsFact label={t("os.opps.fit")} value={t(FIT_WORD[fit])} />}
+          {d?.firstExperiment && (
+            <OsFact
+              label={t("os.opps.firstMove")}
+              value={d.firstExperiment}
+              className="sm:col-span-2"
+            />
+          )}
+        </dl>
+        <div className="flex flex-wrap items-center gap-x-6 gap-y-3 pt-1">
+          <Link
+            to="/dashboard/opportunities/$id"
+            params={{ id: direction.id }}
+            className={primaryActionClass}
+          >
+            {t("os.opps.open")}
+            <ActionArrow />
+          </Link>
+          {canChoose && (
+            <button
+              type="button"
+              onClick={onChoose}
+              disabled={choosing}
+              className={textActionClass}
+            >
+              {choosing && <Loader2 className="size-4 animate-spin" aria-hidden="true" />}
+              {t("cc.chooseDirection")}
+            </button>
+          )}
+        </div>
+      </div>
+      <OsFrame className="p-4 sm:p-6">
+        <BusinessGraphic
+          kind={direction.kind}
+          nodes={direction.nodes}
+          label={direction.graphicLabel}
+        />
+      </OsFrame>
+    </article>
+  );
+}
+
+function AlternativeDirection({
+  brief,
+  canChoose,
+  choosing,
+  onChoose,
+}: {
+  brief: OpportunityBrief;
+  canChoose: boolean;
+  choosing: boolean;
+  onChoose: () => void;
+}) {
+  const { t } = useLocale();
+  const { direction } = useDirection(brief);
+  if (!direction) return null;
+  const d = direction.detail;
+  return (
+    <article
+      className="flex flex-col gap-5 rounded-[24px] border border-[#171A27]/10 bg-white/70 p-6 sm:p-7"
+      data-testid="opp-alternative"
+    >
+      <BusinessGraphic
+        kind={direction.kind}
+        nodes={direction.nodes}
+        size="mini"
+        label={direction.graphicLabel}
+        className="rounded-xl border border-[#171A27]/[0.06] bg-[#FCFAF7]"
+      />
+      <div className="flex flex-col gap-2">
+        <h3 className="font-os text-[1.5rem] font-medium uppercase leading-[1.05] tracking-[-0.02em] text-[#171A27]">
+          {direction.title}
+        </h3>
+        <p className="text-[1rem] leading-snug text-[#2A2F3B]">{direction.oneLiner}</p>
+      </div>
+      <dl className="grid gap-4 sm:grid-cols-2">
+        {d?.customerHeadline && <OsFact label={t("os.opps.whoPays")} value={d.customerHeadline} />}
+        {d?.startingCapital && <OsFact label={t("os.opps.cost")} value={d.startingCapital} />}
+      </dl>
+      <div className="mt-auto flex flex-wrap items-center gap-x-6 gap-y-2 pt-2">
+        <Link
+          to="/dashboard/opportunities/$id"
+          params={{ id: direction.id }}
+          className={textActionClass}
+        >
+          {t("os.opps.open")}
+          <ActionArrow />
+        </Link>
+        {canChoose && (
+          <button
+            type="button"
+            onClick={onChoose}
+            disabled={choosing}
+            className={cn(textActionClass, "text-[#454B59]")}
+          >
+            {choosing && <Loader2 className="size-4 animate-spin" aria-hidden="true" />}
+            {t("cc.choose")}
+          </button>
+        )}
+      </div>
+    </article>
+  );
+}
+
+function PreviousDirection({ brief: raw }: { brief: OpportunityBrief }) {
+  const { t, locale } = useLocale();
+  const brief = useTranslatedBrief(raw) ?? raw;
+  return (
+    <li
+      className="flex flex-wrap items-center justify-between gap-4 border-b border-[#171A27]/10 py-4"
+      data-testid="opp-previous"
+    >
+      <div className="min-w-0">
+        <p className="text-[1.0625rem] font-semibold text-[#171A27]">{brief.title}</p>
+        <p className="text-[0.9375rem] text-[#454B59]">
+          {new Date(brief.createdAt).toLocaleDateString(locale === "hi" ? "hi-IN" : "en-IN", {
+            day: "numeric",
+            month: "short",
+            year: "numeric",
+          })}
+          {" · "}
+          {brief.status === "dismissed" ? t("opp.status.dismissed") : t("opp.status.previous")}
+        </p>
+      </div>
+      <Link to="/dashboard/opportunities/$id" params={{ id: brief.id }} className={textActionClass}>
+        {t("os.opps.open")}
+        <ActionArrow />
+      </Link>
+    </li>
   );
 }

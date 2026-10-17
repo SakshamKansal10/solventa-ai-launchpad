@@ -1,77 +1,38 @@
 import { useEffect, useState } from "react";
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useMutation, useQuery } from "@tanstack/react-query";
-import { toast } from "sonner";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { useQuery } from "@tanstack/react-query";
 import { z } from "zod";
 import {
-  ArrowRight,
   Check,
-  Clock3,
   Compass,
-  FileCheck2,
   FlaskConical,
   Loader2,
   Map as MapIcon,
   Rocket,
   UserRound,
 } from "lucide-react";
-import { Line, LineChart, ReferenceDot, ResponsiveContainer } from "recharts";
 
+import { JourneyPreview, type PreviewStep } from "@/components/founder/dashboard/graphics";
+import { ErrorPanel, LinkButton, PageSkeleton, Skeleton } from "@/components/founder/ui";
+import { useDirection } from "@/components/os/direction";
+import { stageOfPhase } from "@/components/os/roadmap";
+import { BusinessGraphic } from "@/components/os/graphics";
+import { IdeaReveal } from "@/components/os/IdeaReveal";
 import {
-  AlternativeCard,
-  BriefChain,
-  FitPill,
-  FlagshipCard,
-} from "@/components/founder/OpportunityCards";
-import { DirectionCompare } from "@/components/founder/dashboard/DirectionCompare";
-import { FitSignals } from "@/components/founder/dashboard/fit-visual";
-import {
-  GhostChart,
-  GhostNodes,
-  JourneyPreview,
-  JourneyRibbon,
-  MomentumBars,
-  ProgressRing,
-  StackedBar,
-  StepPath,
-  WeekTrack,
-  type MomentumDay,
-  type PathStep,
-  type PreviewStep,
-  type RibbonPhase,
-} from "@/components/founder/dashboard/graphics";
-import { ExecutionPath } from "@/components/founder/ExecutionPath";
-import { FitStatusPill } from "@/components/founder/fit";
-import { EvidenceMap } from "@/components/founder/proof/EvidenceMap";
-import {
-  Button,
-  Card,
-  ErrorPanel,
-  Eyebrow,
-  LinkButton,
-  PageHeader,
-  PageSkeleton,
-  Pill,
-  Skeleton,
-} from "@/components/founder/ui";
-import {
-  exploreMoreOpportunities,
-  chooseDirection,
-  getOpportunityDetail,
-} from "@/lib/actions/opportunities";
-import { getOpportunityEconomics } from "@/lib/actions/economics";
-import {
-  breakEvenCustomers,
-  contributionPerCustomer,
-  revenueSensitivityPoints,
-} from "@/lib/economics";
-import { getProofOverview, type AssumptionDTO } from "@/lib/actions/proof";
+  ActionArrow,
+  OsDisplay,
+  OsEyebrow,
+  OsFact,
+  OsFrame,
+  OsLead,
+  Priority,
+  primaryActionClass,
+  textActionClass,
+} from "@/components/os/os";
 import { getRoadmapView, type RoadmapView } from "@/lib/actions/roadmap";
 import { useLocale } from "@/lib/i18n/LocaleProvider";
-import { qk, useCurrentUserQuery, useFounderState, useInvalidateFounder } from "@/lib/queries";
-import { useTranslatedBrief } from "@/lib/use-translation";
+import { qk, useCurrentUserQuery, useFounderState } from "@/lib/queries";
 import { useTranslatedEntity } from "@/lib/use-translation";
-import { useTranslatedTitle } from "@/lib/use-translation";
 
 export const Route = createFileRoute("/dashboard/")({
   // Set by a deep link to ONE consultation's ideas (the "ideas ready" email or
@@ -84,6 +45,10 @@ export const Route = createFileRoute("/dashboard/")({
   }),
 });
 
+/**
+ * COMMAND — the founder's home. Before a choice it is the idea reveal; once a direction is
+ * chosen it asks one thing: what should I do next?
+ */
 function CommandCenter() {
   const { t } = useLocale();
   const founder = useFounderState();
@@ -96,7 +61,7 @@ function CommandCenter() {
   const readOnly = !direction.isLatestConsultation && direction.stage !== "roadmap_active";
 
   return (
-    <div className="flex flex-col gap-10" data-testid="command-center" data-stage={direction.stage}>
+    <div className="flex flex-col gap-14" data-testid="command-center" data-stage={direction.stage}>
       {!direction.isLatestConsultation && <EarlierConsultationBanner />}
 
       {direction.stage === "no_consultation" && <NoConsultation />}
@@ -139,7 +104,7 @@ function EarlierConsultationBanner() {
     <div
       role="status"
       data-testid="earlier-consultation-banner"
-      className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-sol-champagne/50 bg-sol-champagne-soft px-5 py-4"
+      className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-[#B8924F]/50 bg-[#FBF8F2] px-5 py-4"
     >
       <p className="text-[1.0625rem] font-medium text-sol-ink">{t("cc.earlier.body")}</p>
       <div className="flex flex-wrap gap-2">
@@ -170,26 +135,29 @@ function NoConsultation() {
   const { t } = useLocale();
   const steps = usePreviewSteps();
   return (
-    <>
-      <PageHeader title={t("cc.none.title")} subtitle={t("cc.none.body")} />
-      <Card className="flex flex-col gap-8 p-6 sm:p-10" data-testid="no-consultation">
+    <section className="flex flex-col gap-10" data-testid="no-consultation">
+      <div className="flex flex-col gap-6">
+        <OsDisplay>{t("cc.none.title")}</OsDisplay>
+        <OsLead>{t("cc.none.body")}</OsLead>
+      </div>
+      <OsFrame className="flex flex-col gap-8 p-6 sm:p-10">
         <JourneyPreview steps={steps} ariaLabel={t("cc.none.step.aria")} />
-        <div className="flex flex-col items-start gap-3 border-t border-sol-border pt-8">
-          <p className="sol-h3">{t("cc.none.cardTitle")}</p>
-          <p className="sol-body sol-prose text-sol-secondary">{t("cc.none.cardBody")}</p>
-          <div className="mt-2">
-            <LinkButton to="/consultation" variant="primary" size="lg">
-              {t("nav.findMyBusinessIdea")}
-              <ArrowRight className="size-4 text-sol-champagne" aria-hidden="true" />
-            </LinkButton>
-          </div>
+        <div className="flex flex-col items-start gap-4 border-t border-[#171A27]/10 pt-8">
+          <p className="text-[1.375rem] font-semibold text-[#171A27]">{t("cc.none.cardTitle")}</p>
+          <p className="max-w-[60ch] text-[1.0625rem] leading-relaxed text-[#2A2F3B]">
+            {t("cc.none.cardBody")}
+          </p>
+          <Link to="/consultation" className={primaryActionClass}>
+            {t("nav.findMyBusinessIdea")}
+            <ActionArrow />
+          </Link>
         </div>
-      </Card>
-    </>
+      </OsFrame>
+    </section>
   );
 }
 
-/** STATE A — ideas ready, nothing chosen yet. */
+/** STATE A — ideas ready, nothing chosen yet: the first idea reveal. */
 function IdeasReady({
   flagshipId,
   alternativeIds,
@@ -199,93 +167,18 @@ function IdeasReady({
   alternativeIds: string[];
   readOnly: boolean;
 }) {
-  const { t, locale } = useLocale();
   const founder = useFounderState();
-  const invalidate = useInvalidateFounder();
-  const navigate = useNavigate();
   const briefs = founder.data!.briefs;
-
-  const choose = useMutation({
-    mutationFn: (opportunityId: string) => chooseDirection({ data: { opportunityId } }),
-    onSuccess: async () => {
-      await invalidate();
-      toast.success(t("cc.chosen.toast"));
-    },
-    onError: (err) => {
-      console.error("[command-center] choose failed:", err);
-      toast.error(t("cc.chosen.error"));
-    },
-  });
-  const explore = useMutation({
-    mutationFn: () => exploreMoreOpportunities({ data: { locale } }),
-    onSuccess: async (res) => {
-      await invalidate();
-      toast.success(t("cc.explore.done", { n: res.added }));
-      void navigate({ to: "/dashboard/opportunities" });
-    },
-    onError: (err) => {
-      console.error("[command-center] explore more failed:", err);
-      toast.error(t("cc.explore.error"));
-    },
-  });
-
-  const busy = choose.isPending || explore.isPending;
   const flagship = briefs[flagshipId];
   if (!flagship) return <NoConsultation />;
   const alternatives = alternativeIds.flatMap((id) => (briefs[id] ? [briefs[id]] : []));
-
   return (
-    <>
-      <PageHeader title={t("cc.a.title")} subtitle={t("cc.a.subtitle")} />
-      <FlagshipCard
-        brief={flagship}
-        readOnly={readOnly}
-        disabled={busy}
-        choosing={choose.isPending && choose.variables === flagshipId}
-        onChoose={() => choose.mutate(flagshipId)}
-      />
-      <DirectionCompare briefs={[flagship, ...alternatives]} />
-      {alternatives.length > 0 && (
-        <section aria-labelledby="alts-heading" className="flex flex-col gap-4">
-          <h2 id="alts-heading" className="sol-eyebrow">
-            {t("cc.alternatives")}
-          </h2>
-          <div className="grid gap-5 md:grid-cols-2">
-            {alternatives.map((alt, i) => (
-              <AlternativeCard
-                key={alt.id}
-                brief={alt}
-                rank={i + 2}
-                readOnly={readOnly}
-                disabled={busy}
-                choosing={choose.isPending && choose.variables === alt.id}
-                onChoose={() => choose.mutate(alt.id)}
-              />
-            ))}
-          </div>
-        </section>
-      )}
-      {!readOnly && (
-        <div className="flex flex-col items-start gap-2">
-          <Button
-            variant="soft"
-            size="lg"
-            onClick={() => explore.mutate()}
-            loading={explore.isPending}
-            disabled={choose.isPending}
-            data-testid="explore-more"
-          >
-            <Compass className="size-5" aria-hidden="true" />
-            {t("cc.exploreMore")}
-          </Button>
-          {explore.isPending && (
-            <p role="status" className="text-[1rem] text-sol-secondary">
-              {t("cc.explore.working")}
-            </p>
-          )}
-        </div>
-      )}
-    </>
+    <IdeaReveal
+      flagship={flagship}
+      alternatives={alternatives}
+      consultationId={flagship.consultationId}
+      readOnly={readOnly}
+    />
   );
 }
 
@@ -304,183 +197,78 @@ function DirectionSelected({
   const { t } = useLocale();
   const navigate = useNavigate();
   const founder = useFounderState();
-  const brief = useTranslatedBrief(founder.data!.briefs[opportunityId]);
-  const detail = useQuery({
-    queryKey: qk.opportunity(opportunityId),
-    queryFn: () => getOpportunityDetail({ data: { id: opportunityId } }),
-    staleTime: 30_000,
-  });
-  if (!brief) return <NoConsultation />;
+  const { direction } = useDirection(founder.data!.briefs[opportunityId]);
+  if (!direction) return <NoConsultation />;
 
   const building = stage === "roadmap_building";
   const failed = stage === "roadmap_failed";
   const goBuild = () => navigate({ to: "/dashboard/roadmap/building", search: { opportunityId } });
-  const matrix = detail.data?.fit.matrix ?? null;
-
-  // Where the founder is: direction chosen, roadmap next — then week 1, evidence, adapt.
-  const steps: PathStep[] = [
-    { id: "direction", label: t("cc.path.direction"), state: "done", note: t("cc.path.chosen") },
-    {
-      id: "roadmap",
-      label: t("cc.b.step.roadmap"),
-      state: "current",
-      busy: building,
-      warn: failed,
-      note: building
-        ? t("cc.b.step.building")
-        : failed
-          ? t("cc.b.step.failed")
-          : t("cc.path.state.current"),
-    },
-    { id: "week1", label: t("common.weekN", { n: "01" }), state: "future" },
-    { id: "evidence", label: t("cc.b.step.evidence"), state: "future" },
-    { id: "adapt", label: t("howItWorks.step5.title"), state: "future" },
-  ];
 
   return (
-    <>
-      <PageHeader title={t("cc.b.title")} />
-
-      <section
-        className="relative overflow-hidden rounded-[24px] bg-workspace p-6 sm:p-8"
-        data-testid="next-step"
-      >
-        <div
-          className="pointer-events-none absolute inset-0"
-          style={{
-            background:
-              "radial-gradient(ellipse 480px 320px at 85% -10%, var(--workspace-violet-glow), transparent 70%)",
-          }}
-          aria-hidden="true"
-        />
-        <div className="relative flex flex-wrap items-start justify-between gap-4">
-          <div className="min-w-0">
-            <p className="text-[0.875rem] font-bold uppercase tracking-[0.1em] text-workspace-muted">
-              {t("cc.surface.direction")}
-            </p>
-            <h2
-              className="mt-1.5 max-w-[32ch] font-display text-[clamp(1.5rem,1.2rem+1.2vw,2.125rem)] font-semibold leading-[1.15] text-workspace-foreground"
-              data-testid="surface-direction"
-            >
-              {brief.title}
-            </h2>
-          </div>
-          <FitPill fit={brief.fit} />
-        </div>
-
-        {failed && (
-          <div
-            role="alert"
-            className="relative mt-5 rounded-2xl border border-sol-warning/50 bg-sol-warning/15 px-4 py-3 text-[1rem] text-workspace-foreground"
+    <section
+      className="grid items-center gap-10 @4xl:min-h-[calc(100dvh-72px-6rem)] @4xl:grid-cols-[1.12fr_1fr] @4xl:gap-14"
+      data-testid="next-step"
+    >
+      <div className="flex flex-col gap-7">
+        <OsEyebrow tone="champagne">{t("os.chosen.eyebrow")}</OsEyebrow>
+        <OsDisplay size="title" data-testid="surface-direction">
+          {direction.title}
+        </OsDisplay>
+        <OsLead>{t("os.chosen.next")}</OsLead>
+        {(building || failed) && (
+          <p
+            role={failed ? "alert" : "status"}
+            className="text-[1.0625rem] font-semibold text-[#171A27]"
           >
-            {t("cc.b.failed")}
-          </div>
-        )}
-        {building && (
-          <div
-            role="status"
-            className="relative mt-5 rounded-2xl border border-sol-violet/40 bg-sol-violet/15 px-4 py-3 text-[1rem] text-workspace-foreground"
-          >
-            {t("cc.b.building")}
-          </div>
-        )}
-
-        <div className="relative mt-6 border-t border-workspace-border pt-6">
-          <StepPath steps={steps} ariaLabel={t("cc.b.step.aria")} testId="build-path" />
-        </div>
-
-        <div className="relative mt-6 flex flex-wrap items-center justify-between gap-4 border-t border-workspace-border pt-6">
-          <p className="min-w-0 flex-1 basis-60 text-[0.9375rem] text-workspace-muted">
-            {hasArchivedRoadmap ? t("cc.b.resumeHint") : t("cc.b.hint")}
+            {building ? t("os.chosen.building") : t("os.chosen.failed")}
           </p>
-          <div className="flex w-full flex-wrap gap-3 sm:w-auto">
-            {!readOnly && (
-              <Button
-                size="lg"
-                variant="champagne"
-                onClick={goBuild}
-                data-testid="build-roadmap"
-                className="w-full sm:w-auto"
-              >
-                {building
-                  ? t("cc.b.viewProgress")
-                  : failed
-                    ? t("common.retry")
-                    : hasArchivedRoadmap
-                      ? t("cc.b.resumeCta")
-                      : t("cc.b.buildCta")}
-                <ArrowRight className="size-4" aria-hidden="true" />
-              </Button>
-            )}
-            <LinkButton
-              to="/dashboard/opportunities/$id"
-              params={{ id: opportunityId }}
-              variant="secondary"
-              size="lg"
-              className="w-full border-workspace-border bg-transparent text-workspace-foreground hover:border-sol-violet/50 sm:w-auto"
+        )}
+        {!readOnly && (
+          <div className="flex flex-wrap items-center gap-x-6 gap-y-3 pt-1">
+            <button
+              type="button"
+              className={primaryActionClass}
+              onClick={goBuild}
+              data-testid="build-roadmap"
             >
-              {t("cc.b.openOpportunity")}
-            </LinkButton>
+              {building
+                ? t("cc.b.viewProgress")
+                : failed
+                  ? t("common.retry")
+                  : hasArchivedRoadmap
+                    ? t("cc.b.resumeCta")
+                    : t("os.reveal.build")}
+              <ActionArrow />
+            </button>
+            <Link to="/dashboard/opportunities" className={textActionClass}>
+              {t("os.chosen.switch")}
+              <ActionArrow />
+            </Link>
           </div>
-        </div>
-      </section>
-
-      <Card className="flex flex-col gap-6 p-6 sm:p-8" data-testid="chosen-direction">
-        <Eyebrow>{t("cc.b.chosen")}</Eyebrow>
-        <BriefChain brief={brief} />
-      </Card>
-      <Card className="flex flex-col gap-4 p-6" data-testid="chosen-fit">
-        <h2 className="sol-eyebrow">{t("cc.oppPulse.heading")}</h2>
-        {detail.isPending ? (
-          <Skeleton className="h-28" />
-        ) : matrix ? (
-          <FitSignals rows={matrix.rows} layout="tiles" />
-        ) : null}
-      </Card>
-    </>
+        )}
+      </div>
+      <OsFrame className="p-4 sm:p-6">
+        <BusinessGraphic
+          kind={direction.kind}
+          nodes={direction.nodes}
+          label={direction.graphicLabel}
+          testId="chosen-graphic"
+        />
+      </OsFrame>
+    </section>
   );
-}
-
-const localKey = (d: Date) =>
-  `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
-
-/** The last 14 days, one entry per day: missions finished (from their completion
- * time) and evidence captured (from the date the founder gave it). */
-function buildMomentum(view: RoadmapView, assumptions: AssumptionDTO[]): MomentumDay[] {
-  const now = new Date();
-  const days: MomentumDay[] = [];
-  for (let i = 13; i >= 0; i--) {
-    const d = new Date(now.getFullYear(), now.getMonth(), now.getDate() - i);
-    days.push({ key: localKey(d), missions: 0, evidence: 0, today: i === 0 });
-  }
-  const byKey = new Map(days.map((d) => [d.key, d]));
-  for (const w of view.weeks) {
-    for (const m of w.missions) {
-      if (!m.completedAt) continue;
-      const day = byKey.get(localKey(new Date(m.completedAt)));
-      if (day) day.missions += 1;
-    }
-  }
-  for (const a of assumptions) {
-    for (const e of a.evidence) {
-      const day = byKey.get(e.occurredOn);
-      if (day) day.evidence += 1;
-    }
-  }
-  return days;
 }
 
 interface WeekOverlay {
   mission?: string;
-  missions?: Record<string, { title?: string }>;
-}
-interface SkeletonOverlay {
-  phases?: Record<string, { title?: string }>;
-  weeks?: Record<string, { title?: string; objective?: string }>;
+  missions?: Record<string, { title?: string; why?: string }>;
 }
 
-/** STATE C — the returning founder's dashboard: this week's mission, and three
- * small modules. No setup CTAs, no giant idea report. */
+/**
+ * STATE C — the returning founder. ONE question: what should I do next? One specific move,
+ * huge, with one action; its personalised model beside it; then the direction, at most three
+ * priorities for the week, and what changed. Nothing else competes.
+ */
 function NextMove({
   roadmapId,
   opportunityId,
@@ -513,38 +301,18 @@ function NextMove({
     queryFn: () => getRoadmapView({ data: { roadmapId } }),
     staleTime: 15_000,
   });
-  const proof = useQuery({
-    queryKey: qk.proof(opportunityId),
-    queryFn: () => getProofOverview({ data: { opportunityId } }),
-    staleTime: 15_000,
-  });
-  const detail = useQuery({
-    queryKey: qk.opportunity(opportunityId),
-    queryFn: () => getOpportunityDetail({ data: { id: opportunityId } }),
-    staleTime: 30_000,
-  });
-  const economics = useQuery({
-    queryKey: qk.opportunityEconomics(opportunityId),
-    queryFn: () => getOpportunityEconomics({ data: { opportunityId } }),
-    staleTime: 30_000,
-  });
+  const founder = useFounderState();
+  const { direction } = useDirection(founder.data?.briefs[opportunityId]);
   const view: RoadmapView | null | undefined = roadmap.data;
   const currentWeekId = view?.currentWeekId ?? null;
-  const skeleton = useTranslatedEntity<SkeletonOverlay>("roadmap_skeleton", roadmapId);
   const weekDetail = useTranslatedEntity<WeekOverlay>("week_detail", currentWeekId);
-  const rawOpportunityTitle = useFounderState().data?.briefs[opportunityId]?.title ?? "";
-  const opportunityTitle = useTranslatedTitle(opportunityId, rawOpportunityTitle) ?? "";
+  const [whyOpen, setWhyOpen] = useState(false);
 
   if (roadmap.isPending) {
     return (
       <>
-        <PageHeader title={t("cc.c.title")} />
-        <Skeleton className="h-72 w-full rounded-[1.5rem]" />
-        <div className="grid gap-5 md:grid-cols-3">
-          <Skeleton className="h-40" />
-          <Skeleton className="h-40" />
-          <Skeleton className="h-40" />
-        </div>
+        <Skeleton className="h-10 w-64" />
+        <Skeleton className="h-[22rem] w-full rounded-[1.5rem]" />
       </>
     );
   }
@@ -553,491 +321,199 @@ function NextMove({
   }
 
   const week = view.weeks.find((w) => w.id === view.currentWeekId) ?? null;
-  const phase = view.phases.find((p) => p.id === view.currentPhaseId) ?? null;
+  const phaseIndex = view.phases.findIndex((p) => p.id === view.currentPhaseId);
+  const phase = phaseIndex >= 0 ? view.phases[phaseIndex] : null;
   const mission =
     week?.missions.find((m) => m.state === "in_progress") ??
     week?.missions.find((m) => m.state === "not_started" && m.required) ??
     week?.missions.find((m) => m.state === "not_started") ??
     null;
-  const weekTitle = skeleton.data?.weeks?.[week?.id ?? ""]?.title ?? week?.title;
-  const phaseTitle = skeleton.data?.phases?.[phase?.id ?? ""]?.title ?? phase?.title;
-  const missionTitle = weekDetail.data?.missions?.[mission?.id ?? ""]?.title ?? mission?.title;
+  const missionText = (m: { id: string; title: string }) =>
+    weekDetail.data?.missions?.[m.id]?.title ?? m.title;
+  const missionWhy = mission ? (weekDetail.data?.missions?.[mission.id]?.why ?? mission.why) : "";
+  const stage = stageOfPhase(phase?.key, Math.max(0, phaseIndex));
+  const priorities = (week?.missions ?? []).slice(0, 3);
   const adaptation = week?.adaptationNote ?? null;
-  const counts = proof.data?.counts;
-  const assumptions = proof.data?.assumptions ?? [];
-  const weekMissions = week?.missions ?? [];
-  const missionsDone = weekMissions.filter((m) => m.state === "completed").length;
-  const requiredMissions = weekMissions.filter((m) => m.required);
-  const econ = economics.data ?? null;
-  const contribution = econ ? contributionPerCustomer(econ) : null;
-  const breakEven = econ ? breakEvenCustomers(econ) : null;
-  const sensPoints = econ ? revenueSensitivityPoints(econ) : [];
-  const matrix = detail.data?.fit.matrix ?? null;
-  const supportedN = counts?.supported ?? 0;
-  const testingN = (counts?.weak ?? 0) + (counts?.mixed ?? 0);
-  const untestedN = counts?.untested ?? 0;
-  const contradictedN = counts?.contradicted ?? 0;
-  const momentum = buildMomentum(view, assumptions);
-  const momentumTotal = momentum.reduce((n, d) => n + d.missions + d.evidence, 0);
-  const weekDone = weekMissions.length > 0 && missionsDone === weekMissions.length;
-  const nextWeekLabel =
-    week && week.number < view.totals.weeks
-      ? t("common.weekN", { n: String(week.number + 1).padStart(2, "0") })
-      : t("rm.state.completed");
-  const phaseRibbon: RibbonPhase[] = view.phases.map((p, i) => ({
-    id: p.id,
-    number: i + 1,
-    title: skeleton.data?.phases?.[p.id]?.title ?? p.title,
-    current: p.id === view.currentPhaseId,
-    weeks: p.weekIds.flatMap((wid) => {
-      const w = view.weeks.find((x) => x.id === wid);
-      return w
-        ? [
-            {
-              id: w.id,
-              state: (w.state === "completed"
-                ? "completed"
-                : w.id === view.currentWeekId
-                  ? "current"
-                  : "future") as "completed" | "current" | "future",
-            },
-          ]
-        : [];
-    }),
-  }));
+  const d = direction?.detail ?? null;
+  const edge = d?.advantages[0] ?? direction?.why[0] ?? null;
 
   return (
     <>
-      <header className="flex flex-col gap-1.5" data-testid="dashboard-header">
+      <header className="flex flex-col gap-4" data-testid="dashboard-header">
         <p
-          className="min-h-[1.75rem] text-[1.1875rem] font-semibold text-sol-secondary"
+          className="min-h-[1.5rem] text-[1.0625rem] font-semibold uppercase tracking-[0.12em] text-[#3C4250]"
           data-testid="greeting"
         >
           {greeting}
         </p>
-        <h1 className="sol-page-title">
-          {completed ? t("cc.c.completedTitle") : t("cc.c.titleClear")}
-        </h1>
-        {completed && (
-          <p className="sol-body sol-prose mt-2 text-sol-secondary">{t("cc.c.completedBody")}</p>
-        )}
+        <OsDisplay>{completed ? t("cc.c.completedTitle") : t("os.cc.title")}</OsDisplay>
+        {completed && <OsLead>{t("cc.c.completedBody")}</OsLead>}
       </header>
 
       {week && !completed && (
-        <section
-          className="relative overflow-hidden rounded-[24px] bg-workspace p-6 sm:p-8"
-          data-testid="founder-command-surface"
-        >
-          {/* Subtle violet illumination only — the surface itself stays the
-              deliberate navy/near-black, never a gradient background. */}
-          <div
-            className="pointer-events-none absolute inset-0"
-            style={{
-              background:
-                "radial-gradient(ellipse 480px 320px at 85% -10%, var(--workspace-violet-glow), transparent 70%)",
-            }}
-            aria-hidden="true"
-          />
-
-          {/* Top row: Active Direction / Current Week / Evidence — real data only. */}
-          <div className="relative grid gap-5 border-b border-workspace-border pb-5 sm:grid-cols-[1.35fr_1fr_1.15fr]">
-            <div className="min-w-0">
-              <p className="text-[0.875rem] font-bold uppercase tracking-[0.1em] text-workspace-muted">
-                {t("cc.surface.direction")}
-              </p>
-              <p
-                className="mt-1.5 line-clamp-2 text-[1.1875rem] font-semibold leading-snug text-workspace-foreground"
-                data-testid="surface-direction"
-              >
-                {opportunityTitle}
-              </p>
-            </div>
-            <div className="min-w-0">
-              <p className="text-[0.875rem] font-bold uppercase tracking-[0.1em] text-workspace-muted">
-                {t("cc.surface.week")}
-              </p>
-              <p className="mt-1.5 text-[1.1875rem] font-semibold leading-snug text-workspace-foreground">
-                {t("common.weekN", { n: String(week.number).padStart(2, "0") })}
-              </p>
-              <p className="truncate text-[0.9375rem] text-workspace-muted">{weekTitle}</p>
-            </div>
-            <div className="min-w-0">
-              <p className="text-[0.875rem] font-bold uppercase tracking-[0.1em] text-workspace-muted">
-                {t("cc.surface.evidence")}
-              </p>
-              <p
-                className="mt-1.5 text-[1.1875rem] font-semibold leading-snug text-workspace-foreground"
-                data-testid="surface-evidence"
-              >
-                {proof.data && assumptions.length > 0
-                  ? t("cc.surface.evidenceLine", {
-                      captured: view.totals.evidence,
-                      supported: supportedN,
-                      testing: testingN,
-                    })
-                  : t("cc.surface.evidenceNone")}
-              </p>
-              <div className="mt-2.5">
-                <StackedBar
-                  ariaLabel={t("cc.surface.evidenceAria")}
-                  track="bg-white/10"
-                  segments={[
-                    {
-                      value: supportedN,
-                      className: "bg-sol-champagne",
-                      label: t("cc.map.legend.supported"),
-                    },
-                    {
-                      value: testingN,
-                      className: "bg-sol-violet",
-                      label: t("cc.map.legend.testing"),
-                    },
-                    {
-                      value: contradictedN,
-                      className: "bg-sol-warning",
-                      label: t("pf.state.contradicted"),
-                    },
-                    {
-                      value: untestedN,
-                      className: "bg-white/25",
-                      label: t("cc.map.legend.untested"),
-                    },
-                  ]}
-                />
-              </div>
-            </div>
-          </div>
-
-          {/* The execution path — each stop read off the founder's real assumptions. */}
-          <div className="relative mt-5">
-            <p className="mb-3 text-[0.875rem] font-bold uppercase tracking-[0.1em] text-sol-champagne">
-              {t("cc.path.heading")}
-            </p>
-            <ExecutionPath
-              opportunityId={opportunityId}
-              assumptions={assumptions}
-              loading={proof.isPending}
-            />
-          </div>
-
-          <div className="relative mt-5 flex flex-wrap items-center justify-between gap-3 border-t border-workspace-border pt-5">
-            <div className="min-w-0 flex-1">
-              {week.state === "generating_next" ? (
-                <p className="sol-body text-workspace-muted" role="status">
-                  {week.generationStatus === "failed"
-                    ? t("rm.gen.failedShort")
-                    : t("rm.gen.preparingShort")}
-                </p>
-              ) : week.state === "ready_to_close" ? (
-                <p className="sol-body text-workspace-foreground">{t("cc.c.readyToClose")}</p>
-              ) : (
-                <p className="text-[0.9375rem] text-workspace-muted">
-                  {t(`rm.state.${week.state}` as const)}
-                </p>
-              )}
-            </div>
-            <LinkButton
-              to="/dashboard/roadmap"
-              search={{ week: week.number, mission: mission?.id }}
-              variant="secondary"
-              size="lg"
-              className="border-workspace-border bg-transparent text-workspace-foreground hover:border-sol-violet/50"
-              data-testid="continue-mission"
-            >
-              {week.state === "ready_to_close" ? t("rm.week.review") : t("cc.c.openWeek")}
-            </LinkButton>
-          </div>
-        </section>
-      )}
-
-      {/* Today's Move + this week as a track that ends at the next unlock. */}
-      {week && !completed && (
-        <div className="grid gap-5 lg:grid-cols-[1.35fr_1fr]">
+        <section className="flex flex-col" data-testid="founder-command-surface">
           {mission && week.state !== "generating_next" ? (
-            <Card
-              className="relative overflow-hidden border-l-[6px] border-l-sol-champagne p-6 sm:p-8"
-              data-testid="todays-move"
-            >
-              {/* Keyed by mission: when one is finished the next one arrives as a
-                  state change (480ms reveal), not a silent text swap. */}
-              <div key={mission.id} className="sol-reveal">
-                <Eyebrow className="text-sol-champagne-deep">{t("cc.today.heading")}</Eyebrow>
+            <div className="flex flex-col gap-6" data-testid="todays-move">
+              <div key={mission.id} className="flex flex-col gap-6 sol-reveal">
+                <OsEyebrow tone="champagne">
+                  {t("os.rm.week", { n: String(week.number).padStart(2, "0") })}
+                  {mission.timeEstimate ? ` · ${mission.timeEstimate}` : ""}
+                </OsEyebrow>
                 <h2
-                  className="mt-3 max-w-[30ch] font-display text-[clamp(1.5rem,1.2rem+1.2vw,2.125rem)] font-semibold leading-[1.15] text-sol-ink"
+                  className="max-w-[20ch] font-os text-[clamp(2.1rem,1.35rem+2.4vw,3.6rem)] font-medium leading-[1.04] tracking-[-0.035em] text-[#171A27]"
                   data-testid="current-mission"
                 >
-                  {missionTitle}
+                  {missionText(mission)}
                 </h2>
-                <div className="mt-5 flex flex-wrap items-center gap-2">
-                  {mission.timeEstimate && (
-                    <Pill>
-                      <Clock3 className="size-3.5" aria-hidden="true" />
-                      {mission.timeEstimate}
-                    </Pill>
-                  )}
-                  {mission.evidenceRequired && (
-                    <Pill tone="violet">
-                      <FileCheck2 className="size-3.5" aria-hidden="true" />
-                      {t("rm.evidenceRequired")}
-                    </Pill>
-                  )}
-                </div>
-                <div className="mt-6">
-                  <LinkButton
+                <div className="flex flex-wrap items-center gap-x-6 gap-y-3">
+                  <Link
                     to="/dashboard/roadmap"
                     search={{ week: week.number, mission: mission.id }}
-                    variant="primary"
-                    size="lg"
+                    className={primaryActionClass}
                     data-testid="start-mission"
                   >
-                    {mission.state === "not_started"
-                      ? t("rm.mission.start")
-                      : t("cc.c.continueMission")}
-                    <ArrowRight className="size-4 text-sol-champagne" aria-hidden="true" />
-                  </LinkButton>
+                    {mission.state === "not_started" ? t("os.cc.start") : t("os.cc.continue")}
+                    <ActionArrow />
+                  </Link>
+                  {missionWhy && (
+                    <button
+                      type="button"
+                      aria-expanded={whyOpen}
+                      onClick={() => setWhyOpen((v) => !v)}
+                      className={textActionClass}
+                      data-testid="why-this"
+                    >
+                      {t("os.cc.why")}
+                    </button>
+                  )}
                 </div>
+                {whyOpen && missionWhy && (
+                  <p className="max-w-[56ch] border-l-2 border-[#B8924F] pl-4 text-[1.0625rem] leading-relaxed text-[#2A2F3B]">
+                    {missionWhy}
+                  </p>
+                )}
               </div>
-            </Card>
+            </div>
           ) : (
-            <Card
-              className="flex flex-col items-start justify-center gap-5 border-l-[6px] border-l-sol-champagne p-6 sm:p-8"
-              data-testid="week-wrap"
-            >
+            <div className="flex flex-col items-start gap-6" data-testid="week-wrap">
               {week.state === "generating_next" ? (
                 <p
-                  className="flex items-center gap-3 font-display text-[1.5rem] font-semibold text-sol-ink"
+                  className="flex items-center gap-3 font-os text-[1.75rem] font-medium text-[#171A27]"
                   role="status"
                 >
-                  <Loader2 className="size-6 animate-spin text-sol-violet" aria-hidden="true" />
-                  {t("rm.gen.preparingShort")}
+                  <Loader2 className="size-6 animate-spin text-[#2F62D9]" aria-hidden="true" />
+                  {t("os.cc.preparing")}
                 </p>
               ) : (
                 <>
-                  <span className="flex size-14 items-center justify-center rounded-full bg-sol-champagne text-sol-ink">
+                  <span className="flex size-14 items-center justify-center rounded-full bg-[#B8924F] text-white">
                     <Check className="size-7" strokeWidth={3} aria-hidden="true" />
                   </span>
-                  <h2 className="font-display text-[clamp(1.5rem,1.2rem+1.2vw,2.125rem)] font-semibold leading-[1.15] text-sol-ink">
-                    {t("rm.week.readyToClose")}
+                  <h2 className="font-os text-[clamp(1.85rem,1.3rem+1.8vw,3rem)] font-medium leading-[1.06] tracking-[-0.03em] text-[#171A27]">
+                    {t("os.cc.weekDone")}
                   </h2>
-                  <LinkButton
+                  <Link
                     to="/dashboard/roadmap"
                     search={{ week: week.number }}
-                    size="lg"
+                    className={primaryActionClass}
                     data-testid="review-from-dashboard"
                   >
-                    {t("rm.week.review")}
-                    <ArrowRight className="size-4 text-sol-champagne" aria-hidden="true" />
-                  </LinkButton>
+                    {t("os.cc.review")}
+                    <ActionArrow />
+                  </Link>
                 </>
               )}
-            </Card>
-          )}
-
-          <Card className="flex flex-col gap-5 p-6" data-testid="next-unlock">
-            <h2 className="sol-eyebrow">{t("cc.unlock.heading")}</h2>
-            <div className="my-auto">
-              <WeekTrack
-                testId="week-track"
-                missions={weekMissions.map((m) => ({
-                  id: m.id,
-                  title: weekDetail.data?.missions?.[m.id]?.title ?? m.title,
-                  state: m.state,
-                }))}
-                unlocked={weekDone || week.state === "ready_to_close"}
-                nextLabel={nextWeekLabel}
-                onOpen={(missionId) =>
-                  navigate({
-                    to: "/dashboard/roadmap",
-                    search: { week: week.number, mission: missionId },
-                  })
-                }
-              />
             </div>
-          </Card>
-        </div>
+          )}
+        </section>
       )}
 
-      {/* Pulse rings + evidence map — real counts and real assumptions. */}
-      <div className="grid gap-5 lg:grid-cols-[1fr_1.4fr]">
-        <Card className="flex flex-col gap-5 p-6" data-testid="business-pulse">
-          <h2 className="sol-eyebrow">{t("cc.pulse.heading")}</h2>
-          <div className="my-auto flex flex-wrap items-start justify-around gap-5">
-            <ProgressRing
-              testId="ring-missions"
-              label={t("cc.ring.missions")}
-              value={missionsDone}
-              total={weekMissions.length}
-              tone="violet"
+      <div className="grid gap-12 border-t border-[#171A27]/10 pt-12 @4xl:grid-cols-3 @4xl:gap-10">
+        {/* The direction, in three facts. */}
+        <section className="flex flex-col gap-5" data-testid="current-direction">
+          <OsEyebrow>{t("os.cc.direction")}</OsEyebrow>
+          {direction && (
+            <BusinessGraphic
+              kind={direction.kind}
+              nodes={direction.nodes}
+              size="mini"
+              label={direction.graphicLabel}
+              testId="command-graphic"
+              className="max-w-[22rem] rounded-xl border border-[#171A27]/[0.06] bg-white/70"
             />
-            <ProgressRing
-              testId="ring-supported"
-              label={t("cc.ring.supported")}
-              value={supportedN}
-              total={assumptions.length}
-              tone="champagne"
-            />
-            <ProgressRing
-              testId="ring-weeks"
-              label={t("cc.ring.weeks")}
-              value={view.totals.completedWeeks}
-              total={view.totals.weeks}
-              tone="violet"
-            />
-          </div>
-        </Card>
-
-        <Card className="flex flex-col gap-4 p-6" data-testid="dashboard-evidence-map">
-          <div className="flex items-center justify-between gap-3">
-            <h2 className="sol-eyebrow">{t("cc.map.heading")}</h2>
-            <LinkButton
-              to="/dashboard/proof"
-              search={{ opportunity: opportunityId }}
-              variant="ghost"
-              size="sm"
-              aria-label={t("cc.c.openProof")}
-              title={t("cc.c.openProof")}
-            >
-              <ArrowRight className="size-4" aria-hidden="true" />
-            </LinkButton>
-          </div>
-          {proof.isPending ? (
-            <Skeleton className="h-28" />
-          ) : assumptions.length > 0 ? (
-            <EvidenceMap
-              assumptions={assumptions}
-              onSelect={(id) =>
-                navigate({
-                  to: "/dashboard/proof",
-                  search: { opportunity: opportunityId, assumption: id },
-                })
-              }
-            />
-          ) : (
-            <div className="flex flex-col items-start gap-3">
-              <GhostNodes />
-              <p className="sr-only">{t("cc.map.empty")}</p>
-            </div>
           )}
-        </Card>
-      </div>
-
-      {/* Founder fit as four bars; economics as a chart (or the shape of one). */}
-      <div className="grid gap-5 md:grid-cols-2">
-        <Card className="flex flex-col gap-4 p-6" data-testid="opportunity-pulse">
-          <h2 className="sol-eyebrow">{t("cc.oppPulse.heading")}</h2>
-          {detail.isPending || !matrix ? (
-            <Skeleton className="h-28" />
-          ) : (
-            <FitSignals rows={matrix.rows} />
-          )}
-        </Card>
-
-        <Card className="flex flex-col gap-4 p-6" data-testid="economics-snapshot">
-          <div className="flex items-center justify-between gap-3">
-            <h2 className="sol-eyebrow">{t("cc.econ.heading")}</h2>
-            {econ?.exists && <Pill>{t("opp.econ.assumptionBadge")}</Pill>}
-          </div>
-          {economics.isPending ? (
-            <Skeleton className="h-28" />
-          ) : econ && econ.exists && econ.pricePerCustomer != null ? (
-            <>
-              <dl className="grid grid-cols-2 gap-x-4 gap-y-3">
-                <div>
-                  <dt className="text-[0.875rem] font-semibold text-sol-secondary">
-                    {t("opp.econ.contribution")}
-                  </dt>
-                  <dd className="mt-1 font-display text-[1.5rem] font-semibold text-sol-ink">
-                    {contribution != null
-                      ? `${econ.currency} ${contribution.toLocaleString()}`
-                      : "—"}
-                  </dd>
-                </div>
-                <div>
-                  <dt className="text-[0.875rem] font-semibold text-sol-secondary">
-                    {t("opp.econ.breakEven")}
-                  </dt>
-                  <dd className="mt-1 font-display text-[1.5rem] font-semibold text-sol-ink">
-                    {breakEven != null ? breakEven : "—"}
-                  </dd>
-                </div>
-              </dl>
-              {sensPoints.length > 1 && (
-                <div className="h-24 w-full" aria-hidden="true">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <LineChart data={sensPoints}>
-                      <Line
-                        type="monotone"
-                        dataKey="revenue"
-                        stroke="var(--sol-violet)"
-                        strokeWidth={2}
-                        dot={false}
-                      />
-                      {breakEven != null && (
-                        <ReferenceDot
-                          x={breakEven}
-                          y={econ.pricePerCustomer * breakEven}
-                          r={4}
-                          fill="var(--sol-champagne-deep)"
-                          stroke="none"
-                        />
-                      )}
-                    </LineChart>
-                  </ResponsiveContainer>
-                </div>
-              )}
-            </>
-          ) : (
-            <GhostChart />
-          )}
-          <LinkButton
-            to="/dashboard/opportunities/$id"
-            params={{ id: opportunityId }}
-            search={{ tab: "economics" }}
-            variant="ghost"
-            size="sm"
-            className="mt-auto self-start"
-          >
-            {econ?.exists ? t("opp.econ.edit") : t("opp.econ.add")}
-          </LinkButton>
-        </Card>
-      </div>
-
-      {/* The whole roadmap on one line, and the last fortnight's momentum. */}
-      <div className="grid gap-5 lg:grid-cols-[1.5fr_1fr]">
-        <Card className="flex flex-col gap-5 p-6" data-testid="mini-roadmap">
-          <div className="flex items-center justify-between gap-3">
-            <h2 className="sol-eyebrow">{t("cc.mini.heading")}</h2>
-            <LinkButton
-              to="/dashboard/roadmap"
-              variant="ghost"
-              size="sm"
-              aria-label={t("cc.mini.openFull")}
-              title={t("cc.mini.openFull")}
-            >
-              <ArrowRight className="size-4" aria-hidden="true" />
-            </LinkButton>
-          </div>
-          <JourneyRibbon
-            phases={phaseRibbon}
-            onOpenPhase={(id) => navigate({ to: "/dashboard/roadmap", search: { phase: id } })}
-          />
-          {phaseTitle && (
-            <p className="truncate text-[0.9375rem] font-semibold text-sol-secondary">
-              {phaseTitle}
+          <div className="flex flex-col gap-2">
+            <h2 className="font-os text-[1.625rem] font-medium uppercase leading-[1.05] tracking-[-0.02em] text-[#171A27]">
+              {direction?.title ?? view.roadmap.opportunityTitle}
+            </h2>
+            <p className="text-[0.9375rem] font-semibold uppercase tracking-[0.12em] text-[#7A5B2B]">
+              {t(`os.cc.stage.${stage}` as const)}
             </p>
+          </div>
+          {d && (
+            <dl className="flex flex-col gap-4">
+              {d.startingCapital && (
+                <OsFact label={t("os.cc.startCost")} value={d.startingCapital} />
+              )}
+              {d.weeklyTime && <OsFact label={t("os.cc.time")} value={d.weeklyTime} />}
+              {edge && <OsFact label={t("os.cc.advantage")} value={edge} />}
+            </dl>
           )}
-        </Card>
+        </section>
 
-        <Card className="flex flex-col gap-4 p-6" data-testid="recent-changes">
-          <h2 className="sol-eyebrow">{t("cc.mom.heading")}</h2>
-          <MomentumBars
-            days={momentum}
-            ariaLabel={t("cc.mom.aria")}
-            missionsLabel={t("cc.mom.missions")}
-            evidenceLabel={t("cc.mom.evidence")}
-          />
-          {momentumTotal === 0 && <p className="sr-only">{t("cc.mom.empty")}</p>}
-        </Card>
+        {/* This week: at most three priorities. */}
+        <section className="flex flex-col gap-3" data-testid="this-week">
+          <OsEyebrow>{t("os.cc.thisWeek")}</OsEyebrow>
+          {week && priorities.length > 0 ? (
+            <div className="flex flex-col">
+              {priorities.map((m, i) => (
+                <Priority
+                  key={m.id}
+                  n={i + 1}
+                  title={missionText(m)}
+                  done={m.state === "completed"}
+                  active={m.id === mission?.id}
+                  testId="track-node"
+                  onOpen={() =>
+                    navigate({
+                      to: "/dashboard/roadmap",
+                      search: { week: week.number, mission: m.id },
+                    })
+                  }
+                />
+              ))}
+            </div>
+          ) : (
+            <Link to="/dashboard/roadmap" className={textActionClass}>
+              {t("os.cc.openRoadmap")}
+              <ActionArrow />
+            </Link>
+          )}
+        </section>
+
+        {/* What changed: a compact, honest recap. */}
+        <section className="flex flex-col gap-4" data-testid="what-changed">
+          <OsEyebrow>{t("os.cc.changed")}</OsEyebrow>
+          <h2 className="font-os text-[1.625rem] font-medium uppercase leading-[1.05] tracking-[-0.02em] text-[#171A27]">
+            {adaptation ? t("os.cc.adapted") : t("os.cc.unchanged")}
+          </h2>
+          <p
+            className="text-[1.0625rem] leading-relaxed text-[#2A2F3B]"
+            data-testid="adaptation-summary"
+          >
+            {adaptation ?? t("os.cc.unchangedBody")}
+          </p>
+          {adaptation && week && (
+            <Link
+              to="/dashboard/roadmap"
+              search={{ week: week.number }}
+              className={textActionClass}
+            >
+              {t("os.cc.seeWhy")}
+              <ActionArrow />
+            </Link>
+          )}
+        </section>
       </div>
     </>
   );

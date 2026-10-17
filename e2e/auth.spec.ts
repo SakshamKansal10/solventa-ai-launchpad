@@ -132,7 +132,9 @@ test.describe("first consultation as a guest", () => {
     await page.getByRole("button", { name: /Verify/ }).click();
 
     await expect(page).toHaveURL(/localhost:\d+\/dashboard$/, { timeout: 90_000 });
-    await expect(page.locator("h1")).toHaveText("Your directions are ready", { timeout: 60_000 });
+    await expect(page.getByTestId("command-center")).toHaveAttribute("data-stage", "ideas_ready", {
+      timeout: 60_000,
+    });
     expect(await gemini.countOf("INITIAL_INTELLIGENCE")).toBe(1);
 
     const rows = await sql<{ full_name: string; n: string }>(

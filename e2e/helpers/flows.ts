@@ -17,14 +17,32 @@ export async function founderWithDirections(context: BrowserContext, name = "Ash
   return { user, seeded };
 }
 
-/** Chooses the flagship direction and builds its roadmap through the real UI. */
+/** Moves past the idea reveal's short opening line (shown once per consultation), if it shows. */
+export async function skipRevealIntro(page: Page): Promise<void> {
+  const intro = page.getByTestId("reveal-continue");
+  await expect(intro.or(page.getByTestId("flagship-choose"))).toBeVisible({ timeout: 30_000 });
+  if (await intro.isVisible()) await intro.click();
+  await expect(page.getByTestId("flagship-choose")).toBeVisible();
+}
+
+/** Chooses the flagship direction and builds its roadmap through the real UI: one action —
+ * "Build my roadmap" — chooses it, shows the roadmap being made, then opens it. */
 export async function chooseAndBuildRoadmap(page: Page): Promise<void> {
   await gotoApp(page, "/dashboard");
+  await skipRevealIntro(page);
   await page.getByTestId("flagship-choose").click();
-  await expect(page.getByTestId("build-roadmap")).toBeEnabled();
-  await page.getByTestId("build-roadmap").click();
-  await expect(page).toHaveURL(/\/dashboard\/roadmap/, { timeout: 60_000 });
+  await expect(page).toHaveURL(/\/dashboard\/roadmap/, { timeout: 90_000 });
   await expect(page.getByTestId("roadmap-page")).toBeVisible({ timeout: 30_000 });
+}
+
+/** Records one learning on an open, in-progress mission that asks for evidence. */
+export async function recordLearning(
+  card: ReturnType<Page["getByTestId"]>,
+  summary = "Said the follow-ups are dropped every week.",
+): Promise<void> {
+  await card.getByTestId("learning-summary").fill(summary);
+  await card.getByTestId("learning-save").click();
+  await expect(card).not.toHaveAttribute("data-evidence", "0", { timeout: 45_000 });
 }
 
 export async function founderWithRoadmap(page: Page, context: BrowserContext) {
@@ -34,14 +52,14 @@ export async function founderWithRoadmap(page: Page, context: BrowserContext) {
 }
 
 /** Starts and completes every mission of the current week the way a founder
- * does: Start, capture evidence where the mission asks for it, Mark complete. */
+ * does: Start, say what was learned where the mission asks for it, Mark complete. */
 export async function completeAllMissions(page: Page): Promise<void> {
   const cards = page.getByTestId("mission-card");
   // count() does not wait: on a freshly loaded page the cards are still loading.
   await expect(cards.first()).toBeVisible();
   const count = await cards.count();
   for (let i = 0; i < count; i++) {
-    let card = cards.nth(i);
+    const card = cards.nth(i);
     if ((await card.getAttribute("data-state")) === "completed") continue;
     if ((await card.getAttribute("data-open")) !== "true") {
       await card.getByTestId("mission-toggle").click();
@@ -51,22 +69,9 @@ export async function completeAllMissions(page: Page): Promise<void> {
       await expect(card).toHaveAttribute("data-state", "in_progress");
     }
     const needsEvidence =
-      (await card.getByTestId("mission-add-proof").count()) > 0 &&
+      (await card.getByTestId("learning-summary").count()) > 0 &&
       Number(await card.getAttribute("data-evidence")) === 0;
-    if (needsEvidence) {
-      await card.getByTestId("mission-add-proof").click();
-      await expect(page.getByTestId("evidence-dialog")).toBeVisible({ timeout: 45_000 });
-      await page.getByTestId("ev-person").fill("Customer");
-      await page.getByTestId("ev-summary").fill("Said the follow-ups are dropped every week.");
-      await page.getByTestId("ev-save").click();
-      await expect(page.getByTestId("evidence-dialog")).toBeHidden();
-      await gotoApp(page, "/dashboard/roadmap");
-      card = page.getByTestId("mission-card").nth(i);
-      await expect(card).toBeVisible();
-      if ((await card.getAttribute("data-open")) !== "true") {
-        await card.getByTestId("mission-toggle").click();
-      }
-    }
+    if (needsEvidence) await recordLearning(card);
     await card.getByTestId("mission-complete").click();
     await expect(card).toHaveAttribute("data-state", "completed");
   }

@@ -1,30 +1,32 @@
+import { useState } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { z } from "zod";
 
-import { PhasePreview, PhaseStrip, PlanTab } from "@/components/founder/roadmap/PhaseViews";
-import { ProgressTab } from "@/components/founder/roadmap/ProgressTab";
+import { useAskSol } from "@/components/founder/DashboardShell";
 import { useRoadmapText } from "@/components/founder/roadmap/text";
-import { WeekTab } from "@/components/founder/roadmap/WeekTab";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Button, EmptyState, ErrorPanel, LinkButton, PageSkeleton } from "@/components/founder/ui";
+import { useDirection } from "@/components/os/direction";
+import { RoutePath } from "@/components/os/graphics";
 import {
-  Button,
-  EmptyState,
-  ErrorPanel,
-  Eyebrow,
-  LinkButton,
-  PageSkeleton,
-  Pill,
-} from "@/components/founder/ui";
-import { getProofOverview } from "@/lib/actions/proof";
+  ActionArrow,
+  FlashCard,
+  OsDisplay,
+  OsEyebrow,
+  primaryActionClass,
+  textActionClass,
+} from "@/components/os/os";
+import { routeStages } from "@/components/os/roadmap";
+import { RoadmapWeek, RouteAhead } from "@/components/os/RoadmapWeek";
+import type { WeekDTO } from "@/lib/roadmap/view";
 import { getRoadmapView, type CloseWeekResult } from "@/lib/actions/roadmap";
 import { useLocale } from "@/lib/i18n/LocaleProvider";
 import { qk, useFounderState } from "@/lib/queries";
 import { useTranslatedTitle } from "@/lib/use-translation";
 
+/** Older links carried a tab (week · plan · progress); the roadmap is one continuous page now. */
 const TABS = ["week", "plan", "progress"] as const;
-type Tab = (typeof TABS)[number];
 
 export const Route = createFileRoute("/dashboard/roadmap/")({
   validateSearch: z.object({
@@ -127,6 +129,11 @@ function RoadmapWorkspace({
   const { t } = useLocale();
   const search = Route.useSearch();
   const navigate = useNavigate();
+  const founder = useFounderState();
+  const { direction } = useDirection(founder.data?.briefs[opportunityId]);
+  const [focus, setFocus] = useState<{ id: string; nonce: number; start: boolean } | null>(
+    search.mission ? { id: search.mission, nonce: 0, start: false } : null,
+  );
 
   const query = useQuery({
     queryKey: qk.roadmap(roadmapId),
@@ -139,11 +146,6 @@ function RoadmapWorkspace({
       )
         ? 3000
         : false,
-  });
-  const proof = useQuery({
-    queryKey: qk.proof(opportunityId),
-    queryFn: () => getProofOverview({ data: { opportunityId } }),
-    staleTime: 15_000,
   });
 
   const view = query.data ?? null;
@@ -161,17 +163,10 @@ function RoadmapWorkspace({
     return <ErrorPanel onRetry={() => void query.refetch()} retrying={query.isFetching} />;
   }
 
-  const tab: Tab = search.tab ?? "week";
-  const currentPhase = view.phases.find((p) => p.id === view.currentPhaseId) ?? null;
-  const currentPhaseNumber = currentPhase
-    ? view.phases.findIndex((p) => p.id === currentPhase.id) + 1
-    : null;
-  const selectedPhase = view.phases.find((p) => p.id === search.phase) ?? null;
-  const setSearch = (
-    patch: Partial<{ tab: Tab; week: number | undefined; phase: string | undefined }>,
-  ) => navigate({ to: "/dashboard/roadmap", search: { ...search, ...patch }, replace: true });
-  const openWeek = (n: number) =>
-    navigate({ to: "/dashboard/roadmap", search: { tab: "week", week: n } });
+  const openWeek = (n: number | undefined) =>
+    navigate({ to: "/dashboard/roadmap", search: { week: n }, resetScroll: false }).then(() =>
+      document.getElementById("week-missions")?.scrollIntoView({ behavior: "smooth" }),
+    );
   const nextWeekNumber = shownWeek
     ? (view.weeks.find((w) => w.number === shownWeek.number + 1)?.number ?? null)
     : null;
@@ -181,143 +176,213 @@ function RoadmapWorkspace({
       toast.success(t("rm.completed.toast"));
       return;
     }
-    openWeek(result.nextWeekNumber);
+    void openWeek(result.nextWeekNumber);
   };
 
   return (
     <div
-      className="flex flex-col gap-8"
+      className="flex flex-col gap-14"
       data-testid="roadmap-page"
       data-roadmap-status={view.roadmap.status}
     >
-      <header className="flex flex-wrap items-end justify-between gap-6">
-        <div className="min-w-0">
-          <Eyebrow>{t("rm.subtitle")}</Eyebrow>
-          <h1 className="sol-page-title mt-2 max-w-[24ch]">{opportunityTitle}</h1>
+      {/* The opening: where this is going, and the whole route on one line. */}
+      <header className="flex flex-col gap-10">
+        <div className="flex flex-col gap-5">
+          <OsEyebrow tone="champagne">{opportunityTitle}</OsEyebrow>
+          <OsDisplay>
+            {t("os.rm.title.a")}
+            <span className="block text-[#454B59]">{t("os.rm.title.b")}</span>
+          </OsDisplay>
           {view.roadmap.northStar && (
-            <p className="sol-body sol-prose mt-3 text-sol-secondary" data-testid="north-star">
-              <span className="font-semibold text-sol-ink">{t("rm.northStar")}: </span>
+            <p
+              className="max-w-[62ch] text-[1.125rem] leading-relaxed text-[#2A2F3B]"
+              data-testid="north-star"
+            >
+              <span className="font-semibold text-[#171A27]">{t("rm.northStar")}: </span>
               {text.northStar(view.roadmap.northStar)}
             </p>
           )}
         </div>
-        <dl
-          className="grid min-w-[16rem] max-w-[24rem] gap-4 rounded-2xl border border-sol-border bg-sol-surface px-5 py-4 sm:grid-cols-2"
-          data-testid="roadmap-now"
-        >
-          <div className="min-w-0">
-            <dt className="text-[0.875rem] font-bold uppercase tracking-[0.1em] text-sol-secondary">
-              {t("rm.header.current")}
-            </dt>
-            <dd
-              className="mt-1 text-[1.125rem] font-semibold leading-snug text-sol-ink"
-              data-testid="current-week-number"
-            >
-              {currentWeek && currentPhaseNumber
-                ? t("rm.header.currentValue", {
-                    phase: currentPhaseNumber,
-                    week: String(currentWeek.number).padStart(2, "0"),
-                  })
-                : "—"}
-            </dd>
-            <dd className="truncate text-[0.9375rem] text-sol-secondary">
-              {currentPhase ? text.phaseTitle(currentPhase.id, currentPhase.title) : ""}
-            </dd>
-          </div>
-          <div className="min-w-0" data-testid="next-checkpoint">
-            <dt className="text-[0.875rem] font-bold uppercase tracking-[0.1em] text-sol-secondary">
-              {t("rm.header.checkpoint")}
-            </dt>
-            <dd className="mt-1 text-[1.125rem] font-semibold leading-snug text-sol-ink">
-              {currentWeek ? t("rm.header.checkpointReview", { n: currentWeek.number }) : "—"}
-            </dd>
-            <dd className="line-clamp-2 text-[0.9375rem] text-sol-secondary">
-              {currentWeek
-                ? shownWeek?.id === currentWeek.id
-                  ? text.detail.successThreshold(currentWeek.successThreshold)
-                  : currentWeek.successThreshold
-                : ""}
-            </dd>
-          </div>
-        </dl>
+        <RoutePath
+          stages={routeStages(view, t)}
+          ariaLabel={t("os.rm.route")}
+          testId="roadmap-route"
+          className="max-w-[980px]"
+        />
       </header>
 
       {view.roadmap.status === "completed" && (
         <div
           role="status"
-          className="rounded-2xl border border-sol-champagne/60 bg-sol-champagne-soft px-5 py-4 text-[1.0625rem] text-sol-ink"
+          className="rounded-2xl border border-[#B8924F]/60 bg-[#FBF8F2] px-5 py-4 text-[1.0625rem] text-[#171A27]"
         >
-          <Pill tone="champagne" className="mr-2">
+          <span className="mr-2 font-semibold uppercase tracking-[0.1em] text-[#7A5B2B]">
             {t("rm.state.completed")}
-          </Pill>
+          </span>
           {t("rm.completed.body")}
         </div>
       )}
 
-      <Tabs value={tab} onValueChange={(next) => setSearch({ tab: next as Tab })}>
-        <TabsList
-          aria-label={t("rm.tabs.aria")}
-          className="h-auto w-full justify-start gap-1 rounded-2xl bg-sol-ivory p-1.5 sm:w-fit"
-        >
-          {TABS.map((key) => (
-            <TabsTrigger
-              key={key}
-              value={key}
-              data-testid={`tab-${key}`}
-              className="min-h-11 flex-1 rounded-xl px-2 text-[0.9375rem] font-semibold uppercase tracking-[0.02em] sm:px-6 sm:text-[1rem] sm:tracking-[0.05em] text-sol-secondary data-[state=active]:bg-sol-surface data-[state=active]:text-sol-violet-deep data-[state=active]:shadow-sm sm:flex-none"
-            >
-              {t(`rm.tab.${key}` as const)}
-            </TabsTrigger>
-          ))}
-        </TabsList>
+      {/* NOW: this week's mission, and the help that makes it doable. */}
+      {currentWeek && view.roadmap.status !== "completed" && (
+        <CurrentMission
+          week={currentWeek}
+          text={text}
+          customer={direction?.detail?.customerHeadline ?? null}
+          findFirst={direction?.detail?.firstExperiment ?? null}
+          onFocus={(missionId) => {
+            const go = () => setFocus({ id: missionId, nonce: Date.now(), start: true });
+            if (shownWeek?.id !== currentWeek.id) void openWeek(undefined).then(go);
+            else go();
+          }}
+        />
+      )}
 
-        <div className="mt-6 flex flex-col gap-6">
-          <PhaseStrip
-            view={view}
-            text={text}
-            selectedId={selectedPhase?.id ?? null}
-            onSelect={(id) => setSearch({ phase: id ?? undefined })}
-          />
-          {selectedPhase && (
-            <PhasePreview
-              view={view}
-              phase={selectedPhase}
-              text={text}
-              onClose={() => setSearch({ phase: undefined })}
-              onOpenWeek={openWeek}
-            />
-          )}
-        </div>
+      {/* The missions themselves — this week, or a finished week read back. */}
+      {shownWeek ? (
+        <RoadmapWeek
+          key={shownWeek.id}
+          view={view}
+          week={shownWeek}
+          text={text}
+          opportunityId={opportunityId}
+          isCurrent={shownWeek.id === view.currentWeekId}
+          nextWeekNumber={nextWeekNumber}
+          focus={focus}
+          onWeekChanged={onWeekChanged}
+          onBackToNow={() => void openWeek(undefined)}
+        />
+      ) : (
+        <p className="text-[1.125rem] text-[#2A2F3B]">{t("rm.empty.noWeek")}</p>
+      )}
 
-        <TabsContent value="week" className="mt-8">
-          {shownWeek ? (
-            <WeekTab
-              key={shownWeek.id}
-              view={view}
-              week={shownWeek}
-              text={text}
-              opportunityId={opportunityId}
-              proof={proof.data}
-              isCurrent={shownWeek.id === view.currentWeekId}
-              nextWeekNumber={nextWeekNumber}
-              onWeekChanged={onWeekChanged}
-            />
-          ) : (
-            <EmptyState title={t("rm.empty.noWeek")} />
-          )}
-        </TabsContent>
-        <TabsContent value="plan" className="mt-8">
-          <PlanTab
-            view={view}
-            text={text}
-            openPhaseId={selectedPhase?.id ?? null}
-            onOpenWeek={openWeek}
-          />
-        </TabsContent>
-        <TabsContent value="progress" className="mt-8">
-          <ProgressTab view={view} text={text} proof={proof.data} opportunityId={opportunityId} />
-        </TabsContent>
-      </Tabs>
+      {/* LATER: next week in a line, then the whole plan — disclosed only when asked. */}
+      <RouteAhead view={view} text={text} currentWeek={currentWeek} onOpenWeek={openWeek} />
     </div>
+  );
+}
+
+/**
+ * THIS WEEK — the one mission that matters now, in plain words, what done looks like, and one
+ * action that brings it forward; beside it four flash cards of help (what to say, how to find
+ * people, what good looks like, if nobody responds) — Sol writes the words when asked.
+ */
+function CurrentMission({
+  week,
+  text,
+  customer,
+  findFirst,
+  onFocus,
+}: {
+  week: WeekDTO;
+  text: ReturnType<typeof useRoadmapText>;
+  /** Who pays, in the direction's own words (for "how to find people"). */
+  customer: string | null;
+  /** The direction's first experiment — where to find them first. */
+  findFirst: string | null;
+  onFocus: (missionId: string) => void;
+}) {
+  const { t } = useLocale();
+  const ask = useAskSol();
+  const missions = week.missions;
+  const first =
+    missions.find((m) => m.state === "in_progress") ??
+    missions.find((m) => m.state === "not_started") ??
+    missions[0] ??
+    null;
+  const titleOf = (m: { id: string; title: string }) => text.detail.mission(m.id)?.title ?? m.title;
+  const statement = text.detail.weekMission(week.mission) ?? text.weekTitle(week.id, week.title);
+  const firstTitle = first ? titleOf(first) : statement;
+  const doneWhen = first ? (text.detail.mission(first.id)?.doneWhen ?? first.doneWhen) : "";
+  const success = text.detail.successThreshold(week.successThreshold);
+  const mistakes = text.detail.mistakes(week.mistakes);
+  return (
+    <section
+      className="grid gap-10 border-t border-[#171A27]/10 pt-12 @4xl:grid-cols-[1.1fr_1fr] @4xl:gap-14"
+      data-testid="current-mission-hero"
+    >
+      <div className="flex flex-col gap-6">
+        <OsEyebrow tone="champagne" data-testid="current-week-number">
+          {t("os.rm.thisWeek")} · {t("os.rm.week", { n: String(week.number).padStart(2, "0") })}
+        </OsEyebrow>
+        <h2 className="max-w-[22ch] font-os text-[clamp(1.85rem,1.3rem+1.8vw,3rem)] font-medium uppercase leading-[1.02] tracking-[-0.03em] text-[#171A27]">
+          {statement}
+        </h2>
+        {success && (
+          <div className="flex max-w-[52ch] flex-col gap-1.5" data-testid="success-threshold">
+            <OsEyebrow>{t("os.rm.doneWhen")}</OsEyebrow>
+            <p className="text-[1.1875rem] font-semibold leading-snug text-[#171A27]">{success}</p>
+          </div>
+        )}
+        {first && week.state !== "generating_next" && (
+          <div className="pt-1">
+            <button
+              type="button"
+              onClick={() => onFocus(first.id)}
+              className={primaryActionClass}
+              data-testid="start-week-mission"
+            >
+              {first.state === "in_progress" ? t("cc.c.continueMission") : t("rm.mission.start")}
+              <ActionArrow />
+            </button>
+            <p className="mt-3 text-[0.9375rem] font-medium text-[#454B59]">{firstTitle}</p>
+          </div>
+        )}
+      </div>
+      <div className="flex flex-col gap-3" data-testid="mission-help">
+        <FlashCard
+          label={t("os.rm.help.say")}
+          headline={t("os.rm.help.sayHeadline")}
+          points={[]}
+          action={
+            <button
+              type="button"
+              className={textActionClass}
+              onClick={() => ask.open(t("os.rm.help.askSay", { mission: firstTitle }))}
+            >
+              {t("os.rm.help.writeIt")}
+              <ActionArrow />
+            </button>
+          }
+        />
+        {(customer || findFirst) && (
+          <FlashCard
+            label={t("os.rm.help.find")}
+            headline={customer ?? firstTitle}
+            points={findFirst ? [findFirst] : []}
+            action={
+              <button
+                type="button"
+                className={textActionClass}
+                onClick={() =>
+                  ask.open(
+                    t("os.rm.help.findAsk", { mission: firstTitle, customer: customer ?? "" }),
+                  )
+                }
+              >
+                {t("os.rm.help.findIt")}
+                <ActionArrow />
+              </button>
+            }
+          />
+        )}
+        {doneWhen && <FlashCard label={t("os.rm.help.good")} headline={doneWhen} points={[]} />}
+        <FlashCard
+          label={t("os.rm.help.nobody")}
+          headline={t("os.rm.help.nobodyHeadline")}
+          points={mistakes}
+          action={
+            <button
+              type="button"
+              className={textActionClass}
+              onClick={() => ask.open(t("os.rm.help.askNobody", { mission: firstTitle }))}
+            >
+              {t("os.rm.help.askHow")}
+              <ActionArrow />
+            </button>
+          }
+        />
+      </div>
+    </section>
   );
 }

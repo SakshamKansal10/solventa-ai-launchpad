@@ -3,7 +3,7 @@ import path from "node:path";
 
 import { expect, test, type BrowserContext, type Page } from "@playwright/test";
 
-import { completeAllMissions, founderWithDirections } from "./helpers/flows";
+import { completeAllMissions, founderWithDirections, skipRevealIntro } from "./helpers/flows";
 import { gotoApp } from "./helpers/page";
 import { appUrl, forbidRealBackends, resetStack, sql } from "./helpers/stack";
 
@@ -129,35 +129,33 @@ for (const size of SIZES) {
       test.setTimeout(900_000);
       const { user, seeded } = await founderWithDirections(context);
       await gotoApp(page, "/dashboard");
-      await shoot(page, size.name, "command-center-a", { tall: true });
+      await shoot(page, size.name, "idea-reveal-intro");
+      await skipRevealIntro(page);
+      await shoot(page, size.name, "idea-reveal", { tall: true });
 
+      // One action chooses the direction and builds its roadmap.
       await page.getByTestId("flagship-choose").click();
-      await expect(page.getByTestId("build-roadmap")).toBeVisible();
-      await shoot(page, size.name, "command-center-b");
-
-      await page.getByTestId("build-roadmap").click();
       await expect(
         page.getByTestId("build-status").or(page.getByTestId("roadmap-page")),
-      ).toBeVisible({ timeout: 60_000 });
-      await expect(page.getByTestId("roadmap-page")).toBeVisible({ timeout: 60_000 });
+      ).toBeAttached({ timeout: 60_000 });
+      await expect(page.getByTestId("roadmap-page")).toBeVisible({ timeout: 90_000 });
       await shoot(page, size.name, "roadmap-week", { tall: true });
       await page.getByTestId("mission-card").nth(1).getByTestId("mission-toggle").click();
       await shoot(page, size.name, "roadmap-week-mission-open");
 
-      await gotoApp(page, "/dashboard/roadmap?tab=plan");
-      await shoot(page, size.name, "roadmap-plan", { tall: true });
-      await gotoApp(page, "/dashboard/roadmap?tab=progress");
-      await shoot(page, size.name, "roadmap-progress");
+      // What comes next: the whole plan, one phase opened.
+      const phase = page.getByTestId("route-phase").nth(1);
+      await phase.scrollIntoViewIfNeeded();
+      await phase.getByRole("button").first().click();
+      await shoot(page, size.name, "roadmap-plan");
 
       await gotoApp(page, "/dashboard");
       await shoot(page, size.name, "command-center-c", { tall: true });
 
       const opp = seeded.opportunityIds[0];
-      for (const tab of ["overview", "fit", "market", "economics", "proof"]) {
+      for (const tab of ["overview", "customer", "money", "offer", "risks"]) {
         await gotoApp(page, `/dashboard/opportunities/${opp}?tab=${tab}`);
-        await shoot(page, size.name, `opportunity-${tab}`, {
-          tall: tab === "overview" || tab === "fit",
-        });
+        await shoot(page, size.name, `opportunity-${tab}`, { tall: tab === "overview" });
       }
       await gotoApp(page, "/dashboard/opportunities");
       await shoot(page, size.name, "opportunities-list");
@@ -224,13 +222,13 @@ for (const size of SIZES) {
       await gotoApp(page, "/consultation");
       await shoot(page, size.name, "hi-consultation");
       await gotoApp(page, "/dashboard");
-      await shoot(page, size.name, "hi-command-center", { tall: true });
+      await skipRevealIntro(page);
+      await shoot(page, size.name, "hi-idea-reveal", { tall: true });
       await page.getByTestId("flagship-choose").click();
-      await page.getByTestId("build-roadmap").click();
-      await expect(page.getByTestId("roadmap-page")).toBeVisible({ timeout: 60_000 });
+      await expect(page.getByTestId("roadmap-page")).toBeVisible({ timeout: 90_000 });
       await shoot(page, size.name, "hi-roadmap", { tall: true });
-      await gotoApp(page, `/dashboard/opportunities/${seeded.opportunityIds[0]}?tab=fit`);
-      await shoot(page, size.name, "hi-opportunity-fit", { tall: true });
+      await gotoApp(page, `/dashboard/opportunities/${seeded.opportunityIds[0]}?tab=overview`);
+      await shoot(page, size.name, "hi-opportunity-overview", { tall: true });
       await gotoApp(page, "/dashboard/settings");
       await shoot(page, size.name, "hi-settings", { tall: true });
     });

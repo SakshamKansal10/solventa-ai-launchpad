@@ -40,6 +40,8 @@
   --font-script: "Dancing Script", cursive;
   /* The SOLVENTIA wordmark (brand board): a wide geometric sans, uppercase, medium weight. */
   --font-wordmark: "Montserrat", "Manrope", ui-sans-serif, system-ui, sans-serif;
+  /* The Founder OS display face (Geist, as on the homepage); Devanagari falls to the site sans. */
+  --font-os: "Geist", "Manrope", "Noto Sans Devanagari", ui-sans-serif, system-ui, sans-serif;
   --color-gold: var(--gold);
   --color-gold-soft: var(--gold-soft);
   --color-navy: var(--navy);
@@ -504,6 +506,40 @@
 }
 
 /* Section reveal — state transition, not decoration. */
+/* Founder OS motion (used only under motion-safe): a path drawing itself in, a slow light
+   travelling along it, a quiet rise into place. Never a bounce. */
+@keyframes os-draw {
+  from {
+    stroke-dashoffset: 1;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+@keyframes os-wipe {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+@keyframes os-fade {
+  from {
+    opacity: 0;
+  }
+}
+@keyframes os-rise {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
 /* The homepage scroll cue: a short segment travelling down its hairline. */
 @keyframes sol-cue {
   from {

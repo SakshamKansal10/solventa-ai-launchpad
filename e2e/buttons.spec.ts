@@ -1,6 +1,11 @@
 import { expect, test } from "@playwright/test";
 
-import { completeAllMissions, founderWithDirections, founderWithRoadmap } from "./helpers/flows";
+import {
+  completeAllMissions,
+  founderWithDirections,
+  founderWithRoadmap,
+  skipRevealIntro,
+} from "./helpers/flows";
 import { gotoApp } from "./helpers/page";
 import { forbidRealBackends, resetStack } from "./helpers/stack";
 
@@ -34,16 +39,16 @@ test.describe("public buttons", () => {
 });
 
 test.describe("founder buttons", () => {
-  test("Choose direction → Build my roadmap → Start mission → Mark complete → Review → Prepare next week", async ({
+  test("Build my roadmap → Start mission → Mark complete → Review → Prepare next week", async ({
     page,
     context,
   }) => {
     await founderWithDirections(context);
     await gotoApp(page, "/dashboard");
+    await skipRevealIntro(page);
+    // One action chooses the direction and builds its roadmap.
     await page.getByTestId("flagship-choose").click();
-    await expect(page.getByTestId("build-roadmap")).toBeEnabled();
-    await page.getByTestId("build-roadmap").click();
-    await expect(page.getByTestId("roadmap-page")).toBeVisible({ timeout: 60_000 });
+    await expect(page.getByTestId("roadmap-page")).toBeVisible({ timeout: 90_000 });
 
     const first = page.getByTestId("mission-card").first();
     await first.getByTestId("mission-primary").click();
@@ -58,7 +63,7 @@ test.describe("founder buttons", () => {
     await expect(page.getByTestId("adaptation-note")).toBeVisible({ timeout: 60_000 });
   });
 
-  test("dashboard graphics are controls: path stop, mission node, evidence map and Today's Move all navigate", async ({
+  test("Command Center controls navigate: the next move, and each of this week's priorities", async ({
     page,
     context,
   }) => {
@@ -69,18 +74,12 @@ test.describe("founder buttons", () => {
     await expect(page).toHaveURL(/\/dashboard\/roadmap/);
 
     await gotoApp(page, "/dashboard");
-    await page.getByTestId("path-node-problem").getByRole("button").click();
-    await expect(page).toHaveURL(/\/dashboard\/proof/);
+    await page.getByTestId("why-this").click();
+    await expect(page.getByTestId("why-this")).toHaveAttribute("aria-expanded", "true");
 
-    await gotoApp(page, "/dashboard");
-    await page.getByTestId("track-node").first().click();
+    await page.getByTestId("track-node").nth(1).click();
     await expect(page).toHaveURL(/\/dashboard\/roadmap/);
-
-    await gotoApp(page, "/dashboard");
-    await page.getByTestId("evidence-map-node").first().hover();
-    await expect(page.getByTestId("evidence-map-summary")).not.toContainText("Hover, focus");
-    await page.getByTestId("evidence-map-node").first().click();
-    await expect(page).toHaveURL(/\/dashboard\/proof/);
+    await expect(page.getByTestId("mission-card").nth(1)).toHaveAttribute("data-open", "true");
   });
 
   test("Add evidence (page button) saves; a contradiction gets 'Ask Sol what this changes', which sends the question", async ({

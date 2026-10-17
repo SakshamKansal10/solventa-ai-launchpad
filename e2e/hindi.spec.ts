@@ -1,6 +1,11 @@
 import { expect, test, type BrowserContext, type Page } from "@playwright/test";
 
-import { chooseAndBuildRoadmap, founderWithDirections, founderWithRoadmap } from "./helpers/flows";
+import {
+  chooseAndBuildRoadmap,
+  founderWithDirections,
+  founderWithRoadmap,
+  skipRevealIntro,
+} from "./helpers/flows";
 import { gotoApp } from "./helpers/page";
 import { appUrl, forbidRealBackends, gemini, resetStack, sql } from "./helpers/stack";
 
@@ -135,9 +140,9 @@ test.describe("Hindi — the founder workspace", () => {
     await useHindi(context);
     const { seeded } = await founderWithDirections(context);
     await gotoApp(page, "/dashboard");
+    await skipRevealIntro(page);
     await page.getByTestId("flagship-choose").click();
-    await page.getByTestId("build-roadmap").click();
-    await expect(page.getByTestId("roadmap-page")).toBeVisible({ timeout: 60_000 });
+    await expect(page.getByTestId("roadmap-page")).toBeVisible({ timeout: 90_000 });
 
     const routes = [
       "/dashboard",
@@ -194,7 +199,8 @@ test.describe("Hindi — the founder workspace", () => {
   }) => {
     const { seeded } = await founderWithDirections(context);
     await gotoApp(page, `/dashboard/opportunities/${seeded.opportunityIds[0]}`);
-    const english = (await page.getByTestId("opportunity-title").innerText()).trim();
+    // textContent, not innerText: the title is set in capitals by type, not by its text.
+    const english = ((await page.getByTestId("opportunity-title").textContent()) ?? "").trim();
     expect(english).not.toContain("हिंदी");
 
     await gotoApp(page, "/dashboard/settings");

@@ -152,10 +152,21 @@ test.describe("Ask Sol", () => {
     );
   });
 
-  test("the Ask Sol button on the roadmap rail opens the panel", async ({ page, context }) => {
+  test("on the roadmap, Ask Sol knows where the founder is — and the mission once it is under way", async ({
+    page,
+    context,
+  }) => {
     await founderWithRoadmap(page, context);
-    await page.getByTestId("rail-ask-sol").click();
+    await page.getByTestId("ask-sol-launcher").click();
+    const where = page.getByTestId("ask-sol-context");
     await expect(page.getByTestId("ask-sol-panel")).toBeVisible();
+    await expect(where).toContainText("I'm looking at");
+    await expect(where).toContainText("Week 1");
+    await page.getByTestId("ask-sol-close").click();
+
+    await page.getByTestId("mission-card").first().getByTestId("mission-primary").click();
+    await page.getByTestId("ask-sol-launcher").click();
+    await expect(where).toContainText("Write your interview script");
   });
 });
 

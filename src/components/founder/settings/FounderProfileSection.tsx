@@ -21,7 +21,7 @@ import type { SettingsData } from "@/lib/actions/settings";
 import type { MessageKey } from "@/lib/i18n";
 import { useLocale } from "@/lib/i18n/LocaleProvider";
 import { qk, useInvalidateFounder } from "@/lib/queries";
-import { Button, Card, EmptyState, LinkButton } from "../ui";
+import { Button, EmptyState, LinkButton } from "../ui";
 
 interface RowDef {
   key: string;
@@ -93,17 +93,32 @@ function useRowSummary() {
   const facts = useProfileFacts();
   const { answers: a } = useConsultation();
 
+  // The founder's own words where there are some (named skills, resources, interests — the first
+  // three, then "+n"), never just a count.
+  const named = (names: string[]) =>
+    names.length > 3 ? `${names.slice(0, 3).join(", ")} +${names.length - 3}` : names.join(", ");
+  const skills = (a.skills ?? []).filter((x) => x.level !== null).map((x) => L.skill(x.name));
+  const access = (a.access ?? []).filter((x) => x !== "none").map((x) => L.label("access", x));
+  const interests = (a.interests ?? []).map((x) => L.label("interests", x));
+
   return (row: RowDef): string => {
     const parts: string[] = [];
     if (row.key === "basics" && a.age) parts.push(t("set.founder.age", { n: a.age }));
     for (const key of row.facts) {
+      if (key === "skills" && skills.length > 0) {
+        parts.push(named(skills));
+        continue;
+      }
+      if (key === "access" && access.length > 0) {
+        parts.push(named(access));
+        continue;
+      }
       const f = facts.find((x) => x.key === key);
       if (f) parts.push(f.value);
     }
     if (row.key === "motivation") {
       if (a.commitment) parts.push(L.label("commitment", a.commitment));
-      const n = (a.interests ?? []).length;
-      if (n > 0) parts.push(tp("set.founder.interestsCount", n));
+      if (interests.length > 0) parts.push(named(interests));
     }
     if (row.key === "limits") {
       const n = (a.constraints ?? []).filter((c) => c !== "none").length + (a.refuse ?? []).length;
@@ -209,30 +224,31 @@ function Rows({ answers }: { answers: ConsultationAnswers }) {
 
   return (
     <>
-      <ul className="flex flex-col divide-y divide-sol-border" data-testid="founder-rows">
+      <ul className="flex flex-col border-t border-[#171A27]/10" data-testid="founder-rows">
         {ROWS.map((row) => (
-          <li
-            key={row.key}
-            className="flex flex-wrap items-center justify-between gap-x-6 gap-y-2 py-4"
-          >
-            <div className="min-w-0">
-              <p className="text-[0.9375rem] font-semibold text-sol-secondary">{t(row.label)}</p>
-              <p
-                className="mt-0.5 text-[1.0625rem] leading-snug text-sol-ink"
-                data-testid={`founder-row-${row.key}`}
-              >
-                {summary(row)}
-              </p>
-            </div>
-            <Button
-              variant="secondary"
-              size="sm"
+          <li key={row.key} className="border-b border-[#171A27]/10">
+            <button
+              type="button"
               onClick={() => setEditing(row)}
               data-testid={`edit-${row.key}`}
               aria-label={`${t("set.founder.edit")}: ${t(row.label)}`}
+              className="group flex w-full flex-wrap items-center justify-between gap-x-6 gap-y-2 py-6 text-left transition-colors hover:bg-[#171A27]/[0.02] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#2F62D9]"
             >
-              {t("set.founder.edit")}
-            </Button>
+              <span className="min-w-0">
+                <span className="block text-[0.875rem] font-semibold uppercase tracking-[0.12em] text-[#3C4250]">
+                  {t(row.label)}
+                </span>
+                <span
+                  className="mt-2 block text-[clamp(1.25rem,1.05rem+0.6vw,1.6rem)] font-semibold leading-snug text-[#171A27]"
+                  data-testid={`founder-row-${row.key}`}
+                >
+                  {summary(row)}
+                </span>
+              </span>
+              <span className="text-[1rem] font-semibold text-[#171A27] underline-offset-[6px] group-hover:underline">
+                {t("set.founder.edit")}
+              </span>
+            </button>
           </li>
         ))}
       </ul>
@@ -266,17 +282,15 @@ export function FounderProfileSection({ data }: { data: SettingsData }) {
   const providerKey = useMemo(() => JSON.stringify(answers ?? {}), [answers]);
 
   return (
-    <Card
-      className="flex flex-col gap-5 p-6 sm:p-7"
+    <section
+      id="founder-section"
+      className="flex flex-col gap-6"
       aria-labelledby="founder-h"
       data-testid="founder-section"
     >
-      <div>
-        <h2 id="founder-h" className="sol-h3">
-          {t("set.founder.title")}
-        </h2>
-        <p className="sol-support mt-1 max-w-[60ch]">{t("set.founder.subtitle")}</p>
-      </div>
+      <h2 id="founder-h" className="sr-only">
+        {t("set.founder.title")}
+      </h2>
 
       {data.profileChangedSinceDirections && (
         <div
@@ -333,6 +347,6 @@ export function FounderProfileSection({ data }: { data: SettingsData }) {
           <Rows answers={answers} />
         </ConsultationProvider>
       )}
-    </Card>
+    </section>
   );
 }

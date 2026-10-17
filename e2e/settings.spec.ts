@@ -227,7 +227,8 @@ test.describe("Settings — founder profile", () => {
 
     await page.getByTestId("reanalyze").click();
     await expect(page).toHaveURL(/\/dashboard$/, { timeout: 60_000 });
-    await expect(page.locator("h1")).toHaveText("Your directions are ready");
+    // The new consultation's directions are what the founder sees now.
+    await expect(page.getByTestId("command-center")).toHaveAttribute("data-stage", "ideas_ready");
     expect(await gemini.countOf("INITIAL_INTELLIGENCE")).toBe(1);
     const dna = await sql<{ n: string }>(
       "select count(*)::text as n from business_dna where user_id = $1",
@@ -283,9 +284,10 @@ test.describe("Settings — language, notifications, account", () => {
     await signIn(context, user);
     await gotoApp(page, "/dashboard/settings");
     await page.getByTestId("lang-hi").click();
-    await expect(page.getByTestId("sidebar")).toContainText("कमांड सेंटर");
+    await expect(page.getByTestId("sidebar")).toContainText("कमांड");
     await expect(page.locator("html")).toHaveAttribute("lang", "hi");
-    await expect(page.getByTestId("sidebar")).toContainText("SOLVENTIA");
+    // The wordmark is set in capitals by type, not text; it stays the brand name in any language.
+    await expect(page.getByTestId("sidebar")).toContainText(/solventia/i);
 
     await expect
       .poll(
@@ -299,10 +301,11 @@ test.describe("Settings — language, notifications, account", () => {
       .toBe("hi");
     await page.reload();
     await expect(page.locator("html")).toHaveAttribute("lang", "hi");
-    await expect(page.getByTestId("sidebar")).toContainText("कमांड सेंटर");
+    await expect(page.getByTestId("sidebar")).toContainText("कमांड");
 
     await page.getByTestId("lang-en").click();
-    await expect(page.getByTestId("sidebar")).toContainText("Command Center");
+    await expect(page.getByTestId("sidebar")).toContainText("Command");
+    await expect(page.locator("html")).toHaveAttribute("lang", "en");
   });
 
   test("notification preferences persist and are the only ones offered", async ({

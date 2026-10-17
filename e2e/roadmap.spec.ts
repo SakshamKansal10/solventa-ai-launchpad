@@ -6,6 +6,8 @@ import {
   completeAllMissions,
   founderWithDirections,
   founderWithRoadmap,
+  recordLearning,
+  skipRevealIntro,
 } from "./helpers/flows";
 import { forbidRealBackends, gemini, resetStack, sql } from "./helpers/stack";
 
@@ -22,10 +24,13 @@ test.describe("building a roadmap", () => {
     const { user } = await founderWithDirections(context);
     await chooseAndBuildRoadmap(page);
 
-    await expect(page.getByTestId("tab-week")).toHaveAttribute("data-state", "active");
+    // One page: where it goes (north star, Validate → Build → Elevate), this week's mission,
+    // its missions, then the whole plan (five phases) disclosed below.
     await expect(page.getByTestId("north-star")).toBeVisible();
-    await expect(page.getByTestId("phase-strip").getByRole("listitem")).toHaveCount(5);
+    await expect(page.getByTestId("roadmap-route").getByRole("listitem")).toHaveCount(3);
+    await expect(page.getByTestId("current-mission-hero")).toBeVisible();
     await expect(page.getByTestId("mission-card")).toHaveCount(3);
+    await expect(page.getByTestId("route-phase")).toHaveCount(5);
 
     const roadmaps = await sql<{ status: string }>(
       "select status from roadmaps where user_id = $1",
@@ -55,8 +60,8 @@ test.describe("building a roadmap", () => {
     const { user } = await founderWithDirections(context);
     await gemini.failNext("ROADMAP_SKELETON", 2);
     await gotoApp(page, "/dashboard");
+    await skipRevealIntro(page);
     await page.getByTestId("flagship-choose").click();
-    await page.getByTestId("build-roadmap").click();
 
     await expect(page.getByTestId("build-failed")).toBeVisible({ timeout: 60_000 });
     await gemini.clearBehavior();
@@ -81,10 +86,10 @@ test.describe("This Week", () => {
     // The first mission opens on its own; the others stay compact.
     await expect(first).toHaveAttribute("data-open", "true");
     await expect(page.getByTestId("mission-card").nth(1)).toHaveAttribute("data-open", "false");
-    // WHY / DO / CAPTURE are all there on the active mission.
+    // WHY / DO / WHAT DONE LOOKS LIKE are all there on the active mission.
     await expect(first.getByTestId("mission-details")).toContainText("Why");
     await expect(first.getByTestId("mission-details")).toContainText("Do");
-    await expect(first.getByTestId("mission-details")).toContainText("Capture");
+    await expect(first.getByTestId("mission-details")).toContainText("You're done when");
 
     await first.getByTestId("mission-primary").click();
     await expect(first).toHaveAttribute("data-state", "in_progress");
@@ -112,31 +117,54 @@ test.describe("This Week", () => {
     );
   });
 
-  test("a mission that asks for evidence cannot be completed without it", async ({
+  test("a mission that asks for evidence is finished by saying what was learned — right there", async ({
     page,
     context,
   }) => {
-    await founderWithRoadmap(page, context);
+    const { user } = await founderWithRoadmap(page, context);
     const second = page.getByTestId("mission-card").nth(1);
     await second.getByTestId("mission-toggle").click();
+    // Not started: no form yet, one action.
+    await expect(second.getByTestId("learning-summary")).toHaveCount(0);
     await second.getByTestId("mission-primary").click();
     await expect(second).toHaveAttribute("data-state", "in_progress");
     await expect(second.getByTestId("mission-complete")).toBeDisabled();
     await expect(second.getByTestId("mission-evidence-hint")).toBeVisible();
-    await expect(second.getByTestId("mission-add-proof")).toBeVisible();
+
+    // One plain question — no evidence database to manage.
+    await recordLearning(second, "Six of eight said they lose walk-in customers without a site.");
+    await expect(second.getByTestId("mission-learning")).toContainText("1");
+    const saved = await sql<{ n: string }>(
+      "select count(*)::text as n from proof_evidence e join roadmap_tasks t on t.id = e.task_id where e.user_id = $1",
+      [user.id],
+    );
+    expect(Number(saved[0].n)).toBe(1);
+
+    await second.getByTestId("mission-complete").click();
+    await expect(second).toHaveAttribute("data-state", "completed");
   });
 
-  test("the right rail shows progress, the success threshold, evidence, things to avoid and Ask Sol", async ({
+  test("this week shows what done looks like, help to do it, and Ask Sol in context", async ({
     page,
     context,
   }) => {
     await founderWithRoadmap(page, context);
-    const rail = page.getByTestId("week-rail");
-    await expect(rail).toBeVisible();
     await expect(page.getByTestId("success-threshold")).toContainText("5 of 8");
-    await expect(page.getByTestId("week-evidence")).toBeVisible();
-    await expect(page.getByTestId("week-avoid")).toBeVisible();
-    await expect(page.getByTestId("rail-ask-sol")).toBeVisible();
+    const help = page.getByTestId("mission-help");
+    await expect(help).toContainText("What to say");
+    await expect(help).toContainText("If nobody responds");
+    await help.getByRole("button", { name: /what to say/i }).click();
+    await help.getByRole("button", { name: /write it for me/i }).click();
+    await expect(page.getByTestId("ask-sol-panel")).toBeVisible();
+  });
+
+  test("the hero's action brings this week's mission forward", async ({ page, context }) => {
+    await founderWithRoadmap(page, context);
+    await page.getByTestId("start-week-mission").click();
+    const first = page.getByTestId("mission-card").first();
+    await expect(first).toHaveAttribute("data-open", "true");
+    await expect(first).toHaveAttribute("data-state", "in_progress");
+    await expect(first).toBeInViewport();
   });
 
   test("finishing the week, reviewing it and preparing Week 02 creates exactly one Week 02 — even on a double click", async ({
@@ -198,40 +226,31 @@ test.describe("This Week", () => {
   });
 });
 
-test.describe("Plan and Progress", () => {
-  test("Plan lists every phase and week but only titles and objectives — never future missions", async ({
+test.describe("What comes next", () => {
+  test("next week is one line, and it opens only when this week is done", async ({
     page,
     context,
   }) => {
     await founderWithRoadmap(page, context);
-    await page.getByTestId("tab-plan").click();
-    await expect(page.getByTestId("plan-tab")).toBeVisible();
-    await expect(page.getByTestId("plan-phase-1")).toBeVisible();
-
-    // Open a later phase; it shows locked weeks with no mission cards.
-    await page.getByTestId("plan-phase-3").getByRole("button").first().click();
-    await expect(page.getByTestId("week-row-6")).toBeVisible();
-    await expect(page.getByTestId("mission-card")).toHaveCount(0);
-    expect(await gemini.countOf("WEEK_DETAIL")).toBe(1);
+    const next = page.getByTestId("route-next");
+    await expect(next).toContainText("Week 02");
+    await expect(next).toContainText("Opens when this week is done");
   });
 
-  test("selecting a future phase previews it read-only and never generates anything", async ({
+  test("the whole plan discloses every phase's weeks — titles only, never future missions", async ({
     page,
     context,
   }) => {
     await founderWithRoadmap(page, context);
-    await page.getByTestId("phase-4").click();
-    await expect(page.getByTestId("phase-preview")).toBeVisible();
-    expect(await gemini.countOf("WEEK_DETAIL")).toBe(1);
-  });
+    const phases = page.getByTestId("route-phase");
+    await expect(phases.first()).toHaveAttribute("data-state", "now");
+    await expect(phases.nth(2)).toHaveAttribute("data-state", "later");
 
-  test("Progress shows an honest empty state until there is real data", async ({
-    page,
-    context,
-  }) => {
-    await founderWithRoadmap(page, context);
-    await page.getByTestId("tab-progress").click();
-    await expect(page.getByTestId("progress-empty")).toBeVisible();
-    await expect(page.getByTestId("progress-tab")).toHaveCount(0);
+    // Open a later phase: its weeks are listed, locked (nothing to open), and nothing is written.
+    await phases.nth(2).getByRole("button").first().click();
+    await expect(phases.nth(2)).toContainText("Build the first version: week 1");
+    await expect(phases.nth(2).getByRole("button", { name: /open week/i })).toHaveCount(0);
+    await expect(page.getByTestId("mission-card")).toHaveCount(3);
+    expect(await gemini.countOf("WEEK_DETAIL")).toBe(1);
   });
 });
