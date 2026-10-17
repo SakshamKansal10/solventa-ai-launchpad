@@ -19,6 +19,7 @@ import {
   useExperienceValue,
 } from "./scroll/experience-store";
 import { useScrollController } from "./scroll/useScrollController";
+import { useStoryDriver } from "./timeline/useStoryDriver";
 import { soundController } from "./sound/controller";
 import { SCENE_RANGES, TIMELINE_SCROLL_VH } from "./timeline/timeline";
 import { PEARL_WORLD } from "./world/tone";
@@ -59,6 +60,7 @@ export function CinematicHome({
 }) {
   const [store] = useState(createExperienceStore);
   const sectionRef = useRef<HTMLElement>(null);
+  const stageRef = useRef<HTMLDivElement>(null);
   const reducedMotion = useReducedMotion() === true;
   const [capability, setCapability] = useState<Capability | null>(null);
   const [failure, setFailure] = useState<string | null>(null);
@@ -106,6 +108,13 @@ export function CinematicHome({
   }, [mode, ready]);
 
   useScrollController(store, sectionRef, mode !== "fallback");
+  // The story answers from the first gesture: progress and the overlay run on the page itself,
+  // and the WebGL world joins the current position whenever it is ready.
+  useStoryDriver(store, stageRef, {
+    enabled: mode !== "fallback",
+    animate: !reducedMotion,
+    freeze,
+  });
   usePointerInput(store, mode === "webgl" && !reducedMotion && !freeze);
   // The soundtrack is offered with the WebGL experience only (off until the visitor asks).
   useEffect(() => (mode === "webgl" ? soundController.attach(store) : undefined), [mode, store]);
@@ -148,25 +157,39 @@ export function CinematicHome({
             style={{ height: `calc(${TIMELINE_SCROLL_VH}lvh * var(--cine-pace) + 100lvh)` }}
           >
             <style>{HIDE_SCROLLBAR}</style>
-            <div className="fixed inset-x-0 top-0 h-lvh" data-testid="cinematic-stage">
-              {/* The world fades up over the void as soon as it has rendered real frames. */}
+            <div
+              ref={stageRef}
+              className="fixed inset-x-0 top-0 h-lvh"
+              data-testid="cinematic-stage"
+            >
+              {/* The world fades up over the void as soon as it has rendered real frames — but
+                  while the story rests at its opening it adds nothing: the identity holds the
+                  pearl field alone, so the first frame is the finished opening and time never
+                  changes it. The world arrives as the visitor scrolls into the story
+                  (--world-in, written by DomSync from the story position). */}
               <div
                 className={`absolute inset-0 transition-opacity duration-[1400ms] ${ready ? "opacity-100" : "opacity-0"}`}
               >
-                {mode === "webgl" && capability && (
-                  <CanvasErrorBoundary onError={setFailure}>
-                    <Suspense fallback={null}>
-                      <CinematicCanvas
-                        store={store}
-                        preset={QUALITY_PRESETS[capability.tier]}
-                        animate={!reducedMotion}
-                        parallax={!reducedMotion}
-                        freeze={freeze}
-                        onContextLost={() => setFailure("WebGL context lost")}
-                      />
-                    </Suspense>
-                  </CanvasErrorBoundary>
-                )}
+                <div
+                  data-cine-world
+                  className="absolute inset-0"
+                  style={{ opacity: "var(--world-in, 0)" }}
+                >
+                  {mode === "webgl" && capability && (
+                    <CanvasErrorBoundary onError={setFailure}>
+                      <Suspense fallback={null}>
+                        <CinematicCanvas
+                          store={store}
+                          preset={QUALITY_PRESETS[capability.tier]}
+                          animate={!reducedMotion}
+                          parallax={!reducedMotion}
+                          freeze={freeze}
+                          onContextLost={() => setFailure("WebGL context lost")}
+                        />
+                      </Suspense>
+                    </CanvasErrorBoundary>
+                  )}
+                </div>
               </div>
               <CinematicOverlay />
               <ProductLayer />

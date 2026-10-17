@@ -70,6 +70,83 @@ const cameraState = (page: Page) =>
   });
 
 test.describe("cinematic homepage", () => {
+  test("the opening is finished from its first frame and holds still while idle", async ({
+    page,
+  }) => {
+    test.setTimeout(90_000);
+    // A cold load (fresh context, empty cache) of the real, WebGL page — no frozen frames.
+    await gotoApp(page, "/cinematic?tier=medium");
+    const img = page.locator("[data-brand-opening] [data-brand-part=mark] img");
+    await expect(img).toBeVisible();
+
+    // The emblem asset is transparent: nothing is painted outside the S — no canvas to hide.
+    const corner = await img.evaluate(async (el: HTMLImageElement) => {
+      await el.decode();
+      const c = document.createElement("canvas");
+      c.width = c.height = 64;
+      const g = c.getContext("2d")!;
+      g.drawImage(el, 0, 0, 64, 64);
+      return Array.from(g.getImageData(1, 1, 1, 1).data);
+    });
+    expect(corner[3]).toBe(0);
+    // …and nothing relies on blending with whatever is (or is not yet) drawn beneath it.
+    await expect(img).toHaveCSS("mix-blend-mode", "normal");
+    await expect(page.locator("[data-brand-opening] [data-brand-part=mark]")).toHaveCSS(
+      "mix-blend-mode",
+      "normal",
+    );
+
+    /** The pixel just inside the emblem image's box vs. the open field beside the lockup. */
+    const sample = async () => {
+      const box = (await img.boundingBox())!;
+      const png = await page.screenshot();
+      return page.evaluate(
+        async ({ b64, at, field }) => {
+          const image = new Image();
+          image.src = `data:image/png;base64,${b64}`;
+          await image.decode();
+          const c = document.createElement("canvas");
+          c.width = image.width;
+          c.height = image.height;
+          const g = c.getContext("2d")!;
+          g.drawImage(image, 0, 0);
+          const px = ([x, y]: number[]) => Array.from(g.getImageData(x, y, 1, 1).data).slice(0, 3);
+          return { emblemBox: px(at), field: px(field) };
+        },
+        {
+          b64: png.toString("base64"),
+          at: [Math.round(box.x + 6), Math.round(box.y + 6)],
+          field: [12, Math.round(box.y + 6)],
+        },
+      );
+    };
+    const sameColour = (a: number[], b: number[]) => a.every((v, i) => Math.abs(v - b[i]) <= 3);
+    const layout = () =>
+      page.locator("[data-brand-opening] [data-brand-part]").evaluateAll((els) =>
+        els.map((el) => {
+          const r = el.getBoundingClientRect();
+          return [Math.round(r.x), Math.round(r.y), Math.round(r.width)];
+        }),
+      );
+
+    // First visible frame: the emblem sits on the pearl — no box.
+    const first = await sample();
+    expect(sameColour(first.emblemBox, first.field), JSON.stringify(first)).toBe(true);
+    const firstLayout = await layout();
+
+    // The world finishes loading and the visitor does nothing for 12 seconds.
+    await expect(page.getByTestId("cinematic-home")).toHaveAttribute("data-ready", "true", {
+      timeout: 45_000,
+    });
+    await page.waitForTimeout(12_000);
+    const later = await sample();
+    expect(sameColour(later.emblemBox, later.field), JSON.stringify(later)).toBe(true);
+    // Time is life inside the moment, never story: same position, same identity, same field.
+    expect(sameColour(later.field, first.field), JSON.stringify({ first, later })).toBe(true);
+    expect(await page.evaluate(() => window.scrollY)).toBe(0);
+    expect(await layout()).toEqual(firstLayout);
+  });
+
   test("the whole story plays on one WebGL stage, scene by scene", async ({ page }) => {
     const errors = collectErrors(page);
     const home = await open(page);
@@ -315,19 +392,23 @@ test.describe("cinematic homepage", () => {
     await expect.poll(async () => (await cameraState(page)).scene).toBe(before.scene);
   });
 
-  test("sound belongs to the experience: no control on arrival, it starts with the first interaction, mute is remembered", async ({
+  test("sound belongs to the experience: no visible control, it starts with the first interaction, mute is remembered", async ({
     page,
   }) => {
     await open(page);
     const toggle = page.getByTestId("sound-toggle");
     // Arriving: nothing plays and no utility competes with the film.
     await expect(toggle).toHaveCount(0);
-    // The first real interaction starts it; only then does the quiet mute control appear.
+    // The first real interaction starts it; the mute control then exists — for the keyboard only:
+    // no icon is shown, and it takes no room in the bar.
     await page.mouse.click(400, 400);
     await expect(toggle).toHaveAttribute("data-audio", "running");
     await expect(toggle).toHaveAttribute("aria-pressed", "true");
+    expect(
+      await toggle.evaluate((el) => [getComputedStyle(el).opacity, getComputedStyle(el).position]),
+    ).toEqual(["0", "absolute"]);
     // Muting is immediate…
-    await toggle.click();
+    await toggle.press("Enter");
     await expect(toggle).toHaveAttribute("aria-pressed", "false");
     await expect(toggle).toHaveAttribute("data-audio", "idle");
     // …and remembered for the visit: after a reload an interaction does not start it, and the
@@ -339,7 +420,7 @@ test.describe("cinematic homepage", () => {
     await page.mouse.click(400, 400);
     await expect(toggle).toHaveAttribute("aria-pressed", "false");
     await expect(toggle).toHaveAttribute("data-audio", "idle");
-    await toggle.click();
+    await toggle.press("Enter");
     await expect(toggle).toHaveAttribute("data-audio", "running");
   });
 
@@ -380,9 +461,9 @@ test.describe("cinematic homepage", () => {
     for (let k = 0; k < 8; k++) await goTo(page, "awakening", 0.9 + (k % 2 ? 0.003 : -0.003));
     expect(await sound((s) => s.fired())).toBe(settled);
     // Mute is silence; un-mute restores the current scene's soundscape.
-    await toggle.click();
+    await toggle.press("Enter");
     await expect.poll(() => sound((s) => s.level()), { timeout: 10_000 }).toBe(0);
-    await toggle.click();
+    await toggle.press("Enter");
     await expect.poll(peak, { timeout: 10_000 }).toBeGreaterThan(0.005);
     // Leaving the page tears the audio down.
     await page.evaluate(() => {
@@ -432,18 +513,29 @@ test.describe("cinematic homepage", () => {
   }) => {
     await open(page);
     const nav = page.getByTestId("cinematic-nav");
-    // The calls to action (sign-in and the CTA) recede together.
-    const actions = nav.getByRole("link", { name: /Find My Business Idea/ }).locator("..");
+    // Sign-in recedes with the film; the one call to action never does.
+    const actions = nav.locator("[data-nav-secondary]");
     const opacity = () => actions.evaluate((el) => Number(getComputedStyle(el).opacity));
+    const cta = nav.getByRole("link", { name: /Find My Business Idea/ });
+    // Its own opacity and every ancestor's, up to the bar.
+    const ctaOpacity = () =>
+      cta.evaluate((el) => {
+        let o = 1;
+        for (let n: Element | null = el; n && n.tagName !== "HEADER"; n = n.parentElement)
+          o *= Number(getComputedStyle(n).opacity);
+        return o;
+      });
     const wordmark = nav.getByRole("link", { name: "Solventia home" });
     // In the film the visible identity is the opening lockup, now resting in the bar.
     const identity = page.locator("[data-brand-opening] [data-brand-part=word]");
     // On arrival the full bar is there.
     expect(await opacity()).toBeGreaterThan(0.99);
-    // During the film the calls to action leave the frame entirely; the wordmark stays,
-    // quietly, never below AA contrast.
+    expect(await ctaOpacity()).toBeGreaterThan(0.99);
+    // During the film sign-in leaves the frame entirely; the wordmark stays, quietly, never below
+    // AA contrast — and the call to action stays exactly as it was.
     await goTo(page, "computation", 0.5);
     await expect.poll(opacity).toBeLessThan(0.05);
+    expect(await ctaOpacity()).toBeGreaterThan(0.99);
     await expect
       .poll(() => identity.evaluate((el) => Number(getComputedStyle(el).opacity)))
       .toBeGreaterThanOrEqual(0.54);

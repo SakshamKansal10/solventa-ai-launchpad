@@ -23,10 +23,18 @@ export const getRouter = () => {
     },
   });
 
+  // The first client render after a cold load must not throw away scrolling the visitor already
+  // did while the page was waking up (it reset the homepage film to its opening mid-gesture);
+  // when they have not scrolled, and on every later navigation, restoration works as usual.
+  let firstRender = true;
   const router = createRouter({
     routeTree,
     context: { queryClient },
-    scrollRestoration: true,
+    scrollRestoration: () => {
+      if (!firstRender) return true;
+      firstRender = false;
+      return typeof window === "undefined" || window.scrollY === 0;
+    },
     defaultPreloadStaleTime: 0,
     // The route guards fetch the signed-in user on the SERVER (and that data is
     // used while server-rendering the shell). Handing the same cache to the

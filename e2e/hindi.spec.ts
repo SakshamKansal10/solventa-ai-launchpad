@@ -85,7 +85,7 @@ test.describe("Hindi — public pages", () => {
     await page.getByTestId("language-switch").click();
     await expect(page.getByRole("heading", { level: 1 })).toContainText("फाउंडर प्रोफ़ाइल");
     await expect(page.locator("html")).toHaveAttribute("lang", "hi");
-    await expect(page.locator("header")).toContainText("SOLVENTIA");
+    await expect(page.locator("header")).toContainText(/solventia/i);
 
     await page.reload();
     await expect(page.getByRole("heading", { level: 1 })).toContainText("फाउंडर प्रोफ़ाइल");

@@ -67,12 +67,16 @@ export function PerformanceGovernor({
   return null;
 }
 
-/** Stops rendering entirely while the cinematic section is scrolled out of view. */
+/**
+ * Renders only once every shader is compiled (ReadySignal), and stops rendering entirely while the
+ * cinematic section is scrolled out of view.
+ */
 export function RenderGate({ store }: { store: ExperienceStore }) {
   const setFrameloop = useThree((s) => s.setFrameloop);
   const active = useExperienceValue(store, (s) => s.stageActive);
+  const compiled = useExperienceValue(store, (s) => s.compiled);
   useEffect(() => {
-    setFrameloop(active ? "always" : "never");
-  }, [active, setFrameloop]);
+    setFrameloop(active && compiled ? "always" : "never");
+  }, [active, compiled, setFrameloop]);
   return null;
 }

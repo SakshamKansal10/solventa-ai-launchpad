@@ -13,8 +13,8 @@ export const WORLD = {
   quiet: ["#AAB2C0", "#5A606B"],
   label: ["#9DA5B4", "#666C77"],
   accent: ["#E2C690", "#8A6833"],
-  /** Muted champagne for separators (the · in Validate · Build · Elevate). */
-  accentSoft: ["#A58C64", "#B79A6A"],
+  /** Refined gold for separators (the · in Validate · Build · Elevate) — the brand's own. */
+  accentSoft: ["#C9AA79", "#B8924F"],
   violet: ["#8E83F0", "#5A4FCF"],
   hair: ["#F1EEE61F", "#15181F24"],
 } as const;

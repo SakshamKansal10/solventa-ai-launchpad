@@ -49,9 +49,12 @@ export function inkAt(light: number): number {
  */
 export const TONE_UNIFORMS = { uLight: { value: 1 } };
 
-/** The two worlds' surfaces (sRGB). */
+/**
+ * The two worlds' surfaces (sRGB). The pearl is a neutral, architectural white — a trace of warmth
+ * (R/G a hair above B) so it never reads sterile beside the navy and the champagne, but no cream.
+ */
 export const PEARL_WORLD = {
-  sky: "#F6F4EF",
-  horizon: "#ECE9E2",
-  fog: "#F2F0EA",
+  sky: "#F7F7F4",
+  horizon: "#EDEDE8",
+  fog: "#F3F3EF",
 } as const;

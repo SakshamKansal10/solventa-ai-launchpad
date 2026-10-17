@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { ArrowLeft, ArrowRight, UserRound, X } from "lucide-react";
 
-import mark from "@/assets/solventia-mark.png";
+import { BrandLockup, BrandMark } from "@/components/brand/Brand";
 import { LanguageSwitcher } from "@/components/solventia/LanguageSwitcher";
 import {
   AlertDialog,
@@ -93,10 +93,11 @@ export function ConsultationShell({
       </a>
 
       <header className="sticky top-0 z-30 flex h-[72px] items-center gap-4 border-b border-sol-border bg-sol-pearl/95 px-4 backdrop-blur sm:px-8">
-        <Link to="/" className="flex shrink-0 items-center gap-3" aria-label={t("nav.homeAria")}>
-          <img src={mark} alt="" width={298} height={436} className="h-9 w-auto" />
-          <span className="hidden font-wordmark text-[1.15rem] font-medium tracking-[0.14em] text-sol-ink md:block">
-            SOLVENTIA
+        <Link to="/" className="flex shrink-0 items-center" aria-label={t("nav.homeAria")}>
+          {/* Phones: the emblem alone (the questions need the width); wider: the lockup. */}
+          <BrandMark height={30} className="md:hidden" />
+          <span className="max-md:hidden">
+            <BrandLockup preset="compact" signature={false} />
           </span>
         </Link>
 

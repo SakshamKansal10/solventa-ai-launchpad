@@ -253,7 +253,13 @@ test.describe("text is never unreadably small", () => {
         while ((node = walker.nextNode())) {
           const text = (node.textContent ?? "").trim();
           const el = node.parentElement;
-          if (!text || !el || el.closest("script, style, .sr-only, [aria-hidden=true]")) continue;
+          // The brand lockup (emblem · SOLVENTIA · VALIDATE • BUILD • ELEVATE) is the exception.
+          if (
+            !text ||
+            !el ||
+            el.closest("script, style, .sr-only, [aria-hidden=true], [data-brand-part]")
+          )
+            continue;
           const cs = getComputedStyle(el);
           if (cs.visibility === "hidden" || cs.display === "none") continue;
           const px = parseFloat(cs.fontSize);

@@ -31,6 +31,10 @@ export default function CinematicCanvas({
       aria-hidden="true"
       data-testid="cinematic-canvas"
       style={{ pointerEvents: "none" }}
+      // Nothing renders until ReadySignal has compiled every shader in parallel (RenderGate then
+      // starts the loop) — a first frame would otherwise compile them all synchronously and
+      // freeze the page for seconds on modest GPUs.
+      frameloop="never"
       dpr={preset.dpr}
       gl={{
         antialias: preset.antialias,
@@ -43,6 +47,21 @@ export default function CinematicCanvas({
       // a short resize debounce avoids reallocating buffers mid-drag.
       resize={{ scroll: false, debounce: { scroll: 0, resize: 120 } }}
       onCreated={({ gl }) => {
+        // Leaving the page never waits on the GPU. R3F releases the context as the stage
+        // unmounts — inside the navigation itself — and losing a context blocks until the GPU
+        // has finished what it is still doing: while the world was still compiling its shaders,
+        // that held a click on a link for most of a second. The canvas has already left the
+        // page; its context is released once the next page is up and the GPU has caught up.
+        const lose = gl.forceContextLoss.bind(gl);
+        gl.forceContextLoss = () => {
+          const w = window as Window & {
+            requestIdleCallback?: (cb: () => void, options?: { timeout: number }) => number;
+          };
+          window.setTimeout(() => {
+            if (w.requestIdleCallback) w.requestIdleCallback(lose, { timeout: 3000 });
+            else lose();
+          }, 1500);
+        };
         gl.domElement.addEventListener(
           "webglcontextlost",
           (event) => {

@@ -83,8 +83,6 @@
     </mask>
   </defs>
 
-  <rect width="1254" height="1254" fill="#ffffff"/>
-
   <!-- Navy body -->
   <g filter="url(#soft-shadow)">
     <use href="#half-top" fill="url(#navy-top)"/>

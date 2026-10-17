@@ -52,7 +52,7 @@ const PLACE: Record<Caption["place"], string> = {
  */
 const SHADOW: CSSProperties = {
   textShadow:
-    "0 2px 30px rgb(5 8 14 / calc(0.85 * var(--dark, 0))), 0 1px 2px rgb(5 8 14 / calc(0.4 * var(--dark, 0))), 0 0 20px rgb(246 244 239 / calc(0.9 * (1 - var(--dark, 0)))), 0 0 6px rgb(246 244 239 / calc(0.7 * (1 - var(--dark, 0))))",
+    "0 2px 30px rgb(5 8 14 / calc(0.85 * var(--dark, 0))), 0 1px 2px rgb(5 8 14 / calc(0.4 * var(--dark, 0))), 0 0 20px rgb(247 247 244 / calc(0.9 * (1 - var(--dark, 0)))), 0 0 6px rgb(247 247 244 / calc(0.7 * (1 - var(--dark, 0))))",
 };
 const VEIL_MASK = "linear-gradient(to right, #000 0%, #000 38%, transparent 82%)";
 /** Major statements: clamp(72px, 8vw, 145px) on desktop — short lines, tight leading. */
@@ -103,7 +103,7 @@ export function CinematicOverlay() {
           maskImage: VEIL_MASK,
           WebkitMaskImage: VEIL_MASK,
           background:
-            "linear-gradient(to top, rgb(246 244 239 / 0.9), rgb(246 244 239 / 0.72) 30%, rgb(246 244 239 / 0) 100%)",
+            "linear-gradient(to top, rgb(247 247 244 / 0.9), rgb(247 247 244 / 0.72) 30%, rgb(247 247 244 / 0) 100%)",
         }}
       />
       <div
@@ -115,7 +115,7 @@ export function CinematicOverlay() {
           maskImage: VEIL_MASK,
           WebkitMaskImage: VEIL_MASK,
           background:
-            "linear-gradient(to bottom, rgb(246 244 239 / 0.88), rgb(246 244 239 / 0.7) 34%, rgb(246 244 239 / 0) 100%)",
+            "linear-gradient(to bottom, rgb(247 247 244 / 0.88), rgb(247 247 244 / 0.7) 34%, rgb(247 247 244 / 0) 100%)",
         }}
       />
       <BrandOpening />
@@ -269,20 +269,19 @@ function BrandOpening() {
       className="absolute inset-x-[var(--gutter)] inset-y-0 flex flex-col items-center justify-center"
     >
       <div className="flex items-center gap-[clamp(0.9rem,2.4vw,2.4rem)] [--mark-h:clamp(52px,14vw,82px)] sm:[--mark-h:clamp(84px,10.4vw,152px)]">
-        {/* The element that moves carries the blend itself (see Brand.tsx). */}
-        <span data-brand-part="mark" className="block origin-top-left mix-blend-multiply">
+        <span data-brand-part="mark" className="block origin-top-left">
           <BrandMark />
         </span>
         <div className="flex flex-col gap-[clamp(0.55rem,1.4vw,1.4rem)]">
-          <span data-brand-part="word" className="block origin-top-left">
+          <span data-brand-part="word" className="block origin-top-left self-start">
             <BrandWordmark
               className="text-[clamp(38px,10.4vw,62px)] sm:text-[clamp(62px,7.8vw,116px)]"
               color="var(--ink)"
             />
           </span>
-          <span data-brand-part="sig" className="block origin-top-left">
+          <span data-brand-part="sig" className="block origin-top-left self-start">
             <BrandSignature
-              className="text-[clamp(9px,2.5vw,13px)] sm:text-[clamp(13px,1.45vw,22px)]"
+              className="text-[clamp(10px,2.9vw,14px)] sm:text-[clamp(15px,1.75vw,26px)]"
               color="var(--ink)"
               separator="var(--accent-soft)"
             />
@@ -423,12 +422,8 @@ function CaptionBody({ caption: c }: { caption: Caption }) {
             CTA — each settling in over its own share of the reveal. */}
         <div className="relative flex justify-center [--mark-h:clamp(92px,19svh,188px)]">
           <FinalePaths />
-          {/* The approved emblem, whole and unaltered (the moving element carries the blend). */}
-          <span
-            aria-hidden="true"
-            className="relative block mix-blend-multiply"
-            style={stage(0.3, 0.46)}
-          >
+          {/* The approved emblem, whole and unaltered. */}
+          <span aria-hidden="true" className="relative block" style={stage(0.3, 0.46)}>
             <BrandMark />
           </span>
         </div>
@@ -460,7 +455,7 @@ function CaptionBody({ caption: c }: { caption: Caption }) {
           <Link
             to="/consultation"
             data-testid="cinematic-cta"
-            className="mt-[clamp(1.1rem,3.2svh,2rem)] inline-flex h-14 items-center gap-3 rounded-full bg-[#15181F] px-8 text-[1.0625rem] font-semibold tracking-[-0.01em] text-[#F6F4EF] shadow-[inset_0_0_0_1px_rgba(201,170,121,0.55)] transition-[background-color,transform] duration-200 hover:bg-[#0B1F3B] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#B8924F] active:scale-[0.98]"
+            className="mt-[clamp(1.1rem,3.2svh,2rem)] inline-flex h-14 items-center gap-3 rounded-full bg-[#15181F] px-8 text-[1.0625rem] font-semibold tracking-[-0.01em] text-[#F7F7F4] shadow-[inset_0_0_0_1px_rgba(201,170,121,0.55)] transition-[background-color,transform] duration-200 hover:bg-[#0B1F3B] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#B8924F] active:scale-[0.98]"
           >
             Find My Business Idea
             <ArrowRight className="size-5" aria-hidden="true" />

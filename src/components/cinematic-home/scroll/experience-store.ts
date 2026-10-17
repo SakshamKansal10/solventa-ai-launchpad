@@ -32,6 +32,12 @@ export interface ExperienceState {
   atStart: boolean;
   /** First frames are on screen — the loading veil can lift. */
   ready: boolean;
+  /** The studio environment exists (the world's shaders compile against it). */
+  environment: boolean;
+  /** Every shader the film needs is compiled (in parallel) — the world may start rendering. */
+  compiled: boolean;
+  /** The captions currently on screen and their presence (labels yield to them). */
+  captionBoxes: { box: { l: number; t: number; r: number; b: number }; o: number }[];
   perf: { fps: number; dpr: number; dprChanges: number };
   renderer: {
     calls: number;
@@ -80,6 +86,9 @@ export function createExperienceStore() {
     stageActive: true,
     atStart: true,
     ready: false,
+    environment: false,
+    compiled: false,
+    captionBoxes: [],
     perf: { fps: 0, dpr: 1, dprChanges: 0 },
     renderer: { calls: 0, triangles: 0, filaments: 0, nodes: 0, geometries: 0, textures: 0 },
     device: null,

@@ -3,7 +3,11 @@ import { z } from "zod";
 import { getSiteUrl } from "@/lib/actions/site-url.server";
 import { sanitizeNextPath } from "@/lib/safe-redirect";
 import { CinematicPage } from "@/components/cinematic-home/CinematicPage";
-import { CINEMATIC_FONTS, cinematicSearch } from "@/components/cinematic-home/cinematic-route";
+import {
+  BRAND_FONT_PRELOAD,
+  CINEMATIC_FONTS,
+  cinematicSearch,
+} from "@/components/cinematic-home/cinematic-route";
 
 export const Route = createFileRoute("/")({
   component: Index,
@@ -51,7 +55,7 @@ export const Route = createFileRoute("/")({
         },
         { name: "twitter:image", content: image },
       ],
-      links: [{ rel: "canonical", href: url }, CINEMATIC_FONTS],
+      links: [BRAND_FONT_PRELOAD, { rel: "canonical", href: url }, CINEMATIC_FONTS],
       scripts: [
         {
           type: "application/ld+json",

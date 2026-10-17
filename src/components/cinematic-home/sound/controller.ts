@@ -10,7 +10,9 @@ import { createCueGate, mixAt } from "./score";
  *   only ever STARTS from the visitor's first real interaction — a tap, click or key press — as
  *   browsers require (scrolling alone is not one). Autoplay rules are never bypassed; a refused
  *   start fails silently and waits for the next interaction.
- * - The mute control appears only once sound has actually played (`active`).
+ * - Never in the way: the interaction that starts it is answered first; the audio graph is built
+ *   at the next idle moment (see start). There is no visible control — a keyboard-only mute
+ *   exists once sound has actually played (`active`; see SoundToggle).
  * - Follows the scroll every frame: continuous layers track the current scene,
  *   cues fire as their visible events are crossed (once — see createCueGate).
  * - Muting fades to silence and suspends the context; un-muting resumes the
@@ -41,6 +43,8 @@ class SoundController {
   private gate: ReturnType<typeof createCueGate> | null = null;
   private raf = 0;
   private disarm: (() => void) | null = null;
+  /** The audio graph being built, after an interaction (see start). */
+  private preparing: Promise<void> | null = null;
   private onVisibility: (() => void) | null = null;
   /** Cues played since the page loaded (diagnostics for tests). */
   fired = 0;
@@ -132,8 +136,20 @@ class SoundController {
   private async start() {
     if (!this.store || typeof window === "undefined" || !("AudioContext" in window)) return;
     if (!this.ctx) {
-      this.ctx = new AudioContext({ latencyHint: "interactive" });
-      this.engine = new SoundEngine(this.ctx);
+      // Opening the audio device and synthesising the room take a few hundred milliseconds on a
+      // modest machine — never inside the interaction itself: the click, tap or key press that
+      // starts the sound answers first (a click on a link has navigated away before any of it
+      // runs). Built once, at the page's next idle moment; a page the visitor has interacted
+      // with may start a context created then (where a browser still refuses, the next
+      // interaction resumes it — the gesture listeners stay armed until audio runs).
+      this.preparing ??= idle().then(() => {
+        this.preparing = null;
+        if (!this.store || !this.state.enabled || this.ctx) return;
+        this.ctx = new AudioContext({ latencyHint: "interactive" });
+        this.engine = new SoundEngine(this.ctx);
+      });
+      await this.preparing;
+      if (!this.ctx) return;
     }
     const ctx = this.ctx;
     if (ctx.state !== "running") {
@@ -199,6 +215,17 @@ class SoundController {
     }
     this.raf = requestAnimationFrame(this.loop);
   };
+}
+
+/** The page's next idle moment (soon regardless, on a busy page). */
+function idle(): Promise<void> {
+  return new Promise((resolve) => {
+    const w = window as Window & {
+      requestIdleCallback?: (cb: () => void, options?: { timeout: number }) => number;
+    };
+    if (w.requestIdleCallback) w.requestIdleCallback(() => resolve(), { timeout: 1200 });
+    else window.setTimeout(resolve, 200);
+  });
 }
 
 const SERVER_STATE: SoundState = {

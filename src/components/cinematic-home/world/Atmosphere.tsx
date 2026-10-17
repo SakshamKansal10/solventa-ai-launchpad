@@ -4,17 +4,16 @@ import {
   BackSide,
   Color,
   FogExp2,
-  PMREMGenerator,
   ShaderMaterial,
   SphereGeometry,
   type DirectionalLight,
   type HemisphereLight,
   type Mesh,
 } from "three";
-import { RoomEnvironment } from "three/examples/jsm/environments/RoomEnvironment.js";
 
 import { sampleKeys } from "../timeline/timeline";
 import { EXPOSURE_KEYS, FOG_KEYS } from "./atmosphere-keys";
+import { buildStudioEnvironment } from "./environment";
 import { COLORS } from "./layout";
 import { lightAt, PEARL_WORLD, TONE_UNIFORMS } from "./tone";
 import { useWorld } from "./WorldContext";
@@ -84,23 +83,39 @@ export function Atmosphere() {
   const skyGeometry = useMemo(() => new SphereGeometry(900, 32, 16), []);
 
   useEffect(() => {
-    const pmrem = new PMREMGenerator(gl);
-    const room = new RoomEnvironment();
-    const env = pmrem.fromScene(room, 0.04).texture;
-    scene.environment = env;
-    scene.environmentIntensity = 0.38;
+    let cancelled = false;
+    let built: { dispose: () => void } | null = null;
     scene.background = new Color(COLORS.black);
     scene.fog = new FogExp2(COLORS.black, 0.012);
+    // Built without stalling the page (its shaders compile in parallel first). The world's own
+    // shaders are compiled only once it exists, since they compile differently with an
+    // environment — see ReadySignal.
+    void buildStudioEnvironment(gl, 0.04, () => cancelled)
+      .then((env) => {
+        if (!env) return;
+        if (cancelled) {
+          env.dispose();
+          return;
+        }
+        built = env;
+        scene.environment = env.texture;
+        scene.environmentIntensity = 0.38;
+      })
+      .catch(() => undefined)
+      .finally(() => {
+        if (cancelled) return;
+        store.state.environment = true;
+        store.emit();
+      });
     return () => {
+      cancelled = true;
       scene.environment = null;
       scene.fog = null;
-      env.dispose();
-      pmrem.dispose();
-      room.dispose?.();
+      built?.dispose();
       skyMaterial.dispose();
       skyGeometry.dispose();
     };
-  }, [gl, scene, skyMaterial, skyGeometry]);
+  }, [gl, scene, store, skyMaterial, skyGeometry]);
 
   useFrame((state) => {
     const p = store.state.progress;

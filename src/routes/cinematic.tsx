@@ -2,7 +2,11 @@ import { createFileRoute } from "@tanstack/react-router";
 import { z } from "zod";
 
 import { CinematicPage } from "@/components/cinematic-home/CinematicPage";
-import { CINEMATIC_FONTS, cinematicSearch } from "@/components/cinematic-home/cinematic-route";
+import {
+  BRAND_FONT_PRELOAD,
+  CINEMATIC_FONTS,
+  cinematicSearch,
+} from "@/components/cinematic-home/cinematic-route";
 
 /**
  * The cinematic homepage on its review route — the same page as `/`, kept for review links and
@@ -22,7 +26,7 @@ export const Route = createFileRoute("/cinematic")({
       },
       { name: "robots", content: "noindex, nofollow" },
     ],
-    links: [CINEMATIC_FONTS],
+    links: [BRAND_FONT_PRELOAD, CINEMATIC_FONTS],
   }),
 });
 

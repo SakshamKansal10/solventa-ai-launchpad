@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { z } from "zod";
 
-import mark from "@/assets/solventia-mark.png";
+import { BrandMark } from "@/components/brand/Brand";
 import { exchangeCodeForSession } from "@/lib/actions/auth";
 import { CONSULTATION_STORAGE_KEY } from "@/lib/consultation/store";
 import { useLocale } from "@/lib/i18n/LocaleProvider";
@@ -121,20 +121,14 @@ function AuthCallback() {
     );
   }
 
-  // A calm holding screen: the mark (quieted to graphite), one clear line, and a slim champagne
+  // A calm holding screen: the approved emblem, one clear line, and a slim champagne
   // line that travels while the session is confirmed (still under reduced motion).
   return (
     <div
       role="status"
       className="flex min-h-dvh flex-col items-center justify-center bg-sol-pearl px-6 text-center"
     >
-      <img
-        src={mark}
-        alt=""
-        width={298}
-        height={436}
-        className="h-12 w-auto [filter:grayscale(1)_brightness(0.62)_contrast(1.18)]"
-      />
+      <BrandMark height={48} />
       <p className="mt-8 text-[1.25rem] font-semibold tracking-[-0.01em] text-sol-ink">
         {resuming ? t("auth.callback.resuming") : t("auth.callback.confirming")}
       </p>

@@ -1,6 +1,6 @@
 import { motion, useReducedMotion } from "motion/react";
 
-import mark from "@/assets/solventia-mark.png";
+import { BrandMark } from "@/components/brand/Brand";
 import { cn } from "@/lib/utils";
 import { useProfileFacts } from "./ProfileSignals";
 
@@ -90,7 +90,7 @@ export function GenerationVisual() {
           )}
           <div className="relative flex size-[84px] items-center justify-center rounded-full border border-sol-violet/40 bg-sol-surface shadow-[0_14px_36px_rgba(114,87,216,0.16)]">
             <span className="absolute inset-2 rounded-full border border-dashed border-sol-champagne/55" />
-            <img src={mark} alt="" width={298} height={436} className="relative h-9 w-auto" />
+            <BrandMark height={36} className="relative" />
           </div>
         </div>
         <span className="sm:hidden">

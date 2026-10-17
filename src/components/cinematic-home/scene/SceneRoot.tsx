@@ -6,7 +6,6 @@ import { PerformanceGovernor, RenderGate } from "../performance/PerformanceGover
 import type { QualityPreset } from "../performance/quality";
 import type { ExperienceStore } from "../scroll/experience-store";
 import { DomSync } from "../overlay/DomSync";
-import { TimelineDriver } from "../timeline/TimelineDriver";
 import { Atmosphere } from "../world/Atmosphere";
 import { IntelligenceCore } from "../world/core/IntelligenceCore";
 import { OpportunityUniverse } from "../world/universe/OpportunityUniverse";
@@ -22,8 +21,9 @@ import { WorldContext, type World } from "../world/WorldContext";
 
 /**
  * Everything inside the single WebGL canvas. Frame order is explicit:
- * governor (−3) → timeline (−2) → camera, atmosphere (−1) → worlds (0),
- * then the filament system uploads what the worlds wrote and three renders.
+ * governor (−3) → camera, atmosphere (−1) → worlds (0), then the filament system uploads what the
+ * worlds wrote and three renders. The story position itself is advanced by the page
+ * (useStoryDriver) before every frame, so the world always renders the position the visitor is at.
  */
 export function SceneRoot({
   store,
@@ -57,7 +57,6 @@ export function SceneRoot({
 
   return (
     <WorldContext.Provider value={world}>
-      <TimelineDriver store={store} animate={animate} freeze={freeze} />
       <CameraRig store={store} parallax={parallax && !freeze} />
       <Atmosphere />
       <IntelligenceCore />

@@ -11,7 +11,7 @@ import {
   Settings,
   Sparkles,
 } from "lucide-react";
-import mark from "@/assets/solventia-mark.png";
+import { BrandLockup } from "@/components/brand/Brand";
 import { Avatar } from "@/components/founder/Avatar";
 import { useActiveSection, scrollToSection } from "@/hooks/use-active-section";
 import { SignInDialog } from "./SignInDialog";
@@ -139,41 +139,20 @@ export function Header({ pendingNext }: HeaderProps = {}) {
           aria-label={t("nav.homeAria")}
           onClick={() => setMobileOpen(false)}
         >
-          <motion.img
-            src={mark}
-            alt="Solventia"
-            width={298}
-            height={436}
+          {/* The one Solventia identity (the emblem only on light fields). */}
+          <motion.span
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.9, ease: [0.22, 1, 0.36, 1] }}
-            className={cn(
-              "h-[38px] w-auto md:h-[44px]",
-              overDarkHero
-                ? "drop-shadow-[0_0_14px_rgba(255,255,255,0.4)]"
-                : "drop-shadow-[0_1px_2px_rgba(23,32,61,0.18)]",
-            )}
-          />
-          <span className="hidden leading-none sm:block">
-            <span
-              className={cn(
-                "block font-wordmark text-[1.25rem] font-medium tracking-[0.14em]",
-                overDarkHero ? "text-white" : "text-sol-ink",
-              )}
-            >
-              SOLVENTIA
-            </span>
-            <span
-              className={cn(
-                "mt-1.5 block font-wordmark text-[0.625rem] font-normal tracking-[0.28em]",
-                overDarkHero ? "text-white" : "text-sol-ink",
-              )}
-            >
-              {/* Three equal words; only the separators carry champagne. */}
-              VALIDATE<span className="mx-[0.6em] text-sol-champagne">•</span>BUILD
-              <span className="mx-[0.6em] text-sol-champagne">•</span>ELEVATE
-            </span>
-          </span>
+            className="block"
+          >
+            <BrandLockup
+              preset="nav"
+              emblem={!overDarkHero}
+              wordColor={overDarkHero ? "#FFFFFF" : undefined}
+              signatureColor={overDarkHero ? "#FFFFFF" : undefined}
+            />
+          </motion.span>
         </Link>
 
         <nav className="hidden items-center justify-center gap-[34px] pl-8 xl:flex">
