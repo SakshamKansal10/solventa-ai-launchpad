@@ -494,8 +494,6 @@ function PhaseDetailsPanel({
               </p>
             )}
           </div>
-
-          <Gem3D variant="island" className="hidden size-36 self-center md:block" />
         </div>
       </div>
     </div>
