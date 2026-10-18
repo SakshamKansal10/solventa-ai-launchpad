@@ -599,6 +599,7 @@ export function LanguagesTimeScreen() {
           options={L.opts("hours", HOURS_IDS)}
           value={answers.weeklyHours}
           onChange={(id) => setAnswer("weeklyHours", id)}
+          buttons
         />
       </Question>
     </ScreenBody>

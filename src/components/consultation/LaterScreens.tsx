@@ -257,6 +257,7 @@ export function ScaleHorizonScreen() {
           options={L.opts("horizon", HORIZON_IDS)}
           value={answers.horizon}
           onChange={(id) => setAnswer("horizon", id)}
+          buttons
         />
       </Question>
     </ScreenBody>
