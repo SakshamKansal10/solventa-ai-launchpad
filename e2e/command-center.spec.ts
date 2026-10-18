@@ -19,9 +19,10 @@ test.describe("Command Center — state A: directions ready", () => {
     const seeded = await seedDirections(user.id);
     await gotoApp(page, "/dashboard");
 
-    await expect(page.locator("h1")).toHaveText("Your directions are ready");
+    await expect(page.locator("h1")).toHaveText("Your top idea is ready");
     await expect(page.getByTestId("flagship-card")).toBeVisible();
-    await expect(page.getByTestId("alternative-card")).toHaveCount(2);
+    // Only the recommended idea is here; the others live on the Opportunities page.
+    await expect(page.getByTestId("alternative-card")).toHaveCount(0);
     await expect(page.getByTestId("explore-more")).toHaveCount(1);
 
     // No numeric fit score, percentage or Business DNA anywhere on the screen.
@@ -52,7 +53,7 @@ test.describe("Command Center — state A: directions ready", () => {
     await expect(page.locator("h1")).toHaveText("Your direction is chosen");
   });
 
-  test("Explore More adds new directions through one Gemini call and lands on the Opportunities list", async ({
+  test("Explore more opens the Opportunities page, where more directions are added through one Gemini call", async ({
     page,
     context,
   }) => {
@@ -60,11 +61,11 @@ test.describe("Command Center — state A: directions ready", () => {
     await signIn(context, user);
     await seedDirections(user.id);
     await gotoApp(page, "/dashboard");
-    await expect(page.getByTestId("alternative-card")).toHaveCount(2);
 
     await page.getByTestId("explore-more").click();
     await expect(page).toHaveURL(/\/dashboard\/opportunities/, { timeout: 30_000 });
-    expect(await gemini.countOf("EXPLORE_MORE")).toBe(1);
+    await page.getByTestId("explore-more-generate").click();
+    await expect.poll(() => gemini.countOf("EXPLORE_MORE"), { timeout: 30_000 }).toBe(1);
     const rows = await sql<{ n: string }>(
       "select count(*)::text as n from opportunities where user_id = $1",
       [user.id],
@@ -81,12 +82,12 @@ test.describe("Command Center — state A: directions ready", () => {
     await signIn(context, user);
     await seedDirections(user.id);
     await gemini.failNext("EXPLORE_MORE", 3);
-    await gotoApp(page, "/dashboard");
+    await gotoApp(page, "/dashboard/opportunities");
 
-    await page.getByTestId("explore-more").click();
+    await page.getByTestId("explore-more-generate").click();
     await expect(page.getByText(/couldn't find more directions/i)).toBeVisible({ timeout: 30_000 });
-    await expect(page.getByTestId("alternative-card")).toHaveCount(2);
-    await expect(page.getByTestId("explore-more")).toBeEnabled();
+    await expect(page.getByTestId("opp-alternative")).toHaveCount(3);
+    await expect(page.getByTestId("explore-more-generate")).toBeEnabled();
     await gemini.clearBehavior();
   });
 });
@@ -115,7 +116,7 @@ test.describe("current-consultation rule", () => {
     });
 
     await gotoApp(page, "/dashboard");
-    await expect(page.locator("h1")).toHaveText("Your directions are ready");
+    await expect(page.locator("h1")).toHaveText("Your top idea is ready");
     const flagship = await page.getByTestId("flagship-card").innerText();
     expect(newer.titles.some((t) => flagship.includes(t))).toBe(true);
   });

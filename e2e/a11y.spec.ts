@@ -137,13 +137,6 @@ test.describe("accessibility (WCAG 2.1 A/AA, serious and critical only)", () => 
     await page.getByTestId("mission-card").nth(1).getByTestId("mission-toggle").click();
     findings.push(...(await audit(page, "mission details")));
 
-    await gotoApp(page, "/dashboard/proof");
-    await expect(page.getByTestId("assumption-card").first()).toBeVisible({ timeout: 45_000 });
-    await page.getByTestId("assumption-card").first().getByTestId("add-evidence").click();
-    await expect(page.getByTestId("evidence-dialog")).toBeVisible();
-    findings.push(...(await audit(page, "evidence dialog")));
-    await page.keyboard.press("Escape");
-
     await gotoApp(page, "/dashboard/settings");
     await page.getByTestId("edit-location").click();
     await expect(page.getByTestId("founder-edit-sheet")).toBeVisible();

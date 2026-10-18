@@ -1,11 +1,12 @@
 import { useEffect, useRef, useState } from "react";
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { toast } from "sonner";
 import { z } from "zod";
 import {
+  Check,
   ChevronDown,
   Compass,
+  ExternalLink,
   Loader2,
   Repeat,
   Route as RouteIcon,
@@ -16,53 +17,33 @@ import {
   type LucideIcon,
 } from "lucide-react";
 
-import { AssumptionSheet } from "@/components/founder/proof/AssumptionSheet";
-import { formatDate, StateBadge } from "@/components/founder/proof/bits";
-import { EvidenceDialog } from "@/components/founder/proof/EvidenceDialog";
-import { EvidenceMap } from "@/components/founder/proof/EvidenceMap";
 import { PageHero } from "@/components/founder/proof/PageHero";
-import { EvidenceStream } from "@/components/founder/proof/EvidenceStream";
 import { useAskSol } from "@/components/founder/DashboardShell";
-import { ProgressRing } from "@/components/founder/dashboard/graphics";
+import { FIT_ICONS } from "@/components/founder/dashboard/fit-constants";
+import { FitStatusPill, useFitReasonText } from "@/components/founder/fit";
 import {
-  Button,
   Card,
   EmptyState,
   ErrorPanel,
   LinkButton,
   PageSkeleton,
   Pill,
-  Skeleton,
 } from "@/components/founder/ui";
-import {
-  generateAssumptions,
-  getProofOverview,
-  updateProofEvidence,
-  type AssumptionDTO,
-  type EvidenceDTO,
-} from "@/lib/actions/proof";
+import { getOpportunityDetail } from "@/lib/actions/opportunities";
+import { generateAssumptions, getProofOverview, type AssumptionDTO } from "@/lib/actions/proof";
 import { useLocale } from "@/lib/i18n/LocaleProvider";
-import { PROOF_STATES, type ProofState } from "@/lib/proof/state";
 import { qk, useFounderState, useInvalidateFounder } from "@/lib/queries";
-import { useTranslatedEntity, useTranslatedTitle } from "@/lib/use-translation";
+import {
+  useTranslatedEntity,
+  useTranslatedTitle,
+  type OpportunityOverlay,
+} from "@/lib/use-translation";
 import { cn } from "@/lib/utils";
-
-const FILTERS = ["all", ...PROOF_STATES] as const;
-type Filter = (typeof FILTERS)[number];
 
 export const Route = createFileRoute("/dashboard/proof")({
   validateSearch: z.object({
-    /** Which opportunity's proof workspace to open (defaults to the current direction). */
-    opportunity: z.string().uuid().optional(),
-    filter: z.enum(FILTERS).optional(),
-    /** Open the evidence dialog immediately — prefilled from a roadmap mission. */
-    add: z.boolean().optional(),
-    assumption: z.string().uuid().optional(),
-    /** The mission's assumption category — used to preselect an assumption when
-     * the assumptions are only just being written (first visit). */
-    category: z.string().optional(),
-    mission: z.string().uuid().optional(),
-    week: z.string().uuid().optional(),
+    /** Which opportunity to explain (defaults to the current direction). */
+    opportunity: z.string().uuid().optional().catch(undefined),
   }),
   component: ProofPage,
   head: () => ({
@@ -98,7 +79,7 @@ function ProofPage() {
   if (!opportunityId) {
     return (
       <div className="flex flex-col gap-8">
-        <PageHero title={t("pf.title")} subtitle={t("pf.subtitle")} gem="seal" />
+        <PageHero title={t("pf.title")} subtitle={t("pf.subtitle")} />
         <EmptyState
           title={t("pf.noDirection.title")}
           body={t("pf.noDirection.body")}
@@ -114,33 +95,35 @@ function ProofPage() {
   return <ProofWorkspace opportunityId={opportunityId} />;
 }
 
+/** Proof explains the idea to the founder: why Solventia suggested it for them,
+ * what has to be true for it to work, and where the market numbers come from.
+ * Nothing here asks the founder to enter anything. */
 function ProofWorkspace({ opportunityId }: { opportunityId: string }) {
   const { t, locale } = useLocale();
-  const search = Route.useSearch();
-  const navigate = useNavigate();
   const invalidate = useInvalidateFounder();
   const askSol = useAskSol();
+  const reasonText = useFitReasonText();
 
   const overview = useQuery({
     queryKey: qk.proof(opportunityId),
     queryFn: () => getProofOverview({ data: { opportunityId } }),
     staleTime: 10_000,
   });
+  const detailQuery = useQuery({
+    queryKey: qk.opportunity(opportunityId),
+    queryFn: () => getOpportunityDetail({ data: { id: opportunityId } }),
+    staleTime: 15_000,
+  });
   const overlay = useTranslatedEntity<ProofOverlay>(
     "proof",
     opportunityId,
     String(overview.data?.assumptions.length ?? 0),
   );
-
+  const oppOverlay = useTranslatedEntity<OpportunityOverlay>("opportunity", opportunityId);
   const opportunityTitle = useTranslatedTitle(opportunityId, overview.data?.opportunity?.title);
-  const [detailId, setDetailId] = useState<string | null>(search.assumption ?? null);
-  const [dialog, setDialog] = useState<{
-    open: boolean;
-    assumptionId: string | null;
-    editing: EvidenceDTO | null;
-  }>({ open: Boolean(search.add), assumptionId: search.assumption ?? null, editing: null });
+  const [openId, setOpenId] = useState<string | null>(null);
 
-  // The founder's first visit: set up the critical assumptions exactly once.
+  // The founder's first visit: set up the key assumptions exactly once.
   const generate = useMutation({
     mutationFn: () => generateAssumptions({ data: { opportunityId, locale } }),
     onSuccess: async () => {
@@ -159,7 +142,7 @@ function ProofWorkspace({ opportunityId }: { opportunityId: string }) {
 
   // Ask Sol shows which assumption is open, so its suggestions are about that one.
   const openAssumptionTitle =
-    overview.data?.assumptions.find((a) => a.id === detailId)?.title ?? null;
+    overview.data?.assumptions.find((a) => a.id === openId)?.title ?? null;
   useEffect(() => {
     askSol.setAssumption(openAssumptionTitle);
     return () => askSol.setAssumption(null);
@@ -174,7 +157,7 @@ function ProofWorkspace({ opportunityId }: { opportunityId: string }) {
   if (!data.available) {
     return (
       <div className="flex flex-col gap-8">
-        <PageHero title={t("pf.title")} subtitle={t("pf.subtitle")} gem="seal" />
+        <PageHero title={t("pf.title")} subtitle={t("pf.subtitle")} />
         <ErrorPanel title={t("pf.unavailable.title")} body={t("pf.unavailable.body")} />
       </div>
     );
@@ -192,51 +175,76 @@ function ProofWorkspace({ opportunityId }: { opportunityId: string }) {
       : a;
   };
   const assumptions = data.assumptions.map(applyOverlay);
-  const filter: Filter = search.filter ?? "all";
-  const shown = filter === "all" ? assumptions : assumptions.filter((a) => a.state === filter);
-  const detail = assumptions.find((a) => a.id === detailId) ?? null;
 
-  const setFilter = (next: Filter) =>
-    navigate({
-      to: "/dashboard/proof",
-      search: { ...search, filter: next === "all" ? undefined : next },
-      replace: true,
-    });
-
-  const openAdd = (assumptionId: string | null, editing: EvidenceDTO | null = null) =>
-    setDialog({ open: true, assumptionId, editing });
-
-  const collected = assumptions.filter((a) => a.evidence.length > 0).length;
+  const dto = detailQuery.data;
+  const detail = dto ? { ...dto.detail, ...(oppOverlay.data?.detail ?? {}) } : null;
+  const advantages = dto
+    ? (detail && detail.whyThisFounder.length > 0
+        ? detail.whyThisFounder
+        : dto.fit.advantages
+      ).slice(0, 4)
+    : [];
+  const rows = dto?.fit.matrix.rows ?? [];
+  const sources = dto?.sources ?? [];
 
   return (
     <div className="flex flex-col gap-8" data-testid="proof-page">
-      <PageHero
-        title={opportunityTitle ?? t("pf.title")}
-        subtitle={t("pf.subtitle")}
-        gem="seal"
-        action={
-          assumptions.length > 0 ? (
-            <Button size="lg" onClick={() => openAdd(null)} data-testid="add-evidence-global">
-              {t("pf.addEvidenceCta")}
-            </Button>
-          ) : undefined
-        }
-      >
-        {assumptions.length > 0 && (
-          <div
-            className="flex items-center gap-5 rounded-2xl border border-sol-border bg-white/70 px-5 py-3 backdrop-blur"
-            data-testid="evidence-collected"
-          >
-            <ProgressRing value={collected} total={assumptions.length} label={t("pf.collected")} />
-            <p className="text-[0.9375rem] text-sol-secondary">
-              <span className="block text-[1.5rem] font-medium leading-none text-sol-ink">
-                {assumptions.length - collected}
-              </span>
-              <span className="mt-1 block">{t("pf.moreToValidate")}</span>
-            </p>
+      <PageHero title={opportunityTitle ?? t("pf.title")} subtitle={t("pf.subtitle")} />
+
+      {(advantages.length > 0 || rows.length > 0) && dto && (
+        <section aria-labelledby="fit-h" className="flex flex-col gap-4" data-testid="proof-fit">
+          <div>
+            <h2 id="fit-h" className="sol-h-sm !text-[1.0625rem]">
+              {t("pf.fit.title")}
+            </h2>
+            <p className="mt-1 text-[0.9375rem] text-sol-secondary">{t("pf.fit.sub")}</p>
           </div>
-        )}
-      </PageHero>
+          {advantages.length > 0 && (
+            <Card className="p-5 sm:p-6">
+              <ul className="grid gap-3 sm:grid-cols-2">
+                {advantages.map((reason) => (
+                  <li
+                    key={reason}
+                    className="flex items-start gap-3 text-[0.9375rem] leading-snug text-sol-ink"
+                  >
+                    <span className="mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full bg-sol-violet-soft text-sol-violet-deep">
+                      <Check className="size-3" strokeWidth={3} aria-hidden="true" />
+                    </span>
+                    <span className="min-w-0">{reason}</span>
+                  </li>
+                ))}
+              </ul>
+            </Card>
+          )}
+          {rows.length > 0 && (
+            <ul className="grid gap-4 sm:grid-cols-2">
+              {rows.map((row) => {
+                const Icon = FIT_ICONS[row.key];
+                return (
+                  <li key={row.key} data-testid={`fit-row-${row.key}`}>
+                    <Card className="flex h-full gap-4 p-5">
+                      <span className="flex size-11 shrink-0 items-center justify-center rounded-full border border-sol-champagne/40 bg-sol-champagne-soft text-sol-champagne-deep">
+                        <Icon className="size-5" aria-hidden="true" />
+                      </span>
+                      <div className="min-w-0">
+                        <div className="flex flex-wrap items-center gap-2.5">
+                          <p className="text-[1rem] font-medium text-sol-ink">
+                            {t(`fit.row.${row.key}` as const)}
+                          </p>
+                          <FitStatusPill status={row.status} />
+                        </div>
+                        <p className="mt-2 text-[0.9375rem] leading-snug text-sol-secondary">
+                          {reasonText(row.reason, dto.fit.currency)}
+                        </p>
+                      </div>
+                    </Card>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+        </section>
+      )}
 
       {generate.isPending || (needsGeneration && !generate.isError) ? (
         <div
@@ -256,216 +264,111 @@ function ProofWorkspace({ opportunityId }: { opportunityId: string }) {
       ) : null}
 
       {assumptions.length > 0 && (
-        <div className="grid items-start gap-8 lg:grid-cols-[minmax(0,64fr)_minmax(0,36fr)]">
-          <div className="flex min-w-0 flex-col gap-6">
-            <EvidenceMap assumptions={assumptions} onSelect={setDetailId} />
-
-            <div
-              role="group"
-              aria-label={t("pf.filters.aria")}
-              className="flex flex-wrap gap-2"
-              data-testid="proof-filters"
-            >
-              {FILTERS.map((f) => {
-                const count = f === "all" ? assumptions.length : data.counts[f as ProofState];
-                return (
-                  <button
-                    key={f}
-                    type="button"
-                    aria-pressed={filter === f}
-                    data-testid={`filter-${f}`}
-                    onClick={() => setFilter(f)}
-                    className={cn(
-                      "min-h-10 rounded-full border px-4 text-[0.9375rem] font-medium transition-colors",
-                      filter === f
-                        ? "border-sol-violet bg-sol-violet-soft text-sol-violet-deep"
-                        : "border-sol-border bg-sol-surface text-sol-ink hover:border-sol-violet/45",
-                    )}
-                  >
-                    {f === "all" ? t("common.all") : t(`pf.state.${f}` as const)}{" "}
-                    <span className="text-sol-secondary">{count}</span>
-                  </button>
-                );
-              })}
-            </div>
-
-            {shown.length === 0 ? (
-              <EmptyState title={t("pf.filters.emptyTitle")} body={t("pf.filters.emptyBody")} />
-            ) : (
-              <ul className="flex flex-col gap-3">
-                {shown.map((a) => {
-                  const Icon = CATEGORY_ICON[a.category] ?? Compass;
-                  return (
-                    <li key={a.id}>
-                      <Card
-                        as="article"
-                        className="flex flex-wrap items-center gap-x-4 gap-y-3 border-sol-border px-5 py-4 shadow-none transition-colors hover:border-sol-violet/40"
-                        data-testid="assumption-card"
-                        data-state={a.state}
-                      >
-                        <span className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-sol-violet-soft text-sol-violet-deep">
-                          <Icon className="size-5" strokeWidth={1.75} aria-hidden="true" />
-                        </span>
-                        <div className="min-w-[14rem] flex-1">
-                          <div className="flex flex-wrap items-center gap-2">
-                            <Pill tone="neutral">{t(`pf.category.${a.category}` as const)}</Pill>
-                            <StateBadge state={a.state} />
-                            {a.evidence.length > 0 && (
-                              <span className="text-[0.875rem] text-sol-secondary">
-                                {t("pf.evidenceCount", { n: a.evidence.length })}
-                              </span>
-                            )}
-                          </div>
-                          <h2 className="sol-h-sm mt-1.5 text-sol-ink">{a.title}</h2>
-                        </div>
-                        <div className="flex shrink-0 items-center gap-2">
-                          <Button
-                            size="sm"
-                            onClick={() => openAdd(a.id)}
-                            data-testid="add-evidence"
-                          >
-                            {t("pf.addEvidence")}
-                          </Button>
-                          <button
-                            type="button"
-                            onClick={() => setDetailId(a.id)}
-                            data-testid="view-details"
-                            aria-label={`${t("common.viewDetails")}: ${a.title}`}
-                            className="grid size-10 place-items-center rounded-full border border-sol-border text-sol-ink transition-colors hover:bg-sol-ivory focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sol-violet/50"
-                          >
-                            <ChevronDown className="size-5" aria-hidden="true" />
-                          </button>
-                        </div>
-                      </Card>
-                    </li>
-                  );
-                })}
-              </ul>
-            )}
+        <section aria-labelledby="assume-h" className="flex flex-col gap-4">
+          <div>
+            <h2 id="assume-h" className="sol-h-sm !text-[1.0625rem]">
+              {t("pf.assume.title")}
+            </h2>
+            <p className="mt-1 text-[0.9375rem] text-sol-secondary">{t("pf.assume.sub")}</p>
           </div>
-
-          <aside className="flex min-w-0 flex-col gap-6" aria-label={t("pf.stream.title")}>
-            <EvidenceStream
-              compact
-              assumptions={assumptions}
-              onOpenAssumption={setDetailId}
-              onAdd={() => openAdd(null)}
-              onAskSol={({ summary }) =>
-                askSol.open(t("askSol.q.whatChanges", { summary: summary.slice(0, 240) }))
-              }
-            />
-          </aside>
-        </div>
+          <ul className="flex flex-col gap-3">
+            {assumptions.map((a) => {
+              const Icon = CATEGORY_ICON[a.category] ?? Compass;
+              const open = openId === a.id;
+              return (
+                <li key={a.id}>
+                  <Card
+                    as="article"
+                    className="border-sol-border p-0 shadow-none transition-colors hover:border-sol-violet/40"
+                    data-testid="assumption-card"
+                  >
+                    <button
+                      type="button"
+                      aria-expanded={open}
+                      aria-controls={`assume-${a.id}`}
+                      onClick={() => setOpenId(open ? null : a.id)}
+                      data-testid="view-details"
+                      className="flex w-full cursor-pointer items-center gap-4 rounded-2xl px-5 py-4 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sol-violet/50"
+                    >
+                      <span className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-sol-violet-soft text-sol-violet-deep">
+                        <Icon className="size-5" strokeWidth={1.75} aria-hidden="true" />
+                      </span>
+                      <span className="min-w-0 flex-1">
+                        <Pill tone="neutral">{t(`pf.category.${a.category}` as const)}</Pill>
+                        <span className="sol-h-sm mt-1.5 block text-sol-ink">{a.title}</span>
+                      </span>
+                      <ChevronDown
+                        className={cn(
+                          "size-5 shrink-0 text-sol-secondary transition-transform duration-200",
+                          open && "rotate-180",
+                        )}
+                        aria-hidden="true"
+                      />
+                    </button>
+                    {open && (
+                      <div
+                        id={`assume-${a.id}`}
+                        className="flex flex-col gap-4 border-t border-sol-border px-5 py-5 sm:pl-[5.25rem]"
+                      >
+                        {a.whyItMatters && (
+                          <div>
+                            <p className="sol-eyebrow">{t("pf.detail.whyMatters")}</p>
+                            <p className="mt-1.5 text-[1rem] leading-relaxed text-sol-ink">
+                              {a.whyItMatters}
+                            </p>
+                          </div>
+                        )}
+                        {a.nextTest && (
+                          <div className="rounded-2xl bg-sol-violet-soft px-4 py-3.5">
+                            <p className="text-[0.875rem] font-medium text-sol-violet-deep">
+                              {t("pf.detail.nextTest")}
+                            </p>
+                            <p className="mt-1 text-[1rem] leading-relaxed text-sol-ink">
+                              {a.nextTest}
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </Card>
+                </li>
+              );
+            })}
+          </ul>
+        </section>
       )}
 
-      {data.unassigned.length > 0 && (
-        <UnassignedNotes evidence={data.unassigned} assumptions={assumptions} locale={locale} />
+      {sources.length > 0 && (
+        <section aria-labelledby="sources-h" className="flex flex-col gap-4">
+          <h2 id="sources-h" className="sol-h-sm !text-[1.0625rem]">
+            {t("opp.market.sourcesTitle")}
+          </h2>
+          <ul className="flex flex-col gap-3">
+            {sources.map((s) => (
+              <li key={s.id}>
+                <Card className="flex flex-col gap-1.5 p-5 shadow-none">
+                  <p className="text-[1rem] leading-snug text-sol-ink">{s.claim}</p>
+                  {s.sourceUrl ? (
+                    <a
+                      href={s.sourceUrl}
+                      target="_blank"
+                      rel="noreferrer noopener"
+                      className="inline-flex w-fit items-center gap-1.5 text-[0.9375rem] font-medium text-sol-violet-deep hover:underline"
+                    >
+                      {s.sourceTitle ?? s.sourceUrl}
+                      <ExternalLink className="size-3.5" aria-hidden="true" />
+                    </a>
+                  ) : (
+                    s.sourceTitle && (
+                      <p className="text-[0.9375rem] text-sol-secondary">{s.sourceTitle}</p>
+                    )
+                  )}
+                </Card>
+              </li>
+            ))}
+          </ul>
+        </section>
       )}
-
-      <AssumptionSheet
-        assumption={detail}
-        onOpenChange={(open) => !open && setDetailId(null)}
-        onAddEvidence={(id) => openAdd(id)}
-        onEditEvidence={(e) => openAdd(e.assumptionId, e)}
-      />
-
-      <EvidenceDialog
-        // Never show an empty form: on a first visit (arriving from a mission) the
-        // dialog waits until the assumptions exist, then opens preselected.
-        open={dialog.open && assumptions.length > 0}
-        onOpenChange={(open) => {
-          setDialog((d) => ({ ...d, open }));
-          if (!open && (search.add || search.mission)) {
-            void navigate({
-              to: "/dashboard/proof",
-              search: { opportunity: opportunityId, filter: search.filter },
-              replace: true,
-            });
-          }
-        }}
-        opportunityId={opportunityId}
-        assumptions={assumptions}
-        presetAssumptionId={
-          dialog.assumptionId ??
-          (search.category ? assumptions.find((a) => a.category === search.category)?.id : null) ??
-          null
-        }
-        editing={dialog.editing}
-        titleSupported={data.titleSupported}
-        taskId={search.mission ?? null}
-        weekId={search.week ?? null}
-      />
     </div>
-  );
-}
-
-/** Notes carried over from the old Evidence Vault, before assumptions existed.
- * Nothing is lost: each can be linked to the assumption it speaks to. */
-function UnassignedNotes({
-  evidence,
-  assumptions,
-  locale,
-}: {
-  evidence: EvidenceDTO[];
-  assumptions: AssumptionDTO[];
-  locale: "en" | "hi";
-}) {
-  const { t } = useLocale();
-  const invalidate = useInvalidateFounder();
-  const link = useMutation({
-    mutationFn: (v: { id: string; assumptionId: string }) =>
-      updateProofEvidence({ data: { id: v.id, assumptionId: v.assumptionId } }),
-    onSuccess: async () => {
-      await invalidate();
-      toast.success(t("pf.linked"));
-    },
-    onError: () => toast.error(t("pf.saveError")),
-  });
-  if (assumptions.length === 0) return <Skeleton className="h-24" />;
-  return (
-    <section
-      aria-labelledby="unassigned-h"
-      className="flex flex-col gap-3"
-      data-testid="unassigned-notes"
-    >
-      <h2 id="unassigned-h" className="sol-eyebrow">
-        {t("pf.unassigned.title")}
-      </h2>
-      <p className="sol-support">{t("pf.unassigned.body")}</p>
-      <ul className="flex flex-col gap-3">
-        {evidence.map((e) => (
-          <li key={e.id}>
-            <Card className="flex flex-col gap-3 p-5 sm:flex-row sm:items-center sm:justify-between">
-              <div className="min-w-0">
-                <p className="text-[1rem] leading-relaxed text-sol-ink">{e.summary}</p>
-                <p className="mt-1 text-[0.875rem] text-sol-secondary">
-                  {formatDate(e.occurredOn, locale)}
-                </p>
-              </div>
-              <label className="flex shrink-0 flex-col gap-1 text-[0.875rem] font-semibold text-sol-ink">
-                {t("pf.unassigned.link")}
-                <select
-                  className="min-h-11 max-w-[18rem] rounded-xl border border-sol-border bg-sol-surface px-3 text-[0.9375rem] font-normal"
-                  defaultValue=""
-                  disabled={link.isPending}
-                  onChange={(ev) =>
-                    ev.target.value && link.mutate({ id: e.id, assumptionId: ev.target.value })
-                  }
-                >
-                  <option value="" disabled>
-                    {t("common.chooseOne")}
-                  </option>
-                  {assumptions.map((a) => (
-                    <option key={a.id} value={a.id}>
-                      {a.title}
-                    </option>
-                  ))}
-                </select>
-              </label>
-            </Card>
-          </li>
-        ))}
-      </ul>
-    </section>
   );
 }

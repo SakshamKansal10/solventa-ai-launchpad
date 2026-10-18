@@ -308,10 +308,10 @@ export function DashboardShell({ children }: { children: ReactNode }) {
       >
         {t("common.skipToContent")}
       </a>
-      <div className="app-inter flex h-dvh w-full overflow-hidden bg-sol-pearl text-sol-ink">
+      <div className="app-inter flex h-dvh w-full overflow-hidden bg-white text-sol-ink">
         <aside
           data-testid="sidebar"
-          className="hidden h-dvh w-[244px] shrink-0 border-r border-sol-border bg-gradient-to-b from-sol-ivory-light to-sol-pearl lg:block"
+          className="hidden h-dvh w-[244px] shrink-0 border-r border-sol-border bg-white lg:block"
         >
           <SidebarContent onNavigate={() => undefined} onSignOut={handleSignOut} />
         </aside>
@@ -319,7 +319,7 @@ export function DashboardShell({ children }: { children: ReactNode }) {
         <div data-testid="main-column" className="flex h-dvh min-w-0 flex-1 flex-col">
           <header
             data-testid="topbar"
-            className="flex h-[72px] shrink-0 items-center justify-between gap-3 border-b border-sol-border bg-sol-pearl/95 px-5 backdrop-blur md:px-7 lg:px-10"
+            className="flex h-[72px] shrink-0 items-center justify-between gap-3 border-b border-sol-border bg-white/95 px-5 backdrop-blur md:px-7 lg:px-10"
           >
             <div className="flex min-w-0 items-center gap-3">
               <button
@@ -330,12 +330,19 @@ export function DashboardShell({ children }: { children: ReactNode }) {
               >
                 <Menu className="size-5" aria-hidden="true" />
               </button>
-              <p
-                className="truncate text-[1.0625rem] font-semibold text-sol-ink"
-                data-testid="page-title"
-              >
-                {t(titleKeyFor(pathname))}
-              </p>
+              <div className="min-w-0">
+                <p
+                  className="truncate text-[1.0625rem] font-semibold text-sol-ink"
+                  data-testid="page-title"
+                >
+                  {t(titleKeyFor(pathname))}
+                </p>
+                {pathname === "/dashboard/opportunities" && (
+                  <p className="hidden truncate text-[0.8125rem] text-sol-secondary sm:block">
+                    {t("opp.page.subtitle")}
+                  </p>
+                )}
+              </div>
             </div>
             <div className="flex items-center gap-2 sm:gap-3">
               <LanguageSwitcher compact />
@@ -388,7 +395,7 @@ export function DashboardShell({ children }: { children: ReactNode }) {
           </header>
 
           <div
-            className="sol-shell-wash min-h-0 flex-1 overflow-y-auto overscroll-y-contain"
+            className="min-h-0 flex-1 overflow-y-auto overscroll-y-contain"
             data-testid="scroll-area"
           >
             <main
@@ -463,7 +470,7 @@ export function DashboardShell({ children }: { children: ReactNode }) {
       )}
 
       <Sheet open={navOpen} onOpenChange={setNavOpen}>
-        <SheetContent side="left" className="w-[280px] border-sol-border bg-sol-pearl p-0">
+        <SheetContent side="left" className="w-[280px] border-sol-border bg-white p-0">
           <SheetTitle className="sr-only">{t("shell.nav.aria")}</SheetTitle>
           <SheetDescription className="sr-only">{t("shell.nav.aria")}</SheetDescription>
           <SidebarContent onNavigate={() => setNavOpen(false)} onSignOut={handleSignOut} />

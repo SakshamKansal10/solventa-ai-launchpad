@@ -463,7 +463,7 @@ export function EducationScreen() {
       <Question label={t("q.education.label")}>
         <SegmentedScale
           name="education"
-          noBarsFor={["other"]}
+          buttons
           options={L.opts("education", EDUCATION_IDS)}
           value={answers.education}
           onChange={(id) => setAnswer("education", id)}
@@ -599,6 +599,7 @@ export function LanguagesTimeScreen() {
           options={L.opts("hours", HOURS_IDS)}
           value={answers.weeklyHours}
           onChange={(id) => setAnswer("weeklyHours", id)}
+          buttons
         />
       </Question>
     </ScreenBody>

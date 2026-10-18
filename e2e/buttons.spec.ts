@@ -58,7 +58,7 @@ test.describe("founder buttons", () => {
     await expect(page.getByTestId("adaptation-note")).toBeVisible({ timeout: 60_000 });
   });
 
-  test("dashboard graphics are controls: path stop, mission node, evidence map and Today's Move all navigate", async ({
+  test("dashboard graphics are controls: path stop, mission node and Today's Move all navigate", async ({
     page,
     context,
   }) => {
@@ -75,41 +75,5 @@ test.describe("founder buttons", () => {
     await gotoApp(page, "/dashboard");
     await page.getByTestId("track-node").first().click();
     await expect(page).toHaveURL(/\/dashboard\/roadmap/);
-
-    await gotoApp(page, "/dashboard");
-    await page.getByTestId("evidence-map-node").first().hover();
-    await expect(page.getByTestId("evidence-map-summary")).not.toContainText("Hover, focus");
-    await page.getByTestId("evidence-map-node").first().click();
-    await expect(page).toHaveURL(/\/dashboard\/proof/);
-  });
-
-  test("Add evidence (page button) saves; a contradiction gets 'Ask Sol what this changes', which sends the question", async ({
-    page,
-    context,
-  }) => {
-    await founderWithRoadmap(page, context);
-    await gotoApp(page, "/dashboard/proof");
-    await page.getByTestId("add-evidence-global").click();
-    await expect(page.getByTestId("evidence-dialog")).toBeVisible({ timeout: 45_000 });
-    await page.getByTestId("ev-person").fill("Clinic owner");
-    await page.getByTestId("ev-summary").fill("I wouldn't pay for reminders.");
-
-    // Ask Sol to interpret: it suggests, the founder confirms.
-    await page.getByTestId("ev-interpret").click();
-    await expect(page.getByTestId("ev-suggestion")).toHaveAttribute("data-signal", "contradicts");
-    await page.getByTestId("ev-use-suggestion").click();
-    await expect(page.getByTestId("ev-signal-contradicts")).toHaveAttribute("aria-checked", "true");
-    await page.getByTestId("ev-save").click();
-    await expect(page.getByTestId("evidence-dialog")).toBeHidden();
-
-    const item = page.getByTestId("stream-item").first();
-    await expect(item).toHaveAttribute("data-signal", "contradicts");
-    await item.getByTestId("stream-ask-sol").click();
-    await expect(
-      page.getByTestId("ask-sol-panel").or(page.getByTestId("ask-sol-drawer")),
-    ).toBeVisible();
-    await expect(page.getByTestId("ask-sol-panel")).toContainText("wouldn't pay", {
-      timeout: 30_000,
-    });
   });
 });

@@ -145,7 +145,6 @@ test.describe("Hindi — the founder workspace", () => {
       `/dashboard/opportunities/${seeded.opportunityIds[0]}`,
       `/dashboard/opportunities/${seeded.opportunityIds[0]}?tab=fit`,
       `/dashboard/opportunities/${seeded.opportunityIds[0]}?tab=market`,
-      `/dashboard/opportunities/${seeded.opportunityIds[0]}?tab=economics`,
       "/dashboard/roadmap",
       "/dashboard/roadmap?tab=plan",
       "/dashboard/roadmap?tab=progress",

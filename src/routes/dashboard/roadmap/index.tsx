@@ -18,7 +18,6 @@ import {
   PageSkeleton,
   Pill,
 } from "@/components/founder/ui";
-import { getProofOverview } from "@/lib/actions/proof";
 import { getRoadmapView, type CloseWeekResult } from "@/lib/actions/roadmap";
 import { useLocale } from "@/lib/i18n/LocaleProvider";
 import { qk, useFounderState } from "@/lib/queries";
@@ -140,11 +139,6 @@ function RoadmapWorkspace({
         ? 3000
         : false,
   });
-  const proof = useQuery({
-    queryKey: qk.proof(opportunityId),
-    queryFn: () => getProofOverview({ data: { opportunityId } }),
-    staleTime: 15_000,
-  });
 
   const view = query.data ?? null;
   const currentWeek = view?.weeks.find((w) => w.id === view.currentWeekId) ?? null;
@@ -248,8 +242,6 @@ function RoadmapWorkspace({
                 view={view}
                 week={shownWeek}
                 text={text}
-                opportunityId={opportunityId}
-                proof={proof.data}
                 isCurrent={shownWeek.id === view.currentWeekId}
                 nextWeekNumber={nextWeekNumber}
                 onWeekChanged={onWeekChanged}
@@ -267,7 +259,7 @@ function RoadmapWorkspace({
             />
           </TabsContent>
           <TabsContent value="progress" className="mt-8">
-            <ProgressTab view={view} text={text} proof={proof.data} opportunityId={opportunityId} />
+            <ProgressTab view={view} text={text} />
           </TabsContent>
         </Tabs>
       )}

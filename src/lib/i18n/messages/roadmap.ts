@@ -25,9 +25,6 @@ const en = {
   "rm.mission.markComplete": "Mark complete",
   "rm.mission.reopen": "Reopen",
   "rm.mission.completedOn": "Completed {date}",
-  "rm.mission.needEvidenceHint":
-    "Add the evidence this mission asks for, then you can complete it.",
-  "rm.mission.needEvidenceError": "This mission needs evidence before it can be completed.",
   "rm.mission.expand": "Open mission",
   "rm.mission.collapse": "Close mission",
   "rm.mission.activeNow": "Active now",
@@ -69,7 +66,6 @@ const en = {
   // Week
   "rm.adapted": "Adapted from your last week",
   "rm.missions.aria": "This week's missions",
-  "rm.evidenceRequired": "Evidence required",
   "rm.locked.title": "This week is locked",
   "rm.locked.body": "It opens when you finish the week before it.",
   "rm.week.readyToClose": "Every mission is done",
@@ -100,7 +96,6 @@ const en = {
   "rm.mission.hideDetails": "Hide steps",
   "rm.mission.why": "Why it matters",
   "rm.mission.doneWhen": "Done when",
-  "rm.mission.addProof": "Add evidence",
   "rm.mission.statusAria": "Status of “{title}”",
   "rm.mission.error": "We couldn't update that mission. Please try again.",
 
@@ -210,8 +205,6 @@ const hi: Record<keyof typeof en, string> = {
   "rm.mission.markComplete": "पूर्ण करें",
   "rm.mission.reopen": "फिर से खोलें",
   "rm.mission.completedOn": "{date} को पूर्ण",
-  "rm.mission.needEvidenceHint": "मिशन में मांगा गया साक्ष्य जोड़ें, फिर इसे पूरा कर सकते हैं।",
-  "rm.mission.needEvidenceError": "इस मिशन को पूरा करने से पहले साक्ष्य ज़रूरी है।",
   "rm.mission.expand": "मिशन खोलें",
   "rm.mission.collapse": "मिशन बंद करें",
   "rm.mission.activeNow": "अभी सक्रिय",
@@ -251,7 +244,6 @@ const hi: Record<keyof typeof en, string> = {
 
   "rm.adapted": "आपके पिछले सप्ताह के अनुसार ढाला गया",
   "rm.missions.aria": "इस सप्ताह के मिशन",
-  "rm.evidenceRequired": "साक्ष्य ज़रूरी",
   "rm.locked.title": "यह सप्ताह बंद है",
   "rm.locked.body": "इससे पहले का सप्ताह पूरा करते ही यह खुल जाएगा।",
   "rm.week.readyToClose": "हर मिशन पूरा हो गया",
@@ -280,7 +272,6 @@ const hi: Record<keyof typeof en, string> = {
   "rm.mission.hideDetails": "चरण छिपाएं",
   "rm.mission.why": "यह क्यों मायने रखता है",
   "rm.mission.doneWhen": "पूरा तब माना जाएगा जब",
-  "rm.mission.addProof": "साक्ष्य जोड़ें",
   "rm.mission.statusAria": "“{title}” की स्थिति",
   "rm.mission.error": "वह मिशन अपडेट नहीं कर पाए। कृपया फिर कोशिश करें।",
 

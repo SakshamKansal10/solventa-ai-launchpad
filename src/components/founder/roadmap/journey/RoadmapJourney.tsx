@@ -3,7 +3,6 @@ import {
   forwardRef,
   useEffect,
   useRef,
-  useState,
   type ComponentPropsWithoutRef,
   type RefObject,
 } from "react";
@@ -14,7 +13,6 @@ import { useLocale } from "@/lib/i18n/LocaleProvider";
 import type { PhaseDTO, RoadmapView } from "@/lib/roadmap/view";
 import { cn } from "@/lib/utils";
 import type { useRoadmapText } from "../text";
-export type JourneyViewMode = "timeline" | "map";
 
 type RoadmapText = ReturnType<typeof useRoadmapText>;
 
@@ -33,7 +31,7 @@ const STAGE_H = 720;
 /** The signature roadmap view: a header, a 3D journey of phase islands with
  * HTML labels pinned underneath, and the details panel of the selected phase.
  * All state shown here comes from the roadmap view; the only local state is
- * which view mode and hover are active. */
+ * which hover is active. */
 export function RoadmapJourney({
   view,
   text,
@@ -52,7 +50,6 @@ export function RoadmapJourney({
   onOpenWeek: (n: number) => void;
 }) {
   const { t } = useLocale();
-  const [mode, setMode] = useState<JourneyViewMode>("timeline");
   const visiblePhases = view.phases.slice(0, ISLANDS.length);
   const labelRefs = useRef<(HTMLElement | null)[]>([]);
   const notchRef = useRef<HTMLSpanElement>(null);
@@ -92,7 +89,7 @@ export function RoadmapJourney({
       cancelAnimationFrame(raf);
       window.removeEventListener("resize", place);
     };
-  }, [selectedIndex, mode]);
+  }, [selectedIndex]);
 
   const choose = (i: number) => {
     const p = view.phases[i];
@@ -163,29 +160,6 @@ export function RoadmapJourney({
               )}
             </div>
           </div>
-          <div
-            role="group"
-            aria-label={t("rm.journey.viewAria")}
-            className="flex rounded-full border border-sol-border bg-sol-surface/85 p-1 shadow-sm"
-          >
-            {(["timeline", "map"] as const).map((m) => (
-              <button
-                key={m}
-                type="button"
-                data-testid={`journey-view-${m}`}
-                aria-pressed={mode === m}
-                onClick={() => setMode(m)}
-                className={cn(
-                  "min-h-8 rounded-full px-5 text-[0.8125rem] font-medium transition-colors duration-300",
-                  mode === m
-                    ? "bg-sol-violet-soft text-sol-violet-deep"
-                    : "text-sol-secondary hover:text-sol-ink",
-                )}
-              >
-                {t(`rm.journey.${m}` as const)}
-              </button>
-            ))}
-          </div>
         </header>
 
         <div className="overflow-x-auto">
@@ -201,26 +175,6 @@ export function RoadmapJourney({
               draggable={false}
               className="absolute inset-0 size-full select-none object-cover [mask-image:linear-gradient(to_bottom,transparent,black_14%,black_92%,transparent)]"
             />
-            <svg
-              aria-hidden="true"
-              viewBox={`0 0 ${STAGE_W} ${STAGE_H}`}
-              preserveAspectRatio="none"
-              className="pointer-events-none absolute inset-0 size-full"
-            >
-              {mode === "map" && (
-                <polyline
-                  points={ISLANDS.slice(0, visiblePhases.length)
-                    .map((o) => `${o.cx},${o.cy}`)
-                    .join(" ")}
-                  fill="none"
-                  stroke="#ffffff"
-                  strokeWidth="3"
-                  strokeLinecap="round"
-                  strokeDasharray="2 14"
-                  opacity="0.9"
-                />
-              )}
-            </svg>
             <nav
               aria-label={t("rm.phases.aria")}
               data-testid="phase-strip"
@@ -540,8 +494,6 @@ function PhaseDetailsPanel({
               </p>
             )}
           </div>
-
-          <Gem3D variant="island" className="hidden size-36 self-center md:block" />
         </div>
       </div>
     </div>

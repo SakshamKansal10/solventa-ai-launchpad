@@ -1,4 +1,3 @@
-import { Gem3D } from "@/components/founder/three/Gem3D";
 import { useEffect, useRef, useState } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -172,7 +171,6 @@ function BuildingPage() {
             </div>
           ) : (
             <>
-              <Gem3D variant="island" className="h-40 w-40" />
               <h1 className="sol-h2">{t("rm.build.title")}</h1>
               <p
                 key={statusIndex}

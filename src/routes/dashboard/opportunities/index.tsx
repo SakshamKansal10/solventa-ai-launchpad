@@ -3,15 +3,15 @@ import { useMutation } from "@tanstack/react-query";
 import { toast } from "sonner";
 import {
   ArrowRight,
-  BarChart3,
-  BookOpen,
   Check,
   Compass,
+  Hammer,
+  Lightbulb,
+  Map as MapIcon,
   Search,
-  FileText,
-  PlayCircle,
-  ShoppingCart,
-  Smartphone,
+  SlidersHorizontal,
+  Target,
+  Users,
   type LucideIcon,
 } from "lucide-react";
 import { useState, type ReactNode } from "react";
@@ -20,6 +20,7 @@ import { cn } from "@/lib/utils";
 
 import { OpportunityPhoto, useOpportunityImage } from "@/components/founder/OpportunityImage";
 import { FitPill } from "@/components/founder/OpportunityCards";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import {
   Button,
   Card,
@@ -30,7 +31,7 @@ import {
   Pill,
 } from "@/components/founder/ui";
 import type { OpportunityBrief } from "@/lib/actions/founder";
-import { chooseDirection } from "@/lib/actions/opportunities";
+import { chooseDirection, exploreMoreOpportunities } from "@/lib/actions/opportunities";
 import { useLocale } from "@/lib/i18n/LocaleProvider";
 import { useFounderState, useInvalidateFounder } from "@/lib/queries";
 import { useTranslatedBrief } from "@/lib/use-translation";
@@ -44,7 +45,7 @@ export const Route = createFileRoute("/dashboard/opportunities/")({
   }),
 });
 
-type Section = "selected" | "alternative" | "previous";
+type Section = "selected" | "alternative";
 
 /** One opportunity. The selected one is a featured hero with its photo; the
  * alternatives are image cards: photo (only if one already exists), name, short
@@ -69,33 +70,71 @@ function OpportunityRow({
   // The chosen idea gets its photo (generated once, then cached). Alternatives
   // only show a thumbnail if one already exists — browsing never spends credits.
   const image = useOpportunityImage(raw.id, { generate: selected });
-  const showThumb = selected ? !image.unavailable : image.url !== null && section === "alternative";
 
   if (selected) {
+    const facts: { key: string; icon: LucideIcon; label: string; value: string | null }[] = [
+      { key: "customer", icon: Users, label: t("opp.fact.customer"), value: brief.customer },
+      { key: "problem", icon: Target, label: t("opp.fact.problem"), value: brief.problem },
+      { key: "product", icon: Hammer, label: t("opp.ov.groupWhat"), value: brief.product },
+    ];
+    const shownFacts = facts.filter((f) => f.value);
     return (
       <article className="sol-atmosphere" data-testid="opp-selected" aria-label={brief.title}>
-        <div className="relative z-10 flex flex-col justify-center gap-4 p-6 sm:p-8">
-          <div className="flex flex-wrap items-center gap-2.5">
-            <p className="sol-eyebrow flex items-center gap-2 !text-[0.6875rem] !uppercase !tracking-[0.14em]">
-              <span className="h-3 w-0.5 rounded-full bg-sol-violet" aria-hidden="true" />
-              {t("opp.list.featured")}
-            </p>
-            <Pill tone="violet">{t("opp.status.selected")}</Pill>
+        <div className="relative z-10 grid gap-6 p-6 sm:p-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.15fr)] lg:items-center lg:gap-10">
+          <div className="flex flex-col justify-center gap-5">
+            <div className="flex flex-wrap items-center gap-2.5">
+              <p className="sol-eyebrow flex items-center gap-2 !text-[0.6875rem] !uppercase !tracking-[0.14em]">
+                <span className="h-3 w-0.5 rounded-full bg-sol-violet" aria-hidden="true" />
+                {t("opp.list.featured")}
+              </p>
+              <Pill tone="violet">{t("opp.status.selected")}</Pill>
+            </div>
+            <h3 className="max-w-[16ch] font-display text-[clamp(1.75rem,1.3rem+1.6vw,2.75rem)] font-medium leading-[1.1] text-sol-ink">
+              {brief.title}
+            </h3>
+            <div className="flex flex-wrap items-center gap-3">
+              <LinkButton to="/dashboard/opportunities/$id" params={{ id: brief.id }} size="md">
+                {t("common.open")}
+                <ArrowRight className="size-4" aria-hidden="true" />
+              </LinkButton>
+              <LinkButton to="/dashboard/roadmap" variant="secondary" size="md">
+                <MapIcon className="size-4" aria-hidden="true" />
+                {t("cc.hero.viewRoadmap")}
+              </LinkButton>
+            </div>
           </div>
-          <h3 className="max-w-[24ch] font-display text-[clamp(1.5rem,1.2rem+1.2vw,2.125rem)] font-medium leading-[1.12] text-sol-ink">
-            {brief.title}
-          </h3>
-          {description && (
-            <p className="line-clamp-3 max-w-[56ch] text-[0.9375rem] leading-snug text-sol-secondary">
-              {description}
-            </p>
+          {(description || shownFacts.length > 0) && (
+            <div className="rounded-3xl border border-sol-border bg-white/70 p-5 backdrop-blur sm:p-6">
+              <p className="flex items-center gap-2.5 text-[1rem] font-medium text-sol-violet-deep">
+                <span className="flex size-8 items-center justify-center rounded-full bg-sol-champagne-soft">
+                  <Lightbulb className="size-4" aria-hidden="true" />
+                </span>
+                {t("opp.hero.simply")}
+              </p>
+              {description && (
+                <p className="mt-3 line-clamp-4 text-[0.9375rem] leading-relaxed text-sol-secondary">
+                  {description}
+                </p>
+              )}
+              {shownFacts.length > 0 && (
+                <ul className="mt-4 flex flex-col gap-3.5">
+                  {shownFacts.map((f) => (
+                    <li key={f.key} className="flex items-start gap-3.5">
+                      <span className="flex size-11 shrink-0 items-center justify-center rounded-full bg-sol-champagne-soft text-sol-champagne-deep">
+                        <f.icon className="size-5" aria-hidden="true" />
+                      </span>
+                      <div className="min-w-0">
+                        <p className="text-[0.9375rem] font-medium text-sol-ink">{f.label}</p>
+                        <p className="line-clamp-2 text-[0.875rem] leading-snug text-sol-secondary">
+                          {f.value}
+                        </p>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
           )}
-          <div>
-            <LinkButton to="/dashboard/opportunities/$id" params={{ id: brief.id }} size="md">
-              {t("common.open")}
-              <ArrowRight className="size-4" aria-hidden="true" />
-            </LinkButton>
-          </div>
         </div>
       </article>
     );
@@ -104,107 +143,60 @@ function OpportunityRow({
   return (
     <Card
       as="article"
-      className="group flex h-full flex-col overflow-hidden p-0 transition-colors hover:border-sol-violet/40"
+      className="group flex h-full flex-col p-5 transition-colors hover:border-sol-violet/40 sm:p-6"
       data-testid={`opp-${section}`}
     >
-      {showThumb && (
-        <div
-          className="h-36 w-full overflow-hidden border-b border-sol-border"
-          data-testid="opp-thumb"
-        >
-          <OpportunityPhoto image={image} title={brief.title} compact />
-        </div>
-      )}
-      <div className="flex min-w-0 flex-1 flex-col gap-3 p-5">
-        <div className="flex items-start justify-between gap-3">
-          <h3 className="sol-h3 min-w-0">{brief.title}</h3>
-          {section === "previous" ? (
-            <Pill tone="neutral">
-              {brief.status === "dismissed" ? t("opp.status.dismissed") : t("opp.status.previous")}
-            </Pill>
-          ) : (
-            <FitPill fit={brief.fit} />
-          )}
-        </div>
-        {description && (
-          <p className="line-clamp-3 text-[0.9375rem] leading-snug text-sol-secondary">
-            {description}
-          </p>
-        )}
-        <div className="mt-auto flex flex-wrap items-center gap-3 pt-2">
-          <LinkButton
-            to="/dashboard/opportunities/$id"
-            params={{ id: brief.id }}
-            variant="secondary"
-            size="sm"
-          >
-            {t("common.open")}
-            <ArrowRight className="size-4" aria-hidden="true" />
-          </LinkButton>
-          {section === "alternative" && canChoose && onChoose && (
-            <Button variant="soft" size="sm" onClick={onChoose} loading={choosing}>
-              {t("cc.choose")}
-            </Button>
-          )}
-        </div>
-      </div>
-    </Card>
-  );
-}
-
-const PREVIOUS_TILES: { icon: LucideIcon; tone: string }[] = [
-  { icon: FileText, tone: "bg-sol-violet-soft text-sol-violet-deep" },
-  { icon: BarChart3, tone: "bg-sky-50 text-sky-600" },
-  { icon: Smartphone, tone: "bg-emerald-50 text-emerald-600" },
-  { icon: BookOpen, tone: "bg-rose-50 text-rose-500" },
-  { icon: ShoppingCart, tone: "bg-amber-50 text-amber-500" },
-  { icon: PlayCircle, tone: "bg-fuchsia-50 text-fuchsia-500" },
-];
-
-/** A past idea: coloured tile, name, status, a short line and one Revisit action. */
-function PreviousCard({ brief: raw, index }: { brief: OpportunityBrief; index: number }) {
-  const { t } = useLocale();
-  const brief = useTranslatedBrief(raw) ?? raw;
-  const tile = PREVIOUS_TILES[index % PREVIOUS_TILES.length];
-  const Icon = tile.icon;
-  const description = brief.oneLiner || brief.customer;
-  return (
-    <Card as="article" className="flex h-full flex-col gap-4 p-5" data-testid="opp-previous">
       <div className="flex items-start gap-4">
         <span
-          className={cn("flex size-14 shrink-0 items-center justify-center rounded-2xl", tile.tone)}
+          className="flex size-14 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-sol-violet-soft text-sol-violet-deep"
+          data-testid={image.url ? "opp-thumb" : undefined}
         >
-          <Icon className="size-6" strokeWidth={1.75} aria-hidden="true" />
+          {image.url ? (
+            <img src={image.url} alt="" className="size-full object-cover" draggable={false} />
+          ) : (
+            <Lightbulb className="size-6" strokeWidth={1.75} aria-hidden="true" />
+          )}
         </span>
-        <div className="min-w-0">
-          <h3 className="truncate text-[1.125rem] font-medium text-sol-ink">{brief.title}</h3>
-          <Pill tone={brief.status === "dismissed" ? "neutral" : "violet"} className="mt-2">
-            {brief.status === "dismissed" ? (
-              t("opp.status.dismissed")
-            ) : (
-              <>
-                <Check className="size-3.5" aria-hidden="true" />
-                {t("opp.status.consulted")}
-              </>
-            )}
-          </Pill>
+        <div className="min-w-0 flex-1">
+          <div className="flex items-start justify-between gap-3">
+            <h3 className="sol-h3 min-w-0">{brief.title}</h3>
+            <FitPill fit={brief.fit} />
+          </div>
+          {description && (
+            <p className="mt-1.5 line-clamp-3 text-[0.9375rem] leading-snug text-sol-secondary">
+              {description}
+            </p>
+          )}
         </div>
       </div>
-      {description && (
-        <p className="line-clamp-2 text-[0.9375rem] leading-snug text-sol-secondary">
-          {description}
-        </p>
+      {brief.whyFit.length > 0 && (
+        <ul className="mt-4 flex flex-col gap-2.5 border-t border-sol-border pt-4 sm:pl-[4.5rem]">
+          {brief.whyFit.slice(0, 3).map((reason) => (
+            <li key={reason} className="flex items-start gap-3 text-[0.9375rem] text-sol-secondary">
+              <span className="mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full bg-sol-violet-soft text-sol-violet-deep">
+                <Check className="size-3" strokeWidth={3} aria-hidden="true" />
+              </span>
+              <span className="min-w-0">{reason}</span>
+            </li>
+          ))}
+        </ul>
       )}
-      <LinkButton
-        to="/dashboard/opportunities/$id"
-        params={{ id: brief.id }}
-        variant="secondary"
-        size="md"
-        className="mt-auto w-full"
-      >
-        {t("opp.revisit")}
-        <ArrowRight className="size-4" aria-hidden="true" />
-      </LinkButton>
+      <div className="mt-auto flex flex-wrap items-center gap-3 pt-5 sm:pl-[4.5rem]">
+        <LinkButton
+          to="/dashboard/opportunities/$id"
+          params={{ id: brief.id }}
+          variant="secondary"
+          size="sm"
+        >
+          {t("common.open")}
+          <ArrowRight className="size-4" aria-hidden="true" />
+        </LinkButton>
+        {section === "alternative" && canChoose && onChoose && (
+          <Button variant="soft" size="sm" onClick={onChoose} loading={choosing}>
+            {t("cc.choose")}
+          </Button>
+        )}
+      </div>
     </Card>
   );
 }
@@ -230,6 +222,18 @@ function OpportunitiesPage() {
     },
   });
 
+  const explore = useMutation({
+    mutationFn: () => exploreMoreOpportunities({ data: { locale } }),
+    onSuccess: async (res) => {
+      await invalidate();
+      toast.success(t("cc.explore.done", { n: res.added }));
+    },
+    onError: (err) => {
+      console.error("[opportunities] explore more failed:", err);
+      toast.error(t("cc.explore.error"));
+    },
+  });
+
   if (founder.isPending) return <PageSkeleton label={t("shell.skeleton.loading")} />;
   if (founder.isError || !founder.data) {
     return <ErrorPanel onRetry={() => void founder.refetch()} retrying={founder.isFetching} />;
@@ -242,13 +246,6 @@ function OpportunitiesPage() {
   const alternatives = inView
     .filter((b) => b.id !== selected?.id && b.status !== "dismissed")
     .sort((a, b) => direction.viewedIds.indexOf(a.id) - direction.viewedIds.indexOf(b.id));
-  const previous = all
-    .filter(
-      (b) =>
-        b.id !== selected?.id &&
-        (b.consultationId !== direction.consultationId || b.status === "dismissed"),
-    )
-    .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
   const canChoose = direction.isLatestConsultation;
   const q = query.trim().toLowerCase();
   const textMatch = (b: OpportunityBrief) =>
@@ -256,12 +253,11 @@ function OpportunitiesPage() {
   const shownAlternatives = alternatives.filter(
     (b) => (fitFilter === "all" || b.fit === fitFilter) && textMatch(b),
   );
-  const shownPrevious = previous.filter(textMatch);
   const filtering = q !== "" || fitFilter !== "all";
   const fitOptions = (["strong", "moderate", "conditional"] as const).filter((f) =>
     alternatives.some((b) => b.fit === f),
   );
-  const showToolbar = alternatives.length + previous.length > 2;
+  const showToolbar = alternatives.length > 0;
 
   return (
     <div className="flex flex-col gap-8" data-testid="opportunities-page">
@@ -286,11 +282,11 @@ function OpportunitiesPage() {
       )}
 
       {showToolbar && (
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <label className="relative block w-full sm:max-w-sm">
+        <div className="flex items-center gap-3">
+          <label className="relative block min-w-0 flex-1">
             <span className="sr-only">{t("opp.list.search")}</span>
             <Search
-              className="pointer-events-none absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-sol-secondary"
+              className="pointer-events-none absolute left-4 top-1/2 size-4 -translate-y-1/2 text-sol-secondary"
               aria-hidden="true"
             />
             <input
@@ -299,37 +295,51 @@ function OpportunitiesPage() {
               onChange={(e) => setQuery(e.target.value)}
               placeholder={t("opp.list.searchPlaceholder")}
               data-testid="opp-search"
-              className="h-11 w-full rounded-full border border-sol-border bg-sol-surface pl-10 pr-4 text-[0.9375rem] text-sol-ink outline-none placeholder:text-sol-secondary/70 focus-visible:border-sol-violet/60 focus-visible:ring-2 focus-visible:ring-sol-violet/30"
+              className="h-12 w-full rounded-full border border-sol-border bg-sol-surface pl-11 pr-4 text-[0.9375rem] text-sol-ink outline-none placeholder:text-sol-secondary/70 focus-visible:border-sol-violet/60 focus-visible:ring-2 focus-visible:ring-sol-violet/30"
             />
           </label>
           {fitOptions.length > 1 && (
-            <div
-              role="group"
-              aria-label={t("opp.list.filterAria")}
-              className="flex flex-wrap gap-2"
-            >
-              {(["all", ...fitOptions] as const).map((f) => (
+            <Popover>
+              <PopoverTrigger asChild>
                 <button
-                  key={f}
                   type="button"
-                  aria-pressed={fitFilter === f}
-                  onClick={() => setFitFilter(f)}
-                  className={cn(
-                    "min-h-9 cursor-pointer rounded-full border px-3.5 text-[0.8125rem] font-medium transition-colors",
-                    fitFilter === f
-                      ? "border-sol-violet/50 bg-sol-violet-soft text-sol-violet-deep"
-                      : "border-sol-border bg-sol-surface text-sol-secondary hover:border-sol-violet/40",
-                  )}
+                  data-testid="opp-filters"
+                  className="flex h-12 shrink-0 cursor-pointer items-center gap-2.5 rounded-full border border-sol-border bg-sol-surface px-5 text-[0.9375rem] font-medium text-sol-ink transition-colors hover:border-sol-violet/40"
                 >
-                  {f === "all" ? t("opp.list.filterAll") : t(`fit.${f}` as const)}
+                  <SlidersHorizontal className="size-4" aria-hidden="true" />
+                  {t("opp.list.filters")}
+                  {fitFilter !== "all" && (
+                    <span className="size-2 rounded-full bg-sol-violet" aria-hidden="true" />
+                  )}
                 </button>
-              ))}
-            </div>
+              </PopoverTrigger>
+              <PopoverContent align="end" className="w-56 p-2">
+                <div role="group" aria-label={t("opp.list.filterAria")} className="flex flex-col">
+                  {(["all", ...fitOptions] as const).map((f) => (
+                    <button
+                      key={f}
+                      type="button"
+                      aria-pressed={fitFilter === f}
+                      onClick={() => setFitFilter(f)}
+                      className={cn(
+                        "flex min-h-10 cursor-pointer items-center justify-between rounded-xl px-3 text-left text-[0.9375rem] transition-colors",
+                        fitFilter === f
+                          ? "bg-sol-violet-soft font-medium text-sol-violet-deep"
+                          : "text-sol-ink hover:bg-sol-ivory",
+                      )}
+                    >
+                      {f === "all" ? t("opp.list.filterAll") : t(`fit.${f}` as const)}
+                      {fitFilter === f && <Check className="size-4" aria-hidden="true" />}
+                    </button>
+                  ))}
+                </div>
+              </PopoverContent>
+            </Popover>
           )}
         </div>
       )}
 
-      {filtering && shownAlternatives.length === 0 && shownPrevious.length === 0 && (
+      {filtering && shownAlternatives.length === 0 && (
         <p className="text-[0.9375rem] text-sol-secondary" role="status">
           {t("opp.list.noMatch")}
         </p>
@@ -345,7 +355,7 @@ function OpportunitiesPage() {
               {shownAlternatives.length}
             </span>
           </div>
-          <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
+          <div className="grid gap-5 lg:grid-cols-2">
             {shownAlternatives.map((b) => (
               <OpportunityRow
                 key={b.id}
@@ -360,38 +370,25 @@ function OpportunitiesPage() {
         </section>
       )}
 
-      {shownPrevious.length > 0 && (
-        <section aria-labelledby="prev-h" className="flex flex-col gap-4">
-          <div className="flex items-start justify-between gap-3">
-            <div>
-              <div className="flex items-center gap-3">
-                <h2 id="prev-h" className="sol-h-sm !text-[1.0625rem]">
-                  {t("opp.list.previous")}
-                </h2>
-                <span className="rounded-full bg-sol-violet-soft px-2.5 py-0.5 text-[0.8125rem] font-medium text-sol-violet-deep">
-                  {shownPrevious.length}
-                </span>
-              </div>
-              <p className="mt-1 text-[0.9375rem] text-sol-secondary">
-                {t("opp.list.previousSub")}
-              </p>
-            </div>
-            <LinkButton
-              to="/dashboard/history"
-              variant="ghost"
-              size="sm"
-              className="text-sol-violet-deep"
-            >
-              {t("cc.viewAll")}
-              <ArrowRight className="size-4" aria-hidden="true" />
-            </LinkButton>
-          </div>
-          <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
-            {shownPrevious.map((b, i) => (
-              <PreviousCard key={b.id} brief={b} index={i} />
-            ))}
-          </div>
-        </section>
+      {canChoose && all.length > 0 && (
+        <div className="flex flex-col items-start gap-2">
+          <Button
+            variant="soft"
+            size="lg"
+            onClick={() => explore.mutate()}
+            loading={explore.isPending}
+            disabled={choose.isPending}
+            data-testid="explore-more-generate"
+          >
+            <Compass className="size-5" aria-hidden="true" />
+            {t("cc.exploreMore")}
+          </Button>
+          {explore.isPending && (
+            <p role="status" className="text-[1rem] text-sol-secondary">
+              {t("cc.explore.working")}
+            </p>
+          )}
+        </div>
       )}
     </div>
   );

@@ -63,7 +63,7 @@ test.describe("History", () => {
     await expect(page.getByTestId("earlier-consultation-banner")).toBeVisible();
 
     await gotoApp(page, "/dashboard");
-    await expect(page.locator("h1")).toHaveText("Your directions are ready"); // still the newest
+    await expect(page.locator("h1")).toHaveText("Your top idea is ready"); // still the newest
   });
 
   test("Restore Direction asks first; Cancel changes nothing; Confirm makes the older direction current and keeps its roadmap", async ({
@@ -79,7 +79,7 @@ test.describe("History", () => {
     await page.getByRole("button", { name: "Cancel" }).click();
     await expect(page.getByTestId("restore-dialog")).toBeHidden();
     await gotoApp(page, "/dashboard");
-    await expect(page.locator("h1")).toHaveText("Your directions are ready");
+    await expect(page.locator("h1")).toHaveText("Your top idea is ready");
 
     await gotoApp(page, "/dashboard/history");
     await page.getByTestId("history-entry").nth(1).getByTestId("history-restore").click();
@@ -113,7 +113,7 @@ test.describe("History", () => {
     // A brand-new consultation completes AFTER the restore.
     await seedDirections(user.id);
     await gotoApp(page, "/dashboard");
-    await expect(page.locator("h1")).toHaveText("Your directions are ready", { timeout: 30_000 });
+    await expect(page.locator("h1")).toHaveText("Your top idea is ready", { timeout: 30_000 });
   });
 
   test("an empty account shows an honest empty state", async ({ page, context }) => {
