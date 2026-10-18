@@ -1,19 +1,7 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useMutation } from "@tanstack/react-query";
 import { toast } from "sonner";
-import {
-  ArrowRight,
-  BarChart3,
-  BookOpen,
-  Check,
-  Compass,
-  Search,
-  FileText,
-  PlayCircle,
-  ShoppingCart,
-  Smartphone,
-  type LucideIcon,
-} from "lucide-react";
+import { ArrowRight, Check, Compass, Search } from "lucide-react";
 import { useState, type ReactNode } from "react";
 
 import { cn } from "@/lib/utils";
@@ -152,63 +140,6 @@ function OpportunityRow({
   );
 }
 
-const PREVIOUS_TILES: { icon: LucideIcon; tone: string }[] = [
-  { icon: FileText, tone: "bg-sol-violet-soft text-sol-violet-deep" },
-  { icon: BarChart3, tone: "bg-sky-50 text-sky-600" },
-  { icon: Smartphone, tone: "bg-emerald-50 text-emerald-600" },
-  { icon: BookOpen, tone: "bg-rose-50 text-rose-500" },
-  { icon: ShoppingCart, tone: "bg-amber-50 text-amber-500" },
-  { icon: PlayCircle, tone: "bg-fuchsia-50 text-fuchsia-500" },
-];
-
-/** A past idea: coloured tile, name, status, a short line and one Revisit action. */
-function PreviousCard({ brief: raw, index }: { brief: OpportunityBrief; index: number }) {
-  const { t } = useLocale();
-  const brief = useTranslatedBrief(raw) ?? raw;
-  const tile = PREVIOUS_TILES[index % PREVIOUS_TILES.length];
-  const Icon = tile.icon;
-  const description = brief.oneLiner || brief.customer;
-  return (
-    <Card as="article" className="flex h-full flex-col gap-4 p-5" data-testid="opp-previous">
-      <div className="flex items-start gap-4">
-        <span
-          className={cn("flex size-14 shrink-0 items-center justify-center rounded-2xl", tile.tone)}
-        >
-          <Icon className="size-6" strokeWidth={1.75} aria-hidden="true" />
-        </span>
-        <div className="min-w-0">
-          <h3 className="truncate text-[1.125rem] font-medium text-sol-ink">{brief.title}</h3>
-          <Pill tone={brief.status === "dismissed" ? "neutral" : "violet"} className="mt-2">
-            {brief.status === "dismissed" ? (
-              t("opp.status.dismissed")
-            ) : (
-              <>
-                <Check className="size-3.5" aria-hidden="true" />
-                {t("opp.status.consulted")}
-              </>
-            )}
-          </Pill>
-        </div>
-      </div>
-      {description && (
-        <p className="line-clamp-2 text-[0.9375rem] leading-snug text-sol-secondary">
-          {description}
-        </p>
-      )}
-      <LinkButton
-        to="/dashboard/opportunities/$id"
-        params={{ id: brief.id }}
-        variant="secondary"
-        size="md"
-        className="mt-auto w-full"
-      >
-        {t("opp.revisit")}
-        <ArrowRight className="size-4" aria-hidden="true" />
-      </LinkButton>
-    </Card>
-  );
-}
-
 function OpportunitiesPage() {
   const { t, locale } = useLocale();
   const founder = useFounderState();
@@ -242,13 +173,6 @@ function OpportunitiesPage() {
   const alternatives = inView
     .filter((b) => b.id !== selected?.id && b.status !== "dismissed")
     .sort((a, b) => direction.viewedIds.indexOf(a.id) - direction.viewedIds.indexOf(b.id));
-  const previous = all
-    .filter(
-      (b) =>
-        b.id !== selected?.id &&
-        (b.consultationId !== direction.consultationId || b.status === "dismissed"),
-    )
-    .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
   const canChoose = direction.isLatestConsultation;
   const q = query.trim().toLowerCase();
   const textMatch = (b: OpportunityBrief) =>
@@ -256,12 +180,11 @@ function OpportunitiesPage() {
   const shownAlternatives = alternatives.filter(
     (b) => (fitFilter === "all" || b.fit === fitFilter) && textMatch(b),
   );
-  const shownPrevious = previous.filter(textMatch);
   const filtering = q !== "" || fitFilter !== "all";
   const fitOptions = (["strong", "moderate", "conditional"] as const).filter((f) =>
     alternatives.some((b) => b.fit === f),
   );
-  const showToolbar = alternatives.length + previous.length > 2;
+  const showToolbar = alternatives.length > 2;
 
   return (
     <div className="flex flex-col gap-8" data-testid="opportunities-page">
@@ -329,7 +252,7 @@ function OpportunitiesPage() {
         </div>
       )}
 
-      {filtering && shownAlternatives.length === 0 && shownPrevious.length === 0 && (
+      {filtering && shownAlternatives.length === 0 && (
         <p className="text-[0.9375rem] text-sol-secondary" role="status">
           {t("opp.list.noMatch")}
         </p>
@@ -355,40 +278,6 @@ function OpportunitiesPage() {
                 choosing={choose.isPending && choose.variables === b.id}
                 onChoose={() => choose.mutate(b.id)}
               />
-            ))}
-          </div>
-        </section>
-      )}
-
-      {shownPrevious.length > 0 && (
-        <section aria-labelledby="prev-h" className="flex flex-col gap-4">
-          <div className="flex items-start justify-between gap-3">
-            <div>
-              <div className="flex items-center gap-3">
-                <h2 id="prev-h" className="sol-h-sm !text-[1.0625rem]">
-                  {t("opp.list.previous")}
-                </h2>
-                <span className="rounded-full bg-sol-violet-soft px-2.5 py-0.5 text-[0.8125rem] font-medium text-sol-violet-deep">
-                  {shownPrevious.length}
-                </span>
-              </div>
-              <p className="mt-1 text-[0.9375rem] text-sol-secondary">
-                {t("opp.list.previousSub")}
-              </p>
-            </div>
-            <LinkButton
-              to="/dashboard/history"
-              variant="ghost"
-              size="sm"
-              className="text-sol-violet-deep"
-            >
-              {t("cc.viewAll")}
-              <ArrowRight className="size-4" aria-hidden="true" />
-            </LinkButton>
-          </div>
-          <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
-            {shownPrevious.map((b, i) => (
-              <PreviousCard key={b.id} brief={b} index={i} />
             ))}
           </div>
         </section>
