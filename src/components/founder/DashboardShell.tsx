@@ -1,4 +1,12 @@
-import { createContext, useCallback, useContext, useMemo, useState, type ReactNode } from "react";
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+  type ReactNode,
+} from "react";
 import { Link, useNavigate, useParams, useRouterState } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
@@ -210,6 +218,12 @@ function SidebarContent({
  * docked 420px panel at ≥1280px — a real flex sibling, so opening it RESIZES the
  * page instead of covering it — and a drawer below that. */
 export function DashboardShell({ children }: { children: ReactNode }) {
+  // Dialogs and side sheets render in a portal outside the shell, so the
+  // dashboard typography class lives on <html> while the dashboard is mounted.
+  useEffect(() => {
+    document.documentElement.classList.add("app-inter");
+    return () => document.documentElement.classList.remove("app-inter");
+  }, []);
   const { t } = useLocale();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -294,7 +308,7 @@ export function DashboardShell({ children }: { children: ReactNode }) {
       >
         {t("common.skipToContent")}
       </a>
-      <div className="flex h-dvh w-full overflow-hidden bg-sol-pearl text-sol-ink">
+      <div className="app-inter flex h-dvh w-full overflow-hidden bg-sol-pearl text-sol-ink">
         <aside
           data-testid="sidebar"
           className="hidden h-dvh w-[244px] shrink-0 border-r border-sol-border bg-gradient-to-b from-sol-ivory-light to-sol-pearl lg:block"
@@ -374,13 +388,14 @@ export function DashboardShell({ children }: { children: ReactNode }) {
           </header>
 
           <div
-            className="min-h-0 flex-1 overflow-y-auto overscroll-y-contain"
+            className="sol-shell-wash min-h-0 flex-1 overflow-y-auto overscroll-y-contain"
             data-testid="scroll-area"
           >
             <main
               id="main"
+              key={pathname}
               data-testid="main-content"
-              className="mx-auto w-full max-w-[1440px] px-5 pb-28 pt-8 md:px-7 lg:px-10 lg:pt-10"
+              className="sol-page-in mx-auto w-full max-w-[1440px] px-6 pb-28 pt-8 md:px-10 lg:px-14 lg:pt-10"
             >
               {children}
             </main>

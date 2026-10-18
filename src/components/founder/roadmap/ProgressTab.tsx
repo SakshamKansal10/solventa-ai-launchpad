@@ -21,10 +21,10 @@ function TableAlternative({
   const { t } = useLocale();
   return (
     <details className="mt-3">
-      <summary className="cursor-pointer text-[0.9375rem] font-semibold text-sol-violet-deep">
+      <summary className="cursor-pointer text-[0.875rem] font-semibold text-sol-violet-deep">
         {t("rm.progress.viewTable")}
       </summary>
-      <table className="mt-3 w-full text-left text-[0.9375rem]">
+      <table className="mt-3 w-full text-left text-[0.875rem]">
         <caption className="sr-only">{caption}</caption>
         <thead>
           <tr className="border-b border-sol-border text-sol-secondary">
@@ -104,7 +104,7 @@ export function ProgressTab({
                 })}
                 className="group flex w-full items-center gap-3 rounded-xl px-2 py-1 text-left hover:bg-sol-violet-soft/50"
               >
-                <span className="w-20 shrink-0 text-[0.9375rem] font-semibold text-sol-secondary">
+                <span className="w-20 shrink-0 text-[0.875rem] font-semibold text-sol-secondary">
                   {t("common.weekN", { n: String(w.number).padStart(2, "0") })}
                 </span>
                 <span className="relative h-5 flex-1 overflow-hidden rounded-full bg-sol-ivory-depth">
@@ -117,7 +117,7 @@ export function ProgressTab({
                     style={{ width: `${(w.progress.total / maxMissions) * 100}%` }}
                   />
                 </span>
-                <span className="w-14 shrink-0 text-right text-[0.9375rem] font-semibold text-sol-ink">
+                <span className="w-14 shrink-0 text-right text-[0.875rem] font-semibold text-sol-ink">
                   {w.progress.completed}/{w.progress.total}
                 </span>
               </button>
@@ -140,9 +140,7 @@ export function ProgressTab({
           {t("rm.progress.evidenceByAssumption")}
         </h3>
         {assumptions.length === 0 ? (
-          <p className="mt-3 text-[1.0625rem] text-sol-secondary">
-            {t("rm.progress.noAssumptions")}
-          </p>
+          <p className="mt-3 text-[1rem] text-sol-secondary">{t("rm.progress.noAssumptions")}</p>
         ) : (
           <>
             <ul className="mt-5 flex flex-col gap-3" role="list">
@@ -167,7 +165,7 @@ export function ProgressTab({
                       })}
                       className="flex w-full flex-col gap-1.5 rounded-xl px-2 py-1.5 text-left hover:bg-sol-violet-soft/50"
                     >
-                      <span className="text-[1rem] font-medium leading-snug text-sol-ink">
+                      <span className="text-[0.9375rem] font-medium leading-snug text-sol-ink">
                         {a.title}
                       </span>
                       <span className="flex h-4 w-full overflow-hidden rounded-full bg-sol-ivory-depth">
@@ -209,7 +207,7 @@ export function ProgressTab({
             const done = weeks.filter((w) => w.state === "completed").length;
             return (
               <li key={p.id} className="flex flex-col gap-1.5">
-                <span className="text-[1rem] font-medium text-sol-ink">
+                <span className="text-[0.9375rem] font-medium text-sol-ink">
                   {i + 1}. {text.phaseTitle(p.id, p.title)}
                 </span>
                 <span

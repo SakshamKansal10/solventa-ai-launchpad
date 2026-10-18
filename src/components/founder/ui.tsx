@@ -22,7 +22,7 @@ export type ButtonSize = "md" | "lg" | "sm";
 
 export function buttonClasses(variant: ButtonVariant = "primary", size: ButtonSize = "md") {
   return cn(
-    "inline-flex select-none items-center justify-center gap-2 whitespace-nowrap rounded-2xl font-semibold transition-colors duration-[180ms] ease-[var(--sol-ease)] disabled:pointer-events-none disabled:opacity-50 aria-disabled:pointer-events-none aria-disabled:opacity-50",
+    "inline-flex select-none items-center justify-center gap-2 whitespace-nowrap rounded-2xl font-semibold transition-[color,background-color,border-color,transform] duration-[180ms] ease-[var(--sol-ease)] active:scale-[0.98] disabled:pointer-events-none disabled:opacity-50 aria-disabled:pointer-events-none aria-disabled:opacity-50",
     size === "sm" && "min-h-10 px-4 text-[0.9375rem]",
     size === "md" && "min-h-12 px-6 text-[1rem]",
     size === "lg" && "min-h-14 px-8 text-[1.0625rem]",

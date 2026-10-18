@@ -1,12 +1,35 @@
 import { useState } from "react";
-import { ChevronDown, Check, CircleHelp, ListChecks } from "lucide-react";
+import {
+  ChevronDown,
+  Check,
+  Clock,
+  Compass,
+  Search,
+  Tag,
+  Users,
+  Wallet,
+  Route,
+  Repeat,
+  ShieldCheck,
+  type LucideIcon,
+} from "lucide-react";
 
 import { useLocale } from "@/lib/i18n/LocaleProvider";
 import type { MissionState } from "@/lib/roadmap/state";
 import type { MissionDTO } from "@/lib/roadmap/view";
 import { cn } from "@/lib/utils";
 import { Button, LinkButton, Pill } from "../ui";
-import { MissionScene } from "./illustrations";
+
+const CATEGORY_ICON: Record<string, LucideIcon> = {
+  problem: Search,
+  willingness_to_pay: Wallet,
+  distribution: Route,
+  delivery: Route,
+  retention: Repeat,
+  pricing: Tag,
+  competition: ShieldCheck,
+  customer: Users,
+};
 
 interface MissionText {
   title?: string;
@@ -57,7 +80,7 @@ export function MissionCard({
   const { t, locale } = useLocale();
   const [open, setOpen] = useState(defaultOpen);
   const title = text?.title ?? mission.title;
-  const steps = (text?.steps && text.steps.length > 0 ? text.steps : mission.steps).slice(0, 4);
+  const steps = (text?.steps && text.steps.length > 0 ? text.steps : mission.steps).slice(0, 3);
   const time = text?.timeEstimate ?? mission.timeEstimate;
   const done = mission.state === "completed";
   const inProgress = mission.state === "in_progress";
@@ -120,6 +143,8 @@ export function MissionCard({
     );
   })();
 
+  const Icon = CATEGORY_ICON[mission.assumptionCategory ?? ""] ?? Compass;
+
   return (
     <article
       data-testid="mission-card"
@@ -127,188 +152,176 @@ export function MissionCard({
       data-evidence={mission.evidenceCount}
       data-open={open}
       aria-label={title}
-      className={cn(
-        "relative overflow-hidden rounded-[1.25rem] border transition-all duration-[240ms]",
-        open && !done
-          ? "border-sol-violet/45 bg-sol-surface p-6 shadow-[0_14px_36px_rgba(114,87,216,0.1)]"
-          : "border-sol-border bg-sol-surface/70 px-5 py-4",
-        done && "border-sol-champagne/50 bg-sol-champagne-soft/30",
-      )}
+      className="relative pl-[3.75rem] sm:pl-[4.25rem]"
     >
-      {open && !done && (
-        <span
-          aria-hidden="true"
-          className="absolute inset-y-0 left-0 w-1 bg-gradient-to-b from-sol-violet to-sol-champagne"
-        />
-      )}
+      {/* the expedition line: gold once this stop is reached, lavender ahead */}
+      <span
+        aria-hidden="true"
+        className={cn(
+          "absolute left-[1.3125rem] top-12 -bottom-6 w-px group-last/li:hidden",
+          done ? "bg-sol-champagne" : "bg-sol-violet/20",
+        )}
+      />
+      <span
+        aria-hidden="true"
+        className={cn(
+          "absolute left-0 top-0 flex size-[2.625rem] items-center justify-center rounded-full border transition-all duration-500",
+          done
+            ? "sol-complete-glow border-sol-champagne bg-gradient-to-br from-[#f3e2bd] to-sol-champagne text-sol-ink"
+            : inProgress
+              ? "border-sol-violet bg-sol-violet text-white shadow-[0_0_0_5px_rgba(118,85,245,0.14)]"
+              : "border-sol-violet/30 bg-sol-surface text-sol-violet-deep",
+        )}
+      >
+        {done ? (
+          <Check className="size-5" strokeWidth={3} aria-hidden="true" />
+        ) : (
+          <Icon className="size-5" strokeWidth={1.75} aria-hidden="true" />
+        )}
+      </span>
 
-      <div className="relative flex items-center gap-4">
-        <span
-          className={cn(
-            "relative flex shrink-0 items-center justify-center overflow-hidden rounded-2xl border-2 transition-all",
-            open && !done ? "size-20 sm:size-24" : "size-14 sm:size-16",
-            done
-              ? "border-sol-champagne"
-              : inProgress
-                ? "border-sol-violet"
-                : "border-sol-border-strong",
-          )}
-        >
-          <MissionScene
-            category={mission.assumptionCategory}
-            className="absolute inset-0 size-full"
-          />
-          {done && (
-            <span
-              aria-hidden="true"
-              className="absolute inset-0 grid place-items-center bg-sol-champagne/80"
-            >
-              <Check className="size-6 text-sol-ink" strokeWidth={3} />
-            </span>
-          )}
-          <span
-            aria-hidden="true"
-            className={cn(
-              "absolute -bottom-1.5 -right-1.5 flex size-5 items-center justify-center rounded-full border text-[0.6875rem] font-bold",
-              done
-                ? "border-sol-champagne bg-sol-surface text-sol-champagne-deep"
-                : inProgress
-                  ? "border-sol-violet bg-sol-surface text-sol-violet-deep"
-                  : "border-sol-border-strong bg-sol-surface text-sol-secondary",
+      <div
+        className={cn(
+          "relative rounded-2xl transition-colors duration-300",
+          open && !done
+            ? "bg-[linear-gradient(135deg,#faf7ff_0%,#fffdfb_100%)] p-4 shadow-[0_0_0_1px_rgba(118,85,245,0.2),0_14px_34px_-24px_rgba(88,64,185,0.5)] sm:p-5"
+            : "px-1 py-1.5 hover:bg-sol-violet-ultralight/60 sm:px-3",
+        )}
+      >
+        <div className="relative flex flex-wrap items-center gap-x-4 gap-y-2">
+          <div className="min-w-0 flex-1 basis-56">
+            <p className="sol-eyebrow flex flex-wrap items-center gap-x-2 !text-[0.6875rem]">
+              <span>{t("rm.mission.n", { n: pad })}</span>
+              {inProgress && (
+                <span className="font-semibold normal-case tracking-normal text-sol-violet-deep">
+                  · {t("rm.mission.in_progress")}
+                </span>
+              )}
+              {done && (
+                <span className="font-semibold normal-case tracking-normal text-sol-champagne-deep">
+                  ·{" "}
+                  {completedOn
+                    ? t("rm.mission.completedOn", { date: completedOn })
+                    : t("rm.mission.completed")}
+                </span>
+              )}
+            </p>
+            <h3 className="mt-0.5 text-[1.0625rem] font-semibold leading-snug text-sol-ink sm:text-[1.125rem]">
+              <button
+                type="button"
+                onClick={() => setOpen((v) => !v)}
+                aria-expanded={open}
+                data-testid="mission-toggle"
+                aria-label={`${title} — ${open ? t("rm.mission.collapse") : t("rm.mission.expand")}`}
+                className={cn(
+                  "text-left after:absolute after:inset-0 after:content-[''] focus-visible:outline-none focus-visible:after:rounded-2xl focus-visible:after:ring-2 focus-visible:after:ring-sol-violet/50",
+                  done && "text-sol-ink/70",
+                )}
+              >
+                {title}
+              </button>
+            </h3>
+          </div>
+
+          <div className="relative z-10 flex shrink-0 flex-wrap items-center justify-end gap-2">
+            {mission.evidenceRequired && !done && (
+              <Pill tone="champagne">
+                {t("rm.evidenceRequired")}
+                {mission.evidenceCount > 0 ? ` · ${mission.evidenceCount}` : ""}
+              </Pill>
             )}
-          >
-            {index + 1}
-          </span>
-        </span>
-
-        <div className="min-w-0 flex-1">
-          <p className="sol-eyebrow flex flex-wrap items-center gap-x-2">
-            <span>{t("rm.mission.n", { n: pad })}</span>
+            {!mission.required && <Pill tone="neutral">{t("common.optional")}</Pill>}
             {time && (
-              <span className="font-medium normal-case tracking-normal text-sol-secondary">
-                · {time}
+              <span className="mr-1 inline-flex items-center gap-1.5 text-[0.8125rem] text-sol-secondary">
+                <Clock className="size-3.5" aria-hidden="true" />
+                {time}
               </span>
             )}
-            {inProgress && !open && (
-              <span className="font-semibold normal-case tracking-normal text-sol-violet-deep">
-                · {t("rm.mission.in_progress")}
-              </span>
-            )}
-            {done && (
-              <span className="font-semibold normal-case tracking-normal text-sol-champagne-deep">
-                ·{" "}
-                {completedOn
-                  ? t("rm.mission.completedOn", { date: completedOn })
-                  : t("rm.mission.completed")}
-              </span>
-            )}
-          </p>
-          <h3
-            className={cn(
-              "mt-1 font-display font-semibold leading-[1.2] text-sol-ink",
-              open && !done ? "text-[1.625rem]" : "text-[1.25rem]",
-            )}
-          >
-            <button
-              type="button"
-              onClick={() => setOpen((v) => !v)}
-              aria-expanded={open}
-              data-testid="mission-toggle"
-              aria-label={`${title} — ${open ? t("rm.mission.collapse") : t("rm.mission.expand")}`}
-              className="text-left after:absolute after:inset-0 after:content-[''] focus-visible:outline-none focus-visible:after:ring-2 focus-visible:after:ring-sol-violet/50 focus-visible:after:rounded-[1.25rem]"
-            >
-              {title}
-            </button>
-          </h3>
+            {!open && primary}
+            <ChevronDown
+              className={cn(
+                "size-5 text-sol-secondary transition-transform duration-300",
+                open && "rotate-180",
+              )}
+              aria-hidden="true"
+            />
+          </div>
         </div>
 
-        <div className="relative z-10 flex shrink-0 flex-wrap items-center justify-end gap-2">
-          {mission.evidenceRequired && !done && (
-            <Pill tone="champagne">
-              {t("rm.evidenceRequired")}
-              {mission.evidenceCount > 0 ? ` · ${mission.evidenceCount}` : ""}
-            </Pill>
-          )}
-          {!mission.required && <Pill tone="neutral">{t("common.optional")}</Pill>}
-          {!open && primary}
-          <ChevronDown
-            className={cn("size-5 text-sol-secondary transition-transform", open && "rotate-180")}
-            aria-hidden="true"
-          />
-        </div>
-      </div>
-
-      {open && (
-        <div className="relative mt-5 pl-0 sm:pl-[3.25rem]">
-          {/* Each group is exactly <dt> + <dd> (valid definition-list markup): the term is the
-              icon with its spoken label. */}
-          <dl className="grid gap-4" data-testid="mission-details">
-            <div className="flex items-start gap-2.5">
-              <dt className="mt-0.5 shrink-0">
-                <CircleHelp className="block size-4 text-sol-champagne-deep" aria-hidden="true" />
-                <span className="sr-only">{t("rm.mission.whyShort")}</span>
-              </dt>
-              <dd className="min-w-0 max-w-[62ch] text-[1rem] leading-snug text-sol-ink">
-                {text?.why ?? mission.why}
-              </dd>
-            </div>
-            {steps.length > 0 && (
-              <div className="flex items-start gap-2.5">
-                <dt className="mt-0.5 shrink-0">
-                  <ListChecks className="block size-4 text-sol-champagne-deep" aria-hidden="true" />
-                  <span className="sr-only">{t("rm.mission.do")}</span>
-                </dt>
-                <dd className="min-w-0">
-                  <ul className="flex flex-col gap-1.5">
-                    {steps.map((s) => (
-                      <li key={s} className="text-[1rem] leading-snug text-sol-ink">
-                        {s}
-                      </li>
-                    ))}
-                  </ul>
+        {open && (
+          <div className="sol-reveal relative mt-4">
+            <dl className="grid gap-4" data-testid="mission-details">
+              <div className="min-w-0">
+                <dt className="sr-only">{t("rm.mission.whyShort")}</dt>
+                <dd className="max-w-[62ch] text-[0.9375rem] leading-snug text-sol-ink/90">
+                  {text?.why ?? mission.why}
                 </dd>
               </div>
-            )}
-            <div className="flex items-start gap-2.5">
-              <dt className="mt-0.5 shrink-0">
-                <Check className="block size-4 text-sol-champagne-deep" aria-hidden="true" />
-                <span className="sr-only">{t("rm.mission.capture")}</span>
-              </dt>
-              <dd className="min-w-0 max-w-[62ch] text-[1rem] leading-snug text-sol-ink">
-                {text?.doneWhen ?? mission.doneWhen}
-              </dd>
-            </div>
-          </dl>
+              {steps.length > 0 && (
+                <div className="min-w-0">
+                  <dt className="sr-only">{t("rm.mission.do")}</dt>
+                  <dd>
+                    <ol className="flex flex-col gap-2">
+                      {steps.map((s, i) => (
+                        <li
+                          key={s}
+                          className="flex items-start gap-3 text-[0.9375rem] leading-snug text-sol-ink"
+                        >
+                          <span
+                            aria-hidden="true"
+                            className="mt-[1px] flex size-5 shrink-0 items-center justify-center rounded-full bg-sol-violet-soft text-[0.6875rem] font-semibold text-sol-violet-deep"
+                          >
+                            {i + 1}
+                          </span>
+                          {s}
+                        </li>
+                      ))}
+                    </ol>
+                  </dd>
+                </div>
+              )}
+              <div className="flex min-w-0 items-start gap-2.5 border-t border-sol-border/70 pt-3">
+                <Check
+                  className="mt-0.5 size-4 shrink-0 text-sol-champagne-deep"
+                  aria-hidden="true"
+                />
+                <dt className="sr-only">{t("rm.mission.capture")}</dt>
+                <dd className="min-w-0 max-w-[62ch] text-[0.875rem] leading-snug text-sol-secondary">
+                  {text?.doneWhen ?? mission.doneWhen}
+                </dd>
+              </div>
+            </dl>
 
-          {!locked && (
-            <div className="mt-6 flex flex-col gap-3">
-              <div className="flex flex-wrap items-center gap-3">
-                {primary}
-                {mission.evidenceRequired && !done && addProof}
-                {done && (
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    disabled={busy}
-                    data-testid="mission-reopen"
-                    onClick={() => onState("in_progress")}
+            {!locked && (
+              <div className="mt-5 flex flex-col gap-3">
+                <div className="flex flex-wrap items-center gap-3">
+                  {primary}
+                  {mission.evidenceRequired && !done && addProof}
+                  {done && (
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      disabled={busy}
+                      data-testid="mission-reopen"
+                      onClick={() => onState("in_progress")}
+                    >
+                      {t("rm.mission.reopen")}
+                    </Button>
+                  )}
+                </div>
+                {needsEvidence && inProgress && (
+                  <p
+                    className="text-[0.875rem] font-medium text-sol-secondary"
+                    data-testid="mission-evidence-hint"
                   >
-                    {t("rm.mission.reopen")}
-                  </Button>
+                    {t("rm.mission.needEvidenceHint")}
+                  </p>
                 )}
               </div>
-              {needsEvidence && inProgress && (
-                <p
-                  className="text-[0.9375rem] font-medium text-sol-secondary"
-                  data-testid="mission-evidence-hint"
-                >
-                  {t("rm.mission.needEvidenceHint")}
-                </p>
-              )}
-            </div>
-          )}
-        </div>
-      )}
+            )}
+          </div>
+        )}
+      </div>
     </article>
   );
 }

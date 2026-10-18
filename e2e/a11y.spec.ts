@@ -18,6 +18,16 @@ interface Finding {
 }
 
 async function audit(page: Page, label: string): Promise<Finding[]> {
+  // Axe blends colours from computed styles, so a dialog that is still fading in
+  // reports false contrast failures. Let finite animations and transitions finish.
+  await page.evaluate(() =>
+    Promise.all(
+      document
+        .getAnimations()
+        .filter((a) => a.effect?.getComputedTiming().iterations !== Infinity)
+        .map((a) => a.finished.catch(() => undefined)),
+    ),
+  );
   const results = await new AxeBuilder({ page })
     .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"])
     .analyze();

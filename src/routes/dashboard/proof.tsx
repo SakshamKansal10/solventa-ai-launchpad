@@ -3,21 +3,33 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { z } from "zod";
-import { Loader2 } from "lucide-react";
+import {
+  ChevronDown,
+  Compass,
+  Loader2,
+  Repeat,
+  Route as RouteIcon,
+  Search,
+  ShieldCheck,
+  Tag,
+  Wallet,
+  type LucideIcon,
+} from "lucide-react";
 
 import { AssumptionSheet } from "@/components/founder/proof/AssumptionSheet";
 import { formatDate, StateBadge } from "@/components/founder/proof/bits";
 import { EvidenceDialog } from "@/components/founder/proof/EvidenceDialog";
 import { EvidenceMap } from "@/components/founder/proof/EvidenceMap";
+import { PageHero } from "@/components/founder/proof/PageHero";
 import { EvidenceStream } from "@/components/founder/proof/EvidenceStream";
 import { useAskSol } from "@/components/founder/DashboardShell";
+import { ProgressRing } from "@/components/founder/dashboard/graphics";
 import {
   Button,
   Card,
   EmptyState,
   ErrorPanel,
   LinkButton,
-  PageHeader,
   PageSkeleton,
   Pill,
   Skeleton,
@@ -58,6 +70,16 @@ export const Route = createFileRoute("/dashboard/proof")({
   }),
 });
 
+const CATEGORY_ICON: Record<string, LucideIcon> = {
+  problem: Search,
+  willingness_to_pay: Wallet,
+  distribution: RouteIcon,
+  delivery: RouteIcon,
+  retention: Repeat,
+  pricing: Tag,
+  competition: ShieldCheck,
+};
+
 interface ProofOverlay {
   assumptions?: Record<string, { title?: string; whyItMatters?: string; nextTest?: string }>;
 }
@@ -76,7 +98,7 @@ function ProofPage() {
   if (!opportunityId) {
     return (
       <div className="flex flex-col gap-8">
-        <PageHeader title={t("pf.title")} subtitle={t("pf.subtitle")} />
+        <PageHero title={t("pf.title")} subtitle={t("pf.subtitle")} gem="seal" />
         <EmptyState
           title={t("pf.noDirection.title")}
           body={t("pf.noDirection.body")}
@@ -152,7 +174,7 @@ function ProofWorkspace({ opportunityId }: { opportunityId: string }) {
   if (!data.available) {
     return (
       <div className="flex flex-col gap-8">
-        <PageHeader title={t("pf.title")} subtitle={t("pf.subtitle")} />
+        <PageHero title={t("pf.title")} subtitle={t("pf.subtitle")} gem="seal" />
         <ErrorPanel title={t("pf.unavailable.title")} body={t("pf.unavailable.body")} />
       </div>
     );
@@ -184,12 +206,14 @@ function ProofWorkspace({ opportunityId }: { opportunityId: string }) {
   const openAdd = (assumptionId: string | null, editing: EvidenceDTO | null = null) =>
     setDialog({ open: true, assumptionId, editing });
 
+  const collected = assumptions.filter((a) => a.evidence.length > 0).length;
+
   return (
     <div className="flex flex-col gap-8" data-testid="proof-page">
-      <PageHeader
-        eyebrow={t("pf.title")}
+      <PageHero
         title={opportunityTitle ?? t("pf.title")}
         subtitle={t("pf.subtitle")}
+        gem="seal"
         action={
           assumptions.length > 0 ? (
             <Button size="lg" onClick={() => openAdd(null)} data-testid="add-evidence-global">
@@ -197,7 +221,22 @@ function ProofWorkspace({ opportunityId }: { opportunityId: string }) {
             </Button>
           ) : undefined
         }
-      />
+      >
+        {assumptions.length > 0 && (
+          <div
+            className="flex items-center gap-5 rounded-2xl border border-sol-border bg-white/70 px-5 py-3 backdrop-blur"
+            data-testid="evidence-collected"
+          >
+            <ProgressRing value={collected} total={assumptions.length} label={t("pf.collected")} />
+            <p className="text-[0.9375rem] text-sol-secondary">
+              <span className="block text-[1.5rem] font-medium leading-none text-sol-ink">
+                {assumptions.length - collected}
+              </span>
+              <span className="mt-1 block">{t("pf.moreToValidate")}</span>
+            </p>
+          </div>
+        )}
+      </PageHero>
 
       {generate.isPending || (needsGeneration && !generate.isError) ? (
         <div
@@ -217,96 +256,106 @@ function ProofWorkspace({ opportunityId }: { opportunityId: string }) {
       ) : null}
 
       {assumptions.length > 0 && (
-        <>
-          <EvidenceMap assumptions={assumptions} onSelect={setDetailId} />
+        <div className="grid items-start gap-8 lg:grid-cols-[minmax(0,64fr)_minmax(0,36fr)]">
+          <div className="flex min-w-0 flex-col gap-6">
+            <EvidenceMap assumptions={assumptions} onSelect={setDetailId} />
 
-          <div
-            role="group"
-            aria-label={t("pf.filters.aria")}
-            className="flex flex-wrap gap-2"
-            data-testid="proof-filters"
-          >
-            {FILTERS.map((f) => {
-              const count = f === "all" ? assumptions.length : data.counts[f as ProofState];
-              return (
-                <button
-                  key={f}
-                  type="button"
-                  aria-pressed={filter === f}
-                  data-testid={`filter-${f}`}
-                  onClick={() => setFilter(f)}
-                  className={cn(
-                    "min-h-11 rounded-full border px-4 text-[1rem] font-semibold transition-colors",
-                    filter === f
-                      ? "border-sol-violet bg-sol-violet-soft text-sol-violet-deep"
-                      : "border-sol-border bg-sol-surface text-sol-ink hover:border-sol-violet/45",
-                  )}
-                >
-                  {f === "all" ? t("common.all") : t(`pf.state.${f}` as const)}{" "}
-                  <span className="text-sol-secondary">{count}</span>
-                </button>
-              );
-            })}
+            <div
+              role="group"
+              aria-label={t("pf.filters.aria")}
+              className="flex flex-wrap gap-2"
+              data-testid="proof-filters"
+            >
+              {FILTERS.map((f) => {
+                const count = f === "all" ? assumptions.length : data.counts[f as ProofState];
+                return (
+                  <button
+                    key={f}
+                    type="button"
+                    aria-pressed={filter === f}
+                    data-testid={`filter-${f}`}
+                    onClick={() => setFilter(f)}
+                    className={cn(
+                      "min-h-10 rounded-full border px-4 text-[0.9375rem] font-medium transition-colors",
+                      filter === f
+                        ? "border-sol-violet bg-sol-violet-soft text-sol-violet-deep"
+                        : "border-sol-border bg-sol-surface text-sol-ink hover:border-sol-violet/45",
+                    )}
+                  >
+                    {f === "all" ? t("common.all") : t(`pf.state.${f}` as const)}{" "}
+                    <span className="text-sol-secondary">{count}</span>
+                  </button>
+                );
+              })}
+            </div>
+
+            {shown.length === 0 ? (
+              <EmptyState title={t("pf.filters.emptyTitle")} body={t("pf.filters.emptyBody")} />
+            ) : (
+              <ul className="flex flex-col gap-3">
+                {shown.map((a) => {
+                  const Icon = CATEGORY_ICON[a.category] ?? Compass;
+                  return (
+                    <li key={a.id}>
+                      <Card
+                        as="article"
+                        className="flex flex-wrap items-center gap-x-4 gap-y-3 border-sol-border px-5 py-4 shadow-none transition-colors hover:border-sol-violet/40"
+                        data-testid="assumption-card"
+                        data-state={a.state}
+                      >
+                        <span className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-sol-violet-soft text-sol-violet-deep">
+                          <Icon className="size-5" strokeWidth={1.75} aria-hidden="true" />
+                        </span>
+                        <div className="min-w-[14rem] flex-1">
+                          <div className="flex flex-wrap items-center gap-2">
+                            <Pill tone="neutral">{t(`pf.category.${a.category}` as const)}</Pill>
+                            <StateBadge state={a.state} />
+                            {a.evidence.length > 0 && (
+                              <span className="text-[0.875rem] text-sol-secondary">
+                                {t("pf.evidenceCount", { n: a.evidence.length })}
+                              </span>
+                            )}
+                          </div>
+                          <h2 className="sol-h-sm mt-1.5 text-sol-ink">{a.title}</h2>
+                        </div>
+                        <div className="flex shrink-0 items-center gap-2">
+                          <Button
+                            size="sm"
+                            onClick={() => openAdd(a.id)}
+                            data-testid="add-evidence"
+                          >
+                            {t("pf.addEvidence")}
+                          </Button>
+                          <button
+                            type="button"
+                            onClick={() => setDetailId(a.id)}
+                            data-testid="view-details"
+                            aria-label={`${t("common.viewDetails")}: ${a.title}`}
+                            className="grid size-10 place-items-center rounded-full border border-sol-border text-sol-ink transition-colors hover:bg-sol-ivory focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sol-violet/50"
+                          >
+                            <ChevronDown className="size-5" aria-hidden="true" />
+                          </button>
+                        </div>
+                      </Card>
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
           </div>
 
-          {shown.length === 0 ? (
-            <EmptyState title={t("pf.filters.emptyTitle")} body={t("pf.filters.emptyBody")} />
-          ) : (
-            <ul className="flex flex-col gap-4">
-              {shown.map((a) => (
-                <li key={a.id}>
-                  <Card
-                    as="article"
-                    className="flex flex-col gap-4 p-6 sm:p-7"
-                    data-testid="assumption-card"
-                    data-state={a.state}
-                  >
-                    <div className="flex flex-wrap items-center gap-2.5">
-                      <Pill tone="neutral">{t(`pf.category.${a.category}` as const)}</Pill>
-                      <StateBadge state={a.state} />
-                      <span className="text-[0.9375rem] text-sol-secondary">
-                        {t("pf.evidenceCount", { n: a.evidence.length })}
-                      </span>
-                    </div>
-                    <h2 className="font-display text-[1.5rem] font-semibold leading-[1.25] text-sol-ink">
-                      {a.title}
-                    </h2>
-                    {a.nextTest && (
-                      <p className="text-[1.0625rem] leading-relaxed text-sol-secondary">
-                        <span className="font-semibold text-sol-ink">{t("pf.nextTest")}: </span>
-                        {a.nextTest}
-                      </p>
-                    )}
-                    <div className="flex flex-wrap gap-3">
-                      <Button size="md" onClick={() => openAdd(a.id)} data-testid="add-evidence">
-                        {t("pf.addEvidence")}
-                      </Button>
-                      <Button
-                        size="md"
-                        variant="secondary"
-                        onClick={() => setDetailId(a.id)}
-                        data-testid="view-details"
-                      >
-                        {t("common.viewDetails")}
-                      </Button>
-                    </div>
-                  </Card>
-                </li>
-              ))}
-            </ul>
-          )}
-        </>
-      )}
-
-      {assumptions.length > 0 && (
-        <EvidenceStream
-          assumptions={assumptions}
-          onOpenAssumption={setDetailId}
-          onAdd={() => openAdd(null)}
-          onAskSol={({ summary }) =>
-            askSol.open(t("askSol.q.whatChanges", { summary: summary.slice(0, 240) }))
-          }
-        />
+          <aside className="flex min-w-0 flex-col gap-6" aria-label={t("pf.stream.title")}>
+            <EvidenceStream
+              compact
+              assumptions={assumptions}
+              onOpenAssumption={setDetailId}
+              onAdd={() => openAdd(null)}
+              onAskSol={({ summary }) =>
+                askSol.open(t("askSol.q.whatChanges", { summary: summary.slice(0, 240) }))
+              }
+            />
+          </aside>
+        </div>
       )}
 
       {data.unassigned.length > 0 && (

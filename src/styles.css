@@ -821,10 +821,193 @@
 [data-cine-tone] [data-nav-brand] {
   opacity: 0;
 }
+
+/* Quiet hover lift for cards and a soft image zoom. Motion is removed globally
+   under prefers-reduced-motion (rule above). */
+@utility sol-lift {
+  transition:
+    transform 200ms var(--sol-ease),
+    box-shadow 200ms var(--sol-ease),
+    border-color 200ms var(--sol-ease);
+  &:hover {
+    transform: translateY(-2px);
+    border-color: var(--sol-border-strong);
+    box-shadow: 0 8px 24px oklch(0.2211 0.0259 274.1 / 0.06);
+  }
+}
+
+@utility sol-zoom {
+  transition: transform 500ms var(--sol-ease);
+  :is(.group:hover) > & {
+    transform: scale(1.03);
+  }
+}
+
+/* Founder dashboard: Inter throughout for a clean, professional product feel.
+   The serif stays on the Solventia wordmark (.keep-serif) and the marketing site. */
+.app-inter {
+  --font-display: "Inter", "Noto Sans Devanagari", ui-sans-serif, system-ui, sans-serif;
+  --font-sans: "Inter", "Noto Sans Devanagari", ui-sans-serif, system-ui, sans-serif;
+  font-family: var(--font-sans);
+}
+/* Dashboard-wide scale: every rem size (text and spacing) shrinks ~6%. */
+html.app-inter {
+  font-size: 93.75%;
+}
+.app-inter h1,
+.app-inter h2,
+.app-inter h3,
+.app-inter h4,
+.app-inter .font-display:not(.keep-serif),
+.app-inter .sol-page-title,
+.app-inter .sol-h2,
+.app-inter .sol-h3 {
+  font-family: var(--font-sans);
+  letter-spacing: -0.015em;
+}
+
+/* Calmer, easier-to-scan hierarchy inside the dashboard: capped heading sizes,
+   and sentence-case labels instead of shouting tracked-out capitals. */
+.app-inter h1:not(.sol-h-hero) {
+  font-size: clamp(1.5rem, 1.3rem + 0.6vw, 1.875rem) !important;
+  line-height: 1.2 !important;
+  font-weight: 600;
+}
+.app-inter h2:not(.sol-eyebrow):not(.sol-h3):not(.sol-h-sm) {
+  font-size: clamp(1.1875rem, 1.1rem + 0.35vw, 1.375rem) !important;
+  line-height: 1.3 !important;
+  font-weight: 500;
+}
+.app-inter .sol-h-sm {
+  font-size: 1rem;
+  line-height: 1.4;
+  font-weight: 500;
+}
+.app-inter .sol-h-hero {
+  font-size: clamp(1.875rem, 1.4rem + 1.3vw, 2.5rem) !important;
+  line-height: 1.15 !important;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+/* One step lighter everywhere inside the dashboard. */
+.app-inter .font-bold,
+.app-inter .font-extrabold {
+  font-weight: 600;
+}
+.app-inter .font-semibold {
+  font-weight: 500;
+}
+.app-inter .uppercase,
+.app-inter .sol-eyebrow {
+  text-transform: none !important;
+  letter-spacing: 0 !important;
+  font-weight: 600;
+}
 [data-cine-tone]:has([data-mode="fallback"]) [data-nav-brand] {
   opacity: 1;
 }
 [data-cine-tone]:has([data-mode="fallback"]) [data-nav-bar] {
   background: rgb(247 247 244 / 0.94);
   box-shadow: 0 1px 0 rgb(21 24 31 / 0.06);
+}
+
+/* ── Shared "Roadmap world" surfaces ───────────────────────────────────── */
+/* The ivory → lavender → peach atmosphere of the Roadmap journey, for hero
+   panels on other dashboard pages. */
+.sol-atmosphere {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid var(--sol-border);
+  border-radius: 1.5rem;
+  background:
+    radial-gradient(60% 80% at 100% 0%, rgba(155, 130, 255, 0.16), transparent 70%),
+    radial-gradient(50% 70% at 0% 100%, rgba(248, 226, 205, 0.5), transparent 70%),
+    linear-gradient(180deg, #fbf8fd 0%, #f3ecf9 60%, #f8f1ea 100%);
+}
+/* Static stand-in for a Gem3D while WebGL is off or still loading. */
+.sol-gem-fallback {
+  margin: auto;
+  width: 46%;
+  height: 70%;
+  background: linear-gradient(145deg, #b9a4ff 0%, #7655f5 55%, #5840b9 100%);
+  clip-path: polygon(50% 0, 88% 38%, 50% 100%, 12% 38%);
+  opacity: 0.55;
+  filter: drop-shadow(0 10px 18px rgba(118, 85, 245, 0.25));
+}
+
+.sol-gem-fallback-orb {
+  margin: auto;
+  aspect-ratio: 1;
+  height: 62%;
+  border-radius: 9999px;
+  background: radial-gradient(circle at 32% 28%, #f3c987 0%, #3b2f9a 22%, #141a47 70%);
+  box-shadow:
+    0 0 0 6px rgba(217, 183, 121, 0.35),
+    0 14px 30px rgba(20, 26, 71, 0.3);
+}
+
+/* Dashboard backdrop: the Roadmap's lavender haze, very light, behind every page. */
+.sol-shell-wash {
+  background:
+    radial-gradient(70% 40% at 85% 0%, rgba(155, 130, 255, 0.1), transparent 70%),
+    radial-gradient(50% 35% at 0% 100%, rgba(248, 226, 205, 0.35), transparent 70%);
+}
+@keyframes sol-page-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.sol-page-in {
+  animation: sol-page-in 320ms var(--sol-ease, ease-out) both;
+}
+@media (prefers-reduced-motion: reduce) {
+  .sol-page-in {
+    animation: none;
+  }
+}
+
+/* Full-page version of the Roadmap atmosphere, for sign-in and similar screens. */
+.sol-world-bg {
+  background:
+    radial-gradient(60% 50% at 80% 0%, rgba(155, 130, 255, 0.16), transparent 70%),
+    radial-gradient(50% 45% at 10% 100%, rgba(248, 226, 205, 0.55), transparent 70%),
+    linear-gradient(180deg, #fbf8fd 0%, #f3ecf9 60%, #f8f1ea 100%);
+}
+
+/* Roadmap expedition: reveal of an opened mission, and the one-off glow when a
+   stop is completed. Both are skipped under reduced motion. */
+@keyframes sol-reveal {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.sol-reveal {
+  animation: sol-reveal 260ms var(--sol-ease, ease-out) both;
+}
+@keyframes sol-complete-glow {
+  0% {
+    box-shadow: 0 0 0 0 rgba(217, 183, 121, 0.55);
+  }
+  100% {
+    box-shadow: 0 0 0 14px rgba(217, 183, 121, 0);
+  }
+}
+.sol-complete-glow {
+  animation: sol-complete-glow 1.1s ease-out 1 both;
+}
+@media (prefers-reduced-motion: reduce) {
+  .sol-reveal,
+  .sol-complete-glow {
+    animation: none;
+  }
 }

@@ -1,7 +1,9 @@
 /** Proof: assumptions, evidence, and the deterministic state each one is in. */
 const en = {
   "pf.title": "Proof",
-  "pf.subtitle": "Turn assumptions into evidence.",
+  "pf.collected": "Evidence collected",
+  "pf.moreToValidate": "More to validate",
+  "pf.subtitle": "Validate assumptions with real evidence.",
   "pf.addEvidenceCta": "+ Add evidence",
   "pf.showMore": "Show more",
   "pf.stream.title": "Evidence stream",
@@ -124,6 +126,7 @@ const en = {
   "pf.dialog.whatPlaceholder": "Say exactly what you saw or heard.",
   "pf.dialog.signal": "What does it say about the assumption?",
   "pf.dialog.url": "Link",
+  "pf.dialog.urlInvalid": "Enter a full web address starting with http:// or https://",
   "pf.dialog.file": "Attach a file",
   "pf.dialog.chooseFile": "Choose a file",
   "pf.file.hint": "JPG, PNG, WEBP, PDF or a text file, up to 10 MB.",
@@ -135,6 +138,8 @@ const en = {
 
 const hi: Record<keyof typeof en, string> = {
   "pf.title": "प्रमाण",
+  "pf.collected": "जुटाया गया साक्ष्य",
+  "pf.moreToValidate": "और जाँचने बाकी",
   "pf.subtitle": "अनुमानों को साक्ष्य में बदलें।",
   "pf.addEvidenceCta": "+ साक्ष्य जोड़ें",
   "pf.showMore": "और दिखाएं",
@@ -258,6 +263,7 @@ const hi: Record<keyof typeof en, string> = {
   "pf.dialog.whatPlaceholder": "ठीक वही लिखें जो आपने देखा या सुना।",
   "pf.dialog.signal": "यह धारणा के बारे में क्या कहता है?",
   "pf.dialog.url": "लिंक",
+  "pf.dialog.urlInvalid": "http:// या https:// से शुरू होने वाला पूरा वेब पता लिखें",
   "pf.dialog.file": "फ़ाइल जोड़ें",
   "pf.dialog.chooseFile": "फ़ाइल चुनें",
   "pf.file.hint": "JPG, PNG, WEBP, PDF या टेक्स्ट फ़ाइल, अधिकतम 10 MB।",

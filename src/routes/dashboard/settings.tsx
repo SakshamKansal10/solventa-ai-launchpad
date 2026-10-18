@@ -4,15 +4,9 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
 import { FounderProfileSection } from "@/components/founder/settings/FounderProfileSection";
+import { PageHero } from "@/components/founder/proof/PageHero";
 import { PhotoSection } from "@/components/founder/settings/PhotoSection";
-import {
-  Button,
-  Card,
-  ErrorPanel,
-  LinkButton,
-  PageHeader,
-  PageSkeleton,
-} from "@/components/founder/ui";
+import { Button, Card, ErrorPanel, LinkButton, PageSkeleton } from "@/components/founder/ui";
 import { Switch } from "@/components/ui/switch";
 import { signOut } from "@/lib/actions/auth";
 import {
@@ -54,8 +48,8 @@ function SettingsPage() {
   const data = query.data;
 
   return (
-    <div className="flex max-w-[52rem] flex-col gap-8" data-testid="settings-page">
-      <PageHeader title={t("set.title")} subtitle={t("set.subtitle")} />
+    <div className="flex max-w-[56rem] flex-col gap-6" data-testid="settings-page">
+      <PageHero title={t("set.title")} subtitle={t("set.subtitle")} />
       <ProfileSection data={data} />
       <PhotoSection available={data.extrasAvailable} />
       <FounderProfileSection data={data} />
@@ -91,7 +85,7 @@ function ProfileSection({ data }: { data: SettingsData }) {
 
   return (
     <Card
-      className="flex flex-col gap-5 p-6 sm:p-7"
+      className="flex flex-col gap-5 border-sol-border p-6 shadow-none sm:p-7"
       aria-labelledby="profile-h"
       data-testid="profile-section"
     >
@@ -148,7 +142,7 @@ function LanguageSection() {
   ];
   return (
     <Card
-      className="flex flex-col gap-4 p-6 sm:p-7"
+      className="flex flex-col gap-4 border-sol-border p-6 shadow-none sm:p-7"
       aria-labelledby="lang-h"
       data-testid="language-section"
     >
@@ -211,7 +205,7 @@ function NotificationSection({ data }: { data: SettingsData }) {
 
   return (
     <Card
-      className="flex flex-col gap-4 p-6 sm:p-7"
+      className="flex flex-col gap-4 border-sol-border p-6 shadow-none sm:p-7"
       aria-labelledby="notif-h"
       data-testid="notification-section"
     >
@@ -260,7 +254,7 @@ function AccountSection() {
   });
   return (
     <Card
-      className="flex flex-col gap-5 p-6 sm:p-7"
+      className="flex flex-col gap-5 border-sol-border p-6 shadow-none sm:p-7"
       aria-labelledby="account-h"
       data-testid="account-section"
     >

@@ -226,12 +226,12 @@ function StatBlock({
 }) {
   const { t } = useLocale();
   return (
-    <div className="flex flex-col gap-1.5">
-      <div className="flex items-center gap-2">
-        <p className="text-[0.875rem] font-semibold text-sol-secondary">{label}</p>
+    <div className="flex flex-col gap-1.5 rounded-2xl border border-sol-border bg-sol-surface/80 p-4">
+      <div className="flex flex-wrap items-center gap-2">
+        <p className="text-[0.8125rem] font-medium text-sol-secondary">{label}</p>
         {isAssumption && <Pill tone="neutral">{t("opp.econ.assumptionBadge")}</Pill>}
       </div>
-      <p className="text-[1.25rem] font-semibold leading-snug text-sol-ink">{value}</p>
+      <p className="text-[1.125rem] font-semibold leading-snug text-sol-ink">{value}</p>
     </div>
   );
 }
@@ -251,14 +251,14 @@ function EconomicsDisplay({ dto, onEdit }: { dto: EconomicsDTO; onEdit: () => vo
 
   return (
     <div className="flex flex-col gap-6" data-testid="economics-display">
-      <Card className="flex flex-col gap-6 p-6 sm:p-8">
-        <div className="flex flex-wrap items-center justify-between gap-3">
+      <div className="sol-atmosphere flex flex-col gap-6 p-6 sm:p-8">
+        <div className="relative z-10 flex flex-wrap items-center justify-between gap-3">
           <p className="sol-h3">{dto.revenueModel || t("opp.econ.revenueModel")}</p>
           <Button variant="secondary" size="sm" onClick={onEdit} data-testid="econ-edit">
             {t("opp.econ.edit")}
           </Button>
         </div>
-        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="relative z-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {dto.pricePerCustomer != null && (
             <StatBlock
               label={t("opp.econ.pricePerCustomer")}
@@ -302,7 +302,7 @@ function EconomicsDisplay({ dto, onEdit }: { dto: EconomicsDTO; onEdit: () => vo
           />
         </div>
         {dto.customerAcquisitionNote && (
-          <div>
+          <div className="relative z-10 rounded-2xl border-l-4 border-sol-champagne bg-sol-champagne-soft/50 px-5 py-4">
             <p className="text-[0.875rem] font-semibold text-sol-secondary">
               {t("opp.econ.acquisition")}
             </p>
@@ -311,7 +311,7 @@ function EconomicsDisplay({ dto, onEdit }: { dto: EconomicsDTO; onEdit: () => vo
             </p>
           </div>
         )}
-      </Card>
+      </div>
 
       {/* Revenue sensitivity chart — only when there's a real price to plot
           (spec AT: never a decorative chart with nothing behind it). */}

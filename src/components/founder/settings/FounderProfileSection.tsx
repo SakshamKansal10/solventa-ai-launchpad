@@ -267,7 +267,7 @@ export function FounderProfileSection({ data }: { data: SettingsData }) {
 
   return (
     <Card
-      className="flex flex-col gap-5 p-6 sm:p-7"
+      className="flex flex-col gap-5 border-sol-border p-6 shadow-none sm:p-7"
       aria-labelledby="founder-h"
       data-testid="founder-section"
     >
