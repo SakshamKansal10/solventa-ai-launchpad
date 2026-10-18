@@ -1,6 +1,5 @@
 import { useNavigate } from "@tanstack/react-router";
 
-import type { ProofOverview } from "@/lib/actions/proof";
 import { useLocale } from "@/lib/i18n/LocaleProvider";
 import type { RoadmapView } from "@/lib/roadmap/view";
 import { Card, EmptyState } from "../ui";
@@ -52,19 +51,8 @@ function TableAlternative({
 }
 
 /** Only REAL data, and only once there is enough of it to mean something: no
- * fake analytics, no gauges, no 3-D. Every bar is a link to the week or
- * evidence behind it. */
-export function ProgressTab({
-  view,
-  text,
-  proof,
-  opportunityId,
-}: {
-  view: RoadmapView;
-  text: RoadmapText;
-  proof: ProofOverview | undefined;
-  opportunityId: string;
-}) {
+ * fake analytics, no gauges, no 3-D. Every bar is a link to the week behind it. */
+export function ProgressTab({ view, text }: { view: RoadmapView; text: RoadmapText }) {
   const { t } = useLocale();
   const navigate = useNavigate();
 
@@ -80,9 +68,6 @@ export function ProgressTab({
   const maxMissions = Math.max(1, ...worked.map((w) => w.progress.total));
   const goWeek = (n: number) =>
     navigate({ to: "/dashboard/roadmap", search: { tab: "week", week: n } });
-
-  const assumptions = proof?.available ? proof.assumptions : [];
-  const maxEvidence = Math.max(1, ...assumptions.map((a) => a.evidence.length));
 
   return (
     <div className="grid gap-6" data-testid="progress-tab">
@@ -133,68 +118,6 @@ export function ProgressTab({
           ]}
           rows={worked.map((w) => [w.number, w.progress.completed, w.progress.total])}
         />
-      </Card>
-
-      <Card className="p-6" aria-labelledby="chart-evidence">
-        <h3 id="chart-evidence" className="sol-h3">
-          {t("rm.progress.evidenceByAssumption")}
-        </h3>
-        {assumptions.length === 0 ? (
-          <p className="mt-3 text-[1rem] text-sol-secondary">{t("rm.progress.noAssumptions")}</p>
-        ) : (
-          <>
-            <ul className="mt-5 flex flex-col gap-3" role="list">
-              {assumptions.map((a) => {
-                const s = a.evidence.filter((e) => e.signal === "supports").length;
-                const c = a.evidence.filter((e) => e.signal === "contradicts").length;
-                const n = a.evidence.length - s - c;
-                const pct = (x: number) => `${(x / maxEvidence) * 100}%`;
-                return (
-                  <li key={a.id}>
-                    <button
-                      type="button"
-                      onClick={() =>
-                        navigate({
-                          to: "/dashboard/proof",
-                          search: { opportunity: opportunityId, assumption: a.id },
-                        })
-                      }
-                      aria-label={t("rm.progress.evidenceAria", {
-                        title: a.title,
-                        n: a.evidence.length,
-                      })}
-                      className="flex w-full flex-col gap-1.5 rounded-xl px-2 py-1.5 text-left hover:bg-sol-violet-soft/50"
-                    >
-                      <span className="text-[0.9375rem] font-medium leading-snug text-sol-ink">
-                        {a.title}
-                      </span>
-                      <span className="flex h-4 w-full overflow-hidden rounded-full bg-sol-ivory-depth">
-                        <span className="bg-sol-champagne" style={{ width: pct(s) }} />
-                        <span className="bg-sol-border-strong" style={{ width: pct(n) }} />
-                        <span className="bg-sol-warning" style={{ width: pct(c) }} />
-                      </span>
-                    </button>
-                  </li>
-                );
-              })}
-            </ul>
-            <TableAlternative
-              caption={t("rm.progress.evidenceByAssumption")}
-              head={[
-                t("pf.dialog.assumption"),
-                t("pf.signal.supports"),
-                t("pf.signal.neutral"),
-                t("pf.signal.contradicts"),
-              ]}
-              rows={assumptions.map((a) => [
-                a.title,
-                a.evidence.filter((e) => e.signal === "supports").length,
-                a.evidence.filter((e) => e.signal === "neutral").length,
-                a.evidence.filter((e) => e.signal === "contradicts").length,
-              ])}
-            />
-          </>
-        )}
       </Card>
 
       <Card className="p-6" aria-labelledby="chart-phases">

@@ -171,9 +171,7 @@ for (const size of SIZES) {
         .getByRole("button", { name: /details/i })
         .first()
         .click();
-      await expect(page.getByTestId("assumption-sheet")).toBeVisible();
       await shoot(page, size.name, "proof-assumption-detail");
-      await page.keyboard.press("Escape");
 
       await gotoApp(page, "/dashboard/history");
       await shoot(page, size.name, "history");

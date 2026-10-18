@@ -58,7 +58,7 @@ test.describe("founder buttons", () => {
     await expect(page.getByTestId("adaptation-note")).toBeVisible({ timeout: 60_000 });
   });
 
-  test("dashboard graphics are controls: path stop, mission node, evidence map and Today's Move all navigate", async ({
+  test("dashboard graphics are controls: path stop, mission node and Today's Move all navigate", async ({
     page,
     context,
   }) => {
@@ -75,11 +75,5 @@ test.describe("founder buttons", () => {
     await gotoApp(page, "/dashboard");
     await page.getByTestId("track-node").first().click();
     await expect(page).toHaveURL(/\/dashboard\/roadmap/);
-
-    await gotoApp(page, "/dashboard");
-    await page.getByTestId("evidence-map-node").first().hover();
-    await expect(page.getByTestId("evidence-map-summary")).not.toContainText("Hover, focus");
-    await page.getByTestId("evidence-map-node").first().click();
-    await expect(page).toHaveURL(/\/dashboard\/proof/);
   });
 });

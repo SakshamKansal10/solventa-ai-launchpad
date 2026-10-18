@@ -14,8 +14,8 @@ async function openProof(page: Page) {
   await expect(page.getByTestId("assumption-card").first()).toBeVisible({ timeout: 45_000 });
 }
 
-test.describe("Proof — assumptions become evidence", () => {
-  test("opens with generated, untested assumptions — written once — and no numeric score", async ({
+test.describe("Proof — why this idea fits", () => {
+  test("opens with generated assumptions — written once — that expand inline", async ({
     page,
     context,
   }) => {
@@ -24,11 +24,11 @@ test.describe("Proof — assumptions become evidence", () => {
 
     const cards = page.getByTestId("assumption-card");
     await expect(cards).toHaveCount(3);
-    for (let i = 0; i < 3; i++)
-      await expect(cards.nth(i)).toHaveAttribute("data-state", "untested");
-    const text = await page.getByTestId("proof-page").innerText();
-    expect(text).not.toMatch(/\d+\s?%/);
-    expect(text).not.toMatch(/\bscore\b/i);
+    await cards.first().getByTestId("view-details").click();
+    await expect(cards.first().getByTestId("view-details")).toHaveAttribute(
+      "aria-expanded",
+      "true",
+    );
 
     await page.reload();
     await expect(page.getByTestId("assumption-card")).toHaveCount(3);
