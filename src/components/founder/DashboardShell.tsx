@@ -330,12 +330,19 @@ export function DashboardShell({ children }: { children: ReactNode }) {
               >
                 <Menu className="size-5" aria-hidden="true" />
               </button>
-              <p
-                className="truncate text-[1.0625rem] font-semibold text-sol-ink"
-                data-testid="page-title"
-              >
-                {t(titleKeyFor(pathname))}
-              </p>
+              <div className="min-w-0">
+                <p
+                  className="truncate text-[1.0625rem] font-semibold text-sol-ink"
+                  data-testid="page-title"
+                >
+                  {t(titleKeyFor(pathname))}
+                </p>
+                {pathname === "/dashboard/opportunities" && (
+                  <p className="hidden truncate text-[0.8125rem] text-sol-secondary sm:block">
+                    {t("opp.page.subtitle")}
+                  </p>
+                )}
+              </div>
             </div>
             <div className="flex items-center gap-2 sm:gap-3">
               <LanguageSwitcher compact />
