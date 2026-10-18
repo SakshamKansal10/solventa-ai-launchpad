@@ -25,7 +25,6 @@ import {
 import { FIT_ICONS } from "@/components/founder/dashboard/fit-constants";
 import { FitPill } from "@/components/founder/OpportunityCards";
 import { OpportunityPhoto, useOpportunityImage } from "@/components/founder/OpportunityImage";
-import { Gem3D } from "@/components/founder/three/Gem3D";
 import { FitStatusPill, useFitReasonText } from "@/components/founder/fit";
 import {
   Button,
@@ -168,7 +167,7 @@ function HeaderBlock({ dto, title }: { dto: OpportunityDetailDTO; title: string 
   const oneLiner = dto.brief.oneLiner;
 
   return (
-    <header className="sol-atmosphere grid md:grid-cols-[3fr_2fr]">
+    <header className={cn("sol-atmosphere grid", image.url && "md:grid-cols-[3fr_2fr]")}>
       <div className="relative z-10 flex flex-col items-start gap-4 p-6 sm:p-8">
         <div className="flex flex-wrap items-center gap-2.5">
           <p className="sol-eyebrow flex items-center gap-2 !text-[0.6875rem] !uppercase !tracking-[0.14em]">
@@ -237,11 +236,7 @@ function HeaderBlock({ dto, title }: { dto: OpportunityDetailDTO; title: string 
             aria-hidden="true"
           />
         </div>
-      ) : (
-        <div className="pointer-events-none hidden items-center justify-center md:flex">
-          <Gem3D variant="crystal" className="size-44" />
-        </div>
-      )}
+      ) : null}
     </header>
   );
 }
