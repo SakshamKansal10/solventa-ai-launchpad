@@ -1,5 +1,5 @@
 import { useEffect, useState, type ReactNode } from "react";
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { z } from "zod";
@@ -43,8 +43,6 @@ import {
   Skeleton,
 } from "@/components/founder/ui";
 import { chooseDirection, getOpportunityDetail } from "@/lib/actions/opportunities";
-import type { OpportunityBrief } from "@/lib/actions/founder";
-import { getProofOverview, type AssumptionDTO } from "@/lib/actions/proof";
 import { getRoadmapView, type RoadmapView } from "@/lib/actions/roadmap";
 import { useLocale } from "@/lib/i18n/LocaleProvider";
 import { qk, useCurrentUserQuery, useFounderState, useInvalidateFounder } from "@/lib/queries";
@@ -435,11 +433,6 @@ function NextMove({
     queryFn: () => getRoadmapView({ data: { roadmapId } }),
     staleTime: 15_000,
   });
-  const proof = useQuery({
-    queryKey: qk.proof(opportunityId),
-    queryFn: () => getProofOverview({ data: { opportunityId } }),
-    staleTime: 15_000,
-  });
   const view: RoadmapView | null | undefined = roadmap.data;
   const currentWeekId = view?.currentWeekId ?? null;
   const skeleton = useTranslatedEntity<SkeletonOverlay>("roadmap_skeleton", roadmapId);
@@ -474,32 +467,8 @@ function NextMove({
     week?.missions.find((m) => m.state === "not_started") ??
     null;
   const missionTitle = weekDetail.data?.missions?.[mission?.id ?? ""]?.title ?? mission?.title;
-  const assumptions = proof.data?.assumptions ?? [];
   const weekMissions = week?.missions ?? [];
   const missionsDone = weekMissions.filter((m) => m.state === "completed").length;
-  const activity = [
-    ...assumptions.flatMap((a) =>
-      a.evidence.map((e) => ({
-        id: `e-${e.id}`,
-        kind: "evidence" as const,
-        label: e.title ?? t(`pf.type.${e.type}` as const),
-        at: e.createdAt,
-      })),
-    ),
-    ...view.weeks.flatMap((w) =>
-      w.missions.flatMap((m) =>
-        m.completedAt
-          ? [{ id: `m-${m.id}`, kind: "mission" as const, label: m.title, at: m.completedAt }]
-          : [],
-      ),
-    ),
-  ]
-    .sort((x, y) => y.at.localeCompare(x.at))
-    .slice(0, 3);
-
-  const otherBriefs = (founderState?.direction.alternativeIds ?? []).flatMap((id) =>
-    founderState?.briefs[id] ? [founderState.briefs[id]] : [],
-  );
   const weekCount = view.totals.weeks;
   const weekProgress = weekMissions.length ? (missionsDone / weekMissions.length) * 100 : 0;
   const journeyProgress = weekCount ? (view.totals.completedWeeks / weekCount) * 100 : 0;
@@ -737,95 +706,7 @@ function NextMove({
           })}
         </ol>
       </Card>
-
-      <div className={cn("grid gap-5", otherBriefs.length > 0 && "lg:grid-cols-2")}>
-        <Card className="flex flex-col gap-5 p-6" data-testid="recent-changes">
-          <div className="flex items-center justify-between gap-3">
-            <h2 className="sol-h-sm">{t("cc.activity.heading")}</h2>
-            <LinkButton
-              to="/dashboard/proof"
-              search={{ opportunity: opportunityId }}
-              variant="ghost"
-              size="sm"
-              className="text-sol-violet-deep"
-            >
-              {t("cc.viewAll")}
-              <ArrowRight className="size-4" aria-hidden="true" />
-            </LinkButton>
-          </div>
-          {activity.length === 0 ? (
-            <p className="text-[0.9375rem] text-sol-secondary">{t("cc.activity.empty")}</p>
-          ) : (
-            <ol className="flex flex-col gap-4 border-l border-sol-border pl-5">
-              {activity.map((a, i) => (
-                <li key={a.id} className="relative flex items-center justify-between gap-3">
-                  <span
-                    aria-hidden="true"
-                    className={cn(
-                      "absolute -left-[1.6875rem] size-2.5 rounded-full",
-                      i === 0 ? "bg-sol-violet" : "bg-sol-border-strong",
-                    )}
-                  />
-                  <span className="min-w-0 flex-1 truncate text-[1rem] text-sol-ink">
-                    {a.label}
-                  </span>
-                  <span className="shrink-0 text-[0.875rem] text-sol-secondary">
-                    {relativeTime(a.at, locale)}
-                  </span>
-                  <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-sol-ivory text-sol-secondary">
-                    {a.kind === "mission" ? (
-                      <Check className="size-4" aria-hidden="true" />
-                    ) : (
-                      <FileCheck2 className="size-4" aria-hidden="true" />
-                    )}
-                  </span>
-                </li>
-              ))}
-            </ol>
-          )}
-        </Card>
-
-        {otherBriefs.length > 0 && (
-          <Card className="flex flex-col gap-4 p-6" data-testid="other-directions">
-            <div className="flex items-center justify-between gap-3">
-              <h2 className="sol-h-sm">{t("cc.alternatives")}</h2>
-              <LinkButton
-                to="/dashboard/opportunities"
-                variant="ghost"
-                size="sm"
-                className="text-sol-violet-deep"
-              >
-                {t("cc.viewAll")}
-                <ArrowRight className="size-4" aria-hidden="true" />
-              </LinkButton>
-            </div>
-            <ul className="flex flex-col gap-2">
-              {otherBriefs.slice(0, 3).map((b) => (
-                <OpportunityRow key={b.id} brief={b} />
-              ))}
-            </ul>
-          </Card>
-        )}
-      </div>
     </>
-  );
-}
-
-function OpportunityRow({ brief }: { brief: OpportunityBrief }) {
-  const translated = useTranslatedBrief(brief) ?? brief;
-  return (
-    <li>
-      <Link
-        to="/dashboard/opportunities/$id"
-        params={{ id: brief.id }}
-        className="flex items-center justify-between gap-3 rounded-xl border border-sol-border px-4 py-3 transition-colors hover:border-sol-violet/40 hover:bg-sol-violet-soft/40"
-      >
-        <span className="min-w-0 flex-1 truncate text-[1rem] font-medium text-sol-ink">
-          {translated.title}
-        </span>
-        <FitPill fit={brief.fit} />
-      </Link>
-    </li>
   );
 }
 

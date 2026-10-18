@@ -109,8 +109,6 @@ const en = {
   "cc.week.heading": "This week",
   "cc.week.missionsOf": "{x} of {y} missions",
   "cc.viewAll": "View all",
-  "cc.activity.heading": "Recent activity",
-  "cc.activity.empty": "Nothing yet. Finish a mission or add evidence and it will show up here.",
   "cc.surface.evidenceLine": "{captured} captured · {supported} supported · {testing} testing",
 
   "cc.today.heading": "Today's move",
@@ -512,8 +510,6 @@ const hi: Record<keyof typeof en, string> = {
   "cc.week.heading": "यह सप्ताह",
   "cc.week.missionsOf": "{y} में से {x} मिशन",
   "cc.viewAll": "सभी देखें",
-  "cc.activity.heading": "हाल की गतिविधि",
-  "cc.activity.empty": "अभी कुछ नहीं। कोई मिशन पूरा करें या साक्ष्य जोड़ें, वह यहाँ दिखेगा।",
   "cc.surface.evidenceLine": "{captured} दर्ज · {supported} समर्थित · {testing} परीक्षण में",
 
   "cc.today.heading": "आज का कदम",
