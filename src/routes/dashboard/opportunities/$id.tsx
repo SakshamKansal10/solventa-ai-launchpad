@@ -513,9 +513,6 @@ function FounderFit({
             </p>
           )}
         </div>
-        <div className="pointer-events-none hidden lg:block">
-          <Gem3D variant="seal" className="size-32" />
-        </div>
       </div>
 
       <div className="grid gap-5 lg:grid-cols-3">

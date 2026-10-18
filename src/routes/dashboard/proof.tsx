@@ -98,7 +98,7 @@ function ProofPage() {
   if (!opportunityId) {
     return (
       <div className="flex flex-col gap-8">
-        <PageHero title={t("pf.title")} subtitle={t("pf.subtitle")} gem="seal" />
+        <PageHero title={t("pf.title")} subtitle={t("pf.subtitle")} />
         <EmptyState
           title={t("pf.noDirection.title")}
           body={t("pf.noDirection.body")}
@@ -174,7 +174,7 @@ function ProofWorkspace({ opportunityId }: { opportunityId: string }) {
   if (!data.available) {
     return (
       <div className="flex flex-col gap-8">
-        <PageHero title={t("pf.title")} subtitle={t("pf.subtitle")} gem="seal" />
+        <PageHero title={t("pf.title")} subtitle={t("pf.subtitle")} />
         <ErrorPanel title={t("pf.unavailable.title")} body={t("pf.unavailable.body")} />
       </div>
     );
@@ -213,7 +213,7 @@ function ProofWorkspace({ opportunityId }: { opportunityId: string }) {
       <PageHero
         title={opportunityTitle ?? t("pf.title")}
         subtitle={t("pf.subtitle")}
-        gem="seal"
+
         action={
           assumptions.length > 0 ? (
             <Button size="lg" onClick={() => openAdd(null)} data-testid="add-evidence-global">
