@@ -21,14 +21,8 @@ import {
   type LucideIcon,
 } from "lucide-react";
 
-import {
-  AlternativeCard,
-  BriefChain,
-  FitPill,
-  FlagshipCard,
-} from "@/components/founder/OpportunityCards";
+import { BriefChain, FitPill, FlagshipCard } from "@/components/founder/OpportunityCards";
 import { IdeaHero } from "@/components/founder/OpportunityImage";
-import { DirectionCompare } from "@/components/founder/dashboard/DirectionCompare";
 import { FitSignals } from "@/components/founder/dashboard/fit-visual";
 import {
   JourneyPreview,
@@ -48,11 +42,7 @@ import {
   Pill,
   Skeleton,
 } from "@/components/founder/ui";
-import {
-  exploreMoreOpportunities,
-  chooseDirection,
-  getOpportunityDetail,
-} from "@/lib/actions/opportunities";
+import { chooseDirection, getOpportunityDetail } from "@/lib/actions/opportunities";
 import type { OpportunityBrief } from "@/lib/actions/founder";
 import { getProofOverview, type AssumptionDTO } from "@/lib/actions/proof";
 import { getRoadmapView, type RoadmapView } from "@/lib/actions/roadmap";
@@ -91,11 +81,7 @@ function CommandCenter() {
 
       {direction.stage === "no_consultation" && <NoConsultation />}
       {direction.stage === "ideas_ready" && direction.flagshipId && (
-        <IdeasReady
-          flagshipId={direction.flagshipId}
-          alternativeIds={direction.alternativeIds}
-          readOnly={readOnly}
-        />
+        <IdeasReady flagshipId={direction.flagshipId} readOnly={readOnly} />
       )}
       {(direction.stage === "direction_selected" ||
         direction.stage === "roadmap_building" ||
@@ -180,19 +166,10 @@ function NoConsultation() {
 }
 
 /** STATE A — ideas ready, nothing chosen yet. */
-function IdeasReady({
-  flagshipId,
-  alternativeIds,
-  readOnly,
-}: {
-  flagshipId: string;
-  alternativeIds: string[];
-  readOnly: boolean;
-}) {
-  const { t, locale } = useLocale();
+function IdeasReady({ flagshipId, readOnly }: { flagshipId: string; readOnly: boolean }) {
+  const { t } = useLocale();
   const founder = useFounderState();
   const invalidate = useInvalidateFounder();
-  const navigate = useNavigate();
   const briefs = founder.data!.briefs;
 
   const choose = useMutation({
@@ -206,23 +183,9 @@ function IdeasReady({
       toast.error(t("cc.chosen.error"));
     },
   });
-  const explore = useMutation({
-    mutationFn: () => exploreMoreOpportunities({ data: { locale } }),
-    onSuccess: async (res) => {
-      await invalidate();
-      toast.success(t("cc.explore.done", { n: res.added }));
-      void navigate({ to: "/dashboard/opportunities" });
-    },
-    onError: (err) => {
-      console.error("[command-center] explore more failed:", err);
-      toast.error(t("cc.explore.error"));
-    },
-  });
 
-  const busy = choose.isPending || explore.isPending;
   const flagship = briefs[flagshipId];
   if (!flagship) return <NoConsultation />;
-  const alternatives = alternativeIds.flatMap((id) => (briefs[id] ? [briefs[id]] : []));
 
   return (
     <>
@@ -230,49 +193,22 @@ function IdeasReady({
       <FlagshipCard
         brief={flagship}
         readOnly={readOnly}
-        disabled={busy}
-        choosing={choose.isPending && choose.variables === flagshipId}
+        disabled={choose.isPending}
+        choosing={choose.isPending}
         onChoose={() => choose.mutate(flagshipId)}
       />
-      <DirectionCompare briefs={[flagship, ...alternatives]} />
-      {alternatives.length > 0 && (
-        <section aria-labelledby="alts-heading" className="flex flex-col gap-4">
-          <h2 id="alts-heading" className="sol-eyebrow">
-            {t("cc.alternatives")}
-          </h2>
-          <div className="grid gap-5 md:grid-cols-2">
-            {alternatives.map((alt, i) => (
-              <AlternativeCard
-                key={alt.id}
-                brief={alt}
-                rank={i + 2}
-                readOnly={readOnly}
-                disabled={busy}
-                choosing={choose.isPending && choose.variables === alt.id}
-                onChoose={() => choose.mutate(alt.id)}
-              />
-            ))}
-          </div>
-        </section>
-      )}
       {!readOnly && (
         <div className="flex flex-col items-start gap-2">
-          <Button
+          <LinkButton
+            to="/dashboard/opportunities"
             variant="soft"
             size="lg"
-            onClick={() => explore.mutate()}
-            loading={explore.isPending}
-            disabled={choose.isPending}
             data-testid="explore-more"
           >
             <Compass className="size-5" aria-hidden="true" />
             {t("cc.exploreMore")}
-          </Button>
-          {explore.isPending && (
-            <p role="status" className="text-[1rem] text-sol-secondary">
-              {t("cc.explore.working")}
-            </p>
-          )}
+          </LinkButton>
+          <p className="text-[0.9375rem] text-sol-secondary">{t("cc.exploreMore.hint")}</p>
         </div>
       )}
     </>
@@ -510,6 +446,7 @@ function NextMove({
   const weekDetail = useTranslatedEntity<WeekOverlay>("week_detail", currentWeekId);
   const founderState = useFounderState().data;
   const rawBrief = founderState?.briefs[opportunityId];
+  const translatedBrief = useTranslatedBrief(rawBrief) ?? rawBrief;
   const rawOpportunityTitle = rawBrief?.title ?? "";
   const opportunityTitle = useTranslatedTitle(opportunityId, rawOpportunityTitle) ?? "";
 
@@ -581,6 +518,51 @@ function NextMove({
           <p className="sol-body sol-prose mt-2 text-sol-secondary">{t("cc.c.completedBody")}</p>
         )}
       </header>
+
+      {translatedBrief && (
+        <section
+          aria-label={t("cc.idea.label")}
+          className="flex flex-col gap-4 rounded-2xl border border-sol-border bg-sol-surface p-5 sm:flex-row sm:items-center sm:justify-between sm:gap-8 sm:p-6"
+          data-testid="your-idea"
+        >
+          <div className="flex min-w-0 flex-col gap-2">
+            <p className="sol-eyebrow">{t("cc.idea.label")}</p>
+            <h2 className="sol-h-sm !text-[1.25rem]">{translatedBrief.title}</h2>
+            {translatedBrief.oneLiner && (
+              <p className="line-clamp-2 max-w-[64ch] text-[0.9375rem] leading-snug text-sol-secondary">
+                {translatedBrief.oneLiner}
+              </p>
+            )}
+            {translatedBrief.whyFit[0] && (
+              <p className="flex max-w-[64ch] items-start gap-2.5 text-[0.9375rem] leading-snug text-sol-ink">
+                <span className="mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full bg-sol-violet-soft text-sol-violet-deep">
+                  <Check className="size-3" strokeWidth={3} aria-hidden="true" />
+                </span>
+                <span className="min-w-0">{translatedBrief.whyFit[0]}</span>
+              </p>
+            )}
+          </div>
+          <div className="flex shrink-0 flex-wrap items-center gap-3">
+            <LinkButton
+              to="/dashboard/opportunities/$id"
+              params={{ id: opportunityId }}
+              variant="secondary"
+              size="md"
+            >
+              {t("cc.idea.view")}
+            </LinkButton>
+            <LinkButton
+              to="/dashboard/opportunities"
+              variant="soft"
+              size="md"
+              data-testid="explore-more"
+            >
+              <Compass className="size-4" aria-hidden="true" />
+              {t("cc.exploreMore")}
+            </LinkButton>
+          </div>
+        </section>
+      )}
 
       <section
         className="sol-atmosphere p-6 sm:p-8"

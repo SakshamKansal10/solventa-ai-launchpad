@@ -8,8 +8,12 @@ const en = {
     "About ten to fifteen minutes. Solventia finds three business directions that fit what you actually have — your skills, time, money and access.",
 
   // ── State A: directions ready, none chosen ─────────────────────────────
-  "cc.a.title": "Your directions are ready",
-  "cc.a.subtitle": "Choose the one worth testing first. The others stay saved.",
+  "cc.a.title": "Your top idea is ready",
+  "cc.a.subtitle":
+    "Solventia's best match for you. Choose it to build your roadmap, or explore other ideas.",
+  "cc.exploreMore.hint": "Not convinced? See the other ideas and why each one fits you.",
+  "cc.idea.label": "Your idea",
+  "cc.idea.view": "View idea",
   "cc.alternatives": "Other directions",
   "cc.flagshipLabel": "Strongest fit for you",
   "cc.explore": "Explore",
@@ -409,8 +413,12 @@ const hi: Record<keyof typeof en, string> = {
   "cc.none.cardBody":
     "लगभग दस से पंद्रह मिनट। Solventia आपके पास जो कुछ सच में है — कौशल, समय, पैसा और पहुंच — उसके हिसाब से तीन बिज़नेस दिशाएं खोजता है।",
 
-  "cc.a.title": "आपकी दिशाएं तैयार हैं",
-  "cc.a.subtitle": "जिसे सबसे पहले परखना है, उसे चुनिए। बाकी सुरक्षित रहेंगी।",
+  "cc.a.title": "आपका सबसे अच्छा आइडिया तैयार है",
+  "cc.a.subtitle":
+    "Solventia की नज़र में आपके लिए सबसे उपयुक्त। इसे चुनकर रोडमैप बनाइए, या दूसरे आइडिया देखिए।",
+  "cc.exploreMore.hint": "पसंद नहीं आया? बाकी आइडिया देखिए और जानिए हर एक आपके लिए क्यों सही है।",
+  "cc.idea.label": "आपका आइडिया",
+  "cc.idea.view": "आइडिया देखें",
   "cc.alternatives": "अन्य दिशाएं",
   "cc.flagshipLabel": "आपके लिए सबसे उपयुक्त",
   "cc.explore": "देखें",

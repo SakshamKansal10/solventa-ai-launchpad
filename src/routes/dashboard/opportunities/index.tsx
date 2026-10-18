@@ -4,6 +4,7 @@ import { toast } from "sonner";
 import {
   ArrowRight,
   Check,
+  Compass,
   Hammer,
   Lightbulb,
   Map as MapIcon,
@@ -30,7 +31,7 @@ import {
   Pill,
 } from "@/components/founder/ui";
 import type { OpportunityBrief } from "@/lib/actions/founder";
-import { chooseDirection } from "@/lib/actions/opportunities";
+import { chooseDirection, exploreMoreOpportunities } from "@/lib/actions/opportunities";
 import { useLocale } from "@/lib/i18n/LocaleProvider";
 import { useFounderState, useInvalidateFounder } from "@/lib/queries";
 import { useTranslatedBrief } from "@/lib/use-translation";
@@ -221,6 +222,18 @@ function OpportunitiesPage() {
     },
   });
 
+  const explore = useMutation({
+    mutationFn: () => exploreMoreOpportunities({ data: { locale } }),
+    onSuccess: async (res) => {
+      await invalidate();
+      toast.success(t("cc.explore.done", { n: res.added }));
+    },
+    onError: (err) => {
+      console.error("[opportunities] explore more failed:", err);
+      toast.error(t("cc.explore.error"));
+    },
+  });
+
   if (founder.isPending) return <PageSkeleton label={t("shell.skeleton.loading")} />;
   if (founder.isError || !founder.data) {
     return <ErrorPanel onRetry={() => void founder.refetch()} retrying={founder.isFetching} />;
@@ -355,6 +368,27 @@ function OpportunitiesPage() {
             ))}
           </div>
         </section>
+      )}
+
+      {canChoose && all.length > 0 && (
+        <div className="flex flex-col items-start gap-2">
+          <Button
+            variant="soft"
+            size="lg"
+            onClick={() => explore.mutate()}
+            loading={explore.isPending}
+            disabled={choose.isPending}
+            data-testid="explore-more-generate"
+          >
+            <Compass className="size-5" aria-hidden="true" />
+            {t("cc.exploreMore")}
+          </Button>
+          {explore.isPending && (
+            <p role="status" className="text-[1rem] text-sol-secondary">
+              {t("cc.explore.working")}
+            </p>
+          )}
+        </div>
       )}
     </div>
   );
