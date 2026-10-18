@@ -54,7 +54,7 @@ test("seed the demo founder through the real UI", async ({ page, context }) => {
     if (attempt === 3) throw new Error("The analysis failed three times in a row");
     await page.getByRole("button", { name: /try again/i }).click();
   }
-  await expect(page.locator("h1")).toHaveText("Your directions are ready", { timeout: 60_000 });
+  await expect(page.locator("h1")).toHaveText("Your top idea is ready", { timeout: 60_000 });
 
   await page.getByTestId("flagship-choose").click();
   await page.getByTestId("build-roadmap").click();
