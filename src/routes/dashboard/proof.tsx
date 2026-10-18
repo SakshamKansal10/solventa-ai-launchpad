@@ -138,7 +138,7 @@ function ProofWorkspace({ opportunityId }: { opportunityId: string }) {
     open: boolean;
     assumptionId: string | null;
     editing: EvidenceDTO | null;
-  }>({ open: Boolean(search.add), assumptionId: search.assumption ?? null, editing: null });
+  }>({ open: false, assumptionId: search.assumption ?? null, editing: null });
 
   // The founder's first visit: set up the critical assumptions exactly once.
   const generate = useMutation({
@@ -210,18 +210,7 @@ function ProofWorkspace({ opportunityId }: { opportunityId: string }) {
 
   return (
     <div className="flex flex-col gap-8" data-testid="proof-page">
-      <PageHero
-        title={opportunityTitle ?? t("pf.title")}
-        subtitle={t("pf.subtitle")}
-
-        action={
-          assumptions.length > 0 ? (
-            <Button size="lg" onClick={() => openAdd(null)} data-testid="add-evidence-global">
-              {t("pf.addEvidenceCta")}
-            </Button>
-          ) : undefined
-        }
-      >
+      <PageHero title={opportunityTitle ?? t("pf.title")} subtitle={t("pf.subtitle")}>
         {assumptions.length > 0 && (
           <div
             className="flex items-center gap-5 rounded-2xl border border-sol-border bg-white/70 px-5 py-3 backdrop-blur"
@@ -319,13 +308,6 @@ function ProofWorkspace({ opportunityId }: { opportunityId: string }) {
                           <h2 className="sol-h-sm mt-1.5 text-sol-ink">{a.title}</h2>
                         </div>
                         <div className="flex shrink-0 items-center gap-2">
-                          <Button
-                            size="sm"
-                            onClick={() => openAdd(a.id)}
-                            data-testid="add-evidence"
-                          >
-                            {t("pf.addEvidence")}
-                          </Button>
                           <button
                             type="button"
                             onClick={() => setDetailId(a.id)}
@@ -349,7 +331,6 @@ function ProofWorkspace({ opportunityId }: { opportunityId: string }) {
               compact
               assumptions={assumptions}
               onOpenAssumption={setDetailId}
-              onAdd={() => openAdd(null)}
               onAskSol={({ summary }) =>
                 askSol.open(t("askSol.q.whatChanges", { summary: summary.slice(0, 240) }))
               }
@@ -365,7 +346,6 @@ function ProofWorkspace({ opportunityId }: { opportunityId: string }) {
       <AssumptionSheet
         assumption={detail}
         onOpenChange={(open) => !open && setDetailId(null)}
-        onAddEvidence={(id) => openAdd(id)}
         onEditEvidence={(e) => openAdd(e.assumptionId, e)}
       />
 

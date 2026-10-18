@@ -248,8 +248,6 @@ function RoadmapWorkspace({
                 view={view}
                 week={shownWeek}
                 text={text}
-                opportunityId={opportunityId}
-                proof={proof.data}
                 isCurrent={shownWeek.id === view.currentWeekId}
                 nextWeekNumber={nextWeekNumber}
                 onWeekChanged={onWeekChanged}

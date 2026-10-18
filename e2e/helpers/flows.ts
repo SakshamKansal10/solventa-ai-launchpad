@@ -41,7 +41,7 @@ export async function completeAllMissions(page: Page): Promise<void> {
   await expect(cards.first()).toBeVisible();
   const count = await cards.count();
   for (let i = 0; i < count; i++) {
-    let card = cards.nth(i);
+    const card = cards.nth(i);
     if ((await card.getAttribute("data-state")) === "completed") continue;
     if ((await card.getAttribute("data-open")) !== "true") {
       await card.getByTestId("mission-toggle").click();
@@ -49,23 +49,6 @@ export async function completeAllMissions(page: Page): Promise<void> {
     if ((await card.getAttribute("data-state")) === "not_started") {
       await card.getByTestId("mission-primary").click();
       await expect(card).toHaveAttribute("data-state", "in_progress");
-    }
-    const needsEvidence =
-      (await card.getByTestId("mission-add-proof").count()) > 0 &&
-      Number(await card.getAttribute("data-evidence")) === 0;
-    if (needsEvidence) {
-      await card.getByTestId("mission-add-proof").click();
-      await expect(page.getByTestId("evidence-dialog")).toBeVisible({ timeout: 45_000 });
-      await page.getByTestId("ev-person").fill("Customer");
-      await page.getByTestId("ev-summary").fill("Said the follow-ups are dropped every week.");
-      await page.getByTestId("ev-save").click();
-      await expect(page.getByTestId("evidence-dialog")).toBeHidden();
-      await gotoApp(page, "/dashboard/roadmap");
-      card = page.getByTestId("mission-card").nth(i);
-      await expect(card).toBeVisible();
-      if ((await card.getAttribute("data-open")) !== "true") {
-        await card.getByTestId("mission-toggle").click();
-      }
     }
     await card.getByTestId("mission-complete").click();
     await expect(card).toHaveAttribute("data-state", "completed");

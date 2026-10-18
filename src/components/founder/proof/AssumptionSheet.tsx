@@ -32,12 +32,10 @@ import { formatDate, SignalBadge, StateBadge, useReasonText } from "./bits";
 export function AssumptionSheet({
   assumption,
   onOpenChange,
-  onAddEvidence,
   onEditEvidence,
 }: {
   assumption: AssumptionDTO | null;
   onOpenChange: (open: boolean) => void;
-  onAddEvidence: (assumptionId: string) => void;
   onEditEvidence: (evidence: EvidenceDTO) => void;
 }) {
   const { t, locale } = useLocale();
@@ -123,14 +121,6 @@ export function AssumptionSheet({
                   <h3 id="timeline" className="sol-eyebrow">
                     {t("pf.detail.timeline")}
                   </h3>
-                  <Button
-                    size="sm"
-                    variant="primary"
-                    onClick={() => onAddEvidence(a.id)}
-                    data-testid="sheet-add-evidence"
-                  >
-                    {t("pf.addEvidence")}
-                  </Button>
                 </div>
                 {a.evidence.length === 0 ? (
                   <p className="mt-3 text-[1.0625rem] text-sol-secondary">

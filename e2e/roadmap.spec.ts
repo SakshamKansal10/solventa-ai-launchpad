@@ -114,20 +114,6 @@ test.describe("This Week", () => {
     );
   });
 
-  test("a mission that asks for evidence cannot be completed without it", async ({
-    page,
-    context,
-  }) => {
-    await founderWithRoadmap(page, context);
-    const second = page.getByTestId("mission-card").nth(1);
-    await second.getByTestId("mission-toggle").click();
-    await second.getByTestId("mission-primary").click();
-    await expect(second).toHaveAttribute("data-state", "in_progress");
-    await expect(second.getByTestId("mission-complete")).toBeDisabled();
-    await expect(second.getByTestId("mission-evidence-hint")).toBeVisible();
-    await expect(second.getByTestId("mission-add-proof")).toBeVisible();
-  });
-
   test("the right rail shows progress, the success threshold, evidence, things to avoid and Ask Sol", async ({
     page,
     context,

@@ -18,7 +18,7 @@ import { useLocale } from "@/lib/i18n/LocaleProvider";
 import type { MissionState } from "@/lib/roadmap/state";
 import type { MissionDTO } from "@/lib/roadmap/view";
 import { cn } from "@/lib/utils";
-import { Button, LinkButton, Pill } from "../ui";
+import { Button, Pill } from "../ui";
 
 const CATEGORY_ICON: Record<string, LucideIcon> = {
   problem: Search,
@@ -50,14 +50,11 @@ const dateOf = (iso: string | null, locale: string) =>
 /** One mission, as a small operating card: the title and time, then — only for
  * the mission that is active — WHY, what to DO, and what to CAPTURE. The other
  * missions stay as compact rows. Starting is one action; finishing is another,
- * and a mission that asks for evidence cannot be finished without it. */
+ * missions can be finished at any time. */
 export function MissionCard({
   mission,
   index,
   text,
-  opportunityId,
-  weekId,
-  assumptionId,
   busy,
   locked,
   defaultOpen,
@@ -66,10 +63,6 @@ export function MissionCard({
   mission: MissionDTO;
   index: number;
   text?: MissionText;
-  opportunityId: string;
-  weekId: string;
-  /** The assumption this mission's evidence speaks to (preselects the dialog). */
-  assumptionId?: string;
   busy: boolean;
   /** A completed week's missions are read-only history. */
   locked: boolean;
@@ -84,28 +77,8 @@ export function MissionCard({
   const time = text?.timeEstimate ?? mission.timeEstimate;
   const done = mission.state === "completed";
   const inProgress = mission.state === "in_progress";
-  const needsEvidence = mission.evidenceRequired && mission.evidenceCount === 0;
   const completedOn = dateOf(mission.completedAt, locale);
   const pad = String(index + 1).padStart(2, "0");
-
-  const addProof = (
-    <LinkButton
-      to="/dashboard/proof"
-      search={{
-        opportunity: opportunityId,
-        add: true,
-        mission: mission.id,
-        week: weekId,
-        assumption: assumptionId,
-        category: mission.assumptionCategory ?? undefined,
-      }}
-      variant="secondary"
-      size="sm"
-      data-testid="mission-add-proof"
-    >
-      {t("rm.mission.addProof")}
-    </LinkButton>
-  );
 
   // The primary action depends on where the mission is and whether it is open.
   const primary = (() => {
@@ -133,9 +106,8 @@ export function MissionCard({
     return (
       <Button
         size="sm"
-        disabled={busy || needsEvidence}
+        disabled={busy}
         data-testid="mission-complete"
-        title={needsEvidence ? t("rm.mission.needEvidenceHint") : undefined}
         onClick={() => onState("completed")}
       >
         {t("rm.mission.markComplete")}
@@ -224,12 +196,6 @@ export function MissionCard({
           </div>
 
           <div className="relative z-10 flex shrink-0 flex-wrap items-center justify-end gap-2">
-            {mission.evidenceRequired && !done && (
-              <Pill tone="champagne">
-                {t("rm.evidenceRequired")}
-                {mission.evidenceCount > 0 ? ` · ${mission.evidenceCount}` : ""}
-              </Pill>
-            )}
             {!mission.required && <Pill tone="neutral">{t("common.optional")}</Pill>}
             {time && (
               <span className="mr-1 inline-flex items-center gap-1.5 text-[0.8125rem] text-sol-secondary">
@@ -296,7 +262,6 @@ export function MissionCard({
               <div className="mt-5 flex flex-col gap-3">
                 <div className="flex flex-wrap items-center gap-3">
                   {primary}
-                  {mission.evidenceRequired && !done && addProof}
                   {done && (
                     <Button
                       size="sm"
@@ -309,14 +274,6 @@ export function MissionCard({
                     </Button>
                   )}
                 </div>
-                {needsEvidence && inProgress && (
-                  <p
-                    className="text-[0.875rem] font-medium text-sol-secondary"
-                    data-testid="mission-evidence-hint"
-                  >
-                    {t("rm.mission.needEvidenceHint")}
-                  </p>
-                )}
               </div>
             )}
           </div>

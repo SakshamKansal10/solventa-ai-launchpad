@@ -165,13 +165,6 @@ for (const size of SIZES) {
       await gotoApp(page, "/dashboard/proof");
       await expect(page.getByTestId("assumption-card").first()).toBeVisible({ timeout: 60_000 });
       await shoot(page, size.name, "proof", { tall: true });
-      await page.getByTestId("assumption-card").first().getByTestId("add-evidence").click();
-      await expect(page.getByTestId("evidence-dialog")).toBeVisible();
-      await shoot(page, size.name, "proof-add-evidence");
-      await page.getByTestId("ev-person").fill("Clinic owner");
-      await page.getByTestId("ev-summary").fill("Said follow-ups are dropped every week.");
-      await page.getByTestId("ev-save").click();
-      await expect(page.getByTestId("evidence-dialog")).toBeHidden();
       await page
         .getByTestId("assumption-card")
         .first()

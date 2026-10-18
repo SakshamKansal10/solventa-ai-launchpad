@@ -5,7 +5,6 @@ import { ChevronLeft, ChevronRight, Loader2, Target, TrendingUp } from "lucide-r
 import { useNavigate } from "@tanstack/react-router";
 
 import { retryWeek, setMissionState, type CloseWeekResult } from "@/lib/actions/roadmap";
-import type { ProofOverview } from "@/lib/actions/proof";
 import { useLocale } from "@/lib/i18n/LocaleProvider";
 import { qk, useInvalidateFounder } from "@/lib/queries";
 import type { MissionState } from "@/lib/roadmap/state";
@@ -42,8 +41,6 @@ export function WeekTab({
   view,
   week,
   text,
-  opportunityId,
-  proof,
   isCurrent,
   nextWeekNumber,
   onWeekChanged,
@@ -51,8 +48,6 @@ export function WeekTab({
   view: RoadmapView;
   week: WeekDTO;
   text: RoadmapText;
-  opportunityId: string;
-  proof: ProofOverview | undefined;
   /** Whether this is the founder's active week (vs a completed/locked one being read). */
   isCurrent: boolean;
   nextWeekNumber: number | null;
@@ -84,11 +79,7 @@ export function WeekTab({
     onError: (err, _v, ctx) => {
       console.error("[roadmap] mission update failed:", err);
       if (ctx?.previous) queryClient.setQueryData(roadmapKey, ctx.previous);
-      toast.error(
-        err instanceof Error && err.message.includes("EVIDENCE_REQUIRED")
-          ? t("rm.mission.needEvidenceError")
-          : t("rm.mission.error"),
-      );
+      toast.error(t("rm.mission.error"));
     },
     onSettled: () => {
       void invalidate();
@@ -119,9 +110,6 @@ export function WeekTab({
     week.missions.find((m) => m.state === "not_started" && m.required)?.id ??
     week.missions.find((m) => m.state !== "completed")?.id ??
     null;
-
-  const assumptionFor = (category: string | null) =>
-    proof?.assumptions.find((a) => a.category === category)?.id ?? proof?.assumptions[0]?.id;
 
   const objective = text.weekObjective(week.id, week.objective);
   const threshold = detail.successThreshold(week.successThreshold);
@@ -264,9 +252,6 @@ export function WeekTab({
                     mission={m}
                     index={i}
                     text={detail.mission(m.id)}
-                    opportunityId={opportunityId}
-                    weekId={week.id}
-                    assumptionId={assumptionFor(m.assumptionCategory)}
                     busy={setState.isPending && setState.variables?.taskId === m.id}
                     locked={missionsLocked}
                     defaultOpen={m.id === activeMissionId && !missionsLocked}

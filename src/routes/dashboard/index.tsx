@@ -692,18 +692,6 @@ function NextMove({
             icon={Database}
             label={t("cc.surface.evidence")}
             value={t("rm.rail.captured", { n: view.totals.evidence })}
-            action={
-              <LinkButton
-                to="/dashboard/proof"
-                search={{ opportunity: opportunityId, add: true }}
-                variant="ghost"
-                size="sm"
-                className="-ml-3 text-sol-violet-deep"
-              >
-                {t("pf.addEvidence")}
-                <ArrowRight className="size-4" aria-hidden="true" />
-              </LinkButton>
-            }
           />
         </div>
       )}

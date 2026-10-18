@@ -19,13 +19,11 @@ const PAGE = 8;
 export function EvidenceStream({
   assumptions,
   onOpenAssumption,
-  onAdd,
   onAskSol,
   compact = false,
 }: {
   assumptions: AssumptionDTO[];
   onOpenAssumption: (id: string) => void;
-  onAdd: () => void;
   onAskSol: (item: { summary: string }) => void;
   /** Slim sidebar card: the latest few items as a timeline. */
   compact?: boolean;
@@ -57,9 +55,6 @@ export function EvidenceStream({
         {items.length === 0 ? (
           <div className="flex flex-col items-start gap-2">
             <p className="text-[0.9375rem] text-sol-secondary">{t("pf.stream.empty.body")}</p>
-            <Button size="sm" variant="secondary" onClick={onAdd}>
-              {t("pf.addEvidenceCta")}
-            </Button>
           </div>
         ) : (
           <ol className="flex flex-col gap-4 border-l border-sol-border pl-4">
@@ -125,15 +120,7 @@ export function EvidenceStream({
         <h2 id="stream-h" className="sol-eyebrow mb-3">
           {t("pf.stream.title")}
         </h2>
-        <EmptyState
-          title={t("pf.stream.empty.title")}
-          body={t("pf.stream.empty.body")}
-          action={
-            <Button size="lg" onClick={onAdd}>
-              {t("pf.addEvidenceCta")}
-            </Button>
-          }
-        />
+        <EmptyState title={t("pf.stream.empty.title")} body={t("pf.stream.empty.body")} />
       </section>
     );
   }
