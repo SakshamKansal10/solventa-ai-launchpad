@@ -22,7 +22,6 @@ import {
   type LucideIcon,
 } from "lucide-react";
 
-import { EconomicsTab } from "@/components/founder/EconomicsTab";
 import { FIT_ICONS } from "@/components/founder/dashboard/fit-constants";
 import { FitPill } from "@/components/founder/OpportunityCards";
 import { OpportunityPhoto, useOpportunityImage } from "@/components/founder/OpportunityImage";
@@ -52,11 +51,11 @@ import { cn } from "@/lib/utils";
 
 const FIT_LEVEL = { strong: 2, moderate: 1, conditional: 0 } as const;
 
-const TABS = ["overview", "fit", "market", "economics", "proof"] as const;
+const TABS = ["overview", "fit", "market"] as const;
 type Tab = (typeof TABS)[number];
 
 export const Route = createFileRoute("/dashboard/opportunities/$id")({
-  validateSearch: z.object({ tab: z.enum(TABS).optional() }),
+  validateSearch: z.object({ tab: z.enum(TABS).optional().catch(undefined) }),
   component: OpportunityPage,
   head: () => ({
     meta: [{ title: "Opportunity — Solventia" }, { name: "robots", content: "noindex" }],
@@ -143,12 +142,6 @@ function OpportunityPage() {
         </TabsContent>
         <TabsContent value="market" className="mt-8">
           <Market dto={dto} opportunityId={id} />
-        </TabsContent>
-        <TabsContent value="economics" className="mt-8">
-          <EconomicsTab opportunityId={id} />
-        </TabsContent>
-        <TabsContent value="proof" className="mt-8">
-          <ProofTab dto={dto} opportunityId={id} />
         </TabsContent>
       </Tabs>
     </div>
@@ -744,54 +737,6 @@ function Market({ dto, opportunityId }: { dto: OpportunityDetailDTO; opportunity
         </div>
         <p className="text-[0.9375rem] text-sol-secondary">{t("opp.market.sourcesNote")}</p>
       </Card>
-    </div>
-  );
-}
-
-function ProofTab({ dto, opportunityId }: { dto: OpportunityDetailDTO; opportunityId: string }) {
-  const { t } = useLocale();
-  const { proof } = dto;
-  const supported = proof.counts.supported;
-  const untested = proof.counts.untested;
-  return (
-    <div className="sol-atmosphere flex flex-col gap-5 p-6 sm:p-8" data-testid="proof-tab">
-      {!proof.available ? (
-        <p className="sol-body text-sol-secondary">{t("opp.proof.unavailable")}</p>
-      ) : proof.total === 0 ? (
-        <>
-          <h2 className="sol-h2 relative !text-[1.25rem]">{t("opp.proof.noneTitle")}</h2>
-          <p className="sol-body sol-prose text-sol-secondary">{t("opp.proof.noneBody")}</p>
-        </>
-      ) : (
-        <>
-          <h2 className="sol-h2 relative !text-[1.25rem]">
-            {t("opp.proof.assumptions", { n: proof.total })}
-          </h2>
-          <p className="text-[1.125rem] leading-snug text-sol-ink">
-            {t("opp.proof.summary", { supported, untested })}
-          </p>
-          <div
-            className="h-2 w-full max-w-md overflow-hidden rounded-full bg-sol-border"
-            aria-hidden="true"
-          >
-            <div
-              className="h-full rounded-full bg-gradient-to-r from-sol-violet to-sol-champagne"
-              style={{ width: `${Math.round((supported / proof.total) * 100)}%` }}
-            />
-          </div>
-        </>
-      )}
-      <div>
-        <LinkButton
-          to="/dashboard/proof"
-          search={{ opportunity: opportunityId }}
-          variant="primary"
-          size="lg"
-          data-testid="open-proof-workspace"
-        >
-          {t("opp.proof.open")}
-        </LinkButton>
-      </div>
     </div>
   );
 }

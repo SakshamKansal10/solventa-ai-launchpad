@@ -221,8 +221,6 @@ const en = {
   "opp.tab.overview": "Overview",
   "opp.tab.fit": "Founder Fit",
   "opp.tab.market": "Market",
-  "opp.tab.economics": "Economics",
-  "opp.tab.proof": "Proof",
 
   "opp.ov.customer": "Customer",
   "opp.ov.customerCap": "Who pays for this",
@@ -616,8 +614,6 @@ const hi: Record<keyof typeof en, string> = {
   "opp.tab.overview": "सारांश",
   "opp.tab.fit": "फाउंडर फ़िट",
   "opp.tab.market": "बाज़ार",
-  "opp.tab.economics": "अर्थशास्त्र",
-  "opp.tab.proof": "प्रमाण",
 
   "opp.ov.customer": "ग्राहक",
   "opp.ov.customerCap": "इसके लिए कौन भुगतान करता है",
