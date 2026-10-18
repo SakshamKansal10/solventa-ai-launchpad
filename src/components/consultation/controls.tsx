@@ -201,16 +201,46 @@ export function SegmentedScale({
   value,
   onChange,
   noBarsFor = [],
+  buttons = false,
 }: {
   name: string;
   options: Opt[];
   value: string | undefined;
   onChange: (id: string) => void;
+  /** Plain separate option buttons instead of one connected bar with level bars. */
+  buttons?: boolean;
   /** Options that are not a point on the scale (e.g. "Other") and carry no bars. */
   noBarsFor?: string[];
 }) {
   const n = options.length;
   const scaled = options.filter((o) => !noBarsFor.includes(o.id));
+  if (buttons) {
+    return (
+      <div role="radiogroup" className="flex flex-wrap gap-2">
+        {options.map((o) => {
+          const selected = value === o.id;
+          return (
+            <button
+              key={o.id}
+              type="button"
+              role="radio"
+              aria-checked={selected}
+              data-testid={`opt-${name}-${o.id}`}
+              onClick={() => onChange(o.id)}
+              className={cn(
+                "inline-flex min-h-12 items-center justify-center rounded-2xl border px-5 text-center text-[1rem] font-medium transition-all duration-[180ms]",
+                selected
+                  ? "border-sol-violet bg-sol-violet text-white shadow-[0_6px_16px_rgba(114,87,216,0.25)]"
+                  : "border-sol-border bg-sol-surface text-sol-ink hover:-translate-y-px hover:border-sol-violet/50",
+              )}
+            >
+              {o.label}
+            </button>
+          );
+        })}
+      </div>
+    );
+  }
   return (
     <div
       role="radiogroup"
