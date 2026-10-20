@@ -177,7 +177,7 @@
      (section 8) — a radial wash, not a base-color shift, so it reads as
      atmosphere rather than muddying the navy. */
   --workspace-green-glow: oklch(0.5 0.1 155.5 / 10%);
-  --workspace-violet-glow: oklch(0.55 0.16 292.7 / 8%);
+  --workspace-violet-glow: rgb(49 94 219 / 8%);
 
   /* Sol/mentor brand violet — was 3 slightly different hand-rolled oklch
      literals scattered across dashboard components; consolidated into one

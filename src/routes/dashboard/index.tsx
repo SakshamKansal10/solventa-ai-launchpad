@@ -167,48 +167,15 @@ function NoConsultation() {
 function IdeasReady({ flagshipId, readOnly }: { flagshipId: string; readOnly: boolean }) {
   const { t } = useLocale();
   const founder = useFounderState();
-  const invalidate = useInvalidateFounder();
-  const briefs = founder.data!.briefs;
-
-  const choose = useMutation({
-    mutationFn: (opportunityId: string) => chooseDirection({ data: { opportunityId } }),
-    onSuccess: async () => {
-      await invalidate();
-      toast.success(t("cc.chosen.toast"));
-    },
-    onError: (err) => {
-      console.error("[command-center] choose failed:", err);
-      toast.error(t("cc.chosen.error"));
-    },
-  });
-
+  const { briefs, direction } = founder.data!;
   const flagship = briefs[flagshipId];
   if (!flagship) return <NoConsultation />;
+  void readOnly;
 
   return (
     <>
-      <PageHeader title={t("cc.a.title")} subtitle={t("cc.a.subtitle")} />
-      <FlagshipCard
-        brief={flagship}
-        readOnly={readOnly}
-        disabled={choose.isPending}
-        choosing={choose.isPending}
-        onChoose={() => choose.mutate(flagshipId)}
-      />
-      {!readOnly && (
-        <div className="flex flex-col items-start gap-2">
-          <LinkButton
-            to="/dashboard/opportunities"
-            variant="soft"
-            size="lg"
-            data-testid="explore-more"
-          >
-            <Compass className="size-5" aria-hidden="true" />
-            {t("cc.exploreMore")}
-          </LinkButton>
-          <p className="text-[0.9375rem] text-sol-secondary">{t("cc.exploreMore.hint")}</p>
-        </div>
-      )}
+      <PageHeader title={t("cc2.a.title")} subtitle={t("cc2.a.subtitle")} />
+      <FlagshipCard brief={flagship} compareCount={direction.viewedIds.length} />
     </>
   );
 }
@@ -242,28 +209,39 @@ function DirectionSelected({
   const assessment = detail.data?.fit.assessment ?? null;
 
   // Where the founder is: direction chosen, roadmap next — then week 1, evidence, adapt.
+  // Where the founder really is — nothing after the chosen direction exists yet.
   const steps: PathStep[] = [
-    { id: "direction", label: t("cc.path.direction"), state: "done", note: t("cc.path.chosen") },
+    { id: "direction", label: t("cc2.step.direction"), state: "done", note: t("cc2.step.chosen") },
     {
       id: "roadmap",
-      label: t("cc.b.step.roadmap"),
+      label: t("cc2.step.roadmap"),
       state: "current",
       busy: building,
       warn: failed,
       note: building
-        ? t("cc.b.step.building")
+        ? t("cc2.step.building")
         : failed
-          ? t("cc.b.step.failed")
-          : t("cc.path.state.current"),
+          ? t("cc2.step.failed")
+          : t("cc2.step.notBuilt"),
     },
-    { id: "week1", label: t("common.weekN", { n: "01" }), state: "future" },
-    { id: "evidence", label: t("cc.b.step.evidence"), state: "future" },
-    { id: "adapt", label: t("howItWorks.step5.title"), state: "future" },
+    {
+      id: "week1",
+      label: t("cc2.step.firstMission"),
+      state: "future",
+      note: t("cc2.step.notStarted"),
+    },
+    {
+      id: "evidence",
+      label: t("cc2.step.evidence"),
+      state: "future",
+      note: t("cc2.step.noEvidence"),
+    },
+    { id: "adapt", label: t("cc2.step.adapt"), state: "future", note: t("cc2.step.afterEvidence") },
   ];
 
   return (
     <>
-      <PageHeader title={t("cc.b.title")} />
+      <PageHeader title={t("cc2.b.title")} subtitle={t("cc2.b.subtitle")} />
 
       <IdeaHero
         id={opportunityId}
@@ -274,8 +252,14 @@ function DirectionSelected({
         actions={
           <>
             {!readOnly && (
-              <Button size="md" onClick={goBuild}>
-                {building ? t("cc.b.viewProgress") : t("cc.hero.continue")}
+              <Button size="md" onClick={goBuild} data-testid="build-roadmap">
+                {building
+                  ? t("cc.b.viewProgress")
+                  : failed
+                    ? t("common.retry")
+                    : hasArchivedRoadmap
+                      ? t("cc.b.resumeCta")
+                      : t("cc.b.buildCta")}
                 <ArrowRight className="size-4" aria-hidden="true" />
               </Button>
             )}
@@ -285,7 +269,7 @@ function DirectionSelected({
               variant="secondary"
               size="md"
             >
-              {t("cc.b.openOpportunity")}
+              {t("cc2.b.review")}
             </LinkButton>
           </>
         }
@@ -295,14 +279,6 @@ function DirectionSelected({
         className="relative overflow-hidden rounded-[24px] bg-workspace p-6 sm:p-8"
         data-testid="next-step"
       >
-        <div
-          className="pointer-events-none absolute inset-0"
-          style={{
-            background:
-              "radial-gradient(ellipse 480px 320px at 85% -10%, var(--workspace-violet-glow), transparent 70%)",
-          }}
-          aria-hidden="true"
-        />
         {failed && (
           <div
             role="alert"
@@ -324,48 +300,13 @@ function DirectionSelected({
           <StepPath steps={steps} ariaLabel={t("cc.b.step.aria")} testId="build-path" />
         </div>
 
-        <div className="relative mt-6 flex flex-wrap items-center justify-between gap-4 border-t border-workspace-border pt-6">
-          <p className="min-w-0 flex-1 basis-60 text-[0.9375rem] text-workspace-muted">
-            {hasArchivedRoadmap ? t("cc.b.resumeHint") : t("cc.b.hint")}
-          </p>
-          <div className="flex w-full flex-wrap gap-3 sm:w-auto">
-            {!readOnly && (
-              <Button
-                size="lg"
-                variant="champagne"
-                onClick={goBuild}
-                data-testid="build-roadmap"
-                className="w-full sm:w-auto"
-              >
-                {building
-                  ? t("cc.b.viewProgress")
-                  : failed
-                    ? t("common.retry")
-                    : hasArchivedRoadmap
-                      ? t("cc.b.resumeCta")
-                      : t("cc.b.buildCta")}
-                <ArrowRight className="size-4" aria-hidden="true" />
-              </Button>
-            )}
-            <LinkButton
-              to="/dashboard/opportunities/$id"
-              params={{ id: opportunityId }}
-              variant="secondary"
-              size="lg"
-              className="w-full border-workspace-border bg-transparent text-workspace-foreground hover:border-sol-cobalt/50 sm:w-auto"
-            >
-              {t("cc.b.openOpportunity")}
-            </LinkButton>
-          </div>
-        </div>
+        <p className="relative mt-6 border-t border-workspace-border pt-6 text-[0.9375rem] text-workspace-muted">
+          {hasArchivedRoadmap ? t("cc.b.resumeHint") : t("cc2.b.validation")}
+        </p>
       </section>
 
-      <Card className="flex flex-col gap-6 p-6 sm:p-8" data-testid="chosen-direction">
-        <Eyebrow>{t("cc.b.chosen")}</Eyebrow>
-        <BriefChain brief={brief} />
-      </Card>
       <Card className="flex flex-col gap-4 p-6" data-testid="chosen-fit">
-        <h2 className="sol-eyebrow">{t("cc.oppPulse.heading")}</h2>
+        <h2 className="sol-h-sm">{t("cc2.fit.heading")}</h2>
         {detail.isPending ? (
           <Skeleton className="h-28" />
         ) : assessment ? (
@@ -688,7 +629,7 @@ function NextMove({
                       done
                         ? "border-sol-champagne bg-sol-champagne text-sol-ink"
                         : current
-                          ? "border-sol-cobalt bg-sol-cobalt text-white shadow-[0_0_0_5px_rgba(155,130,255,0.18)]"
+                          ? "border-sol-cobalt bg-sol-cobalt text-white shadow-[0_0_0_5px_rgba(49,94,219,0.18)]"
                           : "border-sol-border-strong bg-sol-surface text-sol-secondary",
                     )}
                   >

@@ -467,7 +467,7 @@ function PhaseDetailsPanel({
                     className={cn(
                       "flex size-7 items-center justify-center rounded-full border text-[0.6875rem] font-semibold transition-all duration-300 disabled:cursor-default",
                       w.id === view.currentWeekId
-                        ? "border-sol-cobalt bg-sol-cobalt text-white shadow-[0_0_0_4px_rgba(118,85,245,0.16)]"
+                        ? "border-sol-cobalt bg-sol-cobalt text-white shadow-[0_0_0_4px_rgba(49,94,219,0.16)]"
                         : w.state === "completed"
                           ? "border-sol-champagne bg-sol-champagne text-sol-ink"
                           : w.state === "locked"

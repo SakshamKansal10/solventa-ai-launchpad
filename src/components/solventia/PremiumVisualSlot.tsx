@@ -51,7 +51,7 @@ export function PremiumVisualSlot({ image, alt = "", caption, className }: Premi
       )}
       style={{
         background:
-          "radial-gradient(ellipse 70% 60% at 30% 20%, rgba(114,87,216,.10), transparent 65%), radial-gradient(ellipse 60% 55% at 80% 85%, rgba(197,163,106,.09), transparent 60%), var(--sol-page)",
+          "radial-gradient(ellipse 70% 60% at 30% 20%, rgba(49,94,219,.10), transparent 65%), radial-gradient(ellipse 60% 55% at 80% 85%, rgba(197,163,106,.09), transparent 60%), var(--sol-page)",
       }}
       aria-hidden="true"
     >

@@ -123,7 +123,7 @@ export function ExecutionPath({
                       done
                         ? "border-sol-champagne bg-sol-champagne text-sol-navy"
                         : isCurrent
-                          ? "border-sol-cobalt bg-sol-cobalt text-white shadow-[0_0_0_4px_rgba(114,87,216,0.28)]"
+                          ? "border-sol-cobalt bg-sol-cobalt text-white shadow-[0_0_0_4px_rgba(49,94,219,0.28)]"
                           : "border-white/25 bg-transparent text-white/55",
                     )}
                   >

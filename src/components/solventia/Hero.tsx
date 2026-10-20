@@ -221,7 +221,7 @@ export function Hero() {
         className="pointer-events-none absolute inset-0"
         style={{
           background:
-            "radial-gradient(ellipse 560px 460px at 42% 38%, rgba(114,87,216,0.12), transparent 70%)",
+            "radial-gradient(ellipse 560px 460px at 42% 38%, rgba(49,94,219,0.12), transparent 70%)",
         }}
         aria-hidden="true"
       />

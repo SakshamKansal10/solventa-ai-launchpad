@@ -195,7 +195,7 @@ export function FounderSignal() {
         className="relative mx-auto mt-12 max-w-[1240px] rounded-[32px] border border-sol-border p-5 sm:p-8 lg:p-10"
         style={{
           background:
-            "radial-gradient(circle at 50% 50%, rgba(114,87,216,.10), rgba(114,87,216,.03) 30%, transparent 52%), linear-gradient(135deg, #FFFDFB 0%, #F8F2E9 100%)",
+            "radial-gradient(circle at 50% 50%, rgba(49,94,219,.10), rgba(49,94,219,.03) 30%, transparent 52%), linear-gradient(135deg, #FFFDFB 0%, #F8F2E9 100%)",
         }}
         data-testid="founder-signal-demo"
         data-phase={phase}
@@ -260,7 +260,7 @@ export function FounderSignal() {
                 key={`in-${i}`}
                 d={p.d}
                 fill="none"
-                stroke="rgba(114,87,216,0.42)"
+                stroke="rgba(49,94,219,0.42)"
                 strokeWidth={1.6}
                 strokeLinecap="round"
                 vectorEffect="non-scaling-stroke"
@@ -368,7 +368,7 @@ export function FounderSignal() {
               <motion.div
                 animate={pulsing && !reduceMotion ? { scale: [1, 1.08, 1] } : { scale: 1 }}
                 transition={{ duration: 0.6, ease: "easeInOut" }}
-                className="relative flex size-full items-center justify-center rounded-full border border-sol-cobalt/35 bg-sol-hp-surface shadow-[0_18px_50px_rgba(114,87,216,0.16)]"
+                className="relative flex size-full items-center justify-center rounded-full border border-sol-cobalt/35 bg-sol-hp-surface shadow-[0_18px_50px_rgba(49,94,219,0.16)]"
                 data-testid="signal-node"
               >
                 <span

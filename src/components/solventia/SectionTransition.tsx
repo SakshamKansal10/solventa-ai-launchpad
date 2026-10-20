@@ -26,7 +26,7 @@ export function SectionTransition({
           <path
             d="M -20,10 C 300,60 900,-10 1220,40"
             fill="none"
-            stroke={line === "violet" ? "rgba(114,87,216,.08)" : "rgba(197,163,106,.09)"}
+            stroke={line === "violet" ? "rgba(49,94,219,.08)" : "rgba(197,163,106,.09)"}
             strokeWidth={1}
           />
         </svg>

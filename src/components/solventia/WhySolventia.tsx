@@ -106,7 +106,7 @@ export function WhySolventia() {
           </div>
 
           {/* Ask Sol */}
-          <div className="flex flex-col rounded-[28px] border border-sol-cobalt/30 bg-sol-hp-surface p-6 shadow-[0_18px_50px_rgba(114,87,216,0.12)] sm:p-7">
+          <div className="flex flex-col rounded-[28px] border border-sol-cobalt/30 bg-sol-hp-surface p-6 shadow-[0_18px_50px_rgba(49,94,219,0.12)] sm:p-7">
             <p className="flex items-center gap-2 text-[14px] font-semibold uppercase tracking-[0.12em] text-sol-cobalt-deep">
               <img src={mark} alt="" width={298} height={436} className="h-5 w-auto" />
               {t("story.ask.eyebrow")}

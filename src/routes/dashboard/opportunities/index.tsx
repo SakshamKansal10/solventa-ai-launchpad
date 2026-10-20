@@ -19,7 +19,7 @@ import { useState, type ReactNode } from "react";
 import { cn } from "@/lib/utils";
 
 import { OpportunityPhoto, useOpportunityImage } from "@/components/founder/OpportunityImage";
-import { FitPill } from "@/components/founder/OpportunityCards";
+import { directionIcon, FitPill } from "@/components/founder/OpportunityCards";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import {
   Button,
@@ -140,6 +140,7 @@ function OpportunityRow({
     );
   }
 
+  const Icon = directionIcon(brief.category, brief.title);
   return (
     <Card
       as="article"
@@ -154,7 +155,7 @@ function OpportunityRow({
           {image.url ? (
             <img src={image.url} alt="" className="size-full object-cover" draggable={false} />
           ) : (
-            <Lightbulb className="size-6" strokeWidth={1.75} aria-hidden="true" />
+            <Icon className="size-6" strokeWidth={1.75} aria-hidden="true" />
           )}
         </span>
         <div className="min-w-0 flex-1">

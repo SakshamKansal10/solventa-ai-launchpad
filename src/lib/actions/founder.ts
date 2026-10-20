@@ -31,6 +31,8 @@ export interface OpportunityBrief {
   createdAt: string;
   /** The canonical founder-fit label (src/lib/fit/model.ts) — the same one every screen shows. */
   fit: FitLabel;
+  /** Plain-words category ("local service", "digital product") — picks the direction's icon. */
+  category: string | null;
 }
 
 export interface FounderState {
@@ -58,10 +60,11 @@ interface OppRow {
   revenue: string | null;
   why: unknown;
   signals: FitFactors | null;
+  category: string | null;
 }
 
 const BASE_COLUMNS =
-  "id, business_dna_id, title, one_liner, who_for, status, fit_score, batch_number, created_at, customer:candidate->>customer, problem:candidate->>problem, solution:candidate->>solution, revenue:candidate->>revenuePath, why:candidate->whyThisFounder, signals:candidate->fitSignals";
+  "id, business_dna_id, title, one_liner, who_for, status, fit_score, batch_number, created_at, customer:candidate->>customer, problem:candidate->>problem, solution:candidate->>solution, revenue:candidate->>revenuePath, why:candidate->whyThisFounder, signals:candidate->fitSignals, category:candidate->>category";
 
 /** Reads every opportunity as a light row. `opportunity_index` (migration 0009)
  * is requested first and dropped if the column doesn't exist, so a database
@@ -100,6 +103,7 @@ function toBrief(r: OppRow, profile: NormalizedProfile | null): OpportunityBrief
     batch: r.batch_number,
     createdAt: r.created_at,
     fit: profile && r.signals ? assessFit(profile, r.signals).label : "provisional",
+    category: r.category ?? null,
   };
 }
 

@@ -1,6 +1,23 @@
 import type { ReactNode } from "react";
 import { motion } from "motion/react";
-import { Flame, Rocket, Sparkles, Users, type LucideIcon } from "lucide-react";
+import {
+  ArrowRight,
+  Compass,
+  Flame,
+  GraduationCap,
+  HeartPulse,
+  Monitor,
+  Newspaper,
+  Package,
+  Rocket,
+  Sparkles,
+  Store,
+  Truck,
+  Users,
+  UtensilsCrossed,
+  Wrench,
+  type LucideIcon,
+} from "lucide-react";
 
 import type { OpportunityBrief } from "@/lib/actions/founder";
 import { useLocale } from "@/lib/i18n/LocaleProvider";
@@ -49,6 +66,24 @@ export function BriefChain({ brief }: { brief: OpportunityBrief }) {
       ))}
     </ol>
   );
+}
+
+/** One icon per KIND of direction, from its category — never the same icon for every idea. */
+const CATEGORY_ICONS: [RegExp, LucideIcon][] = [
+  [/newsletter|content|media|blog|video|podcast|course/i, Newspaper],
+  [/tutor|education|teach|coaching|school|learning/i, GraduationCap],
+  [/health|clinic|fitness|wellness|care/i, HeartPulse],
+  [/food|restaurant|catering|bakery|kitchen|agri/i, UtensilsCrossed],
+  [/delivery|logistic|transport|courier|supply|procure|broker|trading/i, Truck],
+  [/digital|software|app|web|online|saas|tech/i, Monitor],
+  [/product|template|goods|retail|e-?commerce|craft/i, Package],
+  [/repair|install|maintenance|service/i, Wrench],
+  [/shop|store|local/i, Store],
+];
+
+export function directionIcon(category: string | null | undefined, title = ""): LucideIcon {
+  const text = `${category ?? ""} ${title}`;
+  return CATEGORY_ICONS.find(([re]) => re.test(text))?.[1] ?? Compass;
 }
 
 export function FitPill({ fit }: { fit: OpportunityBrief["fit"] }) {
@@ -103,24 +138,22 @@ export function BriefFacts({
   );
 }
 
+/** The Command Center's recommended direction: what it is, why it may fit, how it
+ * would work — and one next step (review it), with a way to compare every direction.
+ * Choosing happens after review, on the direction itself. */
 export function FlagshipCard({
   brief: raw,
-  onChoose,
-  choosing,
-  disabled,
-  readOnly,
+  compareCount,
 }: {
   brief: OpportunityBrief;
-  onChoose: () => void;
-  choosing: boolean;
-  disabled: boolean;
-  readOnly: boolean;
+  /** How many directions this consultation produced (for "Compare all N"). */
+  compareCount: number;
 }) {
   const { t } = useLocale();
   const brief = useTranslatedBrief(raw) ?? raw;
   return (
     <article
-      className="relative overflow-hidden rounded-[28px] border border-sol-champagne/55 bg-sol-surface p-6 shadow-[0_28px_70px_rgba(114,87,216,0.14)] sm:p-10"
+      className="relative overflow-hidden rounded-[28px] border border-sol-border bg-sol-surface p-6 shadow-[0_24px_60px_rgba(16,28,50,0.08)] sm:p-10"
       data-testid="flagship-card"
       aria-labelledby="flagship-title"
     >
@@ -128,7 +161,7 @@ export function FlagshipCard({
         className="pointer-events-none absolute inset-0"
         style={{
           background:
-            "radial-gradient(ellipse 520px 300px at 92% -8%, rgba(114,87,216,0.1), transparent 70%), radial-gradient(ellipse 420px 260px at -4% 108%, rgba(195,160,100,0.14), transparent 70%)",
+            "radial-gradient(ellipse 520px 300px at 92% -8%, rgba(49,94,219,0.1), transparent 70%), radial-gradient(ellipse 420px 260px at -4% 108%, rgba(195,160,100,0.14), transparent 70%)",
         }}
         aria-hidden="true"
       />
@@ -139,10 +172,18 @@ export function FlagshipCard({
       <div className="relative flex flex-wrap items-center justify-between gap-3">
         <p className="sol-eyebrow flex items-center gap-2">
           <Sparkles className="size-4 text-sol-champagne-deep" aria-hidden="true" />
-          {t("cc.flagshipLabel")}
+          {t("cc2.recommended")}
         </p>
         <FitPill fit={brief.fit} />
       </div>
+      {brief.fit === "provisional" && (
+        <p
+          className="relative mt-3 text-[0.9375rem] text-sol-secondary"
+          data-testid="flagship-preliminary"
+        >
+          {t("cc2.preliminary")}
+        </p>
+      )}
       <h2
         id="flagship-title"
         className="relative mt-4 max-w-[24ch] font-display text-[clamp(2.25rem,1.7rem+2vw,3.25rem)] font-semibold leading-[1.06] text-sol-ink"
@@ -152,40 +193,43 @@ export function FlagshipCard({
       <div className="relative mt-9">
         <BriefChain brief={brief} />
       </div>
-      {brief.whyFit[0] && (
-        <p
-          className="relative mt-8 flex gap-3 rounded-2xl border-l-4 border-sol-champagne bg-sol-champagne-soft/50 px-5 py-4 text-[1.0625rem] leading-snug text-sol-ink"
-          data-testid="flagship-why"
-        >
-          <Sparkles className="mt-0.5 size-5 shrink-0 text-sol-champagne-deep" aria-hidden="true" />
-          <span className="min-w-0">
-            <span className="sr-only">{t("opp.fact.whyFit")}: </span>
-            {brief.whyFit[0]}
-          </span>
-        </p>
+      {brief.whyFit.length > 0 && (
+        <div className="relative mt-8" data-testid="flagship-why">
+          <p className="text-[0.875rem] font-semibold text-sol-secondary">{t("cc2.whyHeading")}</p>
+          <ul className="mt-3 flex flex-col gap-2.5">
+            {brief.whyFit.map((reason) => (
+              <li key={reason} className="flex gap-3 text-[1.0625rem] leading-snug text-sol-ink">
+                <span
+                  className="mt-2 size-1.5 shrink-0 rounded-full bg-sol-champagne"
+                  aria-hidden="true"
+                />
+                <span className="min-w-0">{reason}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
       )}
       <div className="relative mt-9 flex flex-wrap items-center gap-3">
-        {!readOnly && (
-          <Button
-            variant="primary"
-            size="lg"
-            onClick={onChoose}
-            loading={choosing}
-            disabled={disabled}
-            data-testid="flagship-choose"
-          >
-            {t("cc.chooseDirection")}
-          </Button>
-        )}
         <LinkButton
           to="/dashboard/opportunities/$id"
           params={{ id: brief.id }}
-          variant={readOnly ? "primary" : "secondary"}
+          variant="primary"
           size="lg"
           data-testid="flagship-explore"
         >
-          {t("cc.exploreDirection")}
+          {t("cc2.review")}
+          <ArrowRight className="size-4" aria-hidden="true" />
         </LinkButton>
+        {compareCount > 1 && (
+          <LinkButton
+            to="/dashboard/opportunities"
+            variant="secondary"
+            size="lg"
+            data-testid="explore-more"
+          >
+            {t("cc2.compare", { n: compareCount })}
+          </LinkButton>
+        )}
       </div>
     </article>
   );

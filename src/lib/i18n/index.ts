@@ -11,6 +11,7 @@ import settings from "./messages/settings";
 import pages from "./messages/pages";
 import story from "./messages/story";
 import fit from "./messages/fit";
+import cc from "./messages/cc";
 import { type Locale } from "./locale";
 
 /** Every domain module exports `{ en, hi }` with `hi` typed as
@@ -30,6 +31,7 @@ const modules = [
   pages,
   story,
   fit,
+  cc,
 ] as const;
 
 type Module = (typeof modules)[number];

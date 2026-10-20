@@ -135,7 +135,7 @@ export function StepScale({
                   className={cn(
                     "flex items-center justify-center rounded-full border-2 transition-all duration-200",
                     selected
-                      ? "size-8 border-sol-cobalt bg-sol-cobalt text-white shadow-[0_6px_16px_rgba(114,87,216,0.35)]"
+                      ? "size-8 border-sol-cobalt bg-sol-cobalt text-white shadow-[0_6px_16px_rgba(49,94,219,0.35)]"
                       : passed
                         ? "size-4 border-sol-cobalt bg-sol-cobalt"
                         : "size-4 border-sol-border-strong bg-sol-surface group-hover:border-sol-cobalt/60",
@@ -230,7 +230,7 @@ export function SegmentedScale({
               className={cn(
                 "inline-flex min-h-12 items-center justify-center rounded-2xl border px-5 text-center text-[1rem] font-medium transition-all duration-[180ms]",
                 selected
-                  ? "border-sol-cobalt bg-sol-cobalt text-white shadow-[0_6px_16px_rgba(114,87,216,0.25)]"
+                  ? "border-sol-cobalt bg-sol-cobalt text-white shadow-[0_6px_16px_rgba(49,94,219,0.25)]"
                   : "border-sol-border bg-sol-surface text-sol-ink hover:-translate-y-px hover:border-sol-cobalt/50",
               )}
             >
@@ -265,7 +265,7 @@ export function SegmentedScale({
             className={cn(
               "flex min-h-[4.75rem] flex-col items-center justify-center gap-2 rounded-2xl px-2 py-3 text-center text-[0.9375rem] font-semibold leading-tight transition-all duration-[180ms]",
               selected
-                ? "bg-sol-cobalt text-white shadow-[0_8px_20px_rgba(114,87,216,0.3)]"
+                ? "bg-sol-cobalt text-white shadow-[0_8px_20px_rgba(49,94,219,0.3)]"
                 : "text-sol-ink hover:bg-sol-surface",
             )}
           >
@@ -341,7 +341,7 @@ export function ChipCloud({
         className={cn(
           "inline-flex min-h-11 items-center gap-2 rounded-full border px-4 text-[1rem] font-medium transition-all duration-[180ms]",
           selected
-            ? "border-sol-cobalt bg-sol-cobalt text-white shadow-[0_6px_16px_rgba(114,87,216,0.25)]"
+            ? "border-sol-cobalt bg-sol-cobalt text-white shadow-[0_6px_16px_rgba(49,94,219,0.25)]"
             : "border-sol-border bg-sol-surface text-sol-ink hover:-translate-y-px hover:border-sol-cobalt/50",
         )}
       >
@@ -439,7 +439,7 @@ export function DirectionCards({
             className={cn(
               "group flex min-h-[4.5rem] items-center gap-4 rounded-2xl border p-4 text-left transition-all duration-[180ms]",
               selected
-                ? "border-sol-cobalt bg-sol-cobalt-soft shadow-[0_10px_26px_rgba(114,87,216,0.16)]"
+                ? "border-sol-cobalt bg-sol-cobalt-soft shadow-[0_10px_26px_rgba(49,94,219,0.16)]"
                 : "border-sol-border bg-sol-surface hover:-translate-y-px hover:border-sol-cobalt/45",
             )}
           >

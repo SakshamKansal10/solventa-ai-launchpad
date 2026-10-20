@@ -105,7 +105,7 @@ export function HeroIntelligenceNetwork() {
       <defs>
         <linearGradient id="sol-hero-network-line" x1="0%" y1="0%" x2="100%" y2="0%">
           <stop offset="0%" stopColor="rgba(197,163,106,0.5)" />
-          <stop offset="100%" stopColor="rgba(114,87,216,0.4)" />
+          <stop offset="100%" stopColor="rgba(49,94,219,0.4)" />
         </linearGradient>
       </defs>
     </svg>

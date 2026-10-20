@@ -116,7 +116,7 @@ export function HowItWorks() {
                       className={cn(
                         "relative flex size-full items-center justify-center rounded-full border-2 transition-colors duration-300",
                         reached
-                          ? "border-sol-cobalt bg-sol-cobalt text-white shadow-[0_10px_26px_rgba(114,87,216,0.3)]"
+                          ? "border-sol-cobalt bg-sol-cobalt text-white shadow-[0_10px_26px_rgba(49,94,219,0.3)]"
                           : "border-sol-border-strong bg-sol-hp-surface text-sol-muted",
                       )}
                     >

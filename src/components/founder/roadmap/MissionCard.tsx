@@ -141,7 +141,7 @@ export function MissionCard({
           done
             ? "sol-complete-glow border-sol-champagne bg-gradient-to-br from-[#f3e2bd] to-sol-champagne text-sol-ink"
             : inProgress
-              ? "border-sol-cobalt bg-sol-cobalt text-white shadow-[0_0_0_5px_rgba(118,85,245,0.14)]"
+              ? "border-sol-cobalt bg-sol-cobalt text-white shadow-[0_0_0_5px_rgba(49,94,219,0.14)]"
               : "border-sol-cobalt/30 bg-sol-surface text-sol-cobalt-deep",
         )}
       >
@@ -156,7 +156,7 @@ export function MissionCard({
         className={cn(
           "relative rounded-2xl transition-colors duration-300",
           open && !done
-            ? "bg-[linear-gradient(135deg,#faf7ff_0%,#fffdfb_100%)] p-4 shadow-[0_0_0_1px_rgba(118,85,245,0.2),0_14px_34px_-24px_rgba(88,64,185,0.5)] sm:p-5"
+            ? "bg-[linear-gradient(135deg,#faf7ff_0%,#fffdfb_100%)] p-4 shadow-[0_0_0_1px_rgba(49,94,219,0.2),0_14px_34px_-24px_rgba(88,64,185,0.5)] sm:p-5"
             : "px-1 py-1.5 hover:bg-sol-cobalt-ultralight/60 sm:px-3",
         )}
       >

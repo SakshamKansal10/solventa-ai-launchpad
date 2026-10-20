@@ -54,7 +54,7 @@ function FindMyBusinessIdeaPage() {
             className="pointer-events-none absolute inset-x-0 top-0 mx-auto h-[320px] max-w-[900px]"
             style={{
               background:
-                "radial-gradient(ellipse 500px 320px at 50% 25%, rgba(114,87,216,.08), transparent 70%)",
+                "radial-gradient(ellipse 500px 320px at 50% 25%, rgba(49,94,219,.08), transparent 70%)",
             }}
             aria-hidden="true"
           />

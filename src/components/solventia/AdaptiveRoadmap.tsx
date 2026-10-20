@@ -202,7 +202,7 @@ export function AdaptiveRoadmap() {
                   aria-hidden="true"
                   className="absolute inset-0 rounded-full"
                   style={{
-                    background: "radial-gradient(circle, rgba(114,87,216,.2), transparent 68%)",
+                    background: "radial-gradient(circle, rgba(49,94,219,.2), transparent 68%)",
                   }}
                   animate={
                     pulsing && !reduceMotion

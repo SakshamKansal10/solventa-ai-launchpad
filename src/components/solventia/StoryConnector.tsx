@@ -44,7 +44,7 @@ export function StoryConnector({
       {!reduceMotion && (
         <motion.span
           aria-hidden="true"
-          className="absolute left-1/2 top-0 -ml-[3.5px] size-[7px] rounded-full bg-sol-cobalt shadow-[0_0_0_4px_rgba(114,87,216,0.18),0_0_14px_rgba(114,87,216,0.55)]"
+          className="absolute left-1/2 top-0 -ml-[3.5px] size-[7px] rounded-full bg-sol-cobalt shadow-[0_0_0_4px_rgba(49,94,219,0.18),0_0_14px_rgba(49,94,219,0.55)]"
           style={{ y: travel, opacity: glow }}
         />
       )}

@@ -107,7 +107,7 @@ export function ProofDemo() {
         className="pointer-events-none absolute inset-0"
         style={{
           background:
-            "radial-gradient(ellipse 720px 420px at 30% 0%, rgba(114,87,216,0.20), transparent 70%), radial-gradient(ellipse 520px 360px at 90% 100%, rgba(195,160,100,0.12), transparent 70%)",
+            "radial-gradient(ellipse 720px 420px at 30% 0%, rgba(49,94,219,0.20), transparent 70%), radial-gradient(ellipse 520px 360px at 90% 100%, rgba(195,160,100,0.12), transparent 70%)",
         }}
         aria-hidden="true"
       />

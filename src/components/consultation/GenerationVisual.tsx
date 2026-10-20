@@ -88,7 +88,7 @@ export function GenerationVisual() {
               />
             </>
           )}
-          <div className="relative flex size-[84px] items-center justify-center rounded-full border border-sol-cobalt/40 bg-sol-surface shadow-[0_14px_36px_rgba(114,87,216,0.16)]">
+          <div className="relative flex size-[84px] items-center justify-center rounded-full border border-sol-cobalt/40 bg-sol-surface shadow-[0_14px_36px_rgba(49,94,219,0.16)]">
             <span className="absolute inset-2 rounded-full border border-dashed border-sol-champagne/55" />
             <BrandMark height={36} className="relative" />
           </div>
