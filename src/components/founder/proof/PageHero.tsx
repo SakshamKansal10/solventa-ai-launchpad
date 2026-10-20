@@ -4,7 +4,7 @@ import { Gem3D } from "@/components/founder/three/Gem3D";
 import type { GemVariant } from "@/components/founder/three/GemCanvas";
 import { cn } from "@/lib/utils";
 
-/** The shared premium page header: an ivory-to-lavender atmosphere panel with
+/** The shared premium page header: a white-to-pearl atmosphere panel with
  * the title, a short line, an optional action, optional facts underneath and
  * (optionally) one small decorative 3D object. */
 export function PageHero({

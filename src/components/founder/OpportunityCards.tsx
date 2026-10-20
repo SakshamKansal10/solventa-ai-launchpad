@@ -23,7 +23,7 @@ export function BriefChain({ brief }: { brief: OpportunityBrief }) {
     <ol className="relative grid gap-5 md:grid-cols-3 md:gap-4" data-testid="brief-chain">
       <motion.span
         aria-hidden="true"
-        className="absolute left-[17%] right-[17%] top-[27px] hidden h-0.5 origin-left rounded-full bg-gradient-to-r from-sol-champagne via-sol-violet to-sol-champagne md:block"
+        className="absolute left-[17%] right-[17%] top-[27px] hidden h-0.5 origin-left rounded-full bg-gradient-to-r from-sol-champagne via-sol-cobalt to-sol-champagne md:block"
         initial={{ scaleX: 0 }}
         animate={{ scaleX: 1 }}
         transition={{ duration: 0.7, delay: 0.15 }}
@@ -37,7 +37,7 @@ export function BriefChain({ brief }: { brief: OpportunityBrief }) {
           className="relative flex gap-4 md:flex-col md:items-center md:text-center"
         >
           <span className="relative z-10 flex size-[54px] shrink-0 items-center justify-center rounded-full border border-sol-champagne/60 bg-sol-surface shadow-[0_8px_20px_rgba(23,26,39,0.08)]">
-            <n.icon className="size-6 text-sol-violet-deep" aria-hidden="true" />
+            <n.icon className="size-6 text-sol-cobalt-deep" aria-hidden="true" />
           </span>
           <div className="min-w-0">
             <p className="text-[0.875rem] font-bold uppercase tracking-[0.1em] text-sol-champagne-deep">
@@ -133,7 +133,7 @@ export function FlagshipCard({
         aria-hidden="true"
       />
       <div
-        className="absolute inset-y-0 left-0 w-1.5 bg-gradient-to-b from-sol-violet to-sol-champagne"
+        className="absolute inset-y-0 left-0 w-1.5 bg-gradient-to-b from-sol-cobalt to-sol-champagne"
         aria-hidden="true"
       />
       <div className="relative flex flex-wrap items-center justify-between gap-3">

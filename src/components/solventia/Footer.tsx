@@ -78,7 +78,7 @@ export function Footer() {
             <p className="text-[0.9375rem] text-sol-secondary">{t("footer.contactPrompt")}</p>
             <a
               href={`mailto:${CONTACT_EMAIL}`}
-              className="flex items-center gap-2 text-[1rem] font-medium text-sol-ink transition-colors hover:text-sol-violet-deep sm:justify-end"
+              className="flex items-center gap-2 text-[1rem] font-medium text-sol-ink transition-colors hover:text-sol-cobalt-deep sm:justify-end"
             >
               <Mail className="size-4" aria-hidden="true" />
               {CONTACT_EMAIL}

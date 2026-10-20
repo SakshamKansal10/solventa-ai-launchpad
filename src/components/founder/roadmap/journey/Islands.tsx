@@ -13,8 +13,8 @@ import {
 import type { JourneyLayout, PhaseVisual } from "./layout";
 
 const C = {
-  violet: "#7655f5",
-  violetGlow: "#9b82ff",
+  cobalt: "#315edb",
+  cobaltGlow: "#8fa9ef",
   gold: "#d9b779",
   wall: "#fbf8f3",
 };
@@ -47,7 +47,7 @@ function useMaterials() {
       tree: new THREE.MeshStandardMaterial({ color: "#ffffff", roughness: 0.9, flatShading: true }),
       glass: new THREE.MeshPhysicalMaterial({
         color: "#a994ff",
-        emissive: C.violetGlow,
+        emissive: C.cobaltGlow,
         emissiveIntensity: 0.2,
         roughness: 0.1,
         transparent: true,
@@ -55,8 +55,8 @@ function useMaterials() {
         clearcoat: 1,
       }),
       crystal: new THREE.MeshPhysicalMaterial({
-        color: C.violet,
-        emissive: C.violetGlow,
+        color: C.cobalt,
+        emissive: C.cobaltGlow,
         emissiveIntensity: 0.3,
         roughness: 0.1,
         clearcoat: 1,
@@ -387,7 +387,7 @@ function Island({
   const ringMat = useMemo(
     () =>
       new THREE.MeshBasicMaterial({
-        color: C.violetGlow,
+        color: C.cobaltGlow,
         transparent: true,
         opacity: 0,
         depthWrite: false,
@@ -513,7 +513,7 @@ function Island({
         </mesh>
         <pointLight
           ref={glow}
-          color={C.violetGlow}
+          color={C.cobaltGlow}
           position={[0, 1.2, 0.6]}
           intensity={0}
           distance={5.5}
@@ -579,7 +579,7 @@ export function Islands({
   );
 }
 
-/** A luminous trail through the clouds: pale for the road ahead, violet up to
+/** A luminous trail through the clouds: pale for the road ahead, cobalt up to
  * where the founder is now, with one slow light travelling along it. */
 function Trail({
   layout,

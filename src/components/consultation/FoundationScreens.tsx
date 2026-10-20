@@ -256,7 +256,7 @@ export function LocationScreen() {
                         setShowList(false);
                         setSuggestions([]);
                       }}
-                      className="flex min-h-11 w-full items-center gap-2 px-4 py-2 text-left text-[1rem] text-sol-ink hover:bg-sol-violet-soft"
+                      className="flex min-h-11 w-full items-center gap-2 px-4 py-2 text-left text-[1rem] text-sol-ink hover:bg-sol-cobalt-soft"
                     >
                       <MapPin className="size-4 shrink-0 text-sol-secondary" aria-hidden="true" />
                       {s.displayLabel}
@@ -388,7 +388,7 @@ function InstitutionField() {
               <li key={`${r.name}-${r.country}`} role="option" aria-selected={false}>
                 <button
                   type="button"
-                  className="flex min-h-11 w-full items-center px-4 py-2 text-left text-[1rem] text-sol-ink hover:bg-sol-violet-soft"
+                  className="flex min-h-11 w-full items-center px-4 py-2 text-left text-[1rem] text-sol-ink hover:bg-sol-cobalt-soft"
                   onClick={() => {
                     setQuery(r.name);
                     setAnswer("institutionName", r.name);
@@ -406,7 +406,7 @@ function InstitutionField() {
               <li role="option" aria-selected={false}>
                 <button
                   type="button"
-                  className="flex min-h-11 w-full items-center px-4 py-2 text-left text-[1rem] font-semibold text-sol-violet-deep hover:bg-sol-violet-soft"
+                  className="flex min-h-11 w-full items-center px-4 py-2 text-left text-[1rem] font-semibold text-sol-cobalt-deep hover:bg-sol-cobalt-soft"
                   onClick={() => {
                     const name = query.trim();
                     setAnswer("institutionName", name);
@@ -425,7 +425,7 @@ function InstitutionField() {
           {t("q.institution.searchingIn", { country: L.country(searchCountry) })}{" "}
           <button
             type="button"
-            className="font-semibold text-sol-violet-deep underline-offset-4 hover:underline"
+            className="font-semibold text-sol-cobalt-deep underline-offset-4 hover:underline"
             onClick={() => setChangeCountry((v) => !v)}
           >
             {t("q.institution.otherCountry")}
@@ -586,7 +586,7 @@ export function LanguagesTimeScreen() {
           <button
             type="submit"
             disabled={!custom.trim()}
-            className="h-12 rounded-2xl border border-sol-border bg-sol-surface px-5 text-[1rem] font-semibold text-sol-ink hover:border-sol-violet/45 disabled:opacity-50"
+            className="h-12 rounded-2xl border border-sol-border bg-sol-surface px-5 text-[1rem] font-semibold text-sol-ink hover:border-sol-cobalt/45 disabled:opacity-50"
           >
             {t("common.add")}
           </button>

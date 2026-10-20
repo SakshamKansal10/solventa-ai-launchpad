@@ -13,7 +13,7 @@ import { useLocale } from "@/lib/i18n/LocaleProvider";
 /** One button language for the whole logged-in product:
  *  primary   — navy, the single main action on a surface
  *  secondary — outlined, the alternative
- *  soft      — violet-soft surface + violet border (a noticeable tertiary action)
+ *  soft      — cobalt-soft surface + cobalt border (a noticeable tertiary action)
  *  ghost     — text only
  *  champagne — ivory-to-champagne, the single main action on a dark surface
  * Every one has a visible disabled and loading state. */
@@ -28,10 +28,10 @@ export function buttonClasses(variant: ButtonVariant = "primary", size: ButtonSi
     size === "lg" && "min-h-14 px-8 text-[1.0625rem]",
     variant === "primary" && "bg-sol-navy text-white hover:bg-sol-navy-soft",
     variant === "secondary" &&
-      "border border-sol-border-strong bg-sol-surface text-sol-ink hover:border-sol-violet/50",
+      "border border-sol-border-strong bg-sol-surface text-sol-ink hover:border-sol-cobalt/50",
     variant === "soft" &&
-      "border border-sol-violet/40 bg-sol-violet-soft text-sol-violet-deep hover:border-sol-violet hover:bg-sol-violet-soft/70",
-    variant === "ghost" && "text-sol-violet-deep hover:bg-sol-violet-soft",
+      "border border-sol-cobalt/40 bg-sol-cobalt-soft text-sol-cobalt-deep hover:border-sol-cobalt hover:bg-sol-cobalt-soft/70",
+    variant === "ghost" && "text-sol-cobalt-deep hover:bg-sol-cobalt-soft",
     variant === "champagne" &&
       "bg-[linear-gradient(135deg,#FFFDFB_0%,#F2ECE2_55%,#DCC08B_100%)] text-sol-navy shadow-[0_10px_30px_rgba(220,192,139,0.22)] hover:brightness-[1.04]",
     variant === "danger" &&
@@ -99,7 +99,7 @@ export function Card({
 }
 
 const PILL: Record<string, string> = {
-  violet: "bg-sol-violet-soft text-sol-violet-deep border-sol-violet/25",
+  cobalt: "bg-sol-cobalt-soft text-sol-cobalt-deep border-sol-cobalt/25",
   champagne: "bg-sol-champagne-soft text-sol-champagne-deep border-sol-champagne/40",
   neutral: "bg-sol-ivory text-sol-secondary border-sol-border",
   warning: "bg-sol-warning-soft text-sol-warning border-sol-warning/30",

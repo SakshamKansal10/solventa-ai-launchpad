@@ -20,7 +20,7 @@ function TableAlternative({
   const { t } = useLocale();
   return (
     <details className="mt-3">
-      <summary className="cursor-pointer text-[0.875rem] font-semibold text-sol-violet-deep">
+      <summary className="cursor-pointer text-[0.875rem] font-semibold text-sol-cobalt-deep">
         {t("rm.progress.viewTable")}
       </summary>
       <table className="mt-3 w-full text-left text-[0.875rem]">
@@ -87,7 +87,7 @@ export function ProgressTab({ view, text }: { view: RoadmapView; text: RoadmapTe
                   x: w.progress.completed,
                   y: w.progress.total,
                 })}
-                className="group flex w-full items-center gap-3 rounded-xl px-2 py-1 text-left hover:bg-sol-violet-soft/50"
+                className="group flex w-full items-center gap-3 rounded-xl px-2 py-1 text-left hover:bg-sol-cobalt-soft/50"
               >
                 <span className="w-20 shrink-0 text-[0.875rem] font-semibold text-sol-secondary">
                   {t("common.weekN", { n: String(w.number).padStart(2, "0") })}
@@ -98,7 +98,7 @@ export function ProgressTab({ view, text }: { view: RoadmapView; text: RoadmapTe
                     style={{ width: `${(w.progress.completed / maxMissions) * 100}%` }}
                   />
                   <span
-                    className="absolute inset-y-0 left-0 rounded-full border-2 border-sol-violet/40"
+                    className="absolute inset-y-0 left-0 rounded-full border-2 border-sol-cobalt/40"
                     style={{ width: `${(w.progress.total / maxMissions) * 100}%` }}
                   />
                 </span>
@@ -146,7 +146,7 @@ export function ProgressTab({ view, text }: { view: RoadmapView; text: RoadmapTe
                           ? "h-3 flex-1 rounded-full bg-sol-champagne"
                           : w.state === "locked"
                             ? "h-3 flex-1 rounded-full bg-sol-ivory-depth"
-                            : "h-3 flex-1 rounded-full bg-sol-violet"
+                            : "h-3 flex-1 rounded-full bg-sol-cobalt"
                       }
                     />
                   ))}

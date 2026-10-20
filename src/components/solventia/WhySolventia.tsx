@@ -21,7 +21,7 @@ function ThinkingDots() {
       {[0, 1, 2].map((i) => (
         <motion.span
           key={i}
-          className="size-2 rounded-full bg-sol-violet/60"
+          className="size-2 rounded-full bg-sol-cobalt/60"
           animate={{ opacity: [0.25, 1, 0.25], y: [0, -3, 0] }}
           transition={{ duration: 0.9, repeat: Infinity, delay: i * 0.15 }}
         />
@@ -106,8 +106,8 @@ export function WhySolventia() {
           </div>
 
           {/* Ask Sol */}
-          <div className="flex flex-col rounded-[28px] border border-sol-violet/30 bg-sol-hp-surface p-6 shadow-[0_18px_50px_rgba(114,87,216,0.12)] sm:p-7">
-            <p className="flex items-center gap-2 text-[14px] font-semibold uppercase tracking-[0.12em] text-sol-violet-deep">
+          <div className="flex flex-col rounded-[28px] border border-sol-cobalt/30 bg-sol-hp-surface p-6 shadow-[0_18px_50px_rgba(114,87,216,0.12)] sm:p-7">
+            <p className="flex items-center gap-2 text-[14px] font-semibold uppercase tracking-[0.12em] text-sol-cobalt-deep">
               <img src={mark} alt="" width={298} height={436} className="h-5 w-auto" />
               {t("story.ask.eyebrow")}
             </p>
@@ -130,7 +130,7 @@ export function WhySolventia() {
                   className={cn(
                     "inline-flex min-h-10 items-center gap-1.5 rounded-full border px-4 text-[14.5px] font-semibold transition-colors duration-[180ms]",
                     on[chip.id]
-                      ? "border-sol-violet/50 bg-sol-violet-soft text-sol-violet-deep"
+                      ? "border-sol-cobalt/50 bg-sol-cobalt-soft text-sol-cobalt-deep"
                       : "border-sol-border-strong bg-transparent text-sol-muted line-through",
                   )}
                 >
@@ -148,7 +148,7 @@ export function WhySolventia() {
               className={cn(
                 "mt-4 min-h-[132px] flex-1 rounded-2xl p-4 text-[16.5px] leading-[26px]",
                 full
-                  ? "border-l-4 border-sol-champagne bg-sol-violet-soft/60 text-sol-ink"
+                  ? "border-l-4 border-sol-champagne bg-sol-cobalt-soft/60 text-sol-ink"
                   : "bg-sol-hp-ivory-deep/70 text-sol-secondary",
               )}
               aria-live="polite"
@@ -176,7 +176,7 @@ export function WhySolventia() {
             <p
               className={cn(
                 "mt-4 flex items-center gap-2 text-[14.5px] font-semibold",
-                full ? "text-sol-violet-deep" : "text-sol-muted",
+                full ? "text-sol-cobalt-deep" : "text-sol-muted",
               )}
             >
               {full ? (

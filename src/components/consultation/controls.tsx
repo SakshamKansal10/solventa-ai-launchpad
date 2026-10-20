@@ -67,7 +67,7 @@ export function StepScale({
 
   const trackBase =
     variant === "continuum"
-      ? "bg-gradient-to-r from-sol-champagne/35 via-sol-violet/25 to-sol-violet/55"
+      ? "bg-gradient-to-r from-sol-champagne/35 via-sol-cobalt/25 to-sol-cobalt/55"
       : "bg-sol-ivory-depth";
 
   return (
@@ -103,7 +103,7 @@ export function StepScale({
           style={{ left: `${50 / n}%`, right: `${50 / n}%` }}
         >
           <motion.span
-            className="absolute inset-y-0 left-0 rounded-full bg-gradient-to-r from-sol-champagne to-sol-violet"
+            className="absolute inset-y-0 left-0 rounded-full bg-gradient-to-r from-sol-champagne to-sol-cobalt"
             initial={false}
             animate={{ width: `${fill * 100}%` }}
             transition={{ duration: reduceMotion ? 0 : 0.35, ease: [0.22, 1, 0.36, 1] }}
@@ -129,16 +129,16 @@ export function StepScale({
                 onMouseEnter={() => setHover(i)}
                 onFocus={() => setHover(i)}
                 onBlur={() => setHover(null)}
-                className="group flex h-12 min-w-0 flex-1 items-center justify-center rounded-xl outline-none focus-visible:ring-2 focus-visible:ring-sol-violet/50"
+                className="group flex h-12 min-w-0 flex-1 items-center justify-center rounded-xl outline-none focus-visible:ring-2 focus-visible:ring-sol-cobalt/50"
               >
                 <span
                   className={cn(
                     "flex items-center justify-center rounded-full border-2 transition-all duration-200",
                     selected
-                      ? "size-8 border-sol-violet bg-sol-violet text-white shadow-[0_6px_16px_rgba(114,87,216,0.35)]"
+                      ? "size-8 border-sol-cobalt bg-sol-cobalt text-white shadow-[0_6px_16px_rgba(114,87,216,0.35)]"
                       : passed
-                        ? "size-4 border-sol-violet bg-sol-violet"
-                        : "size-4 border-sol-border-strong bg-sol-surface group-hover:border-sol-violet/60",
+                        ? "size-4 border-sol-cobalt bg-sol-cobalt"
+                        : "size-4 border-sol-border-strong bg-sol-surface group-hover:border-sol-cobalt/60",
                   )}
                 >
                   {selected && <Check className="size-4" strokeWidth={3} aria-hidden="true" />}
@@ -172,7 +172,7 @@ export function StepScale({
 
       {variant === "continuum" && (
         <p
-          className="min-h-[3.25rem] rounded-2xl border border-sol-violet/25 bg-sol-violet-soft px-4 py-3 text-[1.0625rem] font-semibold text-sol-ink sm:hidden"
+          className="min-h-[3.25rem] rounded-2xl border border-sol-cobalt/25 bg-sol-cobalt-soft px-4 py-3 text-[1.0625rem] font-semibold text-sol-ink sm:hidden"
           aria-live="polite"
         >
           {shown >= 0 ? options[shown].label : placeholder}
@@ -230,8 +230,8 @@ export function SegmentedScale({
               className={cn(
                 "inline-flex min-h-12 items-center justify-center rounded-2xl border px-5 text-center text-[1rem] font-medium transition-all duration-[180ms]",
                 selected
-                  ? "border-sol-violet bg-sol-violet text-white shadow-[0_6px_16px_rgba(114,87,216,0.25)]"
-                  : "border-sol-border bg-sol-surface text-sol-ink hover:-translate-y-px hover:border-sol-violet/50",
+                  ? "border-sol-cobalt bg-sol-cobalt text-white shadow-[0_6px_16px_rgba(114,87,216,0.25)]"
+                  : "border-sol-border bg-sol-surface text-sol-ink hover:-translate-y-px hover:border-sol-cobalt/50",
               )}
             >
               {o.label}
@@ -265,7 +265,7 @@ export function SegmentedScale({
             className={cn(
               "flex min-h-[4.75rem] flex-col items-center justify-center gap-2 rounded-2xl px-2 py-3 text-center text-[0.9375rem] font-semibold leading-tight transition-all duration-[180ms]",
               selected
-                ? "bg-sol-violet text-white shadow-[0_8px_20px_rgba(114,87,216,0.3)]"
+                ? "bg-sol-cobalt text-white shadow-[0_8px_20px_rgba(114,87,216,0.3)]"
                 : "text-sol-ink hover:bg-sol-surface",
             )}
           >
@@ -279,7 +279,7 @@ export function SegmentedScale({
                     b <= level
                       ? selected
                         ? "bg-white"
-                        : "bg-sol-violet/70"
+                        : "bg-sol-cobalt/70"
                       : selected
                         ? "bg-white/30"
                         : "bg-sol-border-strong",
@@ -341,8 +341,8 @@ export function ChipCloud({
         className={cn(
           "inline-flex min-h-11 items-center gap-2 rounded-full border px-4 text-[1rem] font-medium transition-all duration-[180ms]",
           selected
-            ? "border-sol-violet bg-sol-violet text-white shadow-[0_6px_16px_rgba(114,87,216,0.25)]"
-            : "border-sol-border bg-sol-surface text-sol-ink hover:-translate-y-px hover:border-sol-violet/50",
+            ? "border-sol-cobalt bg-sol-cobalt text-white shadow-[0_6px_16px_rgba(114,87,216,0.25)]"
+            : "border-sol-border bg-sol-surface text-sol-ink hover:-translate-y-px hover:border-sol-cobalt/50",
         )}
       >
         {selected && <Check className="size-4" strokeWidth={3} aria-hidden="true" />}
@@ -367,7 +367,7 @@ export function ChipCloud({
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder={searchPlaceholder}
-            className="h-12 w-full rounded-2xl border border-sol-border bg-sol-surface pl-11 pr-4 text-[1rem] text-sol-ink placeholder:text-sol-secondary/70 focus-visible:border-sol-violet focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sol-violet/30"
+            className="h-12 w-full rounded-2xl border border-sol-border bg-sol-surface pl-11 pr-4 text-[1rem] text-sol-ink placeholder:text-sol-secondary/70 focus-visible:border-sol-cobalt focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sol-cobalt/30"
           />
         </label>
       )}
@@ -439,16 +439,16 @@ export function DirectionCards({
             className={cn(
               "group flex min-h-[4.5rem] items-center gap-4 rounded-2xl border p-4 text-left transition-all duration-[180ms]",
               selected
-                ? "border-sol-violet bg-sol-violet-soft shadow-[0_10px_26px_rgba(114,87,216,0.16)]"
-                : "border-sol-border bg-sol-surface hover:-translate-y-px hover:border-sol-violet/45",
+                ? "border-sol-cobalt bg-sol-cobalt-soft shadow-[0_10px_26px_rgba(114,87,216,0.16)]"
+                : "border-sol-border bg-sol-surface hover:-translate-y-px hover:border-sol-cobalt/45",
             )}
           >
             <span
               className={cn(
                 "flex size-12 shrink-0 items-center justify-center rounded-2xl transition-colors",
                 selected
-                  ? "bg-sol-violet text-white"
-                  : "bg-sol-champagne-soft text-sol-champagne-deep group-hover:bg-sol-violet-soft group-hover:text-sol-violet-deep",
+                  ? "bg-sol-cobalt text-white"
+                  : "bg-sol-champagne-soft text-sol-champagne-deep group-hover:bg-sol-cobalt-soft group-hover:text-sol-cobalt-deep",
               )}
             >
               <Icon className="size-6" aria-hidden="true" />
@@ -461,7 +461,7 @@ export function DirectionCards({
               className={cn(
                 "flex size-6 shrink-0 items-center justify-center rounded-full border transition-colors",
                 selected
-                  ? "border-sol-violet bg-sol-violet text-white"
+                  ? "border-sol-cobalt bg-sol-cobalt text-white"
                   : "border-sol-border-strong",
               )}
             >
@@ -519,7 +519,7 @@ export function GroupedChecklist({
                     className={cn(
                       "flex min-h-[3.25rem] w-full items-center gap-3.5 px-4 py-3 text-left text-[1.0625rem] font-medium transition-colors",
                       selected
-                        ? "bg-sol-violet-soft/70 text-sol-ink"
+                        ? "bg-sol-cobalt-soft/70 text-sol-ink"
                         : "text-sol-ink hover:bg-sol-ivory/60",
                     )}
                   >
@@ -528,7 +528,7 @@ export function GroupedChecklist({
                       className={cn(
                         "flex size-6 shrink-0 items-center justify-center rounded-md border-2 transition-colors",
                         selected
-                          ? "border-sol-violet bg-sol-violet text-white"
+                          ? "border-sol-cobalt bg-sol-cobalt text-white"
                           : "border-sol-border-strong bg-sol-surface",
                       )}
                     >

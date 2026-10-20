@@ -46,7 +46,7 @@ function GeneratingPanel() {
           className="flex min-h-[1.75rem] items-center gap-2 text-[1.0625rem] text-sol-ink"
           key={i}
         >
-          <Loader2 className="size-4 animate-spin text-sol-violet" aria-hidden="true" />
+          <Loader2 className="size-4 animate-spin text-sol-cobalt" aria-hidden="true" />
           {t(STATUS_KEYS[i])}
         </p>
         {i === STATUS_KEYS.length - 1 && (

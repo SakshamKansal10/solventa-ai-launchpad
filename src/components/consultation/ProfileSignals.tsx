@@ -102,7 +102,7 @@ export function useProfileFacts(): Fact[] {
 }
 
 /** Living, not a receipt: a fact that wasn't here on the previous render
- * gets one brief violet highlight that settles back to normal — the only
+ * gets one brief cobalt highlight that settles back to normal — the only
  * signal that this panel is reacting to what the founder just answered,
  * not a static printout. */
 function useJustArrivedKeys(facts: Fact[]): Set<string> {
@@ -161,7 +161,7 @@ export function ProfileSignals({ className }: { className?: string }) {
                   style={{
                     backgroundColor:
                       justArrived.has(f.key) && !reduceMotion
-                        ? "var(--sol-violet-soft)"
+                        ? "var(--sol-cobalt-soft)"
                         : "transparent",
                   }}
                   data-testid={`profile-fact-${f.key}`}

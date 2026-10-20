@@ -314,7 +314,7 @@ function DirectionSelected({
         {building && (
           <div
             role="status"
-            className="relative mt-5 rounded-2xl border border-sol-violet/40 bg-sol-violet/15 px-4 py-3 text-[1rem] text-workspace-foreground"
+            className="relative mt-5 rounded-2xl border border-sol-cobalt/40 bg-sol-cobalt/15 px-4 py-3 text-[1rem] text-workspace-foreground"
           >
             {t("cc.b.building")}
           </div>
@@ -352,7 +352,7 @@ function DirectionSelected({
               params={{ id: opportunityId }}
               variant="secondary"
               size="lg"
-              className="w-full border-workspace-border bg-transparent text-workspace-foreground hover:border-sol-violet/50 sm:w-auto"
+              className="w-full border-workspace-border bg-transparent text-workspace-foreground hover:border-sol-cobalt/50 sm:w-auto"
             >
               {t("cc.b.openOpportunity")}
             </LinkButton>
@@ -504,7 +504,7 @@ function NextMove({
             )}
             {translatedBrief.whyFit[0] && (
               <p className="flex max-w-[64ch] items-start gap-2.5 text-[0.9375rem] leading-snug text-sol-ink">
-                <span className="mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full bg-sol-violet-soft text-sol-violet-deep">
+                <span className="mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full bg-sol-cobalt-soft text-sol-cobalt-deep">
                   <Check className="size-3" strokeWidth={3} aria-hidden="true" />
                 </span>
                 <span className="min-w-0">{translatedBrief.whyFit[0]}</span>
@@ -550,7 +550,7 @@ function NextMove({
           {week && !completed ? (
             headline ? (
               <div key={mission!.id} className="sol-reveal flex flex-col items-start gap-3">
-                <Pill tone="violet">{t("cc.focus.label")}</Pill>
+                <Pill tone="cobalt">{t("cc.focus.label")}</Pill>
                 <h2 className="sol-h-sm max-w-xl !text-[1.5rem]" data-testid="current-mission">
                   {headline}
                 </h2>
@@ -580,7 +580,7 @@ function NextMove({
               </div>
             ) : week.state === "generating_next" ? (
               <p className="flex items-center gap-3 text-[1.25rem] text-sol-ink" role="status">
-                <Loader2 className="size-6 animate-spin text-sol-violet" aria-hidden="true" />
+                <Loader2 className="size-6 animate-spin text-sol-cobalt" aria-hidden="true" />
                 {t("rm.gen.preparingShort")}
               </p>
             ) : (
@@ -654,7 +654,7 @@ function NextMove({
             to="/dashboard/roadmap"
             variant="ghost"
             size="sm"
-            className="text-sol-violet-deep"
+            className="text-sol-cobalt-deep"
           >
             {t("cc.mini.openFull")}
             <ArrowRight className="size-4" aria-hidden="true" />
@@ -673,14 +673,14 @@ function NextMove({
                     aria-hidden="true"
                     className={cn(
                       "absolute left-1/2 right-[-50%] top-[1.25rem] h-[2px]",
-                      done ? "bg-sol-champagne" : current ? "bg-sol-violet/50" : "bg-sol-border",
+                      done ? "bg-sol-champagne" : current ? "bg-sol-cobalt/50" : "bg-sol-border",
                     )}
                   />
                 )}
                 <button
                   type="button"
                   onClick={() => navigate({ to: "/dashboard/roadmap", search: { phase: p.id } })}
-                  className="relative flex w-full flex-col items-center gap-2 text-center outline-none focus-visible:ring-2 focus-visible:ring-sol-violet/50"
+                  className="relative flex w-full flex-col items-center gap-2 text-center outline-none focus-visible:ring-2 focus-visible:ring-sol-cobalt/50"
                 >
                   <span
                     className={cn(
@@ -688,7 +688,7 @@ function NextMove({
                       done
                         ? "border-sol-champagne bg-sol-champagne text-sol-ink"
                         : current
-                          ? "border-sol-violet bg-sol-violet text-white shadow-[0_0_0_5px_rgba(155,130,255,0.18)]"
+                          ? "border-sol-cobalt bg-sol-cobalt text-white shadow-[0_0_0_5px_rgba(155,130,255,0.18)]"
                           : "border-sol-border-strong bg-sol-surface text-sol-secondary",
                     )}
                   >
@@ -732,7 +732,7 @@ function MetricTile({
   return (
     <Card className="flex flex-col gap-2 p-5" data-testid={testId}>
       <div className="flex items-center gap-2 text-[0.9375rem] text-sol-secondary">
-        <Icon className="size-4 text-sol-violet-deep" strokeWidth={1.75} aria-hidden="true" />
+        <Icon className="size-4 text-sol-cobalt-deep" strokeWidth={1.75} aria-hidden="true" />
         {label}
       </div>
       <p className="text-[1.375rem] font-medium text-sol-ink">{value}</p>
@@ -746,7 +746,7 @@ function MetricTile({
           aria-label={progressLabel}
         >
           <span
-            className="block h-full rounded-full bg-sol-violet transition-[width] duration-300"
+            className="block h-full rounded-full bg-sol-cobalt transition-[width] duration-300"
             style={{ width: `${progress}%` }}
           />
         </div>

@@ -83,7 +83,7 @@ function FindMyBusinessIdeaPage() {
                   key={p.title}
                   className="rounded-2xl border border-sol-border bg-sol-surface px-5 py-6"
                 >
-                  <p.icon className="size-5 text-sol-violet-deep" aria-hidden="true" />
+                  <p.icon className="size-5 text-sol-cobalt-deep" aria-hidden="true" />
                   <p className="mt-3 font-display text-[1.25rem] font-semibold text-sol-ink">
                     {t(p.title)}
                   </p>

@@ -11,12 +11,12 @@ export function WeekHeroScene({ className }: { className?: string }) {
       preserveAspectRatio="xMidYMid slice"
       aria-hidden="true"
     >
-      <rect width="640" height="220" className="fill-sol-violet-soft" />
+      <rect width="640" height="220" className="fill-sol-cobalt-soft" />
       <rect y="150" width="640" height="70" className="fill-sol-champagne-soft" />
       <circle cx="560" cy="48" r="34" className="fill-sol-champagne" opacity={0.4} />
-      <circle cx="600" cy="100" r="10" className="fill-sol-violet" opacity={0.25} />
-      <circle cx="40" cy="40" r="6" className="fill-sol-violet" opacity={0.25} />
-      <circle cx="80" cy="70" r="3.5" className="fill-sol-violet" opacity={0.25} />
+      <circle cx="600" cy="100" r="10" className="fill-sol-cobalt" opacity={0.25} />
+      <circle cx="40" cy="40" r="6" className="fill-sol-cobalt" opacity={0.25} />
+      <circle cx="80" cy="70" r="3.5" className="fill-sol-cobalt" opacity={0.25} />
 
       {/* desk */}
       <rect x="40" y="168" width="560" height="10" rx="5" className="fill-sol-ink" opacity={0.1} />
@@ -51,17 +51,17 @@ export function WeekHeroScene({ className }: { className?: string }) {
         width="210"
         height="40"
         rx="4"
-        className="fill-sol-violet-soft stroke-sol-violet"
+        className="fill-sol-cobalt-soft stroke-sol-cobalt"
         strokeWidth="2"
       />
-      <rect x="226" y="128" width="80" height="6" rx="3" className="fill-sol-violet" />
+      <rect x="226" y="128" width="80" height="6" rx="3" className="fill-sol-cobalt" />
       <rect
         x="226"
         y="140"
         width="130"
         height="6"
         rx="3"
-        className="fill-sol-violet"
+        className="fill-sol-cobalt"
         opacity={0.5}
       />
 
@@ -69,7 +69,7 @@ export function WeekHeroScene({ className }: { className?: string }) {
       <circle cx="300" cy="64" r="22" className="fill-sol-ink" />
       <path
         d="M254 140 C254 104, 346 104, 346 140 L346 168 L254 168 Z"
-        className="fill-sol-violet"
+        className="fill-sol-cobalt"
       />
 
       {/* sticky note */}
@@ -128,13 +128,13 @@ const CATEGORY_SCENE: Record<string, Scene> = {
   other: "compass",
 };
 
-const SCENE_TONE: Record<Scene, "violet" | "champagne"> = {
+const SCENE_TONE: Record<Scene, "cobalt" | "champagne"> = {
   search: "champagne",
-  wallet: "violet",
+  wallet: "cobalt",
   route: "champagne",
-  loop: "violet",
+  loop: "cobalt",
   tag: "champagne",
-  shields: "violet",
+  shields: "cobalt",
   compass: "champagne",
 };
 
@@ -184,7 +184,7 @@ function SceneArt({ scene }: { scene: Scene }) {
             r="34"
             fill="none"
             strokeWidth="9"
-            className="stroke-sol-violet"
+            className="stroke-sol-cobalt"
           />
           <line
             x1="230"
@@ -193,7 +193,7 @@ function SceneArt({ scene }: { scene: Scene }) {
             y2="154"
             strokeWidth="10"
             strokeLinecap="round"
-            className="stroke-sol-violet"
+            className="stroke-sol-cobalt"
           />
         </g>
       );
@@ -206,10 +206,10 @@ function SceneArt({ scene }: { scene: Scene }) {
             width="140"
             height="86"
             rx="14"
-            className="fill-sol-surface stroke-sol-violet"
+            className="fill-sol-surface stroke-sol-cobalt"
             strokeWidth="3"
           />
-          <path d="M90 108 H230" strokeWidth="3" className="stroke-sol-violet" />
+          <path d="M90 108 H230" strokeWidth="3" className="stroke-sol-cobalt" />
           <circle
             cx="206"
             cy="94"
@@ -225,7 +225,7 @@ function SceneArt({ scene }: { scene: Scene }) {
             strokeWidth="5"
             strokeLinecap="round"
             strokeLinejoin="round"
-            className="stroke-sol-violet"
+            className="stroke-sol-cobalt"
           />
         </g>
       );
@@ -271,10 +271,10 @@ function SceneArt({ scene }: { scene: Scene }) {
             width="76"
             height="68"
             rx="10"
-            className="fill-sol-surface stroke-sol-violet"
+            className="fill-sol-surface stroke-sol-cobalt"
             strokeWidth="3"
           />
-          <rect x="112" y="60" width="76" height="20" rx="8" className="fill-sol-violet" />
+          <rect x="112" y="60" width="76" height="20" rx="8" className="fill-sol-cobalt" />
           <circle
             cx="150"
             cy="104"
@@ -309,9 +309,9 @@ function SceneArt({ scene }: { scene: Scene }) {
             strokeWidth="3"
           />
           <circle cx="104" cy="118" r="10" className="fill-sol-champagne" />
-          <rect x="160" y="58" width="16" height="42" rx="4" className="fill-sol-violet" />
-          <rect x="184" y="40" width="16" height="60" rx="4" className="fill-sol-violet-deep" />
-          <rect x="208" y="70" width="16" height="30" rx="4" className="fill-sol-violet" />
+          <rect x="160" y="58" width="16" height="42" rx="4" className="fill-sol-cobalt" />
+          <rect x="184" y="40" width="16" height="60" rx="4" className="fill-sol-cobalt-deep" />
+          <rect x="208" y="70" width="16" height="30" rx="4" className="fill-sol-cobalt" />
         </g>
       );
     case "shields":
@@ -319,7 +319,7 @@ function SceneArt({ scene }: { scene: Scene }) {
         <g>
           <path
             d="M96 56 L140 44 L140 104 C140 130, 118 146, 96 154 C74 146, 52 130, 52 104 L52 44 Z"
-            className="fill-sol-violet-soft stroke-sol-violet"
+            className="fill-sol-cobalt-soft stroke-sol-cobalt"
             strokeWidth="3"
           />
           <path
@@ -333,7 +333,7 @@ function SceneArt({ scene }: { scene: Scene }) {
             strokeWidth="6"
             strokeLinecap="round"
             strokeLinejoin="round"
-            className="stroke-sol-violet"
+            className="stroke-sol-cobalt"
           />
         </g>
       );
@@ -357,7 +357,7 @@ function SceneArt({ scene }: { scene: Scene }) {
             className="fill-sol-surface stroke-sol-champagne-deep"
             strokeWidth="4"
           />
-          <path d="M155 68 L168 96 L155 124 L142 96 Z" className="fill-sol-violet" />
+          <path d="M155 68 L168 96 L155 124 L142 96 Z" className="fill-sol-cobalt" />
           <circle cx="155" cy="96" r="5" className="fill-sol-champagne-deep" />
         </g>
       );
@@ -385,7 +385,7 @@ export function MissionScene({
       <rect
         width="280"
         height="180"
-        className={tone === "violet" ? "fill-sol-violet-soft" : "fill-sol-champagne-soft"}
+        className={tone === "cobalt" ? "fill-sol-cobalt-soft" : "fill-sol-champagne-soft"}
       />
       <SceneArt scene={scene} />
     </svg>

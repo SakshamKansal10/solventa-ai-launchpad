@@ -209,7 +209,7 @@ function SignInPage() {
                     type="button"
                     disabled={resendCooldown > 0 || loading}
                     onClick={requestCode}
-                    className="font-medium text-sol-violet-deep disabled:text-sol-muted"
+                    className="font-medium text-sol-cobalt-deep disabled:text-sol-muted"
                   >
                     {resendCooldown > 0
                       ? t("auth.otp.resendIn", { s: resendCooldown })

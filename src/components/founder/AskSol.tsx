@@ -142,9 +142,9 @@ export function AskSolPanel({
 
   return (
     <div className="flex h-full min-h-0 flex-col" data-testid="ask-sol-panel">
-      <div className="flex items-start justify-between gap-3 border-b border-sol-border bg-sol-violet-soft/50 px-5 py-4">
+      <div className="flex items-start justify-between gap-3 border-b border-sol-border bg-sol-cobalt-soft/50 px-5 py-4">
         <div className="flex min-w-0 items-start gap-3">
-          <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-sol-champagne to-sol-violet">
+          <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-sol-champagne to-sol-cobalt">
             <img src={mark} alt="" width={298} height={436} className="h-5 w-auto" />
           </span>
           <div className="min-w-0 leading-tight">
@@ -220,7 +220,7 @@ export function AskSolPanel({
                     type="button"
                     onClick={() => void send(t(key))}
                     disabled={sending}
-                    className="min-h-12 rounded-2xl border border-sol-border px-4 py-2.5 text-left text-[1rem] font-medium text-sol-ink transition-colors hover:border-sol-violet/50 hover:bg-sol-violet-soft/50 disabled:opacity-50"
+                    className="min-h-12 rounded-2xl border border-sol-border px-4 py-2.5 text-left text-[1rem] font-medium text-sol-ink transition-colors hover:border-sol-cobalt/50 hover:bg-sol-cobalt-soft/50 disabled:opacity-50"
                   >
                     {t(key)}
                   </button>
@@ -249,7 +249,7 @@ export function AskSolPanel({
                 {m.failed && lastFailed && i === messages.length - 1 && (
                   <button
                     type="button"
-                    className="mt-2 block font-semibold text-sol-violet-deep underline-offset-4 hover:underline"
+                    className="mt-2 block font-semibold text-sol-cobalt-deep underline-offset-4 hover:underline"
                     onClick={() => {
                       setMessages((prev) => prev.slice(0, -2));
                       void send(lastFailed);
@@ -293,7 +293,7 @@ export function AskSolPanel({
             }
           }}
           placeholder={t("askSol.placeholder")}
-          className="min-h-12 flex-1 resize-none rounded-2xl border border-sol-border bg-sol-surface px-4 py-3 text-[1rem] text-sol-ink focus-visible:border-sol-violet focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sol-violet/30"
+          className="min-h-12 flex-1 resize-none rounded-2xl border border-sol-border bg-sol-surface px-4 py-3 text-[1rem] text-sol-ink focus-visible:border-sol-cobalt focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sol-cobalt/30"
         />
         <button
           type="submit"

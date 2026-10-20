@@ -207,7 +207,7 @@ function ProofWorkspace({ opportunityId }: { opportunityId: string }) {
                     key={reason}
                     className="flex items-start gap-3 text-[0.9375rem] leading-snug text-sol-ink"
                   >
-                    <span className="mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full bg-sol-violet-soft text-sol-violet-deep">
+                    <span className="mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full bg-sol-cobalt-soft text-sol-cobalt-deep">
                       <Check className="size-3" strokeWidth={3} aria-hidden="true" />
                     </span>
                     <span className="min-w-0">{reason}</span>
@@ -249,9 +249,9 @@ function ProofWorkspace({ opportunityId }: { opportunityId: string }) {
       {generate.isPending || (needsGeneration && !generate.isError) ? (
         <div
           role="status"
-          className="flex items-center gap-3 rounded-2xl border border-sol-violet/25 bg-sol-violet-soft px-5 py-4 text-[1.0625rem] text-sol-ink"
+          className="flex items-center gap-3 rounded-2xl border border-sol-cobalt/25 bg-sol-cobalt-soft px-5 py-4 text-[1.0625rem] text-sol-ink"
         >
-          <Loader2 className="size-5 animate-spin text-sol-violet" aria-hidden="true" />
+          <Loader2 className="size-5 animate-spin text-sol-cobalt" aria-hidden="true" />
           {t("pf.generating")}
         </div>
       ) : generate.isError ? (
@@ -279,7 +279,7 @@ function ProofWorkspace({ opportunityId }: { opportunityId: string }) {
                 <li key={a.id}>
                   <Card
                     as="article"
-                    className="border-sol-border p-0 shadow-none transition-colors hover:border-sol-violet/40"
+                    className="border-sol-border p-0 shadow-none transition-colors hover:border-sol-cobalt/40"
                     data-testid="assumption-card"
                   >
                     <button
@@ -288,9 +288,9 @@ function ProofWorkspace({ opportunityId }: { opportunityId: string }) {
                       aria-controls={`assume-${a.id}`}
                       onClick={() => setOpenId(open ? null : a.id)}
                       data-testid="view-details"
-                      className="flex w-full cursor-pointer items-center gap-4 rounded-2xl px-5 py-4 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sol-violet/50"
+                      className="flex w-full cursor-pointer items-center gap-4 rounded-2xl px-5 py-4 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sol-cobalt/50"
                     >
-                      <span className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-sol-violet-soft text-sol-violet-deep">
+                      <span className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-sol-cobalt-soft text-sol-cobalt-deep">
                         <Icon className="size-5" strokeWidth={1.75} aria-hidden="true" />
                       </span>
                       <span className="min-w-0 flex-1">
@@ -319,8 +319,8 @@ function ProofWorkspace({ opportunityId }: { opportunityId: string }) {
                           </div>
                         )}
                         {a.nextTest && (
-                          <div className="rounded-2xl bg-sol-violet-soft px-4 py-3.5">
-                            <p className="text-[0.875rem] font-medium text-sol-violet-deep">
+                          <div className="rounded-2xl bg-sol-cobalt-soft px-4 py-3.5">
+                            <p className="text-[0.875rem] font-medium text-sol-cobalt-deep">
                               {t("pf.detail.nextTest")}
                             </p>
                             <p className="mt-1 text-[1rem] leading-relaxed text-sol-ink">
@@ -353,7 +353,7 @@ function ProofWorkspace({ opportunityId }: { opportunityId: string }) {
                       href={s.sourceUrl}
                       target="_blank"
                       rel="noreferrer noopener"
-                      className="inline-flex w-fit items-center gap-1.5 text-[0.9375rem] font-medium text-sol-violet-deep hover:underline"
+                      className="inline-flex w-fit items-center gap-1.5 text-[0.9375rem] font-medium text-sol-cobalt-deep hover:underline"
                     >
                       {s.sourceTitle ?? s.sourceUrl}
                       <ExternalLink className="size-3.5" aria-hidden="true" />

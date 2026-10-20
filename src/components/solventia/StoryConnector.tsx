@@ -38,13 +38,13 @@ export function StoryConnector({
     >
       <motion.span
         aria-hidden="true"
-        className="absolute left-1/2 top-0 h-full w-px origin-top bg-gradient-to-b from-sol-champagne/70 via-sol-violet/60 to-sol-champagne/70"
+        className="absolute left-1/2 top-0 h-full w-px origin-top bg-gradient-to-b from-sol-champagne/70 via-sol-cobalt/60 to-sol-champagne/70"
         style={{ scaleY: reduceMotion ? 1 : draw }}
       />
       {!reduceMotion && (
         <motion.span
           aria-hidden="true"
-          className="absolute left-1/2 top-0 -ml-[3.5px] size-[7px] rounded-full bg-sol-violet shadow-[0_0_0_4px_rgba(114,87,216,0.18),0_0_14px_rgba(114,87,216,0.55)]"
+          className="absolute left-1/2 top-0 -ml-[3.5px] size-[7px] rounded-full bg-sol-cobalt shadow-[0_0_0_4px_rgba(114,87,216,0.18),0_0_14px_rgba(114,87,216,0.55)]"
           style={{ y: travel, opacity: glow }}
         />
       )}

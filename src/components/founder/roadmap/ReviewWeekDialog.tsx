@@ -128,8 +128,8 @@ export function ReviewWeekDialog({
                   className={cn(
                     "min-h-12 rounded-2xl border px-4 text-left text-[0.9375rem] font-semibold transition-colors",
                     outcome === o
-                      ? "border-sol-violet bg-sol-violet-soft text-sol-violet-deep"
-                      : "border-sol-border bg-sol-surface text-sol-ink hover:border-sol-violet/45",
+                      ? "border-sol-cobalt bg-sol-cobalt-soft text-sol-cobalt-deep"
+                      : "border-sol-border bg-sol-surface text-sol-ink hover:border-sol-cobalt/45",
                   )}
                 >
                   {t(`rm.outcome.${o}` as const)}
@@ -154,8 +154,8 @@ export function ReviewWeekDialog({
                   className={cn(
                     "min-h-11 rounded-full border px-4 text-[0.9375rem] font-medium transition-colors",
                     blocker === b
-                      ? "border-sol-violet bg-sol-violet-soft text-sol-violet-deep"
-                      : "border-sol-border bg-sol-surface text-sol-ink hover:border-sol-violet/45",
+                      ? "border-sol-cobalt bg-sol-cobalt-soft text-sol-cobalt-deep"
+                      : "border-sol-border bg-sol-surface text-sol-ink hover:border-sol-cobalt/45",
                   )}
                 >
                   {t(`rm.blocker.${b}` as MessageKey)}
@@ -178,7 +178,7 @@ export function ReviewWeekDialog({
               maxLength={600}
               value={note}
               onChange={(e) => setNote(e.target.value)}
-              className="w-full rounded-2xl border border-sol-border bg-sol-surface px-4 py-3 text-[0.9375rem] text-sol-ink focus-visible:border-sol-violet focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sol-violet/30"
+              className="w-full rounded-2xl border border-sol-border bg-sol-surface px-4 py-3 text-[0.9375rem] text-sol-ink focus-visible:border-sol-cobalt focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sol-cobalt/30"
             />
           </div>
 

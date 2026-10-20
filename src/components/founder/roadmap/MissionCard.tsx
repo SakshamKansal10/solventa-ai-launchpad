@@ -131,7 +131,7 @@ export function MissionCard({
         aria-hidden="true"
         className={cn(
           "absolute left-[1.3125rem] top-12 -bottom-6 w-px group-last/li:hidden",
-          done ? "bg-sol-champagne" : "bg-sol-violet/20",
+          done ? "bg-sol-champagne" : "bg-sol-cobalt/20",
         )}
       />
       <span
@@ -141,8 +141,8 @@ export function MissionCard({
           done
             ? "sol-complete-glow border-sol-champagne bg-gradient-to-br from-[#f3e2bd] to-sol-champagne text-sol-ink"
             : inProgress
-              ? "border-sol-violet bg-sol-violet text-white shadow-[0_0_0_5px_rgba(118,85,245,0.14)]"
-              : "border-sol-violet/30 bg-sol-surface text-sol-violet-deep",
+              ? "border-sol-cobalt bg-sol-cobalt text-white shadow-[0_0_0_5px_rgba(118,85,245,0.14)]"
+              : "border-sol-cobalt/30 bg-sol-surface text-sol-cobalt-deep",
         )}
       >
         {done ? (
@@ -157,7 +157,7 @@ export function MissionCard({
           "relative rounded-2xl transition-colors duration-300",
           open && !done
             ? "bg-[linear-gradient(135deg,#faf7ff_0%,#fffdfb_100%)] p-4 shadow-[0_0_0_1px_rgba(118,85,245,0.2),0_14px_34px_-24px_rgba(88,64,185,0.5)] sm:p-5"
-            : "px-1 py-1.5 hover:bg-sol-violet-ultralight/60 sm:px-3",
+            : "px-1 py-1.5 hover:bg-sol-cobalt-ultralight/60 sm:px-3",
         )}
       >
         <div className="relative flex flex-wrap items-center gap-x-4 gap-y-2">
@@ -165,7 +165,7 @@ export function MissionCard({
             <p className="sol-eyebrow flex flex-wrap items-center gap-x-2 !text-[0.6875rem]">
               <span>{t("rm.mission.n", { n: pad })}</span>
               {inProgress && (
-                <span className="font-semibold normal-case tracking-normal text-sol-violet-deep">
+                <span className="font-semibold normal-case tracking-normal text-sol-cobalt-deep">
                   · {t("rm.mission.in_progress")}
                 </span>
               )}
@@ -186,7 +186,7 @@ export function MissionCard({
                 data-testid="mission-toggle"
                 aria-label={`${title} — ${open ? t("rm.mission.collapse") : t("rm.mission.expand")}`}
                 className={cn(
-                  "text-left after:absolute after:inset-0 after:content-[''] focus-visible:outline-none focus-visible:after:rounded-2xl focus-visible:after:ring-2 focus-visible:after:ring-sol-violet/50",
+                  "text-left after:absolute after:inset-0 after:content-[''] focus-visible:outline-none focus-visible:after:rounded-2xl focus-visible:after:ring-2 focus-visible:after:ring-sol-cobalt/50",
                   done && "text-sol-ink/70",
                 )}
               >
@@ -235,7 +235,7 @@ export function MissionCard({
                         >
                           <span
                             aria-hidden="true"
-                            className="mt-[1px] flex size-5 shrink-0 items-center justify-center rounded-full bg-sol-violet-soft text-[0.6875rem] font-semibold text-sol-violet-deep"
+                            className="mt-[1px] flex size-5 shrink-0 items-center justify-center rounded-full bg-sol-cobalt-soft text-[0.6875rem] font-semibold text-sol-cobalt-deep"
                           >
                             {i + 1}
                           </span>

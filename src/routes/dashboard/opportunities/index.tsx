@@ -84,10 +84,10 @@ function OpportunityRow({
           <div className="flex flex-col justify-center gap-5">
             <div className="flex flex-wrap items-center gap-2.5">
               <p className="sol-eyebrow flex items-center gap-2 !text-[0.6875rem] !uppercase !tracking-[0.14em]">
-                <span className="h-3 w-0.5 rounded-full bg-sol-violet" aria-hidden="true" />
+                <span className="h-3 w-0.5 rounded-full bg-sol-cobalt" aria-hidden="true" />
                 {t("opp.list.featured")}
               </p>
-              <Pill tone="violet">{t("opp.status.selected")}</Pill>
+              <Pill tone="cobalt">{t("opp.status.selected")}</Pill>
             </div>
             <h3 className="max-w-[16ch] font-display text-[clamp(1.75rem,1.3rem+1.6vw,2.75rem)] font-medium leading-[1.1] text-sol-ink">
               {brief.title}
@@ -105,7 +105,7 @@ function OpportunityRow({
           </div>
           {(description || shownFacts.length > 0) && (
             <div className="rounded-3xl border border-sol-border bg-white/70 p-5 backdrop-blur sm:p-6">
-              <p className="flex items-center gap-2.5 text-[1rem] font-medium text-sol-violet-deep">
+              <p className="flex items-center gap-2.5 text-[1rem] font-medium text-sol-cobalt-deep">
                 <span className="flex size-8 items-center justify-center rounded-full bg-sol-champagne-soft">
                   <Lightbulb className="size-4" aria-hidden="true" />
                 </span>
@@ -143,12 +143,12 @@ function OpportunityRow({
   return (
     <Card
       as="article"
-      className="group flex h-full flex-col p-5 transition-colors hover:border-sol-violet/40 sm:p-6"
+      className="group flex h-full flex-col p-5 transition-colors hover:border-sol-cobalt/40 sm:p-6"
       data-testid={`opp-${section}`}
     >
       <div className="flex items-start gap-4">
         <span
-          className="flex size-14 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-sol-violet-soft text-sol-violet-deep"
+          className="flex size-14 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-sol-cobalt-soft text-sol-cobalt-deep"
           data-testid={image.url ? "opp-thumb" : undefined}
         >
           {image.url ? (
@@ -173,7 +173,7 @@ function OpportunityRow({
         <ul className="mt-4 flex flex-col gap-2.5 border-t border-sol-border pt-4 sm:pl-[4.5rem]">
           {brief.whyFit.slice(0, 3).map((reason) => (
             <li key={reason} className="flex items-start gap-3 text-[0.9375rem] text-sol-secondary">
-              <span className="mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full bg-sol-violet-soft text-sol-violet-deep">
+              <span className="mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full bg-sol-cobalt-soft text-sol-cobalt-deep">
                 <Check className="size-3" strokeWidth={3} aria-hidden="true" />
               </span>
               <span className="min-w-0">{reason}</span>
@@ -295,7 +295,7 @@ function OpportunitiesPage() {
               onChange={(e) => setQuery(e.target.value)}
               placeholder={t("opp.list.searchPlaceholder")}
               data-testid="opp-search"
-              className="h-12 w-full rounded-full border border-sol-border bg-sol-surface pl-11 pr-4 text-[0.9375rem] text-sol-ink outline-none placeholder:text-sol-secondary/70 focus-visible:border-sol-violet/60 focus-visible:ring-2 focus-visible:ring-sol-violet/30"
+              className="h-12 w-full rounded-full border border-sol-border bg-sol-surface pl-11 pr-4 text-[0.9375rem] text-sol-ink outline-none placeholder:text-sol-secondary/70 focus-visible:border-sol-cobalt/60 focus-visible:ring-2 focus-visible:ring-sol-cobalt/30"
             />
           </label>
           {fitOptions.length > 1 && (
@@ -304,12 +304,12 @@ function OpportunitiesPage() {
                 <button
                   type="button"
                   data-testid="opp-filters"
-                  className="flex h-12 shrink-0 cursor-pointer items-center gap-2.5 rounded-full border border-sol-border bg-sol-surface px-5 text-[0.9375rem] font-medium text-sol-ink transition-colors hover:border-sol-violet/40"
+                  className="flex h-12 shrink-0 cursor-pointer items-center gap-2.5 rounded-full border border-sol-border bg-sol-surface px-5 text-[0.9375rem] font-medium text-sol-ink transition-colors hover:border-sol-cobalt/40"
                 >
                   <SlidersHorizontal className="size-4" aria-hidden="true" />
                   {t("opp.list.filters")}
                   {fitFilter !== "all" && (
-                    <span className="size-2 rounded-full bg-sol-violet" aria-hidden="true" />
+                    <span className="size-2 rounded-full bg-sol-cobalt" aria-hidden="true" />
                   )}
                 </button>
               </PopoverTrigger>
@@ -324,7 +324,7 @@ function OpportunitiesPage() {
                       className={cn(
                         "flex min-h-10 cursor-pointer items-center justify-between rounded-xl px-3 text-left text-[0.9375rem] transition-colors",
                         fitFilter === f
-                          ? "bg-sol-violet-soft font-medium text-sol-violet-deep"
+                          ? "bg-sol-cobalt-soft font-medium text-sol-cobalt-deep"
                           : "text-sol-ink hover:bg-sol-ivory",
                       )}
                     >

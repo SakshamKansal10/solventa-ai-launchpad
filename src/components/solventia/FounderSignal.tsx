@@ -128,7 +128,7 @@ function LevelPips({ level }: { level: Level }) {
           key={n}
           className={cn(
             "h-2 w-5 rounded-full transition-colors duration-[240ms]",
-            n <= filled ? "bg-sol-violet" : "bg-sol-hp-ivory-deep",
+            n <= filled ? "bg-sol-cobalt" : "bg-sol-hp-ivory-deep",
           )}
         />
       ))}
@@ -203,7 +203,7 @@ export function FounderSignal() {
         <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-4">
           <div className="flex flex-wrap items-center gap-3">
             <span
-              className="inline-flex min-h-8 items-center rounded-full border border-sol-violet/30 bg-sol-violet-soft px-4 text-[14px] font-bold tracking-[0.1em] text-sol-violet-deep"
+              className="inline-flex min-h-8 items-center rounded-full border border-sol-cobalt/30 bg-sol-cobalt-soft px-4 text-[14px] font-bold tracking-[0.1em] text-sol-cobalt-deep"
               data-testid="demo-label"
             >
               {t("founderSignal.demoLabel")}
@@ -232,8 +232,8 @@ export function FounderSignal() {
                 className={cn(
                   "min-h-11 rounded-full border px-5 text-[15px] font-semibold transition-colors duration-[180ms]",
                   scenario === id
-                    ? "border-sol-violet bg-sol-violet-soft text-sol-violet-deep"
-                    : "border-sol-border-strong bg-sol-hp-surface text-sol-ink hover:border-sol-violet/50",
+                    ? "border-sol-cobalt bg-sol-cobalt-soft text-sol-cobalt-deep"
+                    : "border-sol-border-strong bg-sol-hp-surface text-sol-ink hover:border-sol-cobalt/50",
                 )}
               >
                 {t(`founderSignal.scenario.${id}` as MessageKey)}
@@ -281,7 +281,7 @@ export function FounderSignal() {
                   <motion.circle
                     key={`dot-${i}`}
                     r={4}
-                    fill="var(--sol-violet)"
+                    fill="var(--sol-cobalt)"
                     initial={{ cx: xs[0], cy: ys[0], opacity: 0 }}
                     animate={{ cx: xs, cy: ys, opacity: [0, 1, 1, 0] }}
                     transition={{
@@ -347,7 +347,7 @@ export function FounderSignal() {
           {/* Mobile connector into the node. */}
           <motion.span
             aria-hidden="true"
-            className="mx-auto block h-10 w-px origin-top bg-gradient-to-b from-sol-violet/10 via-sol-violet/50 to-sol-violet lg:hidden"
+            className="mx-auto block h-10 w-px origin-top bg-gradient-to-b from-sol-cobalt/10 via-sol-cobalt/50 to-sol-cobalt lg:hidden"
             initial={{ scaleY: 0 }}
             animate={signalsIn ? { scaleY: 1 } : {}}
             transition={{ duration: reduceMotion ? 0 : 0.5, delay: reduceMotion ? 0 : 0.5 }}
@@ -359,7 +359,7 @@ export function FounderSignal() {
               {pulsing && !reduceMotion && (
                 <motion.span
                   aria-hidden="true"
-                  className="absolute inset-0 rounded-full border-2 border-sol-violet/60"
+                  className="absolute inset-0 rounded-full border-2 border-sol-cobalt/60"
                   initial={{ scale: 1, opacity: 0.7 }}
                   animate={{ scale: 1.7, opacity: 0 }}
                   transition={{ duration: 0.75, ease: "easeOut" }}
@@ -368,7 +368,7 @@ export function FounderSignal() {
               <motion.div
                 animate={pulsing && !reduceMotion ? { scale: [1, 1.08, 1] } : { scale: 1 }}
                 transition={{ duration: 0.6, ease: "easeInOut" }}
-                className="relative flex size-full items-center justify-center rounded-full border border-sol-violet/35 bg-sol-hp-surface shadow-[0_18px_50px_rgba(114,87,216,0.16)]"
+                className="relative flex size-full items-center justify-center rounded-full border border-sol-cobalt/35 bg-sol-hp-surface shadow-[0_18px_50px_rgba(114,87,216,0.16)]"
                 data-testid="signal-node"
               >
                 <span

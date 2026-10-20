@@ -13,14 +13,14 @@ function Flow({ vertical, delay = 0 }: { vertical?: boolean; delay?: number }) {
     <span
       aria-hidden="true"
       className={cn(
-        "relative block shrink-0 overflow-hidden rounded-full bg-gradient-to-r from-sol-violet/15 via-sol-violet/40 to-sol-champagne/50",
+        "relative block shrink-0 overflow-hidden rounded-full bg-gradient-to-r from-sol-cobalt/15 via-sol-cobalt/40 to-sol-champagne/50",
         vertical ? "h-9 w-0.5 bg-gradient-to-b" : "h-0.5 w-14",
       )}
     >
       {!reduceMotion && (
         <motion.span
           className={cn(
-            "absolute rounded-full bg-sol-violet",
+            "absolute rounded-full bg-sol-cobalt",
             vertical ? "left-0 top-0 h-3 w-0.5" : "left-0 top-0 h-0.5 w-3",
           )}
           animate={vertical ? { y: [-12, 40] } : { x: [-12, 64] }}
@@ -77,7 +77,7 @@ export function GenerationVisual() {
           {!reduceMotion && (
             <>
               <motion.span
-                className="absolute inset-0 rounded-full border border-sol-violet/40"
+                className="absolute inset-0 rounded-full border border-sol-cobalt/40"
                 animate={{ scale: [1, 1.45], opacity: [0.6, 0] }}
                 transition={{ duration: 2, repeat: Infinity, ease: "easeOut" }}
               />
@@ -88,7 +88,7 @@ export function GenerationVisual() {
               />
             </>
           )}
-          <div className="relative flex size-[84px] items-center justify-center rounded-full border border-sol-violet/40 bg-sol-surface shadow-[0_14px_36px_rgba(114,87,216,0.16)]">
+          <div className="relative flex size-[84px] items-center justify-center rounded-full border border-sol-cobalt/40 bg-sol-surface shadow-[0_14px_36px_rgba(114,87,216,0.16)]">
             <span className="absolute inset-2 rounded-full border border-dashed border-sol-champagne/55" />
             <BrandMark height={36} className="relative" />
           </div>

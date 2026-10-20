@@ -16,7 +16,7 @@ const RESEND_COOLDOWN_SECONDS = 30;
 const primaryBtn =
   "inline-flex h-12 w-full items-center justify-center gap-2 rounded-2xl bg-sol-navy px-6 text-[1rem] font-semibold text-white transition-colors hover:bg-sol-navy-soft disabled:opacity-50";
 const linkBtn =
-  "text-[0.9375rem] font-semibold text-sol-violet-deep underline-offset-4 hover:underline disabled:opacity-50";
+  "text-[0.9375rem] font-semibold text-sol-cobalt-deep underline-offset-4 hover:underline disabled:opacity-50";
 
 /** Inline sign-up / sign-in at the end of the consultation. Sign-up is
  * passwordless (a typed code, never a link) so the founder never leaves this
@@ -244,7 +244,7 @@ export function AccountGate({ onAuthenticated }: { onAuthenticated: (email: stri
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             placeholder={t("auth.emailPlaceholder")}
-            className="h-12 w-full rounded-2xl border border-sol-border bg-sol-surface px-4 text-[1rem] text-sol-ink focus-visible:border-sol-violet focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sol-violet/30"
+            className="h-12 w-full rounded-2xl border border-sol-border bg-sol-surface px-4 text-[1rem] text-sol-ink focus-visible:border-sol-cobalt focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sol-cobalt/30"
           />
         </div>
         {mode === "signin" && (
@@ -261,7 +261,7 @@ export function AccountGate({ onAuthenticated }: { onAuthenticated: (email: stri
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder={t("auth.passwordPlaceholder")}
-              className="h-12 w-full rounded-2xl border border-sol-border bg-sol-surface px-4 text-[1rem] text-sol-ink focus-visible:border-sol-violet focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sol-violet/30"
+              className="h-12 w-full rounded-2xl border border-sol-border bg-sol-surface px-4 text-[1rem] text-sol-ink focus-visible:border-sol-cobalt focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sol-cobalt/30"
             />
           </div>
         )}

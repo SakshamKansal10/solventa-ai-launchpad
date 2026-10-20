@@ -241,11 +241,11 @@ const SECTIONS: LegalSection[] = [
     body: (
       <p>
         To request deletion of your Solventia account and associated personal data, email{" "}
-        <a href={`mailto:${CONTACT_EMAIL}`} className="text-sol-violet-deep underline">
+        <a href={`mailto:${CONTACT_EMAIL}`} className="text-sol-cobalt-deep underline">
           {CONTACT_EMAIL}
         </a>{" "}
         from the address on your account. See our{" "}
-        <a href="/data-deletion" className="text-sol-violet-deep underline">
+        <a href="/data-deletion" className="text-sol-cobalt-deep underline">
           Delete Your Data
         </a>{" "}
         page for what to include and what to expect.
@@ -291,7 +291,7 @@ const SECTIONS: LegalSection[] = [
         Solventia
         <br />
         Email:{" "}
-        <a href={`mailto:${CONTACT_EMAIL}`} className="text-sol-violet-deep underline">
+        <a href={`mailto:${CONTACT_EMAIL}`} className="text-sol-cobalt-deep underline">
           {CONTACT_EMAIL}
         </a>
       </p>

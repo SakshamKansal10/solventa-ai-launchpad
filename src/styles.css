@@ -35,9 +35,11 @@
   /* Devanagari families sit AFTER the Latin ones so English text is
      unchanged and Hindi glyphs (which Cormorant/Manrope don't carry) get a
      deliberately chosen serif/sans instead of an arbitrary system fallback. */
-  --font-display: "Cormorant Garamond", "Noto Serif Devanagari", Georgia, serif;
-  --font-sans: "Manrope", "Noto Sans Devanagari", ui-sans-serif, system-ui, sans-serif;
-  --font-script: "Dancing Script", cursive;
+  /* One interface face (Geist) for everything but the SOLVENTIA wordmark; Devanagari falls
+     to Noto Sans. No serif display face — headings are set in the same sans, by weight and size. */
+  --font-display: "Geist", "Noto Sans Devanagari", ui-sans-serif, system-ui, sans-serif;
+  --font-sans: "Geist", "Noto Sans Devanagari", ui-sans-serif, system-ui, sans-serif;
+  --font-script: var(--font-sans);
   /* The SOLVENTIA wordmark (brand board): a wide geometric sans, uppercase, medium weight. */
   --font-wordmark: "Montserrat", "Manrope", ui-sans-serif, system-ui, sans-serif;
   --color-gold: var(--gold);
@@ -73,11 +75,12 @@
   --color-sol-ink: var(--sol-ink);
   --color-sol-navy: var(--sol-navy);
   --color-sol-navy-soft: var(--sol-navy-soft);
-  --color-sol-violet: var(--sol-violet);
-  --color-sol-violet-deep: var(--sol-violet-deep);
-  --color-sol-violet-soft: var(--sol-violet-soft);
-  --color-sol-violet-mist: var(--sol-violet-mist);
-  --color-sol-violet-ultralight: var(--sol-violet-ultralight);
+  --color-sol-cobalt: var(--sol-cobalt);
+  --color-sol-cobalt-deep: var(--sol-cobalt-deep);
+  --color-sol-cobalt-soft: var(--sol-cobalt-soft);
+  --color-sol-cobalt-ultralight: var(--sol-cobalt-ultralight);
+  --color-sol-canvas: var(--sol-canvas);
+  --color-sol-navy-deep: var(--sol-navy-deep);
   --color-sol-champagne: var(--sol-champagne);
   --color-sol-champagne-deep: var(--sol-champagne-deep);
   --color-sol-champagne-soft: var(--sol-champagne-soft);
@@ -98,7 +101,7 @@
   --color-sol-hp-border: var(--sol-hp-border);
   --color-sol-hp-why: var(--sol-hp-why);
   --color-sol-hp-faq-panel: var(--sol-hp-faq-panel);
-  --color-sol-hp-violet-card: var(--sol-hp-violet-card);
+  --color-sol-hp-cobalt-card: var(--sol-hp-cobalt-card);
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
@@ -184,36 +187,38 @@
 
   /* Founder OS design tokens — exact hex values from the Founder OS spec,
      converted to oklch with real sRGB->OKLCH math (not approximated).
-     Semantics: violet = current/adaptive · champagne = completed/milestone ·
-     navy = primary action · ivory = future/inactive · warning = contradiction.
-     Green is intentionally NOT a product colour. */
-  --sol-pearl: oklch(0.9858 0.0045 78.3); /* #FCFAF7 */
-  --sol-ivory-light: oklch(0.9768 0.0086 84.6); /* #FAF7F1 */
-  --sol-ivory: oklch(0.9573 0.0136 78.3); /* #F6F0E7 */
-  --sol-ivory-depth: oklch(0.9343 0.0171 76.1); /* #F0E8DD */
-  --sol-surface: oklch(0.9953 0.0025 48.7); /* #FFFDFC */
-  --sol-ink: oklch(0.2211 0.0259 274.1); /* #171A27 */
-  --sol-navy: oklch(0.255 0.0545 268.9); /* #18213D */
-  --sol-navy-soft: oklch(0.3256 0.06 271.2); /* #293253 */
-  --sol-secondary: oklch(0.4891 0.0165 303.9); /* #625E68 */
-  --sol-violet: oklch(0.5525 0.1865 287.3); /* #7058D7 */
-  --sol-violet-deep: oklch(0.47 0.1812 286.3); /* #5840B9 */
-  --sol-violet-soft: oklch(0.9478 0.0218 297.4); /* #EFEBFB */
-  /* Legacy names kept as aliases so untouched pages keep compiling. */
-  --sol-violet-mist: var(--sol-violet-soft);
-  --sol-violet-ultralight: oklch(0.9726 0.0149 298.6); /* #F7F4FF */
+     The 2026-10 system: WHITE / COOL PEARL = canvas · GRAPHITE = type and structure ·
+     DEEP NAVY = depth and trust · COBALT = interaction and forward movement ·
+     CHAMPAGNE = selective premium emphasis (completed, milestone) · warning = contradiction.
+     Purple is not part of the system. The pearl/ivory names are kept (many components use
+     them) but now hold cool neutrals, never cream. */
+  --sol-canvas: #ffffff;
+  --sol-pearl: #f7f8fa;
+  --sol-ivory-light: #f9fafb;
+  --sol-ivory: #f2f4f7;
+  --sol-ivory-depth: #e9ecf1;
+  --sol-surface: #ffffff;
+  --sol-ink: #171b22;
+  --sol-navy: #101c32;
+  --sol-navy-deep: #0a1324;
+  --sol-navy-soft: #1e2b47;
+  --sol-secondary: #596273;
+  --sol-cobalt: #315edb;
+  --sol-cobalt-deep: #2347b0; /* 7.2:1 on white — text and small marks */
+  --sol-cobalt-soft: #eaf0fd;
+  --sol-cobalt-ultralight: #f4f7fe;
   --sol-champagne: oklch(0.7242 0.0883 80.1); /* #C3A064 */
   --sol-champagne-deep: oklch(
     0.5108 0.0882 82.7
   ); /* #7F6122 — 5.5:1 on pearl, 4.8:1 on champagne-soft */
-  --sol-champagne-soft: oklch(0.9373 0.0251 81.1); /* #F3E9D8 */
-  --sol-border: oklch(0.9003 0.0155 77.1); /* #E4DDD3 */
-  --sol-border-strong: oklch(0.8455 0.0251 71.4); /* #D7CABB */
+  --sol-champagne-soft: #f6efe2;
+  --sol-border: #e1e5eb;
+  --sol-border-strong: #cdd3dc;
   --sol-warning: oklch(0.5644 0.1054 41.8); /* #A95F42 — muted terracotta */
   --sol-warning-soft: oklch(0.9457 0.0163 46.6); /* #F7EAE4 */
   --sol-danger: var(--sol-warning);
   /* Darkened from #85808A: important text must never be faint grey. */
-  --sol-muted: oklch(0.5049 0.0197 304.5); /* #67626E — 4.9:1 on the deepest ivory */
+  --sol-muted: #5f6878; /* 5.4:1 on white, 4.9:1 on the deepest pearl */
 
   /* Motion tokens — one easing, three durations. No bounce. */
   --sol-ease: cubic-bezier(0.22, 1, 0.36, 1);
@@ -223,23 +228,23 @@
   /* Homepage-only surfaces — close to but deliberately distinct from
      sol-pearl/sol-ivory (the product dashboard's own background family),
      per the homepage reconstruction spec's own exact hex values. */
-  --sol-page: oklch(0.9708 0.0086 84.6); /* #F8F5EF */
-  --sol-footer: oklch(0.9423 0.0137 78.3); /* #F1EBE2 — visual-finishing-pass value */
+  --sol-page: #f7f8fa;
+  --sol-footer: #f2f4f7;
   /* Homepage background RHYTHM — several distinct warm-light tones so
      consecutive sections read as deliberate zones, not one repeated
      cream block. Cream/ivory is a KEPT brand color here, never replaced
      with white — these just vary its lightness/warmth section to
      section. See the homepage visual-finishing-pass spec's own exact
      background plan for which section uses which. */
-  --sol-hp-pearl: oklch(0.9858 0.0045 78.3); /* #FCFAF7 */
-  --sol-hp-ivory: oklch(0.9628 0.0119 79.8); /* #F7F2EA */
-  --sol-hp-ivory-light: oklch(0.9768 0.0086 84.6); /* #FAF7F1 */
-  --sol-hp-ivory-deep: oklch(0.945 0.0148 80.7); /* #F2ECE2 */
-  --sol-hp-surface: oklch(0.995 0.0034 67.8); /* #FFFDFB */
-  --sol-hp-border: oklch(0.9006 0.0144 74.4); /* #E4DDD4 */
-  --sol-hp-why: oklch(0.9543 0.0136 78.3); /* #F5EFE6 — Why Solventia section */
-  --sol-hp-faq-panel: oklch(0.9713 0.0102 81.8); /* #F9F5EE — FAQ container */
-  --sol-hp-violet-card: oklch(0.9655 0.0167 304.8); /* #F6F1FD — Week 01 card option */
+  --sol-hp-pearl: #f7f8fa;
+  --sol-hp-ivory: #f2f4f7;
+  --sol-hp-ivory-light: #f9fafb;
+  --sol-hp-ivory-deep: #e9ecf1;
+  --sol-hp-surface: #ffffff;
+  --sol-hp-border: #e1e5eb;
+  --sol-hp-why: #f2f4f7;
+  --sol-hp-faq-panel: #f9fafb;
+  --sol-hp-cobalt-card: #f4f7fe;
 
   /* Dashboard-only typography — deliberately separate from
      --foreground/--muted-foreground, which the marketing site and
@@ -387,7 +392,7 @@
     [role="tab"],
     [tabindex]
   ):focus-visible {
-    outline: 2px solid var(--sol-violet);
+    outline: 2px solid var(--sol-cobalt);
     outline-offset: 2px;
   }
 }
@@ -571,7 +576,7 @@
    falloff curve rather than staying strong across the hero. Ellipse
    size scales with the viewport (clamp) instead of a fixed desktop
    px value. Breathes gently so the page feels alive. */
-@utility ambient-purple {
+@utility ambient-cobalt {
   position: absolute;
   /* Overhangs 48px past the top/left edge (clipped by the hero's own
      overflow-hidden) so the blur filter has real gradient pixels to draw
@@ -588,13 +593,9 @@
   animation: ambient-glow-breathe 9s ease-in-out infinite;
   background: radial-gradient(
     ellipse clamp(340px, 36vw, 520px) clamp(255px, 32vh, 400px) at 48px 48px,
-    #9361c3 0%,
-    #a86cd4 13%,
-    #b179dc 26%,
-    #caa1e6 40%,
-    #e9d8f0 56%,
-    #f9f5f8 70%,
-    transparent 84%
+    rgb(49 94 219 / 0.16) 0%,
+    rgb(49 94 219 / 0.08) 35%,
+    transparent 75%
   );
 }
 
@@ -609,7 +610,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .ambient-purple {
+  .ambient-cobalt {
     animation: none;
   }
 }
@@ -843,11 +844,11 @@
   }
 }
 
-/* Founder dashboard: Inter throughout for a clean, professional product feel.
+/* Founder dashboard: the interface sans (Geist) throughout. (Class name kept: `app-inter`.)
    The serif stays on the Solventia wordmark (.keep-serif) and the marketing site. */
 .app-inter {
-  --font-display: "Inter", "Noto Sans Devanagari", ui-sans-serif, system-ui, sans-serif;
-  --font-sans: "Inter", "Noto Sans Devanagari", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Geist", "Noto Sans Devanagari", ui-sans-serif, system-ui, sans-serif;
+  --font-sans: "Geist", "Noto Sans Devanagari", ui-sans-serif, system-ui, sans-serif;
   font-family: var(--font-sans);
 }
 /* Dashboard-wide scale: every rem size (text and spacing) shrinks ~6%. */
@@ -912,27 +913,26 @@ html.app-inter {
 }
 
 /* ── Shared "Roadmap world" surfaces ───────────────────────────────────── */
-/* The ivory → lavender → peach atmosphere of the Roadmap journey, for hero
-   panels on other dashboard pages. */
+/* Hero panels: a calm white-to-pearl field with the faintest cobalt light at one corner —
+   structure, not decoration. */
 .sol-atmosphere {
   position: relative;
   overflow: hidden;
   border: 1px solid var(--sol-border);
   border-radius: 1.5rem;
   background:
-    radial-gradient(60% 80% at 100% 0%, rgba(155, 130, 255, 0.16), transparent 70%),
-    radial-gradient(50% 70% at 0% 100%, rgba(248, 226, 205, 0.5), transparent 70%),
-    linear-gradient(180deg, #fbf8fd 0%, #f3ecf9 60%, #f8f1ea 100%);
+    radial-gradient(60% 80% at 100% 0%, rgb(49 94 219 / 0.06), transparent 70%),
+    linear-gradient(180deg, #ffffff 0%, #f7f8fa 100%);
 }
 /* Static stand-in for a Gem3D while WebGL is off or still loading. */
 .sol-gem-fallback {
   margin: auto;
   width: 46%;
   height: 70%;
-  background: linear-gradient(145deg, #b9a4ff 0%, #7655f5 55%, #5840b9 100%);
+  background: linear-gradient(145deg, #8fa9ef 0%, #315edb 55%, #2347b0 100%);
   clip-path: polygon(50% 0, 88% 38%, 50% 100%, 12% 38%);
   opacity: 0.55;
-  filter: drop-shadow(0 10px 18px rgba(118, 85, 245, 0.25));
+  filter: drop-shadow(0 10px 18px rgb(49 94 219 / 0.25));
 }
 
 .sol-gem-fallback-orb {
@@ -940,13 +940,12 @@ html.app-inter {
   aspect-ratio: 1;
   height: 62%;
   border-radius: 9999px;
-  background: radial-gradient(circle at 32% 28%, #f3c987 0%, #3b2f9a 22%, #141a47 70%);
+  background: radial-gradient(circle at 32% 28%, #f3c987 0%, #1e3a8a 22%, #101c32 70%);
   box-shadow:
     0 0 0 6px rgba(217, 183, 121, 0.35),
     0 14px 30px rgba(20, 26, 71, 0.3);
 }
 
-/* Dashboard backdrop: the Roadmap's lavender haze, very light, behind every page. */
 @keyframes sol-page-in {
   from {
     opacity: 0;
@@ -966,12 +965,11 @@ html.app-inter {
   }
 }
 
-/* Full-page version of the Roadmap atmosphere, for sign-in and similar screens. */
+/* Full-page field for sign-in and similar screens: white to cool pearl. */
 .sol-world-bg {
   background:
-    radial-gradient(60% 50% at 80% 0%, rgba(155, 130, 255, 0.16), transparent 70%),
-    radial-gradient(50% 45% at 10% 100%, rgba(248, 226, 205, 0.55), transparent 70%),
-    linear-gradient(180deg, #fbf8fd 0%, #f3ecf9 60%, #f8f1ea 100%);
+    radial-gradient(60% 50% at 80% 0%, rgb(49 94 219 / 0.05), transparent 70%),
+    linear-gradient(180deg, #ffffff 0%, #f7f8fa 100%);
 }
 
 /* Roadmap expedition: reveal of an opened mission, and the one-off glow when a

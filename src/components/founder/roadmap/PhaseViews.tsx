@@ -36,7 +36,7 @@ const PHASE_ICON: Record<string, LucideIcon> = {
 const phaseIcon = (key: string): LucideIcon => PHASE_ICON[key] ?? Compass;
 
 const weekTone = (w: WeekDTO) =>
-  w.state === "completed" ? "champagne" : w.state === "locked" ? "neutral" : "violet";
+  w.state === "completed" ? "champagne" : w.state === "locked" ? "neutral" : "cobalt";
 
 export function WeekRow({
   week,
@@ -73,7 +73,7 @@ export function WeekRow({
       type="button"
       onClick={() => onOpen(week.number)}
       data-testid={`week-row-${week.number}`}
-      className={cn(cls, "transition-colors hover:bg-sol-violet-soft/60")}
+      className={cn(cls, "transition-colors hover:bg-sol-cobalt-soft/60")}
     >
       {body}
     </button>
@@ -129,7 +129,7 @@ export function PlanTab({
                       p.state === "completed"
                         ? "border-sol-champagne bg-sol-champagne-soft text-sol-champagne-deep"
                         : p.state === "current"
-                          ? "border-sol-violet bg-sol-violet-soft text-sol-violet-deep"
+                          ? "border-sol-cobalt bg-sol-cobalt-soft text-sol-cobalt-deep"
                           : "border-sol-border-strong bg-sol-surface text-sol-secondary",
                     )}
                   >
@@ -149,7 +149,7 @@ export function PlanTab({
                       p.state === "completed"
                         ? "champagne"
                         : p.state === "current"
-                          ? "violet"
+                          ? "cobalt"
                           : "neutral"
                     }
                   >

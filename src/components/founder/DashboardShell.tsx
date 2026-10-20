@@ -143,7 +143,7 @@ function SidebarContent({
               className={cn(
                 "flex h-11 items-center gap-3 rounded-xl px-3.5 text-[1rem] font-medium transition-colors duration-[180ms]",
                 active
-                  ? "bg-sol-violet-soft text-sol-violet-deep"
+                  ? "bg-sol-cobalt-soft text-sol-cobalt-deep"
                   : "text-sol-ink hover:bg-sol-ivory",
               )}
             >

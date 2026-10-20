@@ -75,7 +75,7 @@ function parseNum(s: string): number | null {
 }
 
 const inputClass =
-  "min-h-11 w-full rounded-xl border border-sol-border bg-sol-surface px-3.5 text-[1rem] text-sol-ink outline-none transition-colors focus:border-sol-violet";
+  "min-h-11 w-full rounded-xl border border-sol-border bg-sol-surface px-3.5 text-[1rem] text-sol-ink outline-none transition-colors focus:border-sol-cobalt";
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
@@ -354,7 +354,7 @@ function EconomicsDisplay({ dto, onEdit }: { dto: EconomicsDTO; onEdit: () => vo
                 <Line
                   type="monotone"
                   dataKey="revenue"
-                  stroke="var(--sol-violet)"
+                  stroke="var(--sol-cobalt)"
                   strokeWidth={2}
                   dot={false}
                   isAnimationActive={false}

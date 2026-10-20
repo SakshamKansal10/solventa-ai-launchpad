@@ -22,7 +22,7 @@ export function Avatar({ url, initials, size = 36, className }: AvatarProps) {
   return (
     <span
       className={cn(
-        "relative inline-flex shrink-0 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-sol-champagne to-sol-violet font-semibold text-white",
+        "relative inline-flex shrink-0 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-sol-champagne to-sol-cobalt font-semibold text-white",
         className,
       )}
       style={{ width: size, height: size, fontSize: Math.max(12, Math.round(size * 0.38)) }}

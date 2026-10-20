@@ -4,13 +4,13 @@ import * as THREE from "three";
 
 export type GemVariant = "crystal" | "island" | "seal" | "trail" | "orb";
 
-const VIOLET = "#7655f5";
+const COBALT = "#315edb";
 const GLOW = "#9b82ff";
 const GOLD = "#d9b779";
 
 function crystalMat() {
   return new THREE.MeshPhysicalMaterial({
-    color: VIOLET,
+    color: COBALT,
     emissive: GLOW,
     emissiveIntensity: 0.28,
     roughness: 0.1,
@@ -329,7 +329,7 @@ export default function GemCanvas({
     >
       <hemisphereLight args={["#fff6ea", "#cfc2f0", 1.1]} />
       <directionalLight position={[-3, 5, 4]} intensity={1.8} color="#fff1dc" />
-      <directionalLight position={[4, 1, -2]} intensity={0.6} color="#b9a4ff" />
+      <directionalLight position={[4, 1, -2]} intensity={0.6} color="#8fa9ef" />
       {variant === "orb" ? (
         <OrbModel reduceMotion={reduceMotion} />
       ) : (

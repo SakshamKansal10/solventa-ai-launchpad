@@ -165,8 +165,8 @@ function LanguageSection() {
             className={cn(
               "min-h-12 min-w-32 rounded-2xl border px-6 text-[1.0625rem] font-semibold transition-colors duration-[180ms]",
               locale === o.id
-                ? "border-sol-violet bg-sol-violet-soft text-sol-violet-deep"
-                : "border-sol-border-strong bg-sol-surface text-sol-ink hover:border-sol-violet/50",
+                ? "border-sol-cobalt bg-sol-cobalt-soft text-sol-cobalt-deep"
+                : "border-sol-border-strong bg-sol-surface text-sol-ink hover:border-sol-cobalt/50",
             )}
           >
             {o.label}

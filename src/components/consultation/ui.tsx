@@ -97,7 +97,7 @@ export function ScreenBody({
   );
 }
 
-/** ≥48px tall, whole row clickable. `selected` = violet (current answer). */
+/** ≥48px tall, whole row clickable. `selected` = cobalt (current answer). */
 export function OptionButton({
   selected,
   onClick,
@@ -126,8 +126,8 @@ export function OptionButton({
       className={cn(
         "flex min-h-[3rem] w-full items-center justify-between gap-3 rounded-2xl border px-4 py-3 text-left text-[1rem] font-medium leading-snug transition-colors duration-[180ms] ease-[var(--sol-ease)] disabled:opacity-50",
         selected
-          ? "border-sol-violet bg-sol-violet-soft text-sol-ink"
-          : "border-sol-border bg-sol-surface text-sol-ink hover:border-sol-violet/45",
+          ? "border-sol-cobalt bg-sol-cobalt-soft text-sol-ink"
+          : "border-sol-border bg-sol-surface text-sol-ink hover:border-sol-cobalt/45",
         className,
       )}
     >
@@ -138,7 +138,7 @@ export function OptionButton({
           "flex size-5 shrink-0 items-center justify-center rounded-full border transition-colors",
           role === "checkbox" && "rounded-md",
           selected
-            ? "border-sol-violet bg-sol-violet text-white"
+            ? "border-sol-cobalt bg-sol-cobalt text-white"
             : "border-sol-border-strong bg-transparent",
         )}
       >
@@ -283,7 +283,7 @@ export function TextField({
         aria-describedby={error ? errId : undefined}
         onChange={(e) => onChange(e.target.value)}
         className={cn(
-          "h-12 w-full rounded-2xl border bg-sol-surface px-4 text-[1rem] text-sol-ink placeholder:text-sol-secondary/70 transition-colors focus-visible:border-sol-violet focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sol-violet/30",
+          "h-12 w-full rounded-2xl border bg-sol-surface px-4 text-[1rem] text-sol-ink placeholder:text-sol-secondary/70 transition-colors focus-visible:border-sol-cobalt focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sol-cobalt/30",
           error ? "border-sol-warning" : "border-sol-border",
         )}
       />
@@ -334,7 +334,7 @@ export function ComboboxField({
             role="combobox"
             aria-expanded={open}
             data-testid={testId}
-            className="flex h-12 w-full items-center justify-between gap-2 rounded-2xl border border-sol-border bg-sol-surface px-4 text-left text-[1rem] text-sol-ink transition-colors hover:border-sol-violet/45"
+            className="flex h-12 w-full items-center justify-between gap-2 rounded-2xl border border-sol-border bg-sol-surface px-4 text-left text-[1rem] text-sol-ink transition-colors hover:border-sol-cobalt/45"
           >
             <span className={cn("truncate", !selected && "text-sol-secondary/80")}>
               {selected?.label ?? placeholder}
@@ -358,7 +358,7 @@ export function ComboboxField({
                     }}
                   >
                     <Check
-                      className={cn("size-4", value === o.id ? "text-sol-violet" : "opacity-0")}
+                      className={cn("size-4", value === o.id ? "text-sol-cobalt" : "opacity-0")}
                       aria-hidden="true"
                     />
                     {o.label}
@@ -405,7 +405,7 @@ export function Segmented({
           onClick={() => onChange(o.id)}
           className={cn(
             "min-h-10 rounded-xl px-3.5 text-[0.9375rem] font-semibold transition-colors duration-[180ms]",
-            value === o.id ? "bg-sol-violet text-white" : "text-sol-ink hover:bg-sol-violet-soft",
+            value === o.id ? "bg-sol-cobalt text-white" : "text-sol-ink hover:bg-sol-cobalt-soft",
           )}
         >
           {o.label}

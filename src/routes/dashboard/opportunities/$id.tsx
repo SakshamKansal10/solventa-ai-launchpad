@@ -87,7 +87,7 @@ function OpportunityPage() {
     <div className="flex flex-col gap-6" data-testid="opportunity-page">
       <Link
         to="/dashboard/opportunities"
-        className="inline-flex min-h-10 w-fit items-center gap-2 text-[0.9375rem] font-medium text-sol-violet-deep hover:underline"
+        className="inline-flex min-h-10 w-fit items-center gap-2 text-[0.9375rem] font-medium text-sol-cobalt-deep hover:underline"
       >
         <ArrowLeft className="size-4" aria-hidden="true" />
         {t("opp.back")}
@@ -124,7 +124,7 @@ function OpportunityPage() {
               key={key}
               value={key}
               data-testid={`tab-${key}`}
-              className="min-h-10 rounded-full px-4 text-[0.9375rem] font-medium text-sol-secondary transition-colors duration-200 data-[state=active]:bg-sol-violet-soft data-[state=active]:text-sol-violet-deep"
+              className="min-h-10 rounded-full px-4 text-[0.9375rem] font-medium text-sol-secondary transition-colors duration-200 data-[state=active]:bg-sol-cobalt-soft data-[state=active]:text-sol-cobalt-deep"
             >
               {t(`opp.tab.${key}` as const)}
             </TabsTrigger>
@@ -169,11 +169,11 @@ function HeaderBlock({ dto, title }: { dto: OpportunityDetailDTO; title: string 
       <div className="relative z-10 flex flex-col items-start gap-4 p-6 sm:p-8">
         <div className="flex flex-wrap items-center gap-2.5">
           <p className="sol-eyebrow flex items-center gap-2 !text-[0.6875rem] !uppercase !tracking-[0.14em]">
-            <span className="h-3 w-0.5 rounded-full bg-sol-violet" aria-hidden="true" />
+            <span className="h-3 w-0.5 rounded-full bg-sol-cobalt" aria-hidden="true" />
             {t("opp.detail.eyebrow")}
           </p>
           {dto.isSelected ? (
-            <Pill tone="violet">{t("opp.status.selected")}</Pill>
+            <Pill tone="cobalt">{t("opp.status.selected")}</Pill>
           ) : (
             <FitPill fit={dto.brief.fit} />
           )}
@@ -375,7 +375,7 @@ function OverviewTile({
     >
       <div className="flex items-center justify-between gap-3">
         <span className="flex items-center gap-2.5">
-          <span className="flex size-9 items-center justify-center rounded-full bg-sol-violet-soft text-sol-violet-deep">
+          <span className="flex size-9 items-center justify-center rounded-full bg-sol-cobalt-soft text-sol-cobalt-deep">
             <Icon className="size-[18px]" aria-hidden="true" />
           </span>
           <span className="text-[0.875rem] font-medium text-sol-champagne-deep">{tile.label}</span>
@@ -408,7 +408,7 @@ function OverviewTile({
             aria-expanded={open}
             aria-controls={panelId}
             onClick={() => setOpen((v) => !v)}
-            className="flex min-h-10 w-fit cursor-pointer items-center gap-1.5 rounded-lg text-[0.9375rem] font-semibold text-sol-violet-deep outline-none transition-colors hover:text-sol-violet focus-visible:ring-2 focus-visible:ring-sol-violet/50"
+            className="flex min-h-10 w-fit cursor-pointer items-center gap-1.5 rounded-lg text-[0.9375rem] font-semibold text-sol-cobalt-deep outline-none transition-colors hover:text-sol-cobalt focus-visible:ring-2 focus-visible:ring-sol-cobalt/50"
           >
             <ChevronDown
               className={cn("size-4 transition-transform duration-200", open && "rotate-180")}
@@ -491,7 +491,7 @@ function FounderFit({
             <p className="sol-h3" data-testid="opportunity-title">
               {title}
             </p>
-            {dto.isSelected && <Pill tone="violet">{t("opp.status.selected")}</Pill>}
+            {dto.isSelected && <Pill tone="cobalt">{t("opp.status.selected")}</Pill>}
           </div>
           {dto.brief.oneLiner && (
             <p className="line-clamp-3 text-[0.9375rem] leading-snug text-sol-secondary">
@@ -550,11 +550,11 @@ function FounderFit({
         <Card className="flex flex-col gap-3 p-5">
           <div className="flex items-center justify-between gap-3">
             <h3 className="sol-h3 flex items-center gap-2.5">
-              <CalendarCheck className="size-5 text-sol-violet" aria-hidden="true" />
+              <CalendarCheck className="size-5 text-sol-cobalt" aria-hidden="true" />
               {t("opp.fit.nextSteps")}
             </h3>
             {gaps.length > 0 && (
-              <span className="rounded-full bg-sol-violet-soft px-2.5 py-0.5 text-[0.875rem] font-semibold text-sol-violet-deep">
+              <span className="rounded-full bg-sol-cobalt-soft px-2.5 py-0.5 text-[0.875rem] font-semibold text-sol-cobalt-deep">
                 {done.size}/{gaps.length}
               </span>
             )}
@@ -571,7 +571,7 @@ function FounderFit({
                       type="checkbox"
                       checked={done.has(g)}
                       onChange={() => toggle(g)}
-                      className="mt-0.5 size-5 shrink-0 accent-[var(--sol-violet)]"
+                      className="mt-0.5 size-5 shrink-0 accent-[var(--sol-cobalt)]"
                     />
                     <span className={cn(done.has(g) && "text-sol-secondary line-through")}>
                       {g}
@@ -591,7 +591,7 @@ function FounderFit({
               <Star className="size-5 text-sol-champagne-deep" aria-hidden="true" />
               {t("opp.fit.advantages")}
             </span>
-            <span className="rounded-full bg-sol-violet-soft px-2.5 py-0.5 font-sans text-[0.875rem] font-semibold text-sol-violet-deep">
+            <span className="rounded-full bg-sol-cobalt-soft px-2.5 py-0.5 font-sans text-[0.875rem] font-semibold text-sol-cobalt-deep">
               {advantages.length}
             </span>
           </h3>
@@ -615,7 +615,7 @@ function FounderFit({
               <TriangleAlert className="size-5 text-sol-warning" aria-hidden="true" />
               {t("opp.fit.gaps")}
             </span>
-            <span className="rounded-full bg-sol-violet-soft px-2.5 py-0.5 font-sans text-[0.875rem] font-semibold text-sol-violet-deep">
+            <span className="rounded-full bg-sol-cobalt-soft px-2.5 py-0.5 font-sans text-[0.875rem] font-semibold text-sol-cobalt-deep">
               {gaps.length}
             </span>
           </h3>
@@ -682,7 +682,7 @@ function Market({ dto, opportunityId }: { dto: OpportunityDetailDTO; opportunity
                       href={s.sourceUrl}
                       target="_blank"
                       rel="noreferrer noopener"
-                      className="inline-flex items-center gap-1.5 text-[0.9375rem] font-semibold text-sol-violet-deep hover:underline"
+                      className="inline-flex items-center gap-1.5 text-[0.9375rem] font-semibold text-sol-cobalt-deep hover:underline"
                     >
                       {s.sourceTitle ?? s.sourceUrl}
                       <ExternalLink className="size-3.5" aria-hidden="true" />
@@ -695,13 +695,13 @@ function Market({ dto, opportunityId }: { dto: OpportunityDetailDTO; opportunity
         </ul>
       )}
 
-      <Card className="flex flex-col gap-4 border-sol-violet/25 bg-sol-violet-ultralight/60 p-6">
+      <Card className="flex flex-col gap-4 border-sol-cobalt/25 bg-sol-cobalt-ultralight/60 p-6">
         <h3 className="sol-h3">{t("opp.market.learnTitle")}</h3>
         <ul className="flex flex-col gap-2.5">
           {(["q1", "q2", "q3"] as const).map((q) => (
             <li key={q} className="flex gap-3 text-[1.0625rem] leading-snug text-sol-ink">
               <span
-                className="mt-2 size-1.5 shrink-0 rounded-full bg-sol-violet"
+                className="mt-2 size-1.5 shrink-0 rounded-full bg-sol-cobalt"
                 aria-hidden="true"
               />
               {t(`opp.market.${q}` as const)}

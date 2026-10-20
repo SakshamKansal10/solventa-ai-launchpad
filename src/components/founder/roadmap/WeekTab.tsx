@@ -141,7 +141,7 @@ export function WeekTab({
                   ? "champagne"
                   : week.state === "locked"
                     ? "neutral"
-                    : "violet"
+                    : "cobalt"
               }
             >
               {t(`rm.state.${week.state}` as const)}
@@ -157,7 +157,7 @@ export function WeekTab({
                 aria-label={t("rm.week.prev")}
                 disabled={!prevWeek}
                 onClick={() => prevWeek && goWeek(prevWeek.number)}
-                className="grid size-10 place-items-center text-sol-ink transition-colors hover:bg-sol-violet-soft disabled:opacity-35"
+                className="grid size-10 place-items-center text-sol-ink transition-colors hover:bg-sol-cobalt-soft disabled:opacity-35"
               >
                 <ChevronLeft className="size-5" aria-hidden="true" />
               </button>
@@ -166,7 +166,7 @@ export function WeekTab({
                 aria-label={t("rm.week.next")}
                 disabled={!nextWeek}
                 onClick={() => nextWeek && goWeek(nextWeek.number)}
-                className="grid size-10 place-items-center border-l border-sol-border text-sol-ink transition-colors hover:bg-sol-violet-soft disabled:opacity-35"
+                className="grid size-10 place-items-center border-l border-sol-border text-sol-ink transition-colors hover:bg-sol-cobalt-soft disabled:opacity-35"
               >
                 <ChevronRight className="size-5" aria-hidden="true" />
               </button>
@@ -187,10 +187,10 @@ export function WeekTab({
 
         {detail.adaptationNote(week.adaptationNote) && (
           <div
-            className="border-l-2 border-sol-violet/50 bg-sol-violet-ultralight/70 py-3 pl-4 pr-3"
+            className="border-l-2 border-sol-cobalt/50 bg-sol-cobalt-ultralight/70 py-3 pl-4 pr-3"
             data-testid="adaptation-note"
           >
-            <p className="sol-eyebrow !text-[0.6875rem] !text-sol-violet-deep">{t("rm.adapted")}</p>
+            <p className="sol-eyebrow !text-[0.6875rem] !text-sol-cobalt-deep">{t("rm.adapted")}</p>
             <p className="mt-1 text-[0.9375rem] leading-snug text-sol-ink">
               {detail.adaptationNote(week.adaptationNote)}
             </p>
@@ -217,7 +217,7 @@ export function WeekTab({
             ) : (
               <>
                 <p className="sol-h3 flex items-center gap-3">
-                  <Loader2 className="size-5 animate-spin text-sol-violet" aria-hidden="true" />
+                  <Loader2 className="size-5 animate-spin text-sol-cobalt" aria-hidden="true" />
                   {t("rm.gen.preparingTitle", { n: pad })}
                 </p>
                 <p role="status" className="sol-body sol-prose text-sol-secondary">
@@ -269,7 +269,7 @@ export function WeekTab({
           <div className="flex flex-col divide-y divide-sol-border/70 rounded-3xl border border-sol-border bg-[linear-gradient(160deg,#fffdfb_0%,#f8f3fc_100%)] shadow-[0_16px_40px_-30px_rgba(88,64,185,0.45)]">
             <section className="flex flex-col gap-4 p-5">
               <h3 className="flex items-center gap-2.5 text-[0.9375rem] font-semibold text-sol-ink">
-                <TrendingUp className="size-4 text-sol-violet-deep" aria-hidden="true" />
+                <TrendingUp className="size-4 text-sol-cobalt-deep" aria-hidden="true" />
                 {t("rm.rail.progress")}
               </h3>
               <ProgressSegments week={week} />
@@ -282,8 +282,8 @@ export function WeekTab({
                       m.state === "completed"
                         ? "bg-sol-champagne"
                         : m.state === "in_progress"
-                          ? "bg-sol-violet"
-                          : "bg-sol-violet/15",
+                          ? "bg-sol-cobalt"
+                          : "bg-sol-cobalt/15",
                     )}
                   />
                 ))}
@@ -314,11 +314,11 @@ export function WeekTab({
                   <p className="text-[0.9375rem] leading-snug text-sol-ink">{threshold}</p>
                 )}
                 <div
-                  className="h-1 overflow-hidden rounded-full bg-sol-violet/10"
+                  className="h-1 overflow-hidden rounded-full bg-sol-cobalt/10"
                   aria-hidden="true"
                 >
                   <div
-                    className="h-full rounded-full bg-gradient-to-r from-sol-violet to-sol-champagne transition-[width] duration-700 ease-out"
+                    className="h-full rounded-full bg-gradient-to-r from-sol-cobalt to-sol-champagne transition-[width] duration-700 ease-out"
                     style={{ width: `${Math.round(pct * 100)}%` }}
                   />
                 </div>

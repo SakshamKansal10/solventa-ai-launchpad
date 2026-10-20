@@ -109,7 +109,7 @@ export function RoadmapJourney({
         <header className="relative z-20 flex flex-wrap items-start justify-between gap-4 px-6 pt-6 sm:px-8 sm:pt-7">
           <div className="min-w-0">
             <p className="sol-eyebrow flex items-center gap-2 !text-[0.6875rem] !uppercase !tracking-[0.14em]">
-              <span className="h-3 w-0.5 rounded-full bg-sol-violet" aria-hidden="true" />
+              <span className="h-3 w-0.5 rounded-full bg-sol-cobalt" aria-hidden="true" />
               {t("rm.journey.eyebrow")}
             </p>
             <h1 id="journey-title" className="sol-page-title mt-1">
@@ -130,7 +130,7 @@ export function RoadmapJourney({
                 className="flex items-center gap-2 rounded-full border border-sol-border bg-sol-surface/80 px-3 py-1 text-[0.8125rem] font-medium text-sol-ink"
                 data-testid="current-week-number"
               >
-                <span className="size-2 rounded-full bg-sol-violet" aria-hidden="true" />
+                <span className="size-2 rounded-full bg-sol-cobalt" aria-hidden="true" />
                 {currentWeek && currentPhaseNumber
                   ? t("rm.header.currentValue", {
                       phase: currentPhaseNumber,
@@ -151,7 +151,7 @@ export function RoadmapJourney({
                     type="button"
                     data-testid="next-checkpoint"
                     onClick={() => onOpenWeek(currentWeek.number)}
-                    className="flex items-center gap-1.5 rounded-full border border-sol-border bg-sol-surface/80 px-3 py-1 text-[0.8125rem] font-medium text-sol-violet-deep transition-colors hover:border-sol-violet/50"
+                    className="flex items-center gap-1.5 rounded-full border border-sol-border bg-sol-surface/80 px-3 py-1 text-[0.8125rem] font-medium text-sol-cobalt-deep transition-colors hover:border-sol-cobalt/50"
                   >
                     {t("rm.week.review")}
                     <ArrowRight className="size-3.5" aria-hidden="true" />
@@ -289,9 +289,9 @@ function PhaseIsland({
             </p>
           ) : (
             <>
-              <div className="h-1.5 overflow-hidden rounded-full bg-sol-violet-soft">
+              <div className="h-1.5 overflow-hidden rounded-full bg-sol-cobalt-soft">
                 <div
-                  className="h-full rounded-full bg-gradient-to-r from-sol-violet to-sol-champagne"
+                  className="h-full rounded-full bg-gradient-to-r from-sol-cobalt to-sol-champagne"
                   style={{ width: `${Math.round(pct * 100)}%` }}
                 />
               </div>
@@ -334,7 +334,7 @@ const PhaseLabel = forwardRef<
       aria-pressed={active}
       onClick={onClick}
       className={cn(
-        "pointer-events-auto flex flex-col items-center rounded-xl border border-white/70 bg-white/80 px-3 py-1.5 text-center shadow-sm outline-none backdrop-blur-sm transition-all duration-300 hover:bg-white focus-visible:ring-2 focus-visible:ring-sol-violet/50",
+        "pointer-events-auto flex flex-col items-center rounded-xl border border-white/70 bg-white/80 px-3 py-1.5 text-center shadow-sm outline-none backdrop-blur-sm transition-all duration-300 hover:bg-white focus-visible:ring-2 focus-visible:ring-sol-cobalt/50",
         className,
       )}
       {...rest}
@@ -342,7 +342,7 @@ const PhaseLabel = forwardRef<
       <span
         className={cn(
           "flex items-center gap-1 text-[0.75rem] tabular-nums",
-          active ? "font-semibold text-sol-violet-deep" : "text-sol-secondary",
+          active ? "font-semibold text-sol-cobalt-deep" : "text-sol-secondary",
         )}
       >
         {phase.state === "future" && <Lock className="size-3" aria-label={t("rm.state.locked")} />}
@@ -427,7 +427,7 @@ function PhaseDetailsPanel({
             )}
             <div className="mt-5">
               <div
-                className="h-1.5 overflow-hidden rounded-full bg-sol-violet-soft"
+                className="h-1.5 overflow-hidden rounded-full bg-sol-cobalt-soft"
                 role="progressbar"
                 aria-valuemin={0}
                 aria-valuemax={100}
@@ -435,7 +435,7 @@ function PhaseDetailsPanel({
                 aria-label={t("rm.phase.progress", { x: weeksDone, y: weeks.length })}
               >
                 <div
-                  className="h-full rounded-full bg-gradient-to-r from-sol-violet to-sol-champagne transition-[width] duration-700 ease-out"
+                  className="h-full rounded-full bg-gradient-to-r from-sol-cobalt to-sol-champagne transition-[width] duration-700 ease-out"
                   style={{ width: `${Math.round(pct * 100)}%` }}
                 />
               </div>
@@ -467,12 +467,12 @@ function PhaseDetailsPanel({
                     className={cn(
                       "flex size-7 items-center justify-center rounded-full border text-[0.6875rem] font-semibold transition-all duration-300 disabled:cursor-default",
                       w.id === view.currentWeekId
-                        ? "border-sol-violet bg-sol-violet text-white shadow-[0_0_0_4px_rgba(118,85,245,0.16)]"
+                        ? "border-sol-cobalt bg-sol-cobalt text-white shadow-[0_0_0_4px_rgba(118,85,245,0.16)]"
                         : w.state === "completed"
                           ? "border-sol-champagne bg-sol-champagne text-sol-ink"
                           : w.state === "locked"
                             ? "border-sol-border-strong bg-sol-surface text-sol-secondary"
-                            : "border-sol-violet/50 bg-sol-violet-soft text-sol-violet-deep",
+                            : "border-sol-cobalt/50 bg-sol-cobalt-soft text-sol-cobalt-deep",
                     )}
                   >
                     {w.state === "completed" ? (

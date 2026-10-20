@@ -5,8 +5,8 @@ import { Pill, type PillTone } from "../ui";
 
 export const STATE_TONE: Record<ProofState, PillTone> = {
   untested: "neutral",
-  weak: "violet",
-  mixed: "violet",
+  weak: "cobalt",
+  mixed: "cobalt",
   supported: "champagne",
   contradicted: "warning",
 };

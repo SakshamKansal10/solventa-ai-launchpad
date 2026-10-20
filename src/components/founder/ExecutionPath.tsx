@@ -68,7 +68,7 @@ export function ExecutionPath({
               : done
                 ? next.status === "completed"
                   ? "bg-sol-champagne"
-                  : "bg-gradient-to-r from-sol-champagne to-sol-violet"
+                  : "bg-gradient-to-r from-sol-champagne to-sol-cobalt"
                 : "bg-white/15";
             const supported = stop.items.filter((a) => a.state === "supported").length;
             const stateKey: MessageKey = isCurrent
@@ -109,7 +109,7 @@ export function ExecutionPath({
                   {isCurrent && !reduceMotion && (
                     <motion.span
                       aria-hidden="true"
-                      className="absolute inset-0.5 rounded-full border-2 border-sol-violet/70"
+                      className="absolute inset-0.5 rounded-full border-2 border-sol-cobalt/70"
                       animate={{ scale: [1, 1.35], opacity: [0.7, 0] }}
                       transition={{ duration: 1.8, repeat: Infinity, ease: "easeOut" }}
                     />
@@ -123,7 +123,7 @@ export function ExecutionPath({
                       done
                         ? "border-sol-champagne bg-sol-champagne text-sol-navy"
                         : isCurrent
-                          ? "border-sol-violet bg-sol-violet text-white shadow-[0_0_0_4px_rgba(114,87,216,0.28)]"
+                          ? "border-sol-cobalt bg-sol-cobalt text-white shadow-[0_0_0_4px_rgba(114,87,216,0.28)]"
                           : "border-white/25 bg-transparent text-white/55",
                     )}
                   >

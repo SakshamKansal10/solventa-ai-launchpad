@@ -59,7 +59,7 @@ export function FinalCTA() {
             />
             <span className="relative">{t("finalCta.cta")}</span>
             <span className="sol-nudge relative flex" aria-hidden="true">
-              <ArrowRight className="size-[19px] text-sol-violet-deep transition-transform duration-150 group-hover:translate-x-[5px]" />
+              <ArrowRight className="size-[19px] text-sol-cobalt-deep transition-transform duration-150 group-hover:translate-x-[5px]" />
             </span>
           </button>
         </div>

@@ -143,7 +143,7 @@ function HistoryPage() {
           {/* The rail the consultations hang from, newest first. */}
           <span
             aria-hidden="true"
-            className="absolute bottom-8 left-5 top-8 w-0.5 rounded-full bg-gradient-to-b from-sol-violet/50 via-sol-border-strong to-transparent"
+            className="absolute bottom-8 left-5 top-8 w-0.5 rounded-full bg-gradient-to-b from-sol-cobalt/50 via-sol-border-strong to-transparent"
           />
           {query.data.map((entry, i) => {
             const month = monthOf(entry.createdAt);
@@ -159,7 +159,7 @@ function HistoryPage() {
                     "absolute left-0 flex size-10 items-center justify-center rounded-full border",
                     showMonth ? "top-14" : "top-6",
                     entry.isCurrent
-                      ? "border-sol-violet bg-sol-violet text-white shadow-[0_6px_18px_rgba(112,88,215,0.3)]"
+                      ? "border-sol-cobalt bg-sol-cobalt text-white shadow-[0_6px_18px_rgba(112,88,215,0.3)]"
                       : "border-sol-border-strong bg-sol-surface text-sol-secondary",
                   )}
                 >
@@ -282,7 +282,7 @@ function EntryCard({
   const arrow = (
     <span
       aria-hidden="true"
-      className="absolute -right-[1.15rem] top-1/2 z-10 hidden size-7 -translate-y-1/2 items-center justify-center rounded-full border border-sol-border bg-sol-surface text-sol-violet shadow-sm md:flex"
+      className="absolute -right-[1.15rem] top-1/2 z-10 hidden size-7 -translate-y-1/2 items-center justify-center rounded-full border border-sol-border bg-sol-surface text-sol-cobalt shadow-sm md:flex"
     >
       <ArrowRight className="size-3.5" />
     </span>
@@ -297,7 +297,7 @@ function EntryCard({
     >
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h2 className="sol-h3">{formatDate(entry.createdAt, locale)}</h2>
-        {entry.isCurrent && <Pill tone="violet">{t("hist.current")}</Pill>}
+        {entry.isCurrent && <Pill tone="cobalt">{t("hist.current")}</Pill>}
       </div>
 
       {facts.length > 0 && (

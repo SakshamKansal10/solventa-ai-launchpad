@@ -282,7 +282,7 @@ export function Header({ pendingNext }: HeaderProps = {}) {
                       "hidden text-[15px] font-semibold transition-colors sm:inline-flex",
                       overDarkHero
                         ? "text-white hover:text-sol-champagne"
-                        : "text-sol-ink hover:text-sol-violet-deep",
+                        : "text-sol-ink hover:text-sol-cobalt-deep",
                     )}
                   >
                     {t("nav.signIn")}
@@ -301,7 +301,7 @@ export function Header({ pendingNext }: HeaderProps = {}) {
                 }}
               >
                 {t("nav.findMyBusinessIdea")}
-                <ArrowRight className="size-4 text-sol-violet-deep" aria-hidden="true" />
+                <ArrowRight className="size-4 text-sol-cobalt-deep" aria-hidden="true" />
               </button>
             </>
           )}
@@ -331,7 +331,7 @@ export function Header({ pendingNext }: HeaderProps = {}) {
                     onClick={() => handleScrollNav(item.id)}
                     className={`rounded-lg px-3 py-3 text-left text-base font-medium transition-colors ${
                       isHome && activeId === item.id
-                        ? "bg-sol-violet-mist text-sol-violet-deep"
+                        ? "bg-sol-cobalt-soft text-sol-cobalt-deep"
                         : "text-sol-secondary hover:bg-sol-ivory hover:text-sol-ink"
                     }`}
                   >
@@ -418,7 +418,7 @@ export function Header({ pendingNext }: HeaderProps = {}) {
                       }}
                     >
                       {t("nav.findMyBusinessIdea")}
-                      <ArrowRight className="size-4 text-sol-violet-deep" aria-hidden="true" />
+                      <ArrowRight className="size-4 text-sol-cobalt-deep" aria-hidden="true" />
                     </button>
                   </>
                 )}

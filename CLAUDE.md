@@ -22,10 +22,11 @@ Run prettier, typecheck and eslint on files you change before finishing.
 - `src/components/consultation/*` — onboarding consultation flow.
 
 ## Dashboard design rules
-- Dashboard typography is Inter. `DashboardShell` adds the `app-inter` class to `<html>` while mounted so portals (dialogs, sheets) match. Overrides live at the end of `src/styles.css`.
+- One interface sans for the whole product: Geist (`--font-sans` = `--font-display`), Noto Sans Devanagari for Hindi; Montserrat only for the SOLVENTIA wordmark. No serif headings. `DashboardShell` still adds the `app-inter` class (name kept) so portals match. Overrides live at the end of `src/styles.css`.
 - Headings are capped (h1 ≈ 24–30px, h2 ≈ 19–22px); labels are sentence case, not ALL-CAPS; semibold renders as medium, bold as semibold.
 - Use `sol-h-sm` for small card headings and `sol-h-hero` for the Opportunities hero title. To change a `sol-h-sm` size use a Tailwind `!text-[…]` override.
-- Keep the Solventia palette: warm ivory background, navy text/primary buttons, violet/lavender accents, beige borders, white cards. Thin borders, minimal shadows.
+- Palette (2026-10, set by the owner — supersedes the old ivory/violet rule): WHITE / COOL PEARL = canvas (`sol-surface`, `sol-pearl`; the `ivory` token names now hold cool neutrals), GRAPHITE = type (`sol-ink`, `sol-secondary`), DEEP NAVY = depth and primary actions (`sol-navy`), COBALT = interaction and current state (`sol-cobalt*`), CHAMPAGNE = selective emphasis (completed, milestones). No purple, no lavender or cream gradients. Thin cool borders (`sol-border`), minimal shadows.
+- Founder fit has ONE source: `assessFit` in `src/lib/fit/model.ts`. Never derive a fit label anywhere else, never show a percentage, and show the founder's stated ranges, never a midpoint.
 - Existing e2e tests rely on `data-testid` attributes (e.g. `assumption-card`, `mission-toggle`, `north-star`, `rail-ask-sol`, `week-avoid`, `success-threshold`). Keep them when restyling.
 - Use real data; never replace it with hardcoded sample content. Don't add UI for features that don't exist (e.g. bookmarks).
 

@@ -85,7 +85,7 @@ function Scene(props: JourneySceneProps) {
     <>
       <hemisphereLight args={["#ffe9e2", "#b7a4d6", 1.1]} />
       <directionalLight position={[6, 8, 9]} intensity={2.1} color="#ffd9b8" />
-      <directionalLight position={[-8, 3, 4]} intensity={0.7} color="#b9a4ff" />
+      <directionalLight position={[-8, 3, 4]} intensity={0.7} color="#8fa9ef" />
       <directionalLight position={[-3, 4, -9]} intensity={1.1} color="#ffc9a8" />
       <Backdrop
         low={props.low}

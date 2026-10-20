@@ -46,7 +46,7 @@ export function PremiumVisualSlot({ image, alt = "", caption, className }: Premi
   return (
     <div
       className={cn(
-        "relative flex flex-col items-center justify-center gap-3 overflow-hidden rounded-[28px] border border-dashed border-sol-violet/25 px-8 py-16 text-center",
+        "relative flex flex-col items-center justify-center gap-3 overflow-hidden rounded-[28px] border border-dashed border-sol-cobalt/25 px-8 py-16 text-center",
         className,
       )}
       style={{
@@ -55,7 +55,7 @@ export function PremiumVisualSlot({ image, alt = "", caption, className }: Premi
       }}
       aria-hidden="true"
     >
-      <p className="text-[0.66rem] font-semibold uppercase tracking-[0.16em] text-sol-violet-deep/70">
+      <p className="text-[0.66rem] font-semibold uppercase tracking-[0.16em] text-sol-cobalt-deep/70">
         Reserved — premium visual asset
       </p>
       {caption && (
