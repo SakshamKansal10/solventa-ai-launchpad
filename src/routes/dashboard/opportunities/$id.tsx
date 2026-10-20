@@ -48,8 +48,6 @@ import { useTranslatedEntity, type OpportunityOverlay } from "@/lib/use-translat
 import type { OpportunityDisplayDetail } from "@/lib/opportunity-display";
 import { cn } from "@/lib/utils";
 
-const FIT_LEVEL = { strong: 2, moderate: 1, conditional: 0 } as const;
-
 const TABS = ["overview", "fit", "market"] as const;
 type Tab = (typeof TABS)[number];
 
@@ -449,14 +447,14 @@ function FounderFit({
 }) {
   const { t } = useLocale();
   const reasonText = useFitReasonText();
-  const { matrix } = dto.fit;
+  const { assessment } = dto.fit;
   const advantages = (
     detail.whyThisFounder.length > 0 ? detail.whyThisFounder : dto.fit.advantages
   ).slice(0, 4);
   const gaps = [
-    ...dto.fit.matrix.rows
-      .filter((r) => r.status !== "strong")
-      .map((r) => reasonText(r.reason, dto.fit.currency)),
+    ...assessment.factors
+      .filter((f) => f.score !== 3)
+      .map((f) => reasonText(f.reason, dto.fit.currency)),
     ...detail.skillsToLearn.map((s) => t("opp.fit.learn", { skill: s })),
   ].slice(0, 3);
   // Next steps are the gaps, to be worked through; ticks are a local aid only.
@@ -477,7 +475,7 @@ function FounderFit({
             className="font-display text-[clamp(1.75rem,1.5rem+1.2vw,2.375rem)] font-medium leading-none text-sol-ink"
             data-testid="fit-overall"
           >
-            {t(`fit.overall.${matrix.overall}` as const)}
+            {t(`fit2.label.${assessment.label}` as const)}
           </p>
           <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
             <Pill tone="champagne">
@@ -485,7 +483,7 @@ function FounderFit({
             </Pill>
           </div>
           <p className="sol-prose text-[1rem] text-sol-secondary">
-            {t(`fit.overallBody.${matrix.overall}` as const)}
+            {t(`fit2.body.${assessment.label}` as const)}
           </p>
         </div>
         <div className="relative z-10 flex min-w-0 flex-col gap-2 md:max-w-xs md:text-left">
@@ -505,7 +503,7 @@ function FounderFit({
 
       <div className="grid gap-5 lg:grid-cols-3">
         <ul className="grid gap-5 sm:grid-cols-2 lg:col-span-2">
-          {matrix.rows.map((row) => {
+          {assessment.factors.map((row) => {
             const Icon = FIT_ICONS[row.key];
             return (
               <li key={row.key} data-testid={`fit-row-${row.key}`}>
@@ -516,24 +514,24 @@ function FounderFit({
                   <div className="min-w-0">
                     <div className="flex flex-wrap items-center gap-2.5">
                       <p className="text-[1rem] font-medium text-sol-ink">
-                        {t(`fit.row.${row.key}` as const)}
+                        {t(`fit2.factor.${row.key}` as const)}
                       </p>
-                      <FitStatusPill status={row.status} />
+                      <FitStatusPill score={row.score} />
                     </div>
                     <span
                       className="mt-2.5 flex gap-1"
                       role="img"
-                      aria-label={t(`fit.status.${row.status}` as const)}
+                      aria-label={t(`fit2.level.${row.score ?? "unknown"}` as const)}
                     >
                       {[0, 1, 2].map((n) => (
                         <span
                           key={n}
                           className={cn(
                             "h-1.5 w-8 rounded-full",
-                            n <= FIT_LEVEL[row.status]
-                              ? row.status === "strong"
+                            row.score !== null && n < row.score
+                              ? row.score === 3
                                 ? "bg-sol-champagne"
-                                : "bg-sol-violet"
+                                : "bg-sol-navy"
                               : "bg-sol-border",
                           )}
                         />

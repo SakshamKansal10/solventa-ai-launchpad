@@ -6,6 +6,9 @@ import { requireUser } from "@/lib/supabase/server";
 import type { Database } from "@/lib/supabase/types";
 import { resolveDirection, type Direction, type DirectionOpportunity } from "@/lib/direction";
 import { isSchemaMissingError } from "@/lib/schema-capabilities.server";
+import { assessFit, type FitLabel } from "@/lib/fit/model";
+import type { FitFactors } from "@/lib/ai/schemas";
+import type { NormalizedProfile } from "@/lib/profile/normalize";
 
 /** Cards throughout the product (Command Center, Opportunities, History) show
  * the same six plain facts about an opportunity. This is the one place they
@@ -25,14 +28,8 @@ export interface OpportunityBrief {
   consultationId: string;
   batch: number;
   createdAt: string;
-  /** Qualitative class from the deterministic fit score — never a bare number. */
-  fit: "strong" | "moderate" | "conditional";
-}
-
-export function fitClass(score: number): OpportunityBrief["fit"] {
-  if (score >= 72) return "strong";
-  if (score >= 50) return "moderate";
-  return "conditional";
+  /** The canonical founder-fit label (src/lib/fit/model.ts) — the same one every screen shows. */
+  fit: FitLabel;
 }
 
 export interface FounderState {
@@ -59,10 +56,11 @@ interface OppRow {
   solution: string | null;
   revenue: string | null;
   why: unknown;
+  signals: FitFactors | null;
 }
 
 const BASE_COLUMNS =
-  "id, business_dna_id, title, one_liner, who_for, status, fit_score, batch_number, created_at, customer:candidate->>customer, problem:candidate->>problem, solution:candidate->>solution, revenue:candidate->>revenuePath, why:candidate->whyThisFounder";
+  "id, business_dna_id, title, one_liner, who_for, status, fit_score, batch_number, created_at, customer:candidate->>customer, problem:candidate->>problem, solution:candidate->>solution, revenue:candidate->>revenuePath, why:candidate->whyThisFounder, signals:candidate->fitSignals";
 
 /** Reads every opportunity as a light row. `opportunity_index` (migration 0009)
  * is requested first and dropped if the column doesn't exist, so a database
@@ -83,7 +81,7 @@ async function loadOpportunityRows(
   })) as OppRow[];
 }
 
-function toBrief(r: OppRow): OpportunityBrief {
+function toBrief(r: OppRow, profile: NormalizedProfile | null): OpportunityBrief {
   const why = Array.isArray(r.why)
     ? (r.why as unknown[]).filter((w): w is string => typeof w === "string")
     : [];
@@ -100,7 +98,7 @@ function toBrief(r: OppRow): OpportunityBrief {
     consultationId: r.business_dna_id,
     batch: r.batch_number,
     createdAt: r.created_at,
-    fit: fitClass(r.fit_score),
+    fit: profile && r.signals ? assessFit(profile, r.signals).label : "provisional",
   };
 }
 
@@ -114,7 +112,7 @@ export async function loadFounderState(
     supabase.from("profiles").select("*").eq("id", userId).maybeSingle(),
     supabase
       .from("business_dna")
-      .select("id, created_at")
+      .select("id, created_at, normalized_signals")
       .eq("user_id", userId)
       .order("created_at", { ascending: false }),
     loadOpportunityRows(supabase, userId),
@@ -150,7 +148,14 @@ export async function loadFounderState(
   });
 
   const briefs: Record<string, OpportunityBrief> = {};
-  for (const row of oppRows) briefs[row.id] = toBrief(row);
+  const profileByDna = new Map(
+    (dnaRes.data ?? []).map((d) => [
+      d.id,
+      d.normalized_signals as unknown as NormalizedProfile | null,
+    ]),
+  );
+  for (const row of oppRows)
+    briefs[row.id] = toBrief(row, profileByDna.get(row.business_dna_id) ?? null);
 
   const consultations = (dnaRes.data ?? []).map((d) => ({ id: d.id, createdAt: d.created_at }));
   return {

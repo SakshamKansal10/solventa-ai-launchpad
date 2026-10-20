@@ -1,15 +1,15 @@
-import { Lightbulb, Rocket, Users, Wallet, type LucideIcon } from "lucide-react";
+import { Clock, Target, Users, Wallet, Wrench, type LucideIcon } from "lucide-react";
 
-import type { FitRowKey, FitStatus } from "@/lib/fit/matrix";
+import { FIT_FACTORS, type FitFactorKey } from "@/lib/fit/model";
 
-/** The four rows of Founder Fit, in the order every screen shows them. */
-export const FIT_ORDER: FitRowKey[] = ["capability", "resources", "access", "ambition"];
+/** The five founder-fit factors, in the order every screen shows them. */
+export const FIT_ORDER: FitFactorKey[] = FIT_FACTORS.map((f) => f.key);
 
-export const FIT_ICONS: Record<FitRowKey, LucideIcon> = {
-  capability: Lightbulb,
-  resources: Wallet,
+/** One meaning per icon: people to sell to, money and tools, know-how, hours, the goal. */
+export const FIT_ICONS: Record<FitFactorKey, LucideIcon> = {
   access: Users,
-  ambition: Rocket,
+  resources: Wallet,
+  capability: Wrench,
+  time: Clock,
+  goals: Target,
 };
-
-/** How many of the three pips are filled — fit is a level, never a number. */

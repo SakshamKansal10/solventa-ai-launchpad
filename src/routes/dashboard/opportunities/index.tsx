@@ -254,8 +254,8 @@ function OpportunitiesPage() {
     (b) => (fitFilter === "all" || b.fit === fitFilter) && textMatch(b),
   );
   const filtering = q !== "" || fitFilter !== "all";
-  const fitOptions = (["strong", "moderate", "conditional"] as const).filter((f) =>
-    alternatives.some((b) => b.fit === f),
+  const fitOptions = (["strong", "moderate", "conditional", "weak", "provisional"] as const).filter(
+    (f) => alternatives.some((b) => b.fit === f),
   );
   const showToolbar = alternatives.length > 0;
 
@@ -328,7 +328,7 @@ function OpportunitiesPage() {
                           : "text-sol-ink hover:bg-sol-ivory",
                       )}
                     >
-                      {f === "all" ? t("opp.list.filterAll") : t(`fit.${f}` as const)}
+                      {f === "all" ? t("opp.list.filterAll") : t(`fit2.label.${f}` as const)}
                       {fitFilter === f && <Check className="size-4" aria-hidden="true" />}
                     </button>
                   ))}

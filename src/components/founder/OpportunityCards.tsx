@@ -53,10 +53,10 @@ export function BriefChain({ brief }: { brief: OpportunityBrief }) {
 
 export function FitPill({ fit }: { fit: OpportunityBrief["fit"] }) {
   const { t } = useLocale();
-  const tone = fit === "strong" ? "champagne" : fit === "moderate" ? "violet" : "neutral";
+  const tone = fit === "strong" ? "champagne" : fit === "weak" ? "warning" : "neutral";
   return (
     <Pill tone={tone} className="shrink-0">
-      {t(`fit.${fit}` as const)}
+      {t(fit === "provisional" ? "fit2.labelShort.provisional" : (`fit2.label.${fit}` as const))}
     </Pill>
   );
 }

@@ -239,7 +239,7 @@ function DirectionSelected({
   const building = stage === "roadmap_building";
   const failed = stage === "roadmap_failed";
   const goBuild = () => navigate({ to: "/dashboard/roadmap/building", search: { opportunityId } });
-  const matrix = detail.data?.fit.matrix ?? null;
+  const assessment = detail.data?.fit.assessment ?? null;
 
   // Where the founder is: direction chosen, roadmap next — then week 1, evidence, adapt.
   const steps: PathStep[] = [
@@ -368,8 +368,8 @@ function DirectionSelected({
         <h2 className="sol-eyebrow">{t("cc.oppPulse.heading")}</h2>
         {detail.isPending ? (
           <Skeleton className="h-28" />
-        ) : matrix ? (
-          <FitSignals rows={matrix.rows} layout="tiles" />
+        ) : assessment ? (
+          <FitSignals rows={assessment.factors} layout="tiles" />
         ) : null}
       </Card>
     </>

@@ -184,7 +184,7 @@ function ProofWorkspace({ opportunityId }: { opportunityId: string }) {
         : dto.fit.advantages
       ).slice(0, 4)
     : [];
-  const rows = dto?.fit.matrix.rows ?? [];
+  const rows = dto?.fit.assessment.factors ?? [];
   const sources = dto?.sources ?? [];
 
   return (
@@ -229,9 +229,9 @@ function ProofWorkspace({ opportunityId }: { opportunityId: string }) {
                       <div className="min-w-0">
                         <div className="flex flex-wrap items-center gap-2.5">
                           <p className="text-[1rem] font-medium text-sol-ink">
-                            {t(`fit.row.${row.key}` as const)}
+                            {t(`fit2.factor.${row.key}` as const)}
                           </p>
-                          <FitStatusPill status={row.status} />
+                          <FitStatusPill score={row.score} />
                         </div>
                         <p className="mt-2 text-[0.9375rem] leading-snug text-sol-secondary">
                           {reasonText(row.reason, dto.fit.currency)}

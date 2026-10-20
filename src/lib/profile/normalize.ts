@@ -37,6 +37,8 @@ export interface NormalizedProfileV2 {
   domains: string[];
   executionSignals: string[];
   access: string[];
+  /** The founder explicitly answered "None of these" (v2 consultations from 2026-10). */
+  accessNone?: boolean;
   capitalTier: number | null;
   capitalTierCount: number;
   position: {
@@ -115,6 +117,9 @@ export interface NormalizedProfile {
   time: {
     weeklyHours: number;
     weeklyHoursBracket: string | null;
+    /** The range the founder picked — the stated value. `weeklyHours` is only a
+     * representative midpoint for legacy scoring and must never be shown as theirs. */
+    weeklyHoursRange?: { min: number; max: number | null } | null;
   };
   workStyle: {
     location: string | null;
