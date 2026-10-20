@@ -7,6 +7,7 @@ import type { Database } from "@/lib/supabase/types";
 import { resolveDirection, type Direction, type DirectionOpportunity } from "@/lib/direction";
 import { isSchemaMissingError } from "@/lib/schema-capabilities.server";
 import { assessFit, type FitLabel } from "@/lib/fit/model";
+import { keepSupportedReasons } from "@/lib/ai/integrity";
 import type { FitFactors } from "@/lib/ai/schemas";
 import type { NormalizedProfile } from "@/lib/profile/normalize";
 
@@ -92,7 +93,7 @@ function toBrief(r: OppRow, profile: NormalizedProfile | null): OpportunityBrief
     customer: r.customer ?? r.who_for,
     problem: r.problem,
     product: r.solution,
-    whyFit: why.slice(0, 2),
+    whyFit: keepSupportedReasons(why, profile).slice(0, 2),
     scalePath: r.revenue,
     status: r.status,
     consultationId: r.business_dna_id,

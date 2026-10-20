@@ -12,6 +12,7 @@ import {
   formatProfileForPrompt,
   formatGenomeAndAmbitionForPrompt,
   PLAIN_LANGUAGE_RULE,
+  planningHoursPhrase,
   buildLanguageRule,
   type GenerationLocale,
 } from "@/lib/ai/prompts/shared";
@@ -69,7 +70,7 @@ Weekly time: ${opportunity.weeklyTime}
 Resources needed: ${opportunity.resourceRequirements.join(", ") || "none listed"}
 First experiment already suggested: ${opportunity.firstExperiment}
 
-Design a staged roadmap: 3-4 phases, each with 1-3 weeks, each week with 2-4 tasks. deadlineDaysFromStart must reflect this founder's real weekly hours (${profile.time.weeklyHours} hrs/week) and must group cleanly into the week that contains it — do not compress a 40-hour task load into one week for someone with 5 hours/week. Teach missing skills before tasks that require them.
+Design a staged roadmap: 3-4 phases, each with 1-3 weeks, each week with 2-4 tasks. deadlineDaysFromStart must reflect this founder's planning hours (${planningHoursPhrase(profile)}) and must group cleanly into the week that contains it — do not compress a 40-hour task load into one week for someone with 5 hours/week. Teach missing skills before tasks that require them.
 
 Respond with ONLY a single JSON object — no markdown fences, no commentary before or after — matching this exact shape:
 ${ROADMAP_JSON_CONTRACT}`;
@@ -125,7 +126,7 @@ Starting capital: ${opportunity.startingCapital}
 Weekly time: ${opportunity.weeklyTime}
 Revenue path: ${opportunity.revenuePath}
 
-Design the long-term shape only — North Star, phase and week titles/objectives, no tasks. This founder has ${profile.time.weeklyHours} hrs/week realistically available; phase/week LENGTH (how many weeks a phase takes) should reflect that, not a generic timeline. Calibrate scope and ambition to the Founder Genome and Ambition Calibration above — never a ceiling-scraping venture plan for a resource-limited beginner, and never an unrealistically small plan for a highly capable, well-resourced founder.
+Design the long-term shape only — North Star, phase and week titles/objectives, no tasks. Plan around ${planningHoursPhrase(profile)}; phase/week LENGTH (how many weeks a phase takes) should reflect that, not a generic timeline. Calibrate scope and ambition to the Founder Genome and Ambition Calibration above — never a ceiling-scraping venture plan for a resource-limited beginner, and never an unrealistically small plan for a highly capable, well-resourced founder.
 
 Respond with ONLY a single JSON object — no markdown fences, no commentary before or after — matching this exact shape:
 ${SKELETON_JSON_CONTRACT}${buildLanguageRule(locale)}`;
@@ -203,7 +204,7 @@ Roadmap phase: ${context.phaseTitle} — ${context.phaseDescription}
 This week (already shown to the founder before it unlocked): "${context.weekTitle}" — ${context.weekObjective}
 ${priorWeekSection}
 
-Generate this week's real detail now. deadlineDaysFromStart values must be 0-6 (days into THIS week, day 0 = the day it unlocked) and reflect ${profile.time.weeklyHours} hrs/week.
+Generate this week's real detail now. deadlineDaysFromStart values must be 0-6 (days into THIS week, day 0 = the day it unlocked) and reflect ${planningHoursPhrase(profile)}.
 
 Respond with ONLY a single JSON object — no markdown fences, no commentary before or after — matching this exact shape:
 ${WEEK_DETAIL_JSON_CONTRACT}${buildLanguageRule(locale)}`;
