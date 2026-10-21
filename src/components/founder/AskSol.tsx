@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Loader2, Send, X } from "lucide-react";
 
-import mark from "@/assets/solventia-mark.png";
+import { BrandMark } from "@/components/brand/Brand";
 import { getMentorConversation, sendMentorMessage } from "@/lib/actions/mentor";
 import { useLocale } from "@/lib/i18n/LocaleProvider";
 import type { MessageKey } from "@/lib/i18n";
@@ -142,15 +142,13 @@ export function AskSolPanel({
 
   return (
     <div className="flex h-full min-h-0 flex-col" data-testid="ask-sol-panel">
-      <div className="flex items-start justify-between gap-3 border-b border-sol-border bg-sol-cobalt-soft/50 px-5 py-4">
+      <div className="flex items-start justify-between gap-3 border-b border-sol-border bg-sol-surface px-5 py-4">
         <div className="flex min-w-0 items-start gap-3">
-          <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-sol-champagne to-sol-cobalt">
-            <img src={mark} alt="" width={298} height={436} className="h-5 w-auto" />
+          <span className="flex size-10 shrink-0 items-center justify-center rounded-full border border-sol-border bg-sol-pearl">
+            <BrandMark height={20} />
           </span>
           <div className="min-w-0 leading-tight">
-            <h2 className="font-display text-[1.25rem] font-semibold text-sol-ink">
-              {t("askSol.title")}
-            </h2>
+            <h2 className="text-[1.25rem] font-semibold text-sol-ink">{t("askSol.title")}</h2>
             {/* The context stack a founder actually sees Sol already knows —
                 each line present only when real (spec CF): opportunity,
                 then week/phase, then the mission in progress. Never a
@@ -195,19 +193,31 @@ export function AskSolPanel({
       </div>
 
       <div ref={scrollRef} className="min-h-0 flex-1 overflow-y-auto px-5 py-5" aria-live="polite">
-        {conversation.isLoading ? (
-          <p className="text-[1rem] text-sol-secondary">{t("askSol.loading")}</p>
-        ) : messages.length === 0 ? (
+        {/* The welcome and the prompts show at once; earlier messages, if any, load in
+            behind them — the panel never sits on a bare loading line. */}
+        {conversation.isLoading || messages.length === 0 ? (
           <div className="flex flex-col gap-6">
             <div>
-              <p className="text-[1.0625rem] font-semibold leading-snug text-sol-ink">
+              <p
+                className="text-[1.25rem] font-semibold leading-snug text-sol-ink"
+                data-testid="ask-sol-welcome"
+              >
+                {t("askSol.welcome.title")}
+              </p>
+              <p className="mt-1.5 text-[1rem] leading-relaxed text-sol-secondary">
+                {t("askSol.welcome.body")}
+              </p>
+              <p className="mt-3 text-[0.9375rem] leading-relaxed text-sol-secondary">
                 {opportunityTitle
                   ? t("askSol.workingOn", { title: opportunityTitle })
                   : t("askSol.workingGeneral")}
               </p>
-              <p className="mt-1.5 text-[1rem] leading-relaxed text-sol-secondary">
-                {opportunityTitle ? t("askSol.knows") : t("askSol.knowsGeneral")}
-              </p>
+              {conversation.isLoading && (
+                <p className="mt-2 flex items-center gap-2 text-[0.875rem] text-sol-secondary">
+                  <Loader2 className="size-3.5 animate-spin" aria-hidden="true" />
+                  {t("askSol.loading")}
+                </p>
+              )}
             </div>
             <div>
               <p className="text-[0.875rem] font-bold uppercase tracking-[0.1em] text-sol-champagne-deep">
@@ -219,7 +229,7 @@ export function AskSolPanel({
                     key={key}
                     type="button"
                     onClick={() => void send(t(key))}
-                    disabled={sending}
+                    disabled={sending || conversation.isLoading}
                     className="min-h-12 rounded-2xl border border-sol-border px-4 py-2.5 text-left text-[1rem] font-medium text-sol-ink transition-colors hover:border-sol-cobalt/50 hover:bg-sol-cobalt-soft/50 disabled:opacity-50"
                   >
                     {t(key)}

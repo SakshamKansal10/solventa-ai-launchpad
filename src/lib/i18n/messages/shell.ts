@@ -66,7 +66,10 @@ const en = {
   "askSol.placeholder": "Ask Sol something specific…",
   "askSol.send": "Send",
   "askSol.thinking": "Sol is thinking…",
-  "askSol.loading": "Loading your conversation…",
+  "askSol.loading": "Loading your earlier messages…",
+  "askSol.welcome.title": "Let's work on your next move.",
+  "askSol.welcome.body":
+    "I can help you understand this direction, prepare a validation test, or work through your current mission.",
   "askSol.error": "Sol couldn't respond just now. Try again in a moment.",
   "askSol.retry": "Try again",
   "askSol.you": "You",
@@ -141,7 +144,10 @@ const hi: Record<keyof typeof en, string> = {
   "askSol.placeholder": "Sol से कुछ खास पूछें…",
   "askSol.send": "भेजें",
   "askSol.thinking": "Sol सोच रहा है…",
-  "askSol.loading": "आपकी बातचीत लोड हो रही है…",
+  "askSol.loading": "आपके पिछले संदेश लोड हो रहे हैं…",
+  "askSol.welcome.title": "चलिए आपके अगले क़दम पर काम करते हैं।",
+  "askSol.welcome.body":
+    "मैं इस दिशा को समझने, परख की तैयारी करने, या आपके मौजूदा मिशन पर काम करने में मदद कर सकता हूं।",
   "askSol.error": "Sol अभी जवाब नहीं दे सका। थोड़ी देर में फिर कोशिश करें।",
   "askSol.retry": "फिर कोशिश करें",
   "askSol.you": "आप",
