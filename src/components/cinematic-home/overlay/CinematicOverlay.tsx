@@ -1,5 +1,14 @@
 import { Link } from "@tanstack/react-router";
-import { ArrowRight } from "lucide-react";
+import {
+  ArrowRight,
+  Briefcase,
+  Clock,
+  MapPin,
+  Users,
+  Wallet,
+  Wrench,
+  type LucideIcon,
+} from "lucide-react";
 import type { CSSProperties, ReactNode } from "react";
 
 import { BrandMark, BrandSignature, BrandWordmark } from "@/components/brand/Brand";
@@ -225,6 +234,16 @@ function Reveal({ i, n, children }: { i: number; n: number; children: ReactNode 
     </div>
   );
 }
+
+/** One meaning per founder signal, from the product's own icon family (Lucide). */
+const SIGNAL_ICONS: Record<NonNullable<Caption["signal"]>, LucideIcon> = {
+  capital: Wallet,
+  skills: Wrench,
+  location: MapPin,
+  time: Clock,
+  experience: Briefcase,
+  access: Users,
+};
 
 /** Where we are in the journey: a small mono line with a semantic mark. */
 function Kicker({ text, tone }: { text: string; tone: keyof typeof TONE_VAR }) {
@@ -476,7 +495,22 @@ function CaptionBody({ caption: c }: { caption: Caption }) {
         c.kicker &&
         (c.kind === "datum" ? (
           <Reveal i={i++} n={n}>
-            <p className={`mb-3 sm:mb-5 ${KICKER}`} style={{ color: "var(--quiet)" }}>
+            <p
+              className={`mb-3 inline-flex items-center gap-2.5 sm:mb-5 ${KICKER}`}
+              style={{ color: "var(--quiet)" }}
+            >
+              {c.signal &&
+                (() => {
+                  const Icon = SIGNAL_ICONS[c.signal];
+                  return (
+                    <Icon
+                      className="size-4 sm:size-[18px]"
+                      strokeWidth={1.75}
+                      style={{ color: "var(--ink)" }}
+                      aria-hidden="true"
+                    />
+                  );
+                })()}
               {c.kicker}
             </p>
           </Reveal>

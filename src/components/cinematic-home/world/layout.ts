@@ -60,8 +60,8 @@ export const COLORS = {
   champagne: "#C9AA79",
   gold: "#D9B97F",
   edgeGold: "#F2D49A",
-  indigo: "#756CE0",
-  violet: "#756CE0",
+  indigo: "#315EDB",
+  violet: "#315EDB",
   violetGlow: "#968CF2",
 } as const;
 
