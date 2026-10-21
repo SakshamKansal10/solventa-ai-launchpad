@@ -473,7 +473,9 @@ export const buildRoadmap = createServerFn({ method: "POST" })
         title: "Roadmap reactivated",
         body: `Your roadmap for ${opp.title} is active again — pick up where you left off.`,
         link: notificationLinks.roadmapWeek(1),
-        params: { title: opp.title, reactivated: 1 },
+        params: { title: opp.title, reactivated: 1, roadmapId: roadmap.id, opportunityId: opp.id },
+        // A repeated click within the same minute is the same reactivation.
+        dedupeKey: `roadmap_reactivated:${roadmap.id}:${Math.floor(Date.now() / 60_000)}`,
       });
       return { status: "ready", roadmapId: roadmap.id, week1Ready: true };
     }
@@ -596,13 +598,24 @@ export const buildRoadmap = createServerFn({ method: "POST" })
       }
     }
 
-    void notifyFounder(supabase, user.id, {
-      type: "roadmap_ready",
-      title: "Your roadmap is ready",
-      body: `${first?.title ?? "Week 1"} of your roadmap for ${opp.title} is ready to start.`,
-      link: notificationLinks.roadmapWeek(1),
-      params: { title: opp.title, week: 1, weekTitle: first?.title ?? "" },
-    });
+    // "Ready" only when it is: the roadmap is saved AND week 1 exists. A week 1 that
+    // failed to generate is retried on the roadmap page, never announced as ready.
+    if (week1Ready) {
+      void notifyFounder(supabase, user.id, {
+        type: "roadmap_ready",
+        title: "Your roadmap is ready",
+        body: `${first?.title ?? "Week 1"} of your roadmap for ${opp.title} is ready to start.`,
+        link: notificationLinks.roadmapWeek(1),
+        params: {
+          title: opp.title,
+          week: 1,
+          weekTitle: first?.title ?? "",
+          roadmapId,
+          opportunityId: opp.id,
+        },
+        dedupeKey: `roadmap_ready:${roadmapId}`,
+      });
+    }
     if (user.email && first) {
       const fullName = (user.user_metadata?.full_name as string | undefined) ?? null;
       const { opportunity } = await loadGenerationInputs(supabase, user.id, opp.id).catch(() => ({

@@ -36,10 +36,28 @@ export async function notifyFounder(
     link?: string;
     /** Values the UI substitutes into its translated template. */
     params?: Record<string, string | number>;
+    /** One notification per event: a second call with the same key is ignored
+     * (a double click, a retried request). Stored in params.key. */
+    dedupeKey?: string;
   },
 ): Promise<void> {
   try {
     const caps = await getSchemaCapabilities(supabase);
+    if (notification.dedupeKey && caps.weekLock) {
+      // Fails open: a lookup problem must never cost the founder a real notification.
+      const existing = await supabase
+        .from("founder_notifications")
+        .select("id")
+        .eq("user_id", userId)
+        .eq("type", notification.type)
+        .filter("params->>key", "eq", notification.dedupeKey)
+        .limit(1)
+        .then(
+          (r) => (r.error ? [] : (r.data ?? [])),
+          () => [],
+        );
+      if (existing.length > 0) return;
+    }
     if ((OPTIONAL_NOTIFICATION_TYPES as readonly string[]).includes(notification.type)) {
       const { data: profile } = await supabase
         .from("profiles")
@@ -56,8 +74,13 @@ export async function notifyFounder(
       title: notification.title,
       body: notification.body,
       link: notification.link ?? null,
-      ...(caps.weekLock && notification.params
-        ? { params: notification.params as unknown as Json }
+      ...(caps.weekLock && (notification.params || notification.dedupeKey)
+        ? {
+            params: {
+              ...(notification.params ?? {}),
+              ...(notification.dedupeKey ? { key: notification.dedupeKey } : {}),
+            } as unknown as Json,
+          }
         : {}),
     });
     if (error) {
