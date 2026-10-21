@@ -39,10 +39,7 @@ test.describe("Opportunities", () => {
     await expect(page.getByTestId("opp-alternative")).toHaveCount(2);
   });
 
-  test("detail has Overview, Fit with you and Market & validation", async ({
-    page,
-    context,
-  }) => {
+  test("detail has Overview, Fit with you and Market & validation", async ({ page, context }) => {
     const { seeded } = await founderWithDirections(context);
     await gotoApp(page, `/dashboard/opportunities/${seeded.opportunityIds[0]}`);
     await expect(page.getByTestId("opportunity-title")).toBeVisible();
@@ -64,7 +61,9 @@ test.describe("Opportunities", () => {
     const { seeded } = await founderWithDirections(context);
     await gotoApp(page, `/dashboard/opportunities/${seeded.opportunityIds[0]}?tab=fit`);
     await expect(page.getByTestId("founder-fit")).toBeVisible();
-    await expect(page.getByTestId("fit-overall")).toHaveText(/^((Strong|Moderate|Conditional|Weak) fit|Provisional — more information needed)$/);
+    await expect(page.getByTestId("fit-overall")).toHaveText(
+      /^((Strong|Moderate|Conditional|Weak) fit|Provisional — more information needed)$/,
+    );
     for (const row of ["access", "resources", "capability", "time", "goals"]) {
       await expect(page.getByTestId(`fit-row-${row}`)).toBeVisible();
     }
@@ -80,7 +79,9 @@ test.describe("Opportunities", () => {
   }) => {
     const { seeded } = await founderWithDirections(context);
     await gotoApp(page, `/dashboard/opportunities/${seeded.opportunityIds[0]}?tab=market`);
-    await expect(page.getByTestId("market-tab")).toContainText("No market sources yet");
+    await expect(page.getByTestId("market-tab")).toContainText(
+      "Market evidence hasn't been collected yet.",
+    );
     expect(await gemini.countOf("MARKET_GROUNDED")).toBe(0);
 
     await page.getByTestId("look-for-sources").click();

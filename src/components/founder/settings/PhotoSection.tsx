@@ -78,6 +78,7 @@ export function PhotoSection({ available }: { available: boolean }) {
 
   const avatar = user.data?.avatar;
   const busy = upload.isPending || remove.isPending;
+  const [photoShown, setPhotoShown] = useState(false);
 
   return (
     <Card
@@ -89,10 +90,18 @@ export function PhotoSection({ available }: { available: boolean }) {
         {t("set.photo.title")}
       </h2>
       <div className="flex flex-wrap items-center gap-6">
-        <Avatar url={avatar?.url ?? null} initials={user.data?.initials ?? "S"} size={96} />
+        <Avatar
+          url={avatar?.url ?? null}
+          initials={user.data?.initials ?? "S"}
+          size={96}
+          onShownChange={setPhotoShown}
+        />
         <div className="flex min-w-0 flex-col gap-3">
           <p className="text-[1rem] text-sol-secondary" data-testid="photo-source">
-            {t(`set.photo.source.${avatar?.source ?? "initials"}` as const)}
+            {/* Says what is actually on screen: a photo that failed to load is initials. */}
+            {t(
+              `set.photo.source.${photoShown ? (avatar?.source ?? "initials") : "initials"}` as const,
+            )}
           </p>
           <div className="flex flex-wrap gap-3">
             <input

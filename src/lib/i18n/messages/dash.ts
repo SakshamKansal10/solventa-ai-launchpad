@@ -192,14 +192,14 @@ const en = {
   "opp.list.searchPlaceholder": "Search by name or description",
   "opp.list.filterAll": "All fits",
   "opp.list.filters": "Filters",
-  "opp.hero.simply": "The idea, simply",
+  "opp.hero.simply": "The direction, simply",
   "opp.page.subtitle": "Your recommended direction and the others, with how each one fits you.",
   "opp.list.filterAria": "Filter by fit",
   "opp.list.noMatch": "No opportunities match your search.",
   "opp.list.featured": "Your chosen direction",
   "opp.detail.eyebrow": "Opportunity",
   "opp.ov.groupWhy": "Why it matters",
-  "opp.ov.groupWhat": "What you would build",
+  "opp.ov.groupWhat": "Your offer",
   "opp.ov.groupNext": "How to start and grow",
   "opp.status.consulted": "Consulted",
   "opp.revisit": "Revisit",
@@ -208,9 +208,9 @@ const en = {
   "opp.status.dismissed": "Not chosen",
 
   // ── Opportunity: brief facts ───────────────────────────────────────────
-  "opp.fact.customer": "Who it's for",
-  "opp.fact.problem": "The problem",
-  "opp.fact.product": "What you'd sell",
+  "opp.fact.customer": "Customer",
+  "opp.fact.problem": "Problem to solve",
+  "opp.fact.product": "Your offer",
   "opp.fact.whyFit": "Why it fits you",
   "opp.fact.scale": "How it grows",
 
@@ -250,7 +250,7 @@ const en = {
   "opp.fit.learn": "You'd need to learn {skill}.",
 
   // Market
-  "opp.market.none": "No market sources yet",
+  "opp.market.none": "Market evidence hasn't been collected yet.",
   "opp.market.noneBody":
     "Solventia doesn't guess at market size. Look for real, citable sources — or go straight to testing the idea with people.",
   "opp.market.sourcesTitle": "What Solventia found",
@@ -590,14 +590,14 @@ const hi: Record<keyof typeof en, string> = {
   "opp.list.searchPlaceholder": "नाम या विवरण से खोजें",
   "opp.list.filterAll": "सभी मेल",
   "opp.list.filters": "फ़िल्टर",
-  "opp.hero.simply": "आइडिया, सरल शब्दों में",
+  "opp.hero.simply": "दिशा, सरल शब्दों में",
   "opp.page.subtitle": "आपकी सुझाई गई दिशा और बाक़ी दिशाएं, और हर एक आपके लिए कितनी सही है।",
   "opp.list.filterAria": "मेल के अनुसार फ़िल्टर करें",
   "opp.list.noMatch": "आपकी खोज से कोई अवसर मेल नहीं खाता।",
   "opp.list.featured": "आपकी चुनी हुई दिशा",
   "opp.detail.eyebrow": "अवसर",
   "opp.ov.groupWhy": "यह क्यों मायने रखता है",
-  "opp.ov.groupWhat": "आप क्या बनाएंगे",
+  "opp.ov.groupWhat": "आपकी पेशकश",
   "opp.ov.groupNext": "शुरू कैसे करें और बढ़ें कैसे",
   "opp.status.consulted": "देखा गया",
   "opp.revisit": "फिर देखें",
@@ -605,9 +605,9 @@ const hi: Record<keyof typeof en, string> = {
   "opp.status.previous": "पुरानी कंसल्टेशन",
   "opp.status.dismissed": "चुनी नहीं गई",
 
-  "opp.fact.customer": "किसके लिए",
-  "opp.fact.problem": "समस्या",
-  "opp.fact.product": "आप क्या बेचेंगे",
+  "opp.fact.customer": "ग्राहक",
+  "opp.fact.problem": "हल करने वाली समस्या",
+  "opp.fact.product": "आपकी पेशकश",
   "opp.fact.whyFit": "आपके लिए क्यों उपयुक्त",
   "opp.fact.scale": "यह कैसे बढ़ता है",
 
@@ -643,7 +643,7 @@ const hi: Record<keyof typeof en, string> = {
   "opp.fit.noGaps": "आपकी प्रोफ़ाइल में ऐसा कुछ नहीं जो इस दिशा के आड़े आए।",
   "opp.fit.learn": "आपको {skill} सीखना होगा।",
 
-  "opp.market.none": "अभी कोई बाज़ार स्रोत नहीं",
+  "opp.market.none": "बाज़ार के सबूत अभी इकट्ठा नहीं हुए हैं।",
   "opp.market.noneBody":
     "Solventia बाज़ार के आकार का अंदाज़ा नहीं लगाता। असली, प्रमाणित स्रोत खोजिए — या सीधे लोगों के साथ आइडिया को परखना शुरू करें।",
   "opp.market.sourcesTitle": "Solventia को क्या मिला",
