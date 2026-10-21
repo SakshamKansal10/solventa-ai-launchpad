@@ -171,11 +171,13 @@ const en = {
 
   // Building page
   "rm.build.title": "Building your roadmap",
-  "rm.build.s1": "Reading your profile and chosen direction…",
-  "rm.build.s2": "Deciding the phases…",
-  "rm.build.s3": "Sequencing them around your time and money…",
-  "rm.build.s4": "Writing your first week…",
-  "rm.build.s5": "Saving your roadmap…",
+  "rm.build.working": "Working on it — {s}s so far. This usually takes under a minute.",
+  "rm.build.whatHappens": "What happens while it is built",
+  "rm.build.s1": "Your profile and chosen direction are read",
+  "rm.build.s2": "What needs testing first is identified",
+  "rm.build.s3": "The phases are shaped around your stated time and budget",
+  "rm.build.s4": "Your first week of missions is written",
+  "rm.build.s5": "Everything is saved before the roadmap opens",
   "rm.build.other":
     "Another window is already building this roadmap. This page continues when it's done.",
   "rm.build.honest":
@@ -348,11 +350,13 @@ const hi: Record<keyof typeof en, string> = {
   "rm.progress.evidenceAria": "{title}: {n} साक्ष्य। प्रमाण में खोलें।",
 
   "rm.build.title": "आपका रोडमैप बन रहा है",
-  "rm.build.s1": "आपकी प्रोफ़ाइल और चुनी हुई दिशा पढ़ी जा रही है…",
-  "rm.build.s2": "चरण तय किए जा रहे हैं…",
-  "rm.build.s3": "उन्हें आपके समय और पैसे के हिसाब से क्रम दिया जा रहा है…",
-  "rm.build.s4": "आपका पहला सप्ताह लिखा जा रहा है…",
-  "rm.build.s5": "आपका रोडमैप सहेजा जा रहा है…",
+  "rm.build.working": "काम चल रहा है — अब तक {s} सेकंड। आमतौर पर एक मिनट से कम लगता है।",
+  "rm.build.whatHappens": "बनाते समय क्या होता है",
+  "rm.build.s1": "आपकी प्रोफ़ाइल और चुनी हुई दिशा पढ़ी जाती है",
+  "rm.build.s2": "पहले क्या परखना है, यह तय होता है",
+  "rm.build.s3": "चरणों को आपके बताए समय और बजट के हिसाब से बनाया जाता है",
+  "rm.build.s4": "आपके पहले हफ़्ते के मिशन लिखे जाते हैं",
+  "rm.build.s5": "रोडमैप खुलने से पहले सब कुछ सहेजा जाता है",
   "rm.build.other":
     "यह रोडमैप किसी और विंडो में पहले से बन रहा है। पूरा होते ही यह पेज आगे बढ़ेगा।",
   "rm.build.honest": "यह एक असली अनुरोध है, कोई प्रगति-पट्टी नहीं। पूरा होते ही पेज आगे बढ़ जाएगा।",

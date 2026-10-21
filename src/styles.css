@@ -970,6 +970,15 @@ html.app-inter {
   }
 }
 
+@keyframes sol-indeterminate {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(300%);
+  }
+}
+
 /* Full-page field for sign-in and similar screens: white to cool pearl. */
 .sol-world-bg {
   background:

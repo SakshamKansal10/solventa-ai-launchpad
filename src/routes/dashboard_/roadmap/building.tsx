@@ -4,7 +4,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Loader2 } from "lucide-react";
 import { z } from "zod";
 
-import mark from "@/assets/solventia-mark.png";
+import { BrandLockup } from "@/components/brand/Brand";
 import { LanguageSwitcher } from "@/components/solventia/LanguageSwitcher";
 import { Button, LinkButton } from "@/components/founder/ui";
 import { buildRoadmap } from "@/lib/actions/roadmap";
@@ -23,10 +23,9 @@ export const Route = createFileRoute("/dashboard_/roadmap/building")({
   }),
 });
 
-/** Honest narration of what the one real request is doing. It rotates on a
- * timer and holds on the last line; it is NOT tied to a progress bar or a
- * percentage, and nothing on this page claims completion until the request
- * has actually resolved. */
+/** What building a roadmap involves. The server does it in ONE request that reports
+ * no intermediate progress, so these are listed — never ticked off on a timer, never
+ * given a percentage: the page only says it is done when the request has resolved. */
 const STATUS_KEYS = [
   "rm.build.s1",
   "rm.build.s2",
@@ -96,13 +95,16 @@ function BuildingPage() {
     return () => window.clearTimeout(id);
   }, [build.isPending]);
 
+  // Real elapsed time — the one honest measure an opaque request has.
+  const [elapsed, setElapsed] = useState(0);
   useEffect(() => {
-    const id = window.setInterval(
-      () => setStatusIndex((i) => Math.min(i + 1, STATUS_KEYS.length - 1)),
-      3600,
-    );
+    if (!build.isPending && !waitingOnOther) return;
+    const start = Date.now();
+    setElapsed(0);
+    const id = window.setInterval(() => setElapsed(Math.round((Date.now() - start) / 1000)), 1000);
     return () => window.clearInterval(id);
-  }, []);
+  }, [build.isPending, waitingOnOther]);
+  void statusIndex;
 
   // When someone else is building it, watch the real state until it finishes.
   useEffect(() => {
@@ -129,10 +131,7 @@ function BuildingPage() {
     <div className="sol-world-bg flex min-h-dvh flex-col text-sol-ink">
       <header className="flex h-[72px] items-center justify-between px-5 sm:px-10">
         <Link to="/" className="flex items-center gap-3" aria-label={t("nav.homeAria")}>
-          <img src={mark} alt="" width={298} height={436} className="h-9 w-auto" />
-          <span className="hidden font-display text-[1.25rem] font-semibold tracking-[0.2em] sm:block">
-            SOLVENTIA
-          </span>
+          <BrandLockup preset="compact" signature={false} />
         </Link>
         <LanguageSwitcher />
       </header>
@@ -173,14 +172,36 @@ function BuildingPage() {
             <>
               <h1 className="sol-h2">{t("rm.build.title")}</h1>
               <p
-                key={statusIndex}
                 role="status"
                 aria-live="polite"
-                className="min-h-8 text-[1.25rem] text-sol-ink"
+                className="min-h-8 text-[1.125rem] text-sol-ink"
                 data-testid="build-status"
               >
-                {waitingOnOther ? t("rm.build.other") : t(STATUS_KEYS[statusIndex])}
+                {waitingOnOther ? t("rm.build.other") : t("rm.build.working", { s: elapsed })}
               </p>
+              {/* Indeterminate: movement without a number, because none is measurable. */}
+              <div
+                className="h-1 w-full max-w-[320px] overflow-hidden rounded-full bg-sol-cobalt-soft"
+                aria-hidden="true"
+              >
+                <div className="h-full w-1/3 rounded-full bg-sol-cobalt motion-safe:animate-[sol-indeterminate_1.6s_ease-in-out_infinite]" />
+              </div>
+              <div className="w-full max-w-[420px] text-left">
+                <p className="text-[0.875rem] font-semibold text-sol-secondary">
+                  {t("rm.build.whatHappens")}
+                </p>
+                <ul className="mt-2 flex flex-col gap-1.5 text-[0.9375rem] text-sol-ink">
+                  {STATUS_KEYS.map((k) => (
+                    <li key={k} className="flex gap-2.5">
+                      <span
+                        className="mt-2 size-1.5 shrink-0 rounded-full bg-sol-border-strong"
+                        aria-hidden="true"
+                      />
+                      {t(k)}
+                    </li>
+                  ))}
+                </ul>
+              </div>
               <p className="sol-support max-w-[38ch]">{t("rm.build.honest")}</p>
             </>
           )}
