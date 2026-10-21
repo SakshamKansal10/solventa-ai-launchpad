@@ -55,6 +55,41 @@ test.describe("History", () => {
     await expect(oldEntry.getByTestId("history-restore")).toBeVisible();
   });
 
+  test("two consultations can be compared on what each one stored", async ({ page, context }) => {
+    await olderWithRoadmapThenNewer(page, context);
+    await gotoApp(page, "/dashboard/history");
+    const entries = page.getByTestId("history-entry");
+    await entries.nth(0).getByTestId("history-compare").click();
+    await expect(page.getByText("Choose one more consultation to compare.")).toBeVisible();
+    await entries.nth(1).getByTestId("history-compare").click();
+
+    const panel = page.getByTestId("history-compare-panel");
+    await expect(panel).toBeVisible();
+    // Same seeded profile: the stored values match, and nothing is invented.
+    await expect(panel.getByTestId("compare-row-location")).toHaveAttribute("data-state", "same");
+    await expect(panel.getByTestId("compare-row-location")).toContainText("Haryana");
+    // Only the older consultation has a chosen direction.
+    await expect(panel.getByTestId("compare-row-chosen")).toContainText("No direction chosen");
+    await expect(panel.getByTestId("compare-row-chosen")).toContainText("Changed");
+
+    await panel.getByTestId("history-compare-clear").click();
+    await expect(panel).toBeHidden();
+  });
+
+  test("the timeline shows the roadmap the older consultation built, from stored data", async ({
+    page,
+    context,
+  }) => {
+    await olderWithRoadmapThenNewer(page, context);
+    await gotoApp(page, "/dashboard/history");
+    const oldEntry = page.getByTestId("history-entry").nth(1);
+    await expect(oldEntry.getByTestId("event-roadmap")).toContainText("Roadmap built");
+    await expect(oldEntry.getByTestId("history-progress")).toContainText("0 of");
+    await expect(
+      page.getByTestId("history-entry").nth(0).getByTestId("event-roadmap"),
+    ).toContainText("No roadmap built");
+  });
+
   test("Review opens that consultation without making it current", async ({ page, context }) => {
     const { older } = await olderWithRoadmapThenNewer(page, context);
     await gotoApp(page, "/dashboard/history");
@@ -113,7 +148,9 @@ test.describe("History", () => {
     // A brand-new consultation completes AFTER the restore.
     await seedDirections(user.id);
     await gotoApp(page, "/dashboard");
-    await expect(page.locator("h1")).toHaveText("Your strongest direction is ready to explore.", { timeout: 30_000 });
+    await expect(page.locator("h1")).toHaveText("Your strongest direction is ready to explore.", {
+      timeout: 30_000,
+    });
   });
 
   test("an empty account shows an honest empty state", async ({ page, context }) => {

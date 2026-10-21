@@ -3,16 +3,13 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 import {
-  ArrowRight,
+  Check,
   CircleCheck,
-  Clock3,
   Compass,
-  GraduationCap,
-  History as HistoryIcon,
+  FileText,
+  GitCompareArrows,
   Map as MapIcon,
-  MapPin,
-  UserRound,
-  Wallet,
+  X,
   type LucideIcon,
 } from "lucide-react";
 
@@ -25,6 +22,7 @@ import {
   LinkButton,
   PageSkeleton,
   Pill,
+  type PillTone,
 } from "@/components/founder/ui";
 import {
   AlertDialog,
@@ -41,9 +39,17 @@ import {
   getDecisionHistory,
   restoreDirection,
   type HistoryEntry,
+  type HistoryRoadmapStatus,
 } from "@/lib/actions/history";
-import { formatMoney } from "@/lib/country-currency";
-import { statusIdFromEnglish } from "@/components/consultation/labels";
+import { useRangeText } from "@/components/founder/fit";
+import { statusIdFromEnglish, useLabels } from "@/components/consultation/labels";
+import {
+  compareConsultations,
+  directionDiff,
+  type CompareField,
+  type RowState,
+} from "@/lib/history/compare";
+import type { MessageKey } from "@/lib/i18n";
 import { useLocale } from "@/lib/i18n/LocaleProvider";
 import { qk, useFounderState, useInvalidateFounder } from "@/lib/queries";
 import { formatDate } from "@/components/founder/proof/bits";
@@ -57,6 +63,15 @@ export const Route = createFileRoute("/dashboard/history")({
     meta: [{ title: "History — Solventia" }, { name: "robots", content: "noindex" }],
   }),
 });
+
+const ROADMAP_TONE: Record<HistoryRoadmapStatus, PillTone> = {
+  none: "neutral",
+  building: "cobalt",
+  active: "cobalt",
+  completed: "champagne",
+  archived: "neutral",
+  failed: "warning",
+};
 
 /** A direction's name in the reader's language (translated once, then cached). */
 function TranslatedTitle({ id, title }: { id: string; title: string }) {
@@ -73,6 +88,7 @@ function HistoryPage() {
   const founder = useFounderState();
   const [restoring, setRestoring] = useState<HistoryEntry | null>(null);
   const [deleting, setDeleting] = useState<HistoryEntry | null>(null);
+  const [comparing, setComparing] = useState<string[]>([]);
   const invalidate = useInvalidateFounder();
   const navigate = useNavigate();
   const restoringTitle = useTranslatedTitle(restoring?.selected?.id, restoring?.selected?.title);
@@ -99,8 +115,9 @@ function HistoryPage() {
 
   const remove = useMutation({
     mutationFn: (consultationId: string) => deleteConsultation({ data: { consultationId } }),
-    onSuccess: async () => {
+    onSuccess: async (_res, consultationId) => {
       await Promise.all([invalidate(), query.refetch()]);
+      setComparing((ids) => ids.filter((id) => id !== consultationId));
       toast.success(t("hist.deleted"));
       setDeleting(null);
     },
@@ -114,7 +131,14 @@ function HistoryPage() {
   if (query.isError || !query.data) {
     return <ErrorPanel onRetry={() => void query.refetch()} retrying={query.isFetching} />;
   }
-  const currentTitle = currentDirectionTitle;
+  const entries = query.data;
+  const pair = comparing
+    .map((id) => entries.find((e) => e.consultationId === id))
+    .filter((e): e is HistoryEntry => Boolean(e));
+  const toggleCompare = (id: string) =>
+    setComparing((ids) =>
+      ids.includes(id) ? ids.filter((x) => x !== id) : [...ids, id].slice(-2),
+    );
   const monthFmt = new Intl.DateTimeFormat(locale === "hi" ? "hi-IN" : "en-IN", {
     month: "long",
     year: "numeric",
@@ -126,9 +150,9 @@ function HistoryPage() {
 
   return (
     <div className="flex flex-col gap-8" data-testid="history-page">
-      <PageHero title={t("hist.title")} subtitle={t("hist.subtitle")} />
+      <PageHero title={t("hist.title")} subtitle={t("hist.subtitle2")} />
 
-      {query.data.length === 0 ? (
+      {entries.length === 0 ? (
         <EmptyState
           title={t("hist.emptyTitle")}
           body={t("hist.emptyBody")}
@@ -139,45 +163,53 @@ function HistoryPage() {
           }
         />
       ) : (
-        <ol className="relative flex flex-col gap-5" data-testid="history-timeline">
-          {/* The rail the consultations hang from, newest first. */}
-          <span
-            aria-hidden="true"
-            className="absolute bottom-8 left-5 top-8 w-0.5 rounded-full bg-gradient-to-b from-sol-cobalt/50 via-sol-border-strong to-transparent"
-          />
-          {query.data.map((entry, i) => {
-            const month = monthOf(entry.createdAt);
-            const showMonth = month && (i === 0 || monthOf(query.data[i - 1].createdAt) !== month);
-            return (
-              <li key={entry.consultationId} className="relative pl-12 sm:pl-14">
-                {showMonth && (
-                  <p className="mb-3 text-[0.875rem] font-medium text-sol-secondary">{month}</p>
-                )}
-                <span
-                  aria-hidden="true"
-                  className={cn(
-                    "absolute left-0 flex size-10 items-center justify-center rounded-full border",
-                    showMonth ? "top-14" : "top-6",
-                    entry.isCurrent
-                      ? "border-sol-cobalt bg-sol-cobalt text-white shadow-[0_6px_18px_rgba(112,88,215,0.3)]"
-                      : "border-sol-border-strong bg-sol-surface text-sol-secondary",
+        <>
+          {pair.length === 2 && (
+            <ComparePanel a={pair[0]} b={pair[1]} onClear={() => setComparing([])} />
+          )}
+          {pair.length === 1 && entries.length > 1 && (
+            <p
+              role="status"
+              className="rounded-2xl border border-sol-cobalt/25 bg-sol-cobalt-ultralight px-5 py-3 text-[0.9375rem] text-sol-ink"
+            >
+              {t("hist.compare.hint")}
+            </p>
+          )}
+
+          <ol className="flex flex-col" data-testid="history-timeline">
+            {entries.map((entry, i) => {
+              const month = monthOf(entry.createdAt);
+              const showMonth = month && (i === 0 || monthOf(entries[i - 1].createdAt) !== month);
+              return (
+                <li key={entry.consultationId} className="flex flex-col">
+                  {showMonth && (
+                    <p className="pb-3 pt-2 text-[0.8125rem] font-semibold uppercase tracking-[0.12em] text-sol-secondary">
+                      {month}
+                    </p>
                   )}
-                >
-                  {entry.isCurrent ? (
-                    <Compass className="size-5" />
-                  ) : (
-                    <HistoryIcon className="size-5" />
-                  )}
-                </span>
-                <EntryCard
-                  entry={entry}
-                  onRestore={() => setRestoring(entry)}
-                  onDelete={() => setDeleting(entry)}
-                />
-              </li>
-            );
-          })}
-        </ol>
+                  <div className="grid gap-x-6 pb-8 md:grid-cols-[9rem_1fr]">
+                    <div className="hidden md:flex md:flex-col md:items-end md:pt-6">
+                      <p className="text-[1.75rem] font-semibold leading-none text-sol-ink">
+                        {new Date(entry.createdAt).getDate()}
+                      </p>
+                      <p className="mt-1 text-[0.875rem] text-sol-secondary">
+                        {formatDate(entry.createdAt, locale)}
+                      </p>
+                    </div>
+                    <EntryCard
+                      entry={entry}
+                      comparing={comparing.includes(entry.consultationId)}
+                      canCompare={entries.length > 1}
+                      onCompare={() => toggleCompare(entry.consultationId)}
+                      onRestore={() => setRestoring(entry)}
+                      onDelete={() => setDeleting(entry)}
+                    />
+                  </div>
+                </li>
+              );
+            })}
+          </ol>
+        </>
       )}
 
       <AlertDialog
@@ -191,7 +223,9 @@ function HistoryPage() {
               {restoring?.selected
                 ? t("hist.restoreBody", { title: restoringTitle ?? restoring.selected.title })
                 : t("hist.restoreBodyGeneric")}
-              {currentTitle ? ` ${t("hist.restoreArchive", { current: currentTitle })}` : ""}
+              {currentDirectionTitle
+                ? ` ${t("hist.restoreArchive", { current: currentDirectionTitle })}`
+                : ""}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -238,142 +272,232 @@ function HistoryPage() {
   );
 }
 
-/** One consultation as a small flow: what was found → what was chosen → where the
- * roadmap stands, so the history reads as a path rather than a table of text. */
+/** Each stored profile value in the reader's language, or null when it was never given. */
+function useSnapshotText() {
+  const { t, td } = useLocale();
+  const L = useLabels();
+  const range = useRangeText();
+  return (entry: HistoryEntry, field: CompareField): string | null => {
+    const p = entry.profile;
+    switch (field) {
+      case "status": {
+        if (!p.status) return null;
+        const id = statusIdFromEnglish(p.status);
+        return id ? td(`opt.status.${id}`, undefined, p.status) : p.status;
+      }
+      case "location": {
+        const parts = [
+          p.place.city,
+          p.place.state ? L.state(p.place.state) : null,
+          p.place.country ? L.country(p.place.country) : null,
+        ].filter(Boolean);
+        return parts.length > 0 ? parts.join(", ") : null;
+      }
+      case "hours":
+        return p.hours ? range.hours(p.hours.min, p.hours.max ?? -1) : null;
+      case "capital":
+        return p.capital && p.currency
+          ? range.money(p.capital.min, p.capital.max ?? -1, p.currency)
+          : null;
+      case "scale":
+        return p.scale ? L.label("scale", p.scale) : null;
+      case "skills":
+        return p.skills.length > 0 ? p.skills.map((s) => L.skill(s)).join(" · ") : null;
+      case "experienceYears":
+        return p.experienceYears ? t("hist.years", { n: p.experienceYears }) : null;
+    }
+  };
+}
+
+/** One consultation, told as what happened: completed → directions → choice →
+ * roadmap → progress. Only stored facts and dates; a step that never happened
+ * says so instead of being filled in. */
 function EntryCard({
   entry,
+  comparing,
+  canCompare,
+  onCompare,
   onRestore,
   onDelete,
 }: {
   entry: HistoryEntry;
+  comparing: boolean;
+  canCompare: boolean;
+  onCompare: () => void;
   onRestore: () => void;
   onDelete: () => void;
 }) {
-  const { t, td, locale } = useLocale();
-  const p = entry.profile;
-  const statusId = p.status ? statusIdFromEnglish(p.status) : null;
-  const facts: { icon: LucideIcon; text: string }[] = [
-    {
-      icon: GraduationCap,
-      text: statusId ? td(`opt.status.${statusId}`, undefined, p.status ?? "") : (p.status ?? ""),
-    },
-    { icon: UserRound, text: p.age ? t("hist.age", { n: p.age }) : "" },
-    { icon: MapPin, text: [p.state, p.country].filter(Boolean).join(", ") },
-    { icon: Clock3, text: p.weeklyHours ? t("common.hoursPerWeek", { n: p.weeklyHours }) : "" },
-    {
-      icon: Wallet,
-      text: p.capitalAmount && p.currency ? formatMoney(p.capitalAmount, p.currency) : "",
-    },
-  ].filter((f) => f.text);
+  const { t, locale } = useLocale();
+  const snapshot = useSnapshotText();
+  const facts = (["status", "location", "hours", "capital", "scale"] as const)
+    .map((f) => ({ field: f, text: snapshot(entry, f) }))
+    .filter((f): f is { field: (typeof f)["field"]; text: string } => Boolean(f.text));
 
-  const roadmapTone =
-    entry.roadmapStatus === "active"
-      ? "violet"
-      : entry.roadmapStatus === "completed"
-        ? "champagne"
-        : entry.roadmapStatus === "failed"
-          ? "warning"
-          : "neutral";
-
-  const nodeClass =
-    "relative flex flex-col gap-3 rounded-2xl border border-sol-border bg-sol-pearl p-4";
-  const nodeIcon =
-    "flex size-9 shrink-0 items-center justify-center rounded-xl bg-sol-champagne-soft text-sol-champagne-deep";
-  const arrow = (
-    <span
-      aria-hidden="true"
-      className="absolute -right-[1.15rem] top-1/2 z-10 hidden size-7 -translate-y-1/2 items-center justify-center rounded-full border border-sol-border bg-sol-surface text-sol-cobalt shadow-sm md:flex"
-    >
-      <ArrowRight className="size-3.5" />
-    </span>
-  );
+  const steps: { icon: LucideIcon; done: boolean; body: React.ReactNode; testId: string }[] = [
+    {
+      icon: FileText,
+      done: true,
+      testId: "event-consultation",
+      body: (
+        <>
+          <p className="font-medium text-sol-ink">{t("hist.ev.consultation")}</p>
+          <p className="text-[0.875rem] text-sol-secondary md:hidden">
+            {formatDate(entry.createdAt, locale)}
+          </p>
+        </>
+      ),
+    },
+    {
+      icon: Compass,
+      done: entry.directions.length > 0,
+      testId: "event-directions",
+      body: (
+        <>
+          <p className="font-medium text-sol-ink">
+            {t("hist.ev.directions", { n: entry.directions.length })}
+          </p>
+          {entry.directions.length > 0 && (
+            <ul className="mt-2 flex flex-col gap-2">
+              {entry.directions.map((d) => (
+                <li
+                  key={d.id}
+                  className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1 text-[0.9375rem] text-sol-ink"
+                >
+                  <span className={cn("min-w-0", d.id === entry.selected?.id && "font-semibold")}>
+                    <TranslatedTitle id={d.id} title={d.title} />
+                  </span>
+                  <FitPill fit={d.fit} />
+                </li>
+              ))}
+            </ul>
+          )}
+        </>
+      ),
+    },
+    {
+      icon: CircleCheck,
+      done: Boolean(entry.selected),
+      testId: "event-chosen",
+      body: entry.selected ? (
+        <p className="text-sol-ink">
+          <span className="text-sol-secondary">{t("hist.ev.chosen")} </span>
+          <span className="font-semibold">
+            <TranslatedTitle id={entry.selected.id} title={entry.selected.title} />
+          </span>
+        </p>
+      ) : (
+        <p className="text-sol-secondary">{t("hist.ev.noChoice")}</p>
+      ),
+    },
+    {
+      icon: MapIcon,
+      done: entry.roadmapStatus !== "none",
+      testId: "event-roadmap",
+      body: (
+        <>
+          <div className="flex flex-wrap items-center gap-2">
+            <p
+              className={cn(
+                "font-medium",
+                entry.roadmapStatus === "none" ? "text-sol-secondary" : "text-sol-ink",
+              )}
+            >
+              {entry.roadmapStatus === "none"
+                ? t("hist.ev.roadmapNone")
+                : t(`hist.ev.${entry.roadmapStatus}` as MessageKey)}
+            </p>
+            {entry.roadmapStatus !== "none" && (
+              <Pill tone={ROADMAP_TONE[entry.roadmapStatus]}>
+                {t(`hist.roadmap.${entry.roadmapStatus}` as const)}
+              </Pill>
+            )}
+          </div>
+          {(entry.roadmapBuiltAt || entry.roadmapCompletedAt) && (
+            <p className="text-[0.875rem] text-sol-secondary">
+              {[entry.roadmapBuiltAt, entry.roadmapCompletedAt]
+                .filter((d): d is string => Boolean(d))
+                .map((d) => formatDate(d, locale))
+                .join(" → ")}
+            </p>
+          )}
+          {entry.progress && entry.progress.weeksTotal > 0 && (
+            <p className="mt-1 text-[0.9375rem] text-sol-ink" data-testid="history-progress">
+              {t("hist.ev.progress", {
+                w: entry.progress.weeksCompleted,
+                t: entry.progress.weeksTotal,
+                m: entry.progress.missionsCompleted,
+                e: entry.progress.evidence,
+              })}
+            </p>
+          )}
+        </>
+      ),
+    },
+  ];
 
   return (
     <Card
       as="article"
-      className="flex flex-col gap-5 border-sol-border p-5 shadow-none sm:p-7"
+      className={cn(
+        "flex flex-col gap-6 p-5 shadow-none sm:p-7",
+        entry.isCurrent ? "border-sol-cobalt/40" : "border-sol-border",
+        comparing && "ring-2 ring-sol-cobalt/40",
+      )}
       data-testid="history-entry"
       data-current={entry.isCurrent}
     >
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h2 className="sol-h3">{formatDate(entry.createdAt, locale)}</h2>
+        <h2 className="text-[1.25rem] font-semibold text-sol-ink">
+          {formatDate(entry.createdAt, locale)}
+        </h2>
         {entry.isCurrent && <Pill tone="cobalt">{t("hist.current")}</Pill>}
       </div>
 
       {facts.length > 0 && (
-        <ul className="flex flex-wrap gap-2" data-testid="history-profile">
-          {facts.map((f) => (
-            <li
-              key={f.text}
-              className="flex items-center gap-2 rounded-full bg-sol-ivory px-3.5 py-1.5 text-[0.9375rem] font-medium text-sol-ink"
-            >
-              <f.icon className="size-4 text-sol-champagne-deep" aria-hidden="true" />
-              {f.text}
-            </li>
-          ))}
-        </ul>
-      )}
-
-      <div className="grid gap-4 md:grid-cols-[1.7fr_1fr_1fr]">
-        <div className={nodeClass}>
-          <div className="flex items-center gap-3">
-            <span className={nodeIcon}>
-              <Compass className="size-5" aria-hidden="true" />
-            </span>
-            <p className="sol-eyebrow">{t("hist.generated", { n: entry.directions.length })}</p>
-          </div>
-          <ul className="flex flex-col gap-2.5">
-            {entry.directions.map((d) => (
+        <div>
+          <p className="text-[0.8125rem] font-semibold text-sol-secondary">{t("hist.snapshot")}</p>
+          <ul className="mt-2 flex flex-wrap gap-2" data-testid="history-profile">
+            {facts.map((f) => (
               <li
-                key={d.id}
-                className="flex flex-col items-start gap-1.5 text-[1.0625rem] text-sol-ink sm:flex-row sm:justify-between sm:gap-3"
+                key={f.field}
+                className="rounded-full border border-sol-border bg-sol-pearl px-3.5 py-1.5 text-[0.875rem] text-sol-ink"
               >
-                <span className={d.id === entry.selected?.id ? "font-semibold" : undefined}>
-                  <TranslatedTitle id={d.id} title={d.title} />
-                </span>
-                <FitPill fit={d.fit} />
+                {f.text}
               </li>
             ))}
           </ul>
-          {arrow}
         </div>
+      )}
 
-        <div className={nodeClass}>
-          <div className="flex items-center gap-3">
-            <span className={nodeIcon}>
-              <CircleCheck className="size-5" aria-hidden="true" />
-            </span>
-            <p className="sol-eyebrow">{t("hist.selected")}</p>
-          </div>
-          <p
-            className={cn(
-              "text-[1.0625rem] text-sol-ink",
-              entry.selected ? "font-semibold" : "text-sol-secondary",
+      <ol className="flex flex-col" aria-label={t("hist.title")}>
+        {steps.map((s, i) => (
+          <li key={s.testId} className="relative flex gap-4 pb-5 last:pb-0" data-testid={s.testId}>
+            {i < steps.length - 1 && (
+              <span
+                aria-hidden="true"
+                className={cn(
+                  "absolute left-[1.0625rem] top-9 bottom-0 w-px",
+                  steps[i + 1].done ? "bg-sol-cobalt/40" : "bg-sol-border",
+                )}
+              />
             )}
-          >
-            {entry.selected ? (
-              <TranslatedTitle id={entry.selected.id} title={entry.selected.title} />
-            ) : (
-              t("hist.noneSelected")
-            )}
-          </p>
-          {arrow}
-        </div>
-
-        <div className={nodeClass}>
-          <div className="flex items-center gap-3">
-            <span className={nodeIcon}>
-              <MapIcon className="size-5" aria-hidden="true" />
+            <span
+              aria-hidden="true"
+              className={cn(
+                "relative flex size-9 shrink-0 items-center justify-center rounded-full border",
+                s.done
+                  ? "border-sol-cobalt/30 bg-sol-cobalt-soft text-sol-cobalt-deep"
+                  : "border-sol-border bg-sol-surface text-sol-secondary",
+              )}
+            >
+              <s.icon className="size-4" strokeWidth={1.75} />
             </span>
-            <p className="sol-eyebrow">{t("hist.roadmap")}</p>
-          </div>
-          <div>
-            <Pill tone={roadmapTone}>{t(`hist.roadmap.${entry.roadmapStatus}` as const)}</Pill>
-          </div>
-        </div>
-      </div>
+            <div className="min-w-0 flex-1 pt-1.5 text-[0.9375rem] leading-snug">{s.body}</div>
+          </li>
+        ))}
+      </ol>
 
-      <div className="flex flex-wrap gap-3">
+      <div className="flex flex-wrap gap-3 border-t border-sol-border pt-5">
         <LinkButton
           to="/dashboard"
           search={entry.isCurrent ? {} : { consultation: entry.consultationId }}
@@ -382,6 +506,21 @@ function EntryCard({
         >
           {t("hist.review")}
         </LinkButton>
+        {canCompare && (
+          <Button
+            variant={comparing ? "soft" : "ghost"}
+            onClick={onCompare}
+            aria-pressed={comparing}
+            data-testid="history-compare"
+          >
+            {comparing ? (
+              <Check className="size-4" aria-hidden="true" />
+            ) : (
+              <GitCompareArrows className="size-4" aria-hidden="true" />
+            )}
+            {comparing ? t("hist.compare.selected") : t("hist.compare")}
+          </Button>
+        )}
         {entry.canRestore && (
           <Button variant="soft" onClick={onRestore} data-testid="history-restore">
             {t("hist.restore")}
@@ -392,6 +531,181 @@ function EntryCard({
             {t("hist.delete")}
           </Button>
         )}
+      </div>
+    </Card>
+  );
+}
+
+const STATE_TONE: Record<RowState, PillTone> = {
+  same: "neutral",
+  changed: "cobalt",
+  unknown: "neutral",
+};
+
+/** Two consultations side by side — the stored values and whether each changed. */
+function ComparePanel({
+  a,
+  b,
+  onClear,
+}: {
+  a: HistoryEntry;
+  b: HistoryEntry;
+  onClear: () => void;
+}) {
+  const { t, locale } = useLocale();
+  const snapshot = useSnapshotText();
+  // Oldest on the left, so the table reads as "then → now".
+  const [older, newer] = a.createdAt <= b.createdAt ? [a, b] : [b, a];
+  const rows = compareConsultations(older.profile, newer.profile);
+  const dirs = directionDiff(older.directions, newer.directions);
+  // Both chose → compare the titles; one chose and the other did not → changed.
+  const sameChoice =
+    older.selected && newer.selected
+      ? older.selected.title.trim().toLowerCase() === newer.selected.title.trim().toLowerCase()
+      : older.selected || newer.selected
+        ? false
+        : null;
+  const cell = "px-3 py-3 align-top text-[0.9375rem] leading-snug text-sol-ink";
+  const notRecorded = <span className="text-sol-secondary">{t("hist.notProvided")}</span>;
+
+  return (
+    <Card className="flex flex-col gap-5 p-5 sm:p-7" data-testid="history-compare-panel">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h2 className="text-[1.25rem] font-semibold text-sol-ink">{t("hist.compare.title")}</h2>
+          <p className="mt-1 text-[0.9375rem] text-sol-secondary">{t("hist.compare.body")}</p>
+        </div>
+        <Button variant="ghost" size="sm" onClick={onClear} data-testid="history-compare-clear">
+          <X className="size-4" aria-hidden="true" />
+          {t("hist.compare.clear")}
+        </Button>
+      </div>
+      <div className="-mx-2 overflow-x-auto">
+        <table className="w-full min-w-[36rem] border-collapse">
+          <caption className="sr-only">{t("hist.compare.aria")}</caption>
+          <thead>
+            <tr className="border-b border-sol-border text-left">
+              <th
+                scope="col"
+                className="px-3 pb-3 text-[0.8125rem] font-semibold text-sol-secondary"
+              >
+                {t("hist.compare.field")}
+              </th>
+              {[older, newer].map((e) => (
+                <th
+                  key={e.consultationId}
+                  scope="col"
+                  className="px-3 pb-3 text-[0.9375rem] font-semibold text-sol-ink"
+                >
+                  {formatDate(e.createdAt, locale)}
+                </th>
+              ))}
+              <th scope="col" className="px-3 pb-3">
+                <span className="sr-only">{t("hist.compare.state.changed")}</span>
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((r) => (
+              <tr
+                key={r.field}
+                className="border-b border-sol-border/70"
+                data-testid={`compare-row-${r.field}`}
+                data-state={r.state}
+              >
+                <th scope="row" className={cn(cell, "font-medium text-sol-secondary")}>
+                  {t(`hist.compare.field.${r.field}` as const)}
+                </th>
+                <td className={cell}>{snapshot(older, r.field) ?? notRecorded}</td>
+                <td className={cell}>{snapshot(newer, r.field) ?? notRecorded}</td>
+                <td className={cn(cell, "text-right")}>
+                  <Pill tone={STATE_TONE[r.state]}>
+                    {t(`hist.compare.state.${r.state}` as const)}
+                  </Pill>
+                </td>
+              </tr>
+            ))}
+            <tr className="border-b border-sol-border/70" data-testid="compare-row-directions">
+              <th scope="row" className={cn(cell, "font-medium text-sol-secondary")}>
+                {t("hist.compare.directions")}
+              </th>
+              {[
+                { entry: older, only: dirs.onlyA },
+                { entry: newer, only: dirs.onlyB },
+              ].map(({ entry, only }) => (
+                <td key={entry.consultationId} className={cell}>
+                  <ul className="flex flex-col gap-1.5">
+                    {entry.directions.map((d) => (
+                      <li key={d.id} className="flex flex-wrap items-center gap-2">
+                        <TranslatedTitle id={d.id} title={d.title} />
+                        {only.includes(d.title) && (
+                          <span className="text-[0.75rem] font-semibold text-sol-cobalt-deep">
+                            {t("hist.compare.onlyHere")}
+                          </span>
+                        )}
+                      </li>
+                    ))}
+                  </ul>
+                </td>
+              ))}
+              <td className={cn(cell, "text-right")}>
+                <Pill tone={dirs.onlyA.length + dirs.onlyB.length > 0 ? "cobalt" : "neutral"}>
+                  {t(
+                    dirs.onlyA.length + dirs.onlyB.length > 0
+                      ? "hist.compare.state.changed"
+                      : "hist.compare.state.same",
+                  )}
+                </Pill>
+              </td>
+            </tr>
+            <tr className="border-b border-sol-border/70" data-testid="compare-row-chosen">
+              <th scope="row" className={cn(cell, "font-medium text-sol-secondary")}>
+                {t("hist.compare.chosen")}
+              </th>
+              {[older, newer].map((e) => (
+                <td key={e.consultationId} className={cell}>
+                  {e.selected ? (
+                    <TranslatedTitle id={e.selected.id} title={e.selected.title} />
+                  ) : (
+                    <span className="text-sol-secondary">{t("hist.noneSelected")}</span>
+                  )}
+                </td>
+              ))}
+              <td className={cn(cell, "text-right")}>
+                <Pill tone={sameChoice === false ? "cobalt" : "neutral"}>
+                  {t(
+                    sameChoice === null
+                      ? "hist.compare.state.unknown"
+                      : sameChoice
+                        ? "hist.compare.state.same"
+                        : "hist.compare.state.changed",
+                  )}
+                </Pill>
+              </td>
+            </tr>
+            <tr data-testid="compare-row-roadmap">
+              <th scope="row" className={cn(cell, "font-medium text-sol-secondary")}>
+                {t("hist.compare.roadmap")}
+              </th>
+              {[older, newer].map((e) => (
+                <td key={e.consultationId} className={cell}>
+                  {t(`hist.roadmap.${e.roadmapStatus}` as const)}
+                  {e.progress && e.progress.weeksTotal > 0 && (
+                    <span className="block text-[0.875rem] text-sol-secondary">
+                      {t("hist.ev.progress", {
+                        w: e.progress.weeksCompleted,
+                        t: e.progress.weeksTotal,
+                        m: e.progress.missionsCompleted,
+                        e: e.progress.evidence,
+                      })}
+                    </span>
+                  )}
+                </td>
+              ))}
+              <td />
+            </tr>
+          </tbody>
+        </table>
       </div>
     </Card>
   );
