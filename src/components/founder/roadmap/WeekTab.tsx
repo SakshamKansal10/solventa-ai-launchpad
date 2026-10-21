@@ -186,14 +186,17 @@ export function WeekTab({
         </header>
 
         {detail.adaptationNote(week.adaptationNote) && (
+          // Shown only when this week was really rewritten from what was recorded last week.
           <div
-            className="border-l-2 border-sol-cobalt/50 bg-sol-cobalt-ultralight/70 py-3 pl-4 pr-3"
+            role="status"
+            className="rounded-2xl border border-sol-cobalt/30 bg-sol-cobalt-ultralight px-5 py-4"
             data-testid="adaptation-note"
           >
-            <p className="sol-eyebrow !text-[0.6875rem] !text-sol-cobalt-deep">{t("rm.adapted")}</p>
-            <p className="mt-1 text-[0.9375rem] leading-snug text-sol-ink">
+            <p className="text-[1rem] font-semibold text-sol-cobalt-deep">{t("rm.adapted")}</p>
+            <p className="mt-1 text-[1rem] leading-snug text-sol-ink">
               {detail.adaptationNote(week.adaptationNote)}
             </p>
+            <p className="mt-2 text-[0.875rem] text-sol-secondary">{t("rm.adapted.why")}</p>
           </div>
         )}
 

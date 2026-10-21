@@ -69,7 +69,9 @@ const en = {
     "This is only a preview. Later weeks are written when you get there, from what you've learned.",
 
   // Week
-  "rm.adapted": "Adapted from your last week",
+  "rm.adapted": "Your roadmap has changed",
+  "rm.adapted.why":
+    "This week was rewritten from what you recorded last week; earlier weeks stay as they were.",
   "rm.missions.aria": "This week's missions",
   "rm.locked.title": "This week is locked",
   "rm.locked.body": "It opens when you finish the week before it.",
@@ -254,7 +256,9 @@ const hi: Record<keyof typeof en, string> = {
   "rm.phase.previewNote":
     "यह केवल एक झलक है। आगे के सप्ताह तब लिखे जाते हैं जब आप वहां पहुंचते हैं, आपकी सीख के आधार पर।",
 
-  "rm.adapted": "आपके पिछले सप्ताह के अनुसार ढाला गया",
+  "rm.adapted": "आपका रोडमैप बदल गया है",
+  "rm.adapted.why":
+    "यह हफ़्ता आपके पिछले हफ़्ते के दर्ज नतीजों के आधार पर फिर से लिखा गया; पिछले हफ़्ते जैसे थे वैसे ही हैं।",
   "rm.missions.aria": "इस सप्ताह के मिशन",
   "rm.locked.title": "यह सप्ताह बंद है",
   "rm.locked.body": "इससे पहले का सप्ताह पूरा करते ही यह खुल जाएगा।",
