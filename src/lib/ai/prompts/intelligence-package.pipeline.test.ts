@@ -74,6 +74,46 @@ describe("Stage 7 generation call path (mocked Gemini, no live network call)", (
     expect((caught as { category?: string }).category).toBe("GEMINI_INVALID_REQUEST");
   });
 
+  it("a 400 on the schema-constrained request is retried once WITHOUT the provider schema — and still validated", async () => {
+    const { flatIntelligencePackage } = await import("@/lib/ai/fixtures/e2e-gemini");
+    generateContentMock.mockImplementation((req: { config: Record<string, unknown> }) => {
+      if (req.config.responseSchema) {
+        throw new ApiError({ message: "Request contains an invalid argument.", status: 400 });
+      }
+      return { text: JSON.stringify(flatIntelligencePackage()), usageMetadata: {} };
+    });
+
+    const profile = normalizeProfile(FIXTURE_PROFILE_ANSWERS as unknown as OnboardingAnswers);
+    const ambition = computeAmbitionCalibration(profile, computeFounderGenome(profile));
+    const pkg = await generateIntelligencePackage(profile, ambition);
+
+    expect(generateContentMock).toHaveBeenCalledTimes(2);
+    const [first, second] = generateContentMock.mock.calls.map(
+      (c) => c[0] as { contents: string; config: Record<string, unknown> },
+    );
+    expect(first.config.responseSchema).toBeDefined();
+    expect(second.config.responseSchema).toBeUndefined();
+    // The retry repeats the original prompt (which carries the JSON contract),
+    // not a "your response was invalid" note — nothing came back the first time.
+    expect(second.contents).toBe(first.contents);
+    expect(second.contents).toContain("criticalAssumptions");
+    expect(pkg.opportunities).toHaveLength(3);
+    expect(pkg.opportunities.every((o) => (o.criticalAssumptions?.length ?? 0) >= 2)).toBe(true);
+  });
+
+  it("a schema-less retry that returns invalid JSON still fails as a real error", async () => {
+    generateContentMock.mockImplementation((req: { config: Record<string, unknown> }) => {
+      if (req.config.responseSchema) {
+        throw new ApiError({ message: "Request contains an invalid argument.", status: 400 });
+      }
+      return { text: JSON.stringify({ founderDNA: {}, opportunities: [] }), usageMetadata: {} };
+    });
+    const profile = normalizeProfile(FIXTURE_PROFILE_ANSWERS as unknown as OnboardingAnswers);
+    const ambition = computeAmbitionCalibration(profile, computeFounderGenome(profile));
+    await expect(generateIntelligencePackage(profile, ambition)).rejects.toThrow(/after retry/);
+    expect(generateContentMock).toHaveBeenCalledTimes(2);
+  });
+
   it("503 (model overload) with no fallback model configured -> retries once, fails with 'after retry' (not 'after fallback'), category GEMINI_UNAVAILABLE", async () => {
     generateContentMock.mockImplementation(() => {
       throw new ApiError({

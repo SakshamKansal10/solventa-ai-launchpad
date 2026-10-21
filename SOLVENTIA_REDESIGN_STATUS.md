@@ -109,6 +109,41 @@ Released and verified live on 2026-10-21.
 - Follow-up after release: History reads `roadmaps.completed_at` only when the database has
   migration 0010 (same probe as the rest of Founder OS), released the same way.
 
+## Incident 2026-10-21 — Stage 7 "We couldn't finish your analysis" (400 INVALID_ARGUMENT)
+
+- **Symptom:** every consultation failed at Stage 7 on production after release `85f9e06`;
+  console: `Gemini request failed after retry: {"code":400,"message":"Request contains an
+invalid argument.","status":"INVALID_ARGUMENT"}`. Reproduced on production through
+  `/review-public` (fixed fictional profile, nothing persisted): failed at "Gemini —
+  intelligence package" in 1.3 s, i.e. rejected before any generation.
+- **Root cause (measured live, synthetic prompt):** the consultation is the call that sends a
+  provider-side `responseSchema` (`generateStructured(FlatIntelligencePackageSchema)`). The
+  structured direction fields added in `4468915` raised that schema's `maxItems` constraints
+  from 14 to 17. Gemini rejects a schema with "too many" constraints with a bare 400 and no
+  detail (the undocumented limit already noted in `gemini.server.ts`):
+  released schema → 400; pre-release shape (14 maxItems) → accepted; released schema with
+  every description removed → still 400; with only `maxItems` removed → accepted. The
+  same-model retry re-sent the same schema, hence "failed after retry".
+- **Fix:** `src/lib/ai/gemini.server.ts` — (1) `toGeminiSchema` no longer sends `maxItems` to
+  the provider (Zod still enforces every upper bound on the response; the prompt's JSON
+  contract states them); (2) if Gemini still rejects a request that carries a schema with a
+  400, the one retry goes without the provider schema — same prompt (it contains the JSON
+  contract), same Zod validation, same two-attempt budget; a 400 without a schema, or an
+  invalid response, still fails as a real error with the retry screen.
+- **Regression tests:** `gemini-schema.test.ts` (no `maxItems` in any provider schema; the
+  consultation schema still requires deliveryModel / criticalAssumptions (min 2, category
+  enum) / successCriteria / reconsiderIf; keyword stripping never removes a same-named
+  property) — fails without the fix; `intelligence-package.pipeline.test.ts` (400 with schema
+  → schema-less retry succeeds and is validated; schema-less invalid JSON still fails); the E2E
+  fake Gemini now rejects a responseSchema with more than 14 `maxItems` like the provider;
+  `auth.spec.ts` (a provider 400 recovers on the first click: 2 calls, 3 directions; a full
+  failure then "Try again" keeps the answers: 1 consultation, 3 directions, 1 notification).
+- **Results:** vitest 46 files / 420 tests pass; `tsc` pass; ESLint no errors; `npm run build`
+  pass; E2E `auth` + `consultation` + `smoke` + `command-center`: 29/29 passed. Live Gemini,
+  synthetic fixture profile: fixed schema accepted; real `generateIntelligencePackage` → 3
+  distinct directions with every structured field in 32 s, no schema-less retry needed.
+- No user data was read, changed or created; no secrets logged. Commit / deploy: see below.
+
 ## Next action
 
 Nothing outstanding in code. Owner: the §21 Google consent-screen branding above; then sign in

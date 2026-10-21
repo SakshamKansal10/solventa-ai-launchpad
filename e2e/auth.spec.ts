@@ -132,7 +132,9 @@ test.describe("first consultation as a guest", () => {
     await page.getByRole("button", { name: /Verify/ }).click();
 
     await expect(page).toHaveURL(/localhost:\d+\/dashboard$/, { timeout: 90_000 });
-    await expect(page.locator("h1")).toHaveText("Your strongest direction is ready to explore.", { timeout: 60_000 });
+    await expect(page.locator("h1")).toHaveText("Your strongest direction is ready to explore.", {
+      timeout: 60_000,
+    });
     expect(await gemini.countOf("INITIAL_INTELLIGENCE")).toBe(1);
 
     const rows = await sql<{ full_name: string; n: string }>(
@@ -185,6 +187,50 @@ test.describe("first consultation as a guest", () => {
       [user.id],
     );
     expect(Number(rows[0].n)).toBe(1);
+    // The retry used the saved answers once: one consultation, its three directions,
+    // and a single "directions ready" notification — nothing duplicated.
+    const opps = await sql<{ n: string }>(
+      "select count(*)::text as n from opportunities where user_id = $1",
+      [user.id],
+    );
+    expect(Number(opps[0].n)).toBe(3);
+    await expect
+      .poll(async () =>
+        Number(
+          (
+            await sql<{ n: string }>(
+              "select count(*)::text as n from founder_notifications where user_id = $1",
+              [user.id],
+            )
+          )[0].n,
+        ),
+      )
+      .toBe(1);
+  });
+
+  test("a provider rejection of the structured request recovers on the first click (Stage 7, 2026-10-21)", async ({
+    page,
+    context,
+  }) => {
+    test.setTimeout(240_000);
+    const user = await createUser();
+    await signIn(context, user);
+    // One 400 INVALID_ARGUMENT, as Gemini returned in production: the app retries
+    // the same request without the provider schema, validates it, and saves it.
+    await gemini.failNext("INITIAL_INTELLIGENCE", 1, 400);
+    await gotoApp(page, "/consultation");
+    await page.evaluate(() => window.localStorage.clear());
+    await gotoApp(page, "/consultation");
+    await walkConsultation(page);
+    await page.getByTestId("find-directions").click();
+    await expect(page).toHaveURL(/localhost:\d+\/dashboard$/, { timeout: 90_000 });
+    await expect(page.getByTestId("flagship-card")).toBeVisible();
+    expect(await gemini.countOf("INITIAL_INTELLIGENCE")).toBe(2);
+    const opps = await sql<{ n: string }>(
+      "select count(*)::text as n from opportunities where user_id = $1",
+      [user.id],
+    );
+    expect(Number(opps[0].n)).toBe(3);
   });
 });
 

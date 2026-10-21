@@ -172,6 +172,25 @@ export class FakeGemini {
       };
     }
 
+    // Mirrors Gemini's undocumented responseSchema limit as measured live on
+    // 2026-10-21 (14 maxItems accepted, 17 rejected with a bare 400 before any
+    // generation) — the bug that broke Stage 7 in production.
+    const maxItems = (
+      JSON.stringify(body.generationConfig?.responseSchema ?? {}).match(/"maxItems"/g) ?? []
+    ).length;
+    if (maxItems > 14) {
+      return {
+        status: 400,
+        json: {
+          error: {
+            code: 400,
+            message: "Request contains an invalid argument.",
+            status: "INVALID_ARGUMENT",
+          },
+        },
+      };
+    }
+
     const payload = this.payloadFor(purpose, prompt, hindi, system);
     if (payload === undefined) {
       return {

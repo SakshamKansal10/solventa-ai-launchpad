@@ -38,15 +38,37 @@ function getClient(): GoogleGenAI {
   return client;
 }
 
-// Gemini's responseSchema only accepts a restricted OpenAPI-3 subset — it
-// rejects "additionalProperties" outright (400 INVALID_ARGUMENT), which
-// zod-to-json-schema emits by default on every z.object() node.
-function stripAdditionalProperties(node: unknown): unknown {
-  if (Array.isArray(node)) return node.map(stripAdditionalProperties);
+// Keywords removed from every schema sent to Gemini as responseSchema. Zod still
+// enforces all of them on the response (runGenerationLoop validates locally), so
+// nothing is lost — they are only kept out of the PROVIDER-side schema:
+//   additionalProperties — not in Gemini's OpenAPI-3 subset; zod-to-json-schema
+//     emits it on every z.object() node and Gemini rejects it outright (400).
+//   maxItems — Gemini rejects a schema carrying "too many" of them with a bare
+//     400 INVALID_ARGUMENT before generating anything. Measured live on
+//     2026-10-21 against the consultation package: 14 maxItems accepted, 17
+//     rejected; the same schema with only maxItems removed was accepted (with
+//     every description and minItems kept). The limit is undocumented, so none
+//     are sent; the prompt's JSON contract states each upper bound instead.
+const PROVIDER_STRIPPED_KEYS = new Set(["additionalProperties", "maxItems"]);
+
+function stripProviderKeywords(node: unknown): unknown {
+  if (Array.isArray(node)) return node.map(stripProviderKeywords);
   if (node && typeof node === "object") {
-    const { additionalProperties, ...rest } = node as Record<string, unknown>;
     return Object.fromEntries(
-      Object.entries(rest).map(([key, value]) => [key, stripAdditionalProperties(value)]),
+      Object.entries(node as Record<string, unknown>)
+        .filter(([key]) => !PROVIDER_STRIPPED_KEYS.has(key))
+        .map(([key, value]) => [
+          key,
+          // Property NAMES are data, not keywords — only their schemas are walked.
+          key === "properties" && value && typeof value === "object"
+            ? Object.fromEntries(
+                Object.entries(value as Record<string, unknown>).map(([name, sub]) => [
+                  name,
+                  stripProviderKeywords(sub),
+                ]),
+              )
+            : stripProviderKeywords(value),
+        ]),
     );
   }
   return node;
@@ -70,7 +92,7 @@ export function toGeminiSchema(schema: z.ZodTypeAny): unknown {
   const json = zodToJsonSchema(schema, { target: "openApi3", $refStrategy: "none" });
   // zodToJsonSchema can leave a top-level $schema key Gemini's backend rejects.
   const { $schema, ...rest } = json as Record<string, unknown>;
-  return stripAdditionalProperties(rest);
+  return stripProviderKeywords(rest);
 }
 
 /**
@@ -298,6 +320,12 @@ async function runGenerationLoop<T>(
   let lastCategory: GeminiFailureCategory = "GEMINI_REQUEST_FAILED";
   let lastCause: unknown;
   let attemptedFallback = false;
+  // The provider-side schema actually sent. If Gemini rejects a request that
+  // carries one (400 INVALID_ARGUMENT — e.g. its undocumented schema-complexity
+  // limit), the retry goes WITHOUT it: every prompt that uses a schema also
+  // states the JSON contract, and Zod validates the result either way, so this
+  // never accepts anything weaker. A 400 on a schema-less request still fails.
+  let providerSchema: unknown = responseSchema;
 
   for (let modelIndex = 0; modelIndex < models.length; modelIndex++) {
     const model = models[modelIndex];
@@ -311,8 +339,14 @@ async function runGenerationLoop<T>(
     for (let attempt = 0; attempt < maxAttempts; attempt++) {
       const requestId = crypto.randomUUID();
       const startedAt = Date.now();
+      // A request-level failure (nothing came back) is retried with the original
+      // prompt; only a bad RESPONSE earns the corrective note.
+      const responseProblem =
+        lastCategory === "GEMINI_MALFORMED_JSON" ||
+        lastCategory === "GEMINI_SCHEMA_MISMATCH" ||
+        lastCategory === "GEMINI_EMPTY_RESPONSE";
       const prompt =
-        attempt === 0
+        attempt === 0 || !responseProblem
           ? params.prompt
           : lastCategory === "GEMINI_MALFORMED_JSON"
             ? `${params.prompt}\n\nYour previous response was not valid JSON — it could not be parsed at all and failed with this error:\n${lastError}\nRespond again with ONLY a single, complete, syntactically valid JSON object matching the required shape. No markdown fences, no commentary, no truncation.`
@@ -325,7 +359,7 @@ async function runGenerationLoop<T>(
           config: {
             systemInstruction: params.systemInstruction,
             responseMimeType: "application/json",
-            ...(responseSchema ? { responseSchema } : {}),
+            ...(providerSchema ? { responseSchema: providerSchema } : {}),
             ...(params.thinkingLevel
               ? { thinkingConfig: { thinkingLevel: SDK_THINKING_LEVEL[params.thinkingLevel] } }
               : {}),
@@ -350,7 +384,7 @@ async function runGenerationLoop<T>(
             success: false,
             usage,
             errorCategory: lastCategory,
-            responseSchemaPresent: responseSchema !== null,
+            responseSchemaPresent: providerSchema !== null,
             responseMimeType: "application/json",
           });
           continue;
@@ -374,7 +408,7 @@ async function runGenerationLoop<T>(
             success: false,
             usage,
             errorCategory: lastCategory,
-            responseSchemaPresent: responseSchema !== null,
+            responseSchemaPresent: providerSchema !== null,
             responseMimeType: "application/json",
             responseLength: responseText.length,
             diagnosticSnippet: snippetNearParseError(responseText, lastError),
@@ -395,7 +429,7 @@ async function runGenerationLoop<T>(
             durationMs,
             success: true,
             usage,
-            responseSchemaPresent: responseSchema !== null,
+            responseSchemaPresent: providerSchema !== null,
             responseMimeType: "application/json",
             responseLength: responseText.length,
           });
@@ -415,7 +449,7 @@ async function runGenerationLoop<T>(
           success: false,
           usage,
           errorCategory: lastCategory,
-          responseSchemaPresent: responseSchema !== null,
+          responseSchemaPresent: providerSchema !== null,
           responseMimeType: "application/json",
           responseLength: responseText.length,
           diagnosticSnippet: responseText.length <= 400 ? responseText : undefined,
@@ -424,6 +458,7 @@ async function runGenerationLoop<T>(
         lastError = err instanceof Error ? err.message : "Gemini request failed.";
         lastCategory = classifyGeminiFailure(err);
         lastCause = err;
+        const schemaWasSent = providerSchema !== null;
         logCallCost({
           requestId,
           purpose: params.purpose,
@@ -435,9 +470,15 @@ async function runGenerationLoop<T>(
           durationMs: Date.now() - startedAt,
           success: false,
           errorCategory: lastCategory,
-          responseSchemaPresent: responseSchema !== null,
+          responseSchemaPresent: schemaWasSent,
           responseMimeType: "application/json",
         });
+        if (lastCategory === "GEMINI_INVALID_REQUEST" && schemaWasSent) {
+          console.warn(
+            `[gemini] function=${params.callSite ?? "unknown"} model=${model} responseSchema rejected (400 INVALID_ARGUMENT) — retrying without a provider schema; the response is still validated locally`,
+          );
+          providerSchema = null;
+        }
       }
     }
 
