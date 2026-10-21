@@ -1,8 +1,13 @@
 /** Roadmap: This Week / Plan / Progress, missions, week review, building page. */
 const en = {
   "rm.journey.eyebrow": "Roadmap",
-  "rm.journey.title": "Your Journey",
-  "rm.journey.subtitle": "From idea to impact. Complete each phase step by step.",
+  "rm.journey.title": "Your roadmap",
+  "rm.journey.subtitle":
+    "Validate → Build → Elevate: test demand first, then build only what the evidence supports.",
+  "rm.stage.validate": "Validate",
+  "rm.stage.build": "Build",
+  "rm.stage.elevate": "Elevate",
+  "rm.stage.provisional": "Provisional — depends on what you learn",
   "rm.journey.timeline": "Timeline",
   "rm.journey.map": "Map",
   "rm.journey.viewAria": "Journey view",
@@ -181,8 +186,13 @@ const en = {
 
 const hi: Record<keyof typeof en, string> = {
   "rm.journey.eyebrow": "रोडमैप",
-  "rm.journey.title": "आपकी यात्रा",
-  "rm.journey.subtitle": "आइडिया से असर तक। हर चरण को एक-एक करके पूरा करें।",
+  "rm.journey.title": "आपका रोडमैप",
+  "rm.journey.subtitle":
+    "परखें → बनाएं → बढ़ाएं: पहले मांग परखें, फिर सिर्फ़ वही बनाएं जिसका सबूत मिले।",
+  "rm.stage.validate": "परखें",
+  "rm.stage.build": "बनाएं",
+  "rm.stage.elevate": "बढ़ाएं",
+  "rm.stage.provisional": "अस्थायी — आपकी सीख पर निर्भर",
   "rm.journey.timeline": "टाइमलाइन",
   "rm.journey.map": "मानचित्र",
   "rm.journey.viewAria": "यात्रा का दृश्य",

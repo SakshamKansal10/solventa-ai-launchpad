@@ -1,24 +1,20 @@
 import type { ReactNode } from "react";
 
-import { Gem3D } from "@/components/founder/three/Gem3D";
-import type { GemVariant } from "@/components/founder/three/GemCanvas";
 import { cn } from "@/lib/utils";
 
 /** The shared premium page header: a white-to-pearl atmosphere panel with
- * the title, a short line, an optional action, optional facts underneath and
- * (optionally) one small decorative 3D object. */
+ * the title, a short line, an optional action and optional facts underneath. No
+ * decorative 3D object: the page's content is the visual. */
 export function PageHero({
   title,
   subtitle,
   action,
-  gem,
   children,
   className,
 }: {
   title: string;
   subtitle?: string;
   action?: ReactNode;
-  gem?: GemVariant;
   children?: ReactNode;
   className?: string;
 }) {
@@ -31,7 +27,6 @@ export function PageHero({
           {action && <div className="mt-5">{action}</div>}
         </div>
         {children && <div className="flex items-center gap-5">{children}</div>}
-        {gem && <Gem3D variant={gem} className="hidden size-32 shrink-0 sm:block" />}
       </div>
     </header>
   );

@@ -156,7 +156,7 @@ export function MissionCard({
         className={cn(
           "relative rounded-2xl transition-colors duration-300",
           open && !done
-            ? "bg-[linear-gradient(135deg,#faf7ff_0%,#fffdfb_100%)] p-4 shadow-[0_0_0_1px_rgba(49,94,219,0.2),0_14px_34px_-24px_rgba(88,64,185,0.5)] sm:p-5"
+            ? "bg-[linear-gradient(135deg,#faf7ff_0%,#fffdfb_100%)] p-4 shadow-[0_0_0_1px_rgba(49,94,219,0.2),0_14px_34px_-24px_rgba(16,28,50,0.5)] sm:p-5"
             : "px-1 py-1.5 hover:bg-sol-cobalt-ultralight/60 sm:px-3",
         )}
       >

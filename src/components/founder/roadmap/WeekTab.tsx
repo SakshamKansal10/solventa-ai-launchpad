@@ -266,7 +266,7 @@ export function WeekTab({
 
       <aside className="min-w-0 self-start" aria-label={t("rm.rail.aria")} data-testid="week-rail">
         {week.hasDetail && (
-          <div className="flex flex-col divide-y divide-sol-border/70 rounded-3xl border border-sol-border bg-[linear-gradient(160deg,#fffdfb_0%,#f8f3fc_100%)] shadow-[0_16px_40px_-30px_rgba(88,64,185,0.45)]">
+          <div className="flex flex-col divide-y divide-sol-border/70 rounded-3xl border border-sol-border bg-[linear-gradient(160deg,#fffdfb_0%,#f8f3fc_100%)] shadow-[0_16px_40px_-30px_rgba(16,28,50,0.45)]">
             <section className="flex flex-col gap-4 p-5">
               <h3 className="flex items-center gap-2.5 text-[0.9375rem] font-semibold text-sol-ink">
                 <TrendingUp className="size-4 text-sol-cobalt-deep" aria-hidden="true" />

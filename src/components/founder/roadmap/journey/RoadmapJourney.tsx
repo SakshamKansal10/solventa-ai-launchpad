@@ -7,8 +7,6 @@ import {
   type RefObject,
 } from "react";
 
-import { Gem3D } from "@/components/founder/three/Gem3D";
-import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
 import { useLocale } from "@/lib/i18n/LocaleProvider";
 import type { PhaseDTO, RoadmapView } from "@/lib/roadmap/view";
 import { cn } from "@/lib/utils";
@@ -16,22 +14,18 @@ import type { useRoadmapText } from "../text";
 
 type RoadmapText = ReturnType<typeof useRoadmapText>;
 
-/** The three mountain peaks shown on the journey scene: centre and radii of
- * each island's base (1280×720 units) and its tilt in degrees. Only the
- * first three phases ever get a peak — later phases stay reachable from
- * History, but the scene itself never grows past three. */
-const ISLANDS = [
-  { cx: 290, cy: 560, rx: 300, ry: 55, rot: -10 },
-  { cx: 737, cy: 468, rx: 100, ry: 20, rot: -3 },
-  { cx: 1005, cy: 228, rx: 225, ry: 12, rot: 1 },
-] as const;
-const STAGE_W = 1280;
-const STAGE_H = 720;
+/** Where each phase sits on the founder's path: test demand, build what the evidence
+ * supports, then grow it. Phase keys come from the generated roadmap. */
+export type Stage = "validate" | "build" | "elevate";
+export function stageOf(key: string): Stage {
+  if (key === "build" || key === "launch") return "build";
+  if (key === "improve") return "elevate";
+  return "validate";
+}
 
-/** The signature roadmap view: a header, a 3D journey of phase islands with
- * HTML labels pinned underneath, and the details panel of the selected phase.
- * All state shown here comes from the roadmap view; the only local state is
- * which hover is active. */
+/** The roadmap at a glance: a header naming the direction, every phase on one
+ * VALIDATE → BUILD → ELEVATE path (all phases, full titles, real states), and the
+ * details panel of the selected phase. Plain HTML — no 3D, nothing hidden. */
 export function RoadmapJourney({
   view,
   text,
@@ -50,7 +44,7 @@ export function RoadmapJourney({
   onOpenWeek: (n: number) => void;
 }) {
   const { t } = useLocale();
-  const visiblePhases = view.phases.slice(0, ISLANDS.length);
+  const visiblePhases = view.phases;
   const labelRefs = useRef<(HTMLElement | null)[]>([]);
   const notchRef = useRef<HTMLSpanElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
@@ -105,7 +99,7 @@ export function RoadmapJourney({
       data-testid="roadmap-header"
       aria-labelledby="journey-title"
     >
-      <div className="relative overflow-hidden rounded-[1.5rem] border border-sol-border bg-[linear-gradient(180deg,#d6c9ee_0%,#e3cbea_22%,#f0d0dd_55%,#f8e6dc_100%)]">
+      <div className="relative overflow-hidden rounded-[1.5rem] border border-sol-border bg-[linear-gradient(180deg,#ffffff_0%,#f7f8fa_100%)]">
         <header className="relative z-20 flex flex-wrap items-start justify-between gap-4 px-6 pt-6 sm:px-8 sm:pt-7">
           <div className="min-w-0">
             <p className="sol-eyebrow flex items-center gap-2 !text-[0.6875rem] !uppercase !tracking-[0.14em]">
@@ -115,12 +109,17 @@ export function RoadmapJourney({
             <h1 id="journey-title" className="sol-page-title mt-1">
               {t("rm.journey.title")}
             </h1>
-            <p className="mt-1 text-[0.875rem] text-sol-ink/75">{t("rm.journey.subtitle")}</p>
+            <p
+              className="mt-1 text-[1rem] font-medium text-sol-ink"
+              data-testid="roadmap-direction"
+            >
+              {view.roadmap.opportunityTitle}
+            </p>
+            <p className="mt-1 text-[0.9375rem] text-sol-secondary">{t("rm.journey.subtitle")}</p>
             {northStar && (
               <p
-                className="mt-2 line-clamp-1 max-w-[60ch] text-[0.8125rem] text-sol-ink/80"
+                className="mt-2 max-w-[70ch] text-[0.9375rem] text-sol-ink/80"
                 data-testid="north-star"
-                title={northStar}
               >
                 {northStar}
               </p>
@@ -162,54 +161,36 @@ export function RoadmapJourney({
           </div>
         </header>
 
-        <div className="overflow-x-auto">
-          <div
-            className="relative aspect-[16/9] min-w-[780px]"
-            role="group"
-            aria-label={t("rm.journey.sceneAria", { n: visiblePhases.length })}
-          >
-            <img
-              src="/images/roadmap-floating-islands-reference.png"
-              alt=""
+        <nav
+          aria-label={t("rm.phases.aria")}
+          data-testid="phase-strip"
+          className="relative z-10 px-6 pb-2 pt-6 sm:px-8"
+        >
+          <ol className="relative grid gap-3 md:auto-cols-fr md:grid-flow-col">
+            {/* The path itself: one line joining every phase, in order. */}
+            <span
               aria-hidden="true"
-              draggable={false}
-              className="absolute inset-0 size-full select-none object-cover [mask-image:linear-gradient(to_bottom,transparent,black_14%,black_92%,transparent)]"
+              className="absolute left-5 top-4 bottom-4 w-px bg-sol-border-strong md:left-4 md:right-4 md:top-5 md:bottom-auto md:h-px md:w-auto"
             />
-            <nav
-              aria-label={t("rm.phases.aria")}
-              data-testid="phase-strip"
-              className="pointer-events-none absolute inset-0"
-            >
-              <ol>
-                {visiblePhases.map((p, i) => {
-                  const o = ISLANDS[i];
-                  return (
-                    <li
-                      key={p.id}
-                      ref={(el) => {
-                        labelRefs.current[i] = el;
-                      }}
-                      className="absolute -translate-x-1/2 -translate-y-full"
-                      style={{
-                        left: `${(o.cx / STAGE_W) * 100}%`,
-                        top: `${((o.cy - o.ry * 2.4) / STAGE_H) * 100}%`,
-                      }}
-                    >
-                      <PhaseIsland
-                        view={view}
-                        phase={p}
-                        index={i}
-                        text={text}
-                        active={i === selectedIndex}
-                        onClick={() => choose(i)}
-                      />
-                    </li>
-                  );
-                })}
-              </ol>
-            </nav>
-          </div>
-        </div>
+            {visiblePhases.map((p, i) => (
+              <li
+                key={p.id}
+                ref={(el) => {
+                  labelRefs.current[i] = el;
+                }}
+                className="relative min-w-0"
+              >
+                <PhaseLabel
+                  phase={p}
+                  index={i}
+                  text={text}
+                  active={i === selectedIndex}
+                  onClick={() => choose(i)}
+                />
+              </li>
+            ))}
+          </ol>
+        </nav>
 
         {selected && (
           <PhaseDetailsPanel
@@ -226,86 +207,6 @@ export function RoadmapJourney({
         )}
       </div>
     </section>
-  );
-}
-
-/** A phase's peak label, plus a hover card that pops up a small 3D preview of
- * that phase's progress instead of the old ambient glow. */
-function PhaseIsland({
-  view,
-  phase,
-  index,
-  text,
-  active,
-  onClick,
-}: {
-  view: RoadmapView;
-  phase: PhaseDTO;
-  index: number;
-  text: RoadmapText;
-  active: boolean;
-  onClick: () => void;
-}) {
-  const { t } = useLocale();
-  const weeks = view.weeks.filter((w) => w.phaseId === phase.id);
-  const missionTotal = weeks.reduce((n, w) => n + w.progress.total, 0);
-  const missionDone = weeks.reduce((n, w) => n + w.progress.completed, 0);
-  const weeksDone = weeks.filter((w) => w.state === "completed").length;
-  const pct =
-    missionTotal > 0 ? missionDone / missionTotal : weeks.length ? weeksDone / weeks.length : 0;
-
-  return (
-    <HoverCard openDelay={120} closeDelay={80}>
-      <HoverCardTrigger asChild>
-        <PhaseLabel phase={phase} index={index} text={text} active={active} onClick={onClick} />
-      </HoverCardTrigger>
-      <HoverCardContent
-        side="top"
-        align="center"
-        sideOffset={10}
-        className="w-72 origin-(--radix-hover-card-content-transform-origin) overflow-hidden rounded-2xl border border-sol-border bg-[linear-gradient(160deg,#fffdfb_0%,#f3ecfb_100%)] p-0 shadow-[0_28px_60px_-24px_rgba(88,64,185,0.55)] [transform:perspective(900px)_rotateX(4deg)]"
-      >
-        <div className="flex items-start gap-3 p-4">
-          <Gem3D variant="crystal" className="size-12 shrink-0" />
-          <div className="min-w-0">
-            <p className="sol-eyebrow !text-[0.625rem] !tracking-[0.12em]">
-              {t("rm.phase.n", { n: index + 1 })}
-            </p>
-            <p className="mt-0.5 font-semibold text-[0.9375rem] leading-tight text-sol-ink">
-              {text.phaseTitle(phase.id, phase.title)}
-            </p>
-            {phase.description && (
-              <p className="mt-1 line-clamp-2 text-[0.75rem] leading-snug text-sol-secondary">
-                {phase.description}
-              </p>
-            )}
-          </div>
-        </div>
-        <div className="border-t border-sol-border/70 bg-white/60 px-4 py-3">
-          {phase.state === "future" ? (
-            <p className="flex items-center gap-1.5 text-[0.75rem] font-medium text-sol-secondary">
-              <Lock className="size-3.5" aria-hidden="true" />
-              {t("rm.state.locked")}
-            </p>
-          ) : (
-            <>
-              <div className="h-1.5 overflow-hidden rounded-full bg-sol-cobalt-soft">
-                <div
-                  className="h-full rounded-full bg-gradient-to-r from-sol-cobalt to-sol-champagne"
-                  style={{ width: `${Math.round(pct * 100)}%` }}
-                />
-              </div>
-              <p className="mt-1.5 text-[0.75rem] text-sol-secondary">
-                {t("rm.phase.progress", { x: weeksDone, y: weeks.length })}
-                {missionTotal > 0 && (
-                  <> · {t("rm.journey.missionsDone", { x: missionDone, y: missionTotal })}</>
-                )}
-              </p>
-            </>
-          )}
-        </div>
-      </HoverCardContent>
-    </HoverCard>
   );
 }
 
@@ -334,34 +235,58 @@ const PhaseLabel = forwardRef<
       aria-pressed={active}
       onClick={onClick}
       className={cn(
-        "pointer-events-auto flex flex-col items-center rounded-xl border border-white/70 bg-white/80 px-3 py-1.5 text-center shadow-sm outline-none backdrop-blur-sm transition-all duration-300 hover:bg-white focus-visible:ring-2 focus-visible:ring-sol-cobalt/50",
+        "relative flex w-full items-start gap-3 rounded-2xl border bg-sol-surface p-3 text-left outline-none transition-colors focus-visible:ring-2 focus-visible:ring-sol-cobalt/50 md:flex-col md:gap-2",
+        active
+          ? "border-sol-cobalt shadow-[0_8px_24px_-12px_rgba(49,94,219,0.45)]"
+          : "border-sol-border hover:border-sol-cobalt/40",
         className,
       )}
       {...rest}
     >
       <span
+        aria-hidden="true"
         className={cn(
-          "flex items-center gap-1 text-[0.75rem] tabular-nums",
-          active ? "font-semibold text-sol-cobalt-deep" : "text-sol-secondary",
+          "flex size-5 shrink-0 items-center justify-center rounded-full border-2 bg-sol-surface",
+          phase.state === "completed"
+            ? "border-sol-champagne bg-sol-champagne text-white"
+            : phase.state === "current"
+              ? "border-sol-cobalt"
+              : "border-dashed border-sol-border-strong",
         )}
       >
-        {phase.state === "future" && <Lock className="size-3" aria-label={t("rm.state.locked")} />}
-        {String(index + 1).padStart(2, "0")}
+        {phase.state === "completed" && <Check className="size-3" strokeWidth={3} />}
+        {phase.state === "current" && <span className="size-2 rounded-full bg-sol-cobalt" />}
       </span>
-      <span
-        className={cn(
-          "max-w-[9rem] line-clamp-2 text-[0.875rem] font-semibold leading-tight",
-          phase.state === "future" && !active ? "text-sol-secondary" : "text-sol-ink",
-        )}
-        title={title}
-      >
-        {title}
-      </span>
-      {phase.range && (
-        <span className="text-[0.6875rem] text-sol-secondary">
-          {t("common.weeksRange", { from: phase.range.first, to: phase.range.last })}
+      <span className="min-w-0">
+        <span className="flex flex-wrap items-center gap-x-2 text-[0.75rem] font-semibold uppercase tracking-[0.08em] text-sol-secondary">
+          {t(`rm.stage.${stageOf(phase.key)}` as const)}
+          <span className="font-medium normal-case tracking-normal tabular-nums">
+            {t("rm.phase.n", { n: index + 1 })}
+          </span>
         </span>
-      )}
+        <span
+          className={cn(
+            "mt-0.5 block text-[0.9375rem] font-semibold leading-snug",
+            phase.state === "future" && !active ? "text-sol-secondary" : "text-sol-ink",
+          )}
+        >
+          {title}
+        </span>
+        <span className="mt-0.5 flex flex-wrap items-center gap-x-2 text-[0.8125rem] text-sol-secondary">
+          {t(
+            phase.state === "completed"
+              ? "rm.state.completed"
+              : phase.state === "current"
+                ? "rm.journey.here"
+                : "rm.stage.provisional",
+          )}
+          {phase.range && (
+            <span>
+              · {t("common.weeksRange", { from: phase.range.first, to: phase.range.last })}
+            </span>
+          )}
+        </span>
+      </span>
     </button>
   );
 });
@@ -401,7 +326,7 @@ function PhaseDetailsPanel({
     <div className="relative z-10 mx-4 mb-4 mt-1 sm:mx-6 sm:mb-6">
       <div
         ref={panelRef}
-        className="relative rounded-3xl border border-sol-border bg-[linear-gradient(135deg,#fffdfb_0%,#f7f1fb_100%)] p-5 shadow-[0_18px_44px_-28px_rgba(88,64,185,0.45)] sm:p-7"
+        className="relative rounded-3xl border border-sol-border bg-sol-surface p-5 shadow-[0_18px_44px_-28px_rgba(16,28,50,0.2)] sm:p-7"
         data-testid={locked ? "phase-preview" : "phase-details"}
         data-locked={locked || undefined}
         aria-live="polite"

@@ -126,7 +126,7 @@ function HistoryPage() {
 
   return (
     <div className="flex flex-col gap-8" data-testid="history-page">
-      <PageHero title={t("hist.title")} subtitle={t("hist.subtitle")} gem="trail" />
+      <PageHero title={t("hist.title")} subtitle={t("hist.subtitle")} />
 
       {query.data.length === 0 ? (
         <EmptyState
