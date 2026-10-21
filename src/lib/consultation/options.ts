@@ -71,6 +71,17 @@ export const HOURS_MIDPOINT: Record<(typeof HOURS_IDS)[number], number> = {
   h40plus: 45,
 };
 
+/** The stated range behind each bracket (max null = open-ended). */
+export const HOURS_RANGE: Record<(typeof HOURS_IDS)[number], { min: number; max: number | null }> =
+  {
+    lt5: { min: 0, max: 5 },
+    h5_10: { min: 5, max: 10 },
+    h10_20: { min: 10, max: 20 },
+    h20_30: { min: 20, max: 30 },
+    h30_40: { min: 30, max: 40 },
+    h40plus: { min: 40, max: null },
+  };
+
 export const SKILL_LEVEL_IDS = ["basic", "working", "advanced", "professional"] as const;
 
 /** Experience domains: where the founder has actually worked. */

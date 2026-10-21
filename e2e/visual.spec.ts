@@ -131,7 +131,11 @@ for (const size of SIZES) {
       await gotoApp(page, "/dashboard");
       await shoot(page, size.name, "command-center-a", { tall: true });
 
-      await page.getByTestId("flagship-choose").click();
+      // The recommended direction is reviewed, then chosen on its own page.
+      await page.getByTestId("flagship-explore").click();
+      await page.getByTestId("choose-direction").click();
+      await expect(page.getByTestId("build-roadmap")).toBeVisible();
+      await gotoApp(page, "/dashboard");
       await expect(page.getByTestId("build-roadmap")).toBeVisible();
       await shoot(page, size.name, "command-center-b");
 
@@ -165,12 +169,7 @@ for (const size of SIZES) {
       await gotoApp(page, "/dashboard/proof");
       await expect(page.getByTestId("assumption-card").first()).toBeVisible({ timeout: 60_000 });
       await shoot(page, size.name, "proof", { tall: true });
-      await page
-        .getByTestId("assumption-card")
-        .first()
-        .getByRole("button", { name: /details/i })
-        .first()
-        .click();
+      await page.getByTestId("assumption-card").first().getByTestId("view-details").click();
       await shoot(page, size.name, "proof-assumption-detail");
 
       await gotoApp(page, "/dashboard/history");
@@ -216,7 +215,11 @@ for (const size of SIZES) {
       await shoot(page, size.name, "hi-consultation");
       await gotoApp(page, "/dashboard");
       await shoot(page, size.name, "hi-command-center", { tall: true });
-      await page.getByTestId("flagship-choose").click();
+      // The recommended direction is reviewed, then chosen on its own page.
+      await page.getByTestId("flagship-explore").click();
+      await page.getByTestId("choose-direction").click();
+      await expect(page.getByTestId("build-roadmap")).toBeVisible();
+      await gotoApp(page, "/dashboard");
       await page.getByTestId("build-roadmap").click();
       await expect(page.getByTestId("roadmap-page")).toBeVisible({ timeout: 60_000 });
       await shoot(page, size.name, "hi-roadmap", { tall: true });

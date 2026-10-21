@@ -153,7 +153,7 @@ export function PositionScreen() {
       {answers.annualIncomeBracket !== undefined && (
         <button
           type="button"
-          className="mt-3 text-[0.9375rem] font-semibold text-sol-violet-deep underline-offset-4 hover:underline"
+          className="mt-3 text-[0.9375rem] font-semibold text-sol-cobalt-deep underline-offset-4 hover:underline"
           onClick={() => setAnswer("annualIncomeBracket", undefined)}
         >
           {t("q.income.skip")}

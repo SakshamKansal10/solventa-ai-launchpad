@@ -75,12 +75,12 @@ function parseNum(s: string): number | null {
 }
 
 const inputClass =
-  "min-h-11 w-full rounded-xl border border-sol-border bg-sol-surface px-3.5 text-[1rem] text-sol-ink outline-none transition-colors focus:border-sol-violet";
+  "min-h-11 w-full rounded-xl border border-sol-border bg-sol-surface px-3.5 text-[1rem] text-sol-ink outline-none transition-colors focus:border-sol-cobalt";
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <label className="flex flex-col gap-1.5">
-      <span className="text-[0.875rem] font-semibold text-sol-secondary">{label}</span>
+      <span className="text-[0.9375rem] font-semibold text-sol-secondary">{label}</span>
       {children}
     </label>
   );
@@ -228,7 +228,7 @@ function StatBlock({
   return (
     <div className="flex flex-col gap-1.5 rounded-2xl border border-sol-border bg-sol-surface/80 p-4">
       <div className="flex flex-wrap items-center gap-2">
-        <p className="text-[0.8125rem] font-medium text-sol-secondary">{label}</p>
+        <p className="text-[0.9375rem] font-medium text-sol-secondary">{label}</p>
         {isAssumption && <Pill tone="neutral">{t("opp.econ.assumptionBadge")}</Pill>}
       </div>
       <p className="text-[1.125rem] font-semibold leading-snug text-sol-ink">{value}</p>
@@ -303,7 +303,7 @@ function EconomicsDisplay({ dto, onEdit }: { dto: EconomicsDTO; onEdit: () => vo
         </div>
         {dto.customerAcquisitionNote && (
           <div className="relative z-10 rounded-2xl border-l-4 border-sol-champagne bg-sol-champagne-soft/50 px-5 py-4">
-            <p className="text-[0.875rem] font-semibold text-sol-secondary">
+            <p className="text-[0.9375rem] font-semibold text-sol-secondary">
               {t("opp.econ.acquisition")}
             </p>
             <p className="mt-1 text-[1.0625rem] leading-relaxed text-sol-ink">
@@ -354,7 +354,7 @@ function EconomicsDisplay({ dto, onEdit }: { dto: EconomicsDTO; onEdit: () => vo
                 <Line
                   type="monotone"
                   dataKey="revenue"
-                  stroke="var(--sol-violet)"
+                  stroke="var(--sol-cobalt)"
                   strokeWidth={2}
                   dot={false}
                   isAnimationActive={false}
@@ -373,7 +373,7 @@ function EconomicsDisplay({ dto, onEdit }: { dto: EconomicsDTO; onEdit: () => vo
             </ResponsiveContainer>
           </div>
           {breakEven != null && (
-            <p className="text-[0.875rem] text-sol-secondary">
+            <p className="text-[0.9375rem] text-sol-secondary">
               {t("opp.econ.chartCurrentPoint")}:{" "}
               {t("opp.econ.breakEvenCustomers", { n: breakEven })}
             </p>

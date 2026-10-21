@@ -6,7 +6,6 @@ import { z } from "zod";
 import {
   ArrowLeft,
   ArrowRight,
-  CalendarCheck,
   Check,
   ChevronDown,
   ExternalLink,
@@ -20,6 +19,7 @@ import {
   Users,
   Wallet,
   type LucideIcon,
+  Truck,
 } from "lucide-react";
 
 import { FIT_ICONS } from "@/components/founder/dashboard/fit-constants";
@@ -42,13 +42,12 @@ import {
   type OpportunityDetailDTO,
 } from "@/lib/actions/opportunities";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import type { MessageKey } from "@/lib/i18n";
 import { useLocale } from "@/lib/i18n/LocaleProvider";
 import { qk, useInvalidateFounder } from "@/lib/queries";
 import { useTranslatedEntity, type OpportunityOverlay } from "@/lib/use-translation";
 import type { OpportunityDisplayDetail } from "@/lib/opportunity-display";
 import { cn } from "@/lib/utils";
-
-const FIT_LEVEL = { strong: 2, moderate: 1, conditional: 0 } as const;
 
 const TABS = ["overview", "fit", "market"] as const;
 type Tab = (typeof TABS)[number];
@@ -78,18 +77,20 @@ function OpportunityPage() {
   if (query.isError || !query.data) {
     return <ErrorPanel onRetry={() => void query.refetch()} retrying={query.isFetching} />;
   }
-  const dto = query.data;
+  // Everything below reads the reader-language brief, so no English line slips into Hindi.
   const brief = {
-    ...dto.brief,
-    title: overlay.data?.title ?? dto.brief.title,
+    ...query.data.brief,
+    title: overlay.data?.title ?? query.data.brief.title,
+    oneLiner: overlay.data?.oneLiner ?? query.data.brief.oneLiner,
   };
+  const dto = { ...query.data, brief };
   const detail: OpportunityDisplayDetail = { ...dto.detail, ...(overlay.data?.detail ?? {}) };
 
   return (
     <div className="flex flex-col gap-6" data-testid="opportunity-page">
       <Link
         to="/dashboard/opportunities"
-        className="inline-flex min-h-10 w-fit items-center gap-2 text-[0.9375rem] font-medium text-sol-violet-deep hover:underline"
+        className="inline-flex min-h-10 w-fit items-center gap-2 text-[0.9375rem] font-medium text-sol-cobalt-deep hover:underline"
       >
         <ArrowLeft className="size-4" aria-hidden="true" />
         {t("opp.back")}
@@ -126,7 +127,7 @@ function OpportunityPage() {
               key={key}
               value={key}
               data-testid={`tab-${key}`}
-              className="min-h-10 rounded-full px-4 text-[0.9375rem] font-medium text-sol-secondary transition-colors duration-200 data-[state=active]:bg-sol-violet-soft data-[state=active]:text-sol-violet-deep"
+              className="min-h-10 rounded-full px-4 text-[0.9375rem] font-medium text-sol-secondary transition-colors duration-200 data-[state=active]:bg-sol-cobalt-soft data-[state=active]:text-sol-cobalt-deep"
             >
               {t(`opp.tab.${key}` as const)}
             </TabsTrigger>
@@ -140,7 +141,7 @@ function OpportunityPage() {
           <FounderFit dto={dto} detail={detail} title={brief.title} />
         </TabsContent>
         <TabsContent value="market" className="mt-8">
-          <Market dto={dto} opportunityId={id} />
+          <Market dto={dto} detail={detail} opportunityId={id} />
         </TabsContent>
       </Tabs>
     </div>
@@ -167,15 +168,15 @@ function HeaderBlock({ dto, title }: { dto: OpportunityDetailDTO; title: string 
   const oneLiner = dto.brief.oneLiner;
 
   return (
-    <header className={cn("sol-atmosphere grid", image.url && "md:grid-cols-[3fr_2fr]")}>
+    <header className={cn("sol-atmosphere grid", image.url && "@2xl:grid-cols-[3fr_2fr]")}>
       <div className="relative z-10 flex flex-col items-start gap-4 p-6 sm:p-8">
         <div className="flex flex-wrap items-center gap-2.5">
-          <p className="sol-eyebrow flex items-center gap-2 !text-[0.6875rem] !uppercase !tracking-[0.14em]">
-            <span className="h-3 w-0.5 rounded-full bg-sol-violet" aria-hidden="true" />
+          <p className="sol-eyebrow flex items-center gap-2 !text-[0.9375rem]">
+            <span className="h-3 w-0.5 rounded-full bg-sol-cobalt" aria-hidden="true" />
             {t("opp.detail.eyebrow")}
           </p>
           {dto.isSelected ? (
-            <Pill tone="violet">{t("opp.status.selected")}</Pill>
+            <Pill tone="cobalt">{t("opp.status.selected")}</Pill>
           ) : (
             <FitPill fit={dto.brief.fit} />
           )}
@@ -232,7 +233,7 @@ function HeaderBlock({ dto, title }: { dto: OpportunityDetailDTO; title: string 
         <div className="relative h-44 overflow-hidden sm:h-56 md:h-auto">
           <OpportunityPhoto image={image} title={title} compact />
           <div
-            className="pointer-events-none absolute inset-0 hidden bg-gradient-to-r from-[#f6f0f9] via-transparent to-transparent md:block"
+            className="pointer-events-none absolute inset-0 hidden bg-gradient-to-r from-[#f7f8fa] via-transparent to-transparent md:block"
             aria-hidden="true"
           />
         </div>
@@ -282,6 +283,13 @@ function Overview({ detail }: { detail: OpportunityDisplayDetail }) {
       sentence: detail.businessModel,
     },
     {
+      key: "delivery",
+      icon: Truck,
+      label: t("opp.ov.delivery"),
+      headline: detail.deliveryModel,
+      sentence: "",
+    },
+    {
       key: "wedge",
       icon: FlaskConical,
       label: t("opp.ov.wedge"),
@@ -307,21 +315,22 @@ function Overview({ detail }: { detail: OpportunityDisplayDetail }) {
       id: "why",
       title: t("opp.ov.groupWhy"),
       variant: "lead",
-      cols: "md:grid-cols-2",
+      cols: "@2xl:grid-cols-2",
       keys: ["customer", "pain"],
     },
     {
       id: "what",
       title: t("opp.ov.groupWhat"),
       variant: "plain",
-      cols: "md:grid-cols-2",
-      keys: ["product", "revenue"],
+      // Directions saved before the delivery model existed keep their two tiles.
+      cols: detail.deliveryModel ? "@2xl:grid-cols-3" : "@2xl:grid-cols-2",
+      keys: detail.deliveryModel ? ["product", "revenue", "delivery"] : ["product", "revenue"],
     },
     {
       id: "next",
       title: t("opp.ov.groupNext"),
       variant: "next",
-      cols: "md:grid-cols-2",
+      cols: "@2xl:grid-cols-2",
       keys: ["wedge", "scale"],
     },
   ];
@@ -377,10 +386,10 @@ function OverviewTile({
     >
       <div className="flex items-center justify-between gap-3">
         <span className="flex items-center gap-2.5">
-          <span className="flex size-9 items-center justify-center rounded-full bg-sol-violet-soft text-sol-violet-deep">
+          <span className="flex size-9 items-center justify-center rounded-full bg-sol-cobalt-soft text-sol-cobalt-deep">
             <Icon className="size-[18px]" aria-hidden="true" />
           </span>
-          <span className="text-[0.875rem] font-medium text-sol-champagne-deep">{tile.label}</span>
+          <span className="text-[0.9375rem] font-medium text-sol-champagne-deep">{tile.label}</span>
         </span>
         <span
           className="flex size-7 items-center justify-center rounded-full border border-sol-border font-display text-[0.9375rem] font-semibold text-sol-secondary"
@@ -410,7 +419,7 @@ function OverviewTile({
             aria-expanded={open}
             aria-controls={panelId}
             onClick={() => setOpen((v) => !v)}
-            className="flex min-h-10 w-fit cursor-pointer items-center gap-1.5 rounded-lg text-[0.9375rem] font-semibold text-sol-violet-deep outline-none transition-colors hover:text-sol-violet focus-visible:ring-2 focus-visible:ring-sol-violet/50"
+            className="flex min-h-10 w-fit cursor-pointer items-center gap-1.5 rounded-lg text-[0.9375rem] font-semibold text-sol-cobalt-deep outline-none transition-colors hover:text-sol-cobalt focus-visible:ring-2 focus-visible:ring-sol-cobalt/50"
           >
             <ChevronDown
               className={cn("size-4 transition-transform duration-200", open && "rotate-180")}
@@ -449,24 +458,16 @@ function FounderFit({
 }) {
   const { t } = useLocale();
   const reasonText = useFitReasonText();
-  const { matrix } = dto.fit;
+  const { assessment } = dto.fit;
   const advantages = (
     detail.whyThisFounder.length > 0 ? detail.whyThisFounder : dto.fit.advantages
   ).slice(0, 4);
+  // The factor cards already explain each gap; this list adds only what they
+  // don't: skills to learn and the trade-offs the direction asks you to accept.
   const gaps = [
-    ...dto.fit.matrix.rows
-      .filter((r) => r.status !== "strong")
-      .map((r) => reasonText(r.reason, dto.fit.currency)),
     ...detail.skillsToLearn.map((s) => t("opp.fit.learn", { skill: s })),
-  ].slice(0, 3);
-  // Next steps are the gaps, to be worked through; ticks are a local aid only.
-  const [done, setDone] = useState<Set<string>>(new Set());
-  const toggle = (g: string) =>
-    setDone((prev) => {
-      const next = new Set(prev);
-      if (!next.delete(g)) next.add(g);
-      return next;
-    });
+    ...detail.tradeoffs,
+  ].slice(0, 4);
 
   return (
     <div className="flex flex-col gap-6" data-testid="founder-fit">
@@ -477,7 +478,7 @@ function FounderFit({
             className="font-display text-[clamp(1.75rem,1.5rem+1.2vw,2.375rem)] font-medium leading-none text-sol-ink"
             data-testid="fit-overall"
           >
-            {t(`fit.overall.${matrix.overall}` as const)}
+            {t(`fit2.label.${assessment.label}` as const)}
           </p>
           <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
             <Pill tone="champagne">
@@ -485,7 +486,7 @@ function FounderFit({
             </Pill>
           </div>
           <p className="sol-prose text-[1rem] text-sol-secondary">
-            {t(`fit.overallBody.${matrix.overall}` as const)}
+            {t(`fit2.body.${assessment.label}` as const)}
           </p>
         </div>
         <div className="relative z-10 flex min-w-0 flex-col gap-2 md:max-w-xs md:text-left">
@@ -493,7 +494,7 @@ function FounderFit({
             <p className="sol-h3" data-testid="opportunity-title">
               {title}
             </p>
-            {dto.isSelected && <Pill tone="violet">{t("opp.status.selected")}</Pill>}
+            {dto.isSelected && <Pill tone="cobalt">{t("opp.status.selected")}</Pill>}
           </div>
           {dto.brief.oneLiner && (
             <p className="line-clamp-3 text-[0.9375rem] leading-snug text-sol-secondary">
@@ -503,97 +504,59 @@ function FounderFit({
         </div>
       </div>
 
-      <div className="grid gap-5 lg:grid-cols-3">
-        <ul className="grid gap-5 sm:grid-cols-2 lg:col-span-2">
-          {matrix.rows.map((row) => {
-            const Icon = FIT_ICONS[row.key];
-            return (
-              <li key={row.key} data-testid={`fit-row-${row.key}`}>
-                <Card className="flex h-full gap-4 p-5">
-                  <span className="flex size-11 shrink-0 items-center justify-center rounded-full border border-sol-champagne/40 bg-sol-champagne-soft text-sol-champagne-deep">
-                    <Icon className="size-5" aria-hidden="true" />
-                  </span>
-                  <div className="min-w-0">
-                    <div className="flex flex-wrap items-center gap-2.5">
-                      <p className="text-[1rem] font-medium text-sol-ink">
-                        {t(`fit.row.${row.key}` as const)}
-                      </p>
-                      <FitStatusPill status={row.status} />
-                    </div>
-                    <span
-                      className="mt-2.5 flex gap-1"
-                      role="img"
-                      aria-label={t(`fit.status.${row.status}` as const)}
-                    >
-                      {[0, 1, 2].map((n) => (
-                        <span
-                          key={n}
-                          className={cn(
-                            "h-1.5 w-8 rounded-full",
-                            n <= FIT_LEVEL[row.status]
-                              ? row.status === "strong"
-                                ? "bg-sol-champagne"
-                                : "bg-sol-violet"
-                              : "bg-sol-border",
-                          )}
-                        />
-                      ))}
-                    </span>
-                    <p className="mt-2 text-[0.9375rem] leading-snug text-sol-secondary">
-                      {reasonText(row.reason, dto.fit.currency)}
+      <ul className="grid gap-5 @2xl:grid-cols-2 @5xl:grid-cols-3">
+        {assessment.factors.map((row) => {
+          const Icon = FIT_ICONS[row.key];
+          return (
+            <li key={row.key} data-testid={`fit-row-${row.key}`}>
+              <Card className="flex h-full gap-4 p-5">
+                <span className="flex size-11 shrink-0 items-center justify-center rounded-full border border-sol-champagne/40 bg-sol-champagne-soft text-sol-champagne-deep">
+                  <Icon className="size-5" aria-hidden="true" />
+                </span>
+                <div className="min-w-0">
+                  <div className="flex flex-wrap items-center gap-2.5">
+                    <p className="text-[1rem] font-medium text-sol-ink">
+                      {t(`fit2.factor.${row.key}` as const)}
                     </p>
+                    <FitStatusPill score={row.score} />
                   </div>
-                </Card>
-              </li>
-            );
-          })}
-        </ul>
+                  <span
+                    className="mt-2.5 flex gap-1"
+                    role="img"
+                    aria-label={t(`fit2.level.${row.score ?? "unknown"}` as const)}
+                  >
+                    {[0, 1, 2].map((n) => (
+                      <span
+                        key={n}
+                        className={cn(
+                          "h-1.5 w-8 rounded-full",
+                          row.score !== null && n < row.score
+                            ? row.score === 3
+                              ? "bg-sol-champagne"
+                              : "bg-sol-navy"
+                            : "bg-sol-border",
+                        )}
+                      />
+                    ))}
+                  </span>
+                  <p className="mt-2 text-[0.9375rem] leading-snug text-sol-secondary">
+                    {reasonText(row.reason, dto.fit.currency)}
+                  </p>
+                </div>
+              </Card>
+            </li>
+          );
+        })}
+      </ul>
 
-        <Card className="flex flex-col gap-3 p-5">
-          <div className="flex items-center justify-between gap-3">
-            <h3 className="sol-h3 flex items-center gap-2.5">
-              <CalendarCheck className="size-5 text-sol-violet" aria-hidden="true" />
-              {t("opp.fit.nextSteps")}
-            </h3>
-            {gaps.length > 0 && (
-              <span className="rounded-full bg-sol-violet-soft px-2.5 py-0.5 text-[0.875rem] font-semibold text-sol-violet-deep">
-                {done.size}/{gaps.length}
-              </span>
-            )}
-          </div>
-          <p className="text-[0.9375rem] text-sol-secondary">{t("opp.fit.nextStepsBody")}</p>
-          {gaps.length === 0 ? (
-            <p className="text-[1rem] text-sol-secondary">{t("opp.fit.noGaps")}</p>
-          ) : (
-            <ul className="flex flex-col divide-y divide-sol-border">
-              {gaps.map((g) => (
-                <li key={g}>
-                  <label className="flex min-h-12 cursor-pointer items-start gap-3 py-3 text-[0.9375rem] leading-snug text-sol-ink">
-                    <input
-                      type="checkbox"
-                      checked={done.has(g)}
-                      onChange={() => toggle(g)}
-                      className="mt-0.5 size-5 shrink-0 accent-[var(--sol-violet)]"
-                    />
-                    <span className={cn(done.has(g) && "text-sol-secondary line-through")}>
-                      {g}
-                    </span>
-                  </label>
-                </li>
-              ))}
-            </ul>
-          )}
-        </Card>
-      </div>
-
-      <div className="grid gap-5 md:grid-cols-2">
+      <div className="grid gap-5 @2xl:grid-cols-2">
         <Card className="p-6">
           <h3 className="sol-h3 flex items-center justify-between gap-3">
             <span className="flex items-center gap-3">
               <Star className="size-5 text-sol-champagne-deep" aria-hidden="true" />
               {t("opp.fit.advantages")}
             </span>
-            <span className="rounded-full bg-sol-violet-soft px-2.5 py-0.5 font-sans text-[0.875rem] font-semibold text-sol-violet-deep">
+            <span className="rounded-full bg-sol-cobalt-soft px-2.5 py-0.5 font-sans text-[0.9375rem] font-semibold text-sol-cobalt-deep">
               {advantages.length}
             </span>
           </h3>
@@ -617,7 +580,7 @@ function FounderFit({
               <TriangleAlert className="size-5 text-sol-warning" aria-hidden="true" />
               {t("opp.fit.gaps")}
             </span>
-            <span className="rounded-full bg-sol-violet-soft px-2.5 py-0.5 font-sans text-[0.875rem] font-semibold text-sol-violet-deep">
+            <span className="rounded-full bg-sol-cobalt-soft px-2.5 py-0.5 font-sans text-[0.9375rem] font-semibold text-sol-cobalt-deep">
               {gaps.length}
             </span>
           </h3>
@@ -644,8 +607,17 @@ function FounderFit({
   );
 }
 
-function Market({ dto, opportunityId }: { dto: OpportunityDetailDTO; opportunityId: string }) {
+function Market({
+  dto,
+  detail,
+  opportunityId,
+}: {
+  dto: OpportunityDetailDTO;
+  detail: OpportunityDisplayDetail;
+  opportunityId: string;
+}) {
   const { t } = useLocale();
+  const hasPlan = detail.criticalAssumptions.length > 0;
   const invalidate = useInvalidateFounder();
   const research = useMutation({
     mutationFn: () => refreshMarketEvidence({ data: { opportunityId } }),
@@ -684,7 +656,7 @@ function Market({ dto, opportunityId }: { dto: OpportunityDetailDTO; opportunity
                       href={s.sourceUrl}
                       target="_blank"
                       rel="noreferrer noopener"
-                      className="inline-flex items-center gap-1.5 text-[0.9375rem] font-semibold text-sol-violet-deep hover:underline"
+                      className="inline-flex items-center gap-1.5 text-[0.9375rem] font-semibold text-sol-cobalt-deep hover:underline"
                     >
                       {s.sourceTitle ?? s.sourceUrl}
                       <ExternalLink className="size-3.5" aria-hidden="true" />
@@ -697,19 +669,91 @@ function Market({ dto, opportunityId }: { dto: OpportunityDetailDTO; opportunity
         </ul>
       )}
 
-      <Card className="flex flex-col gap-4 border-sol-violet/25 bg-sol-violet-ultralight/60 p-6">
-        <h3 className="sol-h3">{t("opp.market.learnTitle")}</h3>
-        <ul className="flex flex-col gap-2.5">
-          {(["q1", "q2", "q3"] as const).map((q) => (
-            <li key={q} className="flex gap-3 text-[1.0625rem] leading-snug text-sol-ink">
-              <span
-                className="mt-2 size-1.5 shrink-0 rounded-full bg-sol-violet"
-                aria-hidden="true"
-              />
-              {t(`opp.market.${q}` as const)}
-            </li>
-          ))}
-        </ul>
+      <Card className="flex flex-col gap-5 border-sol-cobalt/25 bg-sol-cobalt-ultralight/60 p-6">
+        <div>
+          <h3 className="sol-h3">{hasPlan ? t("opp.plan.title") : t("opp.market.learnTitle")}</h3>
+          {hasPlan && (
+            <p className="mt-1 text-[0.9375rem] text-sol-secondary">{t("opp.plan.note")}</p>
+          )}
+        </div>
+        {hasPlan ? (
+          <div className="grid gap-6 @2xl:grid-cols-3" data-testid="validation-plan">
+            <div className="@2xl:col-span-3">
+              <p className="text-[0.9375rem] font-semibold text-sol-secondary">
+                {t("opp.plan.assumptions")}
+              </p>
+              <ol className="mt-2 flex flex-col gap-2.5">
+                {detail.criticalAssumptions.map((a, i) => (
+                  <li
+                    key={a}
+                    className="flex flex-wrap items-start gap-x-3 gap-y-1.5 text-[1rem] leading-snug text-sol-ink"
+                  >
+                    <span
+                      className="flex size-6 shrink-0 items-center justify-center rounded-full bg-sol-surface text-[0.9375rem] font-semibold text-sol-cobalt-deep"
+                      aria-hidden="true"
+                    >
+                      {i + 1}
+                    </span>
+                    <span className="min-w-0 flex-1 basis-60">{a}</span>
+                    <Pill tone="neutral">
+                      {t(
+                        `pf.category.${detail.criticalAssumptionCategories[i] ?? "other"}` as MessageKey,
+                      )}
+                    </Pill>
+                  </li>
+                ))}
+              </ol>
+            </div>
+            {detail.successCriteria.length > 0 && (
+              <div className="@2xl:col-span-2">
+                <p className="text-[0.9375rem] font-semibold text-sol-secondary">
+                  {t("opp.plan.success")}
+                </p>
+                <ul className="mt-2 flex flex-col gap-2">
+                  {detail.successCriteria.map((c) => (
+                    <li key={c} className="flex gap-2.5 text-[1rem] leading-snug text-sol-ink">
+                      <Check
+                        className="mt-0.5 size-4 shrink-0 text-sol-champagne-deep"
+                        aria-hidden="true"
+                      />
+                      {c}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+            {detail.reconsiderIf.length > 0 && (
+              <div>
+                <p className="text-[0.9375rem] font-semibold text-sol-secondary">
+                  {t("opp.plan.reconsider")}
+                </p>
+                <ul className="mt-2 flex flex-col gap-2">
+                  {detail.reconsiderIf.map((c) => (
+                    <li key={c} className="flex gap-2.5 text-[1rem] leading-snug text-sol-ink">
+                      <span
+                        className="mt-2 size-1.5 shrink-0 rounded-full bg-sol-warning"
+                        aria-hidden="true"
+                      />
+                      {c}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </div>
+        ) : (
+          <ul className="flex flex-col gap-2.5">
+            {(["q1", "q2", "q3"] as const).map((q) => (
+              <li key={q} className="flex gap-3 text-[1.0625rem] leading-snug text-sol-ink">
+                <span
+                  className="mt-2 size-1.5 shrink-0 rounded-full bg-sol-cobalt"
+                  aria-hidden="true"
+                />
+                {t(`opp.market.${q}` as const)}
+              </li>
+            ))}
+          </ul>
+        )}
         <div className="flex flex-wrap gap-3">
           <LinkButton
             to="/dashboard/proof"

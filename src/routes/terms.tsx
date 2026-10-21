@@ -125,7 +125,7 @@ const SECTIONS: LegalSection[] = [
         The Solventia brand, logo, software, design, and original website content are owned by
         Solventia. Nothing in these Terms transfers ownership of that to you. We don't claim
         ownership of the personal information or founder-profile answers you provide — see our{" "}
-        <a href="/privacy" className="text-sol-violet-deep underline">
+        <a href="/privacy" className="text-sol-cobalt-deep underline">
           Privacy Policy
         </a>{" "}
         for how that's used.
@@ -150,7 +150,7 @@ const SECTIONS: LegalSection[] = [
     body: (
       <p>
         Solventia relies on third-party infrastructure and services (see our{" "}
-        <a href="/privacy" className="text-sol-violet-deep underline">
+        <a href="/privacy" className="text-sol-cobalt-deep underline">
           Privacy Policy
         </a>{" "}
         for the current list). Those providers have their own terms and policies, which apply to
@@ -188,7 +188,7 @@ const SECTIONS: LegalSection[] = [
         We may suspend or terminate access to Solventia for misuse, security concerns, or as
         required by law. You may stop using Solventia, and request account deletion, at any time
         (see our{" "}
-        <a href="/data-deletion" className="text-sol-violet-deep underline">
+        <a href="/data-deletion" className="text-sol-cobalt-deep underline">
           Delete Your Data
         </a>{" "}
         page).
@@ -247,7 +247,7 @@ const SECTIONS: LegalSection[] = [
         Solventia
         <br />
         Email:{" "}
-        <a href={`mailto:${CONTACT_EMAIL}`} className="text-sol-violet-deep underline">
+        <a href={`mailto:${CONTACT_EMAIL}`} className="text-sol-cobalt-deep underline">
           {CONTACT_EMAIL}
         </a>
       </p>

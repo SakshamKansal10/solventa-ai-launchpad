@@ -194,10 +194,6 @@ function RoadmapWorkspace({
         onOpenWeek={openWeek}
       />
 
-      <div aria-hidden="true" className="-my-3 flex flex-col items-center">
-        <span className="h-6 w-px bg-gradient-to-b from-sol-violet/40 to-transparent" />
-      </div>
-
       {view.roadmap.status === "completed" && (
         <div
           role="status"
@@ -228,7 +224,7 @@ function RoadmapWorkspace({
                 key={key}
                 value={key}
                 data-testid={`tab-${key}`}
-                className="min-h-10 flex-1 rounded-full px-2 text-[0.875rem] font-medium text-sol-secondary transition-all duration-300 hover:text-sol-ink data-[state=active]:bg-gradient-to-b data-[state=active]:from-sol-violet-soft data-[state=active]:to-[#e7defc] data-[state=active]:text-sol-violet-deep data-[state=active]:shadow-[inset_0_0_0_1px_rgba(118,85,245,0.25)] sm:flex-none sm:px-6"
+                className="min-h-10 flex-1 rounded-full px-2 text-[0.9375rem] font-medium text-sol-secondary transition-all duration-300 hover:text-sol-ink data-[state=active]:bg-gradient-to-b data-[state=active]:from-sol-cobalt-soft data-[state=active]:to-[#eaf0fd] data-[state=active]:text-sol-cobalt-deep data-[state=active]:shadow-[inset_0_0_0_1px_rgba(49,94,219,0.25)] sm:flex-none sm:px-6"
               >
                 {t(`rm.tab.${key}` as const)}
               </TabsTrigger>

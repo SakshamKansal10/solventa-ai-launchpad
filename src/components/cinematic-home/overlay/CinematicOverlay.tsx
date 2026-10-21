@@ -1,5 +1,14 @@
 import { Link } from "@tanstack/react-router";
-import { ArrowRight } from "lucide-react";
+import {
+  ArrowRight,
+  Briefcase,
+  Clock,
+  MapPin,
+  Users,
+  Wallet,
+  Wrench,
+  type LucideIcon,
+} from "lucide-react";
 import type { CSSProperties, ReactNode } from "react";
 
 import { BrandMark, BrandSignature, BrandWordmark } from "@/components/brand/Brand";
@@ -68,7 +77,7 @@ const QUOTE =
 const DATUM =
   "font-normal uppercase leading-[0.9] tracking-[-0.05em] text-[clamp(2.9rem,12vw,4.4rem)] sm:text-[clamp(3.25rem,8vw,9rem)]";
 const KICKER =
-  "font-mono text-[11px] uppercase tracking-[0.3em] sm:text-[12.5px] [margin-right:-0.3em]";
+  "font-mono text-[12px] uppercase tracking-[0.3em] sm:text-[12.5px] [margin-right:-0.3em]";
 
 export function CinematicOverlay() {
   const store = useExperienceStore();
@@ -226,6 +235,16 @@ function Reveal({ i, n, children }: { i: number; n: number; children: ReactNode 
   );
 }
 
+/** One meaning per founder signal, from the product's own icon family (Lucide). */
+const SIGNAL_ICONS: Record<NonNullable<Caption["signal"]>, LucideIcon> = {
+  capital: Wallet,
+  skills: Wrench,
+  location: MapPin,
+  time: Clock,
+  experience: Briefcase,
+  access: Users,
+};
+
 /** Where we are in the journey: a small mono line with a semantic mark. */
 function Kicker({ text, tone }: { text: string; tone: keyof typeof TONE_VAR }) {
   return (
@@ -248,7 +267,7 @@ function Kicker({ text, tone }: { text: string; tone: keyof typeof TONE_VAR }) {
 export function Signature({ className = "" }: { className?: string }) {
   return (
     <BrandSignature
-      className={`text-[11px] sm:text-[13px] ${className}`}
+      className={`text-[12px] sm:text-[13px] ${className}`}
       color="var(--ink)"
       separator="var(--accent-soft)"
     />
@@ -296,7 +315,7 @@ function BrandOpening() {
           <span className="absolute inset-x-0 top-0 block h-1/2 bg-[color:var(--ink)] motion-safe:animate-[sol-cue_2.4s_cubic-bezier(0.45,0,0.2,1)_infinite]" />
         </span>
         <span
-          className="font-mono text-[11px] uppercase tracking-[0.32em] [margin-right:-0.32em] sm:text-[12px]"
+          className="font-mono text-[12px] uppercase tracking-[0.32em] [margin-right:-0.32em] sm:text-[12px]"
           style={{ color: "var(--quiet)" }}
         >
           Scroll to explore
@@ -400,7 +419,7 @@ function Accented({ text }: { text: string }) {
 }
 
 /** Small, crisp, intentional: the third level of the type system. */
-const LABEL_CLASS = "font-mono text-[11.5px] uppercase tracking-[0.26em]";
+const LABEL_CLASS = "font-mono text-[12px] uppercase tracking-[0.26em]";
 
 /** A milestone on the path: small, crisp, it follows its point in the world. */
 function WorldLabel({ label: l }: { label: WorldLabelDef }) {
@@ -476,7 +495,22 @@ function CaptionBody({ caption: c }: { caption: Caption }) {
         c.kicker &&
         (c.kind === "datum" ? (
           <Reveal i={i++} n={n}>
-            <p className={`mb-3 sm:mb-5 ${KICKER}`} style={{ color: "var(--quiet)" }}>
+            <p
+              className={`mb-3 inline-flex items-center gap-2.5 sm:mb-5 ${KICKER}`}
+              style={{ color: "var(--quiet)" }}
+            >
+              {c.signal &&
+                (() => {
+                  const Icon = SIGNAL_ICONS[c.signal];
+                  return (
+                    <Icon
+                      className="size-4 sm:size-[18px]"
+                      strokeWidth={1.75}
+                      style={{ color: "var(--ink)" }}
+                      aria-hidden="true"
+                    />
+                  );
+                })()}
               {c.kicker}
             </p>
           </Reveal>

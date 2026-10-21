@@ -35,9 +35,9 @@ import { cn } from "@/lib/utils";
  * ABOUT are real routes. No "Explore Ideas" (Solventia isn't a public
  * idea catalogue) and no top-level "Roadmaps" (roadmaps live inside
  * Product / How It Works). */
-const SCROLL_NAV: { labelKey: MessageKey; id: string }[] = [
-  { labelKey: "nav.product", id: "founder-signal" },
-  { labelKey: "nav.howItWorks", id: "how-it-works" },
+const SCROLL_NAV: { labelKey: MessageKey; id: string; route: "/" | "/how-it-works" }[] = [
+  { labelKey: "nav.product", id: "founder-signal", route: "/" },
+  { labelKey: "nav.howItWorks", id: "how-it-works", route: "/how-it-works" },
 ];
 const SCROLL_IDS = SCROLL_NAV.map((item) => item.id);
 
@@ -98,12 +98,15 @@ export function Header({ pendingNext }: HeaderProps = {}) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // A section on this page is scrolled to; otherwise its page opens. The
+  // cinematic homepage has no such sections, so "/#how-it-works" was a dead link.
   function handleScrollNav(id: string) {
     setMobileOpen(false);
-    if (isHome) {
+    const item = SCROLL_NAV.find((x) => x.id === id);
+    if (document.getElementById(id)) {
       scrollToSection(id);
-    } else {
-      navigate({ to: "/", hash: id });
+    } else if (item) {
+      navigate({ to: item.route });
     }
   }
 
@@ -282,7 +285,7 @@ export function Header({ pendingNext }: HeaderProps = {}) {
                       "hidden text-[15px] font-semibold transition-colors sm:inline-flex",
                       overDarkHero
                         ? "text-white hover:text-sol-champagne"
-                        : "text-sol-ink hover:text-sol-violet-deep",
+                        : "text-sol-ink hover:text-sol-cobalt-deep",
                     )}
                   >
                     {t("nav.signIn")}
@@ -301,7 +304,7 @@ export function Header({ pendingNext }: HeaderProps = {}) {
                 }}
               >
                 {t("nav.findMyBusinessIdea")}
-                <ArrowRight className="size-4 text-sol-violet-deep" aria-hidden="true" />
+                <ArrowRight className="size-4 text-sol-cobalt-deep" aria-hidden="true" />
               </button>
             </>
           )}
@@ -331,7 +334,7 @@ export function Header({ pendingNext }: HeaderProps = {}) {
                     onClick={() => handleScrollNav(item.id)}
                     className={`rounded-lg px-3 py-3 text-left text-base font-medium transition-colors ${
                       isHome && activeId === item.id
-                        ? "bg-sol-violet-mist text-sol-violet-deep"
+                        ? "bg-sol-cobalt-soft text-sol-cobalt-deep"
                         : "text-sol-secondary hover:bg-sol-ivory hover:text-sol-ink"
                     }`}
                   >
@@ -418,7 +421,7 @@ export function Header({ pendingNext }: HeaderProps = {}) {
                       }}
                     >
                       {t("nav.findMyBusinessIdea")}
-                      <ArrowRight className="size-4 text-sol-violet-deep" aria-hidden="true" />
+                      <ArrowRight className="size-4 text-sol-cobalt-deep" aria-hidden="true" />
                     </button>
                   </>
                 )}

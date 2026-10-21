@@ -57,7 +57,7 @@ export function LegalPageLayout({
                   <li key={s.id}>
                     <a
                       href={`#${s.id}`}
-                      className="text-[0.9375rem] leading-snug text-sol-secondary transition-colors hover:text-sol-violet-deep"
+                      className="text-[0.9375rem] leading-snug text-sol-secondary transition-colors hover:text-sol-cobalt-deep"
                     >
                       {s.title}
                     </a>

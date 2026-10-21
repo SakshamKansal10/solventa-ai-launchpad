@@ -88,8 +88,8 @@ function StatusDot({ tone }: { tone: "champagne" | "violet" | "gradient" }) {
           tone === "champagne"
             ? "var(--sol-champagne)"
             : tone === "violet"
-              ? "var(--sol-violet)"
-              : "linear-gradient(135deg, var(--sol-champagne), var(--sol-violet))",
+              ? "var(--sol-cobalt)"
+              : "linear-gradient(135deg, var(--sol-champagne), var(--sol-cobalt))",
       }}
       aria-hidden="true"
     />
@@ -221,7 +221,7 @@ export function Hero() {
         className="pointer-events-none absolute inset-0"
         style={{
           background:
-            "radial-gradient(ellipse 560px 460px at 42% 38%, rgba(114,87,216,0.12), transparent 70%)",
+            "radial-gradient(ellipse 560px 460px at 42% 38%, rgba(49,94,219,0.12), transparent 70%)",
         }}
         aria-hidden="true"
       />
@@ -294,7 +294,7 @@ export function Hero() {
               />
               <span className="relative">{t("hero.cta.primary")}</span>
               <span className="sol-nudge relative flex" aria-hidden="true">
-                <ArrowRight className="size-[19px] text-sol-violet-deep transition-transform duration-150 group-hover:translate-x-[5px]" />
+                <ArrowRight className="size-[19px] text-sol-cobalt-deep transition-transform duration-150 group-hover:translate-x-[5px]" />
               </span>
             </button>
 

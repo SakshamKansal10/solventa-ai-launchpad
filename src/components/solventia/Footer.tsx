@@ -11,6 +11,7 @@ const FOOTER_LINKS: {
   labelKey: MessageKey;
   id?: string;
   to?:
+    | "/"
     | "/find-my-business-idea"
     | "/how-it-works"
     | "/for-organizations"
@@ -19,7 +20,7 @@ const FOOTER_LINKS: {
     | "/privacy"
     | "/terms";
 }[] = [
-  { labelKey: "nav.product", id: "founder-signal" },
+  { labelKey: "nav.product", to: "/" },
   { labelKey: "nav.findMyBusinessIdea", to: "/find-my-business-idea" },
   { labelKey: "nav.howItWorks", to: "/how-it-works" },
   { labelKey: "nav.forOrganizations", to: "/for-organizations" },
@@ -78,7 +79,7 @@ export function Footer() {
             <p className="text-[0.9375rem] text-sol-secondary">{t("footer.contactPrompt")}</p>
             <a
               href={`mailto:${CONTACT_EMAIL}`}
-              className="flex items-center gap-2 text-[1rem] font-medium text-sol-ink transition-colors hover:text-sol-violet-deep sm:justify-end"
+              className="flex items-center gap-2 text-[1rem] font-medium text-sol-ink transition-colors hover:text-sol-cobalt-deep sm:justify-end"
             >
               <Mail className="size-4" aria-hidden="true" />
               {CONTACT_EMAIL}

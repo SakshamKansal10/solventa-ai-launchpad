@@ -25,7 +25,7 @@ const LOOP_MS = 12400;
 
 const RING: Record<State, string> = {
   untested: "border-white/25 bg-white/[0.06] text-white/70",
-  testing: "border-sol-violet bg-sol-violet/25 text-white",
+  testing: "border-sol-cobalt bg-sol-cobalt/25 text-white",
   supported: "border-sol-champagne bg-sol-champagne/20 text-sol-champagne",
   contradicted: "border-[#E09A7C] bg-sol-warning/25 text-[#F0B29A]",
 };
@@ -107,7 +107,7 @@ export function ProofDemo() {
         className="pointer-events-none absolute inset-0"
         style={{
           background:
-            "radial-gradient(ellipse 720px 420px at 30% 0%, rgba(114,87,216,0.20), transparent 70%), radial-gradient(ellipse 520px 360px at 90% 100%, rgba(195,160,100,0.12), transparent 70%)",
+            "radial-gradient(ellipse 720px 420px at 30% 0%, rgba(49,94,219,0.20), transparent 70%), radial-gradient(ellipse 520px 360px at 90% 100%, rgba(195,160,100,0.12), transparent 70%)",
         }}
         aria-hidden="true"
       />
@@ -169,7 +169,7 @@ export function ProofDemo() {
                           {state === "testing" && !reduceMotion && (
                             <motion.span
                               aria-hidden="true"
-                              className="absolute inset-0 rounded-full border-2 border-sol-violet/60"
+                              className="absolute inset-0 rounded-full border-2 border-sol-cobalt/60"
                               animate={{ scale: [1, 1.4], opacity: [0.7, 0] }}
                               transition={{ duration: 1.6, repeat: Infinity, ease: "easeOut" }}
                             />

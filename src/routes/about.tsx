@@ -53,7 +53,7 @@ function AboutPage() {
           {t("about.faq4.before")}
           <Link
             to="/for-organizations"
-            className="font-medium text-sol-violet-deep hover:underline"
+            className="font-medium text-sol-cobalt-deep hover:underline"
           >
             {t("about.faq4.link")}
           </Link>

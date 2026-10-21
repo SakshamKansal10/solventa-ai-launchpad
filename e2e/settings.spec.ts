@@ -29,7 +29,11 @@ test.describe("Settings — profile and photo", () => {
 
     await page.getByTestId("name-input").fill("Asha Verma Kapoor");
     await expect(page.getByTestId("save-name")).toBeEnabled();
+    await expect(page.getByTestId("name-state")).toHaveAttribute("data-state", "unsaved");
     await page.getByTestId("save-name").click();
+    // "Saved" only once the server confirmed it.
+    await expect(page.getByTestId("name-state")).toHaveAttribute("data-state", "saved");
+    await expect(page.getByTestId("name-state")).toHaveText("Saved");
     await expect(page.getByTestId("sidebar-account")).toContainText("Asha Verma Kapoor");
     const rows = await sql<{ full_name: string }>("select full_name from profiles where id = $1", [
       user.id,
@@ -44,6 +48,7 @@ test.describe("Settings — profile and photo", () => {
     await gotoApp(page, "/dashboard/settings");
     await page.getByTestId("name-input").fill("   ");
     await expect(page.getByTestId("save-name")).toBeDisabled();
+    await expect(page.getByTestId("name-state")).toHaveAttribute("data-state", "empty");
   });
 
   test("photo priority is custom upload, then Google photo, then initials — with safe fallbacks", async ({
@@ -227,7 +232,7 @@ test.describe("Settings — founder profile", () => {
 
     await page.getByTestId("reanalyze").click();
     await expect(page).toHaveURL(/\/dashboard$/, { timeout: 60_000 });
-    await expect(page.locator("h1")).toHaveText("Your top idea is ready");
+    await expect(page.locator("h1")).toHaveText("Your strongest direction is ready to explore.");
     expect(await gemini.countOf("INITIAL_INTELLIGENCE")).toBe(1);
     const dna = await sql<{ n: string }>(
       "select count(*)::text as n from business_dna where user_id = $1",

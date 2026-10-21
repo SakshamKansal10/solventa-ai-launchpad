@@ -1,8 +1,13 @@
 /** Roadmap: This Week / Plan / Progress, missions, week review, building page. */
 const en = {
   "rm.journey.eyebrow": "Roadmap",
-  "rm.journey.title": "Your Journey",
-  "rm.journey.subtitle": "From idea to impact. Complete each phase step by step.",
+  "rm.journey.title": "Your roadmap",
+  "rm.journey.subtitle":
+    "Validate → Build → Elevate: test demand first, then build only what the evidence supports.",
+  "rm.stage.validate": "Validate",
+  "rm.stage.build": "Build",
+  "rm.stage.elevate": "Elevate",
+  "rm.stage.provisional": "Provisional — depends on what you learn",
   "rm.journey.timeline": "Timeline",
   "rm.journey.map": "Map",
   "rm.journey.viewAria": "Journey view",
@@ -34,7 +39,7 @@ const en = {
   "rm.tabs.aria": "Roadmap views",
   "rm.tab.week": "This week",
   "rm.tab.plan": "Plan",
-  "rm.tab.progress": "Evidence",
+  "rm.tab.progress": "Progress",
 
   "rm.state.locked": "Locked",
   "rm.state.ready": "Ready to start",
@@ -64,7 +69,9 @@ const en = {
     "This is only a preview. Later weeks are written when you get there, from what you've learned.",
 
   // Week
-  "rm.adapted": "Adapted from your last week",
+  "rm.adapted": "Your roadmap has changed",
+  "rm.adapted.why":
+    "This week was rewritten from what you recorded last week; earlier weeks stay as they were.",
   "rm.missions.aria": "This week's missions",
   "rm.locked.title": "This week is locked",
   "rm.locked.body": "It opens when you finish the week before it.",
@@ -150,9 +157,9 @@ const en = {
   "rm.blocker.nothing": "Nothing — it went smoothly",
 
   // Progress
-  "rm.progress.emptyTitle": "Progress appears after two weeks",
+  "rm.progress.emptyTitle": "Nothing recorded yet",
   "rm.progress.emptyBody":
-    "Once you've closed two weeks, this shows what you did and what evidence you found.",
+    "Complete a mission or record what you learned — it shows here from your first week.",
   "rm.progress.missionsByWeek": "Missions done, by week",
   "rm.progress.evidenceByAssumption": "Evidence, by assumption",
   "rm.progress.phaseCompletion": "Phase completion",
@@ -166,11 +173,13 @@ const en = {
 
   // Building page
   "rm.build.title": "Building your roadmap",
-  "rm.build.s1": "Reading your profile and chosen direction…",
-  "rm.build.s2": "Deciding the phases…",
-  "rm.build.s3": "Sequencing them around your time and money…",
-  "rm.build.s4": "Writing your first week…",
-  "rm.build.s5": "Saving your roadmap…",
+  "rm.build.working": "Working on it — {s}s so far. This usually takes under a minute.",
+  "rm.build.whatHappens": "What happens while it is built",
+  "rm.build.s1": "Your profile and chosen direction are read",
+  "rm.build.s2": "What needs testing first is identified",
+  "rm.build.s3": "The phases are shaped around your stated time and budget",
+  "rm.build.s4": "Your first week of missions is written",
+  "rm.build.s5": "Everything is saved before the roadmap opens",
   "rm.build.other":
     "Another window is already building this roadmap. This page continues when it's done.",
   "rm.build.honest":
@@ -181,8 +190,13 @@ const en = {
 
 const hi: Record<keyof typeof en, string> = {
   "rm.journey.eyebrow": "रोडमैप",
-  "rm.journey.title": "आपकी यात्रा",
-  "rm.journey.subtitle": "आइडिया से असर तक। हर चरण को एक-एक करके पूरा करें।",
+  "rm.journey.title": "आपका रोडमैप",
+  "rm.journey.subtitle":
+    "परखें → बनाएं → बढ़ाएं: पहले मांग परखें, फिर सिर्फ़ वही बनाएं जिसका सबूत मिले।",
+  "rm.stage.validate": "परखें",
+  "rm.stage.build": "बनाएं",
+  "rm.stage.elevate": "बढ़ाएं",
+  "rm.stage.provisional": "अस्थायी — आपकी सीख पर निर्भर",
   "rm.journey.timeline": "टाइमलाइन",
   "rm.journey.map": "मानचित्र",
   "rm.journey.viewAria": "यात्रा का दृश्य",
@@ -214,7 +228,7 @@ const hi: Record<keyof typeof en, string> = {
   "rm.tabs.aria": "रोडमैप के दृश्य",
   "rm.tab.week": "यह सप्ताह",
   "rm.tab.plan": "योजना",
-  "rm.tab.progress": "साक्ष्य",
+  "rm.tab.progress": "प्रगति",
 
   "rm.state.locked": "बंद",
   "rm.state.ready": "शुरू करने को तैयार",
@@ -242,7 +256,9 @@ const hi: Record<keyof typeof en, string> = {
   "rm.phase.previewNote":
     "यह केवल एक झलक है। आगे के सप्ताह तब लिखे जाते हैं जब आप वहां पहुंचते हैं, आपकी सीख के आधार पर।",
 
-  "rm.adapted": "आपके पिछले सप्ताह के अनुसार ढाला गया",
+  "rm.adapted": "आपका रोडमैप बदल गया है",
+  "rm.adapted.why":
+    "यह हफ़्ता आपके पिछले हफ़्ते के दर्ज नतीजों के आधार पर फिर से लिखा गया; पिछले हफ़्ते जैसे थे वैसे ही हैं।",
   "rm.missions.aria": "इस सप्ताह के मिशन",
   "rm.locked.title": "यह सप्ताह बंद है",
   "rm.locked.body": "इससे पहले का सप्ताह पूरा करते ही यह खुल जाएगा।",
@@ -323,9 +339,9 @@ const hi: Record<keyof typeof en, string> = {
   "rm.blocker.unclear": "समझ नहीं आया क्या करना है",
   "rm.blocker.nothing": "कुछ नहीं — सब सुचारू रहा",
 
-  "rm.progress.emptyTitle": "प्रगति दो सप्ताह बाद दिखेगी",
+  "rm.progress.emptyTitle": "अभी कुछ दर्ज नहीं हुआ",
   "rm.progress.emptyBody":
-    "दो सप्ताह बंद करने के बाद यहां दिखेगा कि आपने क्या किया और कौन-से साक्ष्य मिले।",
+    "कोई मिशन पूरा करें या जो सीखा उसे दर्ज करें — यह पहले हफ़्ते से यहां दिखेगा।",
   "rm.progress.missionsByWeek": "सप्ताह के अनुसार पूरे हुए मिशन",
   "rm.progress.evidenceByAssumption": "धारणा के अनुसार साक्ष्य",
   "rm.progress.phaseCompletion": "चरणों की प्रगति",
@@ -338,11 +354,13 @@ const hi: Record<keyof typeof en, string> = {
   "rm.progress.evidenceAria": "{title}: {n} साक्ष्य। प्रमाण में खोलें।",
 
   "rm.build.title": "आपका रोडमैप बन रहा है",
-  "rm.build.s1": "आपकी प्रोफ़ाइल और चुनी हुई दिशा पढ़ी जा रही है…",
-  "rm.build.s2": "चरण तय किए जा रहे हैं…",
-  "rm.build.s3": "उन्हें आपके समय और पैसे के हिसाब से क्रम दिया जा रहा है…",
-  "rm.build.s4": "आपका पहला सप्ताह लिखा जा रहा है…",
-  "rm.build.s5": "आपका रोडमैप सहेजा जा रहा है…",
+  "rm.build.working": "काम चल रहा है — अब तक {s} सेकंड। आमतौर पर एक मिनट से कम लगता है।",
+  "rm.build.whatHappens": "बनाते समय क्या होता है",
+  "rm.build.s1": "आपकी प्रोफ़ाइल और चुनी हुई दिशा पढ़ी जाती है",
+  "rm.build.s2": "पहले क्या परखना है, यह तय होता है",
+  "rm.build.s3": "चरणों को आपके बताए समय और बजट के हिसाब से बनाया जाता है",
+  "rm.build.s4": "आपके पहले हफ़्ते के मिशन लिखे जाते हैं",
+  "rm.build.s5": "रोडमैप खुलने से पहले सब कुछ सहेजा जाता है",
   "rm.build.other":
     "यह रोडमैप किसी और विंडो में पहले से बन रहा है। पूरा होते ही यह पेज आगे बढ़ेगा।",
   "rm.build.honest": "यह एक असली अनुरोध है, कोई प्रगति-पट्टी नहीं। पूरा होते ही पेज आगे बढ़ जाएगा।",

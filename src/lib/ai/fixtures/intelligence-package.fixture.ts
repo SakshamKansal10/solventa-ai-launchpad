@@ -126,6 +126,31 @@ export const FIXTURE_INTELLIGENCE_PACKAGE: SolventiaIntelligencePackage = {
         "Message 5 local business owners you already know (or walk into 5 shops) and ask if they have a website — if not, offer to show them a mockup for free.",
       whyNow:
         "Most local businesses only just started feeling pressure from customers searching online post-pandemic — the gap is real and still under-served by agencies that ignore this small-business tier.",
+      deliveryModel:
+        "A fixed-price website built remotely from a reusable template, handed over with a short walkthrough.",
+      criticalAssumptions: [
+        {
+          statement:
+            "Local shop owners without a website feel they are losing customers because of it.",
+          category: "problem",
+        },
+        {
+          statement: "Enough of them would pay a fixed price in the range you'd charge.",
+          category: "willingness_to_pay",
+        },
+        {
+          statement: "You can reach the first five owners in person or through people you know.",
+          category: "distribution",
+        },
+      ],
+      successCriteria: [
+        "At least 3 of 10 owners you speak to say a missing website costs them customers",
+        "At least 1 owner asks what it would cost",
+      ],
+      reconsiderIf: [
+        "Most owners say walk-in and word of mouth are enough",
+        "Owners only accept a price far below what covers your time",
+      ],
       fitSignals: {
         requiredSkills: [{ name: "Web Development", minLevel: "comfortable" }],
         startupCapitalAmount: 8000,
@@ -192,6 +217,23 @@ export const FIXTURE_INTELLIGENCE_PACKAGE: SolventiaIntelligencePackage = {
         "Post in one freelancer Discord/community describing the template pack idea and ask who'd actually buy it at ₹999.",
       whyNow:
         "Freelance platforms have never had more new entrants than right now, and most arrive with zero starting assets — this gap doesn't close, it keeps refilling.",
+      deliveryModel:
+        "A downloadable template pack sold once through an online store, with no ongoing delivery.",
+      criticalAssumptions: [
+        {
+          statement: "New freelancers lose real time rebuilding the same starter pages.",
+          category: "problem",
+        },
+        {
+          statement: "Some of them would pay for a ready-made pack instead of free templates.",
+          category: "willingness_to_pay",
+        },
+      ],
+      successCriteria: [
+        "At least 10 people in one freelancer community say they'd use the pack",
+        "At least 2 ask where they can buy it",
+      ],
+      reconsiderIf: ["Replies point only to free templates they already use"],
       fitSignals: {
         requiredSkills: [{ name: "Web Development", minLevel: "comfortable" }],
         startupCapitalAmount: 5000,
@@ -255,6 +297,30 @@ export const FIXTURE_INTELLIGENCE_PACKAGE: SolventiaIntelligencePackage = {
         "Grow a free list to 200+ engaged readers first, then introduce a modest paid tier.",
       whyNow:
         "Job listings have fragmented across more platforms than ever, and generic job boards keep getting noisier — a curated, local, human-filtered list stands out precisely because of that fragmentation.",
+      deliveryModel:
+        "A weekly email newsletter written and sent by you, free first, with a paid tier later.",
+      criticalAssumptions: [
+        {
+          statement: "Local job seekers find current listings scattered and miss openings.",
+          category: "problem",
+        },
+        {
+          statement: "You can find enough real local openings every week to fill an issue.",
+          category: "delivery",
+        },
+        {
+          statement: "Readers would keep opening a weekly issue after the first few.",
+          category: "retention",
+        },
+      ],
+      successCriteria: [
+        "At least 50 people subscribe after the first two shared issues",
+        "Open rate stays above 40% across the first 4 issues",
+      ],
+      reconsiderIf: [
+        "Fewer than 20 subscribers after 4 issues",
+        "You can't find 10 real openings in a normal week",
+      ],
       fitSignals: {
         requiredSkills: [{ name: "Digital Marketing", minLevel: "beginner" }],
         startupCapitalAmount: 3000,

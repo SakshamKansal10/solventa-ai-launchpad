@@ -1,7 +1,10 @@
 import { useState } from "react";
+import { Link } from "@tanstack/react-router";
 import {
   ChevronDown,
   Check,
+  FlaskConical,
+  Plus,
   Clock,
   Compass,
   Search,
@@ -19,6 +22,7 @@ import type { MissionState } from "@/lib/roadmap/state";
 import type { MissionDTO } from "@/lib/roadmap/view";
 import { cn } from "@/lib/utils";
 import { Button, Pill } from "../ui";
+import { StatusBadge } from "../proof/bits";
 
 const CATEGORY_ICON: Record<string, LucideIcon> = {
   problem: Search,
@@ -59,6 +63,9 @@ export function MissionCard({
   locked,
   defaultOpen,
   onState,
+  opportunityId,
+  assumptionTitle,
+  onRecordEvidence,
 }: {
   mission: MissionDTO;
   index: number;
@@ -69,6 +76,11 @@ export function MissionCard({
   /** The one active mission opens by default; the rest start compact. */
   defaultOpen: boolean;
   onState: (state: MissionState) => void;
+  opportunityId: string;
+  /** The tested assumption's title in the reader's language. */
+  assumptionTitle?: string | null;
+  /** Opens the evidence form for this mission (absent on read-only weeks). */
+  onRecordEvidence?: () => void;
 }) {
   const { t, locale } = useLocale();
   const [open, setOpen] = useState(defaultOpen);
@@ -131,7 +143,7 @@ export function MissionCard({
         aria-hidden="true"
         className={cn(
           "absolute left-[1.3125rem] top-12 -bottom-6 w-px group-last/li:hidden",
-          done ? "bg-sol-champagne" : "bg-sol-violet/20",
+          done ? "bg-sol-champagne" : "bg-sol-cobalt/20",
         )}
       />
       <span
@@ -141,8 +153,8 @@ export function MissionCard({
           done
             ? "sol-complete-glow border-sol-champagne bg-gradient-to-br from-[#f3e2bd] to-sol-champagne text-sol-ink"
             : inProgress
-              ? "border-sol-violet bg-sol-violet text-white shadow-[0_0_0_5px_rgba(118,85,245,0.14)]"
-              : "border-sol-violet/30 bg-sol-surface text-sol-violet-deep",
+              ? "border-sol-cobalt bg-sol-cobalt text-white shadow-[0_0_0_5px_rgba(49,94,219,0.14)]"
+              : "border-sol-cobalt/30 bg-sol-surface text-sol-cobalt-deep",
         )}
       >
         {done ? (
@@ -156,16 +168,16 @@ export function MissionCard({
         className={cn(
           "relative rounded-2xl transition-colors duration-300",
           open && !done
-            ? "bg-[linear-gradient(135deg,#faf7ff_0%,#fffdfb_100%)] p-4 shadow-[0_0_0_1px_rgba(118,85,245,0.2),0_14px_34px_-24px_rgba(88,64,185,0.5)] sm:p-5"
-            : "px-1 py-1.5 hover:bg-sol-violet-ultralight/60 sm:px-3",
+            ? "bg-[linear-gradient(135deg,#f4f7fe_0%,#ffffff_100%)] p-4 shadow-[0_0_0_1px_rgba(49,94,219,0.2),0_14px_34px_-24px_rgba(16,28,50,0.5)] sm:p-5"
+            : "px-1 py-1.5 hover:bg-sol-cobalt-ultralight/60 sm:px-3",
         )}
       >
         <div className="relative flex flex-wrap items-center gap-x-4 gap-y-2">
           <div className="min-w-0 flex-1 basis-56">
-            <p className="sol-eyebrow flex flex-wrap items-center gap-x-2 !text-[0.6875rem]">
+            <p className="sol-eyebrow flex flex-wrap items-center gap-x-2 !text-[0.9375rem]">
               <span>{t("rm.mission.n", { n: pad })}</span>
               {inProgress && (
-                <span className="font-semibold normal-case tracking-normal text-sol-violet-deep">
+                <span className="font-semibold normal-case tracking-normal text-sol-cobalt-deep">
                   · {t("rm.mission.in_progress")}
                 </span>
               )}
@@ -186,7 +198,7 @@ export function MissionCard({
                 data-testid="mission-toggle"
                 aria-label={`${title} — ${open ? t("rm.mission.collapse") : t("rm.mission.expand")}`}
                 className={cn(
-                  "text-left after:absolute after:inset-0 after:content-[''] focus-visible:outline-none focus-visible:after:rounded-2xl focus-visible:after:ring-2 focus-visible:after:ring-sol-violet/50",
+                  "text-left after:absolute after:inset-0 after:content-[''] focus-visible:outline-none focus-visible:after:rounded-2xl focus-visible:after:ring-2 focus-visible:after:ring-sol-cobalt/50",
                   done && "text-sol-ink/70",
                 )}
               >
@@ -198,7 +210,7 @@ export function MissionCard({
           <div className="relative z-10 flex shrink-0 flex-wrap items-center justify-end gap-2">
             {!mission.required && <Pill tone="neutral">{t("common.optional")}</Pill>}
             {time && (
-              <span className="mr-1 inline-flex items-center gap-1.5 text-[0.8125rem] text-sol-secondary">
+              <span className="mr-1 inline-flex items-center gap-1.5 text-[0.9375rem] text-sol-secondary">
                 <Clock className="size-3.5" aria-hidden="true" />
                 {time}
               </span>
@@ -235,7 +247,7 @@ export function MissionCard({
                         >
                           <span
                             aria-hidden="true"
-                            className="mt-[1px] flex size-5 shrink-0 items-center justify-center rounded-full bg-sol-violet-soft text-[0.6875rem] font-semibold text-sol-violet-deep"
+                            className="mt-[1px] flex size-5 shrink-0 items-center justify-center rounded-full bg-sol-cobalt-soft text-[0.9375rem] font-semibold text-sol-cobalt-deep"
                           >
                             {i + 1}
                           </span>
@@ -246,13 +258,38 @@ export function MissionCard({
                   </dd>
                 </div>
               )}
+              {mission.assumption && (
+                // The other half of the assumption ↔ mission link (Evidence lists the missions).
+                <div
+                  className="flex min-w-0 flex-col gap-1.5 rounded-xl bg-sol-pearl px-3.5 py-3"
+                  data-testid="mission-assumption"
+                >
+                  <dt className="flex items-center gap-2 text-[0.9375rem] font-semibold text-sol-secondary">
+                    <FlaskConical
+                      className="size-4 shrink-0 text-sol-cobalt-deep"
+                      aria-hidden="true"
+                    />
+                    {t("pf.mission.tests")}
+                  </dt>
+                  <dd className="flex min-w-0 flex-wrap items-center gap-x-2.5 gap-y-1.5">
+                    <Link
+                      to="/dashboard/proof"
+                      search={{ opportunity: opportunityId, assumption: mission.assumption.id }}
+                      className="relative z-10 min-w-0 text-[0.9375rem] font-medium leading-snug text-sol-cobalt-deep hover:underline"
+                    >
+                      {assumptionTitle ?? mission.assumption.title}
+                    </Link>
+                    <StatusBadge status={mission.assumption.status} />
+                  </dd>
+                </div>
+              )}
               <div className="flex min-w-0 items-start gap-2.5 border-t border-sol-border/70 pt-3">
                 <Check
                   className="mt-0.5 size-4 shrink-0 text-sol-champagne-deep"
                   aria-hidden="true"
                 />
                 <dt className="sr-only">{t("rm.mission.capture")}</dt>
-                <dd className="min-w-0 max-w-[62ch] text-[0.875rem] leading-snug text-sol-secondary">
+                <dd className="min-w-0 max-w-[62ch] text-[0.9375rem] leading-snug text-sol-secondary">
                   {text?.doneWhen ?? mission.doneWhen}
                 </dd>
               </div>
@@ -262,6 +299,22 @@ export function MissionCard({
               <div className="mt-5 flex flex-col gap-3">
                 <div className="flex flex-wrap items-center gap-3">
                   {primary}
+                  {onRecordEvidence && (
+                    <Button
+                      size="sm"
+                      variant="secondary"
+                      onClick={onRecordEvidence}
+                      data-testid="mission-record-evidence"
+                    >
+                      <Plus className="size-4" aria-hidden="true" />
+                      {t("pf.record")}
+                    </Button>
+                  )}
+                  {mission.evidenceCount > 0 && (
+                    <span className="text-[0.9375rem] text-sol-secondary">
+                      {t("pf.mission.recorded", { n: mission.evidenceCount })}
+                    </span>
+                  )}
                   {done && (
                     <Button
                       size="sm"

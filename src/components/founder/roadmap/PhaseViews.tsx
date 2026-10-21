@@ -36,7 +36,7 @@ const PHASE_ICON: Record<string, LucideIcon> = {
 const phaseIcon = (key: string): LucideIcon => PHASE_ICON[key] ?? Compass;
 
 const weekTone = (w: WeekDTO) =>
-  w.state === "completed" ? "champagne" : w.state === "locked" ? "neutral" : "violet";
+  w.state === "completed" ? "champagne" : w.state === "locked" ? "neutral" : "cobalt";
 
 export function WeekRow({
   week,
@@ -51,14 +51,14 @@ export function WeekRow({
   const openable = week.state !== "locked";
   const body = (
     <>
-      <span className="w-20 shrink-0 text-[0.875rem] font-semibold text-sol-secondary">
+      <span className="w-20 shrink-0 text-[0.9375rem] font-semibold text-sol-secondary">
         {t("common.weekN", { n: String(week.number).padStart(2, "0") })}
       </span>
       <span className="min-w-0 flex-1">
         <span className="block text-[1rem] font-semibold leading-snug text-sol-ink">
           {text.weekTitle(week.id, week.title)}
         </span>
-        <span className="mt-0.5 block text-[0.875rem] leading-snug text-sol-secondary">
+        <span className="mt-0.5 block text-[0.9375rem] leading-snug text-sol-secondary">
           {text.weekObjective(week.id, week.objective)}
         </span>
       </span>
@@ -73,7 +73,7 @@ export function WeekRow({
       type="button"
       onClick={() => onOpen(week.number)}
       data-testid={`week-row-${week.number}`}
-      className={cn(cls, "transition-colors hover:bg-sol-violet-soft/60")}
+      className={cn(cls, "transition-colors hover:bg-sol-cobalt-soft/60")}
     >
       {body}
     </button>
@@ -118,7 +118,7 @@ export function PlanTab({
               key={p.id}
               value={p.id}
               data-testid={`plan-phase-${i + 1}`}
-              className="sol-card overflow-hidden border-b-0 px-2"
+              className="sol-card overflow-hidden px-2"
             >
               <AccordionTrigger className="px-4 py-5 text-left hover:no-underline">
                 <span className="flex min-w-0 flex-1 flex-wrap items-center gap-x-4 gap-y-1 font-sans">
@@ -129,7 +129,7 @@ export function PlanTab({
                       p.state === "completed"
                         ? "border-sol-champagne bg-sol-champagne-soft text-sol-champagne-deep"
                         : p.state === "current"
-                          ? "border-sol-violet bg-sol-violet-soft text-sol-violet-deep"
+                          ? "border-sol-cobalt bg-sol-cobalt-soft text-sol-cobalt-deep"
                           : "border-sol-border-strong bg-sol-surface text-sol-secondary",
                     )}
                   >
@@ -140,7 +140,7 @@ export function PlanTab({
                     {text.phaseTitle(p.id, p.title)}
                   </span>
                   {p.range && (
-                    <span className="text-[0.875rem] text-sol-secondary">
+                    <span className="text-[0.9375rem] text-sol-secondary">
                       {t("common.weeksRange", { from: p.range.first, to: p.range.last })}
                     </span>
                   )}
@@ -149,7 +149,7 @@ export function PlanTab({
                       p.state === "completed"
                         ? "champagne"
                         : p.state === "current"
-                          ? "violet"
+                          ? "cobalt"
                           : "neutral"
                     }
                   >

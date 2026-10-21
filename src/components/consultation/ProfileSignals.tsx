@@ -21,12 +21,14 @@ export function useProfileFacts(): Fact[] {
   const { answers: a } = useConsultation();
   const facts: Fact[] = [];
 
+  // Most specific first, as people write an address: city, state, country.
   const place = [
+    a.city,
+    a.state ? (a.country === "India" ? L.state(a.state) : a.state) : null,
     a.country && L.country(a.country),
-    a.state ? (a.country === "India" ? L.state(a.state) : a.state) : a.city,
   ]
     .filter(Boolean)
-    .join(" · ");
+    .join(", ");
   if (place) facts.push({ key: "location", label: t("consult.panel.location"), value: place });
 
   if (a.status) {
@@ -102,7 +104,7 @@ export function useProfileFacts(): Fact[] {
 }
 
 /** Living, not a receipt: a fact that wasn't here on the previous render
- * gets one brief violet highlight that settles back to normal — the only
+ * gets one brief cobalt highlight that settles back to normal — the only
  * signal that this panel is reacting to what the founder just answered,
  * not a static printout. */
 function useJustArrivedKeys(facts: Fact[]): Set<string> {
@@ -161,7 +163,7 @@ export function ProfileSignals({ className }: { className?: string }) {
                   style={{
                     backgroundColor:
                       justArrived.has(f.key) && !reduceMotion
-                        ? "var(--sol-violet-soft)"
+                        ? "var(--sol-cobalt-soft)"
                         : "transparent",
                   }}
                   data-testid={`profile-fact-${f.key}`}

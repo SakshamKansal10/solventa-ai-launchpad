@@ -75,7 +75,7 @@ export function HowItWorks() {
             aria-hidden="true"
           >
             <motion.span
-              className="absolute inset-0 origin-left rounded-full bg-gradient-to-r from-sol-champagne via-sol-violet to-sol-violet"
+              className="absolute inset-0 origin-left rounded-full bg-gradient-to-r from-sol-champagne via-sol-cobalt to-sol-cobalt"
               style={{ scaleX: reduceMotion ? active / (STEPS.length - 1) : fill }}
             />
           </div>
@@ -85,7 +85,7 @@ export function HowItWorks() {
             aria-hidden="true"
           >
             <motion.span
-              className="absolute inset-0 origin-top rounded-full bg-gradient-to-b from-sol-champagne to-sol-violet"
+              className="absolute inset-0 origin-top rounded-full bg-gradient-to-b from-sol-champagne to-sol-cobalt"
               style={{ scaleY: reduceMotion ? active / (STEPS.length - 1) : fill }}
             />
           </div>
@@ -105,7 +105,7 @@ export function HowItWorks() {
                     {current && !reduceMotion && (
                       <motion.span
                         aria-hidden="true"
-                        className="absolute inset-0 rounded-full border-2 border-sol-violet/50"
+                        className="absolute inset-0 rounded-full border-2 border-sol-cobalt/50"
                         animate={{ scale: [1, 1.35], opacity: [0.7, 0] }}
                         transition={{ duration: 1.8, repeat: Infinity, ease: "easeOut" }}
                       />
@@ -116,7 +116,7 @@ export function HowItWorks() {
                       className={cn(
                         "relative flex size-full items-center justify-center rounded-full border-2 transition-colors duration-300",
                         reached
-                          ? "border-sol-violet bg-sol-violet text-white shadow-[0_10px_26px_rgba(114,87,216,0.3)]"
+                          ? "border-sol-cobalt bg-sol-cobalt text-white shadow-[0_10px_26px_rgba(49,94,219,0.3)]"
                           : "border-sol-border-strong bg-sol-hp-surface text-sol-muted",
                       )}
                     >

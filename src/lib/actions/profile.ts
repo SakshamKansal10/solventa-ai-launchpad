@@ -4,7 +4,8 @@ import { z } from "zod";
 
 import { requireUser } from "@/lib/supabase/server";
 import { normalizeProfile, type NormalizedProfile } from "@/lib/profile/normalize";
-import { computeFitScore } from "@/lib/profile/scoring";
+import { assessFit, fitSortScore } from "@/lib/fit/model";
+import { MESSAGES } from "@/lib/i18n";
 import { computeFounderGenome } from "@/lib/profile/founder-genome";
 import { computeAmbitionCalibration } from "@/lib/profile/ambition";
 import { generateIntelligencePackage } from "@/lib/ai/prompts/intelligence-package";
@@ -195,22 +196,18 @@ export const completeConsultation = createServerFn({ method: "POST" })
       console.error("[profile] ambition calibration persistence threw (non-fatal):", err);
     }
 
-    // originalIndex is captured BEFORE the fit_score sort below — pkg
-    // .opportunities arrives in the AI's own original 0/1/2 order (see
-    // reconstructPackage in intelligence-package.ts), and that ranking
-    // (0 = the model's designated flagship, "the single strongest, most
-    // worthy recommendation") is a genuinely different signal than
-    // fit_score (the app's own deterministic scorer) — persisting it
-    // lets getDashboard resolve "the flagship idea" from the model's
-    // actual recommendation rather than a proxy. See migrations/
-    // 0009_opportunity_index.
+    // originalIndex is captured BEFORE the fit sort below — pkg.opportunities
+    // arrives in the AI's own 0/1/2 order (see reconstructPackage in
+    // intelligence-package.ts). It is persisted (migration 0009) as the
+    // tie-break among directions of equal canonical fit; the fit itself decides
+    // which direction leads (see rankOpportunities in direction.ts).
     const scored = pkg.opportunities
       .map((opp, originalIndex) => ({
         opp,
         originalIndex,
-        score: computeFitScore(normalized, opp.fitSignals),
+        score: assessFit(normalized, opp.fitSignals),
       }))
-      .sort((a, b) => b.score.total - a.score.total);
+      .sort((a, b) => fitSortScore(b.score) - fitSortScore(a.score));
 
     // Supabase's REST API gives each insert below its own transaction —
     // there's no ambient transaction spanning this loop. If opportunity #2
@@ -231,7 +228,7 @@ export const completeConsultation = createServerFn({ method: "POST" })
             title: opp.title,
             one_liner: opp.plainEnglishSummary,
             who_for: opp.customer,
-            fit_score: score.total,
+            fit_score: score.score ?? 0,
             score_breakdown: score as unknown as Json,
             candidate: opp as unknown as Json,
             status: "active",
@@ -288,7 +285,7 @@ export const completeConsultation = createServerFn({ method: "POST" })
         primary: {
           title: scored[0].opp.title,
           oneLiner: scored[0].opp.plainEnglishSummary,
-          fitScore: scored[0].score.total,
+          fitLabel: MESSAGES.en[`fit2.label.${scored[0].score.label}`],
           weeklyTime: scored[0].opp.weeklyTime ?? null,
         },
         alternatives: scored

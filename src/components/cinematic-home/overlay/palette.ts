@@ -6,7 +6,7 @@
  *
  *   ink    — what is resolved and read (pearl on dark, graphite on light)
  *   accent — champagne: conviction (a word, the CTA, the film-time line) — deeper on pearl
- *   violet — only while the system is reasoning
+ *   violet — the reasoning accent (now cobalt; the name is kept for the CSS variable)
  */
 export const WORLD = {
   ink: ["#F3F0E8", "#15181F"],
@@ -15,7 +15,7 @@ export const WORLD = {
   accent: ["#E2C690", "#8A6833"],
   /** Refined gold for separators (the · in Validate · Build · Elevate) — the brand's own. */
   accentSoft: ["#C9AA79", "#B8924F"],
-  violet: ["#8E83F0", "#5A4FCF"],
+  violet: ["#7FA0F5", "#315EDB"],
   hair: ["#F1EEE61F", "#15181F24"],
 } as const;
 

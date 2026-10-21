@@ -8,6 +8,8 @@ import type { Database } from "@/lib/supabase/types";
 import { translateStrings } from "@/lib/ai/prompts/translate";
 import { getSchemaCapabilities } from "@/lib/schema-capabilities.server";
 import { toDisplayDetail } from "@/lib/opportunity-display";
+import { keepSupportedDetail } from "@/lib/ai/integrity";
+import type { NormalizedProfile } from "@/lib/profile/normalize";
 import type { OpportunityPackage } from "@/lib/ai/schemas";
 import type { Locale } from "@/lib/i18n/locale";
 import {
@@ -42,13 +44,23 @@ export interface TranslationResult {
 async function loadOpportunity(db: Db, userId: string, id: string): Promise<Json> {
   const { data, error } = await db
     .from("opportunities")
-    .select("title, one_liner, who_for, candidate")
+    .select("title, one_liner, who_for, candidate, business_dna_id")
     .eq("id", id)
     .eq("user_id", userId)
     .single();
   if (error || !data) throw new Error("Opportunity not found");
-  const detail = toDisplayDetail(data.candidate as unknown as OpportunityPackage);
-  const { difficulty: _difficulty, ...prose } = detail;
+  const dna = await db
+    .from("business_dna")
+    .select("normalized_signals")
+    .eq("id", data.business_dna_id)
+    .eq("user_id", userId)
+    .maybeSingle();
+  // Translate only what the page shows: unsupported personal claims are dropped first.
+  const detail = keepSupportedDetail(
+    toDisplayDetail(data.candidate as unknown as OpportunityPackage),
+    (dna.data?.normalized_signals as unknown as NormalizedProfile | undefined) ?? null,
+  );
+  const { difficulty: _difficulty, criticalAssumptionCategories: _categories, ...prose } = detail;
   return {
     title: data.title,
     oneLiner: data.one_liner,

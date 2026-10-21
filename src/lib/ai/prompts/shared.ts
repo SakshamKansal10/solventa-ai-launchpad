@@ -2,8 +2,11 @@ import type { NormalizedProfile } from "@/lib/profile/normalize";
 import { formatMoney } from "@/lib/country-currency";
 import { computeFounderGenome, computeFounderPersona } from "@/lib/profile/founder-genome";
 import { computeAmbitionCalibration, formatAmbitionContextForPrompt } from "@/lib/profile/ambition";
+import { statedCapital, statedHours, type Range } from "@/lib/fit/model";
 
-export const PLAIN_LANGUAGE_RULE = `Never use unexplained jargon (SaaS, B2B, B2C, TAM, CAC, LTV, go-to-market, vertical integration, product-market fit, acquisition funnel, infrastructure layer). If a concept is needed, explain it in one plain clause the same sentence. Write for someone who has never studied business. Never say a business idea is "validated" unless real evidence justifies that — prefer "strong signal", "early signal", "emerging", "needs validation", or "limited evidence". Never invent statistics, customer counts, testimonials, or sources. If you don't know something, say so plainly instead of guessing confidently.`;
+export const PLAIN_LANGUAGE_RULE = `Never use unexplained jargon (SaaS, B2B, B2C, TAM, CAC, LTV, go-to-market, vertical integration, product-market fit, acquisition funnel, infrastructure layer). If a concept is needed, explain it in one plain clause the same sentence. Write for someone who has never studied business. Never say a business idea is "validated" unless real evidence justifies that — prefer "strong signal", "early signal", "emerging", "needs validation", or "limited evidence". Never invent statistics, customer counts, testimonials, or sources. If you don't know something, say so plainly instead of guessing confidently.
+
+TRUTHFULNESS (non-negotiable): Every statement about the founder must come from the profile below — never infer a city, town, local market, physical access, network, skill gap or ambition they did not state. A range the founder gave stays a range: never restate their budget or weekly time as one number ("you have ₹30,000", "your 35 hours"); when a plan needs a number, use the lower end and say it is a planning assumption. Something marked unknown or not stated is unknown — never say they lack it and never say it matches. Never state market facts (supplier or competitor counts, market size, prices, commissions, conversion rates, demand, margins, legal requirements, odds of success) as true; present any such figure as an estimate or a hypothesis to test, and say what would confirm it. Never guarantee earnings, customers or commissions.`;
 
 /** The product's selected-language surface — currently English and Hindi
  * (see src/lib/i18n/dictionary.ts's Locale type, which this deliberately
@@ -30,6 +33,38 @@ export function buildLanguageRule(locale: GenerationLocale): string {
  * weight: skills carry their declared level and whether they were ever used
  * for real, execution evidence outranks self-description, interests are soft,
  * and the minimum-income answer is a constraint — never a target size. */
+function rangeWords(r: Range, fmt: (n: number) => string, unit = ""): string {
+  if (r.max === null) return `more than ${fmt(r.min)}${unit}`;
+  if (r.min <= 0) return `under ${fmt(r.max)}${unit}`;
+  if (r.min === r.max) return `${fmt(r.min)}${unit}`;
+  return `${fmt(r.min)}–${fmt(r.max)}${unit}`;
+}
+
+/** The founder's stated budget and weekly time, as the ranges they picked. */
+export function formatStatedResources(profile: NormalizedProfile): string[] {
+  const money = (amount: number) => formatMoney(amount, profile.identity.currency);
+  const cap = statedCapital(profile);
+  const hours = statedHours(profile);
+  return [
+    cap
+      ? `Starting budget the founder STATED: ${rangeWords(cap, money)} — a range; never restate it as one amount.`
+      : "Starting budget: not stated (unknown — never assume an amount).",
+    hours
+      ? `Weekly time the founder STATED: ${rangeWords(hours, String, " hours")} — a range; never restate it as one number. Plan around the lower end and say so.`
+      : "Weekly time: not stated (unknown — never assume a number).",
+  ];
+}
+
+/** The hours a plan is designed around: the LOWER end of the stated range, named as
+ * a planning assumption so it is never mistaken for the founder's own number. */
+export function planningHoursPhrase(profile: NormalizedProfile): string {
+  const hours = statedHours(profile);
+  if (!hours)
+    return "an unstated number of hours a week (assume a light part-time load and say so)";
+  const plan = Math.max(hours.min, hours.min === 0 ? Math.min(3, hours.max ?? 3) : hours.min);
+  return `${plan} hrs/week — a planning assumption at the lower end of the founder's stated ${rangeWords(hours, String, " hours")}`;
+}
+
 function formatProfileV2ForPrompt(profile: NormalizedProfile): string {
   const v2 = profile.v2!;
   const money = (amount: number) => formatMoney(amount, profile.identity.currency);
@@ -42,6 +77,11 @@ function formatProfileV2ForPrompt(profile: NormalizedProfile): string {
   lines.push(
     `Identity: ${profile.identity.age ?? "unknown"} years old, ${status}, based in ${[profile.identity.city, profile.identity.state, profile.identity.country].filter(Boolean).join(", ") || "unknown location"}. Languages: ${profile.identity.languages.join(", ") || "unknown"} (not a founder-potential signal).`,
   );
+  if (!profile.identity.city) {
+    lines.push(
+      "City: not stated. Never name or assume a specific city, town or local market for this founder; if a local advantage could matter, say it needs confirming.",
+    );
+  }
   lines.push(
     `Currency: every monetary figure below, and every monetary figure you generate for this founder, must be in ${profile.identity.currency} (${profile.identity.currencySymbol}) — never rupees/lakh/crore unless that is genuinely their currency.`,
   );
@@ -80,18 +120,18 @@ function formatProfileV2ForPrompt(profile: NormalizedProfile): string {
     );
   } else {
     lines.push(
-      "Skills: none listed — do not assume competence, but do not treat this as disqualifying.",
+      "Skills: none recorded — UNKNOWN, not absent. Never say they lack a skill; say the skills information is incomplete.",
     );
   }
   if (v2.domains.length > 0) lines.push(`Experience domains: ${v2.domains.join(", ")}.`);
   lines.push(
-    `Execution evidence (what they have actually done — outranks self-description): ${v2.executionSignals.join(", ") || "nothing yet"}. Estimated relevant experience ≈ ${profile.experienceYears} years (derived from age, status and the evidence above).`,
+    `Execution evidence (what they have actually done — outranks self-description): ${v2.executionSignals.join(", ") || "nothing yet"}. Estimated relevant experience ≈ ${profile.experienceYears} years (a derived estimate from age, status and the evidence above — never present it as their stated experience).`,
   );
 
+  lines.push(...formatStatedResources(profile));
   lines.push(
-    `Resources: about ${money(profile.resources.capitalAmount)} available to start (${profile.resources.capitalBracket ?? "range not stated"}). Access: ${v2.access.join(", ") || "none listed"}.`,
+    `Access the founder STATED: ${v2.access.join(", ") || (v2.accessNone ? "none of the listed options" : "not stated (unknown)")}. Having a network is not proof it contains this direction's buyers.`,
   );
-  lines.push(`Time: about ${profile.time.weeklyHours} hours/week realistically available.`);
   lines.push(
     `Risk tolerance: ${v2.execution.riskTolerance ?? "unknown"}. Early-stage roles they can realistically handle: ${v2.execution.roles.join(", ") || "not stated"}. Team preference: ${v2.execution.teamPreference ?? "not stated"}.`,
   );
@@ -115,6 +155,11 @@ function formatProfileV2ForPrompt(profile: NormalizedProfile): string {
   }
 
   const a = v2.ambition;
+  if (a.scaleId === "not_sure") {
+    lines.push(
+      "Ambition is NOT SURE YET — undefined. Never say a direction matches their ambition; you may note that local and larger paths can be compared as they learn.",
+    );
+  }
   lines.push(
     `Ambition: wants ${a.scale ?? "scale not stated"}; will give a serious opportunity ${a.horizon ?? "an unstated time horizon"}; ultimately hoping for ${a.hope ?? "not stated"}.${a.minimumMonthlyIncome ? ` Needs at least ~${money(a.minimumMonthlyIncome)}/month of personal income within 12 months — a CONSTRAINT on the plan, never the target size of the company.` : ""}`,
   );
@@ -149,20 +194,20 @@ export function formatProfileForPrompt(profile: NormalizedProfile): string {
     );
   } else {
     lines.push(
-      "Skills: none formally listed yet — do not assume competence, but do not treat this as disqualifying.",
+      "Skills: none recorded — UNKNOWN, not absent. Never say they lack a skill; say the skills information is incomplete.",
     );
   }
 
-  lines.push(`Relevant experience: ~${profile.experienceYears} years.`);
+  lines.push(`Relevant experience: ~${profile.experienceYears} years (a derived estimate).`);
+  lines.push(...formatStatedResources(profile));
   lines.push(
-    `Resources: about ${money(profile.resources.capitalAmount)} available to start. Assets available: ${profile.resources.assets.join(", ") || "none listed"}. Internet: ${profile.resources.internetQuality ?? "unknown"}. Transportation: ${profile.resources.transportation ?? "unknown"}.`,
+    `Assets available: ${profile.resources.assets.join(", ") || "none listed"}. Internet: ${profile.resources.internetQuality ?? "unknown"}. Transportation: ${profile.resources.transportation ?? "unknown"}.`,
   );
   if (profile.resources.annualIncomeAmount) {
     lines.push(
       `Existing annual income: about ${money(profile.resources.annualIncomeAmount)} — this is ongoing earning capacity, separate from the capital available to invest above. A side-income idea should feel meaningful relative to this, not trivial.`,
     );
   }
-  lines.push(`Time: about ${profile.time.weeklyHours} hours/week realistically available.`);
   lines.push(
     `Work style: prefers ${profile.workStyle.location ?? "no stated preference"} work, drawn to ${profile.workStyle.type ?? "unspecified"} ventures, leadership comfort "${profile.workStyle.leadership ?? "unknown"}", sales comfort "${profile.workStyle.salesComfort ?? "unknown"}", ${profile.workStyle.soloOrTeam ?? "unspecified"} preference.`,
   );

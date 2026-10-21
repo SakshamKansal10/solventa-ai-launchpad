@@ -36,7 +36,7 @@ function LevelMeter({ level }: { level: string | null }) {
           style={{ height: `${8 + b * 4}px` }}
           className={cn(
             "w-1.5 rounded-sm transition-colors duration-200",
-            b <= rank ? "bg-sol-violet" : "bg-sol-border-strong",
+            b <= rank ? "bg-sol-cobalt" : "bg-sol-border-strong",
           )}
         />
       ))}
@@ -98,7 +98,7 @@ export function SkillsScreen() {
           <button
             type="button"
             data-testid="skill-add"
-            className="flex h-12 w-full items-center justify-between rounded-2xl border border-sol-border bg-sol-surface px-4 text-left text-[1rem] text-sol-secondary transition-colors hover:border-sol-violet/45"
+            className="flex h-12 w-full items-center justify-between rounded-2xl border border-sol-border bg-sol-surface px-4 text-left text-[1rem] text-sol-secondary transition-colors hover:border-sol-cobalt/45"
           >
             {t("q.skills.add")}
             <ChevronDown className="size-4" aria-hidden="true" />
@@ -113,7 +113,7 @@ export function SkillsScreen() {
                   <button
                     type="button"
                     onClick={() => add(query)}
-                    className="flex w-full items-center gap-2 px-3 py-2 text-left text-[1rem] text-sol-violet-deep hover:bg-sol-violet-soft"
+                    className="flex w-full items-center gap-2 px-3 py-2 text-left text-[1rem] text-sol-cobalt-deep hover:bg-sol-cobalt-soft"
                   >
                     <Plus className="size-4" aria-hidden="true" />
                     {t("q.skills.addCustom", { name: query.trim() })}
@@ -158,7 +158,7 @@ export function SkillsScreen() {
               key={skill.name}
               className={cn(
                 "flex flex-col gap-3 rounded-2xl border bg-sol-surface p-4",
-                skill.level === null ? "border-sol-violet" : "border-sol-border",
+                skill.level === null ? "border-sol-cobalt" : "border-sol-border",
               )}
             >
               <div className="flex items-start justify-between gap-3">

@@ -18,7 +18,7 @@ export function FinalCTA() {
         className="pointer-events-none absolute left-1/2 top-[42%] h-[240px] w-[420px] -translate-x-1/2 -translate-y-1/2"
         style={{
           background:
-            "radial-gradient(ellipse 420px 240px at 50% 42%, rgba(114,87,216,.16), transparent 72%)",
+            "radial-gradient(ellipse 420px 240px at 50% 42%, rgba(49,94,219,.16), transparent 72%)",
         }}
         aria-hidden="true"
       />
@@ -59,7 +59,7 @@ export function FinalCTA() {
             />
             <span className="relative">{t("finalCta.cta")}</span>
             <span className="sol-nudge relative flex" aria-hidden="true">
-              <ArrowRight className="size-[19px] text-sol-violet-deep transition-transform duration-150 group-hover:translate-x-[5px]" />
+              <ArrowRight className="size-[19px] text-sol-cobalt-deep transition-transform duration-150 group-hover:translate-x-[5px]" />
             </span>
           </button>
         </div>

@@ -85,23 +85,23 @@ export function metricStrip(cells: { label: string; value: string }[]): string {
 }
 
 /** The flagship idea — navy background, white/champagne text, visually
- * distinct from the two lighter secondary cards below it. Fit score is
- * shown only when a real, already-computed number is passed in — never
- * fabricated for display. */
+ * distinct from the two lighter secondary cards below it. Founder fit is
+ * shown only as the canonical label (src/lib/fit/model.ts) when one is passed
+ * in — never a percentage, never fabricated for display. */
 export function primaryIdeaCard(opts: {
   title: string;
   oneLiner: string;
-  fitScore: number | null;
+  fitLabel: string | null;
+  eyebrow?: string;
 }): string {
-  const fit =
-    opts.fitScore !== null
-      ? `<span style="font-family:${FONT_BODY}; font-size:13px; font-weight:bold; color:${EMAIL_COLORS.champagne};">${Math.round(opts.fitScore)}% fit</span>`
-      : "";
+  const fit = opts.fitLabel
+    ? `<span style="font-family:${FONT_BODY}; font-size:13px; font-weight:bold; color:${EMAIL_COLORS.champagne};">${escapeHtml(opts.fitLabel)}</span>`
+    : "";
   return `
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="border-radius:14px; background-color:${EMAIL_COLORS.navy};">
   <tr>
     <td style="padding:22px 24px;">
-      <div style="font-family:${FONT_BODY}; font-size:11px; font-weight:bold; letter-spacing:0.12em; text-transform:uppercase; color:${EMAIL_COLORS.champagne};">Your Strongest Match</div>
+      <div style="font-family:${FONT_BODY}; font-size:11px; font-weight:bold; letter-spacing:0.12em; text-transform:uppercase; color:${EMAIL_COLORS.champagne};">${escapeHtml(opts.eyebrow ?? "Recommended direction")}</div>
       <div style="margin-top:8px; font-family:${FONT_HEADING}; font-size:24px; line-height:1.25; font-weight:700; color:#FFFFFF;">${escapeHtml(opts.title)}</div>
       <div style="margin-top:8px; font-family:${FONT_BODY}; font-size:14px; line-height:21px; color:#D9DBE8;">${escapeHtml(opts.oneLiner)}</div>
       ${fit ? `<div style="margin-top:12px;">${fit}</div>` : ""}

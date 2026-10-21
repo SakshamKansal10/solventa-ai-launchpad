@@ -25,6 +25,11 @@ test.describe("public buttons", () => {
       .click();
     await expect(page).toHaveURL(/\/consultation$/);
 
+    // From another page the header's section links open real pages (the film has no anchors).
+    await gotoApp(page, "/about");
+    await page.getByRole("banner").getByRole("button", { name: "How It Works" }).first().click();
+    await expect(page).toHaveURL(/\/how-it-works$/);
+
     await gotoApp(page, "/how-it-works");
     await page.getByTestId("language-switch").click();
     await expect(page.locator("html")).toHaveAttribute("lang", "hi");
@@ -40,7 +45,11 @@ test.describe("founder buttons", () => {
   }) => {
     await founderWithDirections(context);
     await gotoApp(page, "/dashboard");
-    await page.getByTestId("flagship-choose").click();
+    // The recommended direction is reviewed, then chosen on its own page.
+    await page.getByTestId("flagship-explore").click();
+    await page.getByTestId("choose-direction").click();
+    await expect(page.getByTestId("build-roadmap")).toBeVisible();
+    await gotoApp(page, "/dashboard");
     await expect(page.getByTestId("build-roadmap")).toBeEnabled();
     await page.getByTestId("build-roadmap").click();
     await expect(page.getByTestId("roadmap-page")).toBeVisible({ timeout: 60_000 });
@@ -58,7 +67,7 @@ test.describe("founder buttons", () => {
     await expect(page.getByTestId("adaptation-note")).toBeVisible({ timeout: 60_000 });
   });
 
-  test("dashboard graphics are controls: path stop, mission node and Today's Move all navigate", async ({
+  test("dashboard controls navigate: Today's Move, a phase on the journey, and the evidence tile", async ({
     page,
     context,
   }) => {
@@ -69,11 +78,12 @@ test.describe("founder buttons", () => {
     await expect(page).toHaveURL(/\/dashboard\/roadmap/);
 
     await gotoApp(page, "/dashboard");
-    await page.getByTestId("path-node-problem").getByRole("button").click();
+    await page.getByTestId("open-evidence").click();
     await expect(page).toHaveURL(/\/dashboard\/proof/);
+    await expect(page.getByTestId("proof-page")).toBeVisible();
 
     await gotoApp(page, "/dashboard");
-    await page.getByTestId("track-node").first().click();
-    await expect(page).toHaveURL(/\/dashboard\/roadmap/);
+    await page.getByTestId("journey-ribbon").getByRole("button").first().click();
+    await expect(page).toHaveURL(/\/dashboard\/roadmap\?.*phase=/);
   });
 });

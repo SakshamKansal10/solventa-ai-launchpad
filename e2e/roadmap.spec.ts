@@ -24,9 +24,8 @@ test.describe("building a roadmap", () => {
 
     await expect(page.getByTestId("tab-week")).toHaveAttribute("data-state", "active");
     await expect(page.getByTestId("north-star")).toBeVisible();
-    // The journey scene only ever shows the first 3 phases as mountain peaks;
-    // the rest stay reachable from the Plan tab and History.
-    await expect(page.getByTestId("phase-strip").getByRole("listitem")).toHaveCount(3);
+    // Every phase is on the path (Validate → Build → Elevate), none hidden.
+    await expect(page.getByTestId("phase-strip").getByRole("listitem")).toHaveCount(5);
     await expect(page.getByTestId("mission-card")).toHaveCount(3);
 
     const roadmaps = await sql<{ status: string }>(
@@ -57,7 +56,11 @@ test.describe("building a roadmap", () => {
     const { user } = await founderWithDirections(context);
     await gemini.failNext("ROADMAP_SKELETON", 2);
     await gotoApp(page, "/dashboard");
-    await page.getByTestId("flagship-choose").click();
+    // The recommended direction is reviewed, then chosen on its own page.
+    await page.getByTestId("flagship-explore").click();
+    await page.getByTestId("choose-direction").click();
+    await expect(page.getByTestId("build-roadmap")).toBeVisible();
+    await gotoApp(page, "/dashboard");
     await page.getByTestId("build-roadmap").click();
 
     await expect(page.getByTestId("build-failed")).toBeVisible({ timeout: 60_000 });

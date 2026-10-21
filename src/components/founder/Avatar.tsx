@@ -8,24 +8,32 @@ interface AvatarProps {
   initials: string;
   size?: number;
   className?: string;
+  /** Told whether the photo is really shown (false when there is none or it failed). */
+  onShownChange?: (showsImage: boolean) => void;
 }
 
 /** Custom photo → Google photo → initials. If the image fails to load (a
  * revoked Google URL, a deleted file) it falls back to initials rather than
  * showing a broken-image icon. */
-export function Avatar({ url, initials, size = 36, className }: AvatarProps) {
+export function Avatar({ url, initials, size = 36, className, onShownChange }: AvatarProps) {
   const { t } = useLocale();
   const [failed, setFailed] = useState(false);
   useEffect(() => setFailed(false), [url]);
 
   const showImage = Boolean(url) && !failed;
+  useEffect(() => onShownChange?.(showImage), [showImage, onShownChange]);
   return (
     <span
       className={cn(
-        "relative inline-flex shrink-0 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-sol-champagne to-sol-violet font-semibold text-white",
+        "relative inline-flex shrink-0 items-center justify-center overflow-hidden rounded-full bg-sol-navy font-semibold text-white",
         className,
       )}
-      style={{ width: size, height: size, fontSize: Math.max(12, Math.round(size * 0.38)) }}
+      // In rem (sizes are given in px at the 15px dashboard root), so it scales with the page.
+      style={{
+        width: `${size / 15}rem`,
+        height: `${size / 15}rem`,
+        fontSize: `${Math.max(12, Math.round(size * 0.38)) / 15}rem`,
+      }}
       data-testid="avatar"
       data-source={showImage ? "image" : "initials"}
     >

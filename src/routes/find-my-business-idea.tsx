@@ -54,7 +54,7 @@ function FindMyBusinessIdeaPage() {
             className="pointer-events-none absolute inset-x-0 top-0 mx-auto h-[320px] max-w-[900px]"
             style={{
               background:
-                "radial-gradient(ellipse 500px 320px at 50% 25%, rgba(114,87,216,.08), transparent 70%)",
+                "radial-gradient(ellipse 500px 320px at 50% 25%, rgba(49,94,219,.08), transparent 70%)",
             }}
             aria-hidden="true"
           />
@@ -83,7 +83,7 @@ function FindMyBusinessIdeaPage() {
                   key={p.title}
                   className="rounded-2xl border border-sol-border bg-sol-surface px-5 py-6"
                 >
-                  <p.icon className="size-5 text-sol-violet-deep" aria-hidden="true" />
+                  <p.icon className="size-5 text-sol-cobalt-deep" aria-hidden="true" />
                   <p className="mt-3 font-display text-[1.25rem] font-semibold text-sol-ink">
                     {t(p.title)}
                   </p>

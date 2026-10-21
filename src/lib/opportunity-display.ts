@@ -73,6 +73,46 @@ export interface OpportunityDisplayDetail {
   validationNeeded: string[];
   revenuePath: string;
   firstExperiment: string;
+  /** Structured fields (§7). Empty on directions saved before they existed. */
+  deliveryModel: string;
+  criticalAssumptions: string[];
+  /** Parallel to criticalAssumptions; an enum, so never sent for translation. */
+  criticalAssumptionCategories: string[];
+  successCriteria: string[];
+  reconsiderIf: string[];
+}
+
+const ASSUMPTION_CATEGORIES = new Set([
+  "problem",
+  "willingness_to_pay",
+  "distribution",
+  "delivery",
+  "retention",
+  "pricing",
+  "competition",
+  "other",
+]);
+
+const strings = (v: unknown): string[] =>
+  Array.isArray(v)
+    ? v.filter((x): x is string => typeof x === "string" && x.trim().length > 0)
+    : [];
+
+/** Only well-formed assumptions survive; a stored value of any other shape is dropped. */
+function assumptionsOf(v: unknown): { statement: string; category: string }[] {
+  if (!Array.isArray(v)) return [];
+  return v.flatMap((a) => {
+    const statement = (a as { statement?: unknown })?.statement;
+    const category = (a as { category?: unknown })?.category;
+    if (typeof statement !== "string" || !statement.trim()) return [];
+    return [
+      {
+        statement,
+        category:
+          typeof category === "string" && ASSUMPTION_CATEGORIES.has(category) ? category : "other",
+      },
+    ];
+  });
 }
 
 function isPackageShape(
@@ -122,6 +162,13 @@ export function toDisplayDetail(
       validationNeeded: detail.validationNeeded ?? [],
       revenuePath: detail.revenuePath ?? "",
       firstExperiment: detail.firstExperiment ?? "",
+      deliveryModel: typeof detail.deliveryModel === "string" ? detail.deliveryModel : "",
+      criticalAssumptions: assumptionsOf(detail.criticalAssumptions).map((a) => a.statement),
+      criticalAssumptionCategories: assumptionsOf(detail.criticalAssumptions).map(
+        (a) => a.category,
+      ),
+      successCriteria: strings(detail.successCriteria),
+      reconsiderIf: strings(detail.reconsiderIf),
     };
   }
 
@@ -158,5 +205,10 @@ export function toDisplayDetail(
     validationNeeded: detail.needsValidation ?? [],
     revenuePath: howItCanMakeMoney,
     firstExperiment: detail.firstExperiment ?? "",
+    deliveryModel: "",
+    criticalAssumptions: [],
+    criticalAssumptionCategories: [],
+    successCriteria: [],
+    reconsiderIf: [],
   };
 }

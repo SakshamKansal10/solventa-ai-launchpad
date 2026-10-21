@@ -20,7 +20,11 @@ export async function founderWithDirections(context: BrowserContext, name = "Ash
 /** Chooses the flagship direction and builds its roadmap through the real UI. */
 export async function chooseAndBuildRoadmap(page: Page): Promise<void> {
   await gotoApp(page, "/dashboard");
-  await page.getByTestId("flagship-choose").click();
+  // The recommended direction is reviewed, then chosen on its own page.
+  await page.getByTestId("flagship-explore").click();
+  await page.getByTestId("choose-direction").click();
+  await expect(page.getByTestId("build-roadmap")).toBeVisible();
+  await gotoApp(page, "/dashboard");
   await expect(page.getByTestId("build-roadmap")).toBeEnabled();
   await page.getByTestId("build-roadmap").click();
   await expect(page).toHaveURL(/\/dashboard\/roadmap/, { timeout: 60_000 });

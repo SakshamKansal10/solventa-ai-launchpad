@@ -38,7 +38,7 @@ const STATUS_LABEL: Record<FitStatus, MessageKey> = {
 };
 const PIP_TONE: Record<FitStatus, string> = {
   strong: "bg-sol-champagne-deep",
-  moderate: "bg-sol-violet",
+  moderate: "bg-sol-cobalt",
   conditional: "bg-sol-border-strong",
 };
 
@@ -150,14 +150,14 @@ export function OpportunityDemo() {
                   className={cn(
                     "relative flex items-center gap-4 rounded-2xl border px-5 py-4 text-left transition-colors duration-200",
                     active
-                      ? "border-sol-violet/50"
-                      : "border-sol-border bg-sol-hp-surface hover:border-sol-violet/30",
+                      ? "border-sol-cobalt/50"
+                      : "border-sol-border bg-sol-hp-surface hover:border-sol-cobalt/30",
                   )}
                 >
                   {active && (
                     <motion.span
                       layoutId="opp-focus-bg"
-                      className="absolute inset-0 rounded-2xl bg-sol-violet-soft"
+                      className="absolute inset-0 rounded-2xl bg-sol-cobalt-soft"
                       transition={{ duration: reduceMotion ? 0 : 0.35, ease: [0.22, 1, 0.36, 1] }}
                       aria-hidden="true"
                     />
@@ -166,7 +166,7 @@ export function OpportunityDemo() {
                     className={cn(
                       "relative flex size-9 shrink-0 items-center justify-center rounded-full font-display text-[17px] font-semibold",
                       active
-                        ? "bg-sol-violet text-white"
+                        ? "bg-sol-cobalt text-white"
                         : "bg-sol-champagne-soft text-sol-champagne-deep",
                     )}
                   >
@@ -181,7 +181,7 @@ export function OpportunityDemo() {
                     </span>
                   </span>
                   {active && (
-                    <span className="relative hidden rounded-full bg-sol-violet px-3 py-1 text-[0.875rem] font-bold uppercase tracking-[0.08em] text-white sm:inline">
+                    <span className="relative hidden rounded-full bg-sol-cobalt px-3 py-1 text-[0.875rem] font-bold uppercase tracking-[0.08em] text-white sm:inline">
                       {t("story.opp.focus")}
                     </span>
                   )}
@@ -210,7 +210,7 @@ export function OpportunityDemo() {
                   {/* Connector line behind the three nodes (desktop). */}
                   <motion.span
                     aria-hidden="true"
-                    className="absolute left-[16%] right-[16%] top-[27px] hidden h-0.5 origin-left rounded-full bg-gradient-to-r from-sol-champagne via-sol-violet to-sol-champagne sm:block"
+                    className="absolute left-[16%] right-[16%] top-[27px] hidden h-0.5 origin-left rounded-full bg-gradient-to-r from-sol-champagne via-sol-cobalt to-sol-champagne sm:block"
                     initial={{ scaleX: 0 }}
                     animate={{ scaleX: 1 }}
                     transition={{ duration: reduceMotion ? 0 : 0.6, delay: 0.1 }}
@@ -224,7 +224,7 @@ export function OpportunityDemo() {
                       className="relative flex gap-4 sm:flex-col sm:items-center sm:gap-3 sm:text-center"
                     >
                       <span className="relative z-10 flex size-[54px] shrink-0 items-center justify-center rounded-full border border-sol-champagne/60 bg-sol-hp-surface shadow-[0_8px_20px_rgba(23,26,39,0.08)]">
-                        <node.icon className="size-6 text-sol-violet-deep" aria-hidden="true" />
+                        <node.icon className="size-6 text-sol-cobalt-deep" aria-hidden="true" />
                       </span>
                       <div className="min-w-0">
                         <p className="text-[0.875rem] font-bold uppercase tracking-[0.1em] text-sol-champagne-deep">

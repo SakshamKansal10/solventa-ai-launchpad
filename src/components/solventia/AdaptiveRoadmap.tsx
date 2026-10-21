@@ -108,15 +108,15 @@ export function AdaptiveRoadmap() {
           data-testid="adaptive-demo"
         >
           <div className="flex flex-wrap items-center gap-3">
-            <span className="inline-flex min-h-8 items-center rounded-full border border-sol-violet/30 bg-sol-violet-soft px-4 text-[14px] font-bold tracking-[0.1em] text-sol-violet-deep">
+            <span className="inline-flex min-h-8 items-center rounded-full border border-sol-cobalt/30 bg-sol-cobalt-soft px-4 text-[14px] font-bold tracking-[0.1em] text-sol-cobalt-deep">
               {t("adaptiveRoadmap.demoLabel")}
             </span>
           </div>
 
           <div className="mt-6 grid gap-6 lg:grid-cols-[1fr_170px_0.9fr] lg:items-stretch lg:gap-4">
             {/* Week 01 */}
-            <div className="rounded-3xl border border-sol-violet/25 bg-sol-violet-soft/60 p-6 sm:p-7">
-              <p className="text-[14px] font-bold uppercase tracking-[0.1em] text-sol-violet-deep">
+            <div className="rounded-3xl border border-sol-cobalt/25 bg-sol-cobalt-soft/60 p-6 sm:p-7">
+              <p className="text-[14px] font-bold uppercase tracking-[0.1em] text-sol-cobalt-deep">
                 {t("adaptiveRoadmap.week")}
               </p>
               <p className="mt-2 font-display text-[28px] font-semibold leading-tight text-sol-ink">
@@ -135,7 +135,7 @@ export function AdaptiveRoadmap() {
                           "flex size-6 shrink-0 items-center justify-center rounded-full border transition-colors duration-[240ms]",
                           isDone
                             ? "border-sol-champagne bg-sol-champagne text-sol-ink"
-                            : "border-sol-violet/40 bg-transparent",
+                            : "border-sol-cobalt/40 bg-transparent",
                         )}
                         aria-hidden="true"
                       >
@@ -161,7 +161,7 @@ export function AdaptiveRoadmap() {
               </p>
 
               <div
-                className="mt-5 min-h-[132px] border-t border-sol-violet/20 pt-5"
+                className="mt-5 min-h-[132px] border-t border-sol-cobalt/20 pt-5"
                 ref={evidenceRef}
               >
                 <AnimatePresence initial={false}>
@@ -202,7 +202,7 @@ export function AdaptiveRoadmap() {
                   aria-hidden="true"
                   className="absolute inset-0 rounded-full"
                   style={{
-                    background: "radial-gradient(circle, rgba(114,87,216,.2), transparent 68%)",
+                    background: "radial-gradient(circle, rgba(49,94,219,.2), transparent 68%)",
                   }}
                   animate={
                     pulsing && !reduceMotion
@@ -214,12 +214,12 @@ export function AdaptiveRoadmap() {
                 <motion.span
                   animate={pulsing && !reduceMotion ? { scale: [1, 1.1, 1] } : { scale: 1 }}
                   transition={{ duration: 0.6 }}
-                  className="relative flex size-[84px] items-center justify-center rounded-full bg-sol-violet"
+                  className="relative flex size-[84px] items-center justify-center rounded-full bg-sol-cobalt"
                 >
                   <img src={mark} alt="" width={298} height={436} className="h-8 w-auto" />
                 </motion.span>
               </div>
-              <p className="max-w-[9rem] text-center font-display text-[17px] font-semibold leading-tight text-sol-violet-deep">
+              <p className="max-w-[9rem] text-center font-display text-[17px] font-semibold leading-tight text-sol-cobalt-deep">
                 {pulsing ? t("story.road.reads") : t("adaptiveRoadmap.adapts")}
               </p>
             </div>
@@ -254,7 +254,7 @@ export function AdaptiveRoadmap() {
                     <motion.span
                       initial={{ scale: 0.5, rotate: -30 }}
                       animate={{ scale: 1, rotate: 0 }}
-                      className="flex size-7 shrink-0 items-center justify-center rounded-full bg-sol-violet text-white"
+                      className="flex size-7 shrink-0 items-center justify-center rounded-full bg-sol-cobalt text-white"
                     >
                       <Check className="size-4" aria-hidden="true" />
                     </motion.span>

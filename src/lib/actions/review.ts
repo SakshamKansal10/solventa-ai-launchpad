@@ -6,6 +6,7 @@ import { requireReviewerLoader } from "@/lib/route-guards";
 import { requireUser } from "@/lib/supabase/server";
 import { normalizeProfile, type NormalizedProfile } from "@/lib/profile/normalize";
 import { computeFitScore, type FitScoreBreakdown } from "@/lib/profile/scoring";
+import { assessFit, fitSortScore } from "@/lib/fit/model";
 import { computeFounderGenome } from "@/lib/profile/founder-genome";
 import { computeAmbitionCalibration } from "@/lib/profile/ambition";
 import { generateIntelligencePackage } from "@/lib/ai/prompts/intelligence-package";
@@ -164,8 +165,13 @@ async function runPipeline(
 
     const scored = await timedStep(telemetry, "Fit scoring", async () =>
       pkg.opportunities
-        .map((c) => ({ candidate: c, score: computeFitScore(profile, c.fitSignals) }))
-        .sort((a, b) => b.score.total - a.score.total),
+        // Legacy breakdown kept for this diagnostics view only; order and stored fit are canonical.
+        .map((c) => ({
+          candidate: c,
+          score: computeFitScore(profile, c.fitSignals),
+          assessment: assessFit(profile, c.fitSignals),
+        }))
+        .sort((a, b) => fitSortScore(b.assessment) - fitSortScore(a.assessment)),
     );
 
     await timedStep(telemetry, "Ranking", async () => {
@@ -206,7 +212,7 @@ async function runPipeline(
       opportunityIds = await timedStep(telemetry, "Database — opportunities write", async () => {
         const ids: string[] = [];
         for (let i = 0; i < scored.length; i++) {
-          const { candidate, score } = scored[i];
+          const { candidate, assessment } = scored[i];
           const { data, error } = await supabase
             .from("opportunities")
             .insert({
@@ -215,8 +221,8 @@ async function runPipeline(
               title: candidate.title,
               one_liner: candidate.plainEnglishSummary,
               who_for: candidate.customer,
-              fit_score: score.total,
-              score_breakdown: score as unknown as Json,
+              fit_score: assessment.score ?? 0,
+              score_breakdown: assessment as unknown as Json,
               candidate: candidate as unknown as Json,
               status: "active" as const,
               batch_number: 1,

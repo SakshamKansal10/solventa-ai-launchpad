@@ -359,6 +359,55 @@ export const FounderDNASchema = z.object({
 });
 export type FounderDNA = z.infer<typeof FounderDNASchema>;
 
+/** The categories an assumption can test — the same set the Evidence workspace uses. */
+export const AssumptionCategoryEnum = z.enum([
+  "problem",
+  "willingness_to_pay",
+  "distribution",
+  "delivery",
+  "retention",
+  "pricing",
+  "competition",
+  "other",
+]);
+
+/** The structured part of a direction (§7): how it is delivered, what has to be
+ * true, what success in the first test looks like, and when to stop. */
+export const DirectionStructureSchema = z.object({
+  deliveryModel: z
+    .string()
+    .describe(
+      "One plain sentence on how the offer reaches the customer day to day, e.g. 'Done-for-you setup delivered remotely, then a monthly support plan'.",
+    ),
+  criticalAssumptions: z
+    .array(
+      z.object({
+        statement: z
+          .string()
+          .describe(
+            "One testable sentence that must be true for this direction to work — a hypothesis, never a claimed fact.",
+          ),
+        category: AssumptionCategoryEnum,
+      }),
+    )
+    .min(2)
+    .max(4)
+    .describe("The 2-4 riskiest assumptions, riskiest first; the first tests demand."),
+  successCriteria: z
+    .array(z.string())
+    .min(1)
+    .max(3)
+    .describe(
+      "Observable signals that the FIRST validation test worked, each with a count the founder can check (e.g. '3 of 8 owners ask for a paid trial'). Never a revenue target.",
+    ),
+  reconsiderIf: z
+    .array(z.string())
+    .min(1)
+    .max(3)
+    .describe("Clear, observable signals to revise or drop this direction."),
+});
+export type DirectionStructure = z.infer<typeof DirectionStructureSchema>;
+
 export const OpportunityPackageSchema = z.object({
   title: z.string().describe("Short, concrete name for the opportunity."),
   category: z
@@ -431,6 +480,9 @@ export const OpportunityPackageSchema = z.object({
       "One honest sentence on why this is a good time for THIS founder to pursue this — a real timing signal, never generic hype.",
     ),
   fitSignals: FitFactorsSchema,
+  // Optional on stored rows: directions saved before the structured fields
+  // existed keep deserializing; new ones always carry them (FlatOpportunitySchema).
+  ...DirectionStructureSchema.partial().shape,
   // Optional: an opportunity is generated without a roadmap (see
   // idea-generation.ts) and only gets one attached, out-of-band, once the
   // founder explicitly selects it and clicks "Build My Roadmap" (see

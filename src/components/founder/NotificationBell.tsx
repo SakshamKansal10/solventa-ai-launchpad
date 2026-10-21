@@ -84,13 +84,13 @@ export function NotificationBell() {
           type="button"
           aria-label={unread > 0 ? tp("notif.unread", unread) : t("notif.open")}
           data-testid="notification-bell"
-          className="relative flex size-11 items-center justify-center rounded-full border border-sol-border bg-sol-surface text-sol-ink transition-colors hover:border-sol-violet/50"
+          className="relative flex size-11 items-center justify-center rounded-full border border-sol-border bg-sol-surface text-sol-ink transition-colors hover:border-sol-cobalt/50"
         >
           <Bell className="size-5" aria-hidden="true" />
           {unread > 0 && (
             <span
               data-testid="notification-count"
-              className="absolute -right-0.5 -top-0.5 flex min-w-5 items-center justify-center rounded-full bg-sol-violet px-1 text-[0.75rem] font-bold leading-5 text-white"
+              className="absolute -right-0.5 -top-0.5 flex min-w-5 items-center justify-center rounded-full bg-sol-cobalt px-1 text-[0.9375rem] font-bold leading-5 text-white"
             >
               {unread > 9 ? "9+" : unread}
             </span>
@@ -111,7 +111,7 @@ export function NotificationBell() {
               onClick={() => markAll.mutate()}
               disabled={markAll.isPending}
               data-testid="notification-mark-all"
-              className="text-[0.9375rem] font-semibold text-sol-violet-deep underline-offset-4 hover:underline disabled:opacity-50"
+              className="text-[0.9375rem] font-semibold text-sol-cobalt-deep underline-offset-4 hover:underline disabled:opacity-50"
             >
               {t("notif.markAllRead")}
             </button>
@@ -133,7 +133,7 @@ export function NotificationBell() {
                     key={n.id}
                     className={cn(
                       "flex items-stretch border-b border-sol-border last:border-0",
-                      !n.read_at && "bg-sol-violet-soft/40",
+                      !n.read_at && "bg-sol-cobalt-soft/40",
                     )}
                   >
                     <button
@@ -147,7 +147,7 @@ export function NotificationBell() {
                         aria-hidden="true"
                         className={cn(
                           "mt-2 size-2 shrink-0 rounded-full",
-                          n.read_at ? "bg-transparent" : "bg-sol-violet",
+                          n.read_at ? "bg-transparent" : "bg-sol-cobalt",
                         )}
                       />
                       <span className="min-w-0 flex-1">
@@ -157,7 +157,7 @@ export function NotificationBell() {
                         <span className="mt-0.5 block text-[0.9375rem] leading-snug text-sol-secondary">
                           {copy.body}
                         </span>
-                        <span className="mt-1 block text-[0.875rem] text-sol-secondary">
+                        <span className="mt-1 block text-[0.9375rem] text-sol-secondary">
                           {timeAgo(n.created_at, locale)}
                         </span>
                       </span>
@@ -169,7 +169,7 @@ export function NotificationBell() {
                         aria-label={t("notif.markRead")}
                         title={t("notif.markRead")}
                         data-testid="notification-mark-read"
-                        className="flex w-11 shrink-0 items-center justify-center text-sol-secondary hover:bg-sol-ivory-light hover:text-sol-violet-deep"
+                        className="flex w-11 shrink-0 items-center justify-center text-sol-secondary hover:bg-sol-ivory-light hover:text-sol-cobalt-deep"
                       >
                         <Check className="size-4" aria-hidden="true" />
                       </button>

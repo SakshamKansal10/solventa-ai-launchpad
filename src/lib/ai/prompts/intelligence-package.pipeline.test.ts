@@ -242,6 +242,13 @@ describe("Stage 7 generation call path (mocked Gemini, no live network call)", (
       revenuePath: "x",
       firstExperiment: "x",
       whyNow: "x",
+      deliveryModel: "x",
+      criticalAssumptions: [
+        { statement: "a", category: "problem" },
+        { statement: "b", category: "pricing" },
+      ],
+      successCriteria: ["x"],
+      reconsiderIf: ["x"],
       fitSignals: {
         requiredSkills: [],
         startupCapitalAmount: 1000,

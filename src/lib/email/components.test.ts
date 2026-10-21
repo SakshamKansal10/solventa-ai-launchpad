@@ -63,7 +63,7 @@ describe("email component system", () => {
     const html = primaryIdeaCard({
       title: `A "Great" <Idea> & Co`,
       oneLiner: "Founders' choice",
-      fitScore: 91,
+      fitLabel: "Moderate fit",
     });
     expect(html).not.toContain("<Idea>");
     expect(html).toContain("&lt;Idea&gt;");
@@ -74,9 +74,12 @@ describe("email component system", () => {
     expect(secondary).not.toContain("<script>alert(1)</script>");
   });
 
-  it("primaryIdeaCard never fabricates a fit score when none is given", () => {
-    const html = primaryIdeaCard({ title: "T", oneLiner: "O", fitScore: null });
-    expect(html).not.toMatch(/% fit/);
+  it("primaryIdeaCard never fabricates a fit label, and never shows a percentage", () => {
+    const html = primaryIdeaCard({ title: "T", oneLiner: "O", fitLabel: null });
+    expect(html).not.toMatch(/(strong|moderate|conditional|weak|provisional)[^<]*fit/i);
+    const labelled = primaryIdeaCard({ title: "T", oneLiner: "O", fitLabel: "Strong fit" });
+    expect(labelled).toContain("Strong fit");
+    expect(labelled).not.toMatch(/d+s*%s*fit/i);
   });
 
   it("metricStrip renders only the cells it's given — never invents a fourth", () => {

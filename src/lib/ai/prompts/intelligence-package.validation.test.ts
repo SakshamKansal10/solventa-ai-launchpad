@@ -49,6 +49,16 @@ function buildOpportunity(opportunityIndex: number, overrides: Record<string, un
     revenuePath: "Start with one client, expand via referrals.",
     firstExperiment: "Offer the service free to one business this week in exchange for a review.",
     whyNow: "Local demand for this has grown faster than local supply this year.",
+    deliveryModel: "Done-for-you setup delivered on site, then a monthly plan.",
+    criticalAssumptions: [
+      {
+        statement: "Owners feel the problem enough to want it fixed.",
+        category: "problem" as const,
+      },
+      { statement: "Owners would pay a monthly fee.", category: "willingness_to_pay" as const },
+    ],
+    successCriteria: ["3 of 8 owners ask for a paid trial"],
+    reconsiderIf: ["Most owners say the problem is minor"],
     fitSignals: {
       requiredSkills: [{ name: "Communication", minLevel: "beginner" as const }],
       startupCapitalAmount: 8000,
@@ -91,6 +101,16 @@ describe("FlatIntelligencePackageSchema — schema/structural validation", () =>
   it("only 2 opportunities -> FAIL (length check)", () => {
     const result = FlatIntelligencePackageSchema.safeParse(buildPackage([0, 1]));
     expect(result.success).toBe(false);
+  });
+
+  it("a direction without its critical assumptions -> FAIL (malformed output is retried, never stored)", () => {
+    const pkg = buildPackage([0, 1, 2]);
+    pkg.opportunities[1] = buildOpportunity(1, { criticalAssumptions: undefined });
+    expect(FlatIntelligencePackageSchema.safeParse(pkg).success).toBe(false);
+    pkg.opportunities[1] = buildOpportunity(1, {
+      criticalAssumptions: [{ statement: "Only one", category: "problem" }],
+    });
+    expect(FlatIntelligencePackageSchema.safeParse(pkg).success).toBe(false);
   });
 
   it("missing required semantic field -> FAIL", () => {

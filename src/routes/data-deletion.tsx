@@ -100,7 +100,7 @@ function DataDeletionPage() {
 
           <p className="mt-8 text-[0.85rem] text-sol-secondary">
             See our{" "}
-            <a href="/privacy" className="text-sol-violet-deep underline">
+            <a href="/privacy" className="text-sol-cobalt-deep underline">
               Privacy Policy
             </a>{" "}
             for more on what we collect and how it's used.

@@ -9,7 +9,12 @@ import {
 } from "@/lib/consultation/brackets";
 import type { ConsultationAnswers } from "@/lib/consultation/model";
 import { parseAge } from "@/lib/consultation/model";
-import { HOURS_MIDPOINT, optionKey, SECTOR_DOMAIN_IDS } from "@/lib/consultation/options";
+import {
+  HOURS_MIDPOINT,
+  HOURS_RANGE,
+  optionKey,
+  SECTOR_DOMAIN_IDS,
+} from "@/lib/consultation/options";
 import { MESSAGES } from "@/lib/i18n";
 import type { NormalizedProfile, NormalizedSkill, RiskLevel } from "@/lib/profile/normalize";
 import type { SkillLevel } from "@/lib/onboarding-types";
@@ -230,6 +235,9 @@ export function normalizeV2(a: ConsultationAnswers): NormalizedProfile {
         ? (HOURS_MIDPOINT[a.weeklyHours as keyof typeof HOURS_MIDPOINT] ?? 5)
         : 5,
       weeklyHoursBracket: enLabel("hours", a.weeklyHours),
+      weeklyHoursRange: a.weeklyHours
+        ? (HOURS_RANGE[a.weeklyHours as keyof typeof HOURS_RANGE] ?? null)
+        : null,
     },
     workStyle: {
       location: null,
@@ -281,6 +289,7 @@ export function normalizeV2(a: ConsultationAnswers): NormalizedProfile {
         "access",
         (a.access ?? []).filter((x) => x !== "none"),
       ),
+      accessNone: (a.access ?? []).includes("none"),
       capitalTier: typeof a.capitalBracket === "number" ? a.capitalBracket : null,
       capitalTierCount: bracketCount("capital"),
       position: {

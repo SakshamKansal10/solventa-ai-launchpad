@@ -5,8 +5,14 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { requireUser } from "@/lib/supabase/server";
 import type { Database, Json } from "@/lib/supabase/types";
 import type { NormalizedProfile } from "@/lib/profile/normalize";
-import { computeFitScore, getConstraintWarnings } from "@/lib/profile/scoring";
-import { computeFitMatrix, type FitMatrix } from "@/lib/fit/matrix";
+import {
+  assessFit,
+  statedCapital,
+  statedHours,
+  type FitAssessment,
+  type Range,
+} from "@/lib/fit/model";
+import { keepSupportedDetail } from "@/lib/ai/integrity";
 import { generateOpportunityPackageBatch } from "@/lib/ai/prompts/intelligence-package";
 import { generateOpportunityDetail } from "@/lib/ai/prompts/opportunity-detail";
 import { researchMarketEvidence } from "@/lib/ai/prompts/market-research";
@@ -88,7 +94,8 @@ async function persistOpportunityPackage(
   pkg: OpportunityPackage,
   batchNumber: number,
 ) {
-  const score = computeFitScore(profile, pkg.fitSignals);
+  // The canonical founder-fit assessment, stored once with its rubric version.
+  const assessment = assessFit(profile, pkg.fitSignals);
 
   const { data: oppRow, error: oppError } = await supabase
     .from("opportunities")
@@ -98,8 +105,8 @@ async function persistOpportunityPackage(
       title: pkg.title,
       one_liner: pkg.plainEnglishSummary,
       who_for: pkg.customer,
-      fit_score: score.total,
-      score_breakdown: score as unknown as Json,
+      fit_score: assessment.score ?? 0,
+      score_breakdown: assessment as unknown as Json,
       candidate: pkg as unknown as Json,
       status: "active" as const,
       batch_number: batchNumber,
@@ -158,15 +165,15 @@ export const exploreMoreOpportunities = createServerFn({ method: "POST" })
   });
 
 export interface FitDetail {
-  matrix: FitMatrix;
+  /** The canonical assessment (src/lib/fit/model.ts) — the only source of a fit label. */
+  assessment: FitAssessment;
   /** Founder-specific reasons this fits (from the generated package). */
   advantages: string[];
   /** Named gaps: skills to learn plus tradeoffs. */
   gaps: string[];
-  warnings: string[];
   currency: string;
-  capital: number;
-  weeklyHours: number;
+  /** What the founder stated — ranges, never a midpoint presented as theirs. */
+  stated: { capital: Range | null; hours: Range | null };
 }
 
 export interface OpportunityDetailDTO {
@@ -247,10 +254,11 @@ export const getOpportunityDetail = createServerFn({ method: "GET" })
       detailRow = inserted.data;
     }
 
-    const display = toDisplayDetail(detailRow.detail as unknown as OpportunityPackage);
+    const raw = toDisplayDetail(detailRow.detail as unknown as OpportunityPackage);
+    // Personal reasons the founder's own profile does not support are never shown.
+    const display = keepSupportedDetail(raw, profile);
     const factors = getFitFactors(opportunity.candidate as unknown as OpportunityPackage);
-    const warnings = getConstraintWarnings(profile, factors);
-    const matrix = computeFitMatrix(profile, factors, dnaRow.data.ambition_band, warnings.length);
+    const assessment = assessFit(profile, factors);
 
     const gaps = [...display.skillsToLearn.map((s) => s), ...display.tradeoffs].slice(0, 3);
 
@@ -259,16 +267,14 @@ export const getOpportunityDetail = createServerFn({ method: "GET" })
       brief,
       detail: display,
       fit: {
-        matrix,
+        assessment,
         advantages: (display.whyThisFounder.length > 0
           ? display.whyThisFounder
           : display.advantages
         ).slice(0, 4),
         gaps,
-        warnings,
         currency: profile.identity.currency,
-        capital: profile.resources.capitalAmount,
-        weeklyHours: profile.time.weeklyHours,
+        stated: { capital: statedCapital(profile), hours: statedHours(profile) },
       },
       sources: (evidenceRes.data ?? []).map((e) => ({
         id: e.id,
@@ -286,12 +292,12 @@ export const getOpportunityDetail = createServerFn({ method: "GET" })
     };
   });
 
-/** Founder Fit for several directions in ONE call — only the four-row matrix, so
+/** Founder Fit for several directions in ONE call — only the canonical assessment, so
  * a side-by-side comparison doesn't pay for a full detail load per direction.
  * Same deterministic computation as the detail page, so the two never disagree. */
 export const getDirectionFits = createServerFn({ method: "GET" })
   .validator(z.object({ ids: z.array(z.string().uuid()).min(1).max(40) }))
-  .handler(async ({ data }): Promise<Record<string, FitMatrix>> => {
+  .handler(async ({ data }): Promise<Record<string, FitAssessment>> => {
     const { supabase, user } = await requireUser();
 
     const { data: opportunities, error } = await supabase
@@ -311,14 +317,13 @@ export const getDirectionFits = createServerFn({ method: "GET" })
     if (dnaError) throw new Error(dnaError.message);
     const dnaById = new Map((dnaRows ?? []).map((d) => [d.id, d]));
 
-    const out: Record<string, FitMatrix> = {};
+    const out: Record<string, FitAssessment> = {};
     for (const row of rows) {
       const dna = dnaById.get(row.business_dna_id);
       if (!dna) continue;
       const profile = dna.normalized_signals as unknown as NormalizedProfile;
       const factors = getFitFactors(row.candidate as unknown as OpportunityPackage);
-      const warnings = getConstraintWarnings(profile, factors);
-      out[row.id] = computeFitMatrix(profile, factors, dna.ambition_band, warnings.length);
+      out[row.id] = assessFit(profile, factors);
     }
     return out;
   });

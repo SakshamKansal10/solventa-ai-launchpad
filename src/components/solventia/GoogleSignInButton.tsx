@@ -77,7 +77,7 @@ export function GoogleSignInButton({ redirectPath, className }: GoogleSignInButt
         disabled={loading}
         data-testid="google-signin"
         className={cn(
-          "inline-flex h-12 w-full items-center justify-center gap-3 rounded-full border border-[#747775] bg-white px-4 text-[0.9375rem] font-medium text-[#1F1F1F] transition-colors hover:bg-[#F8F9FA] focus-visible:ring-2 focus-visible:ring-sol-violet/40 disabled:pointer-events-none disabled:opacity-60",
+          "inline-flex h-12 w-full items-center justify-center gap-3 rounded-full border border-[#747775] bg-white px-4 text-[0.9375rem] font-medium text-[#1F1F1F] transition-colors hover:bg-[#F8F9FA] focus-visible:ring-2 focus-visible:ring-sol-cobalt/40 disabled:pointer-events-none disabled:opacity-60",
           className,
         )}
       >

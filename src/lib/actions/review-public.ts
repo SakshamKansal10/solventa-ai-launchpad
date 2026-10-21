@@ -4,6 +4,7 @@ import { z } from "zod";
 
 import { normalizeProfile, type NormalizedProfile } from "@/lib/profile/normalize";
 import { computeFitScore, type FitScoreBreakdown } from "@/lib/profile/scoring";
+import { assessFit, fitSortScore } from "@/lib/fit/model";
 import { computeFounderGenome } from "@/lib/profile/founder-genome";
 import { computeAmbitionCalibration } from "@/lib/profile/ambition";
 import { generateIntelligencePackage } from "@/lib/ai/prompts/intelligence-package";
@@ -181,8 +182,12 @@ async function runAnalysisCore(answersRaw: Record<string, unknown>): Promise<Pub
 
     const scored = await timedStep(telemetry, "Fit scoring", async () =>
       pkg.opportunities
-        .map((c) => ({ candidate: c, score: computeFitScore(profile, c.fitSignals) }))
-        .sort((a, b) => b.score.total - a.score.total),
+        .map((c) => ({
+          candidate: c,
+          score: computeFitScore(profile, c.fitSignals),
+          assessment: assessFit(profile, c.fitSignals),
+        }))
+        .sort((a, b) => fitSortScore(b.assessment) - fitSortScore(a.assessment)),
     );
 
     await timedStep(telemetry, "Ranking", async () => scored.map((s) => s.candidate.title));

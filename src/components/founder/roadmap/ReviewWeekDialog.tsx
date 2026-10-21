@@ -128,8 +128,8 @@ export function ReviewWeekDialog({
                   className={cn(
                     "min-h-12 rounded-2xl border px-4 text-left text-[0.9375rem] font-semibold transition-colors",
                     outcome === o
-                      ? "border-sol-violet bg-sol-violet-soft text-sol-violet-deep"
-                      : "border-sol-border bg-sol-surface text-sol-ink hover:border-sol-violet/45",
+                      ? "border-sol-cobalt bg-sol-cobalt-soft text-sol-cobalt-deep"
+                      : "border-sol-border bg-sol-surface text-sol-ink hover:border-sol-cobalt/45",
                   )}
                 >
                   {t(`rm.outcome.${o}` as const)}
@@ -154,8 +154,8 @@ export function ReviewWeekDialog({
                   className={cn(
                     "min-h-11 rounded-full border px-4 text-[0.9375rem] font-medium transition-colors",
                     blocker === b
-                      ? "border-sol-violet bg-sol-violet-soft text-sol-violet-deep"
-                      : "border-sol-border bg-sol-surface text-sol-ink hover:border-sol-violet/45",
+                      ? "border-sol-cobalt bg-sol-cobalt-soft text-sol-cobalt-deep"
+                      : "border-sol-border bg-sol-surface text-sol-ink hover:border-sol-cobalt/45",
                   )}
                 >
                   {t(`rm.blocker.${b}` as MessageKey)}
@@ -167,7 +167,7 @@ export function ReviewWeekDialog({
           <div className="flex flex-col gap-1.5">
             <label htmlFor="review-note" className="text-[1rem] font-semibold text-sol-ink">
               {t("rm.review.note")}{" "}
-              <span className="text-[0.875rem] font-medium text-sol-secondary">
+              <span className="text-[0.9375rem] font-medium text-sol-secondary">
                 ({t("common.optional")})
               </span>
             </label>
@@ -178,7 +178,7 @@ export function ReviewWeekDialog({
               maxLength={600}
               value={note}
               onChange={(e) => setNote(e.target.value)}
-              className="w-full rounded-2xl border border-sol-border bg-sol-surface px-4 py-3 text-[0.9375rem] text-sol-ink focus-visible:border-sol-violet focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sol-violet/30"
+              className="w-full rounded-2xl border border-sol-border bg-sol-surface px-4 py-3 text-[0.9375rem] text-sol-ink focus-visible:border-sol-cobalt focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sol-cobalt/30"
             />
           </div>
 
@@ -210,7 +210,7 @@ export function ReviewWeekDialog({
             </Button>
           </div>
           {close.isPending && (
-            <p role="status" className="text-center text-[0.875rem] text-sol-secondary">
+            <p role="status" className="text-center text-[0.9375rem] text-sol-secondary">
               {t("rm.review.working")}
             </p>
           )}

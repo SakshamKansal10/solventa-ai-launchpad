@@ -85,7 +85,8 @@ export interface IdeasReadyEmailData {
    * opens the ideas IT describes, never whatever consultation happens to
    * be latest by the time it's clicked. */
   businessDnaId: string;
-  primary: IdeasReadyEmailOpportunity & { fitScore: number; weeklyTime: string | null };
+  /** fitLabel: the canonical founder-fit label in English (e.g. "Moderate fit"). */
+  primary: IdeasReadyEmailOpportunity & { fitLabel: string; weeklyTime: string | null };
   alternatives: IdeasReadyEmailOpportunity[];
 }
 
@@ -102,7 +103,7 @@ export async function sendIdeasReadyEmail(
 
   const metrics = [
     { label: "Directions", value: String(totalIdeas) },
-    { label: "Strongest Fit", value: `${Math.round(data.primary.fitScore)}%` },
+    { label: "Founder fit", value: data.primary.fitLabel },
     ...(data.primary.weeklyTime ? [{ label: "Weekly Time", value: data.primary.weeklyTime }] : []),
   ];
 
@@ -123,7 +124,7 @@ ${alternativeRows}
     to: email,
     subject: "Your business directions are ready",
     html: emailShell({
-      preheader: `Sol found ${totalIdeas} directions for you, led by "${data.primary.title}" — see your strongest match and how it fits.`,
+      preheader: `Sol found ${totalIdeas} directions for you, led by "${data.primary.title}" — see why it may fit and what to test first.`,
       bodyRowsHtml,
     }),
   });
@@ -166,7 +167,7 @@ export async function sendRoadmapReadyEmail(
 ${greetingRow(fullName)}
 ${bodyTextRow(`Your first founder mission is ready. Sol built a full roadmap for "${escapeHtml(data.opportunityTitle)}" — Week 01 is unlocked and waiting for you.`)}
 <tr><td style="padding:18px 40px 0 40px;">${metricStrip(metrics)}</td></tr>
-<tr><td style="padding:20px 40px 0 40px;">${primaryIdeaCard({ title: data.week1Title, oneLiner: data.week1Objective, fitScore: null })}</td></tr>
+<tr><td style="padding:20px 40px 0 40px;">${primaryIdeaCard({ title: data.week1Title, oneLiner: data.week1Objective, fitLabel: null, eyebrow: "This week" })}</td></tr>
 <tr><td style="padding:26px 40px 4px 40px;">${primaryCta(roadmapUrl, "Start Week 01")}</td></tr>
 `;
 

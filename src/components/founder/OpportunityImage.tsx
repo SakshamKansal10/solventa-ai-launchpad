@@ -87,7 +87,7 @@ export function OpportunityPhoto({
   return (
     <div
       className={cn(
-        "flex size-full flex-col items-center justify-center gap-2 bg-gradient-to-br from-sol-violet-ultralight to-sol-ivory-light px-3 text-center text-sol-secondary",
+        "flex size-full flex-col items-center justify-center gap-2 bg-gradient-to-br from-sol-cobalt-ultralight to-sol-ivory-light px-3 text-center text-sol-secondary",
         busy && "animate-pulse",
         className,
       )}
@@ -95,18 +95,18 @@ export function OpportunityPhoto({
       data-testid="idea-image-placeholder"
     >
       {busy ? (
-        <Loader2 className="size-5 animate-spin text-sol-violet" aria-hidden="true" />
+        <Loader2 className="size-5 animate-spin text-sol-cobalt" aria-hidden="true" />
       ) : (
         <ImageIcon className="size-5" aria-hidden="true" />
       )}
-      {!compact && image.generating && <p className="text-[0.875rem]">{t("img.generating")}</p>}
+      {!compact && image.generating && <p className="text-[0.9375rem]">{t("img.generating")}</p>}
       {!compact && image.failed && !image.generating && (
         <>
-          <p className="text-[0.875rem]">{t("img.failed")}</p>
+          <p className="text-[0.9375rem]">{t("img.failed")}</p>
           <button
             type="button"
             onClick={image.generate}
-            className="rounded-full border border-sol-border bg-white px-3 py-1 text-[0.875rem] font-medium text-sol-ink hover:border-sol-violet/50"
+            className="rounded-full border border-sol-border bg-white px-3 py-1 text-[0.9375rem] font-medium text-sol-ink hover:border-sol-cobalt/50"
           >
             {t("img.retry")}
           </button>
@@ -128,7 +128,7 @@ export function RegenerateImageButton({ image }: { image: ImageState }) {
       disabled={image.generating}
       aria-label={t("img.regenerate")}
       title={t("img.regenerate")}
-      className="absolute right-2 top-2 flex size-8 items-center justify-center rounded-full border border-sol-border bg-white/90 text-sol-ink opacity-0 transition-opacity hover:border-sol-violet/50 focus-visible:opacity-100 group-hover:opacity-100 disabled:opacity-100"
+      className="absolute right-2 top-2 flex size-8 items-center justify-center rounded-full border border-sol-border bg-white/90 text-sol-ink opacity-0 transition-opacity hover:border-sol-cobalt/50 focus-visible:opacity-100 group-hover:opacity-100 disabled:opacity-100"
       data-testid="regenerate-image"
     >
       <RefreshCw className={cn("size-4", image.generating && "animate-spin")} aria-hidden="true" />

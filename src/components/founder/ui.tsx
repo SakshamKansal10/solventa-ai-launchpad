@@ -13,7 +13,7 @@ import { useLocale } from "@/lib/i18n/LocaleProvider";
 /** One button language for the whole logged-in product:
  *  primary   — navy, the single main action on a surface
  *  secondary — outlined, the alternative
- *  soft      — violet-soft surface + violet border (a noticeable tertiary action)
+ *  soft      — cobalt-soft surface + cobalt border (a noticeable tertiary action)
  *  ghost     — text only
  *  champagne — ivory-to-champagne, the single main action on a dark surface
  * Every one has a visible disabled and loading state. */
@@ -22,16 +22,17 @@ export type ButtonSize = "md" | "lg" | "sm";
 
 export function buttonClasses(variant: ButtonVariant = "primary", size: ButtonSize = "md") {
   return cn(
-    "inline-flex select-none items-center justify-center gap-2 whitespace-nowrap rounded-2xl font-semibold transition-[color,background-color,border-color,transform] duration-[180ms] ease-[var(--sol-ease)] active:scale-[0.98] disabled:pointer-events-none disabled:opacity-50 aria-disabled:pointer-events-none aria-disabled:opacity-50",
-    size === "sm" && "min-h-10 px-4 text-[0.9375rem]",
-    size === "md" && "min-h-12 px-6 text-[1rem]",
-    size === "lg" && "min-h-14 px-8 text-[1.0625rem]",
+    // A long label wraps inside its container instead of running past the edge.
+    "inline-flex max-w-full select-none items-center justify-center gap-2 text-center leading-tight rounded-2xl font-semibold transition-[color,background-color,border-color,transform] duration-[180ms] ease-[var(--sol-ease)] active:scale-[0.98] disabled:pointer-events-none disabled:opacity-50 aria-disabled:pointer-events-none aria-disabled:opacity-50",
+    size === "sm" && "min-h-10 px-4 py-2 text-[0.9375rem]",
+    size === "md" && "min-h-12 px-6 py-2.5 text-[1rem]",
+    size === "lg" && "min-h-14 px-8 py-3 text-[1.0625rem]",
     variant === "primary" && "bg-sol-navy text-white hover:bg-sol-navy-soft",
     variant === "secondary" &&
-      "border border-sol-border-strong bg-sol-surface text-sol-ink hover:border-sol-violet/50",
+      "border border-sol-border-strong bg-sol-surface text-sol-ink hover:border-sol-cobalt/50",
     variant === "soft" &&
-      "border border-sol-violet/40 bg-sol-violet-soft text-sol-violet-deep hover:border-sol-violet hover:bg-sol-violet-soft/70",
-    variant === "ghost" && "text-sol-violet-deep hover:bg-sol-violet-soft",
+      "border border-sol-cobalt/40 bg-sol-cobalt-soft text-sol-cobalt-deep hover:border-sol-cobalt hover:bg-sol-cobalt-soft/70",
+    variant === "ghost" && "text-sol-cobalt-deep hover:bg-sol-cobalt-soft",
     variant === "champagne" &&
       "bg-[linear-gradient(135deg,#FFFDFB_0%,#F2ECE2_55%,#DCC08B_100%)] text-sol-navy shadow-[0_10px_30px_rgba(220,192,139,0.22)] hover:brightness-[1.04]",
     variant === "danger" &&
@@ -99,7 +100,7 @@ export function Card({
 }
 
 const PILL: Record<string, string> = {
-  violet: "bg-sol-violet-soft text-sol-violet-deep border-sol-violet/25",
+  cobalt: "bg-sol-cobalt-soft text-sol-cobalt-deep border-sol-cobalt/25",
   champagne: "bg-sol-champagne-soft text-sol-champagne-deep border-sol-champagne/40",
   neutral: "bg-sol-ivory text-sol-secondary border-sol-border",
   warning: "bg-sol-warning-soft text-sol-warning border-sol-warning/30",
@@ -120,7 +121,7 @@ export function Pill({
   return (
     <span
       className={cn(
-        "inline-flex min-h-7 items-center gap-1.5 rounded-full border px-3 text-[0.875rem] font-semibold",
+        "inline-flex min-h-7 items-center gap-1.5 rounded-full border px-3 text-[0.9375rem] font-semibold",
         PILL[tone],
         className,
       )}
@@ -239,7 +240,7 @@ export function EmptyState({
 export function Fact({ label, children }: { label: string; children: ReactNode }) {
   return (
     <div className="min-w-0">
-      <dt className="text-[0.875rem] font-bold uppercase tracking-[0.1em] text-sol-champagne-deep">
+      <dt className="text-[0.9375rem] font-bold uppercase tracking-[0.1em] text-sol-champagne-deep">
         {label}
       </dt>
       <dd className="mt-1.5 text-[1.0625rem] leading-snug text-sol-ink">{children}</dd>

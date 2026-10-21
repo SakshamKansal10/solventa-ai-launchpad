@@ -24,6 +24,14 @@ import {
   type EvidenceType,
   type ProofState,
 } from "@/lib/proof/state";
+import {
+  assumptionStatus,
+  linkMissions,
+  nextAssumptionAction,
+  type AssumptionStatus,
+  type NextAction,
+} from "@/lib/proof/links";
+import { globalWeekNumbers, missionStateFromDb, type MissionState } from "@/lib/roadmap/state";
 
 export const EVIDENCE_TYPES = [
   "interview",
@@ -71,6 +79,15 @@ export interface AssumptionDTO {
   supporters: number;
   contradictors: number;
   evidence: EvidenceDTO[];
+  /** Not tested / Testing / Supported / Contradicted / Inconclusive — from the
+   * evidence; a linked mission only moves "not tested" to "testing". */
+  status: AssumptionStatus;
+  /** The roadmap missions that test this assumption (the other half of the link
+   * each mission card shows). */
+  missions: LinkedMissionDTO[];
+  nextAction: NextAction;
+  /** The latest evidence date, else when the assumption was written. */
+  updatedAt: string;
   history: {
     evidenceId: string;
     at: string;
@@ -78,6 +95,25 @@ export interface AssumptionDTO {
     to: ProofState;
     reason: { code: string; params: Record<string, number> };
   }[];
+}
+
+export interface LinkedMissionDTO {
+  id: string;
+  title: string;
+  weekId: string | null;
+  weekNumber: number | null;
+  state: MissionState;
+  evidenceCount: number;
+}
+
+/** A roadmap mission as the Evidence workspace needs it. */
+export interface MissionLinkRow {
+  id: string;
+  what: string;
+  status: Database["public"]["Tables"]["roadmap_tasks"]["Row"]["status"];
+  assumption_category: string | null;
+  week_id: string | null;
+  weekNumber: number | null;
 }
 
 export interface ProofOverview {
@@ -89,8 +125,11 @@ export interface ProofOverview {
   unassigned: EvidenceDTO[];
   needsGeneration: boolean;
   counts: Record<ProofState, number>;
+  statusCounts: Record<AssumptionStatus, number>;
   /** Whether evidence can carry a title on this database (migration 0012). */
   titleSupported: boolean;
+  /** The roadmap whose missions test these assumptions, if one exists. */
+  roadmapId: string | null;
 }
 
 type Db = SupabaseClient<Database>;
@@ -140,7 +179,13 @@ export function buildAssumptionDTOs(
   assumptions: AssumptionRow[],
   evidence: EvidenceRow[],
   taskTitles: Map<string, string>,
+  tasks: MissionLinkRow[] = [],
 ): AssumptionDTO[] {
+  const links = linkMissions(assumptions, tasks, evidence);
+  const evidenceByTask = new Map<string, number>();
+  for (const e of evidence) {
+    if (e.task_id) evidenceByTask.set(e.task_id, (evidenceByTask.get(e.task_id) ?? 0) + 1);
+  }
   return [...assumptions]
     .sort((a, b) => a.position - b.position)
     .map((a) => {
@@ -155,6 +200,25 @@ export function buildAssumptionDTOs(
         created_at: e.created_at,
       }));
       const result = deriveProofState(like, threshold);
+      const missions: LinkedMissionDTO[] = tasks
+        .filter((t) => links.get(t.id) === a.id)
+        .sort((x, y) => (x.weekNumber ?? 0) - (y.weekNumber ?? 0))
+        .map((t) => ({
+          id: t.id,
+          title: t.what,
+          weekId: t.week_id,
+          weekNumber: t.weekNumber,
+          state: missionStateFromDb(t.status),
+          evidenceCount: evidenceByTask.get(t.id) ?? 0,
+        }));
+      const status = assumptionStatus(
+        result.state,
+        missions.some((m) => m.state !== "not_started"),
+      );
+      const latest = rows
+        .map((e) => e.occurred_on)
+        .sort()
+        .at(-1);
       return {
         id: a.id,
         position: a.position,
@@ -173,10 +237,65 @@ export function buildAssumptionDTOs(
             (x, y) =>
               y.occurredOn.localeCompare(x.occurredOn) || y.createdAt.localeCompare(x.createdAt),
           ),
+        status,
+        missions,
+        nextAction: nextAssumptionAction(status, result, threshold, missions),
+        updatedAt: latest ?? a.updated_at ?? a.created_at,
         history: replayStateHistory(like, threshold),
       };
     });
 }
+
+/** The missions of the founder's roadmap for this opportunity, numbered by week,
+ * so assumptions can show which missions test them. Empty before a roadmap. */
+async function loadMissionLinks(
+  supabase: Db,
+  userId: string,
+  opportunityId: string,
+): Promise<{ roadmapId: string | null; tasks: MissionLinkRow[] }> {
+  const roadmap = await supabase
+    .from("roadmaps")
+    .select("id")
+    .eq("user_id", userId)
+    .eq("opportunity_id", opportunityId)
+    .neq("status", "archived")
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  if (roadmap.error || !roadmap.data) return { roadmapId: null, tasks: [] };
+  const phases = await supabase
+    .from("roadmap_phases")
+    .select(
+      "order_index, roadmap_weeks(id, order_index, roadmap_tasks(id, what, status, assumption_category, week_id))",
+    )
+    .eq("roadmap_id", roadmap.data.id)
+    .eq("user_id", userId);
+  if (phases.error) return { roadmapId: roadmap.data.id, tasks: [] };
+  type WeekRow = {
+    id: string;
+    order_index: number;
+    roadmap_tasks: Omit<MissionLinkRow, "weekNumber">[];
+  };
+  const rows = (phases.data ?? []) as unknown as {
+    order_index: number;
+    roadmap_weeks: WeekRow[];
+  }[];
+  const numbers = globalWeekNumbers(rows);
+  const tasks = rows.flatMap((p) =>
+    p.roadmap_weeks.flatMap((w) =>
+      w.roadmap_tasks.map((t) => ({ ...t, weekNumber: numbers.get(w.id) ?? null })),
+    ),
+  );
+  return { roadmapId: roadmap.data.id, tasks };
+}
+
+const EMPTY_STATUS_COUNTS: Record<AssumptionStatus, number> = {
+  not_tested: 0,
+  testing: 0,
+  supported: 0,
+  contradicted: 0,
+  inconclusive: 0,
+};
 
 async function loadTaskTitles(supabase: Db, userId: string, evidence: EvidenceRow[]) {
   const ids = Array.from(
@@ -210,7 +329,9 @@ export async function loadProofOverview(
       unassigned: [],
       needsGeneration: false,
       counts: { ...EMPTY_COUNTS },
+      statusCounts: { ...EMPTY_STATUS_COUNTS },
       titleSupported: false,
+      roadmapId: null,
     };
   }
 
@@ -231,8 +352,13 @@ export async function loadProofOverview(
   if (eRes.error) throw new Error(eRes.error.message);
 
   const evidence = eRes.data ?? [];
-  const taskTitles = await loadTaskTitles(supabase, userId, evidence);
-  const assumptions = buildAssumptionDTOs(aRes.data ?? [], evidence, taskTitles);
+  const [taskTitles, links] = await Promise.all([
+    loadTaskTitles(supabase, userId, evidence),
+    loadMissionLinks(supabase, userId, opportunityId),
+  ]);
+  const assumptions = buildAssumptionDTOs(aRes.data ?? [], evidence, taskTitles, links.tasks);
+  const statusCounts = { ...EMPTY_STATUS_COUNTS };
+  for (const a of assumptions) statusCounts[a.status]++;
 
   return {
     available: true,
@@ -241,7 +367,9 @@ export async function loadProofOverview(
     unassigned: evidence.filter((e) => !e.assumption_id).map((e) => toEvidenceDTO(e, taskTitles)),
     needsGeneration: assumptions.length === 0,
     counts: summarizeStates(assumptions.map((a) => a.state)),
+    statusCounts,
     titleSupported: caps.evidenceTitle,
+    roadmapId: links.roadmapId,
   };
 }
 
@@ -251,6 +379,10 @@ export const getProofOverview = createServerFn({ method: "GET" })
     const { supabase, user } = await requireUser();
     return loadProofOverview(supabase, user.id, data.opportunityId);
   });
+
+/** In-flight generations by opportunity, so two pages opening at once (This Week
+ * and Evidence) make one AI call; the unique index still guards across servers. */
+const generating = new Map<string, Promise<{ created: boolean; usedFallback: boolean }>>();
 
 /** Creates the 3-4 critical assumptions for an opportunity exactly once.
  * (opportunity_id, position) is unique, so two concurrent first-opens converge
@@ -262,55 +394,68 @@ export const generateAssumptions = createServerFn({ method: "POST" })
   )
   .handler(async ({ data }): Promise<{ created: boolean; usedFallback: boolean }> => {
     const { supabase, user } = await requireUser();
-    const caps = await getSchemaCapabilities(supabase);
-    if (!caps.proof) throw new Error("PROOF_UNAVAILABLE");
-    const opp = await ownedOpportunity(supabase, user.id, data.opportunityId);
-
-    const existing = await supabase
-      .from("proof_assumptions")
-      .select("id", { count: "exact", head: true })
-      .eq("opportunity_id", data.opportunityId)
-      .eq("user_id", user.id);
-    if ((existing.count ?? 0) > 0) return { created: false, usedFallback: false };
-
-    const pkg = opp.candidate as unknown as OpportunityPackage | OpportunityCandidate;
-    let plan: ProofAssumptionPlan[];
-    let usedFallback = false;
-    try {
-      const dna = await supabase
-        .from("business_dna")
-        .select("normalized_signals")
-        .eq("id", opp.business_dna_id)
-        .single();
-      if (dna.error || !dna.data) throw new Error("profile not found");
-      plan = await generateProofAssumptions(
-        dna.data.normalized_signals as unknown as NormalizedProfile,
-        pkg,
-        data.locale ?? "en",
-      );
-    } catch (err) {
-      console.error("[proof] assumption generation failed, using template:", err);
-      plan = templateAssumptions(pkg);
-      usedFallback = true;
-    }
-
-    const { error } = await supabase.from("proof_assumptions").insert(
-      plan.map((a, i) => ({
-        user_id: user.id,
-        opportunity_id: data.opportunityId,
-        position: i,
-        title: a.title,
-        category: a.category,
-        why_it_matters: a.whyItMatters,
-        next_test: a.nextTest,
-        success_threshold: a.successThreshold,
-        origin: usedFallback ? ("template" as const) : ("ai" as const),
-      })),
-    );
-    // 23505: another request created the set first — exactly what we wanted.
-    if (error && error.code !== "23505") throw new Error(error.message);
-    return { created: !error, usedFallback };
+    const key = `${user.id}:${data.opportunityId}`;
+    const running = generating.get(key);
+    if (running) return running;
+    const job = createAssumptions(supabase, user.id, data).finally(() => generating.delete(key));
+    generating.set(key, job);
+    return job;
   });
+
+async function createAssumptions(
+  supabase: Db,
+  userId: string,
+  data: { opportunityId: string; locale?: "en" | "hi" },
+): Promise<{ created: boolean; usedFallback: boolean }> {
+  const caps = await getSchemaCapabilities(supabase);
+  if (!caps.proof) throw new Error("PROOF_UNAVAILABLE");
+  const opp = await ownedOpportunity(supabase, userId, data.opportunityId);
+
+  const existing = await supabase
+    .from("proof_assumptions")
+    .select("id", { count: "exact", head: true })
+    .eq("opportunity_id", data.opportunityId)
+    .eq("user_id", userId);
+  if ((existing.count ?? 0) > 0) return { created: false, usedFallback: false };
+
+  const pkg = opp.candidate as unknown as OpportunityPackage | OpportunityCandidate;
+  let plan: ProofAssumptionPlan[];
+  let usedFallback = false;
+  try {
+    const dna = await supabase
+      .from("business_dna")
+      .select("normalized_signals")
+      .eq("id", opp.business_dna_id)
+      .single();
+    if (dna.error || !dna.data) throw new Error("profile not found");
+    plan = await generateProofAssumptions(
+      dna.data.normalized_signals as unknown as NormalizedProfile,
+      pkg,
+      data.locale ?? "en",
+    );
+  } catch (err) {
+    console.error("[proof] assumption generation failed, using template:", err);
+    plan = templateAssumptions(pkg);
+    usedFallback = true;
+  }
+
+  const { error } = await supabase.from("proof_assumptions").insert(
+    plan.map((a, i) => ({
+      user_id: userId,
+      opportunity_id: data.opportunityId,
+      position: i,
+      title: a.title,
+      category: a.category,
+      why_it_matters: a.whyItMatters,
+      next_test: a.nextTest,
+      success_threshold: a.successThreshold,
+      origin: usedFallback ? ("template" as const) : ("ai" as const),
+    })),
+  );
+  // 23505: another request created the set first — exactly what we wanted.
+  if (error && error.code !== "23505") throw new Error(error.message);
+  return { created: !error, usedFallback };
+}
 
 const httpUrl = z
   .string()

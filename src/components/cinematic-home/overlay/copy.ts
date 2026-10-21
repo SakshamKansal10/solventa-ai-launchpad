@@ -44,6 +44,8 @@ export interface Caption {
    * end  — the finale composition
    */
   place: "low" | "top" | "end";
+  /** A founder-signal caption: which signal, so it carries that signal's semantic icon. */
+  signal?: (typeof SIGNALS)[number]["id"];
 }
 
 /** Each founder signal's value as deliberate lines (set very large, one data point at a time). */
@@ -67,6 +69,7 @@ const DATA: Caption[] = SIGNALS.map((s, i) => {
     lines: DATUM_LINES[s.id],
     span: ["context", a + 0.1, "context", next + 0.1],
     place: "low",
+    signal: s.id,
   };
 });
 

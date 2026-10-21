@@ -1,4 +1,4 @@
-import { Gem3D } from "@/components/founder/three/Gem3D";
+import { BrandMark } from "@/components/brand/Brand";
 import { useState, type FormEvent } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
@@ -150,8 +150,8 @@ function SignInPage() {
     <div className="min-h-screen bg-sol-page">
       <Header />
       <main className="sol-world-bg flex min-h-screen flex-col items-center justify-center gap-2 px-[18px] pt-[76px] sm:px-6">
-        <Gem3D variant="crystal" className="h-36 w-36" />
-        <div className="w-full max-w-[400px] rounded-3xl border border-sol-border bg-sol-surface/90 px-6 py-8 shadow-[0_18px_50px_-28px_rgba(88,64,185,0.4)] backdrop-blur-sm sm:px-8">
+        <BrandMark height={56} className="mb-4" />
+        <div className="w-full max-w-[400px] rounded-3xl border border-sol-border bg-sol-surface/90 px-6 py-8 shadow-[0_18px_50px_-28px_rgba(16,28,50,0.25)] backdrop-blur-sm sm:px-8">
           {mode === "otp" ? (
             <>
               <h1 className="font-display text-2xl font-semibold text-sol-ink">
@@ -209,7 +209,7 @@ function SignInPage() {
                     type="button"
                     disabled={resendCooldown > 0 || loading}
                     onClick={requestCode}
-                    className="font-medium text-sol-violet-deep disabled:text-sol-muted"
+                    className="font-medium text-sol-cobalt-deep disabled:text-sol-muted"
                   >
                     {resendCooldown > 0
                       ? t("auth.otp.resendIn", { s: resendCooldown })

@@ -1,14 +1,15 @@
 /** Proof: assumptions, evidence, and the deterministic state each one is in. */
 const en = {
-  "pf.title": "Proof",
+  "pf.title": "Evidence",
   "pf.collected": "Evidence collected",
   "pf.moreToValidate": "More to validate",
   "pf.subtitle":
     "Why Solventia suggested this idea for you, and what has to be true for it to work.",
-  "pf.fit.title": "Why this idea fits you",
+  "pf.fit.title": "Why this direction fits you",
   "pf.fit.sub": "Based on what you told us in your consultation.",
   "pf.assume.title": "What has to be true",
-  "pf.assume.sub": "The key assumptions behind this idea, and why each one matters.",
+  "pf.assume.sub":
+    "The key assumptions behind this direction, the missions that test them, and what you have recorded.",
   "pf.showMore": "Show more",
   "pf.stream.title": "Evidence stream",
   "pf.stream.supports": "Supports",
@@ -35,8 +36,8 @@ const en = {
   "pf.type.screenshot": "Screenshot",
   "pf.type.survey": "Survey",
   "pf.noDirection.title": "Choose a direction first",
-  "pf.noDirection.body": "Proof tracks the assumptions behind the direction you're building.",
-  "pf.unavailable.title": "Proof isn't ready yet",
+  "pf.noDirection.body": "Evidence tracks the assumptions behind the direction you're building.",
+  "pf.unavailable.title": "Evidence isn't ready yet",
   "pf.unavailable.body":
     "This workspace is still being updated. Your evidence isn't lost — try again in a little while.",
   "pf.generating": "Writing the assumptions worth testing…",
@@ -140,15 +141,16 @@ const en = {
 };
 
 const hi: Record<keyof typeof en, string> = {
-  "pf.title": "प्रमाण",
+  "pf.title": "सबूत",
   "pf.collected": "जुटाया गया साक्ष्य",
   "pf.moreToValidate": "और जाँचने बाकी",
   "pf.subtitle":
     "Solventia ने यह आइडिया आपके लिए क्यों सुझाया, और इसके काम करने के लिए क्या सच होना चाहिए।",
-  "pf.fit.title": "यह आइडिया आपके लिए क्यों सही है",
+  "pf.fit.title": "यह दिशा आपके लिए क्यों सही है",
   "pf.fit.sub": "आपकी कंसल्टेशन में बताई गई बातों पर आधारित।",
   "pf.assume.title": "क्या सच होना चाहिए",
-  "pf.assume.sub": "इस आइडिया के पीछे की मुख्य धारणाएं, और हर एक क्यों मायने रखती है।",
+  "pf.assume.sub":
+    "इस दिशा के पीछे की मुख्य धारणाएं, उन्हें परखने वाले मिशन, और आपने क्या दर्ज किया है।",
   "pf.showMore": "और दिखाएं",
   "pf.stream.title": "साक्ष्य धारा",
   "pf.stream.supports": "पक्ष में",
@@ -176,8 +178,8 @@ const hi: Record<keyof typeof en, string> = {
   "pf.type.screenshot": "स्क्रीनशॉट",
   "pf.type.survey": "सर्वे",
   "pf.noDirection.title": "पहले एक दिशा चुनें",
-  "pf.noDirection.body": "प्रमाण उस दिशा की धारणाओं को दर्ज करता है जिस पर आप काम कर रहे हैं।",
-  "pf.unavailable.title": "प्रमाण अभी तैयार नहीं है",
+  "pf.noDirection.body": "सबूत उस दिशा की धारणाओं को दर्ज करता है जिस पर आप काम कर रहे हैं।",
+  "pf.unavailable.title": "सबूत अभी तैयार नहीं है",
   "pf.unavailable.body":
     "यह वर्कस्पेस अभी अपडेट हो रहा है। आपके साक्ष्य खोए नहीं हैं — थोड़ी देर बाद फिर कोशिश करें।",
   "pf.generating": "परखने लायक धारणाएं लिखी जा रही हैं…",

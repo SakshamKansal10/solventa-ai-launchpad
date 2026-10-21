@@ -19,7 +19,8 @@ import { useState, type ReactNode } from "react";
 import { cn } from "@/lib/utils";
 
 import { OpportunityPhoto, useOpportunityImage } from "@/components/founder/OpportunityImage";
-import { FitPill } from "@/components/founder/OpportunityCards";
+import { directionIcon, FitPill } from "@/components/founder/OpportunityCards";
+import { DirectionCompare } from "@/components/founder/dashboard/DirectionCompare";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import {
   Button,
@@ -56,9 +57,12 @@ function OpportunityRow({
   onChoose,
   choosing,
   canChoose,
+  recommended = false,
 }: {
   brief: OpportunityBrief;
   section: Section;
+  /** The direction the Command Center recommends (before anything is chosen). */
+  recommended?: boolean;
   onChoose?: () => void;
   choosing?: boolean;
   canChoose: boolean;
@@ -80,14 +84,14 @@ function OpportunityRow({
     const shownFacts = facts.filter((f) => f.value);
     return (
       <article className="sol-atmosphere" data-testid="opp-selected" aria-label={brief.title}>
-        <div className="relative z-10 grid gap-6 p-6 sm:p-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.15fr)] lg:items-center lg:gap-10">
+        <div className="relative z-10 grid gap-6 p-6 sm:p-8 @4xl:grid-cols-[minmax(0,1fr)_minmax(0,1.15fr)] @4xl:items-center @4xl:gap-10">
           <div className="flex flex-col justify-center gap-5">
             <div className="flex flex-wrap items-center gap-2.5">
-              <p className="sol-eyebrow flex items-center gap-2 !text-[0.6875rem] !uppercase !tracking-[0.14em]">
-                <span className="h-3 w-0.5 rounded-full bg-sol-violet" aria-hidden="true" />
+              <p className="sol-eyebrow flex items-center gap-2 !text-[0.9375rem]">
+                <span className="h-3 w-0.5 rounded-full bg-sol-cobalt" aria-hidden="true" />
                 {t("opp.list.featured")}
               </p>
-              <Pill tone="violet">{t("opp.status.selected")}</Pill>
+              <Pill tone="cobalt">{t("opp.status.selected")}</Pill>
             </div>
             <h3 className="max-w-[16ch] font-display text-[clamp(1.75rem,1.3rem+1.6vw,2.75rem)] font-medium leading-[1.1] text-sol-ink">
               {brief.title}
@@ -105,7 +109,7 @@ function OpportunityRow({
           </div>
           {(description || shownFacts.length > 0) && (
             <div className="rounded-3xl border border-sol-border bg-white/70 p-5 backdrop-blur sm:p-6">
-              <p className="flex items-center gap-2.5 text-[1rem] font-medium text-sol-violet-deep">
+              <p className="flex items-center gap-2.5 text-[1rem] font-medium text-sol-cobalt-deep">
                 <span className="flex size-8 items-center justify-center rounded-full bg-sol-champagne-soft">
                   <Lightbulb className="size-4" aria-hidden="true" />
                 </span>
@@ -125,7 +129,7 @@ function OpportunityRow({
                       </span>
                       <div className="min-w-0">
                         <p className="text-[0.9375rem] font-medium text-sol-ink">{f.label}</p>
-                        <p className="line-clamp-2 text-[0.875rem] leading-snug text-sol-secondary">
+                        <p className="line-clamp-2 text-[0.9375rem] leading-snug text-sol-secondary">
                           {f.value}
                         </p>
                       </div>
@@ -140,24 +144,30 @@ function OpportunityRow({
     );
   }
 
+  const Icon = directionIcon(brief.category, brief.title);
   return (
     <Card
       as="article"
-      className="group flex h-full flex-col p-5 transition-colors hover:border-sol-violet/40 sm:p-6"
+      className="group flex h-full flex-col p-5 transition-colors hover:border-sol-cobalt/40 sm:p-6"
       data-testid={`opp-${section}`}
     >
       <div className="flex items-start gap-4">
         <span
-          className="flex size-14 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-sol-violet-soft text-sol-violet-deep"
+          className="flex size-14 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-sol-cobalt-soft text-sol-cobalt-deep"
           data-testid={image.url ? "opp-thumb" : undefined}
         >
           {image.url ? (
             <img src={image.url} alt="" className="size-full object-cover" draggable={false} />
           ) : (
-            <Lightbulb className="size-6" strokeWidth={1.75} aria-hidden="true" />
+            <Icon className="size-6" strokeWidth={1.75} aria-hidden="true" />
           )}
         </span>
         <div className="min-w-0 flex-1">
+          {recommended && (
+            <p className="sol-eyebrow mb-1 !text-[0.9375rem] !normal-case !tracking-normal !text-sol-champagne-deep">
+              {t("opp.list.recommendedTag")}
+            </p>
+          )}
           <div className="flex items-start justify-between gap-3">
             <h3 className="sol-h3 min-w-0">{brief.title}</h3>
             <FitPill fit={brief.fit} />
@@ -173,7 +183,7 @@ function OpportunityRow({
         <ul className="mt-4 flex flex-col gap-2.5 border-t border-sol-border pt-4 sm:pl-[4.5rem]">
           {brief.whyFit.slice(0, 3).map((reason) => (
             <li key={reason} className="flex items-start gap-3 text-[0.9375rem] text-sol-secondary">
-              <span className="mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full bg-sol-violet-soft text-sol-violet-deep">
+              <span className="mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full bg-sol-cobalt-soft text-sol-cobalt-deep">
                 <Check className="size-3" strokeWidth={3} aria-hidden="true" />
               </span>
               <span className="min-w-0">{reason}</span>
@@ -254,10 +264,15 @@ function OpportunitiesPage() {
     (b) => (fitFilter === "all" || b.fit === fitFilter) && textMatch(b),
   );
   const filtering = q !== "" || fitFilter !== "all";
-  const fitOptions = (["strong", "moderate", "conditional"] as const).filter((f) =>
-    alternatives.some((b) => b.fit === f),
+  const fitOptions = (["strong", "moderate", "conditional", "weak", "provisional"] as const).filter(
+    (f) => alternatives.some((b) => b.fit === f),
   );
   const showToolbar = alternatives.length > 0;
+  // Every live direction of this consultation, in the order they were presented.
+  const comparable = inView
+    .filter((b) => b.status !== "dismissed")
+    .sort((a, b) => direction.viewedIds.indexOf(a.id) - direction.viewedIds.indexOf(b.id))
+    .slice(0, 4);
 
   return (
     <div className="flex flex-col gap-8" data-testid="opportunities-page">
@@ -281,6 +296,12 @@ function OpportunitiesPage() {
         </section>
       )}
 
+      {comparable.length > 1 && !filtering && (
+        <section id="compare" aria-label={t("cc.compare.heading")} className="scroll-mt-24">
+          <DirectionCompare briefs={comparable} />
+        </section>
+      )}
+
       {showToolbar && (
         <div className="flex items-center gap-3">
           <label className="relative block min-w-0 flex-1">
@@ -295,7 +316,7 @@ function OpportunitiesPage() {
               onChange={(e) => setQuery(e.target.value)}
               placeholder={t("opp.list.searchPlaceholder")}
               data-testid="opp-search"
-              className="h-12 w-full rounded-full border border-sol-border bg-sol-surface pl-11 pr-4 text-[0.9375rem] text-sol-ink outline-none placeholder:text-sol-secondary/70 focus-visible:border-sol-violet/60 focus-visible:ring-2 focus-visible:ring-sol-violet/30"
+              className="h-12 w-full rounded-full border border-sol-border bg-sol-surface pl-11 pr-4 text-[0.9375rem] text-sol-ink outline-none placeholder:text-sol-secondary/70 focus-visible:border-sol-cobalt/60 focus-visible:ring-2 focus-visible:ring-sol-cobalt/30"
             />
           </label>
           {fitOptions.length > 1 && (
@@ -304,12 +325,12 @@ function OpportunitiesPage() {
                 <button
                   type="button"
                   data-testid="opp-filters"
-                  className="flex h-12 shrink-0 cursor-pointer items-center gap-2.5 rounded-full border border-sol-border bg-sol-surface px-5 text-[0.9375rem] font-medium text-sol-ink transition-colors hover:border-sol-violet/40"
+                  className="flex h-12 shrink-0 cursor-pointer items-center gap-2.5 rounded-full border border-sol-border bg-sol-surface px-5 text-[0.9375rem] font-medium text-sol-ink transition-colors hover:border-sol-cobalt/40"
                 >
                   <SlidersHorizontal className="size-4" aria-hidden="true" />
                   {t("opp.list.filters")}
                   {fitFilter !== "all" && (
-                    <span className="size-2 rounded-full bg-sol-violet" aria-hidden="true" />
+                    <span className="size-2 rounded-full bg-sol-cobalt" aria-hidden="true" />
                   )}
                 </button>
               </PopoverTrigger>
@@ -324,11 +345,11 @@ function OpportunitiesPage() {
                       className={cn(
                         "flex min-h-10 cursor-pointer items-center justify-between rounded-xl px-3 text-left text-[0.9375rem] transition-colors",
                         fitFilter === f
-                          ? "bg-sol-violet-soft font-medium text-sol-violet-deep"
+                          ? "bg-sol-cobalt-soft font-medium text-sol-cobalt-deep"
                           : "text-sol-ink hover:bg-sol-ivory",
                       )}
                     >
-                      {f === "all" ? t("opp.list.filterAll") : t(`fit.${f}` as const)}
+                      {f === "all" ? t("opp.list.filterAll") : t(`fit2.label.${f}` as const)}
                       {fitFilter === f && <Check className="size-4" aria-hidden="true" />}
                     </button>
                   ))}
@@ -349,13 +370,14 @@ function OpportunitiesPage() {
         <section aria-labelledby="alt-h" className="flex flex-col gap-4">
           <div className="flex items-center gap-3">
             <h2 id="alt-h" className="sol-h-sm !text-[1.0625rem]">
-              {t("opp.list.alternatives")}
+              {/* Before a choice every direction is listed, the recommended one first. */}
+              {selected ? t("opp.list.alternatives") : t("opp.list.all")}
             </h2>
-            <span className="rounded-full bg-sol-ivory px-2.5 py-0.5 text-[0.8125rem] font-medium text-sol-secondary">
+            <span className="rounded-full bg-sol-ivory px-2.5 py-0.5 text-[0.9375rem] font-medium text-sol-secondary">
               {shownAlternatives.length}
             </span>
           </div>
-          <div className="grid gap-5 lg:grid-cols-2">
+          <div className="grid gap-5 @4xl:grid-cols-2">
             {shownAlternatives.map((b) => (
               <OpportunityRow
                 key={b.id}
@@ -364,6 +386,7 @@ function OpportunitiesPage() {
                 canChoose={canChoose}
                 choosing={choose.isPending && choose.variables === b.id}
                 onChoose={() => choose.mutate(b.id)}
+                recommended={!selected && b.id === direction.flagshipId}
               />
             ))}
           </div>
@@ -381,7 +404,7 @@ function OpportunitiesPage() {
             data-testid="explore-more-generate"
           >
             <Compass className="size-5" aria-hidden="true" />
-            {t("cc.exploreMore")}
+            {t("cc.findMore")}
           </Button>
           {explore.isPending && (
             <p role="status" className="text-[1rem] text-sol-secondary">

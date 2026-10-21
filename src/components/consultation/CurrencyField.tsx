@@ -25,7 +25,7 @@ export function CurrencyField({
 
   return (
     <div>
-      <div className="flex h-12 items-center gap-2 rounded-2xl border border-sol-border bg-sol-surface px-4 focus-within:border-sol-violet focus-within:ring-2 focus-within:ring-sol-violet/30">
+      <div className="flex h-12 items-center gap-2 rounded-2xl border border-sol-border bg-sol-surface px-4 focus-within:border-sol-cobalt focus-within:ring-2 focus-within:ring-sol-cobalt/30">
         <span className="text-[1.125rem] font-medium text-sol-secondary">{currencySymbol}</span>
         <input
           type="text"

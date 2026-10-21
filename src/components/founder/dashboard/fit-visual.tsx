@@ -1,10 +1,10 @@
-import type { FitRow } from "@/lib/fit/matrix";
+import type { FactorAssessment } from "@/lib/fit/model";
 import type { MessageKey } from "@/lib/i18n";
 import { useLocale } from "@/lib/i18n/LocaleProvider";
 import { FitStatusPill } from "../fit";
 import { FIT_ICONS } from "./fit-constants";
 
-/* Founder fit is a qualitative matrix — never a number. Each row shows its status word. */
+/* Founder fit is shown as levels per factor — never a number. Each row shows its level word. */
 
 /** Capability / Resources / Access / Ambition, each an icon tile + label + pips.
  * `tiles` lays the four out as a row of cards instead of a list. */
@@ -12,7 +12,7 @@ export function FitSignals({
   rows,
   layout = "list",
 }: {
-  rows: FitRow[];
+  rows: FactorAssessment[];
   layout?: "list" | "tiles" | "chips";
 }) {
   const { t } = useLocale();
@@ -30,10 +30,10 @@ export function FitSignals({
                 <Icon className="size-4" aria-hidden="true" />
               </span>
               <span className="flex min-w-0 flex-col items-start gap-0.5">
-                <span className="max-w-full truncate text-[0.8125rem] font-medium leading-none text-sol-ink">
-                  {t(`fit.row.${row.key}` as MessageKey)}
+                <span className="max-w-full truncate text-[0.9375rem] font-medium leading-none text-sol-ink">
+                  {t(`fit2.factor.${row.key}` as MessageKey)}
                 </span>
-                <FitStatusPill status={row.status} />
+                <FitStatusPill score={row.score} />
               </span>
             </li>
           );
@@ -44,7 +44,7 @@ export function FitSignals({
   if (layout === "tiles") {
     return (
       <div className="@container">
-        <ul className="grid grid-cols-2 gap-3 @[40rem]:grid-cols-4" data-testid="fit-signals">
+        <ul className="grid grid-cols-2 gap-3 @[40rem]:grid-cols-5" data-testid="fit-signals">
           {rows.map((row) => {
             const Icon = FIT_ICONS[row.key];
             return (
@@ -56,9 +56,9 @@ export function FitSignals({
                   <Icon className="size-5" aria-hidden="true" />
                 </span>
                 <span className="max-w-full truncate text-[1rem] font-medium text-sol-ink">
-                  {t(`fit.row.${row.key}` as MessageKey)}
+                  {t(`fit2.factor.${row.key}` as MessageKey)}
                 </span>
-                <FitStatusPill status={row.status} />
+                <FitStatusPill score={row.score} />
               </li>
             );
           })}
@@ -76,9 +76,9 @@ export function FitSignals({
               <span className="flex size-8 items-center justify-center rounded-lg bg-sol-champagne-soft text-sol-champagne-deep">
                 <Icon className="size-4" aria-hidden="true" />
               </span>
-              {t(`fit.row.${row.key}` as MessageKey)}
+              {t(`fit2.factor.${row.key}` as MessageKey)}
             </span>
-            <FitStatusPill status={row.status} />
+            <FitStatusPill score={row.score} />
           </li>
         );
       })}

@@ -18,14 +18,17 @@ export function ProgressRing({
   value,
   total,
   label,
-  tone = "violet",
+  tone = "cobalt",
   testId,
+  showLabel = true,
 }: {
   value: number;
   total: number;
   label: string;
-  tone?: "violet" | "champagne";
+  tone?: "cobalt" | "champagne";
   testId?: string;
+  /** Off where a heading right above already names it (the label stays for screen readers). */
+  showLabel?: boolean;
 }) {
   const reduceMotion = useReducedMotion();
   const frac = total > 0 ? Math.min(1, value / total) : 0;
@@ -54,7 +57,7 @@ export function ProgressRing({
             strokeWidth={9}
             strokeLinecap="round"
             strokeDasharray={CIRC}
-            className={tone === "violet" ? "stroke-sol-violet" : "stroke-sol-champagne-deep"}
+            className={tone === "cobalt" ? "stroke-sol-cobalt" : "stroke-sol-champagne-deep"}
             initial={{ strokeDashoffset: reduceMotion ? CIRC * (1 - frac) : CIRC }}
             animate={{ strokeDashoffset: CIRC * (1 - frac) }}
             transition={{ duration: 0.9, ease: EASE }}
@@ -67,9 +70,11 @@ export function ProgressRing({
           </span>
         </span>
       </div>
-      <span className="text-[0.875rem] font-bold uppercase tracking-[0.08em] text-sol-secondary">
-        {label}
-      </span>
+      {showLabel && (
+        <span className="text-[0.9375rem] font-bold uppercase tracking-[0.08em] text-sol-secondary">
+          {label}
+        </span>
+      )}
     </div>
   );
 }
@@ -125,7 +130,7 @@ export interface TrackMission {
 }
 
 /** This week as a short track: one node per mission, then the lock that opens
- * the next week. Done nodes are champagne, the active one violet. */
+ * the next week. Done nodes are champagne, the active one cobalt. */
 export function WeekTrack({
   missions,
   unlocked,
@@ -158,12 +163,12 @@ export function WeekTrack({
               aria-label={m.title}
               data-state={m.state}
               data-testid="track-node"
-              className="relative flex size-12 shrink-0 items-center justify-center rounded-full outline-none focus-visible:ring-2 focus-visible:ring-sol-violet/60"
+              className="relative flex size-12 shrink-0 items-center justify-center rounded-full outline-none focus-visible:ring-2 focus-visible:ring-sol-cobalt/60"
             >
               {active && !reduceMotion && (
                 <motion.span
                   aria-hidden="true"
-                  className="absolute inset-0 rounded-full border-2 border-sol-violet/60"
+                  className="absolute inset-0 rounded-full border-2 border-sol-cobalt/60"
                   animate={{ scale: [1, 1.3], opacity: [0.7, 0] }}
                   transition={{ duration: 1.8, repeat: Infinity, ease: "easeOut" }}
                 />
@@ -174,7 +179,7 @@ export function WeekTrack({
                   done
                     ? "border-sol-champagne bg-sol-champagne text-sol-ink"
                     : active
-                      ? "border-sol-violet bg-sol-violet text-white"
+                      ? "border-sol-cobalt bg-sol-cobalt text-white"
                       : "border-sol-border-strong bg-sol-surface text-sol-secondary",
                 )}
               >
@@ -245,14 +250,14 @@ export function JourneyRibbon({
               title={p.title}
               aria-label={p.title}
               className={cn(
-                "flex items-center gap-2 text-left text-[0.875rem] font-bold uppercase tracking-[0.08em] outline-none focus-visible:ring-2 focus-visible:ring-sol-violet/50",
-                p.current ? "text-sol-violet-deep" : "text-sol-secondary",
+                "flex items-center gap-2 text-left text-[0.9375rem] font-bold uppercase tracking-[0.08em] outline-none focus-visible:ring-2 focus-visible:ring-sol-cobalt/50",
+                p.current ? "text-sol-cobalt-deep" : "text-sol-secondary",
               )}
             >
               <span
                 className={cn(
-                  "flex size-6 items-center justify-center rounded-full text-[0.875rem]",
-                  p.current ? "bg-sol-violet text-white" : "bg-sol-ivory-depth text-sol-secondary",
+                  "flex size-6 items-center justify-center rounded-full text-[0.9375rem]",
+                  p.current ? "bg-sol-cobalt text-white" : "bg-sol-ivory-depth text-sol-secondary",
                 )}
               >
                 {p.number}
@@ -268,7 +273,7 @@ export function JourneyRibbon({
                     w.state === "completed"
                       ? "bg-sol-champagne"
                       : w.state === "current"
-                        ? "bg-sol-violet"
+                        ? "bg-sol-cobalt"
                         : "bg-sol-ivory-depth",
                   )}
                   initial={{ opacity: 0, scaleY: reduceMotion ? 1 : 0.2 }}
@@ -330,7 +335,7 @@ export function MomentumBars({
                 <span
                   className={cn(
                     "h-1.5 rounded-full",
-                    d.today ? "bg-sol-violet/40" : "bg-sol-ivory-depth",
+                    d.today ? "bg-sol-cobalt/40" : "bg-sol-ivory-depth",
                   )}
                 />
               ) : (
@@ -343,7 +348,7 @@ export function MomentumBars({
                     transition={{ duration: 0.5, delay: i * 0.03 }}
                   />
                   <motion.span
-                    className="w-full rounded-b-md bg-sol-violet"
+                    className="w-full rounded-b-md bg-sol-cobalt"
                     style={{ height: `${(d.missions / max) * 100}%` }}
                     initial={{ scaleY: reduceMotion ? 1 : 0 }}
                     animate={{ scaleY: 1 }}
@@ -355,9 +360,9 @@ export function MomentumBars({
           );
         })}
       </div>
-      <div className="flex gap-4 text-[0.875rem] font-semibold text-sol-secondary">
+      <div className="flex gap-4 text-[0.9375rem] font-semibold text-sol-secondary">
         <span className="flex items-center gap-1.5">
-          <span className="size-2.5 rounded-sm bg-sol-violet" aria-hidden="true" />
+          <span className="size-2.5 rounded-sm bg-sol-cobalt" aria-hidden="true" />
           {missionsLabel}
         </span>
         <span className="flex items-center gap-1.5">
@@ -447,7 +452,7 @@ export interface PathStep {
 }
 
 /** A short path for the dark command surface: finished stops are champagne with a
- * tick, the current stop is violet and pulses, the rest are outlined. It shows
+ * tick, the current stop is cobalt and pulses, the rest are outlined. It shows
  * where the founder is — the button beside it is what moves them forward. */
 export function StepPath({
   steps,
@@ -488,7 +493,7 @@ export function StepPath({
                     className={cn(
                       "absolute left-[19.5px] top-10 h-5 w-[3px] rounded-full sm:hidden",
                       flow === "done" && "bg-sol-champagne",
-                      flow === "toCurrent" && "bg-gradient-to-b from-sol-champagne to-sol-violet",
+                      flow === "toCurrent" && "bg-gradient-to-b from-sol-champagne to-sol-cobalt",
                       flow === "idle" && "bg-white/15",
                     )}
                   />
@@ -497,7 +502,7 @@ export function StepPath({
                     className={cn(
                       "absolute left-1/2 top-[21px] hidden h-[3px] w-full origin-left rounded-full sm:block",
                       flow === "done" && "bg-sol-champagne",
-                      flow === "toCurrent" && "bg-gradient-to-r from-sol-champagne to-sol-violet",
+                      flow === "toCurrent" && "bg-gradient-to-r from-sol-champagne to-sol-cobalt",
                       flow === "idle" && "bg-white/15",
                     )}
                     initial={{ scaleX: reduceMotion ? 1 : 0 }}
@@ -510,7 +515,7 @@ export function StepPath({
                 {current && !reduceMotion && (
                   <motion.span
                     aria-hidden="true"
-                    className="absolute inset-0.5 rounded-full border-2 border-sol-violet/70"
+                    className="absolute inset-0.5 rounded-full border-2 border-sol-cobalt/70"
                     animate={{ scale: [1, 1.35], opacity: [0.7, 0] }}
                     transition={{ duration: 1.8, repeat: Infinity, ease: "easeOut" }}
                   />
@@ -524,7 +529,7 @@ export function StepPath({
                     done
                       ? "border-sol-champagne bg-sol-champagne text-sol-navy"
                       : current
-                        ? "border-sol-violet bg-sol-violet text-white shadow-[0_0_0_4px_rgba(114,87,216,0.28)]"
+                        ? "border-sol-cobalt bg-sol-cobalt text-white shadow-[0_0_0_4px_rgba(49,94,219,0.28)]"
                         : "border-white/25 bg-transparent text-white/55",
                   )}
                 >
@@ -535,14 +540,14 @@ export function StepPath({
                   ) : current && s.warn ? (
                     <TriangleAlert className="size-4" aria-hidden="true" />
                   ) : (
-                    <span className="text-[0.875rem] font-bold">{i + 1}</span>
+                    <span className="text-[0.9375rem] font-bold">{i + 1}</span>
                   )}
                 </motion.span>
               </span>
               <span className="flex min-h-11 min-w-0 flex-col justify-center sm:min-h-0 sm:items-center sm:justify-start sm:text-center">
                 <span
                   className={cn(
-                    "text-[0.875rem] font-semibold leading-tight sm:mt-1.5",
+                    "text-[0.9375rem] font-semibold leading-tight sm:mt-1.5",
                     done || current ? "text-white" : "text-white/60",
                   )}
                 >
@@ -551,7 +556,7 @@ export function StepPath({
                 {s.note && (
                   <span
                     className={cn(
-                      "mt-0.5 text-[0.875rem] leading-tight",
+                      "mt-0.5 text-[0.9375rem] leading-tight",
                       current ? "font-semibold text-sol-champagne" : "text-white/45",
                     )}
                   >
@@ -615,7 +620,7 @@ export function JourneyPreview({ steps, ariaLabel }: { steps: PreviewStep[]; ari
                 className={cn(
                   "relative z-10 flex size-[54px] shrink-0 items-center justify-center rounded-full border-2",
                   first
-                    ? "border-sol-violet bg-sol-violet text-white shadow-[0_8px_22px_rgba(112,88,215,0.3)]"
+                    ? "border-sol-cobalt bg-sol-cobalt text-white shadow-[0_8px_22px_rgba(112,88,215,0.3)]"
                     : "border-dashed border-sol-border-strong bg-sol-surface text-sol-secondary",
                 )}
               >
@@ -623,8 +628,8 @@ export function JourneyPreview({ steps, ariaLabel }: { steps: PreviewStep[]; ari
               </motion.span>
               <span
                 className={cn(
-                  "flex min-h-[54px] items-center text-[0.875rem] font-bold uppercase tracking-[0.06em] sm:mt-2.5 sm:min-h-0 sm:text-center",
-                  first ? "text-sol-violet-deep" : "text-sol-secondary",
+                  "flex min-h-[54px] items-center text-[0.9375rem] font-bold uppercase tracking-[0.06em] sm:mt-2.5 sm:min-h-0 sm:text-center",
+                  first ? "text-sol-cobalt-deep" : "text-sol-secondary",
                 )}
               >
                 {s.label}

@@ -282,7 +282,7 @@ export function FounderProfileSection({ data }: { data: SettingsData }) {
         <div
           role="status"
           data-testid="profile-changed-banner"
-          className="flex flex-col gap-3 rounded-2xl border border-sol-violet/30 bg-sol-violet-soft p-5"
+          className="flex flex-col gap-3 rounded-2xl border border-sol-cobalt/30 bg-sol-cobalt-soft p-5"
         >
           <p className="text-[1.125rem] font-semibold text-sol-ink">
             {t("set.founder.changedTitle")}

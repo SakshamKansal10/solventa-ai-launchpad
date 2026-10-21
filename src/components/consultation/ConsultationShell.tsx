@@ -29,7 +29,7 @@ import { ProfileSignals } from "./ProfileSignals";
 import { ScreenView } from "./ScreenView";
 import { SubmitStep } from "./SubmitStep";
 
-/** Seven segments — champagne once a stage is behind you, violet for the one
+/** Seven segments — champagne once a stage is behind you, cobalt for the one
  * you're in, ivory for what's ahead. A plain progress line, never a percentage. */
 function StageProgress({ stage }: { stage: number }) {
   const { t } = useLocale();
@@ -56,7 +56,7 @@ function StageProgress({ stage }: { stage: number }) {
             className={cn(
               "h-1.5 flex-1 rounded-full transition-colors duration-[240ms]",
               i + 1 < stage && "bg-sol-champagne",
-              i + 1 === stage && "bg-sol-violet",
+              i + 1 === stage && "bg-sol-cobalt",
               i + 1 > stage && "bg-sol-ivory-depth",
             )}
           />
@@ -111,7 +111,7 @@ export function ConsultationShell({
             <SheetTrigger asChild>
               <button
                 type="button"
-                className="inline-flex min-h-10 items-center gap-1.5 rounded-full border border-sol-border px-3 text-[0.9375rem] font-medium text-sol-ink hover:border-sol-violet/45 xl:hidden"
+                className="inline-flex min-h-10 items-center gap-1.5 rounded-full border border-sol-border px-3 text-[0.9375rem] font-medium text-sol-ink hover:border-sol-cobalt/45 xl:hidden"
               >
                 <UserRound className="size-4" aria-hidden="true" />
                 <span className="hidden sm:inline">{t("consult.panel.open")}</span>
@@ -129,7 +129,7 @@ export function ConsultationShell({
           <Link
             to={editMode ? "/dashboard/settings" : "/"}
             aria-label={t("consult.exit")}
-            className="flex size-10 items-center justify-center rounded-full border border-sol-border text-sol-secondary hover:border-sol-violet/45 hover:text-sol-ink"
+            className="flex size-10 items-center justify-center rounded-full border border-sol-border text-sol-secondary hover:border-sol-cobalt/45 hover:text-sol-ink"
           >
             <X className="size-4" aria-hidden="true" />
           </Link>
@@ -143,12 +143,12 @@ export function ConsultationShell({
               <div
                 role="status"
                 data-testid="resumed-note"
-                className="mb-5 flex flex-wrap items-center justify-between gap-2 rounded-2xl border border-sol-violet/25 bg-sol-violet-soft px-4 py-3 text-[1rem] text-sol-ink"
+                className="mb-5 flex flex-wrap items-center justify-between gap-2 rounded-2xl border border-sol-cobalt/25 bg-sol-cobalt-soft px-4 py-3 text-[1rem] text-sol-ink"
               >
                 <span>{t("consult.resumed")}</span>
                 <button
                   type="button"
-                  className="font-semibold text-sol-violet-deep underline-offset-4 hover:underline"
+                  className="font-semibold text-sol-cobalt-deep underline-offset-4 hover:underline"
                   onClick={() => setConfirmRestart(true)}
                 >
                   {t("consult.startOver")}
@@ -192,12 +192,12 @@ export function ConsultationShell({
                     {c.canContinue && (
                       <p
                         key={c.current?.key}
-                        className="sol-reveal hidden flex-1 items-center justify-center gap-2 text-[0.9375rem] font-semibold text-sol-violet-deep sm:flex"
+                        className="sol-reveal hidden flex-1 items-center justify-center gap-2 text-[0.9375rem] font-semibold text-sol-cobalt-deep sm:flex"
                         data-testid="signal-added"
                       >
                         <span className="relative flex size-2.5">
-                          <span className="absolute inline-flex size-full animate-ping rounded-full bg-sol-violet/50" />
-                          <span className="relative inline-flex size-2.5 rounded-full bg-sol-violet" />
+                          <span className="absolute inline-flex size-full animate-ping rounded-full bg-sol-cobalt/50" />
+                          <span className="relative inline-flex size-2.5 rounded-full bg-sol-cobalt" />
                         </span>
                         {t("consult.signalAdded")}
                       </p>

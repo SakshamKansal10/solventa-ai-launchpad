@@ -28,7 +28,7 @@ export function ForOrganizations() {
         className="pointer-events-none absolute inset-x-0 top-0 mx-auto h-[320px] max-w-[1180px]"
         style={{
           background:
-            "radial-gradient(ellipse 500px 320px at 50% 25%, rgba(114,87,216,.08), transparent 70%)",
+            "radial-gradient(ellipse 500px 320px at 50% 25%, rgba(49,94,219,.08), transparent 70%)",
         }}
         aria-hidden="true"
       />
@@ -63,7 +63,7 @@ export function ForOrganizations() {
         className="relative mt-14 overflow-hidden rounded-[28px] bg-sol-navy px-8 py-14 lg:px-16"
         style={{
           backgroundImage:
-            "radial-gradient(circle at 90% 15%, rgba(114,87,216,.20), transparent 48%)",
+            "radial-gradient(circle at 90% 15%, rgba(49,94,219,.20), transparent 48%)",
         }}
       >
         <span

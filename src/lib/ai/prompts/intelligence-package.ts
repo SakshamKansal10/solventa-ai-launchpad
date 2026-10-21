@@ -5,6 +5,7 @@ import { env } from "@/lib/env.server";
 import {
   FounderDNASchema,
   FitFactorsSchema,
+  DirectionStructureSchema,
   type SolventiaIntelligencePackage,
   type OpportunityPackage,
   type OpportunityPackageBatch,
@@ -128,6 +129,7 @@ const FlatOpportunitySchema = z.object({
       "One honest sentence on why this is a good time for THIS founder to pursue this — a real timing signal, never generic hype.",
     ),
   fitSignals: FitFactorsSchema,
+  ...DirectionStructureSchema.shape,
 });
 type FlatOpportunity = z.infer<typeof FlatOpportunitySchema>;
 
@@ -223,6 +225,8 @@ TITLES AND STYLE. Opportunity titles should be short, memorable, and business-sp
 
 OVERVIEW HEADLINES. problemHeadline/solutionHeadline/customerHeadline/moneyHeadline exist so a founder can scan the whole opportunity shape in under ten seconds, before reading any full sentence — each is a genuine 3-7 word PHRASE, not a shortened sentence with the period removed and not a restatement of the title. Concrete examples of the right length and register: problemHeadline "Manual order entry wastes hours", solutionHeadline "Automated order-to-invoice sync", customerHeadline "Small online store owners", moneyHeadline "Monthly subscription per store". Wrong: a 15-word clause, a vague abstraction like "market inefficiency", or copying the title.
 
+STRUCTURE OF EACH DIRECTION. deliveryModel says plainly how the offer reaches the customer. criticalAssumptions are the 2-4 riskiest things that must be true, riskiest first — the first one always tests demand (does this customer have the problem and want it solved), before supplier, product or build questions; each is a testable hypothesis, never stated as fact. successCriteria are observable signals that the first validation test worked, each with a count the founder can check in a week or two ("3 of 8 owners ask for a paid trial") — never a revenue or follower target. reconsiderIf names the observable signals that should make the founder revise or drop the direction. None of these may invent market numbers, named buyers, or facts about the founder.
+
 CURRENCY: the founder profile states their exact currency (ISO code and symbol) — every monetary value you produce (startingCapital text, startupCapitalAmount number, any cost/price/revenue figure anywhere) MUST be in that currency, at a realistic magnitude and cost-of-living for the founder's actual country and city. Never default to Indian Rupees or lakh/crore phrasing unless the founder's currency is genuinely INR. Never invent an exchange rate or mention any currency other than the founder's own.
 
 Before responding, privately verify every opportunity against all of the above — no hard constraint violated, no fabricated fact or statistic, no generic whyNow, no permanent founder-hours-only business without an explicit reason, no skill-keyword matching, no lowball idea for a high-potential founder, no unrealistic moonshot for a resource-constrained one, and a clear customer/problem/product/wedge/path-to-scale for each. Fix anything that fails before responding. Respond with ONLY the JSON object matching the schema — no markdown fences, no commentary, no chain-of-thought, no extra fields.`;
@@ -233,6 +237,7 @@ const OPPORTUNITY_CONTRACT = `{
     "whyThisFounder": string[exactly 3], "businessModelPlainEnglish": string, "startingCapital": string, "weeklyTime": string,
     "difficulty": "Beginner-friendly"|"Moderate"|"Challenging", "skillsAlreadyOwned": string[0-5], "skillsToLearn": string[0-5], "resourceRequirements": string[0-4],
     "advantages": string[2-4], "tradeoffs": string[1-4], "risks": string[1-4], "unknowns": string[0-3], "validationNeeded": string[0-3], "revenuePath": string, "firstExperiment": string, "whyNow": string,
+    "deliveryModel": string, "criticalAssumptions": [2-4 objects: { "statement": string, "category": "problem"|"willingness_to_pay"|"distribution"|"delivery"|"retention"|"pricing"|"competition"|"other" }], "successCriteria": string[1-3], "reconsiderIf": string[1-3],
     "fitSignals": { "requiredSkills": [{"name": string, "minLevel": "never_tried"|"beginner"|"comfortable"|"advanced"}], "startupCapitalAmount": number, "weeklyHoursNeeded": number,
       "riskLevel": "cautious"|"balanced"|"experimental", "motivationAlignment": "high"|"medium"|"low", "requiresLeadership": boolean, "requiresSales": boolean, "soloFriendly": boolean,
       "relevantExperienceYears": number, "requiresDigitalAssets": boolean, "locationFlexible": boolean,
