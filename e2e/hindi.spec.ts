@@ -135,7 +135,11 @@ test.describe("Hindi — the founder workspace", () => {
     await useHindi(context);
     const { seeded } = await founderWithDirections(context);
     await gotoApp(page, "/dashboard");
-    await page.getByTestId("flagship-choose").click();
+    // The recommended direction is reviewed, then chosen on its own page.
+    await page.getByTestId("flagship-explore").click();
+    await page.getByTestId("choose-direction").click();
+    await expect(page.getByTestId("build-roadmap")).toBeVisible();
+    await gotoApp(page, "/dashboard");
     await page.getByTestId("build-roadmap").click();
     await expect(page.getByTestId("roadmap-page")).toBeVisible({ timeout: 60_000 });
 

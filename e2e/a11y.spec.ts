@@ -84,15 +84,14 @@ test.describe("accessibility (WCAG 2.1 A/AA, serious and critical only)", () => 
     findings.push(...(await audit(page, "command-center A")));
 
     // State B: the dark build surface, then on to the roadmap.
-    await page.getByTestId("flagship-choose").click();
+    // The recommended direction is reviewed, then chosen on its own page.
+    await page.getByTestId("flagship-explore").click();
+    await page.getByTestId("choose-direction").click();
+    await expect(page.getByTestId("build-roadmap")).toBeVisible();
+    await gotoApp(page, "/dashboard");
     await expect(page.getByTestId("build-roadmap")).toBeEnabled();
     await expect(page.getByTestId("chosen-fit")).toBeVisible();
     await page.waitForLoadState("networkidle");
-    // The customer → problem → product chain fades in. Audit the settled frame
-    // (every item fully opaque), not a mid-fade one — the rules are unchanged.
-    const chainItems = page.getByTestId("chosen-direction").getByRole("listitem");
-    await expect(chainItems).toHaveCount(3);
-    for (let i = 0; i < 3; i++) await expect(chainItems.nth(i)).toHaveCSS("opacity", "1");
     findings.push(...(await audit(page, "command-center B")));
     await page.getByTestId("build-roadmap").click();
     await expect(page).toHaveURL(/\/dashboard\/roadmap/, { timeout: 60_000 });

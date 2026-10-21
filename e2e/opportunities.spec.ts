@@ -33,23 +33,23 @@ test.describe("Opportunities", () => {
       .getByRole("button", { name: "Choose" })
       .click();
     // Choosing takes the founder to the Command Center, where the next step is.
-    await expect(page.locator("h1")).toHaveText("Your direction is chosen");
+    await expect(page.locator("h1")).toHaveText("Your direction is chosen. Now let's test it.");
     await gotoApp(page, "/dashboard/opportunities");
     await expect(page.getByTestId("opp-selected")).toHaveCount(1);
     await expect(page.getByTestId("opp-alternative")).toHaveCount(2);
   });
 
-  test("detail has Overview, Founder Fit, Market, Economics and Proof", async ({
+  test("detail has Overview, Fit with you and Market & validation", async ({
     page,
     context,
   }) => {
     const { seeded } = await founderWithDirections(context);
     await gotoApp(page, `/dashboard/opportunities/${seeded.opportunityIds[0]}`);
     await expect(page.getByTestId("opportunity-title")).toBeVisible();
-    for (const tab of ["overview", "fit", "market", "economics", "proof"]) {
+    for (const tab of ["overview", "fit", "market"]) {
       await expect(page.getByTestId(`tab-${tab}`)).toBeVisible();
     }
-    await expect(page.getByRole("tab")).toHaveCount(5);
+    await expect(page.getByRole("tab")).toHaveCount(3);
 
     // Overview: six large, scannable blocks.
     for (const block of ["customer", "pain", "product", "revenue", "wedge", "scale"]) {
@@ -57,15 +57,15 @@ test.describe("Opportunities", () => {
     }
   });
 
-  test("Founder Fit is qualitative: an overall label, four rows with reasons, advantages and gaps — no numbers", async ({
+  test("Founder Fit is qualitative: one canonical label, five factor rows with reasons, advantages and gaps — no numbers", async ({
     page,
     context,
   }) => {
     const { seeded } = await founderWithDirections(context);
     await gotoApp(page, `/dashboard/opportunities/${seeded.opportunityIds[0]}?tab=fit`);
     await expect(page.getByTestId("founder-fit")).toBeVisible();
-    await expect(page.getByTestId("fit-overall")).toHaveText(/^(Strong|Moderate|Conditional) fit$/);
-    for (const row of ["capability", "resources", "access", "ambition"]) {
+    await expect(page.getByTestId("fit-overall")).toHaveText(/^((Strong|Moderate|Conditional|Weak) fit|Provisional — more information needed)$/);
+    for (const row of ["access", "resources", "capability", "time", "goals"]) {
       await expect(page.getByTestId(`fit-row-${row}`)).toBeVisible();
     }
     const text = await page.getByTestId("founder-fit").innerText();

@@ -19,7 +19,7 @@ test.describe("Command Center — state A: directions ready", () => {
     const seeded = await seedDirections(user.id);
     await gotoApp(page, "/dashboard");
 
-    await expect(page.locator("h1")).toHaveText("Your top idea is ready");
+    await expect(page.locator("h1")).toHaveText("Your strongest direction is ready to explore.");
     await expect(page.getByTestId("flagship-card")).toBeVisible();
     // Only the recommended idea is here; the others live on the Opportunities page.
     await expect(page.getByTestId("alternative-card")).toHaveCount(0);
@@ -44,13 +44,16 @@ test.describe("Command Center — state A: directions ready", () => {
     await seedDirections(user.id);
     await gotoApp(page, "/dashboard");
 
-    await page.getByTestId("flagship-choose").click();
-    await expect(page.locator("h1")).toHaveText("Your direction is chosen");
-    await expect(page.getByTestId("chosen-direction")).toBeVisible();
+    // The recommended direction is reviewed, then chosen on its own page.
+    await page.getByTestId("flagship-explore").click();
+    await page.getByTestId("choose-direction").click();
+    await expect(page.getByTestId("build-roadmap")).toBeVisible();
+    await gotoApp(page, "/dashboard");
+    await expect(page.locator("h1")).toHaveText("Your direction is chosen. Now let's test it.");
     await expect(page.getByTestId("build-roadmap")).toBeEnabled();
     // Survives a reload (it is saved, not just local state).
     await page.reload();
-    await expect(page.locator("h1")).toHaveText("Your direction is chosen");
+    await expect(page.locator("h1")).toHaveText("Your direction is chosen. Now let's test it.");
   });
 
   test("Explore more opens the Opportunities page, where more directions are added through one Gemini call", async ({
@@ -116,7 +119,7 @@ test.describe("current-consultation rule", () => {
     });
 
     await gotoApp(page, "/dashboard");
-    await expect(page.locator("h1")).toHaveText("Your top idea is ready");
+    await expect(page.locator("h1")).toHaveText("Your strongest direction is ready to explore.");
     const flagship = await page.getByTestId("flagship-card").innerText();
     expect(newer.titles.some((t) => flagship.includes(t))).toBe(true);
   });
