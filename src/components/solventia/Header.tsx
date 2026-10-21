@@ -35,9 +35,9 @@ import { cn } from "@/lib/utils";
  * ABOUT are real routes. No "Explore Ideas" (Solventia isn't a public
  * idea catalogue) and no top-level "Roadmaps" (roadmaps live inside
  * Product / How It Works). */
-const SCROLL_NAV: { labelKey: MessageKey; id: string }[] = [
-  { labelKey: "nav.product", id: "founder-signal" },
-  { labelKey: "nav.howItWorks", id: "how-it-works" },
+const SCROLL_NAV: { labelKey: MessageKey; id: string; route: "/" | "/how-it-works" }[] = [
+  { labelKey: "nav.product", id: "founder-signal", route: "/" },
+  { labelKey: "nav.howItWorks", id: "how-it-works", route: "/how-it-works" },
 ];
 const SCROLL_IDS = SCROLL_NAV.map((item) => item.id);
 
@@ -98,12 +98,15 @@ export function Header({ pendingNext }: HeaderProps = {}) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // A section on this page is scrolled to; otherwise its page opens. The
+  // cinematic homepage has no such sections, so "/#how-it-works" was a dead link.
   function handleScrollNav(id: string) {
     setMobileOpen(false);
-    if (isHome) {
+    const item = SCROLL_NAV.find((x) => x.id === id);
+    if (document.getElementById(id)) {
       scrollToSection(id);
-    } else {
-      navigate({ to: "/", hash: id });
+    } else if (item) {
+      navigate({ to: item.route });
     }
   }
 

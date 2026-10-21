@@ -29,7 +29,11 @@ test.describe("Settings — profile and photo", () => {
 
     await page.getByTestId("name-input").fill("Asha Verma Kapoor");
     await expect(page.getByTestId("save-name")).toBeEnabled();
+    await expect(page.getByTestId("name-state")).toHaveAttribute("data-state", "unsaved");
     await page.getByTestId("save-name").click();
+    // "Saved" only once the server confirmed it.
+    await expect(page.getByTestId("name-state")).toHaveAttribute("data-state", "saved");
+    await expect(page.getByTestId("name-state")).toHaveText("Saved");
     await expect(page.getByTestId("sidebar-account")).toContainText("Asha Verma Kapoor");
     const rows = await sql<{ full_name: string }>("select full_name from profiles where id = $1", [
       user.id,
@@ -44,6 +48,7 @@ test.describe("Settings — profile and photo", () => {
     await gotoApp(page, "/dashboard/settings");
     await page.getByTestId("name-input").fill("   ");
     await expect(page.getByTestId("save-name")).toBeDisabled();
+    await expect(page.getByTestId("name-state")).toHaveAttribute("data-state", "empty");
   });
 
   test("photo priority is custom upload, then Google photo, then initials — with safe fallbacks", async ({

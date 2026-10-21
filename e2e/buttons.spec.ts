@@ -25,6 +25,11 @@ test.describe("public buttons", () => {
       .click();
     await expect(page).toHaveURL(/\/consultation$/);
 
+    // From another page the header's section links open real pages (the film has no anchors).
+    await gotoApp(page, "/about");
+    await page.getByRole("banner").getByRole("button", { name: "How It Works" }).first().click();
+    await expect(page).toHaveURL(/\/how-it-works$/);
+
     await gotoApp(page, "/how-it-works");
     await page.getByTestId("language-switch").click();
     await expect(page.locator("html")).toHaveAttribute("lang", "hi");

@@ -11,6 +11,7 @@ const FOOTER_LINKS: {
   labelKey: MessageKey;
   id?: string;
   to?:
+    | "/"
     | "/find-my-business-idea"
     | "/how-it-works"
     | "/for-organizations"
@@ -19,7 +20,7 @@ const FOOTER_LINKS: {
     | "/privacy"
     | "/terms";
 }[] = [
-  { labelKey: "nav.product", id: "founder-signal" },
+  { labelKey: "nav.product", to: "/" },
   { labelKey: "nav.findMyBusinessIdea", to: "/find-my-business-idea" },
   { labelKey: "nav.howItWorks", to: "/how-it-works" },
   { labelKey: "nav.forOrganizations", to: "/for-organizations" },

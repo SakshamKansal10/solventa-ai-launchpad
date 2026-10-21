@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
+import { Check } from "lucide-react";
 
 import { FounderProfileSection } from "@/components/founder/settings/FounderProfileSection";
 import { PageHero } from "@/components/founder/proof/PageHero";
@@ -65,10 +66,13 @@ function ProfileSection({ data }: { data: SettingsData }) {
   const queryClient = useQueryClient();
   const [name, setName] = useState(data.fullName ?? "");
   useEffect(() => setName(data.fullName ?? ""), [data.fullName]);
+  // "Saved" is shown only after the server confirmed this exact value.
+  const [savedName, setSavedName] = useState<string | null>(null);
 
   const save = useMutation({
-    mutationFn: () => updateProfileName({ data: { fullName: name.trim() } }),
-    onSuccess: async () => {
+    mutationFn: (fullName: string) => updateProfileName({ data: { fullName } }),
+    onSuccess: async (_res, fullName) => {
+      setSavedName(fullName);
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: qk.settings }),
         queryClient.invalidateQueries({ queryKey: qk.currentUser }),
@@ -82,6 +86,17 @@ function ProfileSection({ data }: { data: SettingsData }) {
   });
   const dirty = name.trim() !== (data.fullName ?? "").trim();
   const valid = name.trim().length > 0 && name.trim().length <= 80;
+  const state = save.isPending
+    ? "saving"
+    : save.isError && dirty
+      ? "error"
+      : !valid && dirty
+        ? "empty"
+        : dirty
+          ? "unsaved"
+          : savedName !== null && savedName === name.trim()
+            ? "saved"
+            : null;
 
   return (
     <Card
@@ -96,7 +111,7 @@ function ProfileSection({ data }: { data: SettingsData }) {
         className="flex flex-col gap-5"
         onSubmit={(e) => {
           e.preventDefault();
-          if (dirty && valid && !save.isPending) save.mutate();
+          if (dirty && valid && !save.isPending) save.mutate(name.trim());
         }}
       >
         <label className="flex max-w-md flex-col gap-1.5">
@@ -120,15 +135,32 @@ function ProfileSection({ data }: { data: SettingsData }) {
           </p>
           <span className="sol-support">{t("set.profile.emailNote")}</span>
         </div>
-        <Button
-          type="submit"
-          className="self-start"
-          disabled={!dirty || !valid}
-          loading={save.isPending}
-          data-testid="save-name"
-        >
-          {save.isPending ? t("common.saving") : t("set.profile.save")}
-        </Button>
+        <div className="flex flex-wrap items-center gap-4">
+          <Button
+            type="submit"
+            disabled={!dirty || !valid}
+            loading={save.isPending}
+            data-testid="save-name"
+          >
+            {save.isPending ? t("common.saving") : t("set.profile.save")}
+          </Button>
+          <p
+            role={state === "error" || state === "empty" ? "alert" : "status"}
+            data-testid="name-state"
+            data-state={state ?? "idle"}
+            className={cn(
+              "flex min-h-6 items-center gap-1.5 text-[0.9375rem]",
+              state === "error" || state === "empty"
+                ? "text-sol-warning"
+                : state === "saved"
+                  ? "text-sol-cobalt-deep"
+                  : "text-sol-secondary",
+            )}
+          >
+            {state === "saved" && <Check className="size-4" aria-hidden="true" />}
+            {state && t(`set.profile.state.${state}` as const)}
+          </p>
+        </div>
       </form>
     </Card>
   );
