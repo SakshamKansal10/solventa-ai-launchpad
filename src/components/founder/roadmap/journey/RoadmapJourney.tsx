@@ -131,7 +131,7 @@ export function RoadmapJourney({
             )}
             <div className="mt-3 flex flex-wrap items-center gap-2" data-testid="roadmap-now">
               <p
-                className="flex items-center gap-2 rounded-full border border-sol-border bg-sol-surface/80 px-3 py-1 text-[0.8125rem] font-medium text-sol-ink"
+                className="flex items-center gap-2 rounded-full border border-sol-border bg-sol-surface/80 px-3 py-1 text-[0.9375rem] font-medium text-sol-ink"
                 data-testid="current-week-number"
               >
                 <span className="size-2 rounded-full bg-sol-cobalt" aria-hidden="true" />
@@ -144,7 +144,7 @@ export function RoadmapJourney({
               </p>
               {currentWeek && (
                 <>
-                  <span className="flex items-center gap-2 rounded-full border border-sol-border bg-sol-surface/80 px-3 py-1 text-[0.8125rem] font-medium text-sol-ink">
+                  <span className="flex items-center gap-2 rounded-full border border-sol-border bg-sol-surface/80 px-3 py-1 text-[0.9375rem] font-medium text-sol-ink">
                     <CalendarDays className="size-3.5" aria-hidden="true" />
                     {t("rm.header.weekOf", {
                       n: String(currentWeek.number).padStart(2, "0"),
@@ -155,7 +155,7 @@ export function RoadmapJourney({
                     type="button"
                     data-testid="next-checkpoint"
                     onClick={() => onOpenWeek(currentWeek.number)}
-                    className="flex items-center gap-1.5 rounded-full border border-sol-border bg-sol-surface/80 px-3 py-1 text-[0.8125rem] font-medium text-sol-cobalt-deep transition-colors hover:border-sol-cobalt/50"
+                    className="flex items-center gap-1.5 rounded-full border border-sol-border bg-sol-surface/80 px-3 py-1 text-[0.9375rem] font-medium text-sol-cobalt-deep transition-colors hover:border-sol-cobalt/50"
                   >
                     {t("rm.week.review")}
                     <ArrowRight className="size-3.5" aria-hidden="true" />
@@ -263,7 +263,7 @@ const PhaseLabel = forwardRef<
         {phase.state === "current" && <span className="size-2 rounded-full bg-sol-cobalt" />}
       </span>
       <span className="min-w-0">
-        <span className="flex flex-wrap items-center gap-x-2 text-[0.8125rem] font-semibold uppercase tracking-[0.08em] text-sol-secondary">
+        <span className="flex flex-wrap items-center gap-x-2 text-[0.9375rem] font-semibold uppercase tracking-[0.08em] text-sol-secondary">
           {t(`rm.stage.${stageOf(phase.key)}` as const)}
           <span className="font-medium normal-case tracking-normal tabular-nums">
             {t("rm.phase.n", { n: index + 1 })}
@@ -277,7 +277,7 @@ const PhaseLabel = forwardRef<
         >
           {title}
         </span>
-        <span className="mt-0.5 flex flex-wrap items-center gap-x-2 text-[0.8125rem] text-sol-secondary">
+        <span className="mt-0.5 flex flex-wrap items-center gap-x-2 text-[0.9375rem] text-sol-secondary">
           {t(
             phase.state === "completed"
               ? "rm.state.completed"
@@ -344,12 +344,12 @@ function PhaseDetailsPanel({
         />
         <div className="grid gap-x-10 gap-y-6 @2xl:grid-cols-[minmax(0,1fr)_auto]">
           <div className="min-w-0">
-            <p className="sol-eyebrow !text-[0.8125rem]">{t("rm.phase.n", { n: index + 1 })}</p>
+            <p className="sol-eyebrow !text-[0.9375rem]">{t("rm.phase.n", { n: index + 1 })}</p>
             <h2 className="mt-1 font-semibold !text-[1.5rem] leading-tight text-sol-ink">
               {text.phaseTitle(phase.id, phase.title)}
             </h2>
             {phase.description && (
-              <p className="mt-2 line-clamp-2 text-[0.875rem] leading-snug text-sol-secondary">
+              <p className="mt-2 line-clamp-2 text-[0.9375rem] leading-snug text-sol-secondary">
                 {phase.description}
               </p>
             )}
@@ -367,7 +367,7 @@ function PhaseDetailsPanel({
                   style={{ width: `${Math.round(pct * 100)}%` }}
                 />
               </div>
-              <p className="mt-2 text-[0.8125rem] text-sol-secondary">
+              <p className="mt-2 text-[0.9375rem] text-sol-secondary">
                 {t("rm.phase.progress", { x: weeksDone, y: weeks.length })}
                 {missionTotal > 0 && (
                   <> · {t("rm.journey.missionsDone", { x: missionDone, y: missionTotal })}</>
@@ -393,7 +393,7 @@ function PhaseDetailsPanel({
                     onClick={() => onOpenWeek(w.number)}
                     aria-label={t("common.weekN", { n: String(w.number).padStart(2, "0") })}
                     className={cn(
-                      "flex size-7 items-center justify-center rounded-full border text-[0.8125rem] font-semibold transition-all duration-300 disabled:cursor-default",
+                      "flex size-7 items-center justify-center rounded-full border text-[0.9375rem] font-semibold transition-all duration-300 disabled:cursor-default",
                       w.id === view.currentWeekId
                         ? "border-sol-cobalt bg-sol-cobalt text-white shadow-[0_0_0_4px_rgba(49,94,219,0.16)]"
                         : w.state === "completed"
@@ -414,7 +414,7 @@ function PhaseDetailsPanel({
             </ol>
             {locked && (
               <p
-                className="mt-5 flex items-center gap-2 text-[0.875rem] font-medium text-sol-secondary"
+                className="mt-5 flex items-center gap-2 text-[0.9375rem] font-medium text-sol-secondary"
                 data-testid="phase-locked-note"
               >
                 <Lock className="size-4 shrink-0" aria-hidden="true" />

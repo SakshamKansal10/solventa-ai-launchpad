@@ -174,7 +174,7 @@ export function MissionCard({
       >
         <div className="relative flex flex-wrap items-center gap-x-4 gap-y-2">
           <div className="min-w-0 flex-1 basis-56">
-            <p className="sol-eyebrow flex flex-wrap items-center gap-x-2 !text-[0.8125rem]">
+            <p className="sol-eyebrow flex flex-wrap items-center gap-x-2 !text-[0.9375rem]">
               <span>{t("rm.mission.n", { n: pad })}</span>
               {inProgress && (
                 <span className="font-semibold normal-case tracking-normal text-sol-cobalt-deep">
@@ -210,7 +210,7 @@ export function MissionCard({
           <div className="relative z-10 flex shrink-0 flex-wrap items-center justify-end gap-2">
             {!mission.required && <Pill tone="neutral">{t("common.optional")}</Pill>}
             {time && (
-              <span className="mr-1 inline-flex items-center gap-1.5 text-[0.8125rem] text-sol-secondary">
+              <span className="mr-1 inline-flex items-center gap-1.5 text-[0.9375rem] text-sol-secondary">
                 <Clock className="size-3.5" aria-hidden="true" />
                 {time}
               </span>
@@ -247,7 +247,7 @@ export function MissionCard({
                         >
                           <span
                             aria-hidden="true"
-                            className="mt-[1px] flex size-5 shrink-0 items-center justify-center rounded-full bg-sol-cobalt-soft text-[0.8125rem] font-semibold text-sol-cobalt-deep"
+                            className="mt-[1px] flex size-5 shrink-0 items-center justify-center rounded-full bg-sol-cobalt-soft text-[0.9375rem] font-semibold text-sol-cobalt-deep"
                           >
                             {i + 1}
                           </span>
@@ -264,7 +264,7 @@ export function MissionCard({
                   className="flex min-w-0 flex-col gap-1.5 rounded-xl bg-sol-pearl px-3.5 py-3"
                   data-testid="mission-assumption"
                 >
-                  <dt className="flex items-center gap-2 text-[0.8125rem] font-semibold text-sol-secondary">
+                  <dt className="flex items-center gap-2 text-[0.9375rem] font-semibold text-sol-secondary">
                     <FlaskConical
                       className="size-4 shrink-0 text-sol-cobalt-deep"
                       aria-hidden="true"
@@ -289,7 +289,7 @@ export function MissionCard({
                   aria-hidden="true"
                 />
                 <dt className="sr-only">{t("rm.mission.capture")}</dt>
-                <dd className="min-w-0 max-w-[62ch] text-[0.875rem] leading-snug text-sol-secondary">
+                <dd className="min-w-0 max-w-[62ch] text-[0.9375rem] leading-snug text-sol-secondary">
                   {text?.doneWhen ?? mission.doneWhen}
                 </dd>
               </div>
@@ -311,7 +311,7 @@ export function MissionCard({
                     </Button>
                   )}
                   {mission.evidenceCount > 0 && (
-                    <span className="text-[0.875rem] text-sol-secondary">
+                    <span className="text-[0.9375rem] text-sol-secondary">
                       {t("pf.mission.recorded", { n: mission.evidenceCount })}
                     </span>
                   )}

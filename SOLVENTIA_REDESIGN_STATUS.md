@@ -1,103 +1,92 @@
 # Solventia redesign — status
 
-Checkpoint file for the master redesign. Updated after every phase. No secrets, tokens or user data here.
+Checkpoint for the master redesign. Updated after every milestone. No secrets, tokens or user
+data here. Specification: `SOLVENTIA_MASTER_PROMPT.md` (reconstructed — the original brief
+arrived truncated twice; nothing here claims to be its verbatim text).
 
 ## Branches
 
-| Role | Branch | Commit |
-|---|---|---|
-| Implementation | `feature/solventia-master-redesign` | see `git log -1` |
-| Backup of production before the redesign | `backup/pre-solventia-redesign-20261020` | `62e8e3c` |
-| Production (Vercel deploys from it; Lovable-connected) | `main` | `62e8e3c` at start |
-| Earlier unreviewed Founder OS WIP (not in main, kept) | `founder-os-wip` | `eb36f77` |
+| Role                                                                              | Branch                                   | Commit                                 |
+| --------------------------------------------------------------------------------- | ---------------------------------------- | -------------------------------------- |
+| Implementation                                                                    | `feature/solventia-master-redesign`      | see `git log -1` (85fe2b1 at QA close) |
+| Backup of production before the redesign                                          | `backup/pre-solventia-redesign-20261020` | `62e8e3c`                              |
+| Production (Vercel project `solventa-ai-launchpad` deploys it; Lovable-connected) | `main`                                   | `62e8e3c` before release               |
+| Earlier unreviewed Founder OS WIP (not in main, kept)                             | `founder-os-wip`                         | `eb36f77`                              |
 
-The implementation branch was cut from production `main` (`62e8e3c`), which already contains the
-homepage release (`4c5bbc8`) and the merged dashboard work (PR #1 and PR #2).
+Cut from production `main` (`62e8e3c`, which holds the homepage release and Anushka Shah's
+PR #1/#2). `main` had no newer commits from anyone when the release was prepared, so the
+branch integrates without conflicts and overwrites nobody's work.
 
-To return to the previous implementation: `git switch backup/pre-solventia-redesign-20261020`.
+Recovery: `git switch backup/pre-solventia-redesign-20261020` (or redeploy `62e8e3c`).
 
-## Brief
+## Checklist (§1–§28) — real status
 
-- Master brief + addendum pasted 2026-10-20. **The master brief arrived truncated at about 50,000
-  characters — it stops in section 11.3 ("Every ext…").** Sections after 11.3 (roadmap, evidence,
-  Ask Sol, history, settings, homepage bugs, icons, Google branding, testing, release) were not
-  received. Until the rest is provided, those areas follow the addendum's scope list only.
-- The user's brief supersedes `CLAUDE.md`'s old "violet/lavender, warm ivory" palette rule; that
-  rule is updated as part of the design-system phase.
-
-## Brief, sections 12–28 (received 2026-10-21; again truncated inside the §28 checklist)
-
-Compact checklist — resume from this, not from the conversation:
-- §12 Roadmap: VALIDATE → BUILD → ELEVATE; first missions test demand and the riskiest assumptions (buyer, buying process, willingness to consider, then supplier feasibility, then a continue/revise/reconsider gate). No hard-coded sequence, no arbitrary volume targets, future phases provisional. Week load ≤ lower bound of stated hours minus ~15%. Budget ranges stay ranges. Missions: title, why, time, steps, output, done-when, linked assumptions, what the result means. One recommended mission at a time; statuses Ready / In progress / Waiting for evidence / Completed / Needs revision. Replace the 3D floating-island roadmap with a light SVG/HTML VALIDATE → BUILD → ELEVATE path (all phases readable, current/completed/provisional, mobile-legible).
-- §13 Generation screen: trace the real lifecycle; progress % only for real stages, else honest indeterminate stages; never "saved" before save; "Building your roadmap" (no serif); timeouts, retries, idempotent clicks, resume an existing roadmap.
-- §14 Proof → "Evidence" (keep /dashboard/proof working; tab=evidence). Assumption model: id, direction, statement, category, why it matters, test method, mission ids, evidence ids, status (Not tested / Testing / Supported / Contradicted / Inconclusive), updated, next action. Evidence recordable from week 1; completing a mission never validates by itself; assumption ↔ mission links both ways; low-friction evidence entry; negative results are fine.
-- §15 Real adaptation: "Your roadmap has changed" with what/why/evidence/new next action, only when the plan really changed; keep history.
-- §16 Notifications: correct user/consultation/direction/roadmap; "roadmap ready" only after a successful save; no success on failure; no duplicates; correct links; unread from real state; preferences; language.
-- §17 Ask Sol: designed panel (emblem, tokens), instant shell, contextual welcome "Let's work on your next move.", real contextual prompts, no invented facts, desktop overlay / mobile sheet, recovery state.
-- §18 History: editorial timeline (consultation, directions, chosen, roadmap built, outcome, what changed), compare consultations only from stored data, safe review/delete.
-- §19 Settings: editable name with real save state; photo truth ("Using your initials"); founder profile rows "Not provided yet", no truncation, recalculation notice; language everywhere; preferences and account actions real.
-- §20 Homepage: brand on first frame; scroll sync; ONE identity (centre → bar → centre at finale → bar), never two lockups at once; no clipped logo; semantic profile icons (education, time, location, money, skills, experience, languages, risk) in one icon family; no purple.
-- §21 Google sign-in shows the Supabase hostname — external config (Google OAuth consent screen app name/logo/authorized domains; Supabase custom auth domain). Fix code-side, report exact external steps, mark blocked until verified.
-- §22 Copy: Customer / Problem to solve / Your offer / Revenue model / First validation test; "Market evidence hasn't been collected yet."; "Your roadmap hasn't been built yet."; Evidence not Proof; consistent sentence case.
-- §23 Remove duplication and clutter at the IA level. §24 Viewports 360/390/430/1280/1366/1440/1920/3840, WCAG 2.2 AA, reduced motion. §25 Measure before/after. §26 Tests for data, roadmap, evidence, flows, homepage, auth. §27 Phase order. §28 Report every checklist item's real status.
-
-## Phases
-
-| # | Phase | State |
-|---|---|---|
-| 0 | Branches, backup, this file | done |
-| 1 | Data integrity: provenance, ranges as ranges, unknown ≠ absent, no invented facts | done (fe85c11) — typed provenance per claim still to add with Phase 3 schema work |
-| 2 | One canonical fit model (5 factors, 0–3, unknown = null, coverage, bands) used everywhere | done (ce19fd4) |
-| 3 | AI direction generation: structured, distinct, plain language, hypotheses labelled | not started |
-| 4 | Design system: pearl/graphite/navy/cobalt/champagne tokens, type scale, components; purple removed | not started |
-| 5 | Command Center (state-aware: before choice / chosen, no roadmap / roadmap) | not started |
-| 6 | Opportunities + direction detail (Overview / Fit with you / Market & validation) | not started |
-| 7 | Roadmap logic + generation states + Evidence + adaptation + notifications + Ask Sol + History + Settings + homepage + copy (§12–22) | in progress |
-| 8 | Tests, build, release to `main`, verify https://solventia.in | not started |
-
-## In progress
-
-Phase 4 (design system).
-
-## Done so far
-
-- Fit (ce19fd4): `src/lib/fit/model.ts` is the only fit function (5 factors, unknown = null, coverage, bands, rubric version stored in `score_breakdown`); every screen, filter, compare grid and email uses it.
-- Integrity (fe85c11): prompts get stated ranges + truthfulness rules; `src/lib/ai/integrity.ts` drops unsupported personal claims (single hour/budget figures, unconfirmed places).
-- Design system (478b065): pearl/graphite/navy/cobalt/champagne tokens, Geist only, purple removed product-wide; CLAUDE.md rules updated.
-- Command Center (f83d708): state-aware, one primary action per state, honest path, "Other directions · 2", category icons.
-- Roadmap logic (ef66b46): demand-first rule for shape and weeks; week load ≤ 85% of the lower stated hours, enforced after generation (`src/lib/roadmap/hours.ts`).
-- Roadmap view (0b3e4e0): island PNG/3D removed; all phases on a Validate → Build → Elevate path; gems removed (History hero, sign-in).
-- Homepage identity (9911d92): one identity at a time (bar hands over to the finale lockup); solid bar with its own lockup after the film. Evidence replaces Proof in visible labels (route kept). Progress shows from the first record.
-- Notifications (490145f): roadmap-ready only after save + week 1; carries roadmap/direction ids; dedupe key.
-- Building screen (d4ce537): real elapsed time, indeterminate bar, no timer-driven stages.
-- Homepage icons + palette (ee5a451): semantic icons on the founder-profile captions; film violet → cobalt.
-- Copy (b5c979f): Customer / Problem to solve / Your offer / "Market evidence hasn't been collected yet."; photo label matches what is shown; navy initials avatar.
-- Ask Sol (2f59d5a): instant welcome + prompts, approved emblem.
+| Area                                                                                                                                             | State                                | Where                                                            |
+| ------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------ | ---------------------------------------------------------------- |
+| Data integrity — ranges stay ranges, unknown ≠ absent, no invented personal facts                                                                | done                                 | fe85c11, 4468915 (one claim filter for page and translation)     |
+| One canonical fit model, used everywhere, including ranking                                                                                      | done                                 | ce19fd4, 85fe2b1 (ranking follows the fit; AI order breaks ties) |
+| §7 structured directions — delivery model, critical assumptions, success criteria, reconsider-if, risks, unknowns; validated; old rows tolerated | done                                 | 4468915                                                          |
+| Design system — pearl/graphite/navy/cobalt/champagne, Geist, no purple                                                                           | done                                 | 478b065, 71d4d93, 85fe2b1                                        |
+| Command Center (state-aware, one next move)                                                                                                      | done                                 | f83d708, 85fe2b1                                                 |
+| Opportunities + detail (Overview / Fit with you / Market & validation), comparison                                                               | done                                 | f83d708, 71d4d93, 4468915, 85fe2b1                               |
+| §12 roadmap — demand first, week ≤ 85% of the lower stated hours, all phases on a Validate → Build → Elevate path                                | done                                 | ef66b46, 0b3e4e0                                                 |
+| §13 building screen — real elapsed time, no fake stages                                                                                          | done                                 | d4ce537                                                          |
+| §14 Evidence — five statuses from evidence only, assumption ↔ mission links both ways, entry from week 1, negative results, edit/delete          | done                                 | 71d4d93                                                          |
+| §15 "Your roadmap has changed" only on a real change                                                                                             | done                                 | 591edbc                                                          |
+| §16 notifications — after a real save, traceable, no duplicates                                                                                  | done                                 | 490145f                                                          |
+| §17 Ask Sol — instant welcome, context, emblem                                                                                                   | done                                 | 2f59d5a                                                          |
+| §18 History — timeline from stored data, comparison, restore/delete                                                                              | done                                 | fe9af18, 85fe2b1                                                 |
+| §19 Settings — name save state, photo truth, "Not provided yet"                                                                                  | done                                 | 1a37c8c, b5c979f, 1b89901                                        |
+| §20 homepage — one identity at a time, semantic icons, cobalt, ≥12px captions                                                                    | done                                 | 9911d92, ee5a451, 85fe2b1                                        |
+| §21 Google sign-in shows the Supabase host                                                                                                       | **blocked — external configuration** | see below                                                        |
+| §22 copy — Customer / Problem to solve / Your offer, Evidence not Proof, "direction"                                                             | done                                 | b5c979f, 85fe2b1                                                 |
+| §23 duplication removed                                                                                                                          | done                                 | 85fe2b1 (Today's Move, roadmap header, Fit with you)             |
+| §24 responsive 360 → 3840, container queries, ≥12px text                                                                                         | done                                 | 85fe2b1                                                          |
+| Header "Product" / "How It Works" dead anchors                                                                                                   | done                                 | 1a37c8c                                                          |
 
 ## Blocked pending external configuration
 
-- §21 Google sign-in shows the Supabase project host. Code is correct (`redirectTo` = site origin). Needed by the owner:
-  1. Google Cloud Console → APIs & Services → OAuth consent screen → Branding: App name "Solventia", logo, home page https://solventia.in, privacy https://solventia.in/privacy, terms https://solventia.in/terms, authorized domains `solventia.in` (and `supabase.co` while the Supabase host is used); submit for brand verification.
-  2. Optional, removes the host entirely: Supabase → Project Settings → Custom domains → e.g. `auth.solventia.in`; then add `https://auth.solventia.in/auth/v1/callback` to the Google OAuth client's redirect URIs and set the production SUPABASE_URL / VITE_SUPABASE_URL (Vercel) to the custom domain.
-  Verify: sign in with Google on https://solventia.in — the account chooser should say "to continue to Solventia".
+- §21 Google's account chooser names the Supabase project host. The code is correct
+  (`redirectTo` = site origin); the name comes from the Google OAuth consent screen and the
+  Supabase auth domain, which need the owner's console access:
+  1. Google Cloud Console → APIs & Services → OAuth consent screen → Branding: App name
+     "Solventia", logo, home page https://solventia.in, privacy https://solventia.in/privacy,
+     terms https://solventia.in/terms, authorized domains `solventia.in` (and `supabase.co`
+     while the Supabase host is used); submit for brand verification.
+  2. Optional, removes the host entirely: Supabase → Project Settings → Custom domains (e.g.
+     `auth.solventia.in`), add `https://auth.solventia.in/auth/v1/callback` to the Google OAuth
+     client's redirect URIs, and set the production `SUPABASE_URL` / `VITE_SUPABASE_URL` in
+     Vercel to the custom domain.
+     Verify: Google sign-in on https://solventia.in says "to continue to Solventia".
 
-## Not done yet (honest list)
+## Tests (latest)
 
-- §14 assumption model fields (test method, next action, status labels Supported/Contradicted/Inconclusive end to end) and two-way mission ↔ assumption links: existing proof state machine kept; not yet redesigned.
-- §15 visible "Your roadmap has changed" panel: adaptationNote exists per week; no dedicated panel yet.
-- §18 History editorial timeline + consultation compare; §19 Settings name save-state and profile rows "Not provided yet"; §6.4 explicit "assessment refreshed" notice on profile change.
-- §7 extended direction schema (delivery model, critical assumptions, success criteria, reconsider conditions) — not yet.
-- Responsive sweep at 430/1280/1366/3840 and a11y audit on the new screens; before/after pack.
-
-## Tests
-
-- `npm run typecheck`: pass. `vitest`: 42 files, 384 tests pass (fe85c11).
-- E2E not yet run on this branch (fit rows changed: `fit-row-ambition` → five factor rows; specs may need updating).
+- `vitest`: 46 files, 412 tests pass. `tsc --noEmit`: pass. ESLint (`--quiet`): no errors.
+  `npm run build` (Vercel preset): passes; Vercel preview builds of the branch: success.
+- E2E on the fake stack (PGlite + fake Gemini), 155 tests in 17 spec files:
+  - full run: tests 1–126 (every spec except the screenshot spec) passed; the screenshot spec
+    then timed out on a stale "details" selector, so the run was stopped and the spec fixed;
+  - screenshot spec rerun: 28 passed, 1 failed — the existing 14px text-floor test (0.875rem
+    is 13.1px at the dashboard root). Fixed by raising every sub-14px size; the test passes;
+  - after those fixes, the functional specs for the touched screens (a11y, buttons, command
+    center, opportunities, evidence, roadmap, Hindi, history, settings, shell): 77/77 passed.
+- Responsive QA: every Founder OS screen (Command Center before/after choice and with a
+  roadmap, Opportunities, detail, Fit with you, Market & validation, This Week, Plan,
+  Progress, Evidence with an open assumption, History with a comparison, Settings, Ask Sol
+  open, notifications open, homepage) at 360×740, 390×844, 430×932, 1280×800, 1366×768,
+  1440×900, 1920×1080 and 3840×2160, with automatic checks for horizontal overflow, text
+  under 12px, clipped controls and console errors. Pack (local, not committed):
+  `.e2e-tmp/qa/shots-final/<width>/<screen>.png` + `_report.json`; fixes re-shot in
+  `.e2e-tmp/qa/shots-fix/` and `.e2e-tmp/qa/shots-14px/`. Only remaining console error:
+  opportunity image generation is not available on the fake AI stack (expected).
 
 ## Deployment
 
-Not deployed. Production is unchanged.
+Not yet released at the time of this checkpoint. Next: full E2E + production build, merge into
+`main`, push (Vercel deploys), verify https://solventia.in in a fresh browser.
 
 ## Next action
 
-Read the full E2E result (.e2e-tmp/full-e2e.log), fix regressions, then ask the owner to confirm the production merge to main (Lovable-connected, shared with another contributor).
+Read `.e2e-tmp/full-e2e-2.log`; fix any regression; `npm run build`; merge
+`feature/solventia-master-redesign` into `main` (no fast-forward, like the earlier PR merges),
+push `main`, wait for Vercel's commit status, verify the live homepage and dashboard.

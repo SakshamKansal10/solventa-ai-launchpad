@@ -167,7 +167,7 @@ export function ReviewWeekDialog({
           <div className="flex flex-col gap-1.5">
             <label htmlFor="review-note" className="text-[1rem] font-semibold text-sol-ink">
               {t("rm.review.note")}{" "}
-              <span className="text-[0.875rem] font-medium text-sol-secondary">
+              <span className="text-[0.9375rem] font-medium text-sol-secondary">
                 ({t("common.optional")})
               </span>
             </label>
@@ -210,7 +210,7 @@ export function ReviewWeekDialog({
             </Button>
           </div>
           {close.isPending && (
-            <p role="status" className="text-center text-[0.875rem] text-sol-secondary">
+            <p role="status" className="text-center text-[0.9375rem] text-sol-secondary">
               {t("rm.review.working")}
             </p>
           )}

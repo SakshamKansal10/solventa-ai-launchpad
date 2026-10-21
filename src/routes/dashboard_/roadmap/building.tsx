@@ -187,7 +187,7 @@ function BuildingPage() {
                 <div className="h-full w-1/3 rounded-full bg-sol-cobalt motion-safe:animate-[sol-indeterminate_1.6s_ease-in-out_infinite]" />
               </div>
               <div className="w-full max-w-[420px] text-left">
-                <p className="text-[0.875rem] font-semibold text-sol-secondary">
+                <p className="text-[0.9375rem] font-semibold text-sol-secondary">
                   {t("rm.build.whatHappens")}
                 </p>
                 <ul className="mt-2 flex flex-col gap-1.5 text-[0.9375rem] text-sol-ink">

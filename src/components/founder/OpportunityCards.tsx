@@ -57,7 +57,7 @@ export function BriefChain({ brief }: { brief: OpportunityBrief }) {
             <n.icon className="size-6 text-sol-cobalt-deep" aria-hidden="true" />
           </span>
           <div className="min-w-0">
-            <p className="text-[0.875rem] font-bold uppercase tracking-[0.1em] text-sol-champagne-deep">
+            <p className="text-[0.9375rem] font-bold uppercase tracking-[0.1em] text-sol-champagne-deep">
               {n.label}
             </p>
             <p className="mt-1 line-clamp-4 text-[1.0625rem] leading-snug text-sol-ink">{n.text}</p>
@@ -195,7 +195,7 @@ export function FlagshipCard({
       </div>
       {brief.whyFit.length > 0 && (
         <div className="relative mt-8" data-testid="flagship-why">
-          <p className="text-[0.875rem] font-semibold text-sol-secondary">{t("cc2.whyHeading")}</p>
+          <p className="text-[0.9375rem] font-semibold text-sol-secondary">{t("cc2.whyHeading")}</p>
           <ul className="mt-3 flex flex-col gap-2.5">
             {brief.whyFit.map((reason) => (
               <li key={reason} className="flex gap-3 text-[1.0625rem] leading-snug text-sol-ink">

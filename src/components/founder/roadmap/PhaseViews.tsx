@@ -51,14 +51,14 @@ export function WeekRow({
   const openable = week.state !== "locked";
   const body = (
     <>
-      <span className="w-20 shrink-0 text-[0.875rem] font-semibold text-sol-secondary">
+      <span className="w-20 shrink-0 text-[0.9375rem] font-semibold text-sol-secondary">
         {t("common.weekN", { n: String(week.number).padStart(2, "0") })}
       </span>
       <span className="min-w-0 flex-1">
         <span className="block text-[1rem] font-semibold leading-snug text-sol-ink">
           {text.weekTitle(week.id, week.title)}
         </span>
-        <span className="mt-0.5 block text-[0.875rem] leading-snug text-sol-secondary">
+        <span className="mt-0.5 block text-[0.9375rem] leading-snug text-sol-secondary">
           {text.weekObjective(week.id, week.objective)}
         </span>
       </span>
@@ -140,7 +140,7 @@ export function PlanTab({
                     {text.phaseTitle(p.id, p.title)}
                   </span>
                   {p.range && (
-                    <span className="text-[0.875rem] text-sol-secondary">
+                    <span className="text-[0.9375rem] text-sol-secondary">
                       {t("common.weeksRange", { from: p.range.first, to: p.range.last })}
                     </span>
                   )}

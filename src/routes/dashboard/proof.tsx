@@ -503,7 +503,7 @@ function AssumptionCard({
             data-testid="next-action"
           >
             <div className="min-w-0">
-              <p className="text-[0.875rem] font-semibold text-sol-cobalt-deep">
+              <p className="text-[0.9375rem] font-semibold text-sol-cobalt-deep">
                 {t("pf.next.title")}
               </p>
               <p className="mt-1 text-[1rem] leading-snug text-sol-ink">
@@ -520,7 +520,7 @@ function AssumptionCard({
             <div className="flex flex-col gap-4">
               {a.whyItMatters && (
                 <div>
-                  <p className="text-[0.875rem] font-semibold text-sol-secondary">
+                  <p className="text-[0.9375rem] font-semibold text-sol-secondary">
                     {t("pf.detail.whyMatters")}
                   </p>
                   <p className="mt-1 text-[1rem] leading-relaxed text-sol-ink">{a.whyItMatters}</p>
@@ -528,7 +528,7 @@ function AssumptionCard({
               )}
               {a.nextTest && (
                 <div>
-                  <p className="text-[0.875rem] font-semibold text-sol-secondary">
+                  <p className="text-[0.9375rem] font-semibold text-sol-secondary">
                     {t("pf.testMethod")}
                   </p>
                   <p className="mt-1 text-[1rem] leading-relaxed text-sol-ink">{a.nextTest}</p>
@@ -536,7 +536,7 @@ function AssumptionCard({
               )}
             </div>
             <div>
-              <p className="text-[0.875rem] font-semibold text-sol-secondary">
+              <p className="text-[0.9375rem] font-semibold text-sol-secondary">
                 {t("pf.missions.title")}
               </p>
               {a.missions.length === 0 ? (
@@ -555,10 +555,10 @@ function AssumptionCard({
 
           <div>
             <div className="flex flex-wrap items-baseline justify-between gap-2">
-              <p className="text-[0.875rem] font-semibold text-sol-secondary">
+              <p className="text-[0.9375rem] font-semibold text-sol-secondary">
                 {t("pf.evidence.title")} · {a.evidence.length}
               </p>
-              <p className="text-[0.8125rem] text-sol-secondary">
+              <p className="text-[0.9375rem] text-sol-secondary">
                 {t("pf.updated", { date: formatDate(a.updatedAt, locale) })}
               </p>
             </div>
@@ -619,7 +619,7 @@ function LinkedMission({
     <>
       <span
         className={cn(
-          "flex size-7 shrink-0 items-center justify-center rounded-full border text-[0.8125rem] font-semibold",
+          "flex size-7 shrink-0 items-center justify-center rounded-full border text-[0.9375rem] font-semibold",
           m.state === "completed"
             ? "border-sol-champagne bg-sol-champagne text-sol-ink"
             : m.state === "in_progress"
@@ -638,7 +638,7 @@ function LinkedMission({
         <span className="block text-[0.9375rem] font-medium leading-snug text-sol-ink">
           {title}
         </span>
-        <span className="block text-[0.8125rem] text-sol-secondary">
+        <span className="block text-[0.9375rem] text-sol-secondary">
           {m.weekNumber ? `${t("pf.missions.week", { n: m.weekNumber })} · ` : ""}
           {t(`pf.missions.state.${m.state}` as const)}
           {m.evidenceCount > 0 && ` · ${t("pf.mission.recorded", { n: m.evidenceCount })}`}
@@ -695,7 +695,7 @@ function EvidenceItem({
     >
       <div className="flex flex-wrap items-center gap-2">
         <SignalBadge signal={e.signal} />
-        <span className="text-[0.8125rem] text-sol-secondary">
+        <span className="text-[0.9375rem] text-sol-secondary">
           {t(`pf.type.${e.type}` as const)} · {formatDate(e.occurredOn, locale)}
           {e.sourcePerson ? ` · ${e.sourcePerson}` : ""}
         </span>
@@ -705,7 +705,7 @@ function EvidenceItem({
         {e.summary}
       </p>
       {e.taskTitle && (
-        <p className="text-[0.8125rem] text-sol-secondary">
+        <p className="text-[0.9375rem] text-sol-secondary">
           {t("pf.fromMission", { title: e.taskTitle })}
         </p>
       )}
@@ -715,7 +715,7 @@ function EvidenceItem({
             href={e.url}
             target="_blank"
             rel="noreferrer noopener"
-            className="inline-flex min-h-9 items-center gap-1.5 text-[0.875rem] font-medium text-sol-cobalt-deep hover:underline"
+            className="inline-flex min-h-9 items-center gap-1.5 text-[0.9375rem] font-medium text-sol-cobalt-deep hover:underline"
           >
             {t("pf.link")}
             <ExternalLink className="size-3.5" aria-hidden="true" />
@@ -725,7 +725,7 @@ function EvidenceItem({
           <button
             type="button"
             onClick={() => file.mutate()}
-            className="inline-flex min-h-9 items-center gap-1.5 text-[0.875rem] font-medium text-sol-cobalt-deep hover:underline"
+            className="inline-flex min-h-9 items-center gap-1.5 text-[0.9375rem] font-medium text-sol-cobalt-deep hover:underline"
           >
             <FileText className="size-3.5" aria-hidden="true" />
             {e.fileName ?? t("pf.file.open")}

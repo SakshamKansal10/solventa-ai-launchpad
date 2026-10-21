@@ -121,7 +121,7 @@ export function Pill({
   return (
     <span
       className={cn(
-        "inline-flex min-h-7 items-center gap-1.5 rounded-full border px-3 text-[0.875rem] font-semibold",
+        "inline-flex min-h-7 items-center gap-1.5 rounded-full border px-3 text-[0.9375rem] font-semibold",
         PILL[tone],
         className,
       )}
@@ -240,7 +240,7 @@ export function EmptyState({
 export function Fact({ label, children }: { label: string; children: ReactNode }) {
   return (
     <div className="min-w-0">
-      <dt className="text-[0.875rem] font-bold uppercase tracking-[0.1em] text-sol-champagne-deep">
+      <dt className="text-[0.9375rem] font-bold uppercase tracking-[0.1em] text-sol-champagne-deep">
         {label}
       </dt>
       <dd className="mt-1.5 text-[1.0625rem] leading-snug text-sol-ink">{children}</dd>

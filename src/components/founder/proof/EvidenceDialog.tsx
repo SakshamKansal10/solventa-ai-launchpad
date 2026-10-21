@@ -405,7 +405,9 @@ export function EvidenceDialog({
                 {interpret.isPending ? t("pf.interpret.working") : t("pf.interpret.cta")}
               </Button>
               {draft.summary.trim().length < 8 && (
-                <span className="text-[0.875rem] text-sol-secondary">{t("pf.interpret.hint")}</span>
+                <span className="text-[0.9375rem] text-sol-secondary">
+                  {t("pf.interpret.hint")}
+                </span>
               )}
             </div>
             {suggestion && (
@@ -420,7 +422,7 @@ export function EvidenceDialog({
                 data-testid="ev-suggestion"
                 data-signal={suggestion.signal}
               >
-                <p className="text-[0.875rem] font-bold uppercase tracking-[0.1em] text-sol-secondary">
+                <p className="text-[0.9375rem] font-bold uppercase tracking-[0.1em] text-sol-secondary">
                   {t("pf.interpret.suggests")}:{" "}
                   <span className="text-sol-ink">
                     {t(`pf.signal.${suggestion.signal}` as const)}
@@ -441,7 +443,7 @@ export function EvidenceDialog({
                   >
                     {t("pf.interpret.use")}
                   </Button>
-                  <span className="text-[0.875rem] text-sol-secondary">
+                  <span className="text-[0.9375rem] text-sol-secondary">
                     {applied || draft.signal === suggestion.signal
                       ? t("pf.interpret.applied")
                       : t("pf.interpret.disclaimer")}
@@ -494,7 +496,7 @@ export function EvidenceDialog({
               onChange={(e) => setDraft({ ...draft, url: e.target.value })}
             />
             {!urlValid && (
-              <p id="ev-url-error" role="alert" className="text-[0.875rem] text-sol-warning">
+              <p id="ev-url-error" role="alert" className="text-[0.9375rem] text-sol-warning">
                 {t("pf.dialog.urlInvalid")}
               </p>
             )}
@@ -544,7 +546,7 @@ export function EvidenceDialog({
                   </span>
                 )}
               </div>
-              <p className="text-[0.875rem] text-sol-secondary">{t("pf.file.hint")}</p>
+              <p className="text-[0.9375rem] text-sol-secondary">{t("pf.file.hint")}</p>
               {fileError && (
                 <p role="alert" className="text-[0.9375rem] text-sol-warning">
                   {fileError}

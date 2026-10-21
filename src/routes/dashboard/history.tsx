@@ -190,7 +190,7 @@ function HistoryPage() {
               return (
                 <li key={entry.consultationId} className="flex flex-col">
                   {showMonth && (
-                    <p className="pb-3 pt-2 text-[0.8125rem] font-semibold uppercase tracking-[0.12em] text-sol-secondary">
+                    <p className="pb-3 pt-2 text-[0.9375rem] font-semibold uppercase tracking-[0.12em] text-sol-secondary">
                       {month}
                     </p>
                   )}
@@ -199,7 +199,7 @@ function HistoryPage() {
                       <p className="text-[1.75rem] font-semibold leading-none text-sol-ink">
                         {new Date(entry.createdAt).getDate()}
                       </p>
-                      <p className="mt-1 text-[0.875rem] text-sol-secondary">
+                      <p className="mt-1 text-[0.9375rem] text-sol-secondary">
                         {weekdayOf(entry.createdAt)}
                       </p>
                     </div>
@@ -348,7 +348,7 @@ function EntryCard({
       body: (
         <>
           <p className="font-medium text-sol-ink">{t("hist.ev.consultation")}</p>
-          <p className="text-[0.875rem] text-sol-secondary @2xl:hidden">
+          <p className="text-[0.9375rem] text-sol-secondary @2xl:hidden">
             {formatDate(entry.createdAt, locale)}
           </p>
         </>
@@ -420,7 +420,7 @@ function EntryCard({
             )}
           </div>
           {(entry.roadmapBuiltAt || entry.roadmapCompletedAt) && (
-            <p className="text-[0.875rem] text-sol-secondary">
+            <p className="text-[0.9375rem] text-sol-secondary">
               {[entry.roadmapBuiltAt, entry.roadmapCompletedAt]
                 .filter((d): d is string => Boolean(d))
                 .map((d) => formatDate(d, locale))
@@ -462,12 +462,12 @@ function EntryCard({
 
       {facts.length > 0 && (
         <div>
-          <p className="text-[0.8125rem] font-semibold text-sol-secondary">{t("hist.snapshot")}</p>
+          <p className="text-[0.9375rem] font-semibold text-sol-secondary">{t("hist.snapshot")}</p>
           <ul className="mt-2 flex flex-wrap gap-2" data-testid="history-profile">
             {facts.map((f) => (
               <li
                 key={f.field}
-                className="rounded-full border border-sol-border bg-sol-pearl px-3.5 py-1.5 text-[0.875rem] text-sol-ink"
+                className="rounded-full border border-sol-border bg-sol-pearl px-3.5 py-1.5 text-[0.9375rem] text-sol-ink"
               >
                 {f.text}
               </li>
@@ -579,7 +579,7 @@ function ComparePanel({
         <li key={d.id} className="flex flex-wrap items-center gap-2">
           <TranslatedTitle id={d.id} title={d.title} />
           {only.includes(d.title) && (
-            <span className="text-[0.8125rem] font-semibold text-sol-cobalt-deep">
+            <span className="text-[0.9375rem] font-semibold text-sol-cobalt-deep">
               {t("hist.compare.onlyHere")}
             </span>
           )}
@@ -591,7 +591,7 @@ function ComparePanel({
     <>
       {t(`hist.roadmap.${e.roadmapStatus}` as const)}
       {e.progress && e.progress.weeksTotal > 0 && (
-        <span className="block text-[0.875rem] text-sol-secondary">
+        <span className="block text-[0.9375rem] text-sol-secondary">
           {t("hist.ev.progress", {
             w: e.progress.weeksCompleted,
             t: e.progress.weeksTotal,
@@ -667,7 +667,7 @@ function ComparePanel({
         <caption className="sr-only">{t("hist.compare.aria")}</caption>
         <thead>
           <tr className="border-b border-sol-border text-left">
-            <th scope="col" className="px-3 pb-3 text-[0.8125rem] font-semibold text-sol-secondary">
+            <th scope="col" className="px-3 pb-3 text-[0.9375rem] font-semibold text-sol-secondary">
               {t("hist.compare.field")}
             </th>
             {[older, newer].map((e) => (
@@ -713,7 +713,7 @@ function ComparePanel({
             className="flex flex-col gap-2 py-3.5"
             data-testid={`compare-item-${l.key}`}
           >
-            <dt className="flex items-center justify-between gap-3 text-[0.875rem] font-semibold text-sol-secondary">
+            <dt className="flex items-center justify-between gap-3 text-[0.9375rem] font-semibold text-sol-secondary">
               {l.label}
               {statePill(l.state)}
             </dt>
@@ -725,7 +725,7 @@ function ComparePanel({
                 key={e.consultationId}
                 className="flex gap-3 text-[0.9375rem] leading-snug text-sol-ink"
               >
-                <span className="w-20 shrink-0 text-[0.8125rem] text-sol-secondary">
+                <span className="w-20 shrink-0 text-[0.9375rem] text-sol-secondary">
                   {formatDate(e.createdAt, locale)}
                 </span>
                 <span className="min-w-0 flex-1">{v}</span>

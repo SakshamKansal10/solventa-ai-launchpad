@@ -71,7 +71,7 @@ export function ProgressRing({
         </span>
       </div>
       {showLabel && (
-        <span className="text-[0.875rem] font-bold uppercase tracking-[0.08em] text-sol-secondary">
+        <span className="text-[0.9375rem] font-bold uppercase tracking-[0.08em] text-sol-secondary">
           {label}
         </span>
       )}
@@ -250,13 +250,13 @@ export function JourneyRibbon({
               title={p.title}
               aria-label={p.title}
               className={cn(
-                "flex items-center gap-2 text-left text-[0.875rem] font-bold uppercase tracking-[0.08em] outline-none focus-visible:ring-2 focus-visible:ring-sol-cobalt/50",
+                "flex items-center gap-2 text-left text-[0.9375rem] font-bold uppercase tracking-[0.08em] outline-none focus-visible:ring-2 focus-visible:ring-sol-cobalt/50",
                 p.current ? "text-sol-cobalt-deep" : "text-sol-secondary",
               )}
             >
               <span
                 className={cn(
-                  "flex size-6 items-center justify-center rounded-full text-[0.875rem]",
+                  "flex size-6 items-center justify-center rounded-full text-[0.9375rem]",
                   p.current ? "bg-sol-cobalt text-white" : "bg-sol-ivory-depth text-sol-secondary",
                 )}
               >
@@ -360,7 +360,7 @@ export function MomentumBars({
           );
         })}
       </div>
-      <div className="flex gap-4 text-[0.875rem] font-semibold text-sol-secondary">
+      <div className="flex gap-4 text-[0.9375rem] font-semibold text-sol-secondary">
         <span className="flex items-center gap-1.5">
           <span className="size-2.5 rounded-sm bg-sol-cobalt" aria-hidden="true" />
           {missionsLabel}
@@ -540,14 +540,14 @@ export function StepPath({
                   ) : current && s.warn ? (
                     <TriangleAlert className="size-4" aria-hidden="true" />
                   ) : (
-                    <span className="text-[0.875rem] font-bold">{i + 1}</span>
+                    <span className="text-[0.9375rem] font-bold">{i + 1}</span>
                   )}
                 </motion.span>
               </span>
               <span className="flex min-h-11 min-w-0 flex-col justify-center sm:min-h-0 sm:items-center sm:justify-start sm:text-center">
                 <span
                   className={cn(
-                    "text-[0.875rem] font-semibold leading-tight sm:mt-1.5",
+                    "text-[0.9375rem] font-semibold leading-tight sm:mt-1.5",
                     done || current ? "text-white" : "text-white/60",
                   )}
                 >
@@ -556,7 +556,7 @@ export function StepPath({
                 {s.note && (
                   <span
                     className={cn(
-                      "mt-0.5 text-[0.875rem] leading-tight",
+                      "mt-0.5 text-[0.9375rem] leading-tight",
                       current ? "font-semibold text-sol-champagne" : "text-white/45",
                     )}
                   >
@@ -628,7 +628,7 @@ export function JourneyPreview({ steps, ariaLabel }: { steps: PreviewStep[]; ari
               </motion.span>
               <span
                 className={cn(
-                  "flex min-h-[54px] items-center text-[0.875rem] font-bold uppercase tracking-[0.06em] sm:mt-2.5 sm:min-h-0 sm:text-center",
+                  "flex min-h-[54px] items-center text-[0.9375rem] font-bold uppercase tracking-[0.06em] sm:mt-2.5 sm:min-h-0 sm:text-center",
                   first ? "text-sol-cobalt-deep" : "text-sol-secondary",
                 )}
               >

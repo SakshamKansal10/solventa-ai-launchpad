@@ -171,7 +171,7 @@ function HeaderBlock({ dto, title }: { dto: OpportunityDetailDTO; title: string 
     <header className={cn("sol-atmosphere grid", image.url && "@2xl:grid-cols-[3fr_2fr]")}>
       <div className="relative z-10 flex flex-col items-start gap-4 p-6 sm:p-8">
         <div className="flex flex-wrap items-center gap-2.5">
-          <p className="sol-eyebrow flex items-center gap-2 !text-[0.875rem]">
+          <p className="sol-eyebrow flex items-center gap-2 !text-[0.9375rem]">
             <span className="h-3 w-0.5 rounded-full bg-sol-cobalt" aria-hidden="true" />
             {t("opp.detail.eyebrow")}
           </p>
@@ -389,7 +389,7 @@ function OverviewTile({
           <span className="flex size-9 items-center justify-center rounded-full bg-sol-cobalt-soft text-sol-cobalt-deep">
             <Icon className="size-[18px]" aria-hidden="true" />
           </span>
-          <span className="text-[0.875rem] font-medium text-sol-champagne-deep">{tile.label}</span>
+          <span className="text-[0.9375rem] font-medium text-sol-champagne-deep">{tile.label}</span>
         </span>
         <span
           className="flex size-7 items-center justify-center rounded-full border border-sol-border font-display text-[0.9375rem] font-semibold text-sol-secondary"
@@ -556,7 +556,7 @@ function FounderFit({
               <Star className="size-5 text-sol-champagne-deep" aria-hidden="true" />
               {t("opp.fit.advantages")}
             </span>
-            <span className="rounded-full bg-sol-cobalt-soft px-2.5 py-0.5 font-sans text-[0.875rem] font-semibold text-sol-cobalt-deep">
+            <span className="rounded-full bg-sol-cobalt-soft px-2.5 py-0.5 font-sans text-[0.9375rem] font-semibold text-sol-cobalt-deep">
               {advantages.length}
             </span>
           </h3>
@@ -580,7 +580,7 @@ function FounderFit({
               <TriangleAlert className="size-5 text-sol-warning" aria-hidden="true" />
               {t("opp.fit.gaps")}
             </span>
-            <span className="rounded-full bg-sol-cobalt-soft px-2.5 py-0.5 font-sans text-[0.875rem] font-semibold text-sol-cobalt-deep">
+            <span className="rounded-full bg-sol-cobalt-soft px-2.5 py-0.5 font-sans text-[0.9375rem] font-semibold text-sol-cobalt-deep">
               {gaps.length}
             </span>
           </h3>
@@ -679,7 +679,7 @@ function Market({
         {hasPlan ? (
           <div className="grid gap-6 @2xl:grid-cols-3" data-testid="validation-plan">
             <div className="@2xl:col-span-3">
-              <p className="text-[0.875rem] font-semibold text-sol-secondary">
+              <p className="text-[0.9375rem] font-semibold text-sol-secondary">
                 {t("opp.plan.assumptions")}
               </p>
               <ol className="mt-2 flex flex-col gap-2.5">
@@ -689,7 +689,7 @@ function Market({
                     className="flex flex-wrap items-start gap-x-3 gap-y-1.5 text-[1rem] leading-snug text-sol-ink"
                   >
                     <span
-                      className="flex size-6 shrink-0 items-center justify-center rounded-full bg-sol-surface text-[0.8125rem] font-semibold text-sol-cobalt-deep"
+                      className="flex size-6 shrink-0 items-center justify-center rounded-full bg-sol-surface text-[0.9375rem] font-semibold text-sol-cobalt-deep"
                       aria-hidden="true"
                     >
                       {i + 1}
@@ -706,7 +706,7 @@ function Market({
             </div>
             {detail.successCriteria.length > 0 && (
               <div className="@2xl:col-span-2">
-                <p className="text-[0.875rem] font-semibold text-sol-secondary">
+                <p className="text-[0.9375rem] font-semibold text-sol-secondary">
                   {t("opp.plan.success")}
                 </p>
                 <ul className="mt-2 flex flex-col gap-2">
@@ -724,7 +724,7 @@ function Market({
             )}
             {detail.reconsiderIf.length > 0 && (
               <div>
-                <p className="text-[0.875rem] font-semibold text-sol-secondary">
+                <p className="text-[0.9375rem] font-semibold text-sol-secondary">
                   {t("opp.plan.reconsider")}
                 </p>
                 <ul className="mt-2 flex flex-col gap-2">

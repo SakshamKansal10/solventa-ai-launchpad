@@ -921,6 +921,11 @@ html.app-inter {
   letter-spacing: 0 !important;
   font-weight: 600;
 }
+/* The product's 14px text floor (0.875rem is only 13.1px at the dashboard's 15px root). */
+.app-inter .sol-eyebrow,
+.app-inter .sol-meta {
+  font-size: 0.9375rem;
+}
 [data-cine-tone]:has([data-mode="fallback"]) [data-nav-brand] {
   opacity: 1;
 }

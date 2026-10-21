@@ -87,7 +87,7 @@ function OpportunityRow({
         <div className="relative z-10 grid gap-6 p-6 sm:p-8 @4xl:grid-cols-[minmax(0,1fr)_minmax(0,1.15fr)] @4xl:items-center @4xl:gap-10">
           <div className="flex flex-col justify-center gap-5">
             <div className="flex flex-wrap items-center gap-2.5">
-              <p className="sol-eyebrow flex items-center gap-2 !text-[0.875rem]">
+              <p className="sol-eyebrow flex items-center gap-2 !text-[0.9375rem]">
                 <span className="h-3 w-0.5 rounded-full bg-sol-cobalt" aria-hidden="true" />
                 {t("opp.list.featured")}
               </p>
@@ -129,7 +129,7 @@ function OpportunityRow({
                       </span>
                       <div className="min-w-0">
                         <p className="text-[0.9375rem] font-medium text-sol-ink">{f.label}</p>
-                        <p className="line-clamp-2 text-[0.875rem] leading-snug text-sol-secondary">
+                        <p className="line-clamp-2 text-[0.9375rem] leading-snug text-sol-secondary">
                           {f.value}
                         </p>
                       </div>
@@ -164,7 +164,7 @@ function OpportunityRow({
         </span>
         <div className="min-w-0 flex-1">
           {recommended && (
-            <p className="sol-eyebrow mb-1 !text-[0.8125rem] !normal-case !tracking-normal !text-sol-champagne-deep">
+            <p className="sol-eyebrow mb-1 !text-[0.9375rem] !normal-case !tracking-normal !text-sol-champagne-deep">
               {t("opp.list.recommendedTag")}
             </p>
           )}
@@ -373,7 +373,7 @@ function OpportunitiesPage() {
               {/* Before a choice every direction is listed, the recommended one first. */}
               {selected ? t("opp.list.alternatives") : t("opp.list.all")}
             </h2>
-            <span className="rounded-full bg-sol-ivory px-2.5 py-0.5 text-[0.8125rem] font-medium text-sol-secondary">
+            <span className="rounded-full bg-sol-ivory px-2.5 py-0.5 text-[0.9375rem] font-medium text-sol-secondary">
               {shownAlternatives.length}
             </span>
           </div>
@@ -404,7 +404,7 @@ function OpportunitiesPage() {
             data-testid="explore-more-generate"
           >
             <Compass className="size-5" aria-hidden="true" />
-            {t("cc.exploreMore")}
+            {t("cc.findMore")}
           </Button>
           {explore.isPending && (
             <p role="status" className="text-[1rem] text-sol-secondary">

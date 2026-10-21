@@ -8,6 +8,7 @@ const en = {
   "opp.plan.reconsider": "Reconsider if",
   "opp.list.all": "Directions found for you",
   "opp.list.recommendedTag": "Recommended",
+  "cc.findMore": "Find more directions",
 };
 
 const hi: Record<keyof typeof en, string> = {
@@ -19,6 +20,7 @@ const hi: Record<keyof typeof en, string> = {
   "opp.plan.reconsider": "दोबारा सोचें अगर",
   "opp.list.all": "आपके लिए मिली दिशाएं",
   "opp.list.recommendedTag": "सुझाई गई",
+  "cc.findMore": "और दिशाएं खोजें",
 };
 
 export default { en, hi };

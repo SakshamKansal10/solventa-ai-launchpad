@@ -644,7 +644,7 @@ function NextMove({
                   </span>
                   <span className="text-[1rem] font-medium text-sol-ink">{name}</span>
                   {p.range && (
-                    <span className="text-[0.875rem] text-sol-secondary">
+                    <span className="text-[0.9375rem] text-sol-secondary">
                       {t("common.weeksRange", { from: p.range.first, to: p.range.last })}
                     </span>
                   )}
@@ -699,7 +699,7 @@ function MetricTile({
           />
         </div>
       )}
-      {note && <p className="text-[0.875rem] text-sol-secondary">{note}</p>}
+      {note && <p className="text-[0.9375rem] text-sol-secondary">{note}</p>}
       {action}
     </Card>
   );

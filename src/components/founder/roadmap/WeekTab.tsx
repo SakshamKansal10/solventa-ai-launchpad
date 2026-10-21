@@ -222,7 +222,7 @@ export function WeekTab({
             <p className="mt-1 text-[1rem] leading-snug text-sol-ink">
               {detail.adaptationNote(week.adaptationNote)}
             </p>
-            <p className="mt-2 text-[0.875rem] text-sol-secondary">{t("rm.adapted.why")}</p>
+            <p className="mt-2 text-[0.9375rem] text-sol-secondary">{t("rm.adapted.why")}</p>
           </div>
         )}
 
@@ -403,7 +403,7 @@ export function WeekTab({
                 <Link
                   to="/dashboard/proof"
                   search={{ opportunity: opportunityId }}
-                  className="inline-flex min-h-9 items-center px-2 text-[0.875rem] font-medium text-sol-cobalt-deep hover:underline"
+                  className="inline-flex min-h-9 items-center px-2 text-[0.9375rem] font-medium text-sol-cobalt-deep hover:underline"
                 >
                   {t("pf.rail.open")}
                 </Link>
@@ -411,7 +411,7 @@ export function WeekTab({
             </section>
             {detail.mistakes(week.mistakes).length > 0 && (
               <section className="flex flex-col gap-3 p-5" data-testid="week-avoid">
-                <h3 className="sol-eyebrow !text-[0.8125rem]">{t("rm.rail.avoid")}</h3>
+                <h3 className="sol-eyebrow !text-[0.9375rem]">{t("rm.rail.avoid")}</h3>
                 <ul className="flex flex-col gap-2">
                   {detail.mistakes(week.mistakes).map((m) => (
                     <li key={m} className="flex gap-2.5 text-[0.9375rem] leading-snug text-sol-ink">

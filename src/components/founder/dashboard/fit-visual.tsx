@@ -30,7 +30,7 @@ export function FitSignals({
                 <Icon className="size-4" aria-hidden="true" />
               </span>
               <span className="flex min-w-0 flex-col items-start gap-0.5">
-                <span className="max-w-full truncate text-[0.8125rem] font-medium leading-none text-sol-ink">
+                <span className="max-w-full truncate text-[0.9375rem] font-medium leading-none text-sol-ink">
                   {t(`fit2.factor.${row.key}` as MessageKey)}
                 </span>
                 <FitStatusPill score={row.score} />

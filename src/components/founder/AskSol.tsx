@@ -155,21 +155,21 @@ export function AskSolPanel({
                 generic tagline once there's real context to show instead. */}
             {opportunityTitle ? (
               <div className="mt-1 flex flex-col gap-0.5" data-testid="ask-sol-context">
-                <p className="truncate text-[0.875rem] font-semibold text-sol-ink">
+                <p className="truncate text-[0.9375rem] font-semibold text-sol-ink">
                   {opportunityTitle}
                 </p>
                 {weekNumber != null && (
-                  <p className="truncate text-[0.875rem] text-sol-secondary">
+                  <p className="truncate text-[0.9375rem] text-sol-secondary">
                     {t("common.weekN", { n: String(weekNumber) })}
                     {phaseTitle ? ` · ${phaseTitle}` : ""}
                   </p>
                 )}
                 {missionTitle && (
-                  <p className="truncate text-[0.875rem] text-sol-secondary">{missionTitle}</p>
+                  <p className="truncate text-[0.9375rem] text-sol-secondary">{missionTitle}</p>
                 )}
                 {assumptionTitle && (
                   <p
-                    className="truncate text-[0.875rem] text-sol-secondary"
+                    className="truncate text-[0.9375rem] text-sol-secondary"
                     data-testid="ask-sol-assumption"
                   >
                     {t("askSol.assumptionLine", { title: assumptionTitle })}
@@ -177,7 +177,7 @@ export function AskSolPanel({
                 )}
               </div>
             ) : (
-              <p className="text-[0.875rem] text-sol-secondary">{t("askSol.tagline")}</p>
+              <p className="text-[0.9375rem] text-sol-secondary">{t("askSol.tagline")}</p>
             )}
           </div>
         </div>
@@ -213,14 +213,14 @@ export function AskSolPanel({
                   : t("askSol.workingGeneral")}
               </p>
               {conversation.isLoading && (
-                <p className="mt-2 flex items-center gap-2 text-[0.875rem] text-sol-secondary">
+                <p className="mt-2 flex items-center gap-2 text-[0.9375rem] text-sol-secondary">
                   <Loader2 className="size-3.5 animate-spin" aria-hidden="true" />
                   {t("askSol.loading")}
                 </p>
               )}
             </div>
             <div>
-              <p className="text-[0.875rem] font-bold uppercase tracking-[0.1em] text-sol-champagne-deep">
+              <p className="text-[0.9375rem] font-bold uppercase tracking-[0.1em] text-sol-champagne-deep">
                 {t("askSol.help")}
               </p>
               <div className="mt-3 flex flex-col gap-2">

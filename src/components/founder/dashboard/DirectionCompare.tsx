@@ -51,7 +51,7 @@ function DirectionHead({ brief: raw, rank }: { brief: OpportunityBrief; rank: nu
       >
         {rank}
       </span>
-      <span className="line-clamp-3 min-w-0 break-words text-[0.875rem] font-semibold leading-snug text-sol-ink sm:text-[0.9375rem]">
+      <span className="line-clamp-3 min-w-0 break-words text-[0.9375rem] font-semibold leading-snug text-sol-ink sm:text-[0.9375rem]">
         {brief.title}
       </span>
     </div>
@@ -82,7 +82,7 @@ function Cell({
   }
   if (score === undefined || score === null) {
     return (
-      <span className="grid h-12 place-items-center rounded-xl border border-dashed border-sol-border text-[0.8125rem] font-semibold text-sol-muted">
+      <span className="grid h-12 place-items-center rounded-xl border border-dashed border-sol-border text-[0.9375rem] font-semibold text-sol-muted">
         <span aria-hidden="true">{score === null ? t("fit2.level.unknown") : "—"}</span>
         <span className="sr-only">{label}</span>
       </span>
@@ -96,7 +96,7 @@ function Cell({
       animate={{ opacity: 1, scale: 1 }}
       transition={{ duration: 0.35, delay: 0.05 * order, ease: [0.22, 1, 0.36, 1] }}
     >
-      <span className="text-[0.8125rem] font-semibold">
+      <span className="text-[0.9375rem] font-semibold">
         {t(`fit2.level.${score}` as MessageKey)}
       </span>
     </motion.span>
@@ -111,7 +111,7 @@ function Legend() {
       {([3, 2, 1, 0] as const).map((s) => (
         <li
           key={s}
-          className="flex items-center gap-2 text-[0.875rem] font-semibold text-sol-secondary"
+          className="flex items-center gap-2 text-[0.9375rem] font-semibold text-sol-secondary"
         >
           {t(`fit2.level.${s}` as MessageKey)}
         </li>
@@ -198,7 +198,7 @@ export function DirectionCompare({ briefs }: { briefs: OpportunityBrief[] }) {
           <tr>
             <th
               scope="row"
-              className="text-left text-[0.875rem] font-bold uppercase tracking-[0.08em] text-sol-secondary"
+              className="text-left text-[0.9375rem] font-bold uppercase tracking-[0.08em] text-sol-secondary"
             >
               <span className="hidden sm:inline">{t("cc.compare.overall")}</span>
               <span className="sr-only sm:hidden">{t("cc.compare.overall")}</span>
@@ -207,7 +207,7 @@ export function DirectionCompare({ briefs }: { briefs: OpportunityBrief[] }) {
               <td
                 key={b.id}
                 className={cn(
-                  "text-center text-[0.875rem] font-bold leading-tight sm:text-[0.9375rem]",
+                  "text-center text-[0.9375rem] font-bold leading-tight sm:text-[0.9375rem]",
                   OVERALL_TONE[b.fit],
                 )}
                 data-testid="compare-overall"

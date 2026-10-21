@@ -172,7 +172,7 @@ function SidebarContent({
                 <span className="block truncate text-[1rem] font-semibold text-sol-ink">
                   {name}
                 </span>
-                <span className="block truncate text-[0.875rem] text-sol-secondary">
+                <span className="block truncate text-[0.9375rem] text-sol-secondary">
                   {user.data?.email}
                 </span>
               </span>
@@ -180,7 +180,7 @@ function SidebarContent({
           </DropdownMenuTrigger>
           <DropdownMenuContent align="start" side="top" className="w-60">
             <DropdownMenuLabel className="font-normal">
-              <span className="block text-[0.875rem] text-sol-secondary">
+              <span className="block text-[0.9375rem] text-sol-secondary">
                 {t("shell.account.signedInAs")}
               </span>
               <span className="block truncate text-[1rem] font-semibold text-sol-ink">
@@ -338,7 +338,7 @@ export function DashboardShell({ children }: { children: ReactNode }) {
                   {t(titleKeyFor(pathname))}
                 </p>
                 {pathname === "/dashboard/opportunities" && (
-                  <p className="hidden truncate text-[0.8125rem] text-sol-secondary sm:block">
+                  <p className="hidden truncate text-[0.9375rem] text-sol-secondary sm:block">
                     {t("opp.page.subtitle")}
                   </p>
                 )}
@@ -367,7 +367,7 @@ export function DashboardShell({ children }: { children: ReactNode }) {
                     <span className="block truncate text-[1rem] font-semibold text-sol-ink">
                       {user.data?.fullName ?? user.data?.email}
                     </span>
-                    <span className="block truncate text-[0.875rem] text-sol-secondary">
+                    <span className="block truncate text-[0.9375rem] text-sol-secondary">
                       {user.data?.email}
                     </span>
                   </DropdownMenuLabel>

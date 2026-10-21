@@ -99,14 +99,14 @@ export function OpportunityPhoto({
       ) : (
         <ImageIcon className="size-5" aria-hidden="true" />
       )}
-      {!compact && image.generating && <p className="text-[0.875rem]">{t("img.generating")}</p>}
+      {!compact && image.generating && <p className="text-[0.9375rem]">{t("img.generating")}</p>}
       {!compact && image.failed && !image.generating && (
         <>
-          <p className="text-[0.875rem]">{t("img.failed")}</p>
+          <p className="text-[0.9375rem]">{t("img.failed")}</p>
           <button
             type="button"
             onClick={image.generate}
-            className="rounded-full border border-sol-border bg-white px-3 py-1 text-[0.875rem] font-medium text-sol-ink hover:border-sol-cobalt/50"
+            className="rounded-full border border-sol-border bg-white px-3 py-1 text-[0.9375rem] font-medium text-sol-ink hover:border-sol-cobalt/50"
           >
             {t("img.retry")}
           </button>

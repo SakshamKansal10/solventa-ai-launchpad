@@ -169,12 +169,7 @@ for (const size of SIZES) {
       await gotoApp(page, "/dashboard/proof");
       await expect(page.getByTestId("assumption-card").first()).toBeVisible({ timeout: 60_000 });
       await shoot(page, size.name, "proof", { tall: true });
-      await page
-        .getByTestId("assumption-card")
-        .first()
-        .getByRole("button", { name: /details/i })
-        .first()
-        .click();
+      await page.getByTestId("assumption-card").first().getByTestId("view-details").click();
       await shoot(page, size.name, "proof-assumption-detail");
 
       await gotoApp(page, "/dashboard/history");
