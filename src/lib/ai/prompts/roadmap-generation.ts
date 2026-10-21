@@ -52,6 +52,30 @@ const ROADMAP_JSON_CONTRACT = `{
   ] }
 ] }`;
 
+/** The direction's structured fields (§7), when it has them: the roadmap tests the
+ * named critical assumptions, riskiest first, and the validation phase decides
+ * continue / revise / reconsider from the direction's own success criteria. */
+export function formatDirectionStructure(opportunity: OpportunityPackage): string {
+  const lines: string[] = [];
+  if (opportunity.deliveryModel) lines.push(`How it is delivered: ${opportunity.deliveryModel}`);
+  if (opportunity.criticalAssumptions?.length) {
+    lines.push(
+      `Critical assumptions to test, riskiest first (use their category as the missions' assumptionCategory):\n${opportunity.criticalAssumptions
+        .map((a, i) => `${i + 1}. [${a.category}] ${a.statement}`)
+        .join("\n")}`,
+    );
+  }
+  if (opportunity.successCriteria?.length) {
+    lines.push(
+      `The first validation test has worked when: ${opportunity.successCriteria.join("; ")}`,
+    );
+  }
+  if (opportunity.reconsiderIf?.length) {
+    lines.push(`Revise or drop the direction if: ${opportunity.reconsiderIf.join("; ")}`);
+  }
+  return lines.length ? `\n${lines.join("\n")}\n` : "";
+}
+
 export async function generateRoadmapPlan(
   profile: NormalizedProfile,
   opportunity: OpportunityPackage,
@@ -129,7 +153,7 @@ The solution: ${opportunity.solution}
 Starting capital: ${opportunity.startingCapital}
 Weekly time: ${opportunity.weeklyTime}
 Revenue path: ${opportunity.revenuePath}
-
+${formatDirectionStructure(opportunity)}
 Design the long-term shape only — North Star, phase and week titles/objectives, no tasks. Plan around ${planningHoursPhrase(profile)}; phase/week LENGTH (how many weeks a phase takes) should reflect that, not a generic timeline. Calibrate scope and ambition to the Founder Genome and Ambition Calibration above — never a ceiling-scraping venture plan for a resource-limited beginner, and never an unrealistically small plan for a highly capable, well-resourced founder.
 
 Respond with ONLY a single JSON object — no markdown fences, no commentary before or after — matching this exact shape:
@@ -203,7 +227,7 @@ Who it's for: ${opportunity.customer}
 The solution: ${opportunity.solution}
 Skills already owned: ${opportunity.skillsAlreadyOwned.join(", ") || "none listed"}
 Skills to learn: ${opportunity.skillsToLearn.join(", ") || "none listed"}
-
+${formatDirectionStructure(opportunity)}
 Roadmap phase: ${context.phaseTitle} — ${context.phaseDescription}
 This week (already shown to the founder before it unlocked): "${context.weekTitle}" — ${context.weekObjective}
 ${priorWeekSection}

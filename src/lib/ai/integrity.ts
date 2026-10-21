@@ -74,3 +74,34 @@ export function keepSupportedReasons(
   if (!profile) return reasons;
   return reasons.filter((r) => findIntegrityIssues(r, profile).length === 0);
 }
+
+interface PersonalProse {
+  whyThisFounder: string[];
+  advantages: string[];
+  criticalAssumptions: string[];
+  criticalAssumptionCategories: string[];
+  successCriteria: string[];
+  reconsiderIf: string[];
+}
+
+/** A direction's displayed prose with every unsupported personal claim removed —
+ * the same filter for the English page and for what is sent to be translated,
+ * so a dropped claim can't come back in Hindi. Assumptions keep their category. */
+export function keepSupportedDetail<T extends PersonalProse>(
+  detail: T,
+  profile: NormalizedProfile | null,
+): T {
+  if (!profile) return detail;
+  const kept = detail.criticalAssumptions
+    .map((statement, i) => ({ statement, category: detail.criticalAssumptionCategories[i] }))
+    .filter((a) => findIntegrityIssues(a.statement, profile).length === 0);
+  return {
+    ...detail,
+    whyThisFounder: keepSupportedReasons(detail.whyThisFounder, profile),
+    advantages: keepSupportedReasons(detail.advantages, profile),
+    criticalAssumptions: kept.map((a) => a.statement),
+    criticalAssumptionCategories: kept.map((a) => a.category ?? "other"),
+    successCriteria: keepSupportedReasons(detail.successCriteria, profile),
+    reconsiderIf: keepSupportedReasons(detail.reconsiderIf, profile),
+  };
+}

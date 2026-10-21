@@ -14,6 +14,7 @@ import fit from "./messages/fit";
 import cc from "./messages/cc";
 import evidence from "./messages/evidence";
 import history from "./messages/history";
+import direction from "./messages/direction";
 import { type Locale } from "./locale";
 
 /** Every domain module exports `{ en, hi }` with `hi` typed as
@@ -36,6 +37,7 @@ const modules = [
   cc,
   evidence,
   history,
+  direction,
 ] as const;
 
 type Module = (typeof modules)[number];

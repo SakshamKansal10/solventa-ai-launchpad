@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { findIntegrityIssues, keepSupportedReasons } from "@/lib/ai/integrity";
+import { findIntegrityIssues, keepSupportedDetail, keepSupportedReasons } from "@/lib/ai/integrity";
 import type { ConsultationAnswers } from "@/lib/consultation/model";
 import { normalizeProfile } from "@/lib/profile/normalize";
 
@@ -62,5 +62,26 @@ describe("findIntegrityIssues — personal claims the profile does not support",
       profile(),
     );
     expect(kept).toEqual(["You already know how to use spreadsheets."]);
+  });
+
+  it("keepSupportedDetail filters every personal list and keeps assumption categories aligned", () => {
+    const out = keepSupportedDetail(
+      {
+        whyThisFounder: ["Your 35 hours a week fit this.", "You know spreadsheets."],
+        advantages: ["Low cost to start"],
+        criticalAssumptions: [
+          "Your presence in Ambala gives you supplier access.",
+          "Clinic owners feel the follow-up problem.",
+        ],
+        criticalAssumptionCategories: ["distribution", "problem"],
+        successCriteria: ["3 of 8 owners ask for a trial"],
+        reconsiderIf: ["Most owners say it is not a priority"],
+      },
+      profile(),
+    );
+    expect(out.whyThisFounder).toEqual(["You know spreadsheets."]);
+    expect(out.criticalAssumptions).toEqual(["Clinic owners feel the follow-up problem."]);
+    expect(out.criticalAssumptionCategories).toEqual(["problem"]);
+    expect(out.successCriteria).toHaveLength(1);
   });
 });

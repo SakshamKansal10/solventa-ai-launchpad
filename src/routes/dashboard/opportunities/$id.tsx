@@ -20,6 +20,7 @@ import {
   Users,
   Wallet,
   type LucideIcon,
+  Truck,
 } from "lucide-react";
 
 import { FIT_ICONS } from "@/components/founder/dashboard/fit-constants";
@@ -42,6 +43,7 @@ import {
   type OpportunityDetailDTO,
 } from "@/lib/actions/opportunities";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import type { MessageKey } from "@/lib/i18n";
 import { useLocale } from "@/lib/i18n/LocaleProvider";
 import { qk, useInvalidateFounder } from "@/lib/queries";
 import { useTranslatedEntity, type OpportunityOverlay } from "@/lib/use-translation";
@@ -140,7 +142,7 @@ function OpportunityPage() {
           <FounderFit dto={dto} detail={detail} title={brief.title} />
         </TabsContent>
         <TabsContent value="market" className="mt-8">
-          <Market dto={dto} opportunityId={id} />
+          <Market dto={dto} detail={detail} opportunityId={id} />
         </TabsContent>
       </Tabs>
     </div>
@@ -282,6 +284,13 @@ function Overview({ detail }: { detail: OpportunityDisplayDetail }) {
       sentence: detail.businessModel,
     },
     {
+      key: "delivery",
+      icon: Truck,
+      label: t("opp.ov.delivery"),
+      headline: detail.deliveryModel,
+      sentence: "",
+    },
+    {
       key: "wedge",
       icon: FlaskConical,
       label: t("opp.ov.wedge"),
@@ -314,8 +323,9 @@ function Overview({ detail }: { detail: OpportunityDisplayDetail }) {
       id: "what",
       title: t("opp.ov.groupWhat"),
       variant: "plain",
-      cols: "md:grid-cols-2",
-      keys: ["product", "revenue"],
+      // Directions saved before the delivery model existed keep their two tiles.
+      cols: detail.deliveryModel ? "md:grid-cols-3" : "md:grid-cols-2",
+      keys: detail.deliveryModel ? ["product", "revenue", "delivery"] : ["product", "revenue"],
     },
     {
       id: "next",
@@ -644,8 +654,17 @@ function FounderFit({
   );
 }
 
-function Market({ dto, opportunityId }: { dto: OpportunityDetailDTO; opportunityId: string }) {
+function Market({
+  dto,
+  detail,
+  opportunityId,
+}: {
+  dto: OpportunityDetailDTO;
+  detail: OpportunityDisplayDetail;
+  opportunityId: string;
+}) {
   const { t } = useLocale();
+  const hasPlan = detail.criticalAssumptions.length > 0;
   const invalidate = useInvalidateFounder();
   const research = useMutation({
     mutationFn: () => refreshMarketEvidence({ data: { opportunityId } }),
@@ -697,19 +716,91 @@ function Market({ dto, opportunityId }: { dto: OpportunityDetailDTO; opportunity
         </ul>
       )}
 
-      <Card className="flex flex-col gap-4 border-sol-cobalt/25 bg-sol-cobalt-ultralight/60 p-6">
-        <h3 className="sol-h3">{t("opp.market.learnTitle")}</h3>
-        <ul className="flex flex-col gap-2.5">
-          {(["q1", "q2", "q3"] as const).map((q) => (
-            <li key={q} className="flex gap-3 text-[1.0625rem] leading-snug text-sol-ink">
-              <span
-                className="mt-2 size-1.5 shrink-0 rounded-full bg-sol-cobalt"
-                aria-hidden="true"
-              />
-              {t(`opp.market.${q}` as const)}
-            </li>
-          ))}
-        </ul>
+      <Card className="flex flex-col gap-5 border-sol-cobalt/25 bg-sol-cobalt-ultralight/60 p-6">
+        <div>
+          <h3 className="sol-h3">{hasPlan ? t("opp.plan.title") : t("opp.market.learnTitle")}</h3>
+          {hasPlan && (
+            <p className="mt-1 text-[0.9375rem] text-sol-secondary">{t("opp.plan.note")}</p>
+          )}
+        </div>
+        {hasPlan ? (
+          <div className="grid gap-6 md:grid-cols-3" data-testid="validation-plan">
+            <div className="md:col-span-3">
+              <p className="text-[0.875rem] font-semibold text-sol-secondary">
+                {t("opp.plan.assumptions")}
+              </p>
+              <ol className="mt-2 flex flex-col gap-2.5">
+                {detail.criticalAssumptions.map((a, i) => (
+                  <li
+                    key={a}
+                    className="flex flex-wrap items-start gap-x-3 gap-y-1.5 text-[1rem] leading-snug text-sol-ink"
+                  >
+                    <span
+                      className="flex size-6 shrink-0 items-center justify-center rounded-full bg-sol-surface text-[0.8125rem] font-semibold text-sol-cobalt-deep"
+                      aria-hidden="true"
+                    >
+                      {i + 1}
+                    </span>
+                    <span className="min-w-0 flex-1 basis-60">{a}</span>
+                    <Pill tone="neutral">
+                      {t(
+                        `pf.category.${detail.criticalAssumptionCategories[i] ?? "other"}` as MessageKey,
+                      )}
+                    </Pill>
+                  </li>
+                ))}
+              </ol>
+            </div>
+            {detail.successCriteria.length > 0 && (
+              <div className="md:col-span-2">
+                <p className="text-[0.875rem] font-semibold text-sol-secondary">
+                  {t("opp.plan.success")}
+                </p>
+                <ul className="mt-2 flex flex-col gap-2">
+                  {detail.successCriteria.map((c) => (
+                    <li key={c} className="flex gap-2.5 text-[1rem] leading-snug text-sol-ink">
+                      <Check
+                        className="mt-0.5 size-4 shrink-0 text-sol-champagne-deep"
+                        aria-hidden="true"
+                      />
+                      {c}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+            {detail.reconsiderIf.length > 0 && (
+              <div>
+                <p className="text-[0.875rem] font-semibold text-sol-secondary">
+                  {t("opp.plan.reconsider")}
+                </p>
+                <ul className="mt-2 flex flex-col gap-2">
+                  {detail.reconsiderIf.map((c) => (
+                    <li key={c} className="flex gap-2.5 text-[1rem] leading-snug text-sol-ink">
+                      <span
+                        className="mt-2 size-1.5 shrink-0 rounded-full bg-sol-warning"
+                        aria-hidden="true"
+                      />
+                      {c}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </div>
+        ) : (
+          <ul className="flex flex-col gap-2.5">
+            {(["q1", "q2", "q3"] as const).map((q) => (
+              <li key={q} className="flex gap-3 text-[1.0625rem] leading-snug text-sol-ink">
+                <span
+                  className="mt-2 size-1.5 shrink-0 rounded-full bg-sol-cobalt"
+                  aria-hidden="true"
+                />
+                {t(`opp.market.${q}` as const)}
+              </li>
+            ))}
+          </ul>
+        )}
         <div className="flex flex-wrap gap-3">
           <LinkButton
             to="/dashboard/proof"

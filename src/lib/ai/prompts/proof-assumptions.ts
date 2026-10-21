@@ -63,9 +63,29 @@ const CONTRACT = `{
 
 type Pkg = OpportunityPackage | OpportunityCandidate;
 
+/** The direction's own structured fields (§7), when it has them — the assumptions
+ * Evidence tracks start from these instead of being re-invented. */
+function structureOf(p: OpportunityPackage): string {
+  const lines: string[] = [];
+  if (p.criticalAssumptions?.length) {
+    lines.push(
+      `Critical assumptions already named for this direction (start from these, keep their order and category):\n${p.criticalAssumptions
+        .map((a, i) => `${i + 1}. [${a.category}] ${a.statement}`)
+        .join("\n")}`,
+    );
+  }
+  if (p.successCriteria?.length) {
+    lines.push(`What success in the first test looks like: ${p.successCriteria.join("; ")}`);
+  }
+  if (p.reconsiderIf?.length) {
+    lines.push(`Reconsider the direction if: ${p.reconsiderIf.join("; ")}`);
+  }
+  return lines.length ? `\n${lines.join("\n")}` : "";
+}
+
 function describeOpportunity(p: Pkg): string {
   if ("plainEnglishSummary" in p) {
-    return `Opportunity: ${p.title}\nWhat it is: ${p.plainEnglishSummary}\nWho pays: ${p.customer}\nThe problem: ${p.problem}\nThe solution: ${p.solution}\nRevenue path: ${p.revenuePath}\nAlready flagged as needing validation: ${p.validationNeeded.join("; ") || "nothing listed"}\nOpen unknowns: ${p.unknowns.join("; ") || "nothing listed"}`;
+    return `Opportunity: ${p.title}\nWhat it is: ${p.plainEnglishSummary}\nWho pays: ${p.customer}\nThe problem: ${p.problem}\nThe solution: ${p.solution}\nRevenue path: ${p.revenuePath}\nAlready flagged as needing validation: ${p.validationNeeded.join("; ") || "nothing listed"}\nOpen unknowns: ${p.unknowns.join("; ") || "nothing listed"}${structureOf(p)}`;
   }
   return `Opportunity: ${p.title}\nWhat it is: ${p.oneLiner}\nWho pays: ${p.whoFor}`;
 }
@@ -131,6 +151,15 @@ export function templateAssumptions(p: Pkg): ProofAssumptionPlan[] {
       successThreshold: 2,
     },
   ];
+
+  // A direction that names its own critical assumptions is tested on exactly
+  // those (in its order), each with the matching category's why and test.
+  if ("criticalAssumptions" in p && p.criticalAssumptions && p.criticalAssumptions.length > 0) {
+    return p.criticalAssumptions.slice(0, 4).map((a) => {
+      const like = list.find((x) => x.category === a.category) ?? list[0];
+      return { ...like, title: a.statement, category: a.category };
+    });
+  }
 
   // The package's own "needs validation" items become the test for the
   // assumption they most naturally belong to — never extra invented claims.

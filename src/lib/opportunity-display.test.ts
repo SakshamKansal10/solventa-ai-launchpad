@@ -68,4 +68,28 @@ describe("toDisplayDetail", () => {
     expect(display.whyThisFounder).toEqual([]);
     expect(display.risks).toEqual([]);
   });
+
+  it("reads the structured fields, and an older direction without them as empty", () => {
+    const pkg = {
+      plainEnglishSummary: "x",
+      deliveryModel: "Delivered remotely",
+      criticalAssumptions: [
+        { statement: "Owners feel the pain", category: "problem" },
+        { statement: "Made-up category", category: "astrology" },
+        { nope: true },
+      ],
+      successCriteria: ["3 of 8 ask for a trial", 42],
+      reconsiderIf: "not an array",
+    } as unknown as OpportunityPackage;
+    const display = toDisplayDetail(pkg);
+    expect(display.deliveryModel).toBe("Delivered remotely");
+    expect(display.criticalAssumptions).toEqual(["Owners feel the pain", "Made-up category"]);
+    expect(display.criticalAssumptionCategories).toEqual(["problem", "other"]);
+    expect(display.successCriteria).toEqual(["3 of 8 ask for a trial"]);
+    expect(display.reconsiderIf).toEqual([]);
+
+    const old = toDisplayDetail({ plainEnglishSummary: "x" } as unknown as OpportunityPackage);
+    expect(old.criticalAssumptions).toEqual([]);
+    expect(old.deliveryModel).toBe("");
+  });
 });

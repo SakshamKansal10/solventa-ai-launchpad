@@ -12,7 +12,7 @@ import {
   type FitAssessment,
   type Range,
 } from "@/lib/fit/model";
-import { keepSupportedReasons } from "@/lib/ai/integrity";
+import { keepSupportedDetail } from "@/lib/ai/integrity";
 import { generateOpportunityPackageBatch } from "@/lib/ai/prompts/intelligence-package";
 import { generateOpportunityDetail } from "@/lib/ai/prompts/opportunity-detail";
 import { researchMarketEvidence } from "@/lib/ai/prompts/market-research";
@@ -256,11 +256,7 @@ export const getOpportunityDetail = createServerFn({ method: "GET" })
 
     const raw = toDisplayDetail(detailRow.detail as unknown as OpportunityPackage);
     // Personal reasons the founder's own profile does not support are never shown.
-    const display = {
-      ...raw,
-      whyThisFounder: keepSupportedReasons(raw.whyThisFounder, profile),
-      advantages: keepSupportedReasons(raw.advantages, profile),
-    };
+    const display = keepSupportedDetail(raw, profile);
     const factors = getFitFactors(opportunity.candidate as unknown as OpportunityPackage);
     const assessment = assessFit(profile, factors);
 
