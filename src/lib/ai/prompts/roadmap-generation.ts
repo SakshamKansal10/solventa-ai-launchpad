@@ -17,6 +17,7 @@ import {
   type GenerationLocale,
 } from "@/lib/ai/prompts/shared";
 import type { NormalizedProfile } from "@/lib/profile/normalize";
+import { fitTasksToBudget, weekHoursBudget } from "@/lib/roadmap/hours";
 
 /** Shared by every roadmap-generation prompt below — concrete over
  * abstract, short over long, a founder should never feel like they're
@@ -96,9 +97,12 @@ ${ROADMAP_JSON_CONTRACT}`;
 // real founder-facing "Build My Roadmap" flow.
 // ============================================================
 
+/** Shared by the roadmap shape and every week: what is tested first, and what must wait. */
+const DEMAND_FIRST_RULE = `DEMAND FIRST. Order the plan around the assumptions most able to make this business fail. The first phase VALIDATES DEMAND: who exactly buys or decides, how they buy or solve this today, whether the problem matters enough to them, whether they will take a real next step toward this offer (a meeting, a trial, a pre-order, a quote request — not compliments), and whether the founder can actually reach them. Until there is recorded evidence of demand, never schedule catalogues, inventory, paid tools or ads, building software, branding, company registration, or agreement/partnership targets with suppliers or manufacturers. Supply-side feasibility (asking suppliers about terms, stock, delivery, warranty, invoicing — asking, not signing) comes only after first demand signals, in the order THIS business type needs. End the validation phase with a decision week: continue, revise the offer or customer, or reconsider the direction, based only on what was learned. Later phases depend on what validation shows: keep them short and phrase their objectives as provisional ("If validation supports it, …"); never pad the plan to a fixed length. Every count (people to talk to, suppliers to ask) is small and sized to the founder's hours — never arbitrary volumes such as 50 manufacturers or 15 agreements. Prices, commissions, margins, costs and demand are hypotheses to test, never stated as known.`;
+
 const SKELETON_SYSTEM_INSTRUCTION = `You are Sol, Solventia's execution planner. You design the long-term SHAPE of a founder's path to actually build ONE specific business — a one-sentence North Star, then phases and, within each phase, weeks — WITHOUT writing any task detail yet, since only the active week's detail is ever generated, just before the founder needs it. ${PLAIN_LANGUAGE_RULE} ${OUTPUT_STYLE_RULE}
 
-Use only the phases that genuinely apply (choose from: understand, explore, validate, build, launch, improve — skip any that don't fit this specific opportunity, and use realistic phase LENGTH — validating a problem might be 3 weeks, building repeatable acquisition might be 10). Aim for 6-8 phases for most businesses — a genuinely simpler opportunity or a founder with limited capacity can have fewer, but never pad phases or weeks that don't apply just to hit a number. Together the phases should span roughly 26-52 weeks of realistic founder progress, calibrated to THIS founder and THIS opportunity: target close to a full year (~52 weeks) when the business and this founder's real capability/capacity genuinely support sustained, ambitious work, and a shorter path (as low as ~26 weeks) for a narrower opportunity or a founder with real, stated capacity limits — never force either direction. Each phase MUST be adapted to this specific opportunity type, never a generic copy-paste sequence — a physical-product business, a service business, and a digital product need genuinely different phase shapes. Each week needs a title and ONE-sentence objective a founder can read before it unlocks, without seeing any tasks yet.`;
+Use only the phases that genuinely apply (choose from: understand, explore, validate, build, launch, improve — skip any that don't fit this specific opportunity, and use realistic phase LENGTH — validating a problem might be 3 weeks, building repeatable acquisition might be 10). Use as many phases as this business genuinely needs — usually 4-6 — and never pad phases or weeks that don't apply just to hit a number. The total length is whatever THIS business and THIS founder's stated time genuinely require (often 12-30 weeks); never stretch it toward a year. ${DEMAND_FIRST_RULE} Each phase MUST be adapted to this specific opportunity type, never a generic copy-paste sequence — a physical-product business, a service business, and a digital product need genuinely different phase shapes. Each week needs a title and ONE-sentence objective a founder can read before it unlocks, without seeing any tasks yet.`;
 
 const SKELETON_JSON_CONTRACT = `{
   "northStar": string (one sentence: what this whole roadmap is building toward),
@@ -142,7 +146,7 @@ ${SKELETON_JSON_CONTRACT}${buildLanguageRule(locale)}`;
 
 const WEEK_DETAIL_SYSTEM_INSTRUCTION = `You are Sol, Solventia's execution planner. You are filling in the REAL detail for exactly ONE week of a founder's roadmap, right as it unlocks — not the whole roadmap. ${PLAIN_LANGUAGE_RULE} ${OUTPUT_STYLE_RULE}
 
-Give this week 2-5 concrete actions (tasks) that realistically fit this founder's weekly hours — never 15 microtasks; a founder should be able to hold this week's whole plan in their head. If the founder lacks a skill a task requires, insert a short learning task before the task that needs it. State honestly what real-world evidence (if any) this week should produce — interviews, a test purchase, a signed customer, direct observation — and what "this week worked" concretely looks like; a pure-execution week (no evidence to collect) should say so plainly rather than inventing evidence for its own sake. Name 1-3 real, specific mistakes founders make in exactly this kind of week — never generic advice like "stay organized". If this week follows an earlier one, actually use what happened in that earlier week (what got done, and the founder's own reflection if given) to shape this week — never ignore it and repeat a generic template. You may refine or flag a needed pivot based on what actually happened, but never silently rewrite what the founder already completed.`;
+${DEMAND_FIRST_RULE} Give this week 2-5 concrete actions (tasks) that realistically fit this founder's weekly hours — never 15 microtasks; a founder should be able to hold this week's whole plan in their head. If the founder lacks a skill a task requires, insert a short learning task before the task that needs it. State honestly what real-world evidence (if any) this week should produce — interviews, a test purchase, a signed customer, direct observation — and what "this week worked" concretely looks like; a pure-execution week (no evidence to collect) should say so plainly rather than inventing evidence for its own sake. Name 1-3 real, specific mistakes founders make in exactly this kind of week — never generic advice like "stay organized". If this week follows an earlier one, actually use what happened in that earlier week (what got done, and the founder's own reflection if given) to shape this week — never ignore it and repeat a generic template. You may refine or flag a needed pivot based on what actually happened, but never silently rewrite what the founder already completed.`;
 
 const WEEK_DETAIL_JSON_CONTRACT = `{
   "mission": string (short and concrete, 5-14 words — more specific than the objective already shown, not a restatement of it),
@@ -204,16 +208,25 @@ Roadmap phase: ${context.phaseTitle} — ${context.phaseDescription}
 This week (already shown to the founder before it unlocked): "${context.weekTitle}" — ${context.weekObjective}
 ${priorWeekSection}
 
-Generate this week's real detail now. deadlineDaysFromStart values must be 0-6 (days into THIS week, day 0 = the day it unlocked) and reflect ${planningHoursPhrase(profile)}.
+Generate this week's real detail now. deadlineDaysFromStart values must be 0-6 (days into THIS week, day 0 = the day it unlocked) and reflect ${planningHoursPhrase(profile)}. HOURS BUDGET: every task's timeEstimate is in hours (e.g. "~2 hrs"), and together this week's tasks must fit within ${weekHoursBudget(profile)} hours — 85% of the lower end of the founder's stated time, the rest left free. Each task's doneWhen states the output the founder will have (notes, a list, recorded answers) and what that result tells them.
 
 Respond with ONLY a single JSON object — no markdown fences, no commentary before or after — matching this exact shape:
 ${WEEK_DETAIL_JSON_CONTRACT}${buildLanguageRule(locale)}`;
 
-  return generateJSON(RoadmapWeekDetailSchema, {
+  const detail = await generateJSON(RoadmapWeekDetailSchema, {
     systemInstruction: WEEK_DETAIL_SYSTEM_INSTRUCTION,
     prompt,
     callSite: "generateWeekDetail",
     purpose: "WEEK_DETAIL",
     route: "opportunity/build-roadmap",
   });
+  // The founder's stated time is a constraint, not a suggestion: optional work that
+  // would overfill the week is dropped; required work is kept (and logged) if alone over.
+  const budget = weekHoursBudget(profile);
+  const fitted = fitTasksToBudget(detail.tasks, budget);
+  if (fitted.over)
+    console.warn(
+      `[roadmap] week "${context.weekTitle}" needs ~${fitted.hours}h, over the ${budget}h budget`,
+    );
+  return { ...detail, tasks: fitted.tasks.length >= 2 ? fitted.tasks : detail.tasks };
 }
