@@ -61,11 +61,33 @@ Phase 4 (design system).
 
 ## Done so far
 
-- `src/lib/fit/model.ts` — the only fit function; stored in `opportunities.score_breakdown` with `rubricVersion`; `fit_score` = its score (ordering only).
-- Old `fitClass` and `src/lib/fit/matrix.ts` removed; every screen, filter, compare grid and email reads the canonical label.
-- Profile keeps stated ranges (`time.weeklyHoursRange`, capital tier → range) and `v2.accessNone`.
-- Prompts (`src/lib/ai/prompts/shared.ts`) give ranges + truthfulness rules; roadmap prompts plan at the lower end, named as an assumption.
-- `src/lib/ai/integrity.ts` drops unsupported personal reasons before display.
+- Fit (ce19fd4): `src/lib/fit/model.ts` is the only fit function (5 factors, unknown = null, coverage, bands, rubric version stored in `score_breakdown`); every screen, filter, compare grid and email uses it.
+- Integrity (fe85c11): prompts get stated ranges + truthfulness rules; `src/lib/ai/integrity.ts` drops unsupported personal claims (single hour/budget figures, unconfirmed places).
+- Design system (478b065): pearl/graphite/navy/cobalt/champagne tokens, Geist only, purple removed product-wide; CLAUDE.md rules updated.
+- Command Center (f83d708): state-aware, one primary action per state, honest path, "Other directions · 2", category icons.
+- Roadmap logic (ef66b46): demand-first rule for shape and weeks; week load ≤ 85% of the lower stated hours, enforced after generation (`src/lib/roadmap/hours.ts`).
+- Roadmap view (0b3e4e0): island PNG/3D removed; all phases on a Validate → Build → Elevate path; gems removed (History hero, sign-in).
+- Homepage identity (9911d92): one identity at a time (bar hands over to the finale lockup); solid bar with its own lockup after the film. Evidence replaces Proof in visible labels (route kept). Progress shows from the first record.
+- Notifications (490145f): roadmap-ready only after save + week 1; carries roadmap/direction ids; dedupe key.
+- Building screen (d4ce537): real elapsed time, indeterminate bar, no timer-driven stages.
+- Homepage icons + palette (ee5a451): semantic icons on the founder-profile captions; film violet → cobalt.
+- Copy (b5c979f): Customer / Problem to solve / Your offer / "Market evidence hasn't been collected yet."; photo label matches what is shown; navy initials avatar.
+- Ask Sol (2f59d5a): instant welcome + prompts, approved emblem.
+
+## Blocked pending external configuration
+
+- §21 Google sign-in shows the Supabase project host. Code is correct (`redirectTo` = site origin). Needed by the owner:
+  1. Google Cloud Console → APIs & Services → OAuth consent screen → Branding: App name "Solventia", logo, home page https://solventia.in, privacy https://solventia.in/privacy, terms https://solventia.in/terms, authorized domains `solventia.in` (and `supabase.co` while the Supabase host is used); submit for brand verification.
+  2. Optional, removes the host entirely: Supabase → Project Settings → Custom domains → e.g. `auth.solventia.in`; then add `https://auth.solventia.in/auth/v1/callback` to the Google OAuth client's redirect URIs and set the production SUPABASE_URL / VITE_SUPABASE_URL (Vercel) to the custom domain.
+  Verify: sign in with Google on https://solventia.in — the account chooser should say "to continue to Solventia".
+
+## Not done yet (honest list)
+
+- §14 assumption model fields (test method, next action, status labels Supported/Contradicted/Inconclusive end to end) and two-way mission ↔ assumption links: existing proof state machine kept; not yet redesigned.
+- §15 visible "Your roadmap has changed" panel: adaptationNote exists per week; no dedicated panel yet.
+- §18 History editorial timeline + consultation compare; §19 Settings name save-state and profile rows "Not provided yet"; §6.4 explicit "assessment refreshed" notice on profile change.
+- §7 extended direction schema (delivery model, critical assumptions, success criteria, reconsider conditions) — not yet.
+- Responsive sweep at 430/1280/1366/3840 and a11y audit on the new screens; before/after pack.
 
 ## Tests
 
@@ -78,4 +100,4 @@ Not deployed. Production is unchanged.
 
 ## Next action
 
-§12: demand-first roadmap prompt + hours budget; then §14 Evidence naming and assumption links; then §20 homepage identity; then §16 notifications. Run the rest of the E2E suite (buttons, roadmap, history, settings, auth, hindi, a11y, visual) after those.
+Read the full E2E result (.e2e-tmp/full-e2e.log), fix regressions, then ask the owner to confirm the production merge to main (Lovable-connected, shared with another contributor).
