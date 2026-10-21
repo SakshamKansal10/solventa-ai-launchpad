@@ -122,7 +122,7 @@ export function StaticFallback() {
                     {SIGNALS.map((s) => (
                       <div key={s.id}>
                         <dt
-                          className="font-mono text-[11.5px] uppercase tracking-[0.26em]"
+                          className="font-mono text-[12px] uppercase tracking-[0.26em]"
                           style={{ color: "var(--label)" }}
                         >
                           {s.label}
@@ -134,7 +134,7 @@ export function StaticFallback() {
                     ))}
                   </dl>
                   <p
-                    className="mt-8 font-mono text-[11px] uppercase tracking-[0.26em]"
+                    className="mt-8 font-mono text-[12px] uppercase tracking-[0.26em]"
                     style={{ color: "var(--label)" }}
                   >
                     Illustrative founder profile

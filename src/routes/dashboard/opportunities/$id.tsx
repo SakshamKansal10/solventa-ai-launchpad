@@ -6,7 +6,6 @@ import { z } from "zod";
 import {
   ArrowLeft,
   ArrowRight,
-  CalendarCheck,
   Check,
   ChevronDown,
   ExternalLink,
@@ -169,10 +168,10 @@ function HeaderBlock({ dto, title }: { dto: OpportunityDetailDTO; title: string 
   const oneLiner = dto.brief.oneLiner;
 
   return (
-    <header className={cn("sol-atmosphere grid", image.url && "md:grid-cols-[3fr_2fr]")}>
+    <header className={cn("sol-atmosphere grid", image.url && "@2xl:grid-cols-[3fr_2fr]")}>
       <div className="relative z-10 flex flex-col items-start gap-4 p-6 sm:p-8">
         <div className="flex flex-wrap items-center gap-2.5">
-          <p className="sol-eyebrow flex items-center gap-2 !text-[0.6875rem] !uppercase !tracking-[0.14em]">
+          <p className="sol-eyebrow flex items-center gap-2 !text-[0.875rem]">
             <span className="h-3 w-0.5 rounded-full bg-sol-cobalt" aria-hidden="true" />
             {t("opp.detail.eyebrow")}
           </p>
@@ -316,7 +315,7 @@ function Overview({ detail }: { detail: OpportunityDisplayDetail }) {
       id: "why",
       title: t("opp.ov.groupWhy"),
       variant: "lead",
-      cols: "md:grid-cols-2",
+      cols: "@2xl:grid-cols-2",
       keys: ["customer", "pain"],
     },
     {
@@ -324,14 +323,14 @@ function Overview({ detail }: { detail: OpportunityDisplayDetail }) {
       title: t("opp.ov.groupWhat"),
       variant: "plain",
       // Directions saved before the delivery model existed keep their two tiles.
-      cols: detail.deliveryModel ? "md:grid-cols-3" : "md:grid-cols-2",
+      cols: detail.deliveryModel ? "@2xl:grid-cols-3" : "@2xl:grid-cols-2",
       keys: detail.deliveryModel ? ["product", "revenue", "delivery"] : ["product", "revenue"],
     },
     {
       id: "next",
       title: t("opp.ov.groupNext"),
       variant: "next",
-      cols: "md:grid-cols-2",
+      cols: "@2xl:grid-cols-2",
       keys: ["wedge", "scale"],
     },
   ];
@@ -463,20 +462,12 @@ function FounderFit({
   const advantages = (
     detail.whyThisFounder.length > 0 ? detail.whyThisFounder : dto.fit.advantages
   ).slice(0, 4);
+  // The factor cards already explain each gap; this list adds only what they
+  // don't: skills to learn and the trade-offs the direction asks you to accept.
   const gaps = [
-    ...assessment.factors
-      .filter((f) => f.score !== 3)
-      .map((f) => reasonText(f.reason, dto.fit.currency)),
     ...detail.skillsToLearn.map((s) => t("opp.fit.learn", { skill: s })),
-  ].slice(0, 3);
-  // Next steps are the gaps, to be worked through; ticks are a local aid only.
-  const [done, setDone] = useState<Set<string>>(new Set());
-  const toggle = (g: string) =>
-    setDone((prev) => {
-      const next = new Set(prev);
-      if (!next.delete(g)) next.add(g);
-      return next;
-    });
+    ...detail.tradeoffs,
+  ].slice(0, 4);
 
   return (
     <div className="flex flex-col gap-6" data-testid="founder-fit">
@@ -513,90 +504,52 @@ function FounderFit({
         </div>
       </div>
 
-      <div className="grid gap-5 lg:grid-cols-3">
-        <ul className="grid gap-5 sm:grid-cols-2 lg:col-span-2">
-          {assessment.factors.map((row) => {
-            const Icon = FIT_ICONS[row.key];
-            return (
-              <li key={row.key} data-testid={`fit-row-${row.key}`}>
-                <Card className="flex h-full gap-4 p-5">
-                  <span className="flex size-11 shrink-0 items-center justify-center rounded-full border border-sol-champagne/40 bg-sol-champagne-soft text-sol-champagne-deep">
-                    <Icon className="size-5" aria-hidden="true" />
-                  </span>
-                  <div className="min-w-0">
-                    <div className="flex flex-wrap items-center gap-2.5">
-                      <p className="text-[1rem] font-medium text-sol-ink">
-                        {t(`fit2.factor.${row.key}` as const)}
-                      </p>
-                      <FitStatusPill score={row.score} />
-                    </div>
-                    <span
-                      className="mt-2.5 flex gap-1"
-                      role="img"
-                      aria-label={t(`fit2.level.${row.score ?? "unknown"}` as const)}
-                    >
-                      {[0, 1, 2].map((n) => (
-                        <span
-                          key={n}
-                          className={cn(
-                            "h-1.5 w-8 rounded-full",
-                            row.score !== null && n < row.score
-                              ? row.score === 3
-                                ? "bg-sol-champagne"
-                                : "bg-sol-navy"
-                              : "bg-sol-border",
-                          )}
-                        />
-                      ))}
-                    </span>
-                    <p className="mt-2 text-[0.9375rem] leading-snug text-sol-secondary">
-                      {reasonText(row.reason, dto.fit.currency)}
+      <ul className="grid gap-5 @2xl:grid-cols-2 @5xl:grid-cols-3">
+        {assessment.factors.map((row) => {
+          const Icon = FIT_ICONS[row.key];
+          return (
+            <li key={row.key} data-testid={`fit-row-${row.key}`}>
+              <Card className="flex h-full gap-4 p-5">
+                <span className="flex size-11 shrink-0 items-center justify-center rounded-full border border-sol-champagne/40 bg-sol-champagne-soft text-sol-champagne-deep">
+                  <Icon className="size-5" aria-hidden="true" />
+                </span>
+                <div className="min-w-0">
+                  <div className="flex flex-wrap items-center gap-2.5">
+                    <p className="text-[1rem] font-medium text-sol-ink">
+                      {t(`fit2.factor.${row.key}` as const)}
                     </p>
+                    <FitStatusPill score={row.score} />
                   </div>
-                </Card>
-              </li>
-            );
-          })}
-        </ul>
+                  <span
+                    className="mt-2.5 flex gap-1"
+                    role="img"
+                    aria-label={t(`fit2.level.${row.score ?? "unknown"}` as const)}
+                  >
+                    {[0, 1, 2].map((n) => (
+                      <span
+                        key={n}
+                        className={cn(
+                          "h-1.5 w-8 rounded-full",
+                          row.score !== null && n < row.score
+                            ? row.score === 3
+                              ? "bg-sol-champagne"
+                              : "bg-sol-navy"
+                            : "bg-sol-border",
+                        )}
+                      />
+                    ))}
+                  </span>
+                  <p className="mt-2 text-[0.9375rem] leading-snug text-sol-secondary">
+                    {reasonText(row.reason, dto.fit.currency)}
+                  </p>
+                </div>
+              </Card>
+            </li>
+          );
+        })}
+      </ul>
 
-        <Card className="flex flex-col gap-3 p-5">
-          <div className="flex items-center justify-between gap-3">
-            <h3 className="sol-h3 flex items-center gap-2.5">
-              <CalendarCheck className="size-5 text-sol-cobalt" aria-hidden="true" />
-              {t("opp.fit.nextSteps")}
-            </h3>
-            {gaps.length > 0 && (
-              <span className="rounded-full bg-sol-cobalt-soft px-2.5 py-0.5 text-[0.875rem] font-semibold text-sol-cobalt-deep">
-                {done.size}/{gaps.length}
-              </span>
-            )}
-          </div>
-          <p className="text-[0.9375rem] text-sol-secondary">{t("opp.fit.nextStepsBody")}</p>
-          {gaps.length === 0 ? (
-            <p className="text-[1rem] text-sol-secondary">{t("opp.fit.noGaps")}</p>
-          ) : (
-            <ul className="flex flex-col divide-y divide-sol-border">
-              {gaps.map((g) => (
-                <li key={g}>
-                  <label className="flex min-h-12 cursor-pointer items-start gap-3 py-3 text-[0.9375rem] leading-snug text-sol-ink">
-                    <input
-                      type="checkbox"
-                      checked={done.has(g)}
-                      onChange={() => toggle(g)}
-                      className="mt-0.5 size-5 shrink-0 accent-[var(--sol-cobalt)]"
-                    />
-                    <span className={cn(done.has(g) && "text-sol-secondary line-through")}>
-                      {g}
-                    </span>
-                  </label>
-                </li>
-              ))}
-            </ul>
-          )}
-        </Card>
-      </div>
-
-      <div className="grid gap-5 md:grid-cols-2">
+      <div className="grid gap-5 @2xl:grid-cols-2">
         <Card className="p-6">
           <h3 className="sol-h3 flex items-center justify-between gap-3">
             <span className="flex items-center gap-3">
@@ -724,8 +677,8 @@ function Market({
           )}
         </div>
         {hasPlan ? (
-          <div className="grid gap-6 md:grid-cols-3" data-testid="validation-plan">
-            <div className="md:col-span-3">
+          <div className="grid gap-6 @2xl:grid-cols-3" data-testid="validation-plan">
+            <div className="@2xl:col-span-3">
               <p className="text-[0.875rem] font-semibold text-sol-secondary">
                 {t("opp.plan.assumptions")}
               </p>
@@ -752,7 +705,7 @@ function Market({
               </ol>
             </div>
             {detail.successCriteria.length > 0 && (
-              <div className="md:col-span-2">
+              <div className="@2xl:col-span-2">
                 <p className="text-[0.875rem] font-semibold text-sol-secondary">
                   {t("opp.plan.success")}
                 </p>

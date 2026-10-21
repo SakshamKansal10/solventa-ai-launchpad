@@ -108,11 +108,7 @@ export function RoadmapJourney({
       <div className="relative overflow-hidden rounded-[1.5rem] border border-sol-border bg-[linear-gradient(180deg,#ffffff_0%,#f7f8fa_100%)]">
         <header className="relative z-20 flex flex-wrap items-start justify-between gap-4 px-6 pt-6 sm:px-8 sm:pt-7">
           <div className="min-w-0">
-            <p className="sol-eyebrow flex items-center gap-2 !text-[0.6875rem] !uppercase !tracking-[0.14em]">
-              <span className="h-3 w-0.5 rounded-full bg-sol-cobalt" aria-hidden="true" />
-              {t("rm.journey.eyebrow")}
-            </p>
-            <h1 id="journey-title" className="sol-page-title mt-1">
+            <h1 id="journey-title" className="sol-page-title">
               {t("rm.journey.title")}
             </h1>
             <p
@@ -175,11 +171,11 @@ export function RoadmapJourney({
           data-testid="phase-strip"
           className="relative z-10 px-6 pb-2 pt-6 sm:px-8"
         >
-          <ol className="relative grid gap-3 md:auto-cols-fr md:grid-flow-col">
+          <ol className="relative grid gap-3 @4xl:auto-cols-fr @4xl:grid-flow-col">
             {/* The path itself: one line joining every phase, in order. */}
             <span
               aria-hidden="true"
-              className="absolute left-5 top-4 bottom-4 w-px bg-sol-border-strong md:left-4 md:right-4 md:top-5 md:bottom-auto md:h-px md:w-auto"
+              className="absolute left-5 top-4 bottom-4 w-px bg-sol-border-strong @4xl:left-4 @4xl:right-4 @4xl:top-5 @4xl:bottom-auto @4xl:h-px @4xl:w-auto"
             />
             {visiblePhases.map((p, i) => (
               <li
@@ -244,7 +240,7 @@ const PhaseLabel = forwardRef<
       aria-pressed={active}
       onClick={onClick}
       className={cn(
-        "relative flex w-full items-start gap-3 rounded-2xl border bg-sol-surface p-3 text-left outline-none transition-colors focus-visible:ring-2 focus-visible:ring-sol-cobalt/50 md:flex-col md:gap-2",
+        "relative flex w-full items-start gap-3 rounded-2xl border bg-sol-surface p-3 text-left outline-none transition-colors focus-visible:ring-2 focus-visible:ring-sol-cobalt/50 @4xl:flex-col @4xl:gap-2",
         active
           ? "border-sol-cobalt shadow-[0_8px_24px_-12px_rgba(49,94,219,0.45)]"
           : "border-sol-border hover:border-sol-cobalt/40",
@@ -267,7 +263,7 @@ const PhaseLabel = forwardRef<
         {phase.state === "current" && <span className="size-2 rounded-full bg-sol-cobalt" />}
       </span>
       <span className="min-w-0">
-        <span className="flex flex-wrap items-center gap-x-2 text-[0.75rem] font-semibold uppercase tracking-[0.08em] text-sol-secondary">
+        <span className="flex flex-wrap items-center gap-x-2 text-[0.8125rem] font-semibold uppercase tracking-[0.08em] text-sol-secondary">
           {t(`rm.stage.${stageOf(phase.key)}` as const)}
           <span className="font-medium normal-case tracking-normal tabular-nums">
             {t("rm.phase.n", { n: index + 1 })}
@@ -346,11 +342,9 @@ function PhaseDetailsPanel({
           className="absolute -top-[8px] size-4 -translate-x-1/2 rotate-45 border-l border-t border-sol-border bg-[#fffdfb] transition-[left] duration-700 ease-out"
           style={{ left: "50%" }}
         />
-        <div className="grid gap-x-10 gap-y-6 md:grid-cols-[minmax(0,1fr)_auto]">
+        <div className="grid gap-x-10 gap-y-6 @2xl:grid-cols-[minmax(0,1fr)_auto]">
           <div className="min-w-0">
-            <p className="sol-eyebrow !text-[0.6875rem] !tracking-[0.14em]">
-              {t("rm.phase.n", { n: index + 1 })}
-            </p>
+            <p className="sol-eyebrow !text-[0.8125rem]">{t("rm.phase.n", { n: index + 1 })}</p>
             <h2 className="mt-1 font-semibold !text-[1.5rem] leading-tight text-sol-ink">
               {text.phaseTitle(phase.id, phase.title)}
             </h2>
@@ -399,7 +393,7 @@ function PhaseDetailsPanel({
                     onClick={() => onOpenWeek(w.number)}
                     aria-label={t("common.weekN", { n: String(w.number).padStart(2, "0") })}
                     className={cn(
-                      "flex size-7 items-center justify-center rounded-full border text-[0.6875rem] font-semibold transition-all duration-300 disabled:cursor-default",
+                      "flex size-7 items-center justify-center rounded-full border text-[0.8125rem] font-semibold transition-all duration-300 disabled:cursor-default",
                       w.id === view.currentWeekId
                         ? "border-sol-cobalt bg-sol-cobalt text-white shadow-[0_0_0_4px_rgba(49,94,219,0.16)]"
                         : w.state === "completed"

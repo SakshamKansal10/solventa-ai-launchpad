@@ -84,7 +84,7 @@ test.describe("History", () => {
     await gotoApp(page, "/dashboard/history");
     const oldEntry = page.getByTestId("history-entry").nth(1);
     await expect(oldEntry.getByTestId("event-roadmap")).toContainText("Roadmap built");
-    await expect(oldEntry.getByTestId("history-progress")).toContainText("0 of");
+    await expect(oldEntry.getByTestId("history-progress")).toContainText("Weeks completed: 0 of");
     await expect(
       page.getByTestId("history-entry").nth(0).getByTestId("event-roadmap"),
     ).toContainText("No roadmap built");

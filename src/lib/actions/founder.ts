@@ -6,7 +6,7 @@ import { requireUser } from "@/lib/supabase/server";
 import type { Database } from "@/lib/supabase/types";
 import { resolveDirection, type Direction, type DirectionOpportunity } from "@/lib/direction";
 import { isSchemaMissingError } from "@/lib/schema-capabilities.server";
-import { assessFit, type FitLabel } from "@/lib/fit/model";
+import { assessFit, fitSortScore, type FitLabel } from "@/lib/fit/model";
 import { keepSupportedReasons } from "@/lib/ai/integrity";
 import type { FitFactors } from "@/lib/ai/schemas";
 import type { NormalizedProfile } from "@/lib/profile/normalize";
@@ -129,13 +129,26 @@ export async function loadFounderState(
   const profile = profileRes.data as
     (Database["public"]["Tables"]["profiles"]["Row"] & Record<string, unknown>) | null;
 
+  const profileByDna = new Map(
+    (dnaRes.data ?? []).map((d) => [
+      d.id,
+      d.normalized_signals as unknown as NormalizedProfile | null,
+    ]),
+  );
+  // Ranked by the same live assessment every screen shows (provisional last),
+  // so the order and the fit labels can never disagree.
+  const liveFit = (o: OppRow) => {
+    const p = profileByDna.get(o.business_dna_id);
+    return p && o.signals ? fitSortScore(assessFit(p, o.signals)) : -1;
+  };
+
   const direction = resolveDirection({
     consultations: dnaRes.data ?? [],
     opportunities: oppRows.map((o) => ({
       id: o.id,
       business_dna_id: o.business_dna_id,
       status: o.status,
-      fit_score: o.fit_score,
+      fit_score: liveFit(o),
       opportunity_index: o.opportunity_index,
       batch_number: o.batch_number,
       created_at: o.created_at,
@@ -153,12 +166,6 @@ export async function loadFounderState(
   });
 
   const briefs: Record<string, OpportunityBrief> = {};
-  const profileByDna = new Map(
-    (dnaRes.data ?? []).map((d) => [
-      d.id,
-      d.normalized_signals as unknown as NormalizedProfile | null,
-    ]),
-  );
   for (const row of oppRows)
     briefs[row.id] = toBrief(row, profileByDna.get(row.business_dna_id) ?? null);
 

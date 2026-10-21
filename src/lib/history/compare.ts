@@ -25,6 +25,8 @@ export interface ConsultationSnapshot {
 export type CompareField =
   "status" | "location" | "hours" | "capital" | "scale" | "skills" | "experienceYears";
 
+/** Only values the founder stated. experienceYears is derived by the app, so it is
+ * never shown as something they told us. */
 export const COMPARE_FIELDS: CompareField[] = [
   "status",
   "location",
@@ -32,7 +34,6 @@ export const COMPARE_FIELDS: CompareField[] = [
   "capital",
   "scale",
   "skills",
-  "experienceYears",
 ];
 
 export type RowState = "same" | "changed" | "unknown";

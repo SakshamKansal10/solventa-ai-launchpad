@@ -118,7 +118,7 @@ export function PlanTab({
               key={p.id}
               value={p.id}
               data-testid={`plan-phase-${i + 1}`}
-              className="sol-card overflow-hidden border-b-0 px-2"
+              className="sol-card overflow-hidden px-2"
             >
               <AccordionTrigger className="px-4 py-5 text-left hover:no-underline">
                 <span className="flex min-w-0 flex-1 flex-wrap items-center gap-x-4 gap-y-1 font-sans">

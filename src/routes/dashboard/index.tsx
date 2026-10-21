@@ -49,7 +49,6 @@ import { qk, useCurrentUserQuery, useFounderState, useInvalidateFounder } from "
 import { cn } from "@/lib/utils";
 import { useTranslatedBrief } from "@/lib/use-translation";
 import { useTranslatedEntity } from "@/lib/use-translation";
-import { useTranslatedTitle } from "@/lib/use-translation";
 
 export const Route = createFileRoute("/dashboard/")({
   // Set by a deep link to ONE consultation's ideas (the "ideas ready" email or
@@ -381,15 +380,13 @@ function NextMove({
   const founderState = useFounderState().data;
   const rawBrief = founderState?.briefs[opportunityId];
   const translatedBrief = useTranslatedBrief(rawBrief) ?? rawBrief;
-  const rawOpportunityTitle = rawBrief?.title ?? "";
-  const opportunityTitle = useTranslatedTitle(opportunityId, rawOpportunityTitle) ?? "";
 
   if (roadmap.isPending) {
     return (
       <>
         <PageHeader title={t("cc.c.title")} />
         <Skeleton className="h-72 w-full rounded-[1.5rem]" />
-        <div className="grid gap-5 md:grid-cols-3">
+        <div className="grid gap-5 @2xl:grid-cols-3">
           <Skeleton className="h-40" />
           <Skeleton className="h-40" />
           <Skeleton className="h-40" />
@@ -413,6 +410,7 @@ function NextMove({
   const weekCount = view.totals.weeks;
   const weekProgress = weekMissions.length ? (missionsDone / weekMissions.length) * 100 : 0;
   const journeyProgress = weekCount ? (view.totals.completedWeeks / weekCount) * 100 : 0;
+  const currentPhase = view.phases.find((p) => p.id === view.currentPhaseId) ?? null;
   const headline = mission && week?.state !== "generating_next" ? missionTitle : null;
 
   return (
@@ -478,16 +476,8 @@ function NextMove({
         className="sol-atmosphere p-6 sm:p-8"
         data-testid={week && !completed && !mission ? "week-wrap" : "todays-move"}
       >
-        <div className="relative z-10 flex flex-col gap-6 sm:min-h-[13rem] sm:pr-72 lg:pr-88">
-          {opportunityTitle && (
-            <p className="text-[0.9375rem] text-sol-secondary">
-              {t("cc.hero.label")}
-              <span className="mx-2 text-sol-champagne-deep" aria-hidden="true">
-                ·
-              </span>
-              <span className="font-medium text-sol-ink">{opportunityTitle}</span>
-            </p>
-          )}
+        {/* The direction itself is named in the card above — this panel is only the next move. */}
+        <div className="relative z-10 flex flex-col gap-6">
           {week && !completed ? (
             headline ? (
               <div key={mission!.id} className="sol-reveal flex flex-col items-start gap-3">
@@ -575,7 +565,11 @@ function NextMove({
             icon={MapIcon}
             label={t("cc.c.roadmap")}
             value={t("cc.c.weekOf", { x: week.number, y: weekCount })}
-            note={t("cc.mini.heading")}
+            note={
+              currentPhase
+                ? (skeleton.data?.phases?.[currentPhase.id]?.title ?? currentPhase.title)
+                : undefined
+            }
             progress={journeyProgress}
             progressLabel={t("cc.c.roadmap")}
           />

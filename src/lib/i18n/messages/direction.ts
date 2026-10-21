@@ -6,6 +6,8 @@ const en = {
   "opp.plan.assumptions": "What has to be true",
   "opp.plan.success": "What success looks like in the first test",
   "opp.plan.reconsider": "Reconsider if",
+  "opp.list.all": "Directions found for you",
+  "opp.list.recommendedTag": "Recommended",
 };
 
 const hi: Record<keyof typeof en, string> = {
@@ -15,6 +17,8 @@ const hi: Record<keyof typeof en, string> = {
   "opp.plan.assumptions": "क्या सच होना चाहिए",
   "opp.plan.success": "पहली परख में सफलता कैसी दिखती है",
   "opp.plan.reconsider": "दोबारा सोचें अगर",
+  "opp.list.all": "आपके लिए मिली दिशाएं",
+  "opp.list.recommendedTag": "सुझाई गई",
 };
 
 export default { en, hi };

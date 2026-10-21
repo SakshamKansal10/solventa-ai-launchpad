@@ -196,15 +196,11 @@ export const completeConsultation = createServerFn({ method: "POST" })
       console.error("[profile] ambition calibration persistence threw (non-fatal):", err);
     }
 
-    // originalIndex is captured BEFORE the fit_score sort below — pkg
-    // .opportunities arrives in the AI's own original 0/1/2 order (see
-    // reconstructPackage in intelligence-package.ts), and that ranking
-    // (0 = the model's designated flagship, "the single strongest, most
-    // worthy recommendation") is a genuinely different signal than
-    // fit_score (the app's own deterministic scorer) — persisting it
-    // lets getDashboard resolve "the flagship idea" from the model's
-    // actual recommendation rather than a proxy. See migrations/
-    // 0009_opportunity_index.
+    // originalIndex is captured BEFORE the fit sort below — pkg.opportunities
+    // arrives in the AI's own 0/1/2 order (see reconstructPackage in
+    // intelligence-package.ts). It is persisted (migration 0009) as the
+    // tie-break among directions of equal canonical fit; the fit itself decides
+    // which direction leads (see rankOpportunities in direction.ts).
     const scored = pkg.opportunities
       .map((opp, originalIndex) => ({
         opp,

@@ -37,7 +37,7 @@ export function BriefChain({ brief }: { brief: OpportunityBrief }) {
     Boolean(n.text),
   );
   return (
-    <ol className="relative grid gap-5 md:grid-cols-3 md:gap-4" data-testid="brief-chain">
+    <ol className="relative grid gap-5 @2xl:grid-cols-3 md:gap-4" data-testid="brief-chain">
       <motion.span
         aria-hidden="true"
         className="absolute left-[17%] right-[17%] top-[27px] hidden h-0.5 origin-left rounded-full bg-gradient-to-r from-sol-champagne via-sol-cobalt to-sol-champagne md:block"
@@ -125,8 +125,8 @@ export function BriefFacts({
     <dl
       className={
         columns === 3
-          ? "grid gap-x-8 gap-y-6 md:grid-cols-3"
-          : "grid gap-x-8 gap-y-6 md:grid-cols-2"
+          ? "grid gap-x-8 gap-y-6 @2xl:grid-cols-3"
+          : "grid gap-x-8 gap-y-6 @2xl:grid-cols-2"
       }
     >
       {items.map((i) => (

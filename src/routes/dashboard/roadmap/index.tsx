@@ -194,10 +194,6 @@ function RoadmapWorkspace({
         onOpenWeek={openWeek}
       />
 
-      <div aria-hidden="true" className="-my-3 flex flex-col items-center">
-        <span className="h-6 w-px bg-gradient-to-b from-sol-cobalt/40 to-transparent" />
-      </div>
-
       {view.roadmap.status === "completed" && (
         <div
           role="status"

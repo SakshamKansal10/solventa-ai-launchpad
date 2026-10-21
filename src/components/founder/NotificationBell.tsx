@@ -90,7 +90,7 @@ export function NotificationBell() {
           {unread > 0 && (
             <span
               data-testid="notification-count"
-              className="absolute -right-0.5 -top-0.5 flex min-w-5 items-center justify-center rounded-full bg-sol-cobalt px-1 text-[0.75rem] font-bold leading-5 text-white"
+              className="absolute -right-0.5 -top-0.5 flex min-w-5 items-center justify-center rounded-full bg-sol-cobalt px-1 text-[0.8125rem] font-bold leading-5 text-white"
             >
               {unread > 9 ? "9+" : unread}
             </span>

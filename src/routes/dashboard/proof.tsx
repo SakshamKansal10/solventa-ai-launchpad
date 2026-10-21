@@ -90,7 +90,7 @@ const CATEGORY_ICON: Record<string, LucideIcon> = {
 const STATUS_FILL: Record<AssumptionStatus, string> = {
   not_tested: "bg-sol-border-strong",
   testing: "bg-sol-cobalt",
-  inconclusive: "bg-sol-secondary/50",
+  inconclusive: "bg-sol-cobalt/35",
   supported: "bg-sol-champagne",
   contradicted: "bg-sol-warning",
 };
@@ -297,7 +297,7 @@ function EvidenceWorkspace({
       )}
 
       {dto && (
-        <div className="grid gap-4 md:grid-cols-2">
+        <div className="grid gap-4 @2xl:grid-cols-2">
           <Card className="flex flex-col gap-4 p-5 sm:p-6" data-testid="proof-fit">
             <h2 className="sol-h-sm !text-[1.0625rem]">{t("pf.fitLink.title")}</h2>
             {advantages.length > 0 && (
@@ -516,7 +516,7 @@ function AssumptionCard({
             </Button>
           </div>
 
-          <div className="grid gap-6 md:grid-cols-2">
+          <div className="grid gap-6 @2xl:grid-cols-2">
             <div className="flex flex-col gap-4">
               {a.whyItMatters && (
                 <div>
@@ -619,7 +619,7 @@ function LinkedMission({
     <>
       <span
         className={cn(
-          "flex size-7 shrink-0 items-center justify-center rounded-full border text-[0.75rem] font-semibold",
+          "flex size-7 shrink-0 items-center justify-center rounded-full border text-[0.8125rem] font-semibold",
           m.state === "completed"
             ? "border-sol-champagne bg-sol-champagne text-sol-ink"
             : m.state === "in_progress"

@@ -22,10 +22,11 @@ export type ButtonSize = "md" | "lg" | "sm";
 
 export function buttonClasses(variant: ButtonVariant = "primary", size: ButtonSize = "md") {
   return cn(
-    "inline-flex select-none items-center justify-center gap-2 whitespace-nowrap rounded-2xl font-semibold transition-[color,background-color,border-color,transform] duration-[180ms] ease-[var(--sol-ease)] active:scale-[0.98] disabled:pointer-events-none disabled:opacity-50 aria-disabled:pointer-events-none aria-disabled:opacity-50",
-    size === "sm" && "min-h-10 px-4 text-[0.9375rem]",
-    size === "md" && "min-h-12 px-6 text-[1rem]",
-    size === "lg" && "min-h-14 px-8 text-[1.0625rem]",
+    // A long label wraps inside its container instead of running past the edge.
+    "inline-flex max-w-full select-none items-center justify-center gap-2 text-center leading-tight rounded-2xl font-semibold transition-[color,background-color,border-color,transform] duration-[180ms] ease-[var(--sol-ease)] active:scale-[0.98] disabled:pointer-events-none disabled:opacity-50 aria-disabled:pointer-events-none aria-disabled:opacity-50",
+    size === "sm" && "min-h-10 px-4 py-2 text-[0.9375rem]",
+    size === "md" && "min-h-12 px-6 py-2.5 text-[1rem]",
+    size === "lg" && "min-h-14 px-8 py-3 text-[1.0625rem]",
     variant === "primary" && "bg-sol-navy text-white hover:bg-sol-navy-soft",
     variant === "secondary" &&
       "border border-sol-border-strong bg-sol-surface text-sol-ink hover:border-sol-cobalt/50",

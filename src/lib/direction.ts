@@ -71,13 +71,14 @@ const byCreatedDesc = <T extends { created_at: string }>(a: T, b: T) =>
   Date.parse(b.created_at) - Date.parse(a.created_at);
 
 function rankOpportunities(list: DirectionOpportunity[]): DirectionOpportunity[] {
-  // The AI's own designated flagship (index 0) outranks fit_score; fit_score
-  // orders everything else; created_at is the deterministic tie-break.
-  const flagshipFirst = (o: DirectionOpportunity) => (o.opportunity_index === 0 ? 0 : 1);
+  // The canonical fit decides — the "strongest direction" can never carry a
+  // weaker fit label than an alternative. Among equal fits the AI's own order
+  // (index 0 first) breaks the tie, then created_at.
+  const aiOrder = (o: DirectionOpportunity) => o.opportunity_index ?? Number.MAX_SAFE_INTEGER;
   return [...list].sort(
     (a, b) =>
-      flagshipFirst(a) - flagshipFirst(b) ||
       b.fit_score - a.fit_score ||
+      aiOrder(a) - aiOrder(b) ||
       Date.parse(a.created_at) - Date.parse(b.created_at),
   );
 }

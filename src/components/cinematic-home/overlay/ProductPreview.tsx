@@ -63,7 +63,7 @@ const TABS = [
 const INK = "text-[#15181F]";
 const SECONDARY = "text-[#555C68]";
 const GOLD_TEXT = "text-[#7A5B2B]";
-const label = "text-[11px] font-semibold uppercase tracking-[0.16em] text-[#666C77]";
+const label = "text-[12px] font-semibold uppercase tracking-[0.16em] text-[#666C77]";
 const card = "rounded-2xl border border-[#15181F]/[0.08] bg-white/70";
 const DISPLAY = "font-display font-semibold tracking-[-0.01em]";
 
@@ -154,13 +154,13 @@ export function ProductPreview() {
         <div className="mt-auto flex items-center gap-2.5 border-t border-[#15181F]/[0.08] px-1.5 pt-4">
           <span
             aria-hidden="true"
-            className="flex size-8 items-center justify-center rounded-full bg-[#15181F] text-[11px] font-semibold text-[#F8F6F1]"
+            className="flex size-8 items-center justify-center rounded-full bg-[#15181F] text-[12px] font-semibold text-[#F8F6F1]"
           >
             SF
           </span>
           <span className="min-w-0 leading-tight">
             <span className="block text-[13px] font-medium">Sample founder</span>
-            <span className={`block text-[11.5px] ${SECONDARY}`}>Validate · week 3</span>
+            <span className={`block text-[12px] ${SECONDARY}`}>Validate · week 3</span>
           </span>
         </div>
       </aside>
@@ -169,7 +169,7 @@ export function ProductPreview() {
         <header className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 border-b border-[#15181F]/[0.08] px-5 py-3 sm:px-7">
           <p className="text-[14px] font-medium">Command Center</p>
           <p
-            className={`rounded-full border border-[#15181F]/10 px-3 py-1 text-[11.5px] font-medium ${SECONDARY}`}
+            className={`rounded-full border border-[#15181F]/10 px-3 py-1 text-[12px] font-medium ${SECONDARY}`}
           >
             Illustrative preview · sample founder
           </p>
@@ -256,7 +256,7 @@ export function ProductPreview() {
               <div className="rounded-2xl bg-[#0B1424] px-5 py-4 text-[#F1EEE6] sm:px-6">
                 <div className="grid gap-4 sm:grid-cols-[1.4fr_0.7fr_auto] sm:items-end">
                   <div className="min-w-0">
-                    <p className="text-[10.5px] font-semibold uppercase tracking-[0.18em] text-[#9AA3B3]">
+                    <p className="text-[12px] font-semibold uppercase tracking-[0.18em] text-[#9AA3B3]">
                       Active direction
                     </p>
                     <p className="mt-1 text-[14.5px] font-semibold leading-snug">
@@ -264,7 +264,7 @@ export function ProductPreview() {
                     </p>
                   </div>
                   <div>
-                    <p className="text-[10.5px] font-semibold uppercase tracking-[0.18em] text-[#9AA3B3]">
+                    <p className="text-[12px] font-semibold uppercase tracking-[0.18em] text-[#9AA3B3]">
                       Current week
                     </p>
                     <p className="mt-1 text-[14.5px] font-semibold">Week 03</p>
@@ -281,7 +281,7 @@ export function ProductPreview() {
                     <li key={step} className="flex flex-col items-center gap-1.5 text-center">
                       <span
                         aria-hidden="true"
-                        className={`flex size-6 items-center justify-center rounded-full text-[10.5px] font-semibold ${
+                        className={`flex size-6 items-center justify-center rounded-full text-[12px] font-semibold ${
                           i < PATH_AT
                             ? "bg-[#C9AA79] text-[#0B1424]"
                             : i === PATH_AT
@@ -292,7 +292,7 @@ export function ProductPreview() {
                         {i < PATH_AT ? <Check className="size-3" strokeWidth={3} /> : i + 1}
                       </span>
                       <span
-                        className={`text-[10.5px] ${i === PATH_AT ? "font-semibold text-white" : "text-[#9AA3B3]"}`}
+                        className={`text-[12px] ${i === PATH_AT ? "font-semibold text-white" : "text-[#9AA3B3]"}`}
                       >
                         {step}
                         {i === PATH_AT && <span className="sr-only"> (you are here)</span>}
@@ -354,7 +354,7 @@ export function ProductPreview() {
                 </ol>
               </nav>
               <div className="mt-3 rounded-2xl border border-[#C9AA79]/50 border-l-[3px] border-l-[#B8924F] bg-[#FBF8F2] px-5 py-4">
-                <p className={`text-[11px] font-semibold uppercase tracking-[0.2em] ${GOLD_TEXT}`}>
+                <p className={`text-[12px] font-semibold uppercase tracking-[0.2em] ${GOLD_TEXT}`}>
                   Today’s move
                 </p>
                 <p className={`mt-1 text-[1.3rem] leading-snug ${DISPLAY}`}>
@@ -380,7 +380,7 @@ export function ProductPreview() {
                   <p className="mt-3 inline-flex rounded-full bg-[#C2643C]/12 px-2.5 py-0.5 text-[12px] font-semibold text-[#A4482A]">
                     Contradicted
                   </p>
-                  <p className="mt-3 text-[11.5px] tabular-nums text-[#666C77]">
+                  <p className="mt-3 text-[12px] tabular-nums text-[#666C77]">
                     Confidence 0.62 → 0.41
                   </p>
                 </li>
@@ -393,14 +393,14 @@ export function ProductPreview() {
                 </li>
                 <li className="rounded-2xl border border-[#C9AA79]/50 bg-[#FBF8F2] p-4">
                   <p
-                    className={`text-[11px] font-semibold uppercase tracking-[0.16em] ${GOLD_TEXT}`}
+                    className={`text-[12px] font-semibold uppercase tracking-[0.16em] ${GOLD_TEXT}`}
                   >
                     Adaptation · Wk 3
                   </p>
                   <p className="mt-2 text-[14px] font-medium">
                     Path updated: test a lighter starter offer first.
                   </p>
-                  <p className={`mt-3 text-[11.5px] tabular-nums ${GOLD_TEXT}`}>
+                  <p className={`mt-3 text-[12px] tabular-nums ${GOLD_TEXT}`}>
                     Confidence 0.41 → 0.68
                   </p>
                 </li>

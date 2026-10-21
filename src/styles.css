@@ -860,6 +860,18 @@
 html.app-inter {
   font-size: 93.75%;
 }
+/* Very wide displays at 1× (e.g. 4K without OS scaling): the whole dashboard scales up,
+   so it keeps the proportions it has at 1440 instead of becoming a small column. */
+@media (min-width: 2200px) {
+  html.app-inter {
+    font-size: 115%;
+  }
+}
+@media (min-width: 3000px) {
+  html.app-inter {
+    font-size: 150%;
+  }
+}
 .app-inter h1,
 .app-inter h2,
 .app-inter h3,

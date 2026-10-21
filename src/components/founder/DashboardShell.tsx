@@ -311,7 +311,7 @@ export function DashboardShell({ children }: { children: ReactNode }) {
       <div className="app-inter flex h-dvh w-full overflow-hidden bg-white text-sol-ink">
         <aside
           data-testid="sidebar"
-          className="hidden h-dvh w-[244px] shrink-0 border-r border-sol-border bg-white lg:block"
+          className="hidden h-dvh w-[16.25rem] shrink-0 border-r border-sol-border bg-white lg:block"
         >
           <SidebarContent onNavigate={() => undefined} onSignOut={handleSignOut} />
         </aside>
@@ -402,7 +402,7 @@ export function DashboardShell({ children }: { children: ReactNode }) {
               id="main"
               key={pathname}
               data-testid="main-content"
-              className="sol-page-in mx-auto w-full max-w-[1440px] px-6 pb-28 pt-8 md:px-10 lg:px-14 lg:pt-10"
+              className="sol-page-in @container mx-auto w-full max-w-[96rem] px-6 pb-28 pt-8 md:px-10 lg:px-14 lg:pt-10"
             >
               {children}
             </main>
@@ -418,10 +418,10 @@ export function DashboardShell({ children }: { children: ReactNode }) {
             inert={!askOpen}
             className={cn(
               "h-dvh shrink-0 overflow-hidden border-l border-sol-border bg-sol-surface transition-[width] duration-[260ms] ease-[var(--sol-ease)]",
-              askOpen ? "w-[420px]" : "w-0 border-l-0",
+              askOpen ? "w-[28rem]" : "w-0 border-l-0",
             )}
           >
-            <div className="h-full w-[420px]">
+            <div className="h-full w-[28rem]">
               {askOpen && (
                 <AskSolPanel
                   opportunityId={contextId}

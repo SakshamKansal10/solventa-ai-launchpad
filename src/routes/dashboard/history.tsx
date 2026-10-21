@@ -143,6 +143,13 @@ function HistoryPage() {
     month: "long",
     year: "numeric",
   });
+  const weekdayFmt = new Intl.DateTimeFormat(locale === "hi" ? "hi-IN" : "en-IN", {
+    weekday: "long",
+  });
+  const weekdayOf = (iso: string) => {
+    const d = new Date(iso);
+    return Number.isNaN(d.getTime()) ? "" : weekdayFmt.format(d);
+  };
   const monthOf = (iso: string) => {
     const d = new Date(iso);
     return Number.isNaN(d.getTime()) ? "" : monthFmt.format(d);
@@ -187,13 +194,13 @@ function HistoryPage() {
                       {month}
                     </p>
                   )}
-                  <div className="grid gap-x-6 pb-8 md:grid-cols-[9rem_1fr]">
-                    <div className="hidden md:flex md:flex-col md:items-end md:pt-6">
+                  <div className="grid gap-x-6 pb-8 @2xl:grid-cols-[9rem_1fr]">
+                    <div className="hidden @2xl:flex @2xl:flex-col @2xl:items-end @2xl:pt-6">
                       <p className="text-[1.75rem] font-semibold leading-none text-sol-ink">
                         {new Date(entry.createdAt).getDate()}
                       </p>
                       <p className="mt-1 text-[0.875rem] text-sol-secondary">
-                        {formatDate(entry.createdAt, locale)}
+                        {weekdayOf(entry.createdAt)}
                       </p>
                     </div>
                     <EntryCard
@@ -341,7 +348,7 @@ function EntryCard({
       body: (
         <>
           <p className="font-medium text-sol-ink">{t("hist.ev.consultation")}</p>
-          <p className="text-[0.875rem] text-sol-secondary md:hidden">
+          <p className="text-[0.875rem] text-sol-secondary @2xl:hidden">
             {formatDate(entry.createdAt, locale)}
           </p>
         </>
@@ -565,8 +572,83 @@ function ComparePanel({
       : older.selected || newer.selected
         ? false
         : null;
-  const cell = "px-3 py-3 align-top text-[0.9375rem] leading-snug text-sol-ink";
   const notRecorded = <span className="text-sol-secondary">{t("hist.notProvided")}</span>;
+  const directionsOf = (entry: HistoryEntry, only: string[]) => (
+    <ul className="flex flex-col gap-1.5">
+      {entry.directions.map((d) => (
+        <li key={d.id} className="flex flex-wrap items-center gap-2">
+          <TranslatedTitle id={d.id} title={d.title} />
+          {only.includes(d.title) && (
+            <span className="text-[0.8125rem] font-semibold text-sol-cobalt-deep">
+              {t("hist.compare.onlyHere")}
+            </span>
+          )}
+        </li>
+      ))}
+    </ul>
+  );
+  const roadmapOf = (e: HistoryEntry) => (
+    <>
+      {t(`hist.roadmap.${e.roadmapStatus}` as const)}
+      {e.progress && e.progress.weeksTotal > 0 && (
+        <span className="block text-[0.875rem] text-sol-secondary">
+          {t("hist.ev.progress", {
+            w: e.progress.weeksCompleted,
+            t: e.progress.weeksTotal,
+            m: e.progress.missionsCompleted,
+            e: e.progress.evidence,
+          })}
+        </span>
+      )}
+    </>
+  );
+  const chosenOf = (e: HistoryEntry) =>
+    e.selected ? (
+      <TranslatedTitle id={e.selected.id} title={e.selected.title} />
+    ) : (
+      <span className="text-sol-secondary">{t("hist.noneSelected")}</span>
+    );
+  const dirsChanged = dirs.onlyA.length + dirs.onlyB.length > 0;
+  // One list of lines, drawn as a table on wide screens and as stacked rows on phones.
+  const lines: {
+    key: string;
+    label: string;
+    older: React.ReactNode;
+    newer: React.ReactNode;
+    state: RowState | null;
+  }[] = [
+    ...rows.map((r) => ({
+      key: r.field,
+      label: t(`hist.compare.field.${r.field}` as const),
+      older: snapshot(older, r.field) ?? notRecorded,
+      newer: snapshot(newer, r.field) ?? notRecorded,
+      state: r.state,
+    })),
+    {
+      key: "directions",
+      label: t("hist.compare.directions"),
+      older: directionsOf(older, dirs.onlyA),
+      newer: directionsOf(newer, dirs.onlyB),
+      state: dirsChanged ? "changed" : "same",
+    },
+    {
+      key: "chosen",
+      label: t("hist.compare.chosen"),
+      older: chosenOf(older),
+      newer: chosenOf(newer),
+      state: sameChoice === null ? "unknown" : sameChoice ? "same" : "changed",
+    },
+    {
+      key: "roadmap",
+      label: t("hist.compare.roadmap"),
+      older: roadmapOf(older),
+      newer: roadmapOf(newer),
+      state: null,
+    },
+  ];
+  const statePill = (state: RowState | null) =>
+    state && <Pill tone={STATE_TONE[state]}>{t(`hist.compare.state.${state}` as const)}</Pill>;
+  const cell = "px-3 py-3 align-top text-[0.9375rem] leading-snug text-sol-ink";
 
   return (
     <Card className="flex flex-col gap-5 p-5 sm:p-7" data-testid="history-compare-panel">
@@ -580,133 +662,78 @@ function ComparePanel({
           {t("hist.compare.clear")}
         </Button>
       </div>
-      <div className="-mx-2 overflow-x-auto">
-        <table className="w-full min-w-[36rem] border-collapse">
-          <caption className="sr-only">{t("hist.compare.aria")}</caption>
-          <thead>
-            <tr className="border-b border-sol-border text-left">
+
+      <table className="hidden w-full border-collapse @2xl:table">
+        <caption className="sr-only">{t("hist.compare.aria")}</caption>
+        <thead>
+          <tr className="border-b border-sol-border text-left">
+            <th scope="col" className="px-3 pb-3 text-[0.8125rem] font-semibold text-sol-secondary">
+              {t("hist.compare.field")}
+            </th>
+            {[older, newer].map((e) => (
               <th
+                key={e.consultationId}
                 scope="col"
-                className="px-3 pb-3 text-[0.8125rem] font-semibold text-sol-secondary"
+                className="px-3 pb-3 text-[0.9375rem] font-semibold text-sol-ink"
               >
-                {t("hist.compare.field")}
+                {formatDate(e.createdAt, locale)}
               </th>
-              {[older, newer].map((e) => (
-                <th
-                  key={e.consultationId}
-                  scope="col"
-                  className="px-3 pb-3 text-[0.9375rem] font-semibold text-sol-ink"
-                >
-                  {formatDate(e.createdAt, locale)}
-                </th>
-              ))}
-              <th scope="col" className="px-3 pb-3">
-                <span className="sr-only">{t("hist.compare.state.changed")}</span>
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            {rows.map((r) => (
-              <tr
-                key={r.field}
-                className="border-b border-sol-border/70"
-                data-testid={`compare-row-${r.field}`}
-                data-state={r.state}
-              >
-                <th scope="row" className={cn(cell, "font-medium text-sol-secondary")}>
-                  {t(`hist.compare.field.${r.field}` as const)}
-                </th>
-                <td className={cell}>{snapshot(older, r.field) ?? notRecorded}</td>
-                <td className={cell}>{snapshot(newer, r.field) ?? notRecorded}</td>
-                <td className={cn(cell, "text-right")}>
-                  <Pill tone={STATE_TONE[r.state]}>
-                    {t(`hist.compare.state.${r.state}` as const)}
-                  </Pill>
-                </td>
-              </tr>
             ))}
-            <tr className="border-b border-sol-border/70" data-testid="compare-row-directions">
+            <th scope="col" className="px-3 pb-3">
+              <span className="sr-only">{t("hist.compare.state.changed")}</span>
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          {lines.map((l) => (
+            <tr
+              key={l.key}
+              className="border-b border-sol-border/70 last:border-b-0"
+              data-testid={`compare-row-${l.key}`}
+              data-state={l.state ?? undefined}
+            >
               <th scope="row" className={cn(cell, "font-medium text-sol-secondary")}>
-                {t("hist.compare.directions")}
+                {l.label}
               </th>
-              {[
-                { entry: older, only: dirs.onlyA },
-                { entry: newer, only: dirs.onlyB },
-              ].map(({ entry, only }) => (
-                <td key={entry.consultationId} className={cell}>
-                  <ul className="flex flex-col gap-1.5">
-                    {entry.directions.map((d) => (
-                      <li key={d.id} className="flex flex-wrap items-center gap-2">
-                        <TranslatedTitle id={d.id} title={d.title} />
-                        {only.includes(d.title) && (
-                          <span className="text-[0.75rem] font-semibold text-sol-cobalt-deep">
-                            {t("hist.compare.onlyHere")}
-                          </span>
-                        )}
-                      </li>
-                    ))}
-                  </ul>
-                </td>
-              ))}
-              <td className={cn(cell, "text-right")}>
-                <Pill tone={dirs.onlyA.length + dirs.onlyB.length > 0 ? "cobalt" : "neutral"}>
-                  {t(
-                    dirs.onlyA.length + dirs.onlyB.length > 0
-                      ? "hist.compare.state.changed"
-                      : "hist.compare.state.same",
-                  )}
-                </Pill>
-              </td>
+              <td className={cell}>{l.older}</td>
+              <td className={cell}>{l.newer}</td>
+              <td className={cn(cell, "text-right")}>{statePill(l.state)}</td>
             </tr>
-            <tr className="border-b border-sol-border/70" data-testid="compare-row-chosen">
-              <th scope="row" className={cn(cell, "font-medium text-sol-secondary")}>
-                {t("hist.compare.chosen")}
-              </th>
-              {[older, newer].map((e) => (
-                <td key={e.consultationId} className={cell}>
-                  {e.selected ? (
-                    <TranslatedTitle id={e.selected.id} title={e.selected.title} />
-                  ) : (
-                    <span className="text-sol-secondary">{t("hist.noneSelected")}</span>
-                  )}
-                </td>
-              ))}
-              <td className={cn(cell, "text-right")}>
-                <Pill tone={sameChoice === false ? "cobalt" : "neutral"}>
-                  {t(
-                    sameChoice === null
-                      ? "hist.compare.state.unknown"
-                      : sameChoice
-                        ? "hist.compare.state.same"
-                        : "hist.compare.state.changed",
-                  )}
-                </Pill>
-              </td>
-            </tr>
-            <tr data-testid="compare-row-roadmap">
-              <th scope="row" className={cn(cell, "font-medium text-sol-secondary")}>
-                {t("hist.compare.roadmap")}
-              </th>
-              {[older, newer].map((e) => (
-                <td key={e.consultationId} className={cell}>
-                  {t(`hist.roadmap.${e.roadmapStatus}` as const)}
-                  {e.progress && e.progress.weeksTotal > 0 && (
-                    <span className="block text-[0.875rem] text-sol-secondary">
-                      {t("hist.ev.progress", {
-                        w: e.progress.weeksCompleted,
-                        t: e.progress.weeksTotal,
-                        m: e.progress.missionsCompleted,
-                        e: e.progress.evidence,
-                      })}
-                    </span>
-                  )}
-                </td>
-              ))}
-              <td />
-            </tr>
-          </tbody>
-        </table>
-      </div>
+          ))}
+        </tbody>
+      </table>
+
+      <dl
+        className="flex flex-col divide-y divide-sol-border @2xl:hidden"
+        aria-label={t("hist.compare.aria")}
+      >
+        {lines.map((l) => (
+          <div
+            key={l.key}
+            className="flex flex-col gap-2 py-3.5"
+            data-testid={`compare-item-${l.key}`}
+          >
+            <dt className="flex items-center justify-between gap-3 text-[0.875rem] font-semibold text-sol-secondary">
+              {l.label}
+              {statePill(l.state)}
+            </dt>
+            {[
+              { e: older, v: l.older },
+              { e: newer, v: l.newer },
+            ].map(({ e, v }) => (
+              <dd
+                key={e.consultationId}
+                className="flex gap-3 text-[0.9375rem] leading-snug text-sol-ink"
+              >
+                <span className="w-20 shrink-0 text-[0.8125rem] text-sol-secondary">
+                  {formatDate(e.createdAt, locale)}
+                </span>
+                <span className="min-w-0 flex-1">{v}</span>
+              </dd>
+            ))}
+          </div>
+        ))}
+      </dl>
     </Card>
   );
 }

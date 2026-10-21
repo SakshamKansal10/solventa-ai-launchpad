@@ -57,9 +57,12 @@ function OpportunityRow({
   onChoose,
   choosing,
   canChoose,
+  recommended = false,
 }: {
   brief: OpportunityBrief;
   section: Section;
+  /** The direction the Command Center recommends (before anything is chosen). */
+  recommended?: boolean;
   onChoose?: () => void;
   choosing?: boolean;
   canChoose: boolean;
@@ -81,10 +84,10 @@ function OpportunityRow({
     const shownFacts = facts.filter((f) => f.value);
     return (
       <article className="sol-atmosphere" data-testid="opp-selected" aria-label={brief.title}>
-        <div className="relative z-10 grid gap-6 p-6 sm:p-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.15fr)] lg:items-center lg:gap-10">
+        <div className="relative z-10 grid gap-6 p-6 sm:p-8 @4xl:grid-cols-[minmax(0,1fr)_minmax(0,1.15fr)] @4xl:items-center @4xl:gap-10">
           <div className="flex flex-col justify-center gap-5">
             <div className="flex flex-wrap items-center gap-2.5">
-              <p className="sol-eyebrow flex items-center gap-2 !text-[0.6875rem] !uppercase !tracking-[0.14em]">
+              <p className="sol-eyebrow flex items-center gap-2 !text-[0.875rem]">
                 <span className="h-3 w-0.5 rounded-full bg-sol-cobalt" aria-hidden="true" />
                 {t("opp.list.featured")}
               </p>
@@ -160,6 +163,11 @@ function OpportunityRow({
           )}
         </span>
         <div className="min-w-0 flex-1">
+          {recommended && (
+            <p className="sol-eyebrow mb-1 !text-[0.8125rem] !normal-case !tracking-normal !text-sol-champagne-deep">
+              {t("opp.list.recommendedTag")}
+            </p>
+          )}
           <div className="flex items-start justify-between gap-3">
             <h3 className="sol-h3 min-w-0">{brief.title}</h3>
             <FitPill fit={brief.fit} />
@@ -362,13 +370,14 @@ function OpportunitiesPage() {
         <section aria-labelledby="alt-h" className="flex flex-col gap-4">
           <div className="flex items-center gap-3">
             <h2 id="alt-h" className="sol-h-sm !text-[1.0625rem]">
-              {t("opp.list.alternatives")}
+              {/* Before a choice every direction is listed, the recommended one first. */}
+              {selected ? t("opp.list.alternatives") : t("opp.list.all")}
             </h2>
             <span className="rounded-full bg-sol-ivory px-2.5 py-0.5 text-[0.8125rem] font-medium text-sol-secondary">
               {shownAlternatives.length}
             </span>
           </div>
-          <div className="grid gap-5 lg:grid-cols-2">
+          <div className="grid gap-5 @4xl:grid-cols-2">
             {shownAlternatives.map((b) => (
               <OpportunityRow
                 key={b.id}
@@ -377,6 +386,7 @@ function OpportunitiesPage() {
                 canChoose={canChoose}
                 choosing={choose.isPending && choose.variables === b.id}
                 onChoose={() => choose.mutate(b.id)}
+                recommended={!selected && b.id === direction.flagshipId}
               />
             ))}
           </div>

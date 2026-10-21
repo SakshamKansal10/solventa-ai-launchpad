@@ -20,12 +20,15 @@ export function ProgressRing({
   label,
   tone = "cobalt",
   testId,
+  showLabel = true,
 }: {
   value: number;
   total: number;
   label: string;
   tone?: "cobalt" | "champagne";
   testId?: string;
+  /** Off where a heading right above already names it (the label stays for screen readers). */
+  showLabel?: boolean;
 }) {
   const reduceMotion = useReducedMotion();
   const frac = total > 0 ? Math.min(1, value / total) : 0;
@@ -67,9 +70,11 @@ export function ProgressRing({
           </span>
         </span>
       </div>
-      <span className="text-[0.875rem] font-bold uppercase tracking-[0.08em] text-sol-secondary">
-        {label}
-      </span>
+      {showLabel && (
+        <span className="text-[0.875rem] font-bold uppercase tracking-[0.08em] text-sol-secondary">
+          {label}
+        </span>
+      )}
     </div>
   );
 }

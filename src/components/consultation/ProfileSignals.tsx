@@ -21,12 +21,14 @@ export function useProfileFacts(): Fact[] {
   const { answers: a } = useConsultation();
   const facts: Fact[] = [];
 
+  // Most specific first, as people write an address: city, state, country.
   const place = [
+    a.city,
+    a.state ? (a.country === "India" ? L.state(a.state) : a.state) : null,
     a.country && L.country(a.country),
-    a.state ? (a.country === "India" ? L.state(a.state) : a.state) : a.city,
   ]
     .filter(Boolean)
-    .join(" · ");
+    .join(", ");
   if (place) facts.push({ key: "location", label: t("consult.panel.location"), value: place });
 
   if (a.status) {

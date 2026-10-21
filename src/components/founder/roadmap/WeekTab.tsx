@@ -42,6 +42,7 @@ function ProgressSegments({ week }: { week: WeekDTO }) {
         label={t("rm.rail.progress")}
         tone="champagne"
         testId="week-progress-ring"
+        showLabel={false}
       />
       <p className="text-[1rem] font-semibold text-sol-ink" data-testid="week-progress">
         {t("rm.rail.missions", { x: week.progress.completed, y: week.progress.total })}
@@ -155,7 +156,7 @@ export function WeekTab({
 
   return (
     <div
-      className="grid gap-x-10 gap-y-8 lg:grid-cols-[minmax(0,1fr)_21rem]"
+      className="grid gap-x-10 gap-y-8 @4xl:grid-cols-[minmax(0,1fr)_21rem]"
       data-testid="week-tab"
       data-week-state={week.state}
     >
@@ -176,11 +177,6 @@ export function WeekTab({
             >
               {t(`rm.state.${week.state}` as const)}
             </Pill>
-            {week.hasDetail && (
-              <span className="text-[0.8125rem] text-sol-secondary">
-                {t("rm.rail.missions", { x: week.progress.completed, y: week.progress.total })}
-              </span>
-            )}
             <span className="ml-auto inline-flex overflow-hidden rounded-full border border-sol-border bg-sol-surface/90">
               <button
                 type="button"
@@ -415,7 +411,7 @@ export function WeekTab({
             </section>
             {detail.mistakes(week.mistakes).length > 0 && (
               <section className="flex flex-col gap-3 p-5" data-testid="week-avoid">
-                <h3 className="sol-eyebrow !text-[0.6875rem]">{t("rm.rail.avoid")}</h3>
+                <h3 className="sol-eyebrow !text-[0.8125rem]">{t("rm.rail.avoid")}</h3>
                 <ul className="flex flex-col gap-2">
                   {detail.mistakes(week.mistakes).map((m) => (
                     <li key={m} className="flex gap-2.5 text-[0.9375rem] leading-snug text-sol-ink">

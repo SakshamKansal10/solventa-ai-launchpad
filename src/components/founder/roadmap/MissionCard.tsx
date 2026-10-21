@@ -174,7 +174,7 @@ export function MissionCard({
       >
         <div className="relative flex flex-wrap items-center gap-x-4 gap-y-2">
           <div className="min-w-0 flex-1 basis-56">
-            <p className="sol-eyebrow flex flex-wrap items-center gap-x-2 !text-[0.6875rem]">
+            <p className="sol-eyebrow flex flex-wrap items-center gap-x-2 !text-[0.8125rem]">
               <span>{t("rm.mission.n", { n: pad })}</span>
               {inProgress && (
                 <span className="font-semibold normal-case tracking-normal text-sol-cobalt-deep">
@@ -247,7 +247,7 @@ export function MissionCard({
                         >
                           <span
                             aria-hidden="true"
-                            className="mt-[1px] flex size-5 shrink-0 items-center justify-center rounded-full bg-sol-cobalt-soft text-[0.6875rem] font-semibold text-sol-cobalt-deep"
+                            className="mt-[1px] flex size-5 shrink-0 items-center justify-center rounded-full bg-sol-cobalt-soft text-[0.8125rem] font-semibold text-sol-cobalt-deep"
                           >
                             {i + 1}
                           </span>
@@ -261,17 +261,17 @@ export function MissionCard({
               {mission.assumption && (
                 // The other half of the assumption ↔ mission link (Evidence lists the missions).
                 <div
-                  className="flex min-w-0 flex-wrap items-center gap-x-2.5 gap-y-1.5 rounded-xl bg-sol-pearl px-3 py-2.5"
+                  className="flex min-w-0 flex-col gap-1.5 rounded-xl bg-sol-pearl px-3.5 py-3"
                   data-testid="mission-assumption"
                 >
-                  <FlaskConical
-                    className="size-4 shrink-0 text-sol-cobalt-deep"
-                    aria-hidden="true"
-                  />
-                  <dt className="text-[0.8125rem] font-semibold text-sol-secondary">
+                  <dt className="flex items-center gap-2 text-[0.8125rem] font-semibold text-sol-secondary">
+                    <FlaskConical
+                      className="size-4 shrink-0 text-sol-cobalt-deep"
+                      aria-hidden="true"
+                    />
                     {t("pf.mission.tests")}
                   </dt>
-                  <dd className="flex min-w-0 flex-1 flex-wrap items-center gap-2">
+                  <dd className="flex min-w-0 flex-wrap items-center gap-x-2.5 gap-y-1.5">
                     <Link
                       to="/dashboard/proof"
                       search={{ opportunity: opportunityId, assumption: mission.assumption.id }}

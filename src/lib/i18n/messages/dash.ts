@@ -8,12 +8,12 @@ const en = {
     "About ten to fifteen minutes. Solventia finds three business directions that fit what you actually have — your skills, time, money and access.",
 
   // ── State A: directions ready, none chosen ─────────────────────────────
-  "cc.a.title": "Your top idea is ready",
+  "cc.a.title": "Your strongest direction is ready",
   "cc.a.subtitle":
     "Solventia's best match for you. Choose it to build your roadmap, or explore other ideas.",
   "cc.exploreMore.hint": "Not convinced? See the other ideas and why each one fits you.",
   "cc.idea.label": "Your direction",
-  "cc.idea.view": "View idea",
+  "cc.idea.view": "View direction",
   "cc.alternatives": "Other directions",
   "cc.flagshipLabel": "Strongest fit for you",
   "cc.explore": "Explore",
@@ -47,11 +47,11 @@ const en = {
   "cc.b.openOpportunity": "Review this opportunity",
 
   // ── Contextual idea images ─────────────────────────────────────────────
-  "cc.hero.label": "Current idea",
-  "cc.hero.continue": "Continue idea",
+  "cc.hero.label": "Your direction",
+  "cc.hero.continue": "Continue",
   "cc.hero.viewRoadmap": "View roadmap",
   "img.alt": "Photo representing {title}",
-  "img.generating": "Creating a visual for this idea…",
+  "img.generating": "Creating a visual for this direction…",
   "img.failed": "We couldn't create the image.",
   "img.retry": "Try again",
   "img.regenerate": "Regenerate image",
@@ -197,7 +197,7 @@ const en = {
   "opp.list.filterAria": "Filter by fit",
   "opp.list.noMatch": "No opportunities match your search.",
   "opp.list.featured": "Your chosen direction",
-  "opp.detail.eyebrow": "Opportunity",
+  "opp.detail.eyebrow": "Direction",
   "opp.ov.groupWhy": "Why it matters",
   "opp.ov.groupWhat": "Your offer",
   "opp.ov.groupNext": "How to start and grow",
@@ -221,8 +221,8 @@ const en = {
   "opp.openRoadmap": "Open roadmap",
   "opp.tabs.aria": "Opportunity sections",
   "opp.tab.overview": "Overview",
-  "opp.tab.fit": "Founder Fit",
-  "opp.tab.market": "Market",
+  "opp.tab.fit": "Fit with you",
+  "opp.tab.market": "Market & validation",
 
   "opp.ov.customer": "Customer",
   "opp.ov.customerCap": "Who pays for this",
@@ -252,7 +252,7 @@ const en = {
   // Market
   "opp.market.none": "Market evidence hasn't been collected yet.",
   "opp.market.noneBody":
-    "Solventia doesn't guess at market size. Look for real, citable sources — or go straight to testing the idea with people.",
+    "Solventia doesn't guess at market size. Look for real, citable sources — or go straight to testing the direction with people.",
   "opp.market.sourcesTitle": "What Solventia found",
   "opp.market.sourcesNote":
     "Sources are found by search and are only a starting point. Treat them as leads to verify, not proof.",
@@ -312,7 +312,8 @@ const en = {
   "opp.proof.assumptions": "{n} assumptions to test",
   "opp.proof.summary": "{supported} supported · {untested} still untested",
   "opp.proof.open": "Open Proof",
-  "opp.proof.unavailable": "Proof isn't available yet on this workspace. It will appear shortly.",
+  "opp.proof.unavailable":
+    "Evidence isn't available yet on this workspace. It will appear shortly.",
 
   // ── Founder fit ────────────────────────────────────────────────────────
   "fit.strong": "Strong fit",
@@ -411,12 +412,12 @@ const hi: Record<keyof typeof en, string> = {
   "cc.none.cardBody":
     "लगभग दस से पंद्रह मिनट। Solventia आपके पास जो कुछ सच में है — कौशल, समय, पैसा और पहुंच — उसके हिसाब से तीन बिज़नेस दिशाएं खोजता है।",
 
-  "cc.a.title": "आपका सबसे अच्छा आइडिया तैयार है",
+  "cc.a.title": "आपकी सबसे मज़बूत दिशा तैयार है",
   "cc.a.subtitle":
     "Solventia की नज़र में आपके लिए सबसे उपयुक्त। इसे चुनकर रोडमैप बनाइए, या दूसरे आइडिया देखिए।",
   "cc.exploreMore.hint": "पसंद नहीं आया? बाकी आइडिया देखिए और जानिए हर एक आपके लिए क्यों सही है।",
   "cc.idea.label": "आपकी दिशा",
-  "cc.idea.view": "आइडिया देखें",
+  "cc.idea.view": "दिशा देखें",
   "cc.alternatives": "अन्य दिशाएं",
   "cc.flagshipLabel": "आपके लिए सबसे उपयुक्त",
   "cc.explore": "देखें",
@@ -449,18 +450,18 @@ const hi: Record<keyof typeof en, string> = {
   "cc.b.openOpportunity": "इस अवसर को देखें",
 
   // ── Contextual idea images ─────────────────────────────────────────────
-  "cc.hero.label": "मौजूदा आइडिया",
-  "cc.hero.continue": "आइडिया आगे बढ़ाएँ",
+  "cc.hero.label": "आपकी दिशा",
+  "cc.hero.continue": "आगे बढ़ें",
   "cc.hero.viewRoadmap": "रोडमैप देखें",
   "img.alt": "{title} को दर्शाने वाली तस्वीर",
-  "img.generating": "इस आइडिया के लिए तस्वीर बन रही है…",
+  "img.generating": "इस दिशा के लिए तस्वीर बन रही है…",
   "img.failed": "हम तस्वीर नहीं बना सके।",
   "img.retry": "फिर कोशिश करें",
   "img.regenerate": "तस्वीर दोबारा बनाएँ",
 
   "cc.c.title": "आपका अगला कदम",
   "cc.c.completedTitle": "रोडमैप पूरा हुआ",
-  "cc.c.completedBody": "आपने हर सप्ताह पूरा कर लिया है। प्रमाण में देखिए कि आपने क्या सीखा।",
+  "cc.c.completedBody": "आपने हर सप्ताह पूरा कर लिया है। सबूत में देखिए कि आपने क्या सीखा।",
   "cc.c.currentMission": "मौजूदा मिशन",
   "cc.c.readyToClose":
     "हर मिशन पूरा हो गया है। अगला सप्ताह खोलने के लिए इस सप्ताह की समीक्षा करें।",
@@ -470,7 +471,7 @@ const hi: Record<keyof typeof en, string> = {
   "cc.c.pulseSupported": "{n} की पुष्टि हुई",
   "cc.c.pulseUntested": "{n} अभी परखी नहीं",
   "cc.c.pulseNone": "अभी कोई धारणा परखी नहीं गई। सीखते हुए साक्ष्य जोड़ें।",
-  "cc.c.openProof": "प्रमाण खोलें",
+  "cc.c.openProof": "सबूत खोलें",
   "cc.c.roadmap": "रोडमैप",
   "cc.c.weekOf": "सप्ताह {x} / {y}",
   "cc.c.openRoadmap": "रोडमैप खोलें",
@@ -595,7 +596,7 @@ const hi: Record<keyof typeof en, string> = {
   "opp.list.filterAria": "मेल के अनुसार फ़िल्टर करें",
   "opp.list.noMatch": "आपकी खोज से कोई अवसर मेल नहीं खाता।",
   "opp.list.featured": "आपकी चुनी हुई दिशा",
-  "opp.detail.eyebrow": "अवसर",
+  "opp.detail.eyebrow": "दिशा",
   "opp.ov.groupWhy": "यह क्यों मायने रखता है",
   "opp.ov.groupWhat": "आपकी पेशकश",
   "opp.ov.groupNext": "शुरू कैसे करें और बढ़ें कैसे",
@@ -616,8 +617,8 @@ const hi: Record<keyof typeof en, string> = {
   "opp.openRoadmap": "रोडमैप खोलें",
   "opp.tabs.aria": "अवसर के अनुभाग",
   "opp.tab.overview": "सारांश",
-  "opp.tab.fit": "फाउंडर फ़िट",
-  "opp.tab.market": "बाज़ार",
+  "opp.tab.fit": "आपसे मेल",
+  "opp.tab.market": "बाज़ार और परख",
 
   "opp.ov.customer": "ग्राहक",
   "opp.ov.customerCap": "इसके लिए कौन भुगतान करता है",
@@ -645,7 +646,7 @@ const hi: Record<keyof typeof en, string> = {
 
   "opp.market.none": "बाज़ार के सबूत अभी इकट्ठा नहीं हुए हैं।",
   "opp.market.noneBody":
-    "Solventia बाज़ार के आकार का अंदाज़ा नहीं लगाता। असली, प्रमाणित स्रोत खोजिए — या सीधे लोगों के साथ आइडिया को परखना शुरू करें।",
+    "Solventia बाज़ार के आकार का अंदाज़ा नहीं लगाता। असली, प्रमाणित स्रोत खोजिए — या सीधे लोगों के साथ दिशा को परखना शुरू करें।",
   "opp.market.sourcesTitle": "Solventia को क्या मिला",
   "opp.market.sourcesNote":
     "स्रोत खोज से मिले हैं और सिर्फ़ शुरुआती संकेत हैं। इन्हें जांचने वाले सुराग मानें, प्रमाण नहीं।",
@@ -702,8 +703,8 @@ const hi: Record<keyof typeof en, string> = {
     "लिखिए कि इस बिज़नेस के चलने के लिए क्या सच होना चाहिए, फिर हर धारणा के लिए साक्ष्य जुटाइए।",
   "opp.proof.assumptions": "परखने के लिए {n} धारणाएं",
   "opp.proof.summary": "{supported} की पुष्टि · {untested} अभी परखी नहीं",
-  "opp.proof.open": "प्रमाण खोलें",
-  "opp.proof.unavailable": "इस वर्कस्पेस पर प्रमाण अभी उपलब्ध नहीं है। यह जल्द दिखेगा।",
+  "opp.proof.open": "सबूत खोलें",
+  "opp.proof.unavailable": "इस वर्कस्पेस पर सबूत अभी उपलब्ध नहीं है। यह जल्द दिखेगा।",
 
   "fit.strong": "मज़बूत फ़िट",
   "fit.moderate": "मध्यम फ़िट",
@@ -776,7 +777,7 @@ const hi: Record<keyof typeof en, string> = {
   "hist.review": "देखें",
   "hist.restore": "दिशा बहाल करें",
   "hist.restoreTitle": "क्या यह दिशा बहाल करें?",
-  "hist.restoreBody": "“{title}” फिर से आपकी सक्रिय दिशा बन जाएगी, अपने रोडमैप और प्रमाण के साथ।",
+  "hist.restoreBody": "“{title}” फिर से आपकी सक्रिय दिशा बन जाएगी, अपने रोडमैप और सबूत के साथ।",
   "hist.restoreBodyGeneric": "यह दिशा फिर से आपकी सक्रिय दिशा बन जाएगी।",
   "hist.restoreArchive": "“{current}” रोकी जाएगी, हटाई नहीं जाएगी — आप कभी भी वापस जा सकते हैं।",
   "hist.restoreConfirm": "दिशा बहाल करें",

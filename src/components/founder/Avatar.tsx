@@ -28,7 +28,12 @@ export function Avatar({ url, initials, size = 36, className, onShownChange }: A
         "relative inline-flex shrink-0 items-center justify-center overflow-hidden rounded-full bg-sol-navy font-semibold text-white",
         className,
       )}
-      style={{ width: size, height: size, fontSize: Math.max(12, Math.round(size * 0.38)) }}
+      // In rem (sizes are given in px at the 15px dashboard root), so it scales with the page.
+      style={{
+        width: `${size / 15}rem`,
+        height: `${size / 15}rem`,
+        fontSize: `${Math.max(12, Math.round(size * 0.38)) / 15}rem`,
+      }}
       data-testid="avatar"
       data-source={showImage ? "image" : "initials"}
     >

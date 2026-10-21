@@ -39,7 +39,7 @@ describe("resolveDirection", () => {
     expect(resolveDirection(base({ consultations: [] })).stage).toBe("no_consultation");
   });
 
-  it("State A: ideas ready, nothing selected → the AI's flagship plus two alternatives", () => {
+  it("State A: ideas ready, nothing selected → the best canonical fit leads, plus two alternatives", () => {
     const d = resolveDirection(
       base({
         opportunities: [
@@ -50,8 +50,9 @@ describe("resolveDirection", () => {
       }),
     );
     expect(d.stage).toBe("ideas_ready");
-    expect(d.flagshipId).toBe("flagship"); // designated flagship beats a higher fit_score
-    expect(d.alternativeIds).toEqual(["a", "c"]); // then by fit_score
+    // The fit decides, so "strongest direction" never shows a weaker label than an alternative.
+    expect(d.flagshipId).toBe("a");
+    expect(d.alternativeIds).toEqual(["c", "flagship"]);
   });
 
   it("State B: selected but no roadmap, and archived roadmap is reported for 'resume'", () => {

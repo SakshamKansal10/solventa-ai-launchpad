@@ -39,7 +39,7 @@ const en = {
   "rm.tabs.aria": "Roadmap views",
   "rm.tab.week": "This week",
   "rm.tab.plan": "Plan",
-  "rm.tab.progress": "Evidence",
+  "rm.tab.progress": "Progress",
 
   "rm.state.locked": "Locked",
   "rm.state.ready": "Ready to start",
@@ -228,7 +228,7 @@ const hi: Record<keyof typeof en, string> = {
   "rm.tabs.aria": "रोडमैप के दृश्य",
   "rm.tab.week": "यह सप्ताह",
   "rm.tab.plan": "योजना",
-  "rm.tab.progress": "साक्ष्य",
+  "rm.tab.progress": "प्रगति",
 
   "rm.state.locked": "बंद",
   "rm.state.ready": "शुरू करने को तैयार",

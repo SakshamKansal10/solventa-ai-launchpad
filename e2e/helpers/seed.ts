@@ -2,7 +2,7 @@ import { createHash, randomUUID } from "node:crypto";
 
 import { flatIntelligencePackage } from "../../src/lib/ai/fixtures/e2e-gemini";
 import { normalizeProfile } from "../../src/lib/profile/normalize";
-import { computeFitScore } from "../../src/lib/profile/scoring";
+import { assessFit, fitSortScore } from "../../src/lib/fit/model";
 import { sql } from "./stack";
 
 /**
@@ -79,9 +79,10 @@ export async function seedDirections(
     .map((opp, originalIndex) => ({
       opp,
       originalIndex,
-      score: computeFitScore(normalized, opp.fitSignals),
+      // The same canonical assessment the app stores (see profile.ts).
+      score: assessFit(normalized, opp.fitSignals),
     }))
-    .sort((a, b) => b.score.total - a.score.total);
+    .sort((a, b) => fitSortScore(b.score) - fitSortScore(a.score));
 
   const opportunityIds: string[] = [];
   for (const { opp, originalIndex, score } of scored) {
@@ -99,7 +100,7 @@ export async function seedDirections(
         opp.title,
         opp.plainEnglishSummary,
         opp.customer,
-        score.total,
+        score.score ?? 0,
         JSON.stringify(score),
         JSON.stringify(candidate),
         opts.batch ?? 1,
