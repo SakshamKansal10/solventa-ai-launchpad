@@ -142,9 +142,21 @@ invalid argument.","status":"INVALID_ARGUMENT"}`. Reproduced on production throu
   pass; E2E `auth` + `consultation` + `smoke` + `command-center`: 29/29 passed. Live Gemini,
   synthetic fixture profile: fixed schema accepted; real `generateIntelligencePackage` → 3
   distinct directions with every structured field in 32 s, no schema-less retry needed.
-- No user data was read, changed or created; no secrets logged. Commit / deploy: see below.
+- **Commit / deploy:** fix `8da93a1` on `fix/consultation-gemini-400`; merged onto production
+  `5631af3` as `20393ed` (branch `release/consultation-gemini-400`), pushed to `main` (normal
+  push). Vercel: "Deployment has completed" for `solventa-ai-launchpad`.
+- **Verified on production:** `/review-public` (same `generateIntelligencePackage`, production
+  model and settings, fictional profile, nothing persisted). Before the fix it failed at
+  "Gemini — intelligence package" with `400 INVALID_ARGUMENT` in 1.3 s; after: "Run complete
+  in 33391ms", three distinct directions, every step successful.
+- **Not verified on production:** the signed-in `/consultation` submit with a real account
+  (saving the consultation and opening the dashboard). That code is unchanged and passed E2E;
+  it needs the owner to press "Try again" on their saved consultation.
+- No user data was read, changed or created; no secrets logged. Shots: `.e2e-tmp/qa/prod-before/`,
+  `.e2e-tmp/qa/prod-after/`.
 
 ## Next action
 
-Nothing outstanding in code. Owner: the §21 Google consent-screen branding above; then sign in
-on https://solventia.in to confirm the account chooser says "Solventia".
+Owner: press "Try again" on the saved consultation at https://solventia.in/consultation (the
+answers are kept) and confirm the dashboard opens with three directions. Then the §21 Google
+consent-screen branding above.
