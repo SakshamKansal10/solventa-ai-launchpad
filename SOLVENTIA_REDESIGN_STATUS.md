@@ -6,18 +6,24 @@ arrived truncated twice; nothing here claims to be its verbatim text).
 
 ## Branches
 
-| Role                                                                              | Branch                                   | Commit                                 |
-| --------------------------------------------------------------------------------- | ---------------------------------------- | -------------------------------------- |
-| Implementation                                                                    | `feature/solventia-master-redesign`      | see `git log -1` (85fe2b1 at QA close) |
-| Backup of production before the redesign                                          | `backup/pre-solventia-redesign-20261020` | `62e8e3c`                              |
-| Production (Vercel project `solventa-ai-launchpad` deploys it; Lovable-connected) | `main`                                   | `62e8e3c` before release               |
-| Earlier unreviewed Founder OS WIP (not in main, kept)                             | `founder-os-wip`                         | `eb36f77`                              |
+| Role                                                                              | Branch                                   | Commit                             |
+| --------------------------------------------------------------------------------- | ---------------------------------------- | ---------------------------------- |
+| Implementation                                                                    | `feature/solventia-master-redesign`      | see `git log -1`                   |
+| Backup of production before the redesign                                          | `backup/pre-solventia-redesign-20261020` | `62e8e3c`                          |
+| Production (Vercel project `solventa-ai-launchpad` deploys it; Lovable-connected) | `main`                                   | `85f9e06` release (from `62e8e3c`) |
+| Release merge branch (cut from remote `main`)                                     | `release/solventia-master-redesign`      | `85f9e06`                          |
+| Earlier unreviewed Founder OS WIP (not in main, kept)                             | `founder-os-wip`                         | `eb36f77`                          |
 
 Cut from production `main` (`62e8e3c`, which holds the homepage release and Anushka Shah's
 PR #1/#2). `main` had no newer commits from anyone when the release was prepared, so the
 branch integrates without conflicts and overwrites nobody's work.
 
-Recovery: `git switch backup/pre-solventia-redesign-20261020` (or redeploy `62e8e3c`).
+Recovery: `git switch backup/pre-solventia-redesign-20261020` (or redeploy `62e8e3c`, the
+previous production commit, from Vercel).
+
+Note: the local `main` in this checkout holds four old, never-pushed "Founder OS" commits
+(`41da902` and parents). They were left untouched and were not released; the release was
+merged on `release/solventia-master-redesign`, cut from the remote `main`.
 
 ## Checklist (§1–§28) — real status
 
@@ -82,11 +88,28 @@ Recovery: `git switch backup/pre-solventia-redesign-20261020` (or redeploy `62e8
 
 ## Deployment
 
-Not yet released at the time of this checkpoint. Next: full E2E + production build, merge into
-`main`, push (Vercel deploys), verify https://solventia.in in a fresh browser.
+Released and verified live on 2026-10-21.
+
+- `85f9e06` (a merge of the tested branch tip `a8a11fb` onto production `62e8e3c`; its tree
+  is identical to the tested branch) pushed to `main` — a normal fast-forward push, no
+  force. Vercel commit status: "Deployment has completed" for `solventa-ai-launchpad` (the
+  project serving solventia.in) and `solventia10`.
+- https://solventia.in now serves the new build: 10 of 17 homepage assets changed and the new
+  copy ("Find more directions", "Fit with you") is in the live bundle.
+- Fresh-browser check (desktop 1440 and iPhone-size 390, no cookies): brand alone on the first
+  frame; never more than one film identity at a time; after the film the bar is solid with
+  its own lockup (the old finale-under-"Sign In" overlap is gone); scrolling back up returns
+  the centred opening; the header's "How It Works" opens /how-it-works (it was the dead
+  /#how-it-works before the release); signed-out /dashboard returns home with the sign-in
+  dialog; no console errors. Shots: `.e2e-tmp/qa/live-before/`, `.e2e-tmp/qa/live-after/`.
+- Not verified on production: signed-in dashboard pages. That needs the owner's account
+  (Google or email); creating a production account would put test data in the real
+  database. The dashboard was verified on the identical build against the fake stack (E2E +
+  responsive QA above).
+- Follow-up after release: History reads `roadmaps.completed_at` only when the database has
+  migration 0010 (same probe as the rest of Founder OS), released the same way.
 
 ## Next action
 
-Read `.e2e-tmp/full-e2e-2.log`; fix any regression; `npm run build`; merge
-`feature/solventia-master-redesign` into `main` (no fast-forward, like the earlier PR merges),
-push `main`, wait for Vercel's commit status, verify the live homepage and dashboard.
+Nothing outstanding in code. Owner: the §21 Google consent-screen branding above; then sign in
+on https://solventia.in to confirm the account chooser says "Solventia".
