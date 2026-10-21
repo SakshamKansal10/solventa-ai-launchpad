@@ -56,7 +56,8 @@ export function ProgressTab({ view, text }: { view: RoadmapView; text: RoadmapTe
   const { t } = useLocale();
   const navigate = useNavigate();
 
-  if (view.totals.completedWeeks < 2) {
+  // Shown from the first recorded result — evidence is never held back for weeks.
+  if (view.totals.missionsCompleted === 0 && view.totals.evidence === 0) {
     return (
       <div data-testid="progress-empty">
         <EmptyState title={t("rm.progress.emptyTitle")} body={t("rm.progress.emptyBody")} />

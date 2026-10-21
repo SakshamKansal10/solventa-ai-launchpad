@@ -155,9 +155,9 @@ const en = {
   "rm.blocker.nothing": "Nothing — it went smoothly",
 
   // Progress
-  "rm.progress.emptyTitle": "Progress appears after two weeks",
+  "rm.progress.emptyTitle": "Nothing recorded yet",
   "rm.progress.emptyBody":
-    "Once you've closed two weeks, this shows what you did and what evidence you found.",
+    "Complete a mission or record what you learned — it shows here from your first week.",
   "rm.progress.missionsByWeek": "Missions done, by week",
   "rm.progress.evidenceByAssumption": "Evidence, by assumption",
   "rm.progress.phaseCompletion": "Phase completion",
@@ -333,9 +333,9 @@ const hi: Record<keyof typeof en, string> = {
   "rm.blocker.unclear": "समझ नहीं आया क्या करना है",
   "rm.blocker.nothing": "कुछ नहीं — सब सुचारू रहा",
 
-  "rm.progress.emptyTitle": "प्रगति दो सप्ताह बाद दिखेगी",
+  "rm.progress.emptyTitle": "अभी कुछ दर्ज नहीं हुआ",
   "rm.progress.emptyBody":
-    "दो सप्ताह बंद करने के बाद यहां दिखेगा कि आपने क्या किया और कौन-से साक्ष्य मिले।",
+    "कोई मिशन पूरा करें या जो सीखा उसे दर्ज करें — यह पहले हफ़्ते से यहां दिखेगा।",
   "rm.progress.missionsByWeek": "सप्ताह के अनुसार पूरे हुए मिशन",
   "rm.progress.evidenceByAssumption": "धारणा के अनुसार साक्ष्य",
   "rm.progress.phaseCompletion": "चरणों की प्रगति",

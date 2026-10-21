@@ -1,6 +1,6 @@
 /** Proof: assumptions, evidence, and the deterministic state each one is in. */
 const en = {
-  "pf.title": "Proof",
+  "pf.title": "Evidence",
   "pf.collected": "Evidence collected",
   "pf.moreToValidate": "More to validate",
   "pf.subtitle":
@@ -140,7 +140,7 @@ const en = {
 };
 
 const hi: Record<keyof typeof en, string> = {
-  "pf.title": "प्रमाण",
+  "pf.title": "सबूत",
   "pf.collected": "जुटाया गया साक्ष्य",
   "pf.moreToValidate": "और जाँचने बाकी",
   "pf.subtitle":

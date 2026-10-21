@@ -820,7 +820,12 @@
    so the bar's own copy is only the link and the measured destination. The still version (no
    film) shows it, on a pearl bar so the emblem sits on the light field it is made for. */
 [data-cine-tone] [data-nav-brand] {
-  opacity: 0;
+  /* Hidden while the film carries the identity; the bar's own once the film has left. */
+  opacity: var(--past-film, 0);
+}
+[data-cine-tone] [data-nav-bar] {
+  background: rgb(247 247 244 / var(--past-film, 0));
+  box-shadow: 0 1px 0 rgb(21 24 31 / calc(0.06 * var(--past-film, 0)));
 }
 
 /* Quiet hover lift for cards and a soft image zoom. Motion is removed globally

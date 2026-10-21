@@ -139,10 +139,17 @@ export function createOverlaySync(store: ExperienceStore) {
   const shown: ShownBox[] = [];
 
   /** One frame at story position `p` on a stage of `width` × `height` px. */
+  const timeline = { el: null as HTMLElement | null, past: "" };
+
   return function sync(p: number, width: number, height: number, animate: boolean) {
     const s = store.state;
     const dom = s.dom;
     shown.length = 0;
+    // Read before any write this frame: how far the film has left the screen (0 while it
+    // plays, 1 once the footer has taken over) — the bar then carries its own identity.
+    timeline.el ??= document.querySelector<HTMLElement>("[data-testid=cinematic-timeline]");
+    const filmBottom = timeline.el ? timeline.el.getBoundingClientRect().bottom : Infinity;
+    const pastFilm = Math.min(1, Math.max(0, (height - filmBottom) / (height * 0.12)));
     // Immersion: the navigation recedes during the deepest sequences, returns for the product.
     nav.el ??= document.querySelector<HTMLElement>("[data-testid=cinematic-nav]");
     if (nav.el) {
@@ -154,6 +161,11 @@ export function createOverlaySync(store: ExperienceStore) {
       if (immerse !== nav.value) {
         nav.value = immerse;
         nav.el.style.setProperty("--immerse", immerse);
+      }
+      const past = pastFilm.toFixed(2);
+      if (past !== timeline.past) {
+        timeline.past = past;
+        nav.el.style.setProperty("--past-film", past);
       }
     }
 
@@ -178,7 +190,10 @@ export function createOverlaySync(store: ExperienceStore) {
       const travel = ramp(p, "void", 0.04, "void", 0.72);
       const t = travel * travel * (3 - 2 * travel);
       const dark = 1 - inkAt(lightAt(p));
-      const key = `${t.toFixed(4)}:${dark.toFixed(3)}`;
+      // ONE identity at a time: the bar's identity hands over to the centred finale lockup
+      // just before it appears, and comes back (as the bar's own) once the film has left.
+      const handOff = ramp(p, "return", 0.8, "finale", FINALE_REVEAL.from + 0.03);
+      const key = `${t.toFixed(4)}:${dark.toFixed(3)}:${handOff.toFixed(3)}`;
       if (key !== brand.state) {
         brand.state = key;
         // The identity never fades into the film: it stays at full strength in the bar (only the
@@ -194,7 +209,7 @@ export function createOverlaySync(store: ExperienceStore) {
           const dy = (target.y - from.y) * t;
           el.style.transform = `translate3d(${dx.toFixed(2)}px, ${dy.toFixed(2)}px, 0) scale(${sc.toFixed(5)})`;
           // The emblem belongs to light fields: it rests while the world is dark.
-          const o = (to ? 1 : 1 - t) * recede * (name === "mark" ? 1 - dark : 1);
+          const o = (to ? 1 : 1 - t) * recede * (name === "mark" ? 1 - dark : 1) * (1 - handOff);
           el.style.opacity = o.toFixed(3);
         }
         if (brand.cue) brand.cue.style.opacity = Math.max(0, 1 - t * 3).toFixed(3);
