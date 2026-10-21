@@ -63,7 +63,13 @@ export const getDecisionHistory = createServerFn({ method: "GET" }).handler(
         .order("created_at", { ascending: false }),
       supabase
         .from("roadmaps")
-        .select("id, opportunity_id, status, activated_at, completed_at, created_at")
+        // completed_at arrived with migration 0010 (probed via build_error); older
+        // databases still answer, just without a completion date.
+        .select(
+          caps.roadmapStates
+            ? "id, opportunity_id, status, activated_at, completed_at, created_at"
+            : "id, opportunity_id, status, activated_at, created_at",
+        )
         .eq("user_id", user.id),
       supabase
         .from("roadmap_phases")
@@ -75,9 +81,16 @@ export const getDecisionHistory = createServerFn({ method: "GET" }).handler(
     ]);
     if (dnaRes.error) throw new Error(dnaRes.error.message);
 
-    type RoadmapRow = NonNullable<typeof roadmapsRes.data>[number];
+    type RoadmapRow = {
+      id: string;
+      opportunity_id: string;
+      status: string;
+      activated_at: string | null;
+      completed_at?: string | null;
+      created_at: string;
+    };
     const roadmapByOpp = new Map<string, RoadmapRow>();
-    for (const r of roadmapsRes.data ?? []) {
+    for (const r of (roadmapsRes.data ?? []) as unknown as RoadmapRow[]) {
       const prior = roadmapByOpp.get(r.opportunity_id);
       // Prefer a live status over an archived one.
       if (!prior || prior.status === "archived" || prior.status === "available") {
