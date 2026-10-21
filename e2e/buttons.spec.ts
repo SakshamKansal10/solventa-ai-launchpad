@@ -62,7 +62,7 @@ test.describe("founder buttons", () => {
     await expect(page.getByTestId("adaptation-note")).toBeVisible({ timeout: 60_000 });
   });
 
-  test("dashboard graphics are controls: path stop, mission node and Today's Move all navigate", async ({
+  test("dashboard controls navigate: Today's Move, a phase on the journey, and the evidence tile", async ({
     page,
     context,
   }) => {
@@ -73,11 +73,12 @@ test.describe("founder buttons", () => {
     await expect(page).toHaveURL(/\/dashboard\/roadmap/);
 
     await gotoApp(page, "/dashboard");
-    await page.getByTestId("path-node-problem").getByRole("button").click();
+    await page.getByTestId("open-evidence").click();
     await expect(page).toHaveURL(/\/dashboard\/proof/);
+    await expect(page.getByTestId("proof-page")).toBeVisible();
 
     await gotoApp(page, "/dashboard");
-    await page.getByTestId("track-node").first().click();
-    await expect(page).toHaveURL(/\/dashboard\/roadmap/);
+    await page.getByTestId("journey-ribbon").getByRole("button").first().click();
+    await expect(page).toHaveURL(/\/dashboard\/roadmap\?.*phase=/);
   });
 });

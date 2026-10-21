@@ -1,7 +1,10 @@
 import { useState } from "react";
+import { Link } from "@tanstack/react-router";
 import {
   ChevronDown,
   Check,
+  FlaskConical,
+  Plus,
   Clock,
   Compass,
   Search,
@@ -19,6 +22,7 @@ import type { MissionState } from "@/lib/roadmap/state";
 import type { MissionDTO } from "@/lib/roadmap/view";
 import { cn } from "@/lib/utils";
 import { Button, Pill } from "../ui";
+import { StatusBadge } from "../proof/bits";
 
 const CATEGORY_ICON: Record<string, LucideIcon> = {
   problem: Search,
@@ -59,6 +63,9 @@ export function MissionCard({
   locked,
   defaultOpen,
   onState,
+  opportunityId,
+  assumptionTitle,
+  onRecordEvidence,
 }: {
   mission: MissionDTO;
   index: number;
@@ -69,6 +76,11 @@ export function MissionCard({
   /** The one active mission opens by default; the rest start compact. */
   defaultOpen: boolean;
   onState: (state: MissionState) => void;
+  opportunityId: string;
+  /** The tested assumption's title in the reader's language. */
+  assumptionTitle?: string | null;
+  /** Opens the evidence form for this mission (absent on read-only weeks). */
+  onRecordEvidence?: () => void;
 }) {
   const { t, locale } = useLocale();
   const [open, setOpen] = useState(defaultOpen);
@@ -156,7 +168,7 @@ export function MissionCard({
         className={cn(
           "relative rounded-2xl transition-colors duration-300",
           open && !done
-            ? "bg-[linear-gradient(135deg,#faf7ff_0%,#fffdfb_100%)] p-4 shadow-[0_0_0_1px_rgba(49,94,219,0.2),0_14px_34px_-24px_rgba(16,28,50,0.5)] sm:p-5"
+            ? "bg-[linear-gradient(135deg,#f4f7fe_0%,#ffffff_100%)] p-4 shadow-[0_0_0_1px_rgba(49,94,219,0.2),0_14px_34px_-24px_rgba(16,28,50,0.5)] sm:p-5"
             : "px-1 py-1.5 hover:bg-sol-cobalt-ultralight/60 sm:px-3",
         )}
       >
@@ -246,6 +258,31 @@ export function MissionCard({
                   </dd>
                 </div>
               )}
+              {mission.assumption && (
+                // The other half of the assumption ↔ mission link (Evidence lists the missions).
+                <div
+                  className="flex min-w-0 flex-wrap items-center gap-x-2.5 gap-y-1.5 rounded-xl bg-sol-pearl px-3 py-2.5"
+                  data-testid="mission-assumption"
+                >
+                  <FlaskConical
+                    className="size-4 shrink-0 text-sol-cobalt-deep"
+                    aria-hidden="true"
+                  />
+                  <dt className="text-[0.8125rem] font-semibold text-sol-secondary">
+                    {t("pf.mission.tests")}
+                  </dt>
+                  <dd className="flex min-w-0 flex-1 flex-wrap items-center gap-2">
+                    <Link
+                      to="/dashboard/proof"
+                      search={{ opportunity: opportunityId, assumption: mission.assumption.id }}
+                      className="relative z-10 min-w-0 text-[0.9375rem] font-medium leading-snug text-sol-cobalt-deep hover:underline"
+                    >
+                      {assumptionTitle ?? mission.assumption.title}
+                    </Link>
+                    <StatusBadge status={mission.assumption.status} />
+                  </dd>
+                </div>
+              )}
               <div className="flex min-w-0 items-start gap-2.5 border-t border-sol-border/70 pt-3">
                 <Check
                   className="mt-0.5 size-4 shrink-0 text-sol-champagne-deep"
@@ -262,6 +299,22 @@ export function MissionCard({
               <div className="mt-5 flex flex-col gap-3">
                 <div className="flex flex-wrap items-center gap-3">
                   {primary}
+                  {onRecordEvidence && (
+                    <Button
+                      size="sm"
+                      variant="secondary"
+                      onClick={onRecordEvidence}
+                      data-testid="mission-record-evidence"
+                    >
+                      <Plus className="size-4" aria-hidden="true" />
+                      {t("pf.record")}
+                    </Button>
+                  )}
+                  {mission.evidenceCount > 0 && (
+                    <span className="text-[0.875rem] text-sol-secondary">
+                      {t("pf.mission.recorded", { n: mission.evidenceCount })}
+                    </span>
+                  )}
                   {done && (
                     <Button
                       size="sm"

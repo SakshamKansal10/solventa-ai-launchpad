@@ -76,11 +76,13 @@ function OpportunityPage() {
   if (query.isError || !query.data) {
     return <ErrorPanel onRetry={() => void query.refetch()} retrying={query.isFetching} />;
   }
-  const dto = query.data;
+  // Everything below reads the reader-language brief, so no English line slips into Hindi.
   const brief = {
-    ...dto.brief,
-    title: overlay.data?.title ?? dto.brief.title,
+    ...query.data.brief,
+    title: overlay.data?.title ?? query.data.brief.title,
+    oneLiner: overlay.data?.oneLiner ?? query.data.brief.oneLiner,
   };
+  const dto = { ...query.data, brief };
   const detail: OpportunityDisplayDetail = { ...dto.detail, ...(overlay.data?.detail ?? {}) };
 
   return (
@@ -230,7 +232,7 @@ function HeaderBlock({ dto, title }: { dto: OpportunityDetailDTO; title: string 
         <div className="relative h-44 overflow-hidden sm:h-56 md:h-auto">
           <OpportunityPhoto image={image} title={title} compact />
           <div
-            className="pointer-events-none absolute inset-0 hidden bg-gradient-to-r from-[#f6f0f9] via-transparent to-transparent md:block"
+            className="pointer-events-none absolute inset-0 hidden bg-gradient-to-r from-[#f7f8fa] via-transparent to-transparent md:block"
             aria-hidden="true"
           />
         </div>

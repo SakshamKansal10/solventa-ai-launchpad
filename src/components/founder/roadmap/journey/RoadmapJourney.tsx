@@ -8,6 +8,7 @@ import {
 } from "react";
 
 import { useLocale } from "@/lib/i18n/LocaleProvider";
+import { useTranslatedTitle } from "@/lib/use-translation";
 import type { PhaseDTO, RoadmapView } from "@/lib/roadmap/view";
 import { cn } from "@/lib/utils";
 import type { useRoadmapText } from "../text";
@@ -26,6 +27,11 @@ export function stageOf(key: string): Stage {
 /** The roadmap at a glance: a header naming the direction, every phase on one
  * VALIDATE → BUILD → ELEVATE path (all phases, full titles, real states), and the
  * details panel of the selected phase. Plain HTML — no 3D, nothing hidden. */
+/** The direction's name in the reader's language (the same cached translation as elsewhere). */
+function DirectionTitle({ id, title }: { id: string; title: string }) {
+  return <>{useTranslatedTitle(id, title) ?? title}</>;
+}
+
 export function RoadmapJourney({
   view,
   text,
@@ -113,7 +119,10 @@ export function RoadmapJourney({
               className="mt-1 text-[1rem] font-medium text-sol-ink"
               data-testid="roadmap-direction"
             >
-              {view.roadmap.opportunityTitle}
+              <DirectionTitle
+                id={view.roadmap.opportunityId}
+                title={view.roadmap.opportunityTitle}
+              />
             </p>
             <p className="mt-1 text-[0.9375rem] text-sol-secondary">{t("rm.journey.subtitle")}</p>
             {northStar && (

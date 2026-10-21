@@ -1,8 +1,17 @@
 import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { ChevronLeft, ChevronRight, Loader2, Target, TrendingUp } from "lucide-react";
-import { useNavigate } from "@tanstack/react-router";
+import {
+  ChevronLeft,
+  ChevronRight,
+  Database,
+  Loader2,
+  MessageCircle,
+  Plus,
+  Target,
+  TrendingUp,
+} from "lucide-react";
+import { Link, useNavigate } from "@tanstack/react-router";
 
 import { retryWeek, setMissionState, type CloseWeekResult } from "@/lib/actions/roadmap";
 import { useLocale } from "@/lib/i18n/LocaleProvider";
@@ -13,6 +22,10 @@ import { ProgressRing } from "../dashboard/graphics";
 import { cn } from "@/lib/utils";
 import { Button, Pill } from "../ui";
 import { MissionCard } from "./MissionCard";
+import { EvidenceDialog } from "../proof/EvidenceDialog";
+import { StatusBadge } from "../proof/bits";
+import { useEvidenceWorkspace } from "../proof/useEvidence";
+import { useAskSol } from "../DashboardShell";
 import { ReviewWeekDialog } from "./ReviewWeekDialog";
 import type { useRoadmapText } from "./text";
 
@@ -58,6 +71,23 @@ export function WeekTab({
   const queryClient = useQueryClient();
   const invalidate = useInvalidateFounder();
   const navigate = useNavigate();
+  const askSol = useAskSol();
+  const opportunityId = view.roadmap.opportunityId;
+  // Evidence can be recorded from the very first mission — the same assumptions
+  // (in the reader's language) the Evidence page shows.
+  const evidence = useEvidenceWorkspace(opportunityId);
+  const assumptionTitles = new Map(evidence.assumptions.map((a) => [a.id, a.title]));
+  const [recording, setRecording] = useState<{
+    taskId: string | null;
+    assumptionId: string | null;
+  } | null>(null);
+  const weekAssumptions = Array.from(
+    new Map(
+      week.missions
+        .filter((m) => m.assumption)
+        .map((m) => [m.assumption!.id, m.assumption!] as const),
+    ).values(),
+  );
   const goWeek = (n: number) =>
     navigate({ to: "/dashboard/roadmap", search: { tab: "week", week: n } });
   const prevWeek = view.weeks.find((w) => w.number === week.number - 1 && w.state !== "locked");
@@ -259,6 +289,14 @@ export function WeekTab({
                     locked={missionsLocked}
                     defaultOpen={m.id === activeMissionId && !missionsLocked}
                     onState={(state) => setState.mutate({ taskId: m.id, state })}
+                    opportunityId={opportunityId}
+                    assumptionTitle={m.assumption ? assumptionTitles.get(m.assumption.id) : null}
+                    onRecordEvidence={
+                      evidence.assumptions.length > 0 && !missionsLocked
+                        ? () =>
+                            setRecording({ taskId: m.id, assumptionId: m.assumption?.id ?? null })
+                        : undefined
+                    }
                   />
                 </li>
               ))}
@@ -269,7 +307,7 @@ export function WeekTab({
 
       <aside className="min-w-0 self-start" aria-label={t("rm.rail.aria")} data-testid="week-rail">
         {week.hasDetail && (
-          <div className="flex flex-col divide-y divide-sol-border/70 rounded-3xl border border-sol-border bg-[linear-gradient(160deg,#fffdfb_0%,#f8f3fc_100%)] shadow-[0_16px_40px_-30px_rgba(16,28,50,0.45)]">
+          <div className="flex flex-col divide-y divide-sol-border/70 rounded-3xl border border-sol-border bg-[linear-gradient(160deg,#ffffff_0%,#f7f8fa_100%)] shadow-[0_16px_40px_-30px_rgba(16,28,50,0.45)]">
             <section className="flex flex-col gap-4 p-5">
               <h3 className="flex items-center gap-2.5 text-[0.9375rem] font-semibold text-sol-ink">
                 <TrendingUp className="size-4 text-sol-cobalt-deep" aria-hidden="true" />
@@ -327,6 +365,54 @@ export function WeekTab({
                 </div>
               </section>
             )}
+            <section className="flex flex-col gap-3 p-5" data-testid="week-evidence">
+              <h3 className="flex items-center gap-2.5 text-[0.9375rem] font-semibold text-sol-ink">
+                <Database className="size-4 text-sol-cobalt-deep" aria-hidden="true" />
+                {t("pf.rail.title")}
+              </h3>
+              <p className="text-[0.9375rem] leading-snug text-sol-secondary">
+                {week.evidenceCount > 0
+                  ? t("pf.rail.count", { n: week.evidenceCount })
+                  : t("pf.rail.empty")}
+              </p>
+              {weekAssumptions.length > 0 && (
+                <ul className="flex flex-col gap-2">
+                  {weekAssumptions.map((a) => (
+                    <li key={a.id} className="flex flex-wrap items-center gap-2">
+                      <Link
+                        to="/dashboard/proof"
+                        search={{ opportunity: opportunityId, assumption: a.id }}
+                        className="min-w-0 text-[0.9375rem] leading-snug text-sol-ink hover:text-sol-cobalt-deep hover:underline"
+                      >
+                        {assumptionTitles.get(a.id) ?? a.title}
+                      </Link>
+                      <StatusBadge status={a.status} />
+                    </li>
+                  ))}
+                </ul>
+              )}
+              <div className="flex flex-wrap items-center gap-2 pt-1">
+                {evidence.assumptions.length > 0 && !missionsLocked && (
+                  <Button
+                    size="sm"
+                    onClick={() =>
+                      setRecording({ taskId: null, assumptionId: weekAssumptions[0]?.id ?? null })
+                    }
+                    data-testid="rail-record-evidence"
+                  >
+                    <Plus className="size-4" aria-hidden="true" />
+                    {t("pf.record")}
+                  </Button>
+                )}
+                <Link
+                  to="/dashboard/proof"
+                  search={{ opportunity: opportunityId }}
+                  className="inline-flex min-h-9 items-center px-2 text-[0.875rem] font-medium text-sol-cobalt-deep hover:underline"
+                >
+                  {t("pf.rail.open")}
+                </Link>
+              </div>
+            </section>
             {detail.mistakes(week.mistakes).length > 0 && (
               <section className="flex flex-col gap-3 p-5" data-testid="week-avoid">
                 <h3 className="sol-eyebrow !text-[0.6875rem]">{t("rm.rail.avoid")}</h3>
@@ -343,9 +429,34 @@ export function WeekTab({
                 </ul>
               </section>
             )}
+            <section className="p-5">
+              <Button
+                variant="soft"
+                size="sm"
+                className="w-full"
+                onClick={() => askSol.open()}
+                data-testid="rail-ask-sol"
+              >
+                <MessageCircle className="size-4" aria-hidden="true" />
+                {t("pf.rail.askSol")}
+              </Button>
+            </section>
           </div>
         )}
       </aside>
+
+      {recording && (
+        <EvidenceDialog
+          open
+          onOpenChange={(o) => !o && setRecording(null)}
+          opportunityId={opportunityId}
+          assumptions={evidence.assumptions}
+          presetAssumptionId={recording.assumptionId}
+          taskId={recording.taskId}
+          weekId={week.id}
+          titleSupported={evidence.overview.data?.titleSupported ?? false}
+        />
+      )}
 
       {isCurrent && week.state === "ready_to_close" && (
         <ReviewWeekDialog

@@ -1,5 +1,6 @@
 import { useLocale } from "@/lib/i18n/LocaleProvider";
 import type { MessageKey } from "@/lib/i18n";
+import type { AssumptionStatus } from "@/lib/proof/links";
 import type { ProofState } from "@/lib/proof/state";
 import { Pill, type PillTone } from "../ui";
 
@@ -44,4 +45,22 @@ export function formatDate(iso: string, locale: "en" | "hi"): string {
   } catch {
     return iso;
   }
+}
+
+export const STATUS_TONE: Record<AssumptionStatus, PillTone> = {
+  not_tested: "neutral",
+  testing: "cobalt",
+  inconclusive: "neutral",
+  supported: "champagne",
+  contradicted: "warning",
+};
+
+/** Not tested / Testing / Inconclusive / Supported / Contradicted. */
+export function StatusBadge({ status }: { status: AssumptionStatus }) {
+  const { t } = useLocale();
+  return (
+    <Pill tone={STATUS_TONE[status]} data-testid={`status-${status}`}>
+      {t(`pf.status.${status}` as const)}
+    </Pill>
+  );
 }

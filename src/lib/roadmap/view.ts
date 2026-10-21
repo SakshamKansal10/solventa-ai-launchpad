@@ -13,6 +13,8 @@ import {
   type RoadmapState,
   type WeekState,
 } from "@/lib/roadmap/state";
+import { assumptionStatus, linkMissions, type AssumptionStatus } from "@/lib/proof/links";
+import { deriveProofState, type EvidenceSignal, type EvidenceType } from "@/lib/proof/state";
 
 /** Raw rows as read from Supabase (only the columns the view needs). */
 export interface RawTask {
@@ -77,6 +79,23 @@ export interface RawRoadmap {
 export interface EvidenceRef {
   week_id: string | null;
   task_id: string | null;
+  /** Present when the loader read full evidence rows (needed for assumption status). */
+  id?: string;
+  assumption_id?: string | null;
+  signal?: EvidenceSignal;
+  evidence_type?: EvidenceType;
+  source_person?: string | null;
+  occurred_on?: string;
+  created_at?: string;
+}
+
+/** The direction's assumptions, so each mission can name the one it tests. */
+export interface AssumptionRef {
+  id: string;
+  title: string;
+  category: string;
+  position: number;
+  success_threshold: number | null;
 }
 
 export interface MissionDTO {
@@ -95,6 +114,8 @@ export interface MissionDTO {
   evidenceCount: number;
   /** When the founder marked it done (ISO); null while open. */
   completedAt: string | null;
+  /** The assumption this mission tests, with its evidence-derived status. */
+  assumption: { id: string; title: string; status: AssumptionStatus } | null;
 }
 
 export interface WeekDTO {
@@ -154,6 +175,7 @@ export function buildRoadmapView(input: {
   opportunityTitle: string;
   phases: RawPhase[];
   evidence: EvidenceRef[];
+  assumptions?: AssumptionRef[];
 }): RoadmapView {
   const phases = [...input.phases].sort((a, b) => a.order_index - b.order_index);
   const numbers = globalWeekNumbers(phases);
@@ -164,6 +186,39 @@ export function buildRoadmapView(input: {
   for (const e of input.evidence) {
     if (e.week_id) evidenceByWeek.set(e.week_id, (evidenceByWeek.get(e.week_id) ?? 0) + 1);
     if (e.task_id) evidenceByTask.set(e.task_id, (evidenceByTask.get(e.task_id) ?? 0) + 1);
+  }
+
+  // Assumption ↔ mission: the same link the Evidence page shows, from the other side.
+  const allTasks = phases.flatMap((p) => p.roadmap_weeks.flatMap((w) => w.roadmap_tasks));
+  const assumptionRefs = input.assumptions ?? [];
+  const links = linkMissions(
+    assumptionRefs,
+    allTasks,
+    input.evidence.map((e) => ({
+      task_id: e.task_id,
+      assumption_id: e.assumption_id ?? null,
+    })),
+  );
+  const assumptionInfo = new Map<string, { id: string; title: string; status: AssumptionStatus }>();
+  for (const a of assumptionRefs) {
+    const rows = input.evidence.filter((e) => e.assumption_id === a.id && e.id && e.signal);
+    const state = deriveProofState(
+      rows.map((e) => ({
+        id: e.id!,
+        signal: e.signal!,
+        evidence_type: e.evidence_type ?? "other",
+        source_person: e.source_person ?? null,
+        occurred_on: e.occurred_on ?? "",
+        created_at: e.created_at,
+      })),
+      a.success_threshold ?? undefined,
+    ).state;
+    const started = allTasks.some((t) => links.get(t.id) === a.id && t.status !== "pending");
+    assumptionInfo.set(a.id, {
+      id: a.id,
+      title: a.title,
+      status: assumptionStatus(state, started),
+    });
   }
 
   const weeks: WeekDTO[] = [];
@@ -224,6 +279,7 @@ export function buildRoadmapView(input: {
           state: missionStateFromDb(t.status),
           evidenceCount: evidenceByTask.get(t.id) ?? 0,
           completedAt: t.completed_at ?? null,
+          assumption: assumptionInfo.get(links.get(t.id) ?? "") ?? null,
         })),
       });
     }

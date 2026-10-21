@@ -24,9 +24,8 @@ test.describe("building a roadmap", () => {
 
     await expect(page.getByTestId("tab-week")).toHaveAttribute("data-state", "active");
     await expect(page.getByTestId("north-star")).toBeVisible();
-    // The journey scene only ever shows the first 3 phases as mountain peaks;
-    // the rest stay reachable from the Plan tab and History.
-    await expect(page.getByTestId("phase-strip").getByRole("listitem")).toHaveCount(3);
+    // Every phase is on the path (Validate → Build → Elevate), none hidden.
+    await expect(page.getByTestId("phase-strip").getByRole("listitem")).toHaveCount(5);
     await expect(page.getByTestId("mission-card")).toHaveCount(3);
 
     const roadmaps = await sql<{ status: string }>(

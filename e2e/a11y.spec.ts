@@ -78,10 +78,14 @@ test.describe("accessibility (WCAG 2.1 A/AA, serious and critical only)", () => 
     const findings: Finding[] = [];
     await gotoApp(page, "/dashboard");
     await page.waitForLoadState("networkidle");
-    // The side-by-side fit table only exists once its cells have loaded.
-    await expect(page.getByTestId("direction-compare")).toBeVisible();
-    await expect(page.getByTestId("direction-compare").locator("[data-status]")).toHaveCount(12);
     findings.push(...(await audit(page, "command-center A")));
+
+    // The side-by-side fit table (3 directions × 5 factors) lives on Opportunities.
+    await gotoApp(page, "/dashboard/opportunities");
+    await expect(page.getByTestId("direction-compare")).toBeVisible();
+    await expect(page.getByTestId("direction-compare").locator("[data-status]")).toHaveCount(15);
+    findings.push(...(await audit(page, "opportunities compare")));
+    await gotoApp(page, "/dashboard");
 
     // State B: the dark build surface, then on to the roadmap.
     // The recommended direction is reviewed, then chosen on its own page.

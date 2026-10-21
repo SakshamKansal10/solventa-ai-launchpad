@@ -584,6 +584,19 @@ function NextMove({
             icon={Database}
             label={t("cc.surface.evidence")}
             value={t("rm.rail.captured", { n: view.totals.evidence })}
+            action={
+              <LinkButton
+                to="/dashboard/proof"
+                search={{ opportunity: opportunityId }}
+                variant="ghost"
+                size="sm"
+                className="-ml-2 w-fit text-sol-cobalt-deep"
+                data-testid="open-evidence"
+              >
+                {t("pf.rail.open")}
+                <ArrowRight className="size-4" aria-hidden="true" />
+              </LinkButton>
+            }
           />
         </div>
       )}

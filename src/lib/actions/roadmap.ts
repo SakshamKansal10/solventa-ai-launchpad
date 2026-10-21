@@ -28,6 +28,7 @@ import { getSchemaCapabilities } from "@/lib/schema-capabilities.server";
 import { canCloseWeek, globalWeekNumbers, missionStateToDb } from "@/lib/roadmap/state";
 import {
   buildRoadmapView,
+  type AssumptionRef,
   type EvidenceRef,
   type RawPhase,
   type RawRoadmap,
@@ -76,13 +77,24 @@ export async function loadRoadmapView(
   };
 
   let evidence: EvidenceRef[] = [];
+  let assumptions: AssumptionRef[] = [];
   if (caps.proof) {
-    const { data } = await db
-      .from("proof_evidence")
-      .select("week_id, task_id")
-      .eq("opportunity_id", roadmap.opportunity_id)
-      .eq("user_id", userId);
-    evidence = data ?? [];
+    const [ev, as] = await Promise.all([
+      db
+        .from("proof_evidence")
+        .select(
+          "id, week_id, task_id, assumption_id, signal, evidence_type, source_person, occurred_on, created_at",
+        )
+        .eq("opportunity_id", roadmap.opportunity_id)
+        .eq("user_id", userId),
+      db
+        .from("proof_assumptions")
+        .select("id, title, category, position, success_threshold")
+        .eq("opportunity_id", roadmap.opportunity_id)
+        .eq("user_id", userId),
+    ]);
+    evidence = ev.data ?? [];
+    assumptions = as.data ?? [];
   }
 
   return buildRoadmapView({
@@ -90,6 +102,7 @@ export async function loadRoadmapView(
     opportunityTitle: opportunities?.title ?? "",
     phases: (phasesRes.data ?? []) as unknown as RawPhase[],
     evidence,
+    assumptions,
   });
 }
 

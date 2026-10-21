@@ -20,6 +20,7 @@ import { cn } from "@/lib/utils";
 
 import { OpportunityPhoto, useOpportunityImage } from "@/components/founder/OpportunityImage";
 import { directionIcon, FitPill } from "@/components/founder/OpportunityCards";
+import { DirectionCompare } from "@/components/founder/dashboard/DirectionCompare";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import {
   Button,
@@ -259,6 +260,11 @@ function OpportunitiesPage() {
     (f) => alternatives.some((b) => b.fit === f),
   );
   const showToolbar = alternatives.length > 0;
+  // Every live direction of this consultation, in the order they were presented.
+  const comparable = inView
+    .filter((b) => b.status !== "dismissed")
+    .sort((a, b) => direction.viewedIds.indexOf(a.id) - direction.viewedIds.indexOf(b.id))
+    .slice(0, 4);
 
   return (
     <div className="flex flex-col gap-8" data-testid="opportunities-page">
@@ -279,6 +285,12 @@ function OpportunitiesPage() {
       {selected && (
         <section aria-label={t("opp.list.selected")} className="flex flex-col gap-3">
           <OpportunityRow brief={selected} section="selected" canChoose={false} />
+        </section>
+      )}
+
+      {comparable.length > 1 && !filtering && (
+        <section id="compare" aria-label={t("cc.compare.heading")} className="scroll-mt-24">
+          <DirectionCompare briefs={comparable} />
         </section>
       )}
 

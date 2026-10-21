@@ -223,6 +223,7 @@ export function FlagshipCard({
         {compareCount > 1 && (
           <LinkButton
             to="/dashboard/opportunities"
+            hash="compare"
             variant="secondary"
             size="lg"
             data-testid="explore-more"

@@ -3,22 +3,22 @@
  * for real email-client rendering: no CSS variables, no oklch (Outlook's
  * Word engine and older clients don't parse either), plain hex only. */
 export const EMAIL_COLORS = {
-  bgOuter: "#F4EFE7",
-  surface: "#FFFDF9",
-  border: "#E5DDD1",
-  textPrimary: "#151827",
-  navy: "#17203D",
-  secondary: "#67616A",
+  bgOuter: "#F7F8FA",
+  surface: "#FFFFFF",
+  border: "#E1E5EB",
+  textPrimary: "#171B22",
+  navy: "#101C32",
+  secondary: "#596273",
   champagne: "#C5A36A",
-  violet: "#7257D8",
-  violetSoft: "#F5F1FD",
-  cream: "#F7F2EA",
+  cobalt: "#315EDB",
+  cobaltSoft: "#EAF0FD",
+  cream: "#F7F8FA",
 } as const;
 
-// Georgia/Times/serif for display text, Arial/Helvetica/sans-serif for
-// body — no web fonts, since @font-face support is inconsistent across
-// email clients and a fallback-only stack renders identically everywhere.
-export const FONT_HEADING = "Georgia, 'Times New Roman', Times, serif";
+// One sans-serif stack for headings and body, like the product (no serif display
+// type) — no web fonts, since @font-face support is inconsistent across email
+// clients and a fallback-only stack renders identically everywhere.
+export const FONT_HEADING = "Helvetica, Arial, sans-serif";
 export const FONT_BODY = "Arial, Helvetica, sans-serif";
 
 export const BRAND_TAGLINE = "VALIDATE • BUILD • ELEVATE";
