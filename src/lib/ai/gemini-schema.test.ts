@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { z } from "zod";
 import { toGeminiSchema } from "@/lib/ai/gemini.server";
 import { FlatIntelligencePackageSchema } from "@/lib/ai/prompts/intelligence-package";
 import {
@@ -66,6 +67,68 @@ function assertGeminiCompatible(schema: Parameters<typeof toGeminiSchema>[0]) {
     [],
   );
 }
+
+function countKey(node: unknown, key: string): number {
+  if (Array.isArray(node)) return node.reduce((n, item) => n + countKey(item, key), 0);
+  if (node && typeof node === "object") {
+    return Object.entries(node).reduce(
+      (n, [k, v]) => n + (k === key ? 1 : 0) + countKey(v, key),
+      0,
+    );
+  }
+  return 0;
+}
+
+describe("toGeminiSchema — the 2026-10-21 Stage 7 400 INVALID_ARGUMENT", () => {
+  // Live: the consultation package with 17 maxItems was rejected before any
+  // generation; the same schema without maxItems was accepted. Zod enforces
+  // every upper bound locally, so none is sent to the provider.
+  it.each([
+    ["consultation package", FlatIntelligencePackageSchema],
+    ["mentor response", MentorResponseSchema],
+    ["opportunity detail", OpportunityDetailSchema],
+    ["market evidence", MarketEvidenceResultSchema],
+  ])("sends no maxItems in the %s provider schema", (_name, schema) => {
+    expect(countKey(toGeminiSchema(schema), "maxItems")).toBe(0);
+  });
+
+  it("still requires every structured direction field, with the assumption categories as an enum", () => {
+    const result = toGeminiSchema(FlatIntelligencePackageSchema) as {
+      properties: {
+        opportunities: {
+          items: {
+            required: string[];
+            properties: {
+              criticalAssumptions: {
+                minItems?: number;
+                items: { properties: { category: { enum: string[] } } };
+              };
+            };
+          };
+        };
+      };
+    };
+    const opp = result.properties.opportunities.items;
+    for (const field of [
+      "deliveryModel",
+      "criticalAssumptions",
+      "successCriteria",
+      "reconsiderIf",
+    ]) {
+      expect(opp.required).toContain(field);
+    }
+    expect(opp.properties.criticalAssumptions.minItems).toBe(2);
+    expect(opp.properties.criticalAssumptions.items.properties.category.enum).toContain("problem");
+  });
+
+  it("strips keywords, never a property that happens to share a keyword's name", () => {
+    const result = toGeminiSchema(z.object({ maxItems: z.array(z.string()).max(3) })) as {
+      properties: Record<string, { maxItems?: number }>;
+    };
+    expect(Object.keys(result.properties)).toEqual(["maxItems"]);
+    expect(result.properties.maxItems.maxItems).toBeUndefined();
+  });
+});
 
 describe("toGeminiSchema", () => {
   it("produces a non-empty, provider-compatible schema for the one-call initial consultation package", () => {
