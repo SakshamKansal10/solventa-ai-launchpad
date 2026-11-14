@@ -12,8 +12,8 @@ import { SoundToggle } from "../sound/SoundToggle";
 /**
  * Navigation for the cinematic homepage only — the shared Header (used by the other pages) is
  * untouched. Very little chrome: the Solventia lockup anchors the top-left; sign-in and the one
- * call to action sit on the right. The site's other destinations live in the footer. Sound has no
- * control in the bar (see SoundToggle — a keyboard-only mute that takes no room).
+ * call to action sit on the right, with the sound toggle (sound is off until it is pressed — see
+ * SoundToggle). The site's other destinations live in the footer.
  *
  * Identity: during the film the bar's lockup is the DESTINATION of the opening identity — the
  * film carries the centred lockup here (DomSync), so the bar's own copy stays invisible and only
@@ -102,7 +102,9 @@ export function CinematicNav({ pendingNext }: { pendingNext?: string | null } = 
           </span>
         </Link>
         <div className="relative flex items-center justify-end gap-2.5 sm:gap-5">
-          <SoundToggle />
+          <div className="transition-opacity duration-700" style={recede(1)}>
+            <SoundToggle />
+          </div>
           <div className="transition-opacity duration-700" style={recede(1)} data-nav-secondary>
             {signedIn ? (
               <Link

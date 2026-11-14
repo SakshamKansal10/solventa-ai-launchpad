@@ -28,6 +28,9 @@ export interface ExperienceState {
   camera: { x: number; y: number; z: number; fov: number };
   /** False once the cinematic section has scrolled fully out of view. */
   stageActive: boolean;
+  /** Renders one world frame (R3F advance), set while the world is on screen and compiled —
+   * called from the story driver's tick so the page runs a single animation loop. */
+  renderWorld: ((now: number) => void) | null;
   /** Still at the very top — drives the scroll cue. */
   atStart: boolean;
   /** First frames are on screen — the loading veil can lift. */
@@ -84,6 +87,7 @@ export function createExperienceStore() {
     pointer: { x: 0, y: 0 },
     camera: { x: 0, y: 0, z: 0, fov: 0 },
     stageActive: true,
+    renderWorld: null,
     atStart: true,
     ready: false,
     environment: false,

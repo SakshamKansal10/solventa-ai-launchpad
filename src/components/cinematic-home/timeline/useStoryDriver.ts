@@ -72,6 +72,8 @@ export function useStoryDriver(
         stage?.clientHeight || window.innerHeight,
         animate && !freeze,
       );
+      // The world renders in this same frame (no second loop).
+      s.renderWorld?.(now);
     };
     raf = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(raf);

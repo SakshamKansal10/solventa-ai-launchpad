@@ -6,13 +6,13 @@ import { createCueGate, mixAt } from "./score";
  * Owns the soundtrack for the page: the visitor's preference, the audio
  * context's lifecycle and the loop that follows the scroll.
  *
- * - Part of the experience, not a utility: ON unless the visitor muted it in this visit, but it
- *   only ever STARTS from the visitor's first real interaction — a tap, click or key press — as
- *   browsers require (scrolling alone is not one). Autoplay rules are never bypassed; a refused
- *   start fails silently and waits for the next interaction.
- * - Never in the way: the interaction that starts it is answered first; the audio graph is built
- *   at the next idle moment (see start). There is no visible control — a keyboard-only mute
- *   exists once sound has actually played (`active`; see SoundToggle).
+ * - OFF until the visitor presses the sound toggle in the bar (SoundToggle). No audio context
+ *   exists before that, so sound can never slow the intro. Once they have turned it on, it stays
+ *   on for the visit and restarts from their next real interaction after a reload — a tap, click
+ *   or key press, as browsers require. Autoplay rules are never bypassed; a refused start fails
+ *   silently and waits for the next interaction.
+ * - Never in the way: the click that starts it is answered first; the audio graph is built at
+ *   the next idle moment (see start).
  * - Follows the scroll every frame: continuous layers track the current scene,
  *   cues fire as their visible events are crossed (once — see createCueGate).
  * - Muting fades to silence and suspends the context; un-muting resumes the
@@ -30,7 +30,7 @@ export interface SoundState {
   enabled: boolean;
   /** Audio is actually playing (context running). */
   running: boolean;
-  /** Sound has played at least once on this page (the mute control is offered from then on). */
+  /** Sound has played at least once on this page. */
   active: boolean;
 }
 
@@ -64,9 +64,11 @@ class SoundController {
   /** Called by the cinematic stage while it is mounted. Returns the detach. */
   attach(store: ExperienceStore): () => void {
     this.store = store;
-    let wanted = true;
+    // Off until the visitor turns it on: no audio context is created during the intro unless
+    // they asked for sound (remembered for the visit once they have).
+    let wanted = false;
     try {
-      wanted = sessionStorage.getItem(KEY) !== "off";
+      wanted = sessionStorage.getItem(KEY) === "on";
     } catch {
       /* storage unavailable: sound is still only started by an interaction */
     }
@@ -96,8 +98,11 @@ class SoundController {
       /* the choice still applies for this page */
     }
     this.set({ enabled });
-    if (enabled) void this.start();
-    else this.stop(false);
+    if (enabled) {
+      // The press itself starts it; the gesture listeners cover a browser that still refuses.
+      this.armGesture();
+      void this.start();
+    } else this.stop(false);
   }
 
   /** A real interface interaction (product preview tabs): a soft confirmation, if sound is on. */

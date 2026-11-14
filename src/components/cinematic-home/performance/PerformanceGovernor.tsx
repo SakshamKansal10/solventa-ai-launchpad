@@ -69,14 +69,19 @@ export function PerformanceGovernor({
 
 /**
  * Renders only once every shader is compiled (ReadySignal), and stops rendering entirely while the
- * cinematic section is scrolled out of view.
+ * cinematic section is scrolled out of view. The canvas never runs its own loop
+ * (frameloop="never"): the story driver's tick calls `renderWorld`, so the page has ONE
+ * requestAnimationFrame loop for scroll, overlay and world.
  */
 export function RenderGate({ store }: { store: ExperienceStore }) {
-  const setFrameloop = useThree((s) => s.setFrameloop);
+  const advance = useThree((s) => s.advance);
   const active = useExperienceValue(store, (s) => s.stageActive);
   const compiled = useExperienceValue(store, (s) => s.compiled);
   useEffect(() => {
-    setFrameloop(active && compiled ? "always" : "never");
-  }, [active, compiled, setFrameloop]);
+    store.state.renderWorld = active && compiled ? (now: number) => advance(now) : null;
+    return () => {
+      store.state.renderWorld = null;
+    };
+  }, [store, active, compiled, advance]);
   return null;
 }

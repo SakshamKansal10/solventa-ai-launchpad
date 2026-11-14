@@ -27,7 +27,7 @@ export interface QualityPreset {
 
 export const QUALITY_PRESETS: Record<QualityTier, QualityPreset> = {
   high: {
-    dpr: [1, 2],
+    dpr: [1, 1.5],
     antialias: true,
     universeCount: 140,
     filamentCapacity: 900,

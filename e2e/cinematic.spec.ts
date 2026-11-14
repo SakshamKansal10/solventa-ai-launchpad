@@ -392,35 +392,41 @@ test.describe("cinematic homepage", () => {
     await expect.poll(async () => (await cameraState(page)).scene).toBe(before.scene);
   });
 
-  test("sound belongs to the experience: no visible control, it starts with the first interaction, mute is remembered", async ({
+  test("sound is off until the visitor turns it on with the toggle in the bar; the choice is remembered", async ({
     page,
   }) => {
     await open(page);
     const toggle = page.getByTestId("sound-toggle");
-    // Arriving: nothing plays and no utility competes with the film.
-    await expect(toggle).toHaveCount(0);
-    // The first real interaction starts it; the mute control then exists — for the keyboard only:
-    // no icon is shown, and it takes no room in the bar.
+    const context = () =>
+      page.evaluate(() =>
+        (
+          window as unknown as { __cine: { sound: { context: () => string } } }
+        ).__cine.sound.context(),
+      );
+    // Arriving: the toggle is visible and off, and a click on the page creates no audio at all.
+    await expect(toggle).toBeVisible();
+    await expect(toggle).toHaveAttribute("aria-pressed", "false");
     await page.mouse.click(400, 400);
-    await expect(toggle).toHaveAttribute("data-audio", "running");
+    await page.waitForTimeout(400);
+    expect(await context()).toBe("none");
+    // Pressing the toggle starts it…
+    await toggle.click();
     await expect(toggle).toHaveAttribute("aria-pressed", "true");
-    expect(
-      await toggle.evaluate((el) => [getComputedStyle(el).opacity, getComputedStyle(el).position]),
-    ).toEqual(["0", "absolute"]);
-    // Muting is immediate…
+    await expect(toggle).toHaveAttribute("data-audio", "running");
+    // …muting is immediate…
     await toggle.press("Enter");
     await expect(toggle).toHaveAttribute("aria-pressed", "false");
     await expect(toggle).toHaveAttribute("data-audio", "idle");
-    // …and remembered for the visit: after a reload an interaction does not start it, and the
-    // control is there to turn it back on.
+    // …and the choice is remembered for the visit: on again, reload, and the next interaction
+    // resumes it.
+    await toggle.click();
+    await expect(toggle).toHaveAttribute("data-audio", "running");
     await page.reload();
     await expect(page.getByTestId("cinematic-home")).toHaveAttribute("data-ready", "true", {
       timeout: 45_000,
     });
+    await expect(toggle).toHaveAttribute("aria-pressed", "true");
     await page.mouse.click(400, 400);
-    await expect(toggle).toHaveAttribute("aria-pressed", "false");
-    await expect(toggle).toHaveAttribute("data-audio", "idle");
-    await toggle.press("Enter");
     await expect(toggle).toHaveAttribute("data-audio", "running");
   });
 
@@ -443,10 +449,10 @@ test.describe("cinematic homepage", () => {
       return max;
     };
     const toggle = page.getByTestId("sound-toggle");
-    // No autoplay: nothing exists before the visitor's first interaction.
+    // No autoplay: nothing exists before the visitor turns sound on.
     expect(await sound((s) => s.context())).toBe("none");
     await goTo(page, "awakening", 0.7);
-    await page.mouse.click(400, 400);
+    await toggle.click();
     await expect(toggle).toHaveAttribute("aria-pressed", "true");
     await expect(toggle).toHaveAttribute("aria-label", "Mute sound");
     await expect.poll(() => sound((s) => s.context())).toBe("running");
