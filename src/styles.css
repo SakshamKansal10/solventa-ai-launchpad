@@ -988,11 +988,11 @@ html[lang="hi"] .dash-label {
 @keyframes dash-halo {
   0%,
   100% {
-    opacity: 0.3;
+    opacity: 1;
     transform: scale(1);
   }
   50% {
-    opacity: 0.12;
+    opacity: 0.4;
     transform: scale(1.25);
   }
 }
