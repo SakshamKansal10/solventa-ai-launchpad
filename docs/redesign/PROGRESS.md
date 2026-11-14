@@ -25,7 +25,7 @@ Blockers: `blocked.md`. Final report: `REPORT.md`.
 - [—] not in scope: GIS button, /find-my-business-idea redirect; Proof rename → part 3
 
 ## Part 2 — cinematic intro
-- [ ] diagnosis (plan-2.md)
+- [x] diagnosis (plan-2.md)
 - [ ] mode decided once; no mid-scroll swap
 - [ ] performance fixes
 - [ ] proof (perf numbers)
