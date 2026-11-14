@@ -169,3 +169,59 @@ export function useFitCounts() {
     return parts.join(" · ");
   };
 }
+
+/** "How it fits you": N of M fit clearly, the bar, and each factor's level (gaps in amber). */
+export function FitSummaryCard({
+  factors,
+  className,
+}: {
+  factors: FitFactorScore[];
+  className?: string;
+}) {
+  const { t } = useLocale();
+  const sorted = sortFactors(factors);
+  const clear = factors.filter((f) => kindOf(f.score) === "clear").length;
+  return (
+    <aside
+      aria-labelledby="fit-title"
+      data-testid="fit-summary"
+      className={cn(
+        "flex min-w-0 flex-col gap-5 rounded-[32px] bg-sol-ivory p-[clamp(24px,2.8vw,32px)]",
+        className,
+      )}
+    >
+      <div className="flex flex-col gap-2.5">
+        <h2 id="fit-title" className="dash-label">
+          {t("v2.fit.title")}
+        </h2>
+        <p className="font-display text-[clamp(28px,2.6vw,36px)] font-medium leading-[1.05] tracking-[-0.02em] text-sol-ink">
+          {t("v2.fit.clearOf", { x: clear, y: factors.length })}
+        </p>
+      </div>
+      <FitBar factors={factors} className="[&_span]:h-4" />
+      <ul className="flex flex-col gap-3">
+        {sorted.map((f) => {
+          const kind = kindOf(f.score);
+          return (
+            <li
+              key={f.key}
+              className="flex items-baseline justify-between gap-3 text-[18px] text-sol-ink"
+            >
+              <span className="min-w-0">{t(`fit2.factor.${f.key}` as MessageKey)}</span>
+              <span
+                className={cn(
+                  "shrink-0 text-right",
+                  kind === "gap" || kind === "critical"
+                    ? "font-semibold text-sol-warning"
+                    : "text-sol-muted",
+                )}
+              >
+                {t(`fit2.level.${f.score ?? "unknown"}` as MessageKey)}
+              </span>
+            </li>
+          );
+        })}
+      </ul>
+    </aside>
+  );
+}

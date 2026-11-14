@@ -94,7 +94,7 @@ test.describe("accessibility (WCAG 2.1 A/AA, serious and critical only)", () => 
     await expect(page.getByTestId("build-roadmap")).toBeVisible();
     await gotoApp(page, "/dashboard");
     await expect(page.getByTestId("build-roadmap")).toBeEnabled();
-    await expect(page.getByTestId("chosen-fit")).toBeVisible();
+    await expect(page.getByTestId("next-steps")).toBeVisible();
     await page.waitForLoadState("networkidle");
     findings.push(...(await audit(page, "command-center B")));
     await page.getByTestId("build-roadmap").click();

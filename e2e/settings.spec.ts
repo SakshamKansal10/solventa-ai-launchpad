@@ -234,7 +234,7 @@ test.describe("Settings — founder profile", () => {
 
     await page.getByTestId("reanalyze").click();
     await expect(page).toHaveURL(/\/dashboard$/, { timeout: 60_000 });
-    await expect(page.locator("h1")).toHaveText("Your strongest direction is ready to explore.");
+    await expect(page.getByTestId("flagship-card")).toBeVisible();
     expect(await gemini.countOf("INITIAL_INTELLIGENCE")).toBe(1);
     const dna = await sql<{ n: string }>(
       "select count(*)::text as n from business_dna where user_id = $1",
