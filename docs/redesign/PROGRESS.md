@@ -26,12 +26,12 @@ Blockers: `blocked.md`. Final report: `REPORT.md`.
 
 ## Part 2 — cinematic intro
 - [x] diagnosis (plan-2.md)
-- [ ] mode decided once; no mid-scroll swap
-- [ ] performance fixes
-- [ ] proof (perf numbers)
+- [x] mode decided once; no mid-scroll swap (41da42b)
+- [x] performance fixes: one loop, dpr ≤ 1.5, sound off until asked (0da3503)
+- [x] proof: docs/redesign/part2-perf.md; cinematic + public e2e 27/27
 
 ## Part 3 — dashboard redesign
-- [ ] plan-3.md file map
+- [x] plan-3.md file map
 - [ ] 1 tokens and base components
 - [ ] 2 app shell (top bar, phone bottom bar, avatar menu, Ask Sol trigger)
 - [ ] 3 JourneyArc + fit bar

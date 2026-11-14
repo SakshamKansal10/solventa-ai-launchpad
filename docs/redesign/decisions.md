@@ -21,7 +21,7 @@ Each entry: what was ambiguous, what I chose, why.
 5. **Colour tokens.** Part 3's hex codes map onto the existing tokens, no new palette:
    | Brief name | Project token |
    |---|---|
-   | white / mist | `sol-surface` (white canvas), `sol-pearl` (cool pearl supporting cards, nav pill) |
+   | white / mist | `sol-surface` (white canvas), `sol-ivory` #f2f4f7 (supporting cards, nav pill — the closest token to the brief's #F1F3F9; `sol-pearl` #f7f8fa is too faint on white to read as a card) |
    | ink / body / mute | `sol-ink` (graphite headings and body), `sol-secondary` (secondary, meta, labels) |
    | navy | `sol-navy` — the one dark block per page |
    | blue | `sol-cobalt` / `sol-cobalt-deep` — only pressable things and current position, fit bars |
@@ -35,3 +35,23 @@ Each entry: what was ambiguous, what I chose, why.
    redirect, the Proof rename (done in part 3).
 7. **Moved test ids.** Where the redesign moves an element an e2e test targets, the test follows
    the element; no dead layout is kept for a test id.
+
+## Part 2 — cinematic intro
+8. **Phones get the still version.** The brief's thresholds (viewport < 768px, fewer than 4 cores,
+   under 4 GB memory) send every phone to the static narrative from the start. Before, phones got
+   the WebGL film on the medium tier. Tablets (≥ 768px) keep the film. Browsers that hide
+   cores/memory (Safari, Firefox) are not penalised for it.
+9. **The 4-second rule** is read as: the 3D bundle starts loading the moment the visit is a WebGL
+   one; if it has not arrived in 4 s **and the visitor is still at the top** (scrollY ≤ 40), the
+   visit is decided as still — before they are inside the film. If they are already scrolling,
+   the film keeps running on the overlay and the 3D world joins when it arrives. Nothing ever
+   swaps the layout under someone mid-scroll. Forced review tiers (`?tier=`) skip the rule.
+10. **Errors and context loss hide the world, not the film.** The old 15 s start timeout is gone.
+    A canvas error logs `[cinematic] …` and hides the world; a lost WebGL context hides it and a
+    restored context shows it again in place.
+11. **Sound toggle is visible and off by default.** The brief says "create the audio context only
+    after the visitor clicks the sound toggle" and describes a toggle in the header. The earlier
+    design had sound on by default with a hidden keyboard-only mute, which would leave no way to
+    turn sound on. The toggle is now a visible icon button in the bar (WebGL visits only). The
+    two sound e2e tests were updated to the new behaviour.
+12. **will-change** left as is: it sits only on the few overlay layers that move every frame.
