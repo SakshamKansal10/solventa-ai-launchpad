@@ -42,7 +42,14 @@ export const Route = createFileRoute("/dashboard/opportunities/")({
   validateSearch: z.object({ consultation: z.string().uuid().optional() }),
   component: OpportunitiesPage,
   head: () => ({
-    meta: [{ title: "Opportunities — Solventia" }, { name: "robots", content: "noindex" }],
+    meta: [
+      { title: "Directions | Solventia" },
+      {
+        name: "description",
+        content: "The business directions found for you, and how each one fits.",
+      },
+      { name: "robots", content: "noindex" },
+    ],
   }),
 });
 

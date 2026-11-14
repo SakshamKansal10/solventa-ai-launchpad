@@ -24,7 +24,14 @@ import { cn } from "@/lib/utils";
 export const Route = createFileRoute("/dashboard/settings")({
   component: SettingsPage,
   head: () => ({
-    meta: [{ title: "Settings — Solventia" }, { name: "robots", content: "noindex" }],
+    meta: [
+      { title: "Settings | Solventia" },
+      {
+        name: "description",
+        content: "Your name, photo, founder profile, language and notifications.",
+      },
+      { name: "robots", content: "noindex" },
+    ],
   }),
 });
 

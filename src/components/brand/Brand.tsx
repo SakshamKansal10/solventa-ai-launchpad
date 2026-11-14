@@ -121,11 +121,11 @@ export function BrandSignature({
  * bars, sidebars, footer). `stack`: emblem above, wordmark, signature (brand moments).
  */
 const PRESETS = {
-  /** The site bar: SOLVENTIA 26px on desktop, 20px on phones (signature hidden below 640px). */
+  /** The site bar: SOLVENTIA 26px on desktop, 17–20px on phones, the signature always shown. */
   nav: {
     mark: 36,
-    word: "text-[18px] min-[380px]:text-[20px] sm:text-[26px]",
-    sig: "text-[10px] sm:text-[12px]",
+    word: "text-[17px] min-[380px]:text-[19px] sm:text-[26px]",
+    sig: "text-[6.5px] min-[380px]:text-[7.5px] sm:text-[12px]",
   },
   /** Product sidebars and compact bars. */
   compact: { mark: 28, word: "text-[18px]", sig: "text-[9px]" },
@@ -162,10 +162,7 @@ export function BrandLockup({
           <BrandWordmark className={p.word} color={wordColor} />
         </span>
         {signature && (
-          <span
-            data-brand-part="sig"
-            className={`block self-start ${preset === "nav" ? "max-sm:hidden" : ""}`}
-          >
+          <span data-brand-part="sig" className="block self-start">
             <BrandSignature className={p.sig} color={signatureColor} />
           </span>
         )}

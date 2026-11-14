@@ -57,6 +57,15 @@ test.describe("site identity", () => {
     expect(org?.logo).toMatch(/\/icon-512\.png$/);
     // Names the site "Solventia", never "Solventia.in".
     expect(JSON.stringify(parsed)).not.toMatch(/"name":"Solventia\.in"/);
+    expect((site as unknown as { alternateName?: string[] }).alternateName).toEqual([
+      "Solventia.in",
+    ]);
+    // A real 1200×630 share card, not the square app icon.
+    await expect(page.locator('meta[property="og:image"]').first()).toHaveAttribute(
+      "content",
+      /\/og-image\.png$/,
+    );
+    expect((await request.get("/og-image.png")).status()).toBe(200);
 
     for (const href of [
       "/favicon.ico",

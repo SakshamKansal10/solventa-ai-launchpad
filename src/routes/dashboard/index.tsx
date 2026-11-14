@@ -57,7 +57,14 @@ export const Route = createFileRoute("/dashboard/")({
   validateSearch: z.object({ consultation: z.string().uuid().optional() }),
   component: CommandCenter,
   head: () => ({
-    meta: [{ title: "Command Center — Solventia" }, { name: "robots", content: "noindex" }],
+    meta: [
+      { title: "Today | Solventia" },
+      {
+        name: "description",
+        content: "Your next step: today's mission, or the direction to explore next.",
+      },
+      { name: "robots", content: "noindex" },
+    ],
   }),
 });
 

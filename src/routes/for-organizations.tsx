@@ -13,7 +13,7 @@ export const Route = createFileRoute("/for-organizations")({
     const canonical = `${url.replace(/\/$/, "")}/for-organizations`;
     return {
       meta: [
-        { title: "Solventia for Organizations" },
+        { title: "For organizations | Solventia" },
         {
           name: "description",
           content:

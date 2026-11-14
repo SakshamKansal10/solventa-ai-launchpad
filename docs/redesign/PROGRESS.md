@@ -12,14 +12,17 @@ Blockers: `blocked.md`. Final report: `REPORT.md`.
 - [x] CLAUDE.md standing rules
 - [x] commit + push branch and tag
 
-## Part 1 — brand, SEO, Google sign-in
-- [ ] plan-1.md + audit
-- [ ] A. one Logo component everywhere
-- [ ] B. favicon and app icons from the mark; manifest
-- [ ] C. site name for Google: WebSite JSON-LD, og:site_name, titles, canonical, OG image
-- [ ] D. sub-link eligibility: SSR content, plain links, one consultation route, sitemap, robots, noindex
-- [ ] E. Google Identity Services + signInWithIdToken; privacy/terms; owner checklist doc
-- [ ] F. other inconsistencies (Proof naming, header buttons, lang, footer year, dead links, 404)
+## Part 1 — brand, SEO, Google sign-in (scope narrowed by the owner, see decisions 6)
+- [x] plan-1.md + audit
+- [x] dashboard shell uses BrandLockup (old PNG mark + hardcoded wordmark removed)
+- [x] signature kept on every lockup: consultation, building screen, film product preview, phone bar
+- [x] home WebSite JSON-LD alternateName ["Solventia.in"]; home title under 60 chars
+- [x] canonical on /consultation (every other public page already had one)
+- [x] 1200×630 og:image (public/og-image.png) site-wide; twitter summary_large_image
+- [x] "Page | Solventia" titles + descriptions on every page
+- [x] docs/google-auth-owner-checklist.md
+- [—] not rebuilt (already correct per owner): brand system, favicons, manifest, sitemap, robots, 404
+- [—] not in scope: GIS button, /find-my-business-idea redirect; Proof rename → part 3
 
 ## Part 2 — cinematic intro
 - [ ] diagnosis (plan-2.md)

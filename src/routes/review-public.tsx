@@ -33,7 +33,7 @@ export const Route = createFileRoute("/review-public")({
   component: ReviewPublicPage,
   head: () => ({
     meta: [
-      { title: "Public Review — Solventia" },
+      { title: "Public review | Solventia" },
       { name: "robots", content: "noindex, nofollow" },
       {
         name: "description",

@@ -25,9 +25,10 @@ export const Route = createFileRoute("/")({
     // marketing asset exists; every field below already reads from this
     // one constant so that's a one-line change later.
     const image = `${url.replace(/\/$/, "")}/icon-512.png`;
+    const card = `${url.replace(/\/$/, "")}/og-image.png`;
     return {
       meta: [
-        { title: "Solventia — Personalized AI Business Ideas & Founder Roadmaps" },
+        { title: "Solventia — Personalized Business Ideas & Founder Roadmaps" },
         {
           name: "description",
           content:
@@ -35,7 +36,7 @@ export const Route = createFileRoute("/")({
         },
         {
           property: "og:title",
-          content: "Solventia — Personalized AI Business Ideas & Founder Roadmaps",
+          content: "Solventia — Personalized Business Ideas & Founder Roadmaps",
         },
         {
           property: "og:description",
@@ -43,17 +44,17 @@ export const Route = createFileRoute("/")({
             "Personalized business directions, real-world evidence, and an adaptive weekly roadmap — for founders, not just idea browsers.",
         },
         { property: "og:url", content: url },
-        { property: "og:image", content: image },
+        { property: "og:image", content: card },
         {
           name: "twitter:title",
-          content: "Solventia — Personalized AI Business Ideas & Founder Roadmaps",
+          content: "Solventia — Personalized Business Ideas & Founder Roadmaps",
         },
         {
           name: "twitter:description",
           content:
             "Personalized business directions, real-world evidence, and an adaptive weekly roadmap — for founders, not just idea browsers.",
         },
-        { name: "twitter:image", content: image },
+        { name: "twitter:image", content: card },
       ],
       links: [BRAND_FONT_PRELOAD, { rel: "canonical", href: url }, CINEMATIC_FONTS],
       scripts: [
@@ -63,7 +64,7 @@ export const Route = createFileRoute("/")({
             "@context": "https://schema.org",
             "@type": "WebSite",
             name: "Solventia",
-            alternateName: "Solventia AI",
+            alternateName: ["Solventia.in"],
             url,
           }),
         },

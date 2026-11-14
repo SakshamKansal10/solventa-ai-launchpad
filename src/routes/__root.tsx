@@ -94,7 +94,13 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "apple-mobile-web-app-title", content: "Solventia" },
       { property: "og:type", content: "website" },
       { property: "og:site_name", content: "Solventia" },
-      { name: "twitter:card", content: "summary" },
+      // 1200×630: the logo lockup and the home page headline (public/og-image.png).
+      { property: "og:image", content: "https://solventia.in/og-image.png" },
+      { property: "og:image:width", content: "1200" },
+      { property: "og:image:height", content: "630" },
+      { property: "og:image:alt", content: "Solventia — Find the direction worth building." },
+      { name: "twitter:card", content: "summary_large_image" },
+      { name: "twitter:image", content: "https://solventia.in/og-image.png" },
     ],
     links: [
       {

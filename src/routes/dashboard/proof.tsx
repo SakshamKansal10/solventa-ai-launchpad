@@ -72,7 +72,11 @@ export const Route = createFileRoute("/dashboard/proof")({
   }),
   component: ProofPage,
   head: () => ({
-    meta: [{ title: "Evidence — Solventia" }, { name: "robots", content: "noindex" }],
+    meta: [
+      { title: "Proof | Solventia" },
+      { name: "description", content: "What you have proved so far, and what is still to check." },
+      { name: "robots", content: "noindex" },
+    ],
   }),
 });
 

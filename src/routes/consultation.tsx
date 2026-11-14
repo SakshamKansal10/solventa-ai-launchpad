@@ -21,7 +21,16 @@ export const Route = createFileRoute("/consultation")({
   }),
   component: ConsultationPage,
   head: () => ({
-    meta: [{ title: "Your Consultation — Solventia" }, { name: "robots", content: "noindex" }],
+    meta: [
+      { title: "Consultation | Solventia" },
+      {
+        name: "description",
+        content:
+          "Seven short stages about your skills, money, time and goals — then three business directions that fit your real situation.",
+      },
+      { name: "robots", content: "noindex" },
+    ],
+    links: [{ rel: "canonical", href: "https://solventia.in/consultation" }],
   }),
 });
 

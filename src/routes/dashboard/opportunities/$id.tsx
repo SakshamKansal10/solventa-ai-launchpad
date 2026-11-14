@@ -56,7 +56,14 @@ export const Route = createFileRoute("/dashboard/opportunities/$id")({
   validateSearch: z.object({ tab: z.enum(TABS).optional().catch(undefined) }),
   component: OpportunityPage,
   head: () => ({
-    meta: [{ title: "Opportunity — Solventia" }, { name: "robots", content: "noindex" }],
+    meta: [
+      { title: "Direction | Solventia" },
+      {
+        name: "description",
+        content: "One business direction: who it serves, how it fits you, and its first test.",
+      },
+      { name: "robots", content: "noindex" },
+    ],
   }),
 });
 

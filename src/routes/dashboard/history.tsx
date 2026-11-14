@@ -60,7 +60,11 @@ import { cn } from "@/lib/utils";
 export const Route = createFileRoute("/dashboard/history")({
   component: HistoryPage,
   head: () => ({
-    meta: [{ title: "History — Solventia" }, { name: "robots", content: "noindex" }],
+    meta: [
+      { title: "History | Solventia" },
+      { name: "description", content: "Every consultation you have done, and what came of it." },
+      { name: "robots", content: "noindex" },
+    ],
   }),
 });
 

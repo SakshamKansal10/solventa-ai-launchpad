@@ -22,7 +22,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 
-import mark from "@/assets/solventia-mark.png";
+import { BrandLockup } from "@/components/brand/Brand";
 import { LanguageSwitcher } from "@/components/solventia/LanguageSwitcher";
 import { Sheet, SheetContent, SheetDescription, SheetTitle } from "@/components/ui/sheet";
 import {
@@ -121,12 +121,7 @@ function SidebarContent({
         aria-label={t("nav.homeAria")}
         className="flex h-[72px] shrink-0 items-center gap-3 px-6"
       >
-        <img src={mark} alt="" width={298} height={436} className="h-9 w-auto" />
-        <span className="flex flex-col leading-none">
-          <span className="font-wordmark text-[1.05rem] font-medium tracking-[0.13em] text-sol-ink">
-            SOLVENTIA
-          </span>
-        </span>
+        <BrandLockup preset="compact" />
       </Link>
 
       <nav aria-label={t("shell.nav.aria")} className="flex flex-1 flex-col gap-1 px-3 py-2">

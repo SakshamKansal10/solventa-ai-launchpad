@@ -132,7 +132,7 @@ export function ProductPreview() {
         className="hidden w-[196px] shrink-0 flex-col border-r border-[#15181F]/[0.08] bg-[#F2EFE8] px-3.5 py-5 lg:flex"
       >
         <div className="px-2">
-          <BrandLockup preset="compact" signature={false} />
+          <BrandLockup preset="compact" />
         </div>
         <ul className="mt-7 flex flex-col gap-1">
           {NAV.map((n) => {

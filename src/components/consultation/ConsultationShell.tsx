@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { ArrowLeft, ArrowRight, UserRound, X } from "lucide-react";
 
-import { BrandLockup, BrandMark } from "@/components/brand/Brand";
+import { BrandLockup } from "@/components/brand/Brand";
 import { LanguageSwitcher } from "@/components/solventia/LanguageSwitcher";
 import {
   AlertDialog,
@@ -94,11 +94,7 @@ export function ConsultationShell({
 
       <header className="sticky top-0 z-30 flex h-[72px] items-center gap-4 border-b border-sol-border bg-sol-pearl/95 px-4 backdrop-blur sm:px-8">
         <Link to="/" className="flex shrink-0 items-center" aria-label={t("nav.homeAria")}>
-          {/* Phones: the emblem alone (the questions need the width); wider: the lockup. */}
-          <BrandMark height={30} className="md:hidden" />
-          <span className="max-md:hidden">
-            <BrandLockup preset="compact" signature={false} />
-          </span>
+          <BrandLockup preset="compact" />
         </Link>
 
         <div className="flex min-w-0 flex-1 items-center justify-center">

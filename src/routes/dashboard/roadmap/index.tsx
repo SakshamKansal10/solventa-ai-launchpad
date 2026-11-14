@@ -35,7 +35,11 @@ export const Route = createFileRoute("/dashboard/roadmap/")({
   }),
   component: RoadmapPage,
   head: () => ({
-    meta: [{ title: "Roadmap — Solventia" }, { name: "robots", content: "noindex" }],
+    meta: [
+      { title: "Roadmap | Solventia" },
+      { name: "description", content: "Where you are on your roadmap, and this week's missions." },
+      { name: "robots", content: "noindex" },
+    ],
   }),
 });
 

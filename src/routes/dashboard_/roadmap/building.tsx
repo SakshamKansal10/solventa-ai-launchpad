@@ -19,7 +19,11 @@ export const Route = createFileRoute("/dashboard_/roadmap/building")({
   validateSearch: z.object({ opportunityId: z.string().uuid() }),
   component: BuildingPage,
   head: () => ({
-    meta: [{ title: "Building Your Roadmap — Solventia" }, { name: "robots", content: "noindex" }],
+    meta: [
+      { title: "Building your roadmap | Solventia" },
+      { name: "description", content: "Your roadmap is being written from your chosen direction." },
+      { name: "robots", content: "noindex" },
+    ],
   }),
 });
 
@@ -131,7 +135,7 @@ function BuildingPage() {
     <div className="sol-world-bg flex min-h-dvh flex-col text-sol-ink">
       <header className="flex h-[72px] items-center justify-between px-5 sm:px-10">
         <Link to="/" className="flex items-center gap-3" aria-label={t("nav.homeAria")}>
-          <BrandLockup preset="compact" signature={false} />
+          <BrandLockup preset="compact" />
         </Link>
         <LanguageSwitcher />
       </header>

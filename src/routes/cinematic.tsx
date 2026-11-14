@@ -18,7 +18,7 @@ export const Route = createFileRoute("/cinematic")({
   component: CinematicRoute,
   head: () => ({
     meta: [
-      { title: "Solventia — Find the direction worth building" },
+      { title: "Film preview | Solventia" },
       {
         name: "description",
         content:
