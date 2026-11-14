@@ -60,15 +60,18 @@ export function classifyDevice(
   if (reducedMotion) return { mode: "fallback", tier: "low", reasons: ["prefers-reduced-motion"] };
   if (isSoftwareGpu(device.gpu))
     return { mode: "fallback", tier: "low", reasons: ["software GPU"] };
+  // Small screens and slow machines get the still version from the start (decided once).
+  if (device.viewportWidth < 768)
+    return { mode: "fallback", tier: "low", reasons: ["viewport narrower than 768px"] };
+  if (device.cores !== null && device.cores < 4)
+    return { mode: "fallback", tier: "low", reasons: ["fewer than 4 CPU cores"] };
+  if (device.memoryGb !== null && device.memoryGb < 4)
+    return { mode: "fallback", tier: "low", reasons: ["less than 4 GB memory"] };
 
   const reasons: string[] = [];
   let tier: QualityTier = "medium";
   if (device.coarsePointer) {
     reasons.push("touch device");
-    if (device.memoryGb !== null && device.memoryGb <= 3) {
-      tier = "low";
-      reasons.push("≤ 3 GB memory");
-    }
   } else if ((device.cores ?? 0) >= 8 && (device.memoryGb === null || device.memoryGb >= 8)) {
     if (isIntegratedGpu(device.gpu)) reasons.push("desktop, ≥ 8 cores, integrated graphics");
     else {

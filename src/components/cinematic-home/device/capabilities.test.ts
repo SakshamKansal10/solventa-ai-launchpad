@@ -56,9 +56,24 @@ describe("classifyDevice", () => {
     }
   });
 
-  it("gives phones the medium tier, and low-memory phones the low tier", () => {
-    expect(classifyDevice(phone, motionOk)).toMatchObject({ mode: "webgl", tier: "medium" });
-    expect(classifyDevice({ ...phone, memoryGb: 2 }, motionOk)).toMatchObject({ tier: "low" });
+  it("serves phones and other screens narrower than 768px the still version", () => {
+    expect(classifyDevice(phone, motionOk)).toMatchObject({ mode: "fallback" });
+    expect(classifyDevice({ ...desktop, viewportWidth: 767 }, motionOk).mode).toBe("fallback");
+    expect(classifyDevice({ ...desktop, viewportWidth: 768 }, motionOk).mode).toBe("webgl");
+  });
+
+  it("serves slow machines the still version: under 4 cores or under 4 GB", () => {
+    expect(classifyDevice({ ...desktop, cores: 2 }, motionOk).mode).toBe("fallback");
+    expect(classifyDevice({ ...desktop, memoryGb: 2 }, motionOk).mode).toBe("fallback");
+    // Browsers that hide these numbers are not penalised for it.
+    expect(classifyDevice({ ...desktop, cores: null, memoryGb: null }, motionOk).mode).toBe(
+      "webgl",
+    );
+  });
+
+  it("gives a large touch screen (tablet) the medium tier", () => {
+    const tablet = { ...phone, viewportWidth: 1024, viewportHeight: 1366, memoryGb: 4 };
+    expect(classifyDevice(tablet, motionOk)).toMatchObject({ mode: "webgl", tier: "medium" });
   });
 
   it("drops to the low tier when the visitor has data saver on", () => {
@@ -86,7 +101,13 @@ describe("classifyDevice", () => {
   });
 
   it("always explains its decision", () => {
-    const profiles = [desktop, phone, { ...desktop, webgl2: false }, { ...phone, saveData: true }];
+    const profiles = [
+      desktop,
+      phone,
+      { ...desktop, webgl2: false },
+      { ...desktop, saveData: true },
+      { ...desktop, cores: 2 },
+    ];
     for (const p of profiles) {
       expect(classifyDevice(p, motionOk).reasons.length).toBeGreaterThan(0);
     }

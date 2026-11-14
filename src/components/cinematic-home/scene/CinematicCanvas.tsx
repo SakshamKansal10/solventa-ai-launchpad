@@ -18,6 +18,7 @@ export default function CinematicCanvas({
   parallax,
   freeze,
   onContextLost,
+  onContextRestored,
 }: {
   store: ExperienceStore;
   preset: QualityPreset;
@@ -25,6 +26,7 @@ export default function CinematicCanvas({
   parallax: boolean;
   freeze: boolean;
   onContextLost: () => void;
+  onContextRestored: () => void;
 }) {
   return (
     <Canvas
@@ -62,14 +64,13 @@ export default function CinematicCanvas({
             else lose();
           }, 1500);
         };
-        gl.domElement.addEventListener(
-          "webglcontextlost",
-          (event) => {
-            event.preventDefault();
-            onContextLost();
-          },
-          { once: true },
-        );
+        // preventDefault lets the browser restore the context; three.js re-creates its GPU
+        // state on "webglcontextrestored" and the world comes back in place.
+        gl.domElement.addEventListener("webglcontextlost", (event) => {
+          event.preventDefault();
+          onContextLost();
+        });
+        gl.domElement.addEventListener("webglcontextrestored", () => onContextRestored());
       }}
     >
       <SceneRoot

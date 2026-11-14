@@ -1,5 +1,14 @@
 import { useReducedMotion } from "motion/react";
-import { Component, lazy, Suspense, useEffect, useRef, useState, type ReactNode } from "react";
+import {
+  Component,
+  lazy,
+  Suspense,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+  type ReactNode,
+} from "react";
 
 import { usePointerInput } from "./camera/usePointerInput";
 import {
@@ -26,14 +35,33 @@ import { PEARL_WORLD } from "./world/tone";
 
 // three.js + React Three Fiber load only in the browser, after hydration, and
 // only for devices that get the WebGL experience. The HUD is dev tooling.
-const CinematicCanvas = lazy(() => import("./scene/CinematicCanvas"));
+let canvasChunk: Promise<typeof import("./scene/CinematicCanvas")> | null = null;
+const loadCanvas = () => (canvasChunk ??= import("./scene/CinematicCanvas"));
+const CinematicCanvas = lazy(loadCanvas);
 const DebugHud = lazy(() => import("./debug/DebugHud"));
 
 const HIDE_SCROLLBAR =
   "html,body{scrollbar-width:none}html::-webkit-scrollbar,body::-webkit-scrollbar{display:none}";
 
-/** A WebGL start slower than this (huge GPU stall, broken driver) falls back to the static page. */
-const START_TIMEOUT_MS = 15_000;
+/** If the 3D bundle has not arrived by then and the visitor has not started the film, the visit
+ * gets the still version — decided once, before they are inside the story. */
+const BUNDLE_WAIT_MS = 4_000;
+
+/**
+ * The visit's mode, decided ONCE (module scope: it survives remounts and client navigations) and
+ * never recomputed — a resize, a zoom, DevTools, a slow GPU, an error or a lost WebGL context
+ * never swap the layout under the visitor. Only a different review override re-decides.
+ */
+let visitDecision: { override: TierOverride | undefined; capability: Capability } | null = null;
+
+function decideVisit(override: TierOverride | undefined): Capability {
+  if (visitDecision && visitDecision.override === override) return visitDecision.capability;
+  const device = probeDevice();
+  const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const capability = classifyDevice(device, { reducedMotion, override });
+  visitDecision = { override, capability };
+  return capability;
+}
 
 /**
  * EXPERIENCE SHELL of the cinematic homepage.
@@ -63,17 +91,18 @@ export function CinematicHome({
   const stageRef = useRef<HTMLDivElement>(null);
   const reducedMotion = useReducedMotion() === true;
   const [capability, setCapability] = useState<Capability | null>(null);
-  const [failure, setFailure] = useState<string | null>(null);
+  // Problems inside the 3D world hide the world; the film itself keeps running on the overlay.
+  const [worldOff, setWorldOff] = useState<string | null>(null);
   const ready = useExperienceValue(store, (s) => s.ready);
 
-  // Decide the experience on the client (the server render is the void + first line).
-  useEffect(() => {
-    const device = probeDevice();
-    const decided = classifyDevice(device, { reducedMotion, override: tierOverride });
-    store.state.device = device;
+  // Decide the experience once, before the browser paints the hydrated intro (the server render
+  // is the void + first line). Never re-decided for this visit.
+  useLayoutEffect(() => {
+    const decided = decideVisit(tierOverride);
+    store.state.device = probeDevice();
     store.state.capability = decided;
     setCapability(decided);
-  }, [store, reducedMotion, tierOverride]);
+  }, [store, tierOverride]);
 
   // Review/test hook (only with ?freeze or ?debug): scene ranges + live state for frame capture.
   useEffect(() => {
@@ -94,18 +123,38 @@ export function CinematicHome({
     };
   }, [store, freeze, debug]);
 
-  const mode = failure ? "fallback" : (capability?.mode ?? "pending");
+  const mode = capability?.mode ?? "pending";
 
+  // The 3D bundle starts loading as soon as the visit is a WebGL one. If it has not arrived
+  // within BUNDLE_WAIT_MS and the visitor is still at the opening, the visit is served the still
+  // version (the one moment a decision can still change, before they enter the film). If they
+  // are already scrolling, the film continues on the overlay and the world joins if it arrives.
   useEffect(() => {
-    if (!failure || !capability) return;
-    store.state.capability = { ...capability, mode: "fallback", reasons: [failure] };
-  }, [store, failure, capability]);
-
-  useEffect(() => {
-    if (mode !== "webgl" || ready) return;
-    const id = window.setTimeout(() => setFailure("WebGL start timed out"), START_TIMEOUT_MS);
+    if (mode !== "webgl" || tierOverride) return;
+    let loaded = false;
+    loadCanvas().then(
+      () => (loaded = true),
+      (err: unknown) => {
+        console.error("[cinematic] The 3D bundle failed to load; the film runs without it:", err);
+        setWorldOff("bundle failed");
+      },
+    );
+    const id = window.setTimeout(() => {
+      if (loaded || window.scrollY > 40) return;
+      console.warn(
+        "[cinematic] 3D bundle slower than 4 s — serving the still version for this visit.",
+      );
+      const still: Capability = {
+        mode: "fallback",
+        tier: "low",
+        reasons: ["3D bundle slower than 4 s"],
+      };
+      visitDecision = { override: tierOverride, capability: still };
+      store.state.capability = still;
+      setCapability(still);
+    }, BUNDLE_WAIT_MS);
     return () => window.clearTimeout(id);
-  }, [mode, ready]);
+  }, [mode, tierOverride, store]);
 
   useScrollController(store, sectionRef, mode !== "fallback");
   // The story answers from the first gesture: progress and the overlay run on the page itself,
@@ -172,11 +221,20 @@ export function CinematicHome({
               >
                 <div
                   data-cine-world
+                  data-world={worldOff ? "off" : "on"}
                   className="absolute inset-0"
-                  style={{ opacity: "var(--world-in, 0)" }}
+                  style={{ opacity: worldOff ? 0 : "var(--world-in, 0)" }}
                 >
-                  {mode === "webgl" && capability && (
-                    <CanvasErrorBoundary onError={setFailure}>
+                  {mode === "webgl" && capability && !worldOff?.startsWith("error") && (
+                    <CanvasErrorBoundary
+                      onError={(reason) => {
+                        console.error(
+                          "[cinematic] The 3D world failed; the film continues without it:",
+                          reason,
+                        );
+                        setWorldOff(`error: ${reason}`);
+                      }}
+                    >
                       <Suspense fallback={null}>
                         <CinematicCanvas
                           store={store}
@@ -184,7 +242,11 @@ export function CinematicHome({
                           animate={!reducedMotion}
                           parallax={!reducedMotion}
                           freeze={freeze}
-                          onContextLost={() => setFailure("WebGL context lost")}
+                          onContextLost={() => {
+                            console.warn("[cinematic] WebGL context lost — waiting to restore it.");
+                            setWorldOff("context lost");
+                          }}
+                          onContextRestored={() => setWorldOff(null)}
                         />
                       </Suspense>
                     </CanvasErrorBoundary>
@@ -208,7 +270,8 @@ export function CinematicHome({
   );
 }
 
-/** Any failure inside the canvas (shader, driver, chunk load) degrades to the static page. */
+/** Any failure inside the canvas (shader, driver, chunk load) hides the world; the film keeps
+ * running on the overlay, never swapping to the still page under the visitor. */
 class CanvasErrorBoundary extends Component<
   { onError: (reason: string) => void; children: ReactNode },
   { failed: boolean }
