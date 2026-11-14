@@ -1,9 +1,9 @@
 /** Dashboard shell: sidebar, top bar, account menu, notifications, Ask Sol. */
 const en = {
-  "shell.nav.commandCenter": "Command Center",
-  "shell.nav.opportunities": "Opportunities",
+  "shell.nav.commandCenter": "Today",
+  "shell.nav.opportunities": "Directions",
   "shell.nav.roadmap": "Roadmap",
-  "shell.nav.proof": "Evidence",
+  "shell.nav.proof": "Proof",
   "shell.nav.history": "History",
   "shell.nav.settings": "Settings",
   "shell.nav.aria": "Main navigation",
@@ -79,8 +79,8 @@ const en = {
 } as const;
 
 const hi: Record<keyof typeof en, string> = {
-  "shell.nav.commandCenter": "कमांड सेंटर",
-  "shell.nav.opportunities": "अवसर",
+  "shell.nav.commandCenter": "आज",
+  "shell.nav.opportunities": "दिशाएँ",
   "shell.nav.roadmap": "रोडमैप",
   "shell.nav.proof": "सबूत",
   "shell.nav.history": "इतिहास",

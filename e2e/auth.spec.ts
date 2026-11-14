@@ -21,7 +21,8 @@ test.describe("sign in", () => {
     await dialog.getByLabel("Password").fill(user.password);
     await dialog.getByRole("button", { name: "Sign In", exact: true }).click();
     await expect(page).toHaveURL(/localhost:\d+\/dashboard$/, { timeout: 30_000 });
-    await expect(page.getByTestId("sidebar-account")).toContainText("Asha Verma");
+    await page.getByTestId("topbar-avatar").click();
+    await expect(page.getByTestId("account-name")).toContainText("Asha Verma");
   });
 
   test("a wrong password shows a calm error and no session", async ({ page }) => {

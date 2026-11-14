@@ -34,7 +34,9 @@ test.describe("Settings — profile and photo", () => {
     // "Saved" only once the server confirmed it.
     await expect(page.getByTestId("name-state")).toHaveAttribute("data-state", "saved");
     await expect(page.getByTestId("name-state")).toHaveText("Saved");
-    await expect(page.getByTestId("sidebar-account")).toContainText("Asha Verma Kapoor");
+    await page.getByTestId("topbar-avatar").click();
+    await expect(page.getByTestId("account-name")).toContainText("Asha Verma Kapoor");
+    await page.keyboard.press("Escape");
     const rows = await sql<{ full_name: string }>("select full_name from profiles where id = $1", [
       user.id,
     ]);
@@ -288,9 +290,9 @@ test.describe("Settings — language, notifications, account", () => {
     await signIn(context, user);
     await gotoApp(page, "/dashboard/settings");
     await page.getByTestId("lang-hi").click();
-    await expect(page.getByTestId("sidebar")).toContainText("कमांड सेंटर");
+    await expect(page.getByTestId("topnav")).toContainText("आज");
     await expect(page.locator("html")).toHaveAttribute("lang", "hi");
-    await expect(page.getByTestId("sidebar")).toContainText("SOLVENTIA");
+    await expect(page.getByTestId("topbar")).toContainText("SOLVENTIA");
 
     await expect
       .poll(
@@ -304,10 +306,10 @@ test.describe("Settings — language, notifications, account", () => {
       .toBe("hi");
     await page.reload();
     await expect(page.locator("html")).toHaveAttribute("lang", "hi");
-    await expect(page.getByTestId("sidebar")).toContainText("कमांड सेंटर");
+    await expect(page.getByTestId("topnav")).toContainText("आज");
 
     await page.getByTestId("lang-en").click();
-    await expect(page.getByTestId("sidebar")).toContainText("Command Center");
+    await expect(page.getByTestId("topnav")).toContainText("Today");
   });
 
   test("notification preferences persist and are the only ones offered", async ({
