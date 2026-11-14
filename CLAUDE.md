@@ -32,3 +32,11 @@ Run prettier, typecheck and eslint on files you change before finishing.
 
 ## Permissions
 `.claude/settings.json` auto-approves edits and common dev commands and blocks `git push`, `git reset --hard`, `git clean`, `rm -rf`, rebase and amend. Only commit/push when asked.
+
+## Redesign v2 standing rules (from 2026-11-14)
+- All redesign work happens on `redesign-v2`. Never commit to the main branch, never force-push, never rewrite history, never delete branches or tags.
+- Commit after every completed step with a clear message.
+- Database changes are written as SQL migration files in `supabase/migrations/`. Never run destructive SQL. Tell the owner which migrations to apply.
+- Every new user-facing string goes through the existing translation system (`src/lib/i18n/messages/*.ts`) in English and Hindi.
+- Never invent data, statistics or legal facts.
+- Restore point for the site before the redesign: tag `before-redesign-v2`. Plan, progress, decisions and blockers live in `docs/redesign/`.
