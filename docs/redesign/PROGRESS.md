@@ -32,9 +32,9 @@ Blockers: `blocked.md`. Final report: `REPORT.md`.
 
 ## Part 3 — dashboard redesign
 - [x] plan-3.md file map
-- [ ] 1 tokens and base components
-- [ ] 2 app shell (top bar, phone bottom bar, avatar menu, Ask Sol trigger)
-- [ ] 3 JourneyArc + fit bar
+- [x] 1 tokens and base components (24dcf02)
+- [x] 2 app shell (top bar, phone bottom bar, avatar menu, Ask Sol trigger) (622a3a2)
+- [x] 3 JourneyArc + fit bar (1ff6f82)
 - [ ] 4 Today (five states)
 - [ ] 5 Directions + Direction detail + two sub-pages
 - [ ] 6 Roadmap + mission page shell
