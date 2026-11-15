@@ -34,10 +34,7 @@ describe("interview questions ask about past behaviour", () => {
 
 describe("an interview mission always has three to five behaviour questions", () => {
   it("tops up with safe questions in the founder's language when too few survive", () => {
-    const qs = interviewQuestionsFor(
-      ["Would you use this?", "आज आप बुकिंग कैसे करते हैं?"],
-      "hi",
-    );
+    const qs = interviewQuestionsFor(["Would you use this?", "आज आप बुकिंग कैसे करते हैं?"], "hi");
     expect(qs).toHaveLength(3);
     expect(qs[0]).toBe("आज आप बुकिंग कैसे करते हैं?");
     expect(qs.slice(1)).toEqual(DEFAULT_BEHAVIOUR_QUESTIONS.hi.slice(0, 2));

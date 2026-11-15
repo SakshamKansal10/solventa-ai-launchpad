@@ -1,10 +1,16 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMutation } from "@tanstack/react-query";
 import { Check } from "lucide-react";
+import { useState } from "react";
 import { toast } from "sonner";
 import { z } from "zod";
 
 import { FitBar, FitLegend, kindOf, useFitCounts } from "@/components/founder/dash/FitBar";
+import {
+  ContradictionRow,
+  FitQuestionsPanel,
+  useFitQuestions,
+} from "@/components/founder/dash/FitQuestions";
 import {
   ActionButton,
   ActionLink,
@@ -53,6 +59,10 @@ function DirectionsPage() {
     });
   const founder = useFounderState();
   const invalidate = useInvalidateFounder();
+  const [asking, setAsking] = useState(false);
+  // Questions and contradictions are about the latest consultation (answers are saved there).
+  const latest = founder.data?.direction.isLatestConsultation ?? false;
+  const questions = useFitQuestions(latest);
 
   const explore = useMutation({
     mutationFn: () => exploreMoreOpportunities({ data: { locale } }),
@@ -105,6 +115,7 @@ function DirectionsPage() {
     ),
   );
   const canExplore = direction.isLatestConsultation;
+  const askable = canExplore && (questions.data?.missing.length ?? 0) > 0;
 
   return (
     <DashPage data-testid="opportunities-page">
@@ -138,9 +149,10 @@ function DirectionsPage() {
       </ol>
 
       <div className="flex flex-col gap-3">
-        {unknownEverywhere && (
-          // TODO(task 4, "ask what is missing"): three quick questions inline. Until then the
-          // founder answers them in Settings → Founder profile, which re-scores the fit.
+        {canExplore && <ContradictionRow items={questions.data?.contradictions ?? []} />}
+        {unknownEverywhere && !asking && (
+          // Ask what is missing (part 4, feature 5): two to four questions for exactly the empty
+          // answers, inline; on an older consultation, Settings → Founder profile.
           <QuietRow className="border-0 bg-sol-ivory" data-testid="fit-nudge">
             <p className="flex-[1_1_420px] text-[20px] leading-[1.4] text-sol-ink">
               <span className="font-semibold">
@@ -151,10 +163,25 @@ function DirectionsPage() {
               </span>{" "}
               <span className="text-sol-secondary">{t("v2.dir.nudge.body")}</span>
             </p>
-            <ActionLink to="/dashboard/settings" tone="secondary" size="md">
-              {t("v2.dir.nudge.cta")}
-            </ActionLink>
+            {askable ? (
+              <ActionButton
+                tone="secondary"
+                size="md"
+                arrow={false}
+                onClick={() => setAsking(true)}
+                data-testid="fit-nudge-open"
+              >
+                {t("v2.dir.nudge.cta")}
+              </ActionButton>
+            ) : (
+              <ActionLink to="/dashboard/settings" tone="secondary" size="md">
+                {t("v2.dir.nudge.cta")}
+              </ActionLink>
+            )}
           </QuietRow>
+        )}
+        {asking && questions.data && questions.data.missing.length > 0 && (
+          <FitQuestionsPanel data={questions.data} onDone={() => setAsking(false)} />
         )}
         {canExplore && (
           <QuietRow>

@@ -106,3 +106,13 @@ Each entry: what was ambiguous, what I chose, why.
     founder's first name (from `profiles.full_name`) to the week prompt and tops an interview
     mission up to three behaviour questions, in the founder's language, when the check leaves
     fewer. The Hindi defaults are written as they would be said, not translated word for word.
+27. **Ask what is missing (feature 5).** The questions are exactly the empty answers that make a
+    fit factor "Not known yet" (access, money, skills, hours, scale; skills counts as two: a pick
+    and a level), heaviest factor first, never more than four. The skill choices are the skills
+    this consultation's directions ask for, plus a free "something else". Answers are merged into
+    the latest consultation with the existing `updateFounderProfileAnswers` (no new row, no AI
+    call); fit is derived on every read, so it recalculates at once. On an older consultation the
+    nudge keeps linking to Settings. Contradictions flagged: age vs occupation (school student
+    21+, college student under 15, working professional under 16), age vs education (degree under
+    18, postgraduate under 20), and below-10th education with "college student". They are shown
+    to correct, never fixed silently.

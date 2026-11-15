@@ -198,6 +198,17 @@ const en = {
   "v2.failed.switch": "Switch direction",
   "v2.failed.note":
     "Adjust: close this week on your roadmap — the next week is written from what your checks found. Switch: pick another direction; this one stays in your history.",
+  "v2.ask.lead": "A few quick answers. Your fit updates as soon as you save.",
+  "v2.ask.skillOther": "Something else you can do",
+  "v2.ask.add": "Add",
+  "v2.ask.save": "Save and update fit",
+  "v2.ask.later": "Not now",
+  "v2.ask.saved": "Saved. Your fit is updated.",
+  "v2.ask.error": "Couldn't save your answers. Please try again.",
+  "v2.contra.title": "Two of your answers don't fit together.",
+  "v2.contra.line": "{a} and “{b}” don't usually go together. Is one of them out of date?",
+  "v2.contra.age": "Age {n}",
+  "v2.contra.cta": "Correct it",
 } as const;
 
 const hi: Record<keyof typeof en, string> = {
@@ -400,6 +411,17 @@ const hi: Record<keyof typeof en, string> = {
   "v2.failed.switch": "दूसरी दिशा चुनें",
   "v2.failed.note":
     "बदलें: अपने रोडमैप पर यह हफ़्ता बंद करें — अगला हफ़्ता आपकी जाँचों के नतीजों से लिखा जाएगा। दूसरी दिशा: कोई और दिशा चुनें; यह आपके इतिहास में रहेगी।",
+  "v2.ask.lead": "बस कुछ छोटे जवाब। सेव करते ही आपका फ़िट अपडेट हो जाएगा।",
+  "v2.ask.skillOther": "कुछ और जो आप कर सकते हैं",
+  "v2.ask.add": "जोड़ें",
+  "v2.ask.save": "सेव करें और फ़िट अपडेट करें",
+  "v2.ask.later": "अभी नहीं",
+  "v2.ask.saved": "सेव हो गया। आपका फ़िट अपडेट हो गया है।",
+  "v2.ask.error": "आपके जवाब सेव नहीं हो पाए। कृपया फिर से कोशिश करें।",
+  "v2.contra.title": "आपके दो जवाब आपस में मेल नहीं खाते।",
+  "v2.contra.line": "{a} और “{b}” आम तौर पर साथ नहीं होते। क्या इनमें से कोई पुराना है?",
+  "v2.contra.age": "उम्र {n}",
+  "v2.contra.cta": "ठीक करें",
 };
 
 export default { en, hi };
