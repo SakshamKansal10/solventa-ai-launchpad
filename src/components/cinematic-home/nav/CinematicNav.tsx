@@ -101,7 +101,7 @@ export function CinematicNav({ pendingNext }: { pendingNext?: string | null } = 
             <BrandLockup preset="nav" wordColor="var(--ink)" signatureColor="var(--ink)" />
           </span>
         </Link>
-        <div className="relative flex items-center justify-end gap-2.5 sm:gap-5">
+        <div className="relative flex items-center justify-end gap-2 min-[400px]:gap-2.5 sm:gap-5">
           <div className="transition-opacity duration-700" style={recede(1)}>
             <SoundToggle />
           </div>
@@ -136,7 +136,7 @@ export function CinematicNav({ pendingNext }: { pendingNext?: string | null } = 
             to="/consultation"
             preload="intent"
             data-nav-cta
-            className="inline-flex h-10 items-center gap-1.5 whitespace-nowrap rounded-full bg-[#102C57] px-3.5 text-[0.875rem] font-semibold text-[#F7F7F4] shadow-[inset_0_0_0_1px_rgba(201,170,121,0.55),0_8px_22px_-12px_rgba(16,44,87,0.7)] transition-[background-color,transform] duration-200 hover:bg-[#173C73] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[var(--accent)] active:scale-[0.98] sm:h-11 sm:px-5 sm:text-[0.95rem]"
+            className="inline-flex h-10 items-center gap-1.5 whitespace-nowrap rounded-full bg-[#102C57] px-3 text-[0.875rem] min-[400px]:px-3.5 font-semibold text-[#F7F7F4] shadow-[inset_0_0_0_1px_rgba(201,170,121,0.55),0_8px_22px_-12px_rgba(16,44,87,0.7)] transition-[background-color,transform] duration-200 hover:bg-[#173C73] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[var(--accent)] active:scale-[0.98] sm:h-11 sm:px-5 sm:text-[0.95rem]"
           >
             <span className="max-sm:hidden">Find My Business Idea</span>
             <span className="sm:hidden">Start</span>

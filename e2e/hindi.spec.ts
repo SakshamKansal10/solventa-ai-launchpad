@@ -147,11 +147,9 @@ test.describe("Hindi — the founder workspace", () => {
       "/dashboard",
       "/dashboard/opportunities",
       `/dashboard/opportunities/${seeded.opportunityIds[0]}`,
-      `/dashboard/opportunities/${seeded.opportunityIds[0]}?tab=fit`,
-      `/dashboard/opportunities/${seeded.opportunityIds[0]}?tab=market`,
+      `/dashboard/opportunities/${seeded.opportunityIds[0]}/fit`,
+      `/dashboard/opportunities/${seeded.opportunityIds[0]}/market`,
       "/dashboard/roadmap",
-      "/dashboard/roadmap?tab=plan",
-      "/dashboard/roadmap?tab=progress",
       "/dashboard/proof",
       "/dashboard/history",
       "/dashboard/settings",
@@ -164,6 +162,15 @@ test.describe("Hindi — the founder workspace", () => {
       expect(body, route).not.toMatch(/undefined|\[object|NaN/);
       await expect.poll(() => englishLeaks(page), { message: route, timeout: 30_000 }).toEqual([]);
     }
+    // A mission page (chrome-free).
+    await gotoApp(page, "/dashboard/roadmap");
+    await page.getByTestId("mission-open").first().click();
+    await expect(page.getByTestId("mission-page")).toBeVisible();
+    await page.waitForLoadState("networkidle");
+    expect(await page.locator("body").innerText()).not.toMatch(RAW_KEY);
+    await expect
+      .poll(() => englishLeaks(page), { message: "mission page", timeout: 30_000 })
+      .toEqual([]);
   });
 
   test("AI content is translated once, cached against its source, and not regenerated on later visits", async ({

@@ -26,6 +26,7 @@ import { useLocale } from "@/lib/i18n/LocaleProvider";
 import { qk, useFounderState, useInvalidateFounder } from "@/lib/queries";
 import { estimateHours } from "@/lib/roadmap/hours";
 import type { RoadmapView, WeekDTO } from "@/lib/roadmap/view";
+import { useTranslatedTitle } from "@/lib/use-translation";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/dashboard/roadmap/")({
@@ -152,13 +153,18 @@ function RoadmapWorkspace({ roadmapId }: { roadmapId: string }) {
     view?.weeks.filter((w) => w.state === "completed").at(-1) ??
     null;
   const text = useRoadmapText(view, shownWeek);
+  // The direction's name in the reader's language (Hindi readers saw the stored English title).
+  const directionTitle = useTranslatedTitle(
+    view?.roadmap.opportunityId,
+    (view ? founder.data?.briefs[view.roadmap.opportunityId]?.title : null) ??
+      view?.roadmap.opportunityTitle,
+  );
 
   if (query.isPending) return <DashSkeleton label={t("shell.skeleton.loading")} />;
   if (query.isError || !view) {
     return <DashError onRetry={() => void query.refetch()} retrying={query.isFetching} />;
   }
 
-  const direction = founder.data?.briefs[view.roadmap.opportunityId];
   const isCurrent = shownWeek?.id === view.currentWeekId;
   const nextWeekNumber = shownWeek
     ? (view.weeks.find((w) => w.number === shownWeek.number + 1)?.number ?? null)
@@ -178,7 +184,7 @@ function RoadmapWorkspace({ roadmapId }: { roadmapId: string }) {
     <DashPage data-testid="roadmap-page" data-roadmap-status={view.roadmap.status}>
       <div className="flex flex-col gap-[18px]">
         <p className="dash-meta" data-testid="roadmap-direction">
-          {direction?.title ?? view.roadmap.opportunityTitle}
+          {directionTitle ?? view.roadmap.opportunityTitle}
         </p>
         <h1 className="dash-headline">{t("v2.rm.title", { n: view.totals.weeks })}</h1>
         {northStar && (

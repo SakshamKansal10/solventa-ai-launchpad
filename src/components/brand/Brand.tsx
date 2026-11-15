@@ -124,11 +124,16 @@ const PRESETS = {
   /** The site bar: SOLVENTIA 26px on desktop, 17–20px on phones, the signature always shown. */
   nav: {
     mark: 36,
-    word: "text-[17px] min-[380px]:text-[19px] sm:text-[26px]",
-    sig: "text-[6.5px] min-[380px]:text-[7.5px] sm:text-[12px]",
+    word: "text-[16px] min-[420px]:text-[19px] sm:text-[26px]",
+    sig: "text-[6px] min-[420px]:text-[7.5px] sm:text-[12px]",
   },
   /** Product sidebars and compact bars. */
-  compact: { mark: 28, word: "text-[18px]", sig: "text-[9px]" },
+  compact: {
+    mark: 28,
+    // Phones: a step smaller so the bar keeps room for its controls (the signature stays).
+    word: "text-[15px] min-[400px]:text-[18px]",
+    sig: "text-[7.5px] min-[400px]:text-[9px]",
+  },
   footer: { mark: 36, word: "text-[22px]", sig: "text-[10px]" },
 } as const;
 
