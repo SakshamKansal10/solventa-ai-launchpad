@@ -29,6 +29,7 @@ export const STUDENT_ANSWERS = {
   domains: ["software"],
   executionSignals: ["built_product"],
   capitalBracket: 5,
+  lossShare: "half",
   access: ["laptop"],
   riskTolerance: "balanced",
   roles: ["building"],

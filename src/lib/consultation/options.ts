@@ -142,6 +142,37 @@ export const ACCESS_IDS = [
   "none",
 ] as const;
 
+/** How much of the money they can put in they could afford to lose (part 5). */
+export const LOSS_SHARE_IDS = ["all", "half", "little", "none"] as const;
+export const LOSS_SHARE_FRACTION: Record<(typeof LOSS_SHARE_IDS)[number], number> = {
+  all: 1,
+  half: 0.5,
+  little: 0.15,
+  none: 0,
+};
+
+/** Who they could reach THIS WEEK without advertising (part 5). */
+export const REACH_IDS = [
+  "neighbours",
+  "shop_owners",
+  "farmers",
+  "students",
+  "family_business",
+  "colleagues",
+  "online_followers",
+  "community_group",
+  "none",
+] as const;
+
+/** Which days they can give it (part 5). */
+export const WORK_DAY_IDS = [
+  "weekday_mornings",
+  "weekday_evenings",
+  "saturday",
+  "sunday",
+  "flexible",
+] as const;
+
 export const RISK_IDS = ["conservative", "balanced", "meaningful", "high"] as const;
 export const ROLE_IDS = ["selling", "building", "operations", "research", "leading"] as const;
 export const TEAM_IDS = [
@@ -226,6 +257,7 @@ export const EXCLUSIVE_NONE: Record<string, string> = {
   domains: "none",
   executionSignals: "none_yet",
   access: "none",
+  reachThisWeek: "none",
   refuse: "none",
   constraints: "none",
 };

@@ -50,6 +50,7 @@ describe("consultation structure", () => {
       domains: ["ecommerce"],
       executionSignals: ["ran_business"],
       capitalBracket: 4,
+      lossShare: "half",
       access: ["team"],
       bizSector: "ecommerce",
       bizTurnoverBracket: 3,

@@ -39,6 +39,15 @@ export interface NormalizedProfileV2 {
   access: string[];
   /** The founder explicitly answered "None of these" (v2 consultations from 2026-10). */
   accessNone?: boolean;
+  /** Part 5 (better inputs). Missing or empty = not answered: the engine treats it as unknown,
+   * never as a guess. */
+  lossShare?: string | null;
+  /** The money they could afford to lose, as a range in their currency (capital × share). */
+  affordableLoss?: { min: number; max: number | null } | null;
+  reachThisWeek?: string[];
+  reachNone?: boolean;
+  workDays?: string[];
+  helpAskedFor?: string | null;
   capitalTier: number | null;
   capitalTierCount: number;
   position: {

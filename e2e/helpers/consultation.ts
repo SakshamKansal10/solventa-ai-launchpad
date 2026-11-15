@@ -83,6 +83,8 @@ export async function walkConsultation(page: Page, opts: WalkOptions = {}) {
   // Stage 3 — resources
   await expectScreen(page, "capital");
   await page.getByTestId("opt-capital-5").click();
+  // With money to put in, how much of it could be lost is required (part 5, better inputs).
+  await page.getByTestId("opt-loss-half").click();
   await cont(page);
 
   await expectScreen(page, "access");

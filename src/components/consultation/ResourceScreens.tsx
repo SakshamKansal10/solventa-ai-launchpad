@@ -3,7 +3,12 @@ import { useMemo } from "react";
 import { useLocale } from "@/lib/i18n/LocaleProvider";
 import { useConsultation } from "@/lib/consultation/store";
 import { isBusinessOwner, toggleMulti } from "@/lib/consultation/model";
-import { ACCESS_IDS, SECTOR_DOMAIN_IDS } from "@/lib/consultation/options";
+import {
+  ACCESS_IDS,
+  LOSS_SHARE_IDS,
+  REACH_IDS,
+  SECTOR_DOMAIN_IDS,
+} from "@/lib/consultation/options";
 import {
   formatBracketLabel,
   getBrackets,
@@ -33,6 +38,7 @@ function useBracketOptions(kind: BracketKind) {
 
 export function CapitalScreen() {
   const { t } = useLocale();
+  const L = useLabels();
   const { answers, setAnswer } = useConsultation();
   const options = useBracketOptions("capital");
   const currency = getCurrencyForCountry(answers.country);
@@ -47,6 +53,17 @@ export function CapitalScreen() {
         onChange={(id) => setAnswer("capitalBracket", Number(id))}
         placeholder={t("consult.scale.pick")}
       />
+      {typeof answers.capitalBracket === "number" && answers.capitalBracket > 0 && (
+        <Question label={t("q.loss.label")} helper={t("q.loss.helper")}>
+          <SegmentedScale
+            name="loss"
+            options={L.opts("loss", LOSS_SHARE_IDS)}
+            value={answers.lossShare}
+            onChange={(id) => setAnswer("lossShare", id)}
+            buttons
+          />
+        </Question>
+      )}
       {isTop && (
         <Question label={t("q.capitalPrecise.label")} optional>
           <CurrencyField
@@ -74,6 +91,16 @@ export function AccessScreen() {
         value={answers.access}
         onToggle={(id) => setAnswer("access", toggleMulti("access", answers.access, id))}
       />
+      <Question label={t("q.reach.label")} helper={t("q.reach.helper")} optional>
+        <ChipCloud
+          name="reach"
+          options={L.opts("reach", REACH_IDS)}
+          value={answers.reachThisWeek}
+          onToggle={(id) =>
+            setAnswer("reachThisWeek", toggleMulti("reachThisWeek", answers.reachThisWeek, id))
+          }
+        />
+      </Question>
     </ScreenBody>
   );
 }

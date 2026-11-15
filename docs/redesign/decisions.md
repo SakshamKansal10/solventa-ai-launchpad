@@ -199,3 +199,12 @@ Each entry: what was ambiguous, what I chose, why.
     finished, direction chosen, roadmap built (active/completed), mission 1 started / done (the
     first mission of the week numbered 1), week 1 done, and the stuck reasons. The e2e harness's
     fake PostgREST gained a minimal `rpc` route for it.
+37. **Better inputs (part 5 step 2).** Four adviser questions added to existing screens (no new
+    screen, no migration — new answer ids in the same jsonb): how much of the money they could
+    afford to lose (capital screen; required once there is money, because it is the engine's
+    hard limit on a first test), who they could reach this week without advertising (access),
+    which days (time), what people already ask them for help with (execution, optional free text
+    ≤160 chars, quoted to the model as data). The rest of the brief's list was already asked
+    (skills, access, assets, money, hours, place, travel, goal, limits, age, languages). Every
+    new answer is normalised and passed to the engine; empty is written as UNKNOWN. Answers that
+    contradict each other are named on the consultation's last step with a jump back to fix them.

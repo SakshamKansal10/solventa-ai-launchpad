@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { findContradictions } from "@/lib/fit/gaps";
 import { useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { ArrowRight, Loader2 } from "lucide-react";
@@ -68,9 +69,10 @@ export function SubmitStep({
   autoStart: boolean;
   onGeneratingChange?: (generating: boolean) => void;
 }) {
-  const { t, locale } = useLocale();
+  const { t, td, locale } = useLocale();
   const navigate = useNavigate();
-  const { answers, flush, dismissResumed } = useConsultation();
+  const { answers, flush, dismissResumed, goTo } = useConsultation();
+  const contradictions = findContradictions(answers);
   const currentUser = useQuery({
     queryKey: ["current-user"],
     queryFn: () => getCurrentUser(),
@@ -117,6 +119,46 @@ export function SubmitStep({
 
   return (
     <ScreenBody title={t("consult.submit.title")}>
+      {/* Answers that do not fit together are asked about, never silently accepted. */}
+      {contradictions.length > 0 && (
+        <div
+          role="status"
+          className="flex flex-col gap-3 rounded-2xl border border-sol-warning/40 bg-sol-warning-soft p-5"
+          data-testid="consult-contradiction"
+        >
+          <p className="text-[1.0625rem] font-semibold text-sol-ink">{t("v2.contra.title")}</p>
+          {contradictions.map((c) => {
+            const age = "age" in c ? t("v2.contra.age", { n: c.age }) : null;
+            const status = "status" in c ? td(`opt.status.${c.status}`) : null;
+            const education = "education" in c ? td(`opt.education.${c.education}`) : null;
+            const [a, b] = [age, status, education].filter((x): x is string => Boolean(x));
+            return (
+              <p key={c.code} className="text-[1rem] text-sol-ink">
+                {t("v2.contra.line", { a, b })}
+              </p>
+            );
+          })}
+          <div className="flex flex-wrap gap-2">
+            <button
+              type="button"
+              onClick={() => goTo("basics")}
+              className="inline-flex h-11 items-center rounded-2xl border border-sol-ink/25 bg-white px-4 text-[1rem] font-semibold text-sol-ink hover:border-sol-ink/50"
+              data-testid="contra-fix-basics"
+            >
+              {t("consult.contra.fixBasics")}
+            </button>
+            {contradictions.some((c) => "education" in c) && (
+              <button
+                type="button"
+                onClick={() => goTo("education")}
+                className="inline-flex h-11 items-center rounded-2xl border border-sol-ink/25 bg-white px-4 text-[1rem] font-semibold text-sol-ink hover:border-sol-ink/50"
+              >
+                {t("consult.contra.fixEducation")}
+              </button>
+            )}
+          </div>
+        </div>
+      )}
       {phase === "error" && (
         <div
           role="alert"

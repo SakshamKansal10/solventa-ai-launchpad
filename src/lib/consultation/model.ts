@@ -34,16 +34,24 @@ export interface ConsultationAnswers {
   studyYear?: string;
   languages?: string[];
   weeklyHours?: string;
+  /** Which days they can work on it (part 5: better inputs). */
+  workDays?: string[];
 
   // Stage 2 — Capability
   skills?: SkillEntry[];
   domains?: string[];
   executionSignals?: string[];
+  /** What people already ask them for help with, in their own words (optional). */
+  helpAskedFor?: string;
 
   // Stage 3 — Resources
   capitalBracket?: number;
   capitalPrecise?: string;
+  /** How much of that money they could afford to lose. */
+  lossShare?: string;
   access?: string[];
+  /** Customers they could reach this week without advertising. */
+  reachThisWeek?: string[];
   annualIncomeBracket?: number;
   bizSector?: string;
   bizTurnoverBracket?: number;
@@ -177,7 +185,7 @@ export const SCREENS: ScreenDef[] = [
   {
     key: "languagesTime",
     stage: 1,
-    owns: ["languages", "weeklyHours"],
+    owns: ["languages", "weeklyHours", "workDays"],
     isComplete: (a) => hasAny(a.languages) && nonEmpty(a.weeklyHours),
   },
   {
@@ -197,19 +205,22 @@ export const SCREENS: ScreenDef[] = [
   {
     key: "execution",
     stage: 2,
-    owns: ["executionSignals"],
+    owns: ["executionSignals", "helpAskedFor"],
     isComplete: (a) => hasAny(a.executionSignals),
   },
   {
     key: "capital",
     stage: 3,
-    owns: ["capitalBracket", "capitalPrecise"],
-    isComplete: (a) => typeof a.capitalBracket === "number",
+    owns: ["capitalBracket", "capitalPrecise", "lossShare"],
+    // With money to put in, how much of it they could afford to lose is required: it is the
+    // engine's hard limit on a first test (part 5).
+    isComplete: (a) =>
+      typeof a.capitalBracket === "number" && (a.capitalBracket === 0 || nonEmpty(a.lossShare)),
   },
   {
     key: "access",
     stage: 3,
-    owns: ["access"],
+    owns: ["access", "reachThisWeek"],
     isComplete: (a) => hasAny(a.access),
   },
   {

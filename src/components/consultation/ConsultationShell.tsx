@@ -35,7 +35,10 @@ function StageProgress({ stage }: { stage: number }) {
   const { t } = useLocale();
   return (
     <div className="flex min-w-0 flex-1 flex-col gap-1.5 sm:max-w-md">
-      <p className="whitespace-nowrap text-[0.9375rem] font-semibold text-sol-ink" data-testid="stage-label">
+      <p
+        className="whitespace-nowrap text-[0.9375rem] font-semibold text-sol-ink"
+        data-testid="stage-label"
+      >
         {t("consult.stageOf", { n: stage, total: STAGE_COUNT })}
         <span className="ml-2 hidden font-medium text-sol-secondary sm:inline">
           · {t(`consult.stage.${STAGE_IDS[stage - 1]}` as const)}

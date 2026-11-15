@@ -98,6 +98,8 @@ interface ConsultationContextValue {
   canContinue: boolean;
   goNext: () => void;
   goBack: () => void;
+  /** Jump to one screen (the last step's "fix this answer" links). */
+  goTo: (key: string) => void;
   restart: () => void;
   /** False until the saved draft (local + server) has been resolved. */
   ready: boolean;
@@ -234,6 +236,15 @@ export function ConsultationProvider({
     if (index > 0) setScreenKey(screens[index - 1].key);
   }, [index, isSubmitStep, screens]);
 
+  const goTo = useCallback(
+    (key: string) => {
+      if (!screens.some((s) => s.key === key)) return;
+      dirtyRef.current = true;
+      setScreenKey(key);
+    },
+    [screens],
+  );
+
   const restart = useCallback(() => {
     clearLocalDraft();
     setAnswers({ v: 2 });
@@ -312,6 +323,7 @@ export function ConsultationProvider({
       canContinue,
       goNext,
       goBack,
+      goTo,
       restart,
       ready,
       resumed,
@@ -331,6 +343,7 @@ export function ConsultationProvider({
       canContinue,
       goNext,
       goBack,
+      goTo,
       restart,
       ready,
       resumed,
