@@ -38,3 +38,10 @@ generate one roadmap on the preview with a real key and confirm week 1 builds; i
   Cloud API or a BSP such as Gupshup/Twilio), a verified business number, a pre-approved message
   template (one line + one button with the mission link) in English and Hindi, a stored phone
   number with explicit opt-in per founder, and the same cron calling the template-send API.
+
+## Missing graphics / S-mark — resolved (owner step 4, 2026-11-15)
+The S-mark (Intelligence Core, "Core awakening") appears and plays after data-ready on lite and
+full (docs/redesign/perf/scenes/smark-*.png). No commit lost it. The miss came from scrolling
+past it before the world was ready; the opening now holds at the lockup until ready. If the
+owner still sees it missing on the preview, the useful report is: the URL, screen width, and
+whether "Preparing the experience" showed under the lockup.
