@@ -63,15 +63,15 @@ const BARS = [
   { at: [hw - bar / 2, cy], open: [0.62, 0.1], tilt: 0.06, vertical: true },
 ] as const;
 
-function buildGate(curveSegments: number) {
+function buildGate(curveSegments: number, bevel: number) {
   const corner = cornerGeometry(radius, bar, depth, stub, curveSegments);
   const lenH = 2 * (hw - radius - stub);
   const lenV = 2 * (hh - radius - stub);
-  const barH = new RoundedBoxGeometry(lenH, bar - 0.02, depth - 0.02, 2, 0.03);
-  const barV = new RoundedBoxGeometry(bar - 0.02, lenV, depth - 0.02, 2, 0.03);
+  const barH = new RoundedBoxGeometry(lenH, bar - 0.02, depth - 0.02, bevel, 0.03);
+  const barV = new RoundedBoxGeometry(bar - 0.02, lenV, depth - 0.02, bevel, 0.03);
   // A logic lock on each bar: machined housing + a status window.
-  const lockH = new RoundedBoxGeometry(0.62, 0.2, 0.2, 2, 0.04);
-  const lockV = new RoundedBoxGeometry(0.2, 0.62, 0.2, 2, 0.04);
+  const lockH = new RoundedBoxGeometry(0.62, 0.2, 0.2, bevel, 0.04);
+  const lockV = new RoundedBoxGeometry(0.2, 0.62, 0.2, bevel, 0.04);
   const light = new BoxGeometry(1, 1, 1);
   // Build lays a deck under the gates: graphite plate with a pearl centre track.
   const deck = plateGeometry(hw - 0.35, GATE_SPACING / 2 - 0.12, 0.1, 0.12, 0, 3);
@@ -100,8 +100,8 @@ function buildGate(curveSegments: number) {
     curveSegments: farSegments,
   });
   // Build: functional modules mount onto the locked gates; the assumption node's housing.
-  const module = new RoundedBoxGeometry(0.46, 1.2, 0.46, 2, 0.06);
-  const node = new RoundedBoxGeometry(1.25, 0.62, 0.72, 2, 0.12);
+  const module = new RoundedBoxGeometry(0.46, 1.2, 0.46, bevel, 0.06);
+  const node = new RoundedBoxGeometry(1.25, 0.62, 0.72, bevel, 0.12);
   return {
     corner,
     barH,
@@ -155,8 +155,8 @@ const MILESTONE_KEYS = MILESTONES.map((_, k) => `milestone-${k}`);
 export function ExecutionPath() {
   const { store, materials, filaments, preset } = useWorld();
   const geo = useMemo(
-    () => buildGate(Math.max(6, Math.round(preset.coreSegments / 6))),
-    [preset.coreSegments],
+    () => buildGate(Math.max(6, Math.round(preset.coreSegments / 6)), preset.gateBevel),
+    [preset.coreSegments, preset.gateBevel],
   );
   const milestone = useMemo(() => buildMilestone(), []);
   useEffect(
