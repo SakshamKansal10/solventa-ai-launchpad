@@ -38,6 +38,12 @@ Blockers: `blocked.md`. Final report: `REPORT.md`.
 - [x] 4 audit, numbers and proposals: part2-perf.md "Part 2b" (targets met on the Vega 3: p95 16.8 ms, 0 long tasks unthrottled, 2–4 at 4×)
 - [x] cinematic + public e2e on the new tiers (28/28)
 
+## Part 2c — cinematic bounded pass (owner decisions, 2026-11-15)
+- [ ] A: adaptive sampling while the story moves; notch ≤ 2, never up, no visible hitch
+- [ ] 2: lite gate parts 16 sweep segments
+- [ ] missing graphics: 21 scenes live (49d3ead) vs HEAD lite, diff, fix, record (docs/redesign/perf/scenes/)
+- [ ] re-measure (lite, notch not pinned) and record
+
 ## Part 3 — dashboard redesign
 - [x] plan-3.md file map
 - [x] 1 tokens and base components (24dcf02)
