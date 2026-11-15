@@ -39,7 +39,7 @@ Blockers: `blocked.md`. Final report: `REPORT.md`.
 - [x] 5 Directions + Direction detail + two sub-pages (e8aa6ab)
 - [x] 6 Roadmap + mission page shell (b7f0cdd)
 - [x] 7 Proof (b137110)
-- [ ] 8 Building, History, Settings
+- [x] 8 Building, History, Settings (4fe908b)
 - [ ] 9 Hindi + 390px pass
 
 ## Part 4 — working features
