@@ -40,7 +40,7 @@ Blockers: `blocked.md`. Final report: `REPORT.md`.
 
 ## Part 2c — cinematic bounded pass (owner decisions, 2026-11-15)
 - [x] A: adaptive sampling while the story moves; notch ≤ 2, never up, no visible hitch (c358578)
-- [ ] 2: lite gate parts 16 sweep segments
+- [x] 2: lite gate parts 16 sweep segments (implemented as one bevel segment — decisions 18; cb04ee3)
 - [ ] missing graphics: 21 scenes live (49d3ead) vs HEAD lite, diff, fix, record (docs/redesign/perf/scenes/)
 - [ ] re-measure (lite, notch not pinned) and record
 
