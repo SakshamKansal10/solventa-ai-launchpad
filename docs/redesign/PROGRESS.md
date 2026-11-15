@@ -66,7 +66,7 @@ Blockers: `blocked.md`. Final report: `REPORT.md`.
 - [x] 6 estimates and sources (6fd2e75 — code landed under the tick message, see decisions 29)
 - [x] 7 Make it official guide (18e1e34)
 - [x] 8 weekly reminder (59d875b)
-- [ ] 9 plain words
+- [x] 9 plain words (ea15552)
 - [ ] 10 drop-off admin page
 
 ## Part 5 — idea engine
