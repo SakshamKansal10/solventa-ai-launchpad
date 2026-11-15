@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { DPR_STEP, governDpr, GOVERNOR, QUALITY_PRESETS, type GovernorState } from "./quality";
+import { ADAPT, median, nextNotch, notchDpr, QUALITY_NOTCHES, QUALITY_PRESETS } from "./quality";
 
 const { full: high, lite } = QUALITY_PRESETS;
 
@@ -27,32 +27,29 @@ describe("quality presets", () => {
   });
 });
 
-describe("governDpr", () => {
-  const start: GovernorState = { dpr: 2, slow: 0, fast: 0, recoveries: 0 };
+describe("adaptive quality inside a tier", () => {
+  const slow = Array.from({ length: 100 }, (_, i) => (i % 2 ? 33.3 : 16.7) + (i % 3) * 0.1);
+  const fast = Array.from({ length: 120 }, () => 16.7);
 
-  it("drops one step only after consecutive slow seconds, never below the floor", () => {
-    let state = governDpr(start, 30, high, 2);
-    expect(state.dpr).toBe(2);
-    state = governDpr(state, 30, high, 2);
-    expect(state.dpr).toBe(2 - DPR_STEP);
-    for (let i = 0; i < 40; i++) state = governDpr(state, 20, high, 2);
-    expect(state.dpr).toBe(high.dpr[0]);
+  it("steps down one notch when the window median is slower than 20 ms, never past the last", () => {
+    expect(median([16.7, 33.3, 33.3])).toBe(33.3);
+    expect(nextNotch(0, [25, 25, 16.7])).toBe(1);
+    expect(nextNotch(0, fast)).toBe(0);
+    expect(nextNotch(QUALITY_NOTCHES.length - 1, [40, 40])).toBe(QUALITY_NOTCHES.length - 1);
+    expect(nextNotch(0, slow)).toBe(median(slow) > ADAPT.slowMedianMs ? 1 : 0);
   });
 
-  it("a single dropped second is forgiven", () => {
-    let state = governDpr(start, 30, high, 2);
-    state = governDpr(state, 55, high, 2);
-    state = governDpr(state, 30, high, 2);
-    expect(state.dpr).toBe(2);
-  });
-
-  it("recovers after sustained headroom, a limited number of times, never above the ceiling", () => {
-    let state: GovernorState = { dpr: 1, slow: 0, fast: 0, recoveries: 0 };
-    for (let i = 0; i < 200; i++) state = governDpr(state, 60, high, 2);
-    expect(state.recoveries).toBe(GOVERNOR.maxRecoveries);
-    expect(state.dpr).toBe(1 + GOVERNOR.maxRecoveries * DPR_STEP);
-    let capped: GovernorState = { dpr: 1, slow: 0, fast: 0, recoveries: 0 };
-    for (let i = 0; i < 200; i++) capped = governDpr(capped, 60, high, 1.25);
-    expect(capped.dpr).toBe(1.25);
+  it("each notch lowers the pixel ratio within the tier's range and draws fewer filaments", () => {
+    expect(notchDpr(high, 2, 0)).toBe(1.5);
+    expect(notchDpr(high, 2, 1)).toBe(1.2);
+    expect(notchDpr(lite, 1, 0)).toBe(1);
+    expect(notchDpr(lite, 1, 1)).toBe(0.8);
+    expect(notchDpr(lite, 1, 2)).toBe(0.65);
+    // Never below the tier floor.
+    expect(notchDpr(lite, 0.8, 2)).toBeGreaterThanOrEqual(lite.dpr[0]);
+    for (let i = 1; i < QUALITY_NOTCHES.length; i++) {
+      expect(QUALITY_NOTCHES[i].dprScale).toBeLessThan(QUALITY_NOTCHES[i - 1].dprScale);
+      expect(QUALITY_NOTCHES[i].filamentShare).toBeLessThan(QUALITY_NOTCHES[i - 1].filamentShare);
+    }
   });
 });

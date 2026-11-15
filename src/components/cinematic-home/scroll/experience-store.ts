@@ -41,7 +41,15 @@ export interface ExperienceState {
   compiled: boolean;
   /** The captions currently on screen and their presence (labels yield to them). */
   captionBoxes: { box: { l: number; t: number; r: number; b: number }; o: number }[];
-  perf: { fps: number; dpr: number; dprChanges: number };
+  perf: {
+    dpr: number;
+    /** The adaptive quality notch inside the tier (0 = the tier's budget). */
+    notch: number;
+    /** Share of the filament pool drawn at this notch. */
+    filamentShare: number;
+    /** Median frame time (ms) of each adaptive sample window. */
+    medians: number[];
+  };
   renderer: {
     calls: number;
     triangles: number;
@@ -93,7 +101,7 @@ export function createExperienceStore() {
     environment: false,
     compiled: false,
     captionBoxes: [],
-    perf: { fps: 0, dpr: 1, dprChanges: 0 },
+    perf: { dpr: 1, notch: 0, filamentShare: 1, medians: [] },
     renderer: { calls: 0, triangles: 0, filaments: 0, nodes: 0, geometries: 0, textures: 0 },
     device: null,
     capability: null,

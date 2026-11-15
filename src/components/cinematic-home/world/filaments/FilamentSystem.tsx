@@ -39,13 +39,20 @@ export function FilamentSystem() {
         }
         store.state.renderer.filaments = live;
       }
+      // Adaptive quality: a lower notch draws a share of the pool (the first slots).
+      const share = store.state.perf.filamentShare;
+      const count =
+        share >= 1
+          ? Infinity
+          : Math.floor(filaments.capacity * share) * preset.filamentSegments * 6;
+      if (geometry.drawRange.count !== count) geometry.setDrawRange(0, count);
       const cam = camera as PerspectiveCamera;
       const height = renderer.domElement.clientHeight || 1;
       material.uniforms.uPxScale.value = (2 * Math.tan((cam.fov * Math.PI) / 360)) / height;
       material.uniforms.uTime.value = store.state.time;
       material.uniforms.uFogDensity.value = (scene.fog as FogExp2 | null)?.density ?? 0;
     };
-  }, [filaments, material, store]);
+  }, [filaments, material, store, geometry, preset.filamentSegments]);
 
   return (
     <mesh

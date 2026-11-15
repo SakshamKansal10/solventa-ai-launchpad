@@ -2,28 +2,30 @@ import { useFrame, useThree } from "@react-three/fiber";
 import { useEffect, useRef } from "react";
 
 import { useExperienceValue, type ExperienceStore } from "../scroll/experience-store";
-import { governDpr, type GovernorState, type QualityPreset } from "./quality";
+import { ADAPT, median, nextNotch, notchDpr, QUALITY_NOTCHES, type QualityPreset } from "./quality";
 
 /**
- * Measures real frame rate in one-second windows and trades resolution for
- * smoothness: two slow windows drop the pixel ratio a step; sustained headroom
- * wins a step back (a limited number of times). Also publishes renderer
- * counters for the dev HUD.
+ * Adaptive quality inside the visit's tier: frame time is sampled over the first ~2 s the world
+ * renders; a median slower than 20 ms steps quality down one notch (lower pixel ratio, fewer
+ * filaments drawn), and the check runs once more. Then it stops — no oscillation. A notch never
+ * unmounts anything or changes the page. Off under ?freeze (deterministic review frames).
+ * Also publishes renderer counters for the dev HUD and scripts/film-perf.mjs.
  */
 export function PerformanceGovernor({
   store,
   preset,
+  adaptive,
 }: {
   store: ExperienceStore;
   preset: QualityPreset;
+  adaptive: boolean;
 }) {
   const setDpr = useThree((s) => s.setDpr);
-  const sampleWindow = useRef({ frames: 0, time: 0 });
-  const governor = useRef<GovernorState | null>(null);
+  const sample = useRef({ frames: [] as number[], time: 0, windows: 0 });
 
   useFrame((state, delta) => {
     const s = store.state;
-    // Review hook: with ?freeze / ?debug the scene graph is inspectable for profiling.
+    // Review hook: with ?freeze / ?debug / ?perf the scene graph is inspectable for profiling.
     const hook = (window as unknown as { __cine?: { three?: unknown } }).__cine;
     if (hook && !hook.three)
       hook.three = { scene: state.scene, gl: state.gl, camera: state.camera };
@@ -32,36 +34,25 @@ export function PerformanceGovernor({
     s.renderer.triangles = state.gl.info.render.triangles;
     s.renderer.geometries = state.gl.info.memory.geometries;
     s.renderer.textures = state.gl.info.memory.textures;
+    s.perf.dpr = state.viewport.dpr;
 
-    const w = sampleWindow.current;
-    if (delta > 0.25) {
-      // A stall (tab switch, GC, debugger) is not a performance signal.
-      w.frames = 0;
-      w.time = 0;
-      return;
-    }
-    w.frames += 1;
-    w.time += delta;
-    if (w.time < 1) return;
-    const fps = w.frames / w.time;
-    w.frames = 0;
+    const w = sample.current;
+    if (!adaptive || w.windows >= ADAPT.windows) return;
+    const ms = delta * 1000;
+    if (ms <= 0 || ms > ADAPT.stallMs) return;
+    w.frames.push(ms);
+    w.time += ms;
+    if (w.time < ADAPT.windowMs) return;
+    const notch = nextNotch(s.perf.notch, w.frames);
+    s.perf.medians.push(Math.round(median(w.frames) * 10) / 10);
+    w.frames = [];
     w.time = 0;
-
-    const ceiling = Math.min(preset.dpr[1], window.devicePixelRatio || 1);
-    const current = governor.current ?? {
-      dpr: state.viewport.dpr,
-      slow: 0,
-      fast: 0,
-      recoveries: 0,
-    };
-    const next = governDpr(current, fps, preset, ceiling);
-    if (next.dpr !== current.dpr) {
-      setDpr(next.dpr);
-      s.perf.dprChanges += 1;
+    w.windows += 1;
+    if (notch !== s.perf.notch) {
+      s.perf.notch = notch;
+      s.perf.filamentShare = QUALITY_NOTCHES[notch].filamentShare;
+      setDpr(notchDpr(preset, window.devicePixelRatio || 1, notch));
     }
-    governor.current = next;
-    s.perf.fps = fps;
-    s.perf.dpr = next.dpr;
   }, -3);
 
   return null;
@@ -78,7 +69,9 @@ export function RenderGate({ store }: { store: ExperienceStore }) {
   const active = useExperienceValue(store, (s) => s.stageActive);
   const compiled = useExperienceValue(store, (s) => s.compiled);
   useEffect(() => {
-    store.state.renderWorld = active && compiled ? (now: number) => advance(now) : null;
+    // R3F hands useFrame `timestamp − elapsedTime` as the delta, so the timestamp is in SECONDS
+    // (rAF gives milliseconds): every frame callback then gets its delta in seconds.
+    store.state.renderWorld = active && compiled ? (now: number) => advance(now / 1000) : null;
     return () => {
       store.state.renderWorld = null;
     };
