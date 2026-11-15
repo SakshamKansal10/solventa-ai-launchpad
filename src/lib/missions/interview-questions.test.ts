@@ -1,6 +1,11 @@
 import { describe, expect, it } from "vitest";
 
-import { isOpinionQuestion, keepBehaviourQuestions } from "./interview-questions";
+import {
+  DEFAULT_BEHAVIOUR_QUESTIONS,
+  interviewQuestionsFor,
+  isOpinionQuestion,
+  keepBehaviourQuestions,
+} from "./interview-questions";
 
 describe("interview questions ask about past behaviour", () => {
   it("drops questions asking for an opinion of the idea", () => {
@@ -24,5 +29,25 @@ describe("interview questions ask about past behaviour", () => {
       "Tell me about the last time you booked a generator for an event.",
       "How do you find suppliers today?",
     ]);
+  });
+});
+
+describe("an interview mission always has three to five behaviour questions", () => {
+  it("tops up with safe questions in the founder's language when too few survive", () => {
+    const qs = interviewQuestionsFor(
+      ["Would you use this?", "आज आप बुकिंग कैसे करते हैं?"],
+      "hi",
+    );
+    expect(qs).toHaveLength(3);
+    expect(qs[0]).toBe("आज आप बुकिंग कैसे करते हैं?");
+    expect(qs.slice(1)).toEqual(DEFAULT_BEHAVIOUR_QUESTIONS.hi.slice(0, 2));
+  });
+
+  it("keeps the generator's own questions when there are enough, at most five", () => {
+    const six = Array.from({ length: 6 }, (_, i) => `Tell me about the last time (${i}).`);
+    expect(interviewQuestionsFor(six)).toEqual(six.slice(0, 5));
+    expect(interviewQuestionsFor(null)).toEqual([...DEFAULT_BEHAVIOUR_QUESTIONS.en]);
+    for (const q of [...DEFAULT_BEHAVIOUR_QUESTIONS.en, ...DEFAULT_BEHAVIOUR_QUESTIONS.hi])
+      expect(isOpinionQuestion(q)).toBe(false);
   });
 });

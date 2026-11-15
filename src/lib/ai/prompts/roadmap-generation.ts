@@ -190,6 +190,8 @@ export interface WeekGenerationContext {
   weekTitle: string;
   weekObjective: string;
   weekNumber: number;
+  /** For the first message an interview mission gives the founder to send (part 4, feature 4). */
+  founderFirstName?: string | null;
   /** Null for week 1 — nothing precedes it yet. */
   priorWeek: {
     title: string;
@@ -232,6 +234,7 @@ Skills to learn: ${opportunity.skillsToLearn.join(", ") || "none listed"}
 ${formatDirectionStructure(opportunity)}
 Roadmap phase: ${context.phaseTitle} — ${context.phaseDescription}
 This week (already shown to the founder before it unlocked): "${context.weekTitle}" — ${context.weekObjective}
+Founder's first name (for interview first messages): ${context.founderFirstName?.trim() || "not given — write the message so the founder can add their name"}
 ${priorWeekSection}
 
 Generate this week's real detail now. deadlineDaysFromStart values must be 0-6 (days into THIS week, day 0 = the day it unlocked) and reflect ${planningHoursPhrase(profile)}. HOURS BUDGET: every task's timeEstimate is in hours (e.g. "~2 hrs"), and together this week's tasks must fit within ${weekHoursBudget(profile)} hours — 85% of the lower end of the founder's stated time, the rest left free. Each task's doneWhen states the output the founder will have (notes, a list, recorded answers) and what that result tells them.

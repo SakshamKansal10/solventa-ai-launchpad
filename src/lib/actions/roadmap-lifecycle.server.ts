@@ -8,7 +8,7 @@ import type {
   RoadmapWeekDetailPlan,
 } from "@/lib/ai/schemas";
 import type { NormalizedProfile } from "@/lib/profile/normalize";
-import { keepBehaviourQuestions } from "@/lib/missions/interview-questions";
+import { interviewQuestionsFor } from "@/lib/missions/interview-questions";
 import { MODEL } from "@/lib/ai/gemini.server";
 import { generateRoadmapSkeleton, generateWeekDetail } from "@/lib/ai/prompts/roadmap-generation";
 import type { GenerationLocale } from "@/lib/ai/prompts/shared";
@@ -201,6 +201,7 @@ export async function persistWeekDetail(
   detail: RoadmapWeekDetailPlan,
   now: Date,
   caps: SchemaCapabilities,
+  locale: GenerationLocale = "en",
 ): Promise<void> {
   const weekPatch: Database["public"]["Tables"]["roadmap_weeks"]["Update"] = {
     mission: detail.mission,
@@ -247,7 +248,7 @@ export async function persistWeekDetail(
             assumption_category: task.assumptionCategory ?? null,
           }
         : {}),
-      ...(caps.missionWorkspaces ? missionWorkspaceColumns(task) : {}),
+      ...(caps.missionWorkspaces ? missionWorkspaceColumns(task, locale) : {}),
     };
   });
   const { error: taskError } = await db.from("roadmap_tasks").insert(rows);
@@ -257,7 +258,7 @@ export async function persistWeekDetail(
 }
 
 /** The generator's flat workspace fields → the stored workspace, its spec and its done rule. */
-function missionWorkspaceColumns(task: RoadmapTaskPlan) {
+function missionWorkspaceColumns(task: RoadmapTaskPlan, locale: GenerationLocale) {
   const type = task.workspace ?? "generic";
   const quiz =
     task.quizQuestions && task.quizOptions && task.quizAnswers
@@ -274,7 +275,8 @@ function missionWorkspaceColumns(task: RoadmapTaskPlan) {
       task.firstMessageEn && task.firstMessageHi
         ? { en: task.firstMessageEn, hi: task.firstMessageHi }
         : undefined,
-    questions: task.questions ? keepBehaviourQuestions(task.questions) : undefined,
+    // Behaviour questions only, three to five of them (part 4, feature 4).
+    questions: type === "interviews" ? interviewQuestionsFor(task.questions, locale) : undefined,
     lesson: task.lesson ?? undefined,
     quiz: quiz?.filter((q) => q.options.length >= 2),
     prompts: task.prompts ?? undefined,
@@ -300,6 +302,8 @@ function missionWorkspaceColumns(task: RoadmapTaskPlan) {
 export interface GenerationInputs {
   profile: NormalizedProfile;
   opportunity: OpportunityPackage;
+  /** profiles.full_name's first word — signs an interview mission's first message. */
+  founderFirstName: string | null;
 }
 
 export async function loadGenerationInputs(
@@ -320,9 +324,15 @@ export async function loadGenerationInputs(
     .eq("id", opp.business_dna_id)
     .single();
   if (dnaError || !dna) throw new Error(dnaError?.message ?? "Founder profile not found");
+  const { data: who } = await db
+    .from("profiles")
+    .select("full_name")
+    .eq("id", userId)
+    .maybeSingle();
   return {
     profile: dna.normalized_signals as unknown as NormalizedProfile,
     opportunity: opp.candidate as unknown as OpportunityPackage,
+    founderFirstName: who?.full_name?.trim().split(/\s+/)[0] || null,
   };
 }
 
@@ -387,7 +397,11 @@ export async function generateWeekOnce(
   if (lock === "busy") return "in_progress";
 
   try {
-    const { profile, opportunity } = await loadGenerationInputs(db, userId, opportunityId);
+    const { profile, opportunity, founderFirstName } = await loadGenerationInputs(
+      db,
+      userId,
+      opportunityId,
+    );
     const detail = await generateWeekDetail(
       profile,
       opportunity,
@@ -397,11 +411,12 @@ export async function generateWeekOnce(
         weekTitle: week.title,
         weekObjective: week.objective,
         weekNumber: week.weekNumber,
+        founderFirstName,
         priorWeek: prior,
       },
       locale,
     );
-    await persistWeekDetail(db, userId, week, detail, new Date(), caps);
+    await persistWeekDetail(db, userId, week, detail, new Date(), caps, locale ?? "en");
     await releaseWeekLock(db, userId, week.id, { ok: true }, caps);
     return "generated";
   } catch (err) {

@@ -100,3 +100,9 @@ Each entry: what was ambiguous, what I chose, why.
     TODO in REPORT.md. "Switch direction" opens Directions; nothing is deleted either way.
 25. **"No time this week"** moves the deadlines of the week's open missions by seven days and
     records `shifted_days`; done missions keep their dates. No penalty, no guilt wording.
+26. **Interview scripts (feature 4)** were mostly built with feature 1 (first message in two
+    languages with a toggle, Copy message, the "Listen. Do not pitch your idea." rule, the
+    generator's behaviour-question rule and the opinion-question check). Feature 4 adds the
+    founder's first name (from `profiles.full_name`) to the week prompt and tops an interview
+    mission up to three behaviour questions, in the founder's language, when the check leaves
+    fewer. The Hindi defaults are written as they would be said, not translated word for word.
