@@ -129,6 +129,20 @@ async function run({ throttle = 1, trace = false, profile = false, passes = ["do
   page.on("console", (m) => m.type() === "error" && errors.push(m.text().slice(0, 160)));
   await page.addInitScript(() => {
     const w = window;
+    // React commits while scrolling: a minimal devtools hook (works in production builds).
+    w.__commits = 0;
+    w.__REACT_DEVTOOLS_GLOBAL_HOOK__ = {
+      supportsFiber: true,
+      renderers: new Map(),
+      inject: () => 1,
+      onScheduleFiberRoot() {},
+      onCommitFiberRoot() {
+        if (w.__rec) w.__commits++;
+      },
+      onCommitFiberUnmount() {},
+      onPostCommitFiberRoot() {},
+      checkDCE() {},
+    };
     w.__rec = false;
     w.__frames = [];
     w.__lt = [];
@@ -222,7 +236,7 @@ async function run({ throttle = 1, trace = false, profile = false, passes = ["do
   );
   const rec = await page.evaluate(() => {
     window.__rec = false;
-    return { frames: window.__frames, lt: window.__lt };
+    return { frames: window.__frames, lt: window.__lt, commits: window.__commits };
   });
   let traceSplit = null;
   if (trace) {
@@ -250,6 +264,7 @@ async function run({ throttle = 1, trace = false, profile = false, passes = ["do
     info,
     frames: ft.length,
     frameMs: { p50: r1(pct(ft, 0.5)), p95: r1(pct(ft, 0.95)), worst: r1(Math.max(0, ...ft)) },
+    reactCommitsWhileScrolling: rec.commits,
     longTasksOver50: rec.lt.filter((d) => d > 50).length,
     worstLongTask: Math.max(0, ...rec.lt),
     traceSplitMs: traceSplit,
@@ -267,6 +282,6 @@ const results = { label, tier: tier ?? "auto" };
 // separate profiled pass for the hottest functions.
 results.unthrottled = await run({ throttle: 1, trace: true });
 results.unthrottled.hotFunctions = (await run({ throttle: 1, profile: true })).hotFunctions;
-if (throttleToo) results.throttled4x = await run({ throttle: 4, passes: ["down"] });
+if (throttleToo) results.throttled4x = await run({ throttle: 4, passes: ["down"], trace: true });
 console.log(JSON.stringify(results, null, 1));
 await browser.close();
