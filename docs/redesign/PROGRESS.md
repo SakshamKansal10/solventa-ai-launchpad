@@ -38,7 +38,7 @@ Blockers: `blocked.md`. Final report: `REPORT.md`.
 - [x] 4 Today (five states) (4641294)
 - [x] 5 Directions + Direction detail + two sub-pages (e8aa6ab)
 - [x] 6 Roadmap + mission page shell (b7f0cdd)
-- [ ] 7 Proof
+- [x] 7 Proof (b137110)
 - [ ] 8 Building, History, Settings
 - [ ] 9 Hindi + 390px pass
 
