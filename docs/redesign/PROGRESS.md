@@ -80,7 +80,7 @@ Blockers: `blocked.md`. Final report: `REPORT.md`.
 ## Owner follow-up (2026-11-15) — in this order
 - [x] 0 finish the current feature (ea15552)
 - [x] 1 opening: "What brings you here?" (758ba9f)
-- [ ] 2 3D ready faster (measure, then fix)
+- [x] 2 3D ready faster (measure, then fix) (68fe040)
 - [ ] 3 film: the new Today screen as the dashboard scene
 - [ ] 4 S-mark scene check
 - [ ] 5a part 4 feature 10 drop-off admin page
