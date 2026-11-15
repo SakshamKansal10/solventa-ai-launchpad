@@ -36,7 +36,7 @@ Blockers: `blocked.md`. Final report: `REPORT.md`.
 - [x] 2 adaptive quality notches; R3F delta fix (4d1cd9e)
 - [x] 3 main thread: filament layout read (afa640f), veils/tone (2d085bc), frame-loop layout reads (dca0457), idle cue animation (4a2b569), geometry warm-up + notch DPR (2623dcd), dedicated instanced materials (f252612), hidden overlay content-visibility + allocations (c7913ae)
 - [x] 4 audit, numbers and proposals: part2-perf.md "Part 2b" (targets met on the Vega 3: p95 16.8 ms, 0 long tasks unthrottled, 2–4 at 4×)
-- [ ] cinematic + public e2e on the new tiers
+- [x] cinematic + public e2e on the new tiers (28/28)
 
 ## Part 3 — dashboard redesign
 - [x] plan-3.md file map
