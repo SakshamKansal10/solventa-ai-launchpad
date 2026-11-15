@@ -82,7 +82,7 @@ Blockers: `blocked.md`. Final report: `REPORT.md`.
 - [x] 1 opening: "What brings you here?" (758ba9f)
 - [x] 2 3D ready faster (measure, then fix) (68fe040)
 - [x] 3 film: the new Today screen as the dashboard scene (c2d9b90)
-- [ ] 4 S-mark scene check
+- [x] 4 S-mark scene check (3a6e7e7)
 - [ ] 5a part 4 feature 10 drop-off admin page
 - [ ] 5b part 5 idea engine (all steps, 10-profile comparison)
 - [ ] 6 final verification on the Vercel preview
