@@ -48,7 +48,7 @@ Blockers: `blocked.md`. Final report: `REPORT.md`.
 - [x] 6 Roadmap + mission page shell (b7f0cdd)
 - [x] 7 Proof (b137110)
 - [x] 8 Building, History, Settings (4fe908b)
-- [ ] 9 Hindi + 390px pass
+- [x] 9 Hindi + 390px pass (91a105f)
 
 ## Part 4 — working features
 - [x] plan-4.md data model
