@@ -221,3 +221,14 @@ Each entry: what was ambiguous, what I chose, why.
     stores its engine notes (money check, evidence, objection) in `candidate.engine`. Per-
     consultation grounding (Search) was not added: it stays on demand from Market (cost per
     consultation would triple again); measured cost/time in engine-compare.md.
+39. **Reliability (part 5 step 5).** Already in place before this step: every model response is
+    validated against its zod schema (and the provider schema); a bad response is retried once
+    with the validation error quoted back; transient provider errors try the fallback model;
+    then the founder sees a clear retry screen with their answers kept — never partial output.
+    Every call logs tokens and duration (`GEMINI_CALL`). Added: `business_dna.generation`
+    (migration 0020) — engine, prompt version, model, settings (thinking level; temperature and
+    max tokens are the model defaults, recorded as such), call count, duration, the v2 trace and
+    the validated response. "Raw response" is stored as the validated JSON, not the byte-for-byte
+    text. Prompts live in versioned files (`ENGINE_PROMPT_VERSION`). Leave-and-return: roadmaps
+    build in the background (part 3); a consultation's generation still runs within the
+    request — moving it to a background job is a TODO in REPORT.md.

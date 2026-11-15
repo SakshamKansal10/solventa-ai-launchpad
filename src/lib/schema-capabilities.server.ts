@@ -37,6 +37,8 @@ export interface SchemaCapabilities {
   stuck: boolean;
   /** opportunity_evidence.kind — estimate | sourced (0018). */
   evidenceKind: boolean;
+  /** business_dna.generation — how a result was produced (0020). */
+  generationRecord: boolean;
 }
 
 const ALL_OFF: SchemaCapabilities = {
@@ -52,6 +54,7 @@ const ALL_OFF: SchemaCapabilities = {
   proofRules: false,
   stuck: false,
   evidenceKind: false,
+  generationRecord: false,
 };
 
 let cache: { at: number; caps: SchemaCapabilities } | null = null;
@@ -97,6 +100,7 @@ export async function getSchemaCapabilities(
     proofRules,
     stuck,
     evidenceKind,
+    generationRecord,
   ] = await Promise.all([
     probe("roadmap_weeks", "generation_status"),
     probe("proof_assumptions", "id"),
@@ -111,6 +115,7 @@ export async function getSchemaCapabilities(
     probe("proof_assumptions", "success_rule"),
     probe("mission_stuck_events", "id"),
     probe("opportunity_evidence", "kind"),
+    probe("business_dna", "generation"),
   ]);
 
   const caps: SchemaCapabilities = {
@@ -127,6 +132,7 @@ export async function getSchemaCapabilities(
     proofRules,
     stuck,
     evidenceKind,
+    generationRecord,
   };
   cache = { at: Date.now(), caps };
   return caps;
