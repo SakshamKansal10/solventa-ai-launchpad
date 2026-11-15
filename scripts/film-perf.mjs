@@ -236,7 +236,15 @@ async function run({ throttle = 1, trace = false, profile = false, passes = ["do
   );
   const rec = await page.evaluate(() => {
     window.__rec = false;
-    return { frames: window.__frames, lt: window.__lt, commits: window.__commits };
+    const st = window.__cine?.state;
+    return {
+      frames: window.__frames,
+      lt: window.__lt,
+      commits: window.__commits,
+      endNotch: st?.perf?.notch ?? null,
+      endMedians: st?.perf?.medians ?? [],
+      endDpr: st?.perf?.dpr ?? null,
+    };
   });
   let traceSplit = null;
   if (trace) {
@@ -265,6 +273,7 @@ async function run({ throttle = 1, trace = false, profile = false, passes = ["do
     frames: ft.length,
     frameMs: { p50: r1(pct(ft, 0.5)), p95: r1(pct(ft, 0.95)), worst: r1(Math.max(0, ...ft)) },
     reactCommitsWhileScrolling: rec.commits,
+    adaptive: { endNotch: rec.endNotch, windowMedians: rec.endMedians, endDpr: rec.endDpr },
     longTasksOver50: rec.lt.filter((d) => d > 50).length,
     worstLongTask: Math.max(0, ...rec.lt),
     traceSplitMs: traceSplit,

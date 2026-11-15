@@ -20,6 +20,9 @@ export interface QualityPreset {
   coreSegments: number;
   /** Gates along the execution path. */
   pathGates: number;
+  /** Bevel subdivisions of the path's rounded parts (bars, locks, modules, nodes): 2 = 300
+   * triangles a part, 1 = 108. Their 0.03 bevel reads the same at either. */
+  gateBevel: number;
   /** Clear-coat / sheen ceramics (MeshPhysicalMaterial) instead of standard. */
   physicalMaterials: boolean;
 }
@@ -33,6 +36,7 @@ export const QUALITY_PRESETS: Record<QualityTier, QualityPreset> = {
     filamentSegments: 24,
     coreSegments: 72,
     pathGates: 34,
+    gateBevel: 2,
     physicalMaterials: true,
   },
   lite: {
@@ -45,6 +49,7 @@ export const QUALITY_PRESETS: Record<QualityTier, QualityPreset> = {
     filamentSegments: 12,
     coreSegments: 32,
     pathGates: 24,
+    gateBevel: 1,
     // Standard (one-lobe) materials everywhere, glass and smoked included.
     physicalMaterials: false,
   },
@@ -62,14 +67,16 @@ export const QUALITY_NOTCHES = [
 ] as const;
 
 export const ADAPT = {
-  /** Frame time is sampled in windows of this much rendered time… */
+  /** Frame time is sampled, while the story moves, in windows of this much rendered time… */
   windowMs: 2000,
-  /** …and a window whose median frame is slower than this steps down one notch… */
+  /** …and a window whose median frame is slower than this steps down one notch (never up). */
   slowMedianMs: 20,
-  /** …at most this many times (the first window, then once more). */
-  windows: 2,
   /** Frames longer than this are stalls (tab switch, GC, debugger), not a signal. */
   stallMs: 250,
+  /** Progress per second below which the story counts as at rest (a step is applied then)… */
+  calmVelocity: 0.002,
+  /** …or after this long, if the visitor never pauses. */
+  calmWaitMs: 3000,
 } as const;
 
 export function median(xs: readonly number[]): number {

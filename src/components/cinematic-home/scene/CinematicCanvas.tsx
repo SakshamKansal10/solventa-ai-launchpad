@@ -2,7 +2,7 @@ import { Canvas } from "@react-three/fiber";
 
 import { BASE_FOV } from "../camera/camera-path";
 import { notchDpr, type QualityPreset } from "../performance/quality";
-import { useExperienceValue, type ExperienceStore } from "../scroll/experience-store";
+import type { ExperienceStore } from "../scroll/experience-store";
 import { SceneRoot } from "./SceneRoot";
 
 /**
@@ -29,7 +29,9 @@ export default function CinematicCanvas({
   onContextRestored: () => void;
 }) {
   // Adaptive quality: notch 0 is the tier's range; a lower notch is an exact, lower pixel ratio.
-  const notch = useExperienceValue(store, (s) => s.perf.notch);
+  // The governor applies a step through R3F's setDpr (no React render); if the canvas does render
+  // again it passes the CURRENT notch's ratio, so R3F never resets it to the range.
+  const notch = store.state.perf.notch;
   const dpr = notch === 0 ? preset.dpr : notchDpr(preset, window.devicePixelRatio || 1, notch);
   return (
     <Canvas

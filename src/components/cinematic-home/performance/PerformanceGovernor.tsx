@@ -5,10 +5,16 @@ import { useExperienceValue, type ExperienceStore } from "../scroll/experience-s
 import { ADAPT, median, nextNotch, notchDpr, QUALITY_NOTCHES, type QualityPreset } from "./quality";
 
 /**
- * Adaptive quality inside the visit's tier: frame time is sampled over the first ~2 s the world
- * renders; a median slower than 20 ms steps quality down one notch (lower pixel ratio, fewer
- * filaments drawn), and the check runs once more. Then it stops — no oscillation. A notch never
- * unmounts anything or changes the page. Off under ?freeze (deterministic review frames).
+ * Adaptive quality inside the visit's tier (owner decision, proposal A): frame time is sampled
+ * only while the story is MOVING, in any scene — the light opening at rest says nothing about the
+ * universe or the path. Each ~2 s window of moving frames whose median is slower than 20 ms steps
+ * quality down one notch (lower pixel ratio, fewer filaments drawn), as far as the last notch.
+ * It never steps back up during a visit (no oscillation).
+ *
+ * No visible hitch: the step goes through R3F's own setDpr (no React render — re-rendering the
+ * canvas would re-render the whole scene tree) and is applied at a calm moment, when the story
+ * has (nearly) come to rest, or after at most CALM_WAIT_MS. A notch never unmounts anything or
+ * changes the page. Off under ?freeze (deterministic review frames).
  * Also publishes renderer counters for the dev HUD and scripts/film-perf.mjs.
  */
 export function PerformanceGovernor({
@@ -20,17 +26,24 @@ export function PerformanceGovernor({
   preset: QualityPreset;
   adaptive: boolean;
 }) {
-  const sample = useRef({ frames: [] as number[], time: 0, windows: 0 });
+  const setDpr = useThree((s) => s.setDpr);
+  const sample = useRef({ frames: [] as number[], time: 0, pending: -1, waited: 0, pinned: false });
+
+  const apply = (notch: number) => {
+    const s = store.state;
+    s.perf.notch = notch;
+    s.perf.filamentShare = QUALITY_NOTCHES[notch].filamentShare;
+    setDpr(notchDpr(preset, window.devicePixelRatio || 1, notch));
+  };
 
   // Measurement aid (scripts/film-perf.mjs): ?perf=1&notch=N pins a notch and turns adapting off.
   useEffect(() => {
     const q = new URLSearchParams(window.location.search);
     const pinned = Number(q.get("notch"));
     if (!q.has("perf") || !q.has("notch") || !(pinned in QUALITY_NOTCHES)) return;
-    sample.current.windows = ADAPT.windows;
-    store.state.perf.notch = pinned;
-    store.state.perf.filamentShare = QUALITY_NOTCHES[pinned].filamentShare;
-    store.emit();
+    sample.current.pinned = true;
+    apply(pinned);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [store]);
 
   useFrame((state, delta) => {
@@ -47,23 +60,31 @@ export function PerformanceGovernor({
     s.perf.dpr = state.viewport.dpr;
 
     const w = sample.current;
-    if (!adaptive || w.windows >= ADAPT.windows) return;
+    if (!adaptive || w.pinned) return;
     const ms = delta * 1000;
-    if (ms <= 0 || ms > ADAPT.stallMs) return;
+    // A decided step waits for a calm moment (the story at rest), at most CALM_WAIT_MS.
+    if (w.pending >= 0) {
+      w.waited += Math.min(ms, ADAPT.stallMs);
+      if (Math.abs(s.velocity) < ADAPT.calmVelocity || w.waited >= ADAPT.calmWaitMs) {
+        apply(w.pending);
+        w.pending = -1;
+      }
+      return;
+    }
+    if (s.perf.notch >= QUALITY_NOTCHES.length - 1) return;
+    const moving =
+      Math.abs(s.targetProgress - s.progress) > 1e-4 || Math.abs(s.velocity) > ADAPT.calmVelocity;
+    if (!moving || ms <= 0 || ms > ADAPT.stallMs) return;
     w.frames.push(ms);
     w.time += ms;
     if (w.time < ADAPT.windowMs) return;
-    const notch = nextNotch(s.perf.notch, w.frames);
+    const next = nextNotch(s.perf.notch, w.frames);
     s.perf.medians.push(Math.round(median(w.frames) * 10) / 10);
     w.frames = [];
     w.time = 0;
-    w.windows += 1;
-    if (notch !== s.perf.notch) {
-      s.perf.notch = notch;
-      s.perf.filamentShare = QUALITY_NOTCHES[notch].filamentShare;
-      // The canvas takes its pixel ratio from the notch as a prop (CinematicCanvas): R3F re-applies
-      // its dpr prop on every canvas render, which would silently undo a setDpr() here.
-      store.emit();
+    if (next > s.perf.notch) {
+      w.pending = next;
+      w.waited = 0;
     }
   }, -3);
 
