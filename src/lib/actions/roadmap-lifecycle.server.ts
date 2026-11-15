@@ -2,11 +2,13 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 
 import type { Database } from "@/lib/supabase/types";
 import type {
+  RoadmapTaskPlan,
   OpportunityPackage,
   RoadmapSkeletonPlan,
   RoadmapWeekDetailPlan,
 } from "@/lib/ai/schemas";
 import type { NormalizedProfile } from "@/lib/profile/normalize";
+import { keepBehaviourQuestions } from "@/lib/missions/interview-questions";
 import { MODEL } from "@/lib/ai/gemini.server";
 import { generateRoadmapSkeleton, generateWeekDetail } from "@/lib/ai/prompts/roadmap-generation";
 import type { GenerationLocale } from "@/lib/ai/prompts/shared";
@@ -245,12 +247,54 @@ export async function persistWeekDetail(
             assumption_category: task.assumptionCategory ?? null,
           }
         : {}),
+      ...(caps.missionWorkspaces ? missionWorkspaceColumns(task) : {}),
     };
   });
   const { error: taskError } = await db.from("roadmap_tasks").insert(rows);
   // 23505: another request already wrote this week's missions (the unique
   // (week_id, order_index) index) — the week is complete, which is the goal.
   if (taskError && taskError.code !== "23505") throw new Error(taskError.message);
+}
+
+/** The generator's flat workspace fields → the stored workspace, its spec and its done rule. */
+function missionWorkspaceColumns(task: RoadmapTaskPlan) {
+  const type = task.workspace ?? "generic";
+  const quiz =
+    task.quizQuestions && task.quizOptions && task.quizAnswers
+      ? task.quizQuestions.slice(0, 3).map((q, i) => ({
+          q,
+          options: task.quizOptions!.slice(i * 3, i * 3 + 3),
+          answer: task.quizAnswers![i] ?? 0,
+        }))
+      : undefined;
+  const target = task.workspaceTarget ?? undefined;
+  const spec = {
+    target,
+    firstMessage:
+      task.firstMessageEn && task.firstMessageHi
+        ? { en: task.firstMessageEn, hi: task.firstMessageHi }
+        : undefined,
+    questions: task.questions ? keepBehaviourQuestions(task.questions) : undefined,
+    lesson: task.lesson ?? undefined,
+    quiz: quiz?.filter((q) => q.options.length >= 2),
+    prompts: task.prompts ?? undefined,
+  };
+  const doneRule =
+    type === "list" && target
+      ? { metric: "list.count", min: target }
+      : type === "interviews" && target
+        ? { metric: "interviews.count", min: target }
+        : type === "learn" && spec.quiz?.length
+          ? { metric: "quiz.correct", min: spec.quiz.length }
+          : type === "summary" && spec.prompts?.length
+            ? { metric: "summary.filled", min: Math.min(2, spec.prompts.length) }
+            : null;
+  return {
+    workspace: type,
+    workspace_spec: spec,
+    done_rule: doneRule,
+    fallback: task.fallback ?? null,
+  } as Record<string, unknown>;
 }
 
 export interface GenerationInputs {

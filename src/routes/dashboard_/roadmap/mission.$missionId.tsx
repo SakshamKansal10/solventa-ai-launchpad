@@ -13,6 +13,11 @@ import {
   useAskSol,
 } from "@/components/founder/DashboardShell";
 import { nextMissionId } from "@/components/founder/dash/missions";
+import {
+  MissionWorkspace,
+  useGateReason,
+  useMissionWorkspace,
+} from "@/components/founder/dash/MissionWorkspace";
 import { StatusShape } from "@/components/founder/dash/StatusShape";
 import {
   ActionButton,
@@ -91,6 +96,8 @@ function MissionPage() {
   const text = useRoadmapText(view, week);
   const opportunityId = view?.roadmap.opportunityId ?? null;
   const evidence = useEvidenceWorkspace(opportunityId);
+  const workspace = useMissionWorkspace(missionId);
+  const gateReason = useGateReason()(workspace.data);
   const [recording, setRecording] = useState(false);
 
   const setState = useMutation({
@@ -245,8 +252,7 @@ function MissionPage() {
             {why && <p className="dash-lead max-w-[32em]">{why}</p>}
           </div>
 
-          {/* TODO(task 4, mission workspaces): the mission's own input area goes here — the
-              list to fill in, the interview log, the script to copy — saved as you type. */}
+          <MissionWorkspace taskId={mission.id} locked={locked} />
 
           {(steps.length > 0 || mistakes.length > 0) && (
             <section
@@ -355,7 +361,8 @@ function MissionPage() {
                 )
               ) : (
                 <ActionButton
-                  disabled={busy}
+                  disabled={busy || Boolean(gateReason)}
+                  aria-describedby={gateReason ? "gate-reason" : undefined}
                   data-testid="mission-complete"
                   onClick={() => {
                     setState.mutate({ taskId: mission.id, state: "completed" });
@@ -364,6 +371,11 @@ function MissionPage() {
                 >
                   {t("v2.mission.markDone")}
                 </ActionButton>
+              )}
+              {gateReason && !done && !locked && (
+                <p id="gate-reason" className="dash-meta basis-full" data-testid="gate-reason">
+                  {gateReason}
+                </p>
               )}
             </div>
           </section>

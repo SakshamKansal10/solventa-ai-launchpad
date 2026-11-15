@@ -75,3 +75,16 @@ Each entry: what was ambiguous, what I chose, why.
     exist on lite; the real triangle sources in the path scenes are the rounded bars, locks,
     modules and nodes (300 triangles each, ~100k per scene). Lite gives them one bevel
     subdivision (108 triangles). Same intent: fewer gate-part triangles, same look.
+
+## Part 4 — working features
+19. **Workspace fields are flat and optional in the generator schema** (workspace, target,
+    firstMessageEn/Hi, questions, lesson, quiz questions/options/answers, prompts, fallback) —
+    nested objects raise the provider's structured-output complexity, which is what broke Stage 7.
+    The stored `workspace_spec` is assembled in code. Risk recorded in blocked.md: the larger
+    week-detail schema must be checked once against the real Gemini API.
+20. **A done rule exists only when the generator gives a target** (list rows, interviews), a quiz
+    or prompts; otherwise the workspace shows but Mark as done is not gated. Missions written
+    before workspaces existed get the generic notes box, ungated.
+21. **Interview people come from the founder's own lists** as suggestions (a datalist), not a hard
+    lock — a founder may have spoken to someone not yet listed; the honesty prompt (feature 2)
+    covers the rest.
