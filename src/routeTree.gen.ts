@@ -29,9 +29,11 @@ import { Route as DashboardHistoryRouteImport } from './routes/dashboard/history
 import { Route as DashboardProofRouteImport } from './routes/dashboard/proof'
 import { Route as DashboardSettingsRouteImport } from './routes/dashboard/settings'
 import { Route as DashboardOpportunitiesIndexRouteImport } from './routes/dashboard/opportunities/index'
-import { Route as DashboardOpportunitiesIdRouteImport } from './routes/dashboard/opportunities/$id'
 import { Route as DashboardRoadmapIndexRouteImport } from './routes/dashboard/roadmap/index'
 import { Route as DashboardRoadmapBuildingRouteImport } from './routes/dashboard_/roadmap/building'
+import { Route as DashboardOpportunitiesIdIndexRouteImport } from './routes/dashboard/opportunities/$id/index'
+import { Route as DashboardOpportunitiesIdFitRouteImport } from './routes/dashboard/opportunities/$id/fit'
+import { Route as DashboardOpportunitiesIdMarketRouteImport } from './routes/dashboard/opportunities/$id/market'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -134,12 +136,6 @@ const DashboardOpportunitiesIndexRoute =
     path: '/opportunities/',
     getParentRoute: () => DashboardRoute,
   } as any)
-const DashboardOpportunitiesIdRoute =
-  DashboardOpportunitiesIdRouteImport.update({
-    id: '/opportunities/$id',
-    path: '/opportunities/$id',
-    getParentRoute: () => DashboardRoute,
-  } as any)
 const DashboardRoadmapIndexRoute = DashboardRoadmapIndexRouteImport.update({
   id: '/roadmap/',
   path: '/roadmap/',
@@ -150,6 +146,24 @@ const DashboardRoadmapBuildingRoute =
     id: '/dashboard_/roadmap/building',
     path: '/dashboard/roadmap/building',
     getParentRoute: () => rootRouteImport,
+  } as any)
+const DashboardOpportunitiesIdIndexRoute =
+  DashboardOpportunitiesIdIndexRouteImport.update({
+    id: '/opportunities/$id/',
+    path: '/opportunities/$id/',
+    getParentRoute: () => DashboardRoute,
+  } as any)
+const DashboardOpportunitiesIdFitRoute =
+  DashboardOpportunitiesIdFitRouteImport.update({
+    id: '/opportunities/$id/fit',
+    path: '/opportunities/$id/fit',
+    getParentRoute: () => DashboardRoute,
+  } as any)
+const DashboardOpportunitiesIdMarketRoute =
+  DashboardOpportunitiesIdMarketRouteImport.update({
+    id: '/opportunities/$id/market',
+    path: '/opportunities/$id/market',
+    getParentRoute: () => DashboardRoute,
   } as any)
 
 export interface FileRoutesByFullPath {
@@ -172,10 +186,12 @@ export interface FileRoutesByFullPath {
   '/dashboard/proof': typeof DashboardProofRoute
   '/dashboard/settings': typeof DashboardSettingsRoute
   '/dashboard/': typeof DashboardIndexRoute
-  '/dashboard/opportunities/$id': typeof DashboardOpportunitiesIdRoute
   '/dashboard/roadmap/building': typeof DashboardRoadmapBuildingRoute
   '/dashboard/opportunities/': typeof DashboardOpportunitiesIndexRoute
   '/dashboard/roadmap/': typeof DashboardRoadmapIndexRoute
+  '/dashboard/opportunities/$id/fit': typeof DashboardOpportunitiesIdFitRoute
+  '/dashboard/opportunities/$id/market': typeof DashboardOpportunitiesIdMarketRoute
+  '/dashboard/opportunities/$id/': typeof DashboardOpportunitiesIdIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -196,10 +212,12 @@ export interface FileRoutesByTo {
   '/dashboard/proof': typeof DashboardProofRoute
   '/dashboard/settings': typeof DashboardSettingsRoute
   '/dashboard': typeof DashboardIndexRoute
-  '/dashboard/opportunities/$id': typeof DashboardOpportunitiesIdRoute
   '/dashboard/roadmap/building': typeof DashboardRoadmapBuildingRoute
   '/dashboard/opportunities': typeof DashboardOpportunitiesIndexRoute
   '/dashboard/roadmap': typeof DashboardRoadmapIndexRoute
+  '/dashboard/opportunities/$id/fit': typeof DashboardOpportunitiesIdFitRoute
+  '/dashboard/opportunities/$id/market': typeof DashboardOpportunitiesIdMarketRoute
+  '/dashboard/opportunities/$id': typeof DashboardOpportunitiesIdIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -222,10 +240,12 @@ export interface FileRoutesById {
   '/dashboard/proof': typeof DashboardProofRoute
   '/dashboard/settings': typeof DashboardSettingsRoute
   '/dashboard/': typeof DashboardIndexRoute
-  '/dashboard/opportunities/$id': typeof DashboardOpportunitiesIdRoute
   '/dashboard_/roadmap/building': typeof DashboardRoadmapBuildingRoute
   '/dashboard/opportunities/': typeof DashboardOpportunitiesIndexRoute
   '/dashboard/roadmap/': typeof DashboardRoadmapIndexRoute
+  '/dashboard/opportunities/$id/fit': typeof DashboardOpportunitiesIdFitRoute
+  '/dashboard/opportunities/$id/market': typeof DashboardOpportunitiesIdMarketRoute
+  '/dashboard/opportunities/$id/': typeof DashboardOpportunitiesIdIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -249,10 +269,12 @@ export interface FileRouteTypes {
     | '/dashboard/proof'
     | '/dashboard/settings'
     | '/dashboard/'
-    | '/dashboard/opportunities/$id'
     | '/dashboard/roadmap/building'
     | '/dashboard/opportunities/'
     | '/dashboard/roadmap/'
+    | '/dashboard/opportunities/$id/fit'
+    | '/dashboard/opportunities/$id/market'
+    | '/dashboard/opportunities/$id/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -273,10 +295,12 @@ export interface FileRouteTypes {
     | '/dashboard/proof'
     | '/dashboard/settings'
     | '/dashboard'
-    | '/dashboard/opportunities/$id'
     | '/dashboard/roadmap/building'
     | '/dashboard/opportunities'
     | '/dashboard/roadmap'
+    | '/dashboard/opportunities/$id/fit'
+    | '/dashboard/opportunities/$id/market'
+    | '/dashboard/opportunities/$id'
   id:
     | '__root__'
     | '/'
@@ -298,10 +322,12 @@ export interface FileRouteTypes {
     | '/dashboard/proof'
     | '/dashboard/settings'
     | '/dashboard/'
-    | '/dashboard/opportunities/$id'
     | '/dashboard_/roadmap/building'
     | '/dashboard/opportunities/'
     | '/dashboard/roadmap/'
+    | '/dashboard/opportunities/$id/fit'
+    | '/dashboard/opportunities/$id/market'
+    | '/dashboard/opportunities/$id/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -465,13 +491,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardOpportunitiesIndexRouteImport
       parentRoute: typeof DashboardRoute
     }
-    '/dashboard/opportunities/$id': {
-      id: '/dashboard/opportunities/$id'
-      path: '/opportunities/$id'
-      fullPath: '/dashboard/opportunities/$id'
-      preLoaderRoute: typeof DashboardOpportunitiesIdRouteImport
-      parentRoute: typeof DashboardRoute
-    }
     '/dashboard/roadmap/': {
       id: '/dashboard/roadmap/'
       path: '/roadmap'
@@ -486,6 +505,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardRoadmapBuildingRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/dashboard/opportunities/$id/': {
+      id: '/dashboard/opportunities/$id/'
+      path: '/opportunities/$id'
+      fullPath: '/dashboard/opportunities/$id/'
+      preLoaderRoute: typeof DashboardOpportunitiesIdIndexRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/dashboard/opportunities/$id/fit': {
+      id: '/dashboard/opportunities/$id/fit'
+      path: '/opportunities/$id/fit'
+      fullPath: '/dashboard/opportunities/$id/fit'
+      preLoaderRoute: typeof DashboardOpportunitiesIdFitRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/dashboard/opportunities/$id/market': {
+      id: '/dashboard/opportunities/$id/market'
+      path: '/opportunities/$id/market'
+      fullPath: '/dashboard/opportunities/$id/market'
+      preLoaderRoute: typeof DashboardOpportunitiesIdMarketRouteImport
+      parentRoute: typeof DashboardRoute
+    }
   }
 }
 
@@ -494,9 +534,11 @@ interface DashboardRouteChildren {
   DashboardProofRoute: typeof DashboardProofRoute
   DashboardSettingsRoute: typeof DashboardSettingsRoute
   DashboardIndexRoute: typeof DashboardIndexRoute
-  DashboardOpportunitiesIdRoute: typeof DashboardOpportunitiesIdRoute
   DashboardOpportunitiesIndexRoute: typeof DashboardOpportunitiesIndexRoute
   DashboardRoadmapIndexRoute: typeof DashboardRoadmapIndexRoute
+  DashboardOpportunitiesIdFitRoute: typeof DashboardOpportunitiesIdFitRoute
+  DashboardOpportunitiesIdMarketRoute: typeof DashboardOpportunitiesIdMarketRoute
+  DashboardOpportunitiesIdIndexRoute: typeof DashboardOpportunitiesIdIndexRoute
 }
 
 const DashboardRouteChildren: DashboardRouteChildren = {
@@ -504,9 +546,11 @@ const DashboardRouteChildren: DashboardRouteChildren = {
   DashboardProofRoute: DashboardProofRoute,
   DashboardSettingsRoute: DashboardSettingsRoute,
   DashboardIndexRoute: DashboardIndexRoute,
-  DashboardOpportunitiesIdRoute: DashboardOpportunitiesIdRoute,
   DashboardOpportunitiesIndexRoute: DashboardOpportunitiesIndexRoute,
   DashboardRoadmapIndexRoute: DashboardRoadmapIndexRoute,
+  DashboardOpportunitiesIdFitRoute: DashboardOpportunitiesIdFitRoute,
+  DashboardOpportunitiesIdMarketRoute: DashboardOpportunitiesIdMarketRoute,
+  DashboardOpportunitiesIdIndexRoute: DashboardOpportunitiesIdIndexRoute,
 }
 
 const DashboardRouteWithChildren = DashboardRoute._addFileChildren(

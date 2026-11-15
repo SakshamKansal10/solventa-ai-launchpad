@@ -231,13 +231,13 @@ const RowAnchor = forwardRef<
     <a
       ref={ref}
       className={cn(
-        "group flex min-h-[88px] items-center justify-between gap-4 rounded-[32px] border border-sol-border px-[clamp(20px,2.6vw,32px)] py-5 text-sol-ink transition-colors hover:border-sol-ink/40 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sol-cobalt",
+        "group flex min-h-[104px] items-center justify-between gap-4 rounded-[32px] border border-sol-ink/20 px-[clamp(24px,2.8vw,40px)] py-5 text-sol-ink transition-colors hover:border-sol-ink/40 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sol-cobalt",
         className,
       )}
       {...rest}
     >
       <span className="flex min-w-0 flex-col gap-1">
-        <span className="flex flex-wrap items-center gap-3 text-[22px] font-medium leading-tight">
+        <span className="flex flex-wrap items-center gap-3 font-display text-[clamp(22px,2.2vw,28px)] font-medium leading-tight tracking-[-0.015em]">
           {title}
           {tag}
         </span>
@@ -252,9 +252,17 @@ const RowAnchor = forwardRef<
 export const LinkRow = createLink(RowAnchor);
 
 /** A row that is not a link (an action handled on this page, or a TODO). */
-export function QuietRow({ children, className }: { children: ReactNode; className?: string }) {
+export function QuietRow({
+  children,
+  className,
+  ...rest
+}: { children: ReactNode; className?: string } & Omit<
+  HTMLAttributes<HTMLDivElement>,
+  "children" | "className"
+>) {
   return (
     <div
+      {...rest}
       className={cn(
         "flex flex-wrap items-center justify-between gap-x-6 gap-y-3 rounded-[32px] border border-sol-border px-[clamp(20px,2.6vw,32px)] py-6",
         className,
