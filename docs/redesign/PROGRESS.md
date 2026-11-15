@@ -65,7 +65,7 @@ Blockers: `blocked.md`. Final report: `REPORT.md`.
 - [x] 5 ask what is missing (a9156eb)
 - [x] 6 estimates and sources (6fd2e75 — code landed under the tick message, see decisions 29)
 - [x] 7 Make it official guide (18e1e34)
-- [ ] 8 weekly reminder
+- [x] 8 weekly reminder (59d875b)
 - [ ] 9 plain words
 - [ ] 10 drop-off admin page
 
