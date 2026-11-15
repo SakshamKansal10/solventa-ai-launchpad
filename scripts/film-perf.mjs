@@ -43,6 +43,8 @@ const RENDERING = new Set([
   "UpdateLayoutTree", "RecalculateStyles", "Layout", "HitTest", "PrePaint", "UpdateLayerTree",
   "ScheduleStyleRecalculation", "LayoutShift", "IntersectionObserverController::computeIntersections",
   "Document::updateStyleAndLayout", "ResizeObserver::BroadcastObservations", "LocalFrameView::RunPostLifecycleSteps",
+  // Style recalculation as Blink names it in current traces (DevTools files it under Rendering).
+  "Document::recalcStyle", "Document::updateStyle", "Blink.PrePaint.UpdateTime", "LocalFrameView::UpdateStyleAndLayout",
 ]);
 const PAINTING = new Set([
   "Paint", "PaintImage", "CompositeLayers", "Commit", "Decode Image", "Decode LazyPixelRef",
@@ -57,6 +59,7 @@ function categorize(events) {
     if (e.ph === "M" && e.name === "process_name" && e.args?.name === "GPU Process") gpuPid = e.pid;
   }
   const out = { scripting: 0, rendering: 0, painting: 0, other: 0, gpu: 0 };
+  const otherNames = new Map();
   for (const e of events) {
     if (e.ph !== "X" || typeof e.dur !== "number") continue;
     if (e.pid === gpuPid && (e.name === "GPUTask" || e.name === "CommandBufferStub::OnAsyncFlush")) {
@@ -84,9 +87,16 @@ function categorize(events) {
     if (SCRIPTING.has(e.name) || e.name.startsWith("V8.") || e.name.startsWith("v8.")) out.scripting += ms;
     else if (RENDERING.has(e.name)) out.rendering += ms;
     else if (PAINTING.has(e.name)) out.painting += ms;
-    else if (e.name !== "RunTask" && e.name !== "ThreadControllerImpl::RunTask") out.other += ms;
+    else if (e.name !== "RunTask" && e.name !== "ThreadControllerImpl::RunTask") {
+      out.other += ms;
+      otherNames.set(e.name, (otherNames.get(e.name) ?? 0) + ms);
+    }
   }
-  for (const k of Object.keys(out)) out[k] = Math.round(out[k]);
+  out.otherTop = [...otherNames.entries()]
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 8)
+    .map(([n, ms]) => `${Math.round(ms)} ms ${n}`);
+  for (const k of ["scripting", "rendering", "painting", "other", "gpu"]) out[k] = Math.round(out[k]);
   return out;
 }
 
@@ -181,6 +191,11 @@ async function run({ throttle = 1, trace = false, profile = false, passes = ["do
   const total = await page.evaluate(
     () => document.querySelector("[data-testid=cinematic-timeline]")?.scrollHeight ?? document.documentElement.scrollHeight,
   );
+  // Chrome's own main-thread counters (seconds), as a check on the trace split.
+  await cdp.send("Performance.enable");
+  const metric = async () =>
+    Object.fromEntries((await cdp.send("Performance.getMetrics")).metrics.map((m) => [m.name, m.value]));
+  const m0 = await metric();
   await page.evaluate(() => {
     window.__frames = [];
     window.__lt = [];
@@ -195,6 +210,15 @@ async function run({ throttle = 1, trace = false, profile = false, passes = ["do
     }
     await page.waitForTimeout(1200);
   }
+  const m1 = await metric();
+  const chromeMs = Object.fromEntries(
+    [
+      ["script", "ScriptDuration"],
+      ["styleRecalc", "RecalcStyleDuration"],
+      ["layout", "LayoutDuration"],
+      ["allTasks", "TaskDuration"],
+    ].map(([k, n]) => [k, Math.round((m1[n] - m0[n]) * 1000)]),
+  );
   const rec = await page.evaluate(() => {
     window.__rec = false;
     return { frames: window.__frames, lt: window.__lt };
@@ -228,6 +252,7 @@ async function run({ throttle = 1, trace = false, profile = false, passes = ["do
     longTasksOver50: rec.lt.filter((d) => d > 50).length,
     worstLongTask: Math.max(0, ...rec.lt),
     traceSplitMs: traceSplit,
+    chromeMetricsMs: chromeMs,
     perScene: [...scenes.entries()]
       .sort((a, b) => a[0] - b[0])
       .map(([idx, s]) => `scene ${String(idx).padStart(2)}: p95 ${String(r1(pct(s.ft, 0.95))).padStart(5)} ms · ${String(s.calls).padStart(3)} draw calls · ${s.tris} triangles · ${s.ft.length} frames`),

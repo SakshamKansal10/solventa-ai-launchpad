@@ -136,6 +136,7 @@ export function createOverlaySync(store: ExperienceStore) {
   /** The page element the tone variables are written on (nav and overlay inherit them). */
   const tone = { el: null as HTMLElement | null, key: "" };
   const world = { el: null as HTMLElement | null, value: "" };
+  const veils = { low: null as HTMLElement | null, top: null as HTMLElement | null };
   const shown: ShownBox[] = [];
 
   /** One frame at story position `p` on a stage of `width` × `height` px. */
@@ -231,15 +232,18 @@ export function createOverlaySync(store: ExperienceStore) {
 
     // The tone: one set of colours for the current world, inherited by the overlay and the bar.
     tone.el ??= document.querySelector<HTMLElement>("[data-cine-tone]");
+    // Quantised to 1% steps: a tone change re-styles everything that inherits it (the nav and
+    // the whole overlay), so it is written only when it changes visibly, not on every frame
+    // of a transition.
+    const L = Math.round(lightAt(p) * 100) / 100;
+    const ink = Math.round(inkAt(L) * 100) / 100;
     if (tone.el) {
-      const L = lightAt(p);
-      const ink = inkAt(L);
-      const key = `${L.toFixed(3)}:${ink.toFixed(3)}`;
+      const key = `${L}:${ink}`;
       if (key !== tone.key) {
         tone.key = key;
         for (const r of ROLES) setVar(tone.el, ROLE_VAR[r], mixHex(WORLD[r][0], WORLD[r][1], ink));
-        setVar(tone.el, "--dark", (1 - ink).toFixed(3));
-        setVar(tone.el, "--light", L.toFixed(3));
+        setVar(tone.el, "--dark", (1 - ink).toFixed(2));
+        setVar(tone.el, "--light", L.toFixed(2));
       }
     }
 
@@ -287,11 +291,11 @@ export function createOverlaySync(store: ExperienceStore) {
       }
     }
 
-    const overlay = dom.counter?.parentElement;
-    if (overlay) {
-      setVar(overlay, "--veil-low", veilLow.toFixed(3));
-      setVar(overlay, "--veil-top", veilTop.toFixed(3));
-    }
+    // The veils: their own opacity (pearl world only), not variables on the overlay root.
+    veils.low ??= document.querySelector<HTMLElement>("[data-veil=low]");
+    veils.top ??= document.querySelector<HTMLElement>("[data-veil=top]");
+    if (veils.low) setStyle(veils.low, "opacity", (veilLow * ink).toFixed(3));
+    if (veils.top) setStyle(veils.top, "opacity", (veilTop * ink).toFixed(3));
 
     // The narrowing count: one figure that changes only as a stage completes (360 → 120 → 36 →
     // 9; the three that remain are then named by the statement).

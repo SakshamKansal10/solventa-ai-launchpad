@@ -102,12 +102,14 @@ export function CinematicOverlay() {
         }}
       />
       {/* The pearl world's counterpart: a soft veil in the ground's own colour behind a statement,
-          only while one is on screen (--veil-low / --veil-top, written by DomSync). */}
+          only while one is on screen. Its opacity is written straight onto it by overlay-sync
+          (an inherited variable on the overlay root re-styled all 270 overlay elements). */}
       <div
         aria-hidden="true"
+        data-veil="low"
         className="absolute inset-x-0 bottom-0 h-[62%]"
         style={{
-          opacity: "calc(var(--veil-low, 0) * (1 - var(--dark, 0)))",
+          opacity: 0,
           // Only behind the type (the left of the grid): the subject on the right stays whole.
           maskImage: VEIL_MASK,
           WebkitMaskImage: VEIL_MASK,
@@ -117,9 +119,10 @@ export function CinematicOverlay() {
       />
       <div
         aria-hidden="true"
+        data-veil="top"
         className="absolute inset-x-0 top-0 h-[55%]"
         style={{
-          opacity: "calc(var(--veil-top, 0) * (1 - var(--dark, 0)))",
+          opacity: 0,
           // Only behind the type (the left of the grid): the subject on the right stays whole.
           maskImage: VEIL_MASK,
           WebkitMaskImage: VEIL_MASK,
