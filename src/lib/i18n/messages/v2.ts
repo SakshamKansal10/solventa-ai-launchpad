@@ -181,6 +181,11 @@ const en = {
   "v2.ws.learn.result": "{x} of {y} right.",
   "v2.ws.summary.title": "What you learned",
   "v2.ws.notes.prompt": "What did you produce?",
+  "v2.proof.live": "{logged} of {outOf} interviews logged · {yes} said yes",
+  "v2.proof.addedByYou": "added by you",
+  "v2.ws.int.tooNeat":
+    "Sol: these logs look very alike. Could you add one detail from each conversation — a number, a name, or something they said? It makes the result easier to trust.",
+  "v2.ws.int.tooNeatAsk": "Help me remember one concrete detail from each conversation I logged.",
 } as const;
 
 const hi: Record<keyof typeof en, string> = {
@@ -364,6 +369,12 @@ const hi: Record<keyof typeof en, string> = {
   "v2.ws.learn.result": "{y} में से {x} सही।",
   "v2.ws.summary.title": "आपने क्या सीखा",
   "v2.ws.notes.prompt": "आपने क्या बनाया या किया?",
+  "v2.proof.live": "{outOf} में से {logged} बातचीत दर्ज · {yes} ने हाँ कहा",
+  "v2.proof.addedByYou": "आपने जोड़ा",
+  "v2.ws.int.tooNeat":
+    "Sol: ये बातचीत काफ़ी मिलती-जुलती लग रही हैं। क्या आप हर बातचीत से एक बात जोड़ सकते हैं — कोई संख्या, नाम, या उन्होंने जो कहा? इससे नतीजे पर भरोसा करना आसान होगा।",
+  "v2.ws.int.tooNeatAsk":
+    "मैंने जो बातचीत दर्ज की हैं, उनमें से हर एक की एक ठोस बात याद करने में मदद करें।",
 };
 
 export default { en, hi };

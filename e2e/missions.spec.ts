@@ -73,6 +73,7 @@ test.describe("mission workspaces (part 4, feature 1)", () => {
       await expect(page.getByTestId("int-saved")).toHaveText(
         "Saved. A “No” is as useful as a “Yes”.",
       );
+      await expect(page.getByTestId("int-save")).not.toHaveAttribute("aria-busy", "true");
     }
     await expect(page.getByTestId("interview-entries").getByRole("listitem")).toHaveCount(2);
     const rows = await sql<{ n: string }>(
@@ -108,5 +109,48 @@ test.describe("mission workspaces (part 4, feature 1)", () => {
     await expect(page.getByTestId("list-count")).toContainText("2 of 2 added");
     await expect(page.getByTestId("mission-complete")).toBeEnabled();
     await expect(page.getByTestId("gate-reason")).toHaveCount(0);
+  });
+});
+
+test.describe("proof that updates itself (part 4, feature 2)", () => {
+  test("logging interviews on the checking mission settles its assumption on Proof, with the live count", async ({
+    page,
+    context,
+  }) => {
+    const { user } = await founderWithRoadmap(page, context);
+    // The interview mission asks for four conversations.
+    await sql(
+      `update roadmap_tasks set workspace_spec = workspace_spec || '{"target":4}'::jsonb,
+       done_rule = '{"metric":"interviews.count","min":4}'::jsonb
+       where user_id = $1 and order_index = 1`,
+      [user.id],
+    );
+    // Proof writes the assumptions (and links the checking mission) on first open.
+    await gotoApp(page, "/dashboard/proof");
+    await expect(page.getByTestId("assumption-card").first()).toBeVisible({ timeout: 45_000 });
+    const card = page
+      .getByTestId("assumption-card")
+      .filter({ has: page.getByTestId("rule-progress") });
+    await expect(card).toHaveCount(1);
+    await expect(card.getByTestId("rule-progress")).toContainText("0 of 4 interviews logged");
+    await expect(card).toHaveAttribute("data-status", "not_tested");
+
+    await openMission(page, 1);
+    for (const [i, person] of ["Dr Rao", "Dr Shah", "Dr Iyer"].entries()) {
+      await page.getByTestId("int-person").fill(person);
+      await page.getByTestId("int-answer-yes").check({ force: true });
+      await page.getByTestId("int-words").fill(`${person}: we lose patients to missed follow-ups.`);
+      await page.getByTestId("int-save").click();
+      await expect(page.getByTestId("interview-entries").getByRole("listitem")).toHaveCount(i + 1);
+    }
+    // Three logs saved within minutes: Sol asks, gently, for a detail from each.
+    await expect(page.getByTestId("too-neat")).toBeVisible();
+
+    await gotoApp(page, "/dashboard/proof");
+    await expect(card.getByTestId("rule-progress")).toContainText(
+      "3 of 4 interviews logged · 3 said yes",
+    );
+    await expect(card).toHaveAttribute("data-status", "supported");
+    await expect(page.getByTestId("proof-count")).toContainText("1 / ");
   });
 });

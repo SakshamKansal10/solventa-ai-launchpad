@@ -68,6 +68,7 @@ export function EvidenceDialog({
   weekId,
   editing,
   titleSupported = false,
+  addedByUser = false,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -79,6 +80,8 @@ export function EvidenceDialog({
   editing?: EvidenceDTO | null;
   /** Whether this database can store an evidence title (migration 0012). */
   titleSupported?: boolean;
+  /** "Add other proof" (outside a mission): shown as added by you, never moves a rule status. */
+  addedByUser?: boolean;
 }) {
   const { t, locale } = useLocale();
   const invalidate = useInvalidateFounder();
@@ -201,6 +204,7 @@ export function EvidenceDialog({
       }
       return addProofEvidence({
         data: {
+          ...(addedByUser ? { addedByUser: true } : {}),
           opportunityId,
           assumptionId: draft.assumptionId,
           evidenceType: draft.type,

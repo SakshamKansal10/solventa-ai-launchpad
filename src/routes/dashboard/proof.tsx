@@ -110,6 +110,8 @@ function ProofWorkspace({
   const [dialog, setDialog] = useState<{
     assumptionId: string | null;
     editing: EvidenceDTO | null;
+    /** From "Add other proof": outside any mission. */
+    outside?: boolean;
   } | null>(null);
   const [deleting, setDeleting] = useState<EvidenceDTO | null>(null);
 
@@ -178,7 +180,9 @@ function ProofWorkspace({
               <ActionButton
                 tone="secondary"
                 arrow={false}
-                onClick={() => setDialog({ assumptionId: firstOpen?.id ?? null, editing: null })}
+                onClick={() =>
+                  setDialog({ assumptionId: firstOpen?.id ?? null, editing: null, outside: true })
+                }
                 data-testid="add-evidence"
               >
                 {t("v2.proof.add")}
@@ -298,6 +302,7 @@ function ProofWorkspace({
           presetAssumptionId={dialog.assumptionId}
           editing={dialog.editing}
           titleSupported={data.titleSupported}
+          addedByUser={dialog.outside}
         />
       )}
 
@@ -364,7 +369,22 @@ function AssumptionCard({
         <Label as="p" className="!tracking-[0.06em]">
           {t("v2.proof.howCheck")}
         </Label>
-        {checkMission ? (
+        {a.rule ? (
+          // Proof that updates itself: the checking mission's live count against its rule.
+          <Link
+            to="/dashboard/roadmap/mission/$missionId"
+            params={{ missionId: a.rule.missionId }}
+            data-testid="rule-progress"
+            className="inline-flex min-h-11 flex-wrap items-center gap-2.5 text-[18px] font-medium leading-[1.3] text-sol-cobalt-deep hover:underline"
+          >
+            {t("v2.proof.live", {
+              logged: a.rule.logged,
+              outOf: a.rule.outOf,
+              yes: a.rule.matching,
+            })}
+            <Arrow />
+          </Link>
+        ) : checkMission ? (
           <MissionLink mission={checkMission} />
         ) : (
           <p className="flex min-h-11 items-center text-[18px] leading-[1.35] text-sol-secondary">
@@ -512,6 +532,11 @@ function EvidenceItem({
     >
       <div className="flex flex-wrap items-center gap-2.5">
         <SignalBadge signal={e.signal} />
+        {e.addedByUser && (
+          <span className="dash-meta font-semibold" data-testid="added-by-you">
+            {t("v2.proof.addedByYou")}
+          </span>
+        )}
         <span className="dash-meta">
           {t(`pf.type.${e.type}` as const)} · {formatDate(e.occurredOn, locale)}
           {e.sourcePerson ? ` · ${e.sourcePerson}` : ""}

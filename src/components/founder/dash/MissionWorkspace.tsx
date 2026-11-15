@@ -12,7 +12,9 @@ import {
 import type { MessageKey } from "@/lib/i18n";
 import { useLocale } from "@/lib/i18n/LocaleProvider";
 import type { EntryValue, MissionEntry } from "@/lib/missions/workspace";
+import { looksTooNeat } from "@/lib/missions/honesty";
 import { useInvalidateFounder } from "@/lib/queries";
+import { useAskSol } from "../DashboardShell";
 import { cn } from "@/lib/utils";
 import { ActionButton, Label, MistCard } from "./ui";
 
@@ -235,6 +237,7 @@ function ListRow({
 
 function InterviewsWorkspace({ taskId, ws, locked }: WsProps) {
   const { t, locale } = useLocale();
+  const ask = useAskSol();
   const { save } = useEntryMutations(taskId);
   const logs = ws.entries.filter((e) => e.kind === "interview");
   const target = ws.gate.need || 4;
@@ -449,6 +452,24 @@ function InterviewsWorkspace({ taskId, ws, locked }: WsProps) {
               </p>
             )}
           </form>
+        )}
+        {looksTooNeat(logs) && (
+          // Never an accusation, never a block: a gentle prompt from Sol.
+          <div
+            role="note"
+            className="flex flex-col items-start gap-3 rounded-[24px] bg-white p-5"
+            data-testid="too-neat"
+          >
+            <p className="dash-body text-sol-ink">{t("v2.ws.int.tooNeat")}</p>
+            <ActionButton
+              tone="secondary"
+              size="md"
+              arrow={false}
+              onClick={() => ask.open(t("v2.ws.int.tooNeatAsk"))}
+            >
+              {t("askSol.open")}
+            </ActionButton>
+          </div>
         )}
         {logs.length > 0 && (
           <ul className="flex flex-col" data-testid="interview-entries">

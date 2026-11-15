@@ -88,3 +88,9 @@ Each entry: what was ambiguous, what I chose, why.
 21. **Interview people come from the founder's own lists** as suggestions (a datalist), not a hard
     lock — a founder may have spoken to someone not yet listed; the honesty prompt (feature 2)
     covers the rest.
+22. **Which mission checks an assumption, and its rule.** The first linked mission (same
+    assumption category) with an interview workspace and a target; rule = "yes" from 60% of
+    the target (rounded up) out of the target — e.g. 3 of 4. Stored once on first read (never
+    shifts later); status derived from the logs every read.
+23. **"Too neat" prompt** fires at 3+ logs when all answers match with little detail, or the
+    logs were saved within 10 minutes. It is a note with an Ask Sol button — never a block.
