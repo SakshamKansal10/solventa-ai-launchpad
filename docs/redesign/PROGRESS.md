@@ -67,7 +67,7 @@ Blockers: `blocked.md`. Final report: `REPORT.md`.
 - [x] 7 Make it official guide (18e1e34)
 - [x] 8 weekly reminder (59d875b)
 - [x] 9 plain words (ea15552)
-- [ ] 10 drop-off admin page
+- [x] 10 drop-off admin page (21578f4)
 
 ## Part 5 — idea engine
 - [ ] plan-5.md audit
