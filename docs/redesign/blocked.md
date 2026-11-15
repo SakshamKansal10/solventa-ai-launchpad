@@ -29,3 +29,12 @@ generate one roadmap on the preview with a real key and confirm week 1 builds; i
 - **Owner action:** have each step checked (ideally by a CA), correct the text if needed, then set
   `reviewed: true` and `lastChecked: "<YYYY-MM-DD>"` on it (and on `MINOR_NOTE`). Until then the
   page shows "Being reviewed" for that step. Hindi text needs the same check.
+
+## Weekly reminder: env vars before any email is sent (part 4, feature 8)
+- **Owner action:** in Vercel (Production), set `CRON_SECRET` (any random string of 16+
+  characters; Vercel sends it to the cron) and `SUPABASE_SERVICE_ROLE_KEY` (Supabase → Project
+  Settings → API → service_role). Apply migration 0017 first. `RESEND_API_KEY` must already be set.
+- **WhatsApp (not built, as asked):** it would need a WhatsApp Business Platform account (Meta
+  Cloud API or a BSP such as Gupshup/Twilio), a verified business number, a pre-approved message
+  template (one line + one button with the mission link) in English and Hindi, a stored phone
+  number with explicit opt-in per founder, and the same cron calling the template-send API.

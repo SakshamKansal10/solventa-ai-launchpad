@@ -2,15 +2,31 @@
   "redirects": [
     {
       "source": "/:path*",
-      "has": [{ "type": "host", "value": "solventa-ai-launchpad11.vercel.app" }],
+      "has": [
+        {
+          "type": "host",
+          "value": "solventa-ai-launchpad11.vercel.app"
+        }
+      ],
       "destination": "https://solventia.in/:path*",
       "permanent": true
     },
     {
       "source": "/:path*",
-      "has": [{ "type": "host", "value": "solventa-ai-launchpad.vercel.app" }],
+      "has": [
+        {
+          "type": "host",
+          "value": "solventa-ai-launchpad.vercel.app"
+        }
+      ],
       "destination": "https://solventia.in/:path*",
       "permanent": true
+    }
+  ],
+  "crons": [
+    {
+      "path": "/api/cron/weekly-reminders",
+      "schedule": "30 3 * * *"
     }
   ]
 }

@@ -28,6 +28,7 @@ import { Route as DashboardIndexRouteImport } from './routes/dashboard/index'
 import { Route as DashboardHistoryRouteImport } from './routes/dashboard/history'
 import { Route as DashboardProofRouteImport } from './routes/dashboard/proof'
 import { Route as DashboardSettingsRouteImport } from './routes/dashboard/settings'
+import { Route as ApiCronWeeklyRemindersRouteImport } from './routes/api/cron/weekly-reminders'
 import { Route as DashboardOpportunitiesIndexRouteImport } from './routes/dashboard/opportunities/index'
 import { Route as DashboardRoadmapIndexRouteImport } from './routes/dashboard/roadmap/index'
 import { Route as DashboardRoadmapOfficialRouteImport } from './routes/dashboard/roadmap/official'
@@ -132,6 +133,11 @@ const DashboardSettingsRoute = DashboardSettingsRouteImport.update({
   path: '/settings',
   getParentRoute: () => DashboardRoute,
 } as any)
+const ApiCronWeeklyRemindersRoute = ApiCronWeeklyRemindersRouteImport.update({
+  id: '/api/cron/weekly-reminders',
+  path: '/api/cron/weekly-reminders',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const DashboardOpportunitiesIndexRoute =
   DashboardOpportunitiesIndexRouteImport.update({
     id: '/opportunities/',
@@ -200,6 +206,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/proof': typeof DashboardProofRoute
   '/dashboard/settings': typeof DashboardSettingsRoute
   '/dashboard/': typeof DashboardIndexRoute
+  '/api/cron/weekly-reminders': typeof ApiCronWeeklyRemindersRoute
   '/dashboard/roadmap/official': typeof DashboardRoadmapOfficialRoute
   '/dashboard/roadmap/building': typeof DashboardRoadmapBuildingRoute
   '/dashboard/opportunities/': typeof DashboardOpportunitiesIndexRoute
@@ -228,6 +235,7 @@ export interface FileRoutesByTo {
   '/dashboard/proof': typeof DashboardProofRoute
   '/dashboard/settings': typeof DashboardSettingsRoute
   '/dashboard': typeof DashboardIndexRoute
+  '/api/cron/weekly-reminders': typeof ApiCronWeeklyRemindersRoute
   '/dashboard/roadmap/official': typeof DashboardRoadmapOfficialRoute
   '/dashboard/roadmap/building': typeof DashboardRoadmapBuildingRoute
   '/dashboard/opportunities': typeof DashboardOpportunitiesIndexRoute
@@ -258,6 +266,7 @@ export interface FileRoutesById {
   '/dashboard/proof': typeof DashboardProofRoute
   '/dashboard/settings': typeof DashboardSettingsRoute
   '/dashboard/': typeof DashboardIndexRoute
+  '/api/cron/weekly-reminders': typeof ApiCronWeeklyRemindersRoute
   '/dashboard/roadmap/official': typeof DashboardRoadmapOfficialRoute
   '/dashboard_/roadmap/building': typeof DashboardRoadmapBuildingRoute
   '/dashboard/opportunities/': typeof DashboardOpportunitiesIndexRoute
@@ -289,6 +298,7 @@ export interface FileRouteTypes {
     | '/dashboard/proof'
     | '/dashboard/settings'
     | '/dashboard/'
+    | '/api/cron/weekly-reminders'
     | '/dashboard/roadmap/official'
     | '/dashboard/roadmap/building'
     | '/dashboard/opportunities/'
@@ -317,6 +327,7 @@ export interface FileRouteTypes {
     | '/dashboard/proof'
     | '/dashboard/settings'
     | '/dashboard'
+    | '/api/cron/weekly-reminders'
     | '/dashboard/roadmap/official'
     | '/dashboard/roadmap/building'
     | '/dashboard/opportunities'
@@ -346,6 +357,7 @@ export interface FileRouteTypes {
     | '/dashboard/proof'
     | '/dashboard/settings'
     | '/dashboard/'
+    | '/api/cron/weekly-reminders'
     | '/dashboard/roadmap/official'
     | '/dashboard_/roadmap/building'
     | '/dashboard/opportunities/'
@@ -372,6 +384,7 @@ export interface RootRouteChildren {
   SignInRoute: typeof SignInRoute
   TermsRoute: typeof TermsRoute
   AuthCallbackRoute: typeof AuthCallbackRoute
+  ApiCronWeeklyRemindersRoute: typeof ApiCronWeeklyRemindersRoute
   DashboardRoadmapBuildingRoute: typeof DashboardRoadmapBuildingRoute
   DashboardRoadmapMissionMissionIdRoute: typeof DashboardRoadmapMissionMissionIdRoute
 }
@@ -511,6 +524,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardSettingsRouteImport
       parentRoute: typeof DashboardRoute
     }
+    '/api/cron/weekly-reminders': {
+      id: '/api/cron/weekly-reminders'
+      path: '/api/cron/weekly-reminders'
+      fullPath: '/api/cron/weekly-reminders'
+      preLoaderRoute: typeof ApiCronWeeklyRemindersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/dashboard/opportunities/': {
       id: '/dashboard/opportunities/'
       path: '/opportunities'
@@ -616,6 +636,7 @@ const rootRouteChildren: RootRouteChildren = {
   SignInRoute: SignInRoute,
   TermsRoute: TermsRoute,
   AuthCallbackRoute: AuthCallbackRoute,
+  ApiCronWeeklyRemindersRoute: ApiCronWeeklyRemindersRoute,
   DashboardRoadmapBuildingRoute: DashboardRoadmapBuildingRoute,
   DashboardRoadmapMissionMissionIdRoute: DashboardRoadmapMissionMissionIdRoute,
 }

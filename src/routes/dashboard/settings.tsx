@@ -7,6 +7,7 @@ import { Check } from "lucide-react";
 import { FounderProfileSection } from "@/components/founder/settings/FounderProfileSection";
 import { PageHero } from "@/components/founder/proof/PageHero";
 import { PhotoSection } from "@/components/founder/settings/PhotoSection";
+import { ReminderSettingsSection } from "@/components/founder/dash/Reminder";
 import { Button, Card, ErrorPanel, LinkButton, PageSkeleton } from "@/components/founder/ui";
 import { Switch } from "@/components/ui/switch";
 import { signOut } from "@/lib/actions/auth";
@@ -67,6 +68,7 @@ function SettingsPage() {
         </div>
         <LanguageSection />
         <NotificationSection data={data} />
+        <ReminderSettingsSection />
         <AccountSection />
       </div>
     </div>

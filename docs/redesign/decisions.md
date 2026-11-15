@@ -139,3 +139,13 @@ Each entry: what was ambiguous, what I chose, why.
     line that is always present at the foot of the page, not a position: fixed bar.
     The current-account step links to rbi.org.in (the KYC rules banks follow): banks are not
     government sites, and the brief allows official government links only.
+31. **One weekly reminder (feature 8).** Email through the existing Resend sender (no new
+    provider, so no stop for approval). Sending needs a scheduler and a way to read every
+    founder's choice: a daily Vercel Cron (`vercel.json`, 03:30 UTC = 09:00 India) calls
+    `/api/cron/weekly-reminders`, which checks `Authorization: Bearer $CRON_SECRET` and reads with
+    a service-role client (`SUPABASE_SERVICE_ROLE_KEY`, used only there). Without both env vars
+    the route answers 503 and sends nothing. Days are India time; one send per founder per day
+    (`reminder_last_sent_at`). The email is one line and one button (the next open mission of the
+    current week, by earliest deadline) in the founder's saved language. The one-time question
+    sits on the Roadmap page until answered (yes with a day, or no thanks); Settings changes it
+    any time. Crons only run on production deployments, so nothing is sent from previews.

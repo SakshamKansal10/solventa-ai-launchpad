@@ -224,6 +224,17 @@ const en = {
   "v2.official.checked": "Last checked {date}",
   "v2.official.minorSafe": "You're under 18. Do these steps together with a parent or guardian, and confirm with a CA.",
   "v2.official.footer": "General guidance, not legal or tax advice. Confirm with a CA before you register.",
+  "v2.rem.title": "Weekly reminder",
+  "v2.rem.body": "One email a week with your next mission. Nothing else.",
+  "v2.rem.toggle": "Send me one reminder a week",
+  "v2.rem.day": "Day",
+  "v2.rem.saved": "Reminder saved.",
+  "v2.rem.off": "Reminder turned off.",
+  "v2.rem.error": "Couldn't save the reminder. Please try again.",
+  "v2.rem.ask": "Want one email a week with your next mission?",
+  "v2.rem.askNote": "You can change this any time in Settings.",
+  "v2.rem.askYes": "Remind me",
+  "v2.rem.askNo": "No thanks",
 } as const;
 
 const hi: Record<keyof typeof en, string> = {
@@ -453,6 +464,17 @@ const hi: Record<keyof typeof en, string> = {
   "v2.official.checked": "आख़िरी बार जाँचा गया: {date}",
   "v2.official.minorSafe": "आपकी उम्र 18 से कम है। ये क़दम माता-पिता या अभिभावक के साथ मिलकर उठाएँ, और किसी CA से पुष्टि करें।",
   "v2.official.footer": "यह सामान्य जानकारी है, क़ानूनी या टैक्स सलाह नहीं। रजिस्ट्रेशन से पहले किसी CA से पुष्टि करें।",
+  "v2.rem.title": "साप्ताहिक रिमाइंडर",
+  "v2.rem.body": "हफ़्ते में एक ईमेल, आपके अगले मिशन के साथ। और कुछ नहीं।",
+  "v2.rem.toggle": "मुझे हफ़्ते में एक रिमाइंडर भेजें",
+  "v2.rem.day": "दिन",
+  "v2.rem.saved": "रिमाइंडर सेव हो गया।",
+  "v2.rem.off": "रिमाइंडर बंद कर दिया गया।",
+  "v2.rem.error": "रिमाइंडर सेव नहीं हो पाया। कृपया फिर से कोशिश करें।",
+  "v2.rem.ask": "क्या आप हर हफ़्ते अपने अगले मिशन के साथ एक ईमेल चाहते हैं?",
+  "v2.rem.askNote": "आप इसे कभी भी सेटिंग्स में बदल सकते हैं।",
+  "v2.rem.askYes": "याद दिलाएँ",
+  "v2.rem.askNo": "नहीं, धन्यवाद",
 };
 
 export default { en, hi };

@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { z } from "zod";
 
 import { JourneyBlock } from "@/components/founder/dash/JourneyBlock";
+import { ReminderAsk } from "@/components/founder/dash/Reminder";
 import { nextMissionId } from "@/components/founder/dash/missions";
 import {
   ActionButton,
@@ -252,6 +253,9 @@ function RoadmapWorkspace({ roadmapId }: { roadmapId: string }) {
           ))}
         </nav>
       )}
+
+      {/* One weekly reminder (part 4, feature 8): asked once, after the roadmap is built. */}
+      <ReminderAsk />
 
       {/* Make it official (part 4, feature 7): the setup guide, open from the start; its tag
           follows the roadmap's phase. */}
