@@ -32,6 +32,7 @@ export function useScrollController(
       const s = store.state;
       const y = window.scrollY;
       s.targetProgress = sectionProgress(y, top, height, window.innerHeight);
+      s.filmBottom = top + height - y;
       // Once the section has scrolled out the stage is invisible and rendering can pause.
       const stageActive = y < top + height;
       // The ending is protected: past the section the stage scrolls away WITH the page

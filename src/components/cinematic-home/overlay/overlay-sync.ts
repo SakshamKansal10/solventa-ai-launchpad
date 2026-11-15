@@ -138,18 +138,19 @@ export function createOverlaySync(store: ExperienceStore) {
   const world = { el: null as HTMLElement | null, value: "" };
   const veils = { low: null as HTMLElement | null, top: null as HTMLElement | null };
   const shown: ShownBox[] = [];
+  const finaleCta: { el: HTMLElement | null | undefined } = { el: undefined };
 
   /** One frame at story position `p` on a stage of `width` × `height` px. */
-  const timeline = { el: null as HTMLElement | null, past: "" };
+  const timeline = { past: "" };
 
   return function sync(p: number, width: number, height: number, animate: boolean) {
     const s = store.state;
     const dom = s.dom;
     shown.length = 0;
-    // Read before any write this frame: how far the film has left the screen (0 while it
-    // plays, 1 once the footer has taken over) — the bar then carries its own identity.
-    timeline.el ??= document.querySelector<HTMLElement>("[data-testid=cinematic-timeline]");
-    const filmBottom = timeline.el ? timeline.el.getBoundingClientRect().bottom : Infinity;
+    // How far the film has left the screen (0 while it plays, 1 once the footer has taken
+    // over) — the bar then carries its own identity. From the scroll controller: the frame loop
+    // never measures the page.
+    const filmBottom = s.filmBottom;
     const pastFilm = Math.min(1, Math.max(0, (height - filmBottom) / (height * 0.12)));
     // Immersion: the navigation recedes during the deepest sequences, returns for the product.
     nav.el ??= document.querySelector<HTMLElement>("[data-testid=cinematic-nav]");
@@ -286,8 +287,9 @@ export function createOverlaySync(store: ExperienceStore) {
           el.style.setProperty("--reveal", key);
         }
         // The CTA is only focusable once it is visibly there.
-        const cta = el.querySelector<HTMLElement>("[data-testid=cinematic-cta]");
-        if (cta) setStyle(cta, "visibility", r > 0.7 ? "visible" : "hidden");
+        if (finaleCta.el === undefined)
+          finaleCta.el = el.querySelector<HTMLElement>("[data-testid=cinematic-cta]");
+        if (finaleCta.el) setStyle(finaleCta.el, "visibility", r > 0.7 ? "visible" : "hidden");
       }
     }
 

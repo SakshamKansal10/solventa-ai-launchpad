@@ -28,6 +28,9 @@ export interface ExperienceState {
   camera: { x: number; y: number; z: number; fov: number };
   /** False once the cinematic section has scrolled fully out of view. */
   stageActive: boolean;
+  /** The film section's bottom edge in viewport px — kept by the scroll controller (it knows the
+   * section's top and height), so the frame loop never measures the page. */
+  filmBottom: number;
   /** Renders one world frame (R3F advance), set while the world is on screen and compiled —
    * called from the story driver's tick so the page runs a single animation loop. */
   renderWorld: ((now: number) => void) | null;
@@ -96,6 +99,7 @@ export function createExperienceStore() {
     camera: { x: 0, y: 0, z: 0, fov: 0 },
     stageActive: true,
     renderWorld: null,
+    filmBottom: Infinity,
     atStart: true,
     ready: false,
     environment: false,
