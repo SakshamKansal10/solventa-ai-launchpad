@@ -18,6 +18,7 @@ import {
 } from "@/lib/ai/prompts/shared";
 import type { NormalizedProfile } from "@/lib/profile/normalize";
 import { fitTasksToBudget, weekHoursBudget } from "@/lib/roadmap/hours";
+import { keepWeekOneFree } from "@/lib/roadmap/week-one";
 
 /** Shared by every roadmap-generation prompt below — concrete over
  * abstract, short over long, a founder should never feel like they're
@@ -219,7 +220,7 @@ export async function generateWeekDetail(
 ): Promise<RoadmapWeekDetailPlan> {
   const priorWeekSection = context.priorWeek
     ? `\nPrevious week ("${context.priorWeek.title}") — what actually happened: completed missions: ${context.priorWeek.completedTasks.join("; ") || "nothing recorded"}. Outcome the founder reported: ${context.priorWeek.outcome ?? "not stated"}. Biggest blocker: ${context.priorWeek.blocker ?? "none named"}. Founder's own words: "${context.priorWeek.reflection ?? "none given"}". Evidence actually recorded: ${context.priorWeek.evidenceSummary ?? "none recorded"}. Assumption status: ${context.priorWeek.assumptionStates ?? "not tracked yet"}. Let this genuinely inform this week — adjust pace, address the blocker, follow the evidence (never claim evidence that was not recorded), and don't just continue a frozen plan. If the plan changes because of it, say so in adaptationNote.`
-    : "\nThis is Week 1 — nothing precedes it.";
+    : "\nThis is Week 1 — nothing precedes it. Week 1 NEVER needs money, a registration or a website: only actions that are free and done with what the founder already has (lists, conversations, observation, a simple message).";
 
   const prompt = `Founder profile:\n${formatProfileForPrompt(profile)}
 
@@ -249,6 +250,15 @@ ${WEEK_DETAIL_JSON_CONTRACT}${buildLanguageRule(locale)}`;
     purpose: "WEEK_DETAIL",
     route: "opportunity/build-roadmap",
   });
+  // Week 1 never needs money, registration or a website (part 5): checked in code, not trusted.
+  if (context.weekNumber === 1) {
+    const free = keepWeekOneFree(detail.tasks);
+    if (free.removed.length > 0)
+      console.warn(
+        `[roadmap] week 1 dropped ${free.removed.length} mission(s) needing money, registration or a website`,
+      );
+    detail.tasks = free.tasks;
+  }
   // The founder's stated time is a constraint, not a suggestion: optional work that
   // would overfill the week is dropped; required work is kept (and logged) if alone over.
   const budget = weekHoursBudget(profile);

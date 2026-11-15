@@ -31,7 +31,7 @@ const ANSWERS = {
   scale: "profitable",
   minIncomeBracket: 2,
 } as const;
-const profile = normalizeProfile(ANSWERS as Parameters<typeof normalizeProfile>[0]);
+const profile = normalizeProfile(ANSWERS as unknown as Parameters<typeof normalizeProfile>[0]);
 const brief = understand(profile);
 
 function candidate(over: Partial<Candidate> = {}): Candidate {
