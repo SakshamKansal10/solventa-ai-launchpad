@@ -70,7 +70,7 @@ Blockers: `blocked.md`. Final report: `REPORT.md`.
 - [x] 10 drop-off admin page (21578f4)
 
 ## Part 5 — idea engine
-- [ ] plan-5.md audit
+- [x] plan-5.md audit (29466d1)
 - [ ] 2 better inputs
 - [ ] 3 staged pipeline
 - [ ] 4 executable roadmaps
