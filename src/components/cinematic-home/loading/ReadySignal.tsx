@@ -2,6 +2,7 @@ import { useFrame, useThree } from "@react-three/fiber";
 import { useEffect, useRef } from "react";
 import { Vector4, type Object3D, type Texture } from "three";
 
+import { dedicateInstancedMaterials } from "../performance/dedicate-materials";
 import { useExperienceValue, type ExperienceStore } from "../scroll/experience-store";
 
 /**
@@ -33,6 +34,8 @@ export function ReadySignal({ store }: { store: ExperienceStore }) {
   useEffect(() => {
     if (!environment) return;
     let cancelled = false;
+    // Before compiling: instanced meshes get their own material copies (see dedicate-materials).
+    const undoDedicate = dedicateInstancedMaterials(scene);
     const objects: Object3D[] = [];
     const textures = new Set<Texture>();
     const collect = (value: unknown) => {
@@ -112,6 +115,7 @@ export function ReadySignal({ store }: { store: ExperienceStore }) {
     })();
     return () => {
       cancelled = true;
+      undoDedicate();
     };
   }, [environment, gl, scene, camera, store]);
 
