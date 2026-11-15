@@ -59,7 +59,7 @@ Blockers: `blocked.md`. Final report: `REPORT.md`.
 ## Part 4 — working features
 - [x] plan-4.md data model
 - [x] 1 mission workspaces + done rules (5a28c90)
-- [ ] 2 proof that updates itself
+- [x] 2 proof that updates itself (3c338b4)
 - [ ] 3 Stuck? + failed check
 - [ ] 4 scripts and message templates
 - [ ] 5 ask what is missing
