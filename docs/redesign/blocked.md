@@ -20,3 +20,12 @@ The mission schema gained 11 optional workspace fields (decisions 19). The fake 
 anything; the real API rejected an over-complex schema once (Stage 7). **Owner / next session:**
 generate one roadmap on the preview with a real key and confirm week 1 builds; if it returns
 400 INVALID_ARGUMENT, drop `quizOptions`/`quizAnswers` first (the largest), then `lesson`.
+
+## Make it official: owner review before the content shows (part 4, feature 7)
+- **What:** the four steps and the under-18 note were drafted from the official sites
+  (mca.gov.in, udyamregistration.gov.in, rbi.org.in, gst.gov.in, indiacode.nic.in) without a live
+  re-check from this environment. Every rule, fee and threshold is marked `NEEDS OWNER REVIEW` in
+  `src/content/make-official.ts` with the page to check it against.
+- **Owner action:** have each step checked (ideally by a CA), correct the text if needed, then set
+  `reviewed: true` and `lastChecked: "<YYYY-MM-DD>"` on it (and on `MINOR_NOTE`). Until then the
+  page shows "Being reviewed" for that step. Hindi text needs the same check.

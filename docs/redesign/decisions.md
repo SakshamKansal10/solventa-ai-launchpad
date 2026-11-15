@@ -128,3 +128,14 @@ Each entry: what was ambiguous, what I chose, why.
     code (estimates and sources, migration 0018): the feature commit aborted on an empty message
     and the tick commit picked up the staged files. History is not rewritten (pushed); REPORT.md
     lists 6fd2e75 as feature 6's commit.
+30. **Make it official (feature 7).** Content lives in `src/content/make-official.ts` (static,
+    typed, en + hi). A step's content shows only when `reviewed: true` and `lastChecked` is set;
+    every step ships unreviewed, so the page shows each title, its phase tag and "Being
+    reviewed". Thresholds and fees are kept out of the user text and listed in `sources` (each
+    `needsOwnerReview`, with the official page) for the owner's reviewer. Phases unlock by the
+    roadmap's fixed phase keys: structure, Udyam and the current account from `build`, GST from
+    `launch`. The under-18 note shows advice only ("do these steps with a parent or guardian,
+    confirm with a CA") until its legal wording is reviewed. "Fixed footer line" is read as a
+    line that is always present at the foot of the page, not a position: fixed bar.
+    The current-account step links to rbi.org.in (the KYC rules banks follow): banks are not
+    government sites, and the brief allows official government links only.

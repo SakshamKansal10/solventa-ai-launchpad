@@ -93,8 +93,7 @@ const en = {
   "v2.rm.title": "Your {n}-week roadmap",
   "v2.rm.earlier": "Earlier weeks",
   "v2.rm.official": "Make it official",
-  "v2.rm.officialNote":
-    "Registration, bank account and GST. Not needed yet: it opens up in the Build phase.",
+  "v2.rm.officialNote": "Registration, bank account and GST: what each needs, and when.",
   "v2.rm.officialLater": "Later",
   "v2.rm.weekLoad": "{n} missions · about {h} hours",
   "v2.rm.weekCount": "{n} missions",
@@ -212,6 +211,19 @@ const en = {
   "v2.est.tag": "Estimate",
   "v2.est.line": "Your first weeks check it.",
   "v2.est.checked": "Checked {date}",
+  "v2.official.back": "Roadmap",
+  "v2.official.lead": "Setting up a small business properly in India: how it's set up, Udyam registration, a current account and GST. Each step says when you need it.",
+  "v2.official.needed": "Needed now",
+  "v2.official.notYet": "Not needed yet",
+  "v2.official.reviewing": "Being reviewed",
+  "v2.official.reviewingNote": "We're checking this step against the official site before we show it.",
+  "v2.official.when": "When you need it",
+  "v2.official.documents": "What you need",
+  "v2.official.steps": "Steps",
+  "v2.official.open": "Open {site}",
+  "v2.official.checked": "Last checked {date}",
+  "v2.official.minorSafe": "You're under 18. Do these steps together with a parent or guardian, and confirm with a CA.",
+  "v2.official.footer": "General guidance, not legal or tax advice. Confirm with a CA before you register.",
 } as const;
 
 const hi: Record<keyof typeof en, string> = {
@@ -308,7 +320,7 @@ const hi: Record<keyof typeof en, string> = {
   "v2.rm.title": "आपका {n} हफ़्तों का रोडमैप",
   "v2.rm.earlier": "पिछले हफ़्ते",
   "v2.rm.official": "इसे आधिकारिक बनाएँ",
-  "v2.rm.officialNote": "रजिस्ट्रेशन, बैंक खाता और GST। अभी ज़रूरत नहीं: यह Build चरण में खुलेगा।",
+  "v2.rm.officialNote": "रजिस्ट्रेशन, बैंक खाता और GST: हर एक में क्या चाहिए, और कब।",
   "v2.rm.officialLater": "बाद में",
   "v2.rm.weekLoad": "{n} मिशन · लगभग {h} घंटे",
   "v2.rm.weekCount": "{n} मिशन",
@@ -428,6 +440,19 @@ const hi: Record<keyof typeof en, string> = {
   "v2.est.tag": "अनुमान",
   "v2.est.line": "आपके पहले हफ़्ते इसे जाँचेंगे।",
   "v2.est.checked": "{date} को जाँचा गया",
+  "v2.official.back": "रोडमैप",
+  "v2.official.lead": "भारत में छोटे बिज़नेस को सही तरीक़े से शुरू करना: वह किस रूप में चलेगा, उद्यम रजिस्ट्रेशन, करंट अकाउंट और GST। हर क़दम बताता है कि उसकी ज़रूरत कब है।",
+  "v2.official.needed": "अभी ज़रूरी",
+  "v2.official.notYet": "अभी ज़रूरत नहीं",
+  "v2.official.reviewing": "जाँच जारी है",
+  "v2.official.reviewingNote": "दिखाने से पहले हम इस क़दम को आधिकारिक साइट से मिलाकर जाँच रहे हैं।",
+  "v2.official.when": "कब ज़रूरत है",
+  "v2.official.documents": "क्या चाहिए",
+  "v2.official.steps": "क़दम",
+  "v2.official.open": "{site} खोलें",
+  "v2.official.checked": "आख़िरी बार जाँचा गया: {date}",
+  "v2.official.minorSafe": "आपकी उम्र 18 से कम है। ये क़दम माता-पिता या अभिभावक के साथ मिलकर उठाएँ, और किसी CA से पुष्टि करें।",
+  "v2.official.footer": "यह सामान्य जानकारी है, क़ानूनी या टैक्स सलाह नहीं। रजिस्ट्रेशन से पहले किसी CA से पुष्टि करें।",
 };
 
 export default { en, hi };

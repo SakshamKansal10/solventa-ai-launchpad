@@ -15,10 +15,12 @@ import {
   DashPage,
   DashSkeleton,
   Label,
+  LinkRow,
   MistCard,
   QuietRow,
   Tag,
 } from "@/components/founder/dash/ui";
+import { isStepNeeded, OFFICIAL_STEPS, type PhaseKey } from "@/content/make-official";
 import { ReviewWeekDialog } from "@/components/founder/roadmap/ReviewWeekDialog";
 import { useRoadmapText } from "@/components/founder/roadmap/text";
 import { getRoadmapView, retryWeek, type CloseWeekResult } from "@/lib/actions/roadmap";
@@ -147,6 +149,9 @@ function RoadmapWorkspace({ roadmapId }: { roadmapId: string }) {
   });
   const view = query.data ?? null;
   const currentWeek = view?.weeks.find((w) => w.id === view.currentWeekId) ?? null;
+  const phaseKey = (view?.phases.find((p) => p.id === view.currentPhaseId)?.key ??
+    null) as PhaseKey | null;
+  const officialNeeded = OFFICIAL_STEPS.some((s) => isStepNeeded(s, phaseKey));
   const shownWeek =
     (search.week ? view?.weeks.find((w) => w.number === search.week) : null) ??
     currentWeek ??
@@ -248,16 +253,19 @@ function RoadmapWorkspace({ roadmapId }: { roadmapId: string }) {
         </nav>
       )}
 
-      {/* TODO(task 4, "Make it official"): this row opens the setup guide once it exists. */}
-      <QuietRow data-testid="make-official">
-        <span className="flex min-w-0 flex-col gap-1">
-          <span className="font-display text-[clamp(22px,2.2vw,28px)] font-medium tracking-[-0.015em] text-sol-ink">
-            {t("v2.rm.official")}
-          </span>
-          <span className="text-[17px] text-sol-secondary">{t("v2.rm.officialNote")}</span>
-        </span>
-        <Tag>{t("v2.rm.officialLater")}</Tag>
-      </QuietRow>
+      {/* Make it official (part 4, feature 7): the setup guide, open from the start; its tag
+          follows the roadmap's phase. */}
+      <LinkRow
+        to="/dashboard/roadmap/official"
+        title={t("v2.rm.official")}
+        note={t("v2.rm.officialNote")}
+        tag={
+          <Tag tone={officialNeeded ? "ink" : "outline"}>
+            {officialNeeded ? t("v2.official.needed") : t("v2.official.notYet")}
+          </Tag>
+        }
+        data-testid="make-official"
+      />
 
       {isCurrent && shownWeek?.state === "ready_to_close" && (
         <ReviewWeekDialog
