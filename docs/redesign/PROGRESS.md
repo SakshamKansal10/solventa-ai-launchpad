@@ -74,7 +74,7 @@ Blockers: `blocked.md`. Final report: `REPORT.md`.
 - [x] 2 better inputs (361dad0)
 - [x] 3 staged pipeline (b87504b)
 - [x] 4 executable roadmaps (639076c)
-- [ ] 5 reliability
+- [x] 5 reliability (c0361a4)
 - [ ] 6 10-profile comparison + command
 
 ## Owner follow-up (2026-11-15) — in this order
