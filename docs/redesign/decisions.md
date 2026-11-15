@@ -124,3 +124,7 @@ Each entry: what was ambiguous, what I chose, why.
     direction's estimated starting cost or hours). Cited-search claims are `sourced` only with a
     URL (`opportunity_evidence.kind`, migration 0018) and show the link and the date checked
     (`retrieved_at`); one without a URL is an estimate and tagged. Admin flag renumbered 0019.
+29. **Commit 6fd2e75** ("docs(redesign): tick part 4 feature 6") contains all of feature 6's
+    code (estimates and sources, migration 0018): the feature commit aborted on an empty message
+    and the tick commit picked up the staged files. History is not rewritten (pushed); REPORT.md
+    lists 6fd2e75 as feature 6's commit.
