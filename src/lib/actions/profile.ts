@@ -3,6 +3,8 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 
 import { requireUser } from "@/lib/supabase/server";
+import { runEngineV2, type EngineNotes } from "@/lib/engine/pipeline.server";
+import { env } from "@/lib/env.server";
 import { DIRECTION_NUMBER_KIND } from "@/lib/market/number-kind";
 import { normalizeProfile, type NormalizedProfile } from "@/lib/profile/normalize";
 import { assessFit, fitSortScore } from "@/lib/fit/model";
@@ -105,8 +107,17 @@ export const completeConsultation = createServerFn({ method: "POST" })
 
     const overallStart = Date.now();
     let pkg: Awaited<ReturnType<typeof generateIntelligencePackage>>;
+    // Idea engine v2 (part 5): the staged pipeline, behind IDEA_ENGINE=v2 until the owner
+    // switches it on after reading the comparison (docs/redesign/engine-compare.md).
+    let engineNotes: EngineNotes[] | null = null;
     try {
-      pkg = await generateIntelligencePackage(normalized, ambition, data.locale ?? "en");
+      if (env.IDEA_ENGINE === "v2") {
+        const run = await runEngineV2(normalized, data.locale ?? "en");
+        pkg = run.pkg;
+        engineNotes = run.notes;
+      } else {
+        pkg = await generateIntelligencePackage(normalized, ambition, data.locale ?? "en");
+      }
     } catch (err) {
       // Dev-diagnostic detail only — the category never reaches the user,
       // who always sees the same calm "couldn't complete your analysis"
@@ -232,7 +243,11 @@ export const completeConsultation = createServerFn({ method: "POST" })
             fit_score: score.score ?? 0,
             score_breakdown: score as unknown as Json,
             // A direction's numbers are estimates by construction (part 4, feature 6).
-            candidate: { ...opp, numberKind: DIRECTION_NUMBER_KIND } as unknown as Json,
+            candidate: {
+              ...opp,
+              numberKind: DIRECTION_NUMBER_KIND,
+              ...(engineNotes?.[originalIndex] ? { engine: engineNotes[originalIndex] } : {}),
+            } as unknown as Json,
             status: "active",
             batch_number: 1,
             ai_model: MODEL,

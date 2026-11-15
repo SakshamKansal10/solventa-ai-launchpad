@@ -41,6 +41,9 @@ const fieldSchemas = {
    * somewhere sane when unset locally. */
   SITE_URL: z.string().url().default("http://localhost:8080"),
   RESEND_API_KEY: z.string().min(1).optional(),
+  /** Which idea engine a consultation runs: v1 = one call (today), v2 = the staged pipeline
+   * (part 5). v1 until the owner switches it after reading the comparison. */
+  IDEA_ENGINE: z.enum(["v1", "v2"]).default("v1"),
   /** Scheduled jobs only (the weekly reminder cron): bypasses RLS. Unset = no reminders sent. */
   SUPABASE_SERVICE_ROLE_KEY: z.string().min(1).optional(),
   /** Vercel Cron sends it as a bearer token; the cron route refuses any other caller. */
@@ -112,6 +115,9 @@ export const env = {
   },
   get RESEND_API_KEY() {
     return readField("RESEND_API_KEY");
+  },
+  get IDEA_ENGINE() {
+    return readField("IDEA_ENGINE");
   },
   get SUPABASE_SERVICE_ROLE_KEY() {
     return readField("SUPABASE_SERVICE_ROLE_KEY");

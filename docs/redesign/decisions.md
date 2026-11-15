@@ -208,3 +208,16 @@ Each entry: what was ambiguous, what I chose, why.
     (skills, access, assets, money, hours, place, travel, goal, limits, age, languages). Every
     new answer is normalised and passed to the engine; empty is written as UNKNOWN. Answers that
     contradict each other are named on the consultation's last step with a jump back to fix them.
+38. **Idea engine v2 (part 5 step 3).** Staged, behind `IDEA_ENGINE=v2` (default v1 until the
+    owner reads the comparison): understand (code) → 24 candidates across five types + the
+    founder synthesis (1 call) → hard-limit filter in code (affordable loss, hours ×1.25, age,
+    licence under 18, travel) → fit from `assessFit` with the profile answer behind each
+    dimension (none = "Not known yet") → money in code (price × volume × margin vs the income
+    target; hours from volume × hours per unit) → attack the best 7 (1 call; fatal ones drop, the
+    strongest surviving objection becomes the first assumption and test) → choose up to three,
+    one per type first, never a weak fit or over-hours numbers → expand with the existing
+    direction writer told exactly which directions to write (1 call). 3 calls instead of 1.
+    Fewer than three is returned as is; none is an error naming what is unknown. Each direction
+    stores its engine notes (money check, evidence, objection) in `candidate.engine`. Per-
+    consultation grounding (Search) was not added: it stays on demand from Market (cost per
+    consultation would triple again); measured cost/time in engine-compare.md.

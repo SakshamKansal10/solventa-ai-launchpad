@@ -166,7 +166,10 @@ export type GeminiCallPurpose =
   | "EVIDENCE_INTERPRETATION"
   | "CONTENT_TRANSLATION"
   | "OPPORTUNITY_IMAGE"
-  | "LEGACY_FALLBACK";
+  | "LEGACY_FALLBACK"
+  | "ENGINE_WIDE"
+  | "ENGINE_ATTACK"
+  | "ENGINE_EXPAND";
 
 type ThinkingLevel = "minimal" | "low" | "medium" | "high";
 
