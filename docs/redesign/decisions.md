@@ -55,3 +55,18 @@ Each entry: what was ambiguous, what I chose, why.
     turn sound on. The toggle is now a visible icon button in the bar (WebGL visits only). The
     two sound e2e tests were updated to the new behaviour.
 12. **will-change** left as is: it sits only on the few overlay layers that move every frame.
+
+## Part 2b — cinematic performance (owner follow-up)
+13. **Tier rules.** full = dedicated graphics (or Apple silicon) with ≥ 8 cores and ≥ 8 GB;
+    unknown counts are not a demotion. Everything else that passes the still-version gates gets
+    lite (integrated graphics, < 8 cores, < 8 GB, touch screens, data saver). `data-mode` reads
+    full | lite | fallback; old `?tier=high|medium|low` links map to full/full/lite.
+14. **Lite budget.** Pixel ratio ≤ 1, no MSAA, standard materials (glass and smoked included),
+    84 universe instances, 420 × 12 filaments, 32 core / 24 gate segments. Same scenes, camera
+    and layout.
+15. **Adaptive rule kept exactly as specified** (median of ~2 s windows, > 20 ms steps down, at
+    most twice). On the Vega 3 it does not step (the opening's median is 16.7 ms); proposal A in
+    part2-perf.md asks the owner whether to sample while the story moves instead.
+16. **`?perf=1` and `?notch=N`** are measurement aids only (counters without the HUD; a pinned
+    notch). They change nothing for visitors.
+17. **No scene content was cut.** Cuts are proposed with numbers in part2-perf.md.
