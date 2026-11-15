@@ -1,4 +1,5 @@
 import { useFrame, useThree } from "@react-three/fiber";
+import { markStage } from "../performance/marks";
 import { useEffect, useMemo, useRef } from "react";
 import {
   BackSide,
@@ -104,6 +105,7 @@ export function Atmosphere() {
       .catch(() => undefined)
       .finally(() => {
         if (cancelled) return;
+        markStage("environment", { programs: gl.info.programs?.length ?? 0 });
         store.state.environment = true;
         store.emit();
       });

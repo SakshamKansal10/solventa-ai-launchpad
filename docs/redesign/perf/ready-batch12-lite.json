@@ -1,0 +1,111 @@
+{
+  "label": "batch12-lite",
+  "tier": "lite",
+  "runs": 3,
+  "intro": false,
+  "at": "2026-11-15T12:28:34.788Z",
+  "summary": {
+    "broadband": {
+      "runs": 3,
+      "notReady": 0,
+      "fcp": 624,
+      "bundle-loaded": 1133,
+      "bundle-loadedΔ": 1133,
+      "canvas-created": 1774,
+      "canvas-createdΔ": 641,
+      "environment": 1857,
+      "environmentΔ": 83,
+      "shaders": 2724,
+      "shadersΔ": 867,
+      "textures": 2757,
+      "texturesΔ": 33,
+      "geometry": 3807,
+      "geometryΔ": 1050,
+      "ready": 3843,
+      "readyΔ": 36,
+      "bundleStart": 1037
+    }
+  },
+  "results": {
+    "broadband": [
+      {
+        "ok": true,
+        "wallMs": 8082,
+        "marks": {
+          "bundle-start": 1740,
+          "bundle-loaded": 1839,
+          "canvas-created": 3059,
+          "environment": 4165,
+          "shaders": 7338,
+          "textures": 7371,
+          "geometry": 7688,
+          "ready": 7726
+        },
+        "details": {
+          "shaders": {
+            "programs": 31,
+            "objects": 170
+          },
+          "geometry": {
+            "groups": 19
+          }
+        },
+        "fcp": 1672,
+        "domContentLoaded": 564,
+        "mode": "lite"
+      },
+      {
+        "ok": true,
+        "wallMs": 4211,
+        "marks": {
+          "bundle-start": 1037,
+          "bundle-loaded": 1133,
+          "canvas-created": 1774,
+          "environment": 1857,
+          "shaders": 2724,
+          "textures": 2757,
+          "geometry": 3807,
+          "ready": 3843
+        },
+        "details": {
+          "shaders": {
+            "programs": 31,
+            "objects": 170
+          },
+          "geometry": {
+            "groups": 19
+          }
+        },
+        "fcp": 624,
+        "domContentLoaded": 257,
+        "mode": "lite"
+      },
+      {
+        "ok": true,
+        "wallMs": 2799,
+        "marks": {
+          "bundle-start": 989,
+          "bundle-loaded": 1083,
+          "canvas-created": 1704,
+          "environment": 1787,
+          "shaders": 2108,
+          "textures": 2142,
+          "geometry": 2458,
+          "ready": 2502
+        },
+        "details": {
+          "shaders": {
+            "programs": 31,
+            "objects": 170
+          },
+          "geometry": {
+            "groups": 19
+          }
+        },
+        "fcp": 576,
+        "domContentLoaded": 236,
+        "mode": "lite"
+      }
+    ]
+  }
+}

@@ -178,3 +178,10 @@ Each entry: what was ambiguous, what I chose, why.
     awakening caption; shown only when there is a choice). No consultation field matches
     "stage" (status is occupation, not where they are with an idea), so nothing is pre-filled.
     The capital-question idea is dropped. The film's own copy is English-only, as before.
+34. **3D ready faster (owner step 2).** Shader batches of 6 (not 1 per frame), a stand-in
+    environment so world programs compile while PMREM builds, geometry warm-up 3 groups per
+    frame, and a <head> preload of the 3D bundle (server-only `ReactDOM.preload` with a media
+    query matching who gets the film; the chunk name comes from a Vite plugin). Measured on
+    fresh browsers (cold GPU cache) because same-browser runs flatter first visits by seconds.
+    Cold broadband is 6.9 s: inside the 8 s lockup rule, not inside the opening; the remaining
+    levers are listed in part2-perf.md 2d and left to the owner.

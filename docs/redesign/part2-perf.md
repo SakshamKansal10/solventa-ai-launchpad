@@ -175,3 +175,62 @@ candidates, in order: (a) his screen narrower than 768px or fewer than 4 cores /
 version by design (part 2); (b) MSAA off on lite makes 1px filaments shimmer and partly vanish,
 more so if the governor stepped to pixel ratio 0.65; (c) an older preview. Recorded in
 blocked.md with what the owner can send to settle it.
+
+## 2d — Time to `data-ready` (owner follow-up, step 2; 2026-11-15)
+Tool: `scripts/film-ready.mjs` on a local production build, lite tier, 1440×900, headed Chrome on
+this machine (Vega 3 class). Stages come from User Timing marks the app sets (`cine:*`,
+`performance/marks.ts`). Conditions: broadband 40/10 Mbps 20 ms; Fast 4G 9/1.5 Mbps 150 ms;
+4× CPU on broadband. Files: `perf/ready-*.json`.
+
+**Method matters.** Runs inside one browser reuse compiled GPU programs, so after the first run
+they read seconds faster than a real first visit. The final numbers use a fresh browser and
+profile per run (cold HTTP cache and cold GPU shader cache, like a first visitor).
+
+| Ready (median, s) | Broadband | Fast 4G | 4× CPU |
+|---|---|---|---|
+| Before — same browser (first, cold run in brackets) | 8.7 [11.1] | 8.5 | 7.8 |
+| After batching + head preload — same browser | 4.2 [8.6] | 5.9 | 7.0 |
+| **Final — fresh browser every run (true first visit)** | **6.9** | **9.3** | **9.9** |
+| Final without the stand-in precompile (same method) | 8.4 | 10.0 | 11.6 |
+
+Final, broadband, by stage (cold): first paint 1.8 · 3D bundle loaded 2.0 · canvas +0.8 ·
+environment +1.4 · shaders +2.6 · textures +0.03 · geometry +0.1 → ready 6.9. Before, shaders
+alone were 5.8 s (median), geometry 1.0–1.2 s, and the bundle started downloading only after
+hydration (1.0 s broadband, 2.6 s Fast 4G) and arrived 0.5–1.9 s later.
+
+What changed (all in `loading/ReadySignal.tsx`, `CinematicHome.tsx`, `vite.config.ts`):
+1. **Shaders compile in batches** (6 new programs, then one painted frame) instead of one per
+   frame: the driver links a batch in parallel (KHR_parallel_shader_compile via
+   `renderer.compileAsync`) and the page still paints between batches. 31 programs, 170 objects.
+2. **The environment off the critical path:** world programs depend on the environment only by
+   its kind and size (CubeUV, 1024 high), so they compile against a stand-in of that shape while
+   PMREM builds the real one; the main pass then finds them compiled and waits for any still in
+   flight before it draws. Measured cold: shaders after the environment 3.4–4.2 s → 2.4–2.7 s.
+3. **Geometry warm-up spread three groups per frame** (19 groups): 1.0–1.2 s → 0.1–0.9 s.
+4. **The 3D bundle is preloaded from the first HTML:** a small Vite plugin records the
+   CinematicCanvas chunk at client-build time; the server render calls
+   `ReactDOM.preload(…, { as: "script", media })`, so `<link rel="preload">` is in `<head>` —
+   only for screens that can get the film (≥768 px, motion allowed), so phones download nothing.
+   The bundle now arrives ~0.1 s after it is asked for.
+5. **Textures** were already off the path (0.03 s). There are no large binary assets in the film
+   (the world is procedural, no textures or models are fetched); the 3D chunk is 1.0 MB of JS,
+   served compressed — nothing further to compress without splitting three.js.
+
+**Target ("ready within the 3–4 s opening on broadband"): met for a warm GPU cache (3.8–4.2 s),
+not for a truly cold first visit (6.9 s).** With the opening, the lockup forms at ~4.1 s (tap at
+1.5 s) to ~5.6 s (no tap), so a cold first visit on broadband holds ~1.3–2.8 s at the lockup;
+Fast 4G / 4× CPU hold ~4–5.5 s; all well inside the 8 s still-version rule. Remaining levers,
+not done (each changes something the owner may care about): (a) a pre-baked environment image
+instead of building PMREM in the browser (−1.4 s cold; a ~300 KB download and a small
+precision change in reflections); (b) fewer distinct programs by consolidating materials
+(31 → ~20; visual review needed); (c) evaluating three.js earlier than hydration (would delay
+the opening's first tap).
+
+## Step 4 — the S-mark scene (2026-11-15)
+After `data-ready`, the Intelligence Core (the 3D S) assembles in "Core awakening" on lite and
+full: `perf/scenes/smark-{lite,full}-{0.25,0.6}.png` (upper channel in and the lower one
+tracing at 0.25; the whole S at 0.6). Its code was last changed before the redesign (339d713);
+no commit lost it. When it was missed, the visitor had scrolled past "Core awakening" before
+the world was ready — the film runs on the overlay and the world joins later, after the S's
+moment. The new opening holds the lockup until the world is ready (≤ 8 s), so a first visit
+can no longer pass the S before it exists.

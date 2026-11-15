@@ -1,4 +1,6 @@
 import { useReducedMotion } from "motion/react";
+import { preload } from "react-dom";
+import CINEMATIC_PRELOAD from "virtual:cinematic-preload";
 import {
   Component,
   lazy,
@@ -24,6 +26,7 @@ import { IntroQuestion } from "./intro/IntroQuestion";
 import { CinematicOverlay } from "./overlay/CinematicOverlay";
 import { Narrative } from "./overlay/Narrative";
 import { ProductLayer } from "./overlay/ProductLayer";
+import { markStage } from "./performance/marks";
 import { QUALITY_PRESETS } from "./performance/quality";
 import {
   createExperienceStore,
@@ -39,7 +42,14 @@ import { PEARL_WORLD } from "./world/tone";
 // three.js + React Three Fiber load only in the browser, after hydration, and
 // only for devices that get the WebGL experience. The HUD is dev tooling.
 let canvasChunk: Promise<typeof import("./scene/CinematicCanvas")> | null = null;
-const loadCanvas = () => (canvasChunk ??= import("./scene/CinematicCanvas"));
+const loadCanvas = () => {
+  if (!canvasChunk) {
+    markStage("bundle-start");
+    canvasChunk = import("./scene/CinematicCanvas");
+    canvasChunk.then(() => markStage("bundle-loaded")).catch(() => undefined);
+  }
+  return canvasChunk;
+};
 const CinematicCanvas = lazy(loadCanvas);
 
 // The 3D bundle starts downloading the moment this module runs in the browser — while the opening
@@ -54,6 +64,9 @@ if (
   loadCanvas().catch(() => undefined);
 }
 const DebugHud = lazy(() => import("./debug/DebugHud"));
+
+/** Who can get the film (see classifyDevice): only they download the 3D bundle early. */
+const FILM_MEDIA = "(min-width: 768px) and (prefers-reduced-motion: no-preference)";
 
 const HIDE_SCROLLBAR =
   "html,body{scrollbar-width:none}html::-webkit-scrollbar,body::-webkit-scrollbar{display:none}";
@@ -108,6 +121,10 @@ export function CinematicHome({
   /** Deterministic frames (no ambient motion, no smoothing) for review and tests. */
   freeze?: boolean;
 }) {
+  // Server render: <link rel="preload"> for the 3D bundle in <head>, so it downloads alongside
+  // the page itself (the list is empty on the client — see cinematicPreload in vite.config.ts).
+  for (const href of CINEMATIC_PRELOAD)
+    preload(href, { as: "script", crossOrigin: "anonymous", media: FILM_MEDIA });
   const [store] = useState(createExperienceStore);
   const sectionRef = useRef<HTMLElement>(null);
   const stageRef = useRef<HTMLDivElement>(null);

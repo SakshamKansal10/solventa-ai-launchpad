@@ -1,4 +1,5 @@
 import { Canvas } from "@react-three/fiber";
+import { markStage } from "../performance/marks";
 
 import { BASE_FOV } from "../camera/camera-path";
 import { notchDpr, type QualityPreset } from "../performance/quality";
@@ -54,6 +55,7 @@ export default function CinematicCanvas({
       // a short resize debounce avoids reallocating buffers mid-drag.
       resize={{ scroll: false, debounce: { scroll: 0, resize: 120 } }}
       onCreated={({ gl }) => {
+        markStage("canvas-created");
         // Leaving the page never waits on the GPU. R3F releases the context as the stage
         // unmounts — inside the navigation itself — and losing a context blocks until the GPU
         // has finished what it is still doing: while the world was still compiling its shaders,
