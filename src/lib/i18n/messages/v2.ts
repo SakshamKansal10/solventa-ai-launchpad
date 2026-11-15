@@ -123,6 +123,21 @@ const en = {
   "v2.proof.status.supported": "Supported",
   "v2.proof.status.contradicted": "Not supported",
   "v2.proof.status.inconclusive": "Unclear",
+  "v2.proof.title": "What has to be true.",
+  "v2.proof.lead":
+    "{n} things decide whether this direction works. Each one fills in as you record what your missions found.",
+  "v2.proof.continue": "Continue this week's missions",
+  "v2.proof.toDirection": "Back to your direction",
+  "v2.proof.add": "Add other proof",
+  "v2.proof.howCheck": "How you check it",
+  "v2.proof.laterMission": "A later mission checks this.",
+  "v2.proof.show": "See what you recorded ({n})",
+  "v2.proof.hide": "Hide what you recorded",
+  "v2.proof.record": "Record proof",
+  "v2.proof.fails.title": "If a check fails",
+  "v2.proof.fails.body":
+    "That is a result, not a failure. You get two choices: adjust this direction, or switch to another one without losing your work.",
+  "v2.building.arc": "Your roadmap is being drawn.",
 } as const;
 
 const hi: Record<keyof typeof en, string> = {
@@ -248,6 +263,21 @@ const hi: Record<keyof typeof en, string> = {
   "v2.proof.status.supported": "सही निकला",
   "v2.proof.status.contradicted": "सही नहीं निकला",
   "v2.proof.status.inconclusive": "साफ़ नहीं",
+  "v2.proof.title": "क्या सच होना चाहिए।",
+  "v2.proof.lead":
+    "{n} बातें तय करती हैं कि यह दिशा चलेगी या नहीं। आपके मिशन जो पाते हैं, उसे दर्ज करते ही हर एक भरती जाती है।",
+  "v2.proof.continue": "इस हफ़्ते के मिशन जारी रखें",
+  "v2.proof.toDirection": "अपनी दिशा पर वापस",
+  "v2.proof.add": "दूसरा सबूत जोड़ें",
+  "v2.proof.howCheck": "आप इसे कैसे जाँचते हैं",
+  "v2.proof.laterMission": "बाद का कोई मिशन इसे जाँचेगा।",
+  "v2.proof.show": "आपने जो दर्ज किया, देखें ({n})",
+  "v2.proof.hide": "दर्ज की गई बातें छिपाएँ",
+  "v2.proof.record": "सबूत दर्ज करें",
+  "v2.proof.fails.title": "अगर कोई जाँच नाकाम हो",
+  "v2.proof.fails.body":
+    "यह एक नतीजा है, नाकामी नहीं। आपके पास दो रास्ते होंगे: इस दिशा को बदलें, या अपना काम खोए बिना दूसरी दिशा चुनें।",
+  "v2.building.arc": "आपका रोडमैप बन रहा है।",
 };
 
 export default { en, hi };

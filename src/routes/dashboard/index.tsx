@@ -6,6 +6,7 @@ import { z } from "zod";
 
 import { FitSummaryCard } from "@/components/founder/dash/FitBar";
 import { JourneyBlock } from "@/components/founder/dash/JourneyBlock";
+import { isProofChecked } from "@/components/founder/dash/missions";
 import { NextSteps } from "@/components/founder/dash/NextSteps";
 import {
   ActionButton,
@@ -472,8 +473,9 @@ function MissionHero({
         {why && <p className="dash-lead max-w-[32em]">{why}</p>}
         <div className="flex flex-wrap items-center gap-3.5">
           <ActionLink
-            to="/dashboard/roadmap"
-            search={{ week: weekNumber, mission: mission.id }}
+            to="/dashboard/roadmap/mission/$missionId"
+            params={{ missionId: mission.id }}
+            search={mission.state === "not_started" ? { start: true } : {}}
             data-testid="start-mission"
           >
             {mission.state === "in_progress" ? t("v2.today.continue") : t("v2.today.start")}
@@ -502,7 +504,7 @@ function MissionHero({
 function ProofSoFar({ opportunityId }: { opportunityId: string }) {
   const { t } = useLocale();
   const { assumptions, overview } = useEvidenceWorkspace(opportunityId);
-  const checked = assumptions.filter((a) => a.status !== "not_tested").length;
+  const checked = assumptions.filter((a) => isProofChecked(a.status)).length;
   return (
     <MistCard
       className="flex-row flex-wrap items-end justify-between gap-6"

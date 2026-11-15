@@ -15,6 +15,7 @@ interface Finding {
   impact: string | null | undefined;
   nodes: number;
   sample: string;
+  detail?: string;
 }
 
 async function audit(page: Page, label: string): Promise<Finding[]> {
@@ -38,6 +39,8 @@ async function audit(page: Page, label: string): Promise<Finding[]> {
       impact: v.impact,
       nodes: v.nodes.length,
       sample: v.nodes[0]?.html.slice(0, 140) ?? "",
+      // axe's own measurement (colours and ratio), so a failure says what to fix.
+      detail: v.nodes[0]?.any[0]?.message?.slice(0, 200) ?? "",
     }));
 }
 
@@ -80,11 +83,11 @@ test.describe("accessibility (WCAG 2.1 A/AA, serious and critical only)", () => 
     await page.waitForLoadState("networkidle");
     findings.push(...(await audit(page, "command-center A")));
 
-    // The side-by-side fit table (3 directions × 5 factors) lives on Opportunities.
+    // Directions: one card per direction, each with its five-segment fit bar.
     await gotoApp(page, "/dashboard/opportunities");
-    await expect(page.getByTestId("direction-compare")).toBeVisible();
-    await expect(page.getByTestId("direction-compare").locator("[data-status]")).toHaveCount(15);
-    findings.push(...(await audit(page, "opportunities compare")));
+    await expect(page.getByTestId("fit-bar")).toHaveCount(3);
+    await expect(page.getByTestId("fit-bar").first().locator("[data-kind]")).toHaveCount(5);
+    findings.push(...(await audit(page, "directions")));
     await gotoApp(page, "/dashboard");
 
     // State B: the dark build surface, then on to the roadmap.
@@ -105,11 +108,9 @@ test.describe("accessibility (WCAG 2.1 A/AA, serious and critical only)", () => 
       "/dashboard",
       "/dashboard/opportunities",
       `/dashboard/opportunities/${seeded.opportunityIds[0]}`,
-      `/dashboard/opportunities/${seeded.opportunityIds[0]}?tab=fit`,
-      `/dashboard/opportunities/${seeded.opportunityIds[0]}?tab=market`,
+      `/dashboard/opportunities/${seeded.opportunityIds[0]}/fit`,
+      `/dashboard/opportunities/${seeded.opportunityIds[0]}/market`,
       "/dashboard/roadmap",
-      "/dashboard/roadmap?tab=plan",
-      "/dashboard/roadmap?tab=progress",
       "/dashboard/proof",
       "/dashboard/history",
       "/dashboard/settings",
@@ -118,6 +119,12 @@ test.describe("accessibility (WCAG 2.1 A/AA, serious and critical only)", () => 
       await page.waitForLoadState("networkidle");
       findings.push(...(await audit(page, route)));
     }
+    // A mission page (chrome-free).
+    await gotoApp(page, "/dashboard/roadmap");
+    await page.getByTestId("mission-open").first().click();
+    await expect(page.getByTestId("mission-page")).toBeVisible();
+    await page.waitForLoadState("networkidle");
+    findings.push(...(await audit(page, "mission page")));
     expect(findings, JSON.stringify(findings, null, 2)).toEqual([]);
   });
 
@@ -137,8 +144,9 @@ test.describe("accessibility (WCAG 2.1 A/AA, serious and critical only)", () => 
     findings.push(...(await audit(page, "notifications")));
     await page.keyboard.press("Escape");
 
-    await page.getByTestId("mission-card").nth(1).getByTestId("mission-toggle").click();
-    findings.push(...(await audit(page, "mission details")));
+    await page.getByTestId("mission-card").nth(1).getByTestId("mission-open").click();
+    await expect(page.getByTestId("mission-page")).toBeVisible();
+    findings.push(...(await audit(page, "mission page")));
 
     await gotoApp(page, "/dashboard/settings");
     await page.getByTestId("edit-location").click();

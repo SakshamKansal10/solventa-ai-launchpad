@@ -34,6 +34,7 @@ import { Route as DashboardRoadmapBuildingRouteImport } from './routes/dashboard
 import { Route as DashboardOpportunitiesIdIndexRouteImport } from './routes/dashboard/opportunities/$id/index'
 import { Route as DashboardOpportunitiesIdFitRouteImport } from './routes/dashboard/opportunities/$id/fit'
 import { Route as DashboardOpportunitiesIdMarketRouteImport } from './routes/dashboard/opportunities/$id/market'
+import { Route as DashboardRoadmapMissionMissionIdRouteImport } from './routes/dashboard_/roadmap/mission.$missionId'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -165,6 +166,12 @@ const DashboardOpportunitiesIdMarketRoute =
     path: '/opportunities/$id/market',
     getParentRoute: () => DashboardRoute,
   } as any)
+const DashboardRoadmapMissionMissionIdRoute =
+  DashboardRoadmapMissionMissionIdRouteImport.update({
+    id: '/dashboard_/roadmap/mission/$missionId',
+    path: '/dashboard/roadmap/mission/$missionId',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -191,6 +198,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/roadmap/': typeof DashboardRoadmapIndexRoute
   '/dashboard/opportunities/$id/fit': typeof DashboardOpportunitiesIdFitRoute
   '/dashboard/opportunities/$id/market': typeof DashboardOpportunitiesIdMarketRoute
+  '/dashboard/roadmap/mission/$missionId': typeof DashboardRoadmapMissionMissionIdRoute
   '/dashboard/opportunities/$id/': typeof DashboardOpportunitiesIdIndexRoute
 }
 export interface FileRoutesByTo {
@@ -217,6 +225,7 @@ export interface FileRoutesByTo {
   '/dashboard/roadmap': typeof DashboardRoadmapIndexRoute
   '/dashboard/opportunities/$id/fit': typeof DashboardOpportunitiesIdFitRoute
   '/dashboard/opportunities/$id/market': typeof DashboardOpportunitiesIdMarketRoute
+  '/dashboard/roadmap/mission/$missionId': typeof DashboardRoadmapMissionMissionIdRoute
   '/dashboard/opportunities/$id': typeof DashboardOpportunitiesIdIndexRoute
 }
 export interface FileRoutesById {
@@ -245,6 +254,7 @@ export interface FileRoutesById {
   '/dashboard/roadmap/': typeof DashboardRoadmapIndexRoute
   '/dashboard/opportunities/$id/fit': typeof DashboardOpportunitiesIdFitRoute
   '/dashboard/opportunities/$id/market': typeof DashboardOpportunitiesIdMarketRoute
+  '/dashboard_/roadmap/mission/$missionId': typeof DashboardRoadmapMissionMissionIdRoute
   '/dashboard/opportunities/$id/': typeof DashboardOpportunitiesIdIndexRoute
 }
 export interface FileRouteTypes {
@@ -274,6 +284,7 @@ export interface FileRouteTypes {
     | '/dashboard/roadmap/'
     | '/dashboard/opportunities/$id/fit'
     | '/dashboard/opportunities/$id/market'
+    | '/dashboard/roadmap/mission/$missionId'
     | '/dashboard/opportunities/$id/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -300,6 +311,7 @@ export interface FileRouteTypes {
     | '/dashboard/roadmap'
     | '/dashboard/opportunities/$id/fit'
     | '/dashboard/opportunities/$id/market'
+    | '/dashboard/roadmap/mission/$missionId'
     | '/dashboard/opportunities/$id'
   id:
     | '__root__'
@@ -327,6 +339,7 @@ export interface FileRouteTypes {
     | '/dashboard/roadmap/'
     | '/dashboard/opportunities/$id/fit'
     | '/dashboard/opportunities/$id/market'
+    | '/dashboard_/roadmap/mission/$missionId'
     | '/dashboard/opportunities/$id/'
   fileRoutesById: FileRoutesById
 }
@@ -347,6 +360,7 @@ export interface RootRouteChildren {
   TermsRoute: typeof TermsRoute
   AuthCallbackRoute: typeof AuthCallbackRoute
   DashboardRoadmapBuildingRoute: typeof DashboardRoadmapBuildingRoute
+  DashboardRoadmapMissionMissionIdRoute: typeof DashboardRoadmapMissionMissionIdRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -526,6 +540,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardOpportunitiesIdMarketRouteImport
       parentRoute: typeof DashboardRoute
     }
+    '/dashboard_/roadmap/mission/$missionId': {
+      id: '/dashboard_/roadmap/mission/$missionId'
+      path: '/dashboard/roadmap/mission/$missionId'
+      fullPath: '/dashboard/roadmap/mission/$missionId'
+      preLoaderRoute: typeof DashboardRoadmapMissionMissionIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -574,6 +595,7 @@ const rootRouteChildren: RootRouteChildren = {
   TermsRoute: TermsRoute,
   AuthCallbackRoute: AuthCallbackRoute,
   DashboardRoadmapBuildingRoute: DashboardRoadmapBuildingRoute,
+  DashboardRoadmapMissionMissionIdRoute: DashboardRoadmapMissionMissionIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

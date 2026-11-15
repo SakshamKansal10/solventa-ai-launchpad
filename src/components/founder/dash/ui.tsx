@@ -127,7 +127,7 @@ const TAG: Record<string, string> = {
   ink: "bg-sol-ink text-white",
   outline: "border border-sol-ink/30 text-sol-secondary",
   /** Gaps, estimates, failed checks. */
-  warning: "border border-sol-warning/50 bg-sol-warning-soft text-sol-warning",
+  warning: "dash-warn-text border border-sol-warning/50 bg-sol-warning-soft",
   /** Completed states and milestones. */
   done: "bg-sol-champagne-soft text-sol-ink border border-sol-champagne",
   navyOutline: "border border-white/40 text-white",

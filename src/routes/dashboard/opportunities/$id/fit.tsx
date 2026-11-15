@@ -76,7 +76,7 @@ function FitPage() {
                   className={cn(
                     "text-[17px]",
                     kind === "gap" || kind === "critical"
-                      ? "font-semibold text-sol-warning"
+                      ? "dash-warn-text font-semibold"
                       : "text-sol-muted",
                   )}
                 >

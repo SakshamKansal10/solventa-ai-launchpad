@@ -212,7 +212,7 @@ export function FitSummaryCard({
                 className={cn(
                   "shrink-0 text-right",
                   kind === "gap" || kind === "critical"
-                    ? "font-semibold text-sol-warning"
+                    ? "dash-warn-text font-semibold"
                     : "text-sol-muted",
                 )}
               >

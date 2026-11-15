@@ -1001,6 +1001,25 @@ html[lang="hi"] .dash-label {
   transform-origin: center;
   animation: dash-halo 3.2s ease-in-out 900ms infinite;
 }
+@keyframes dash-arc-loop {
+  0% {
+    stroke-dashoffset: 1;
+    opacity: 1;
+  }
+  70% {
+    stroke-dashoffset: 0;
+    opacity: 1;
+  }
+  100% {
+    stroke-dashoffset: 0;
+    opacity: 0.3;
+  }
+}
+.dash-arc-loop {
+  stroke-dasharray: 1;
+  stroke-opacity: 0.6;
+  animation: dash-arc-loop 2.4s var(--sol-ease) infinite;
+}
 /* Buttons: the arrow moves 4px on hover. */
 .dash-arrow {
   transition: transform 180ms var(--sol-ease);
@@ -1011,12 +1030,18 @@ html[lang="hi"] .dash-label {
 @media (prefers-reduced-motion: reduce) {
   .dash-page > *,
   .dash-arc-draw,
+  .dash-arc-loop,
   .dash-halo {
     animation: none;
   }
   :is(a, button):hover > .dash-arrow {
     transform: none;
   }
+}
+/* Small amber TEXT: the warning token darkened enough for 4.5:1 on white and on the pearl
+   cards (the token itself is 4.3:1 on sol-ivory). Fills and borders keep the token. */
+.dash-warn-text {
+  color: color-mix(in oklab, var(--sol-warning) 78%, black);
 }
 /* Fit bar patterns: a gap is a diagonal amber hatch (status never by colour alone). */
 .dash-hatch {

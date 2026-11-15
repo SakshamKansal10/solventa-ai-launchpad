@@ -183,10 +183,18 @@ test.describe("Ask Sol", () => {
     );
   });
 
-  test("the Ask Sol button on the roadmap rail opens the panel", async ({ page, context }) => {
+  test("on a mission page, Ask Sol and each Stuck? answer open the panel", async ({
+    page,
+    context,
+  }) => {
     await founderWithRoadmap(page, context);
-    await page.getByTestId("rail-ask-sol").click();
+    await page.getByTestId("mission-primary").click();
+    await expect(page.getByTestId("mission-page")).toBeVisible();
+    await page.getByTestId("ask-sol-launcher").click();
     await expect(page.getByTestId("ask-sol-panel")).toBeVisible();
+    await page.getByTestId("ask-sol-close").click();
+    await page.getByTestId("stuck-time").click();
+    await expect(page.getByTestId("ask-sol-panel")).toContainText("No time this week");
   });
 });
 
