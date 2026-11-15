@@ -98,7 +98,7 @@ test.describe("Directions", () => {
     const { seeded } = await founderWithDirections(context);
     await gotoApp(page, `/dashboard/opportunities/${seeded.opportunityIds[0]}/market`);
     await expect(page.getByTestId("market-tab")).toContainText(
-      "Market evidence hasn't been collected yet.",
+      "Market proof hasn't been collected yet.",
     );
     expect(await gemini.countOf("MARKET_GROUNDED")).toBe(0);
 

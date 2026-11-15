@@ -239,7 +239,7 @@ test.describe("cinematic homepage", () => {
       "aria-selected",
       "true",
     );
-    await page.getByRole("tab", { name: "Evidence" }).click();
+    await page.getByRole("tab", { name: "Proof" }).click();
     await expect(
       page.getByRole("tabpanel").getByText("Contradicted", { exact: true }),
     ).toBeVisible();

@@ -25,7 +25,7 @@ import { useWorld } from "../WorldContext";
 import { SLAB, SLAB_CENTRE, SLAB_NORMAL, SLAB_QUATERNION, slabState } from "./product-model";
 
 /** The connected chain, in order (labels live in the DOM, anchored to these). */
-export const CHAIN = ["Context", "Opportunity", "Evidence", "Path", "Progress"] as const;
+export const CHAIN = ["Context", "Opportunity", "Proof", "Path", "Progress"] as const;
 
 /**
  * The slab's face IS the interface's silhouette: the real panel's structure (measured from

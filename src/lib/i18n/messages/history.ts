@@ -15,7 +15,7 @@ const en = {
   "hist.ev.completed": "Roadmap completed",
   "hist.ev.archived": "Roadmap paused",
   "hist.ev.failed": "Roadmap didn't finish building",
-  "hist.ev.progress": "Weeks completed: {w} of {t} · Missions done: {m} · Evidence recorded: {e}",
+  "hist.ev.progress": "Weeks completed: {w} of {t} · Missions done: {m} · Proof recorded: {e}",
   "hist.compare": "Compare",
   "hist.compare.selected": "Comparing",
   "hist.compare.hint": "Choose one more consultation to compare.",

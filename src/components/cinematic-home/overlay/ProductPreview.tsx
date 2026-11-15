@@ -43,7 +43,7 @@ const PATH_AT = 2;
 const STEPS = [
   { id: "speak", label: "Speak to potential customers", state: "done" },
   { id: "problem", label: "Test the problem", state: "done" },
-  { id: "pay", label: "Test willingness to pay", state: "current", note: "Revised after evidence" },
+  { id: "pay", label: "Test willingness to pay", state: "current", note: "Revised after proof" },
   { id: "prototype", label: "Create first prototype", state: "future" },
 ] as const;
 
@@ -57,7 +57,7 @@ const CONFIDENCE = [
 const TABS = [
   { id: "direction", label: "Direction" },
   { id: "week", label: "This week" },
-  { id: "evidence", label: "Evidence" },
+  { id: "evidence", label: "Proof" },
 ] as const;
 
 const INK = "text-[#15181F]";

@@ -64,21 +64,21 @@ const en = {
   "cc.c.readyToClose": "Every mission is done. Review the week to unlock the next one.",
   "cc.c.openWeek": "Open this week",
   "cc.c.continueMission": "Continue mission",
-  "cc.c.proofPulse": "Evidence",
+  "cc.c.proofPulse": "Proof",
   "cc.c.pulseSupported": "{n} supported",
   "cc.c.pulseUntested": "{n} untested",
-  "cc.c.pulseNone": "No assumptions tested yet. Add evidence as you learn.",
+  "cc.c.pulseNone": "Nothing checked yet. Add proof as you learn.",
   "cc.c.openProof": "Open Proof",
   "cc.c.roadmap": "Roadmap",
   "cc.c.weekOf": "Week {x} of {y}",
   "cc.c.openRoadmap": "Open roadmap",
   "cc.c.latestChange": "What changed",
-  "cc.c.noChange": "Your roadmap adapts as you record evidence. Nothing has changed yet.",
+  "cc.c.noChange": "Your roadmap adapts as you record proof. Nothing has changed yet.",
 
   // ── Founder Command Surface — the one dark strip at the top of state C ──
   "cc.surface.direction": "Active direction",
   "cc.surface.week": "Current week",
-  "cc.surface.evidence": "Evidence",
+  "cc.surface.evidence": "Proof",
   "cc.surface.evidenceNone": "None yet",
 
   "cc.path.heading": "Execution path",
@@ -98,7 +98,7 @@ const en = {
   "cc.path.state.none": "Not mapped yet",
   "cc.path.count": "{supported} of {total} supported",
   "cc.path.chosen": "Chosen",
-  "cc.path.empty": "The path fills in as your assumptions are tested.",
+  "cc.path.empty": "The path fills in as your things to check are tested.",
 
   "cc.greet.morning": "Good morning, {name}.",
   "cc.greet.afternoon": "Good afternoon, {name}.",
@@ -115,13 +115,13 @@ const en = {
   "cc.today.why": "Why",
   "cc.today.unlocks": "Unlocks",
 
-  "cc.map.heading": "Evidence map",
-  "cc.map.empty": "Your evidence map fills in as assumptions are generated with your roadmap.",
+  "cc.map.heading": "Proof map",
+  "cc.map.empty": "Your proof map fills in as things to check are generated with your roadmap.",
 
   "cc.pulse.heading": "This week, at a glance",
   "cc.pulse.week": "Week",
   "cc.pulse.missions": "{done} of {total} missions",
-  "cc.pulse.evidence": "{n} evidence items",
+  "cc.pulse.evidence": "{n} pieces of proof",
   "cc.pulse.assumptions": "{n} supported",
   "cc.pulse.nextUnlock": "Next unlock",
 
@@ -143,10 +143,10 @@ const en = {
   "cc.ring.weeks": "Weeks",
   "cc.mom.heading": "Last 14 days",
   "cc.mom.missions": "Missions",
-  "cc.mom.evidence": "Evidence",
-  "cc.mom.aria": "Missions finished and evidence captured over the last 14 days",
+  "cc.mom.evidence": "Proof",
+  "cc.mom.aria": "Missions finished and proof captured over the last 14 days",
   "cc.mom.empty": "Your first mission starts the line.",
-  "cc.surface.evidenceAria": "Evidence by state",
+  "cc.surface.evidenceAria": "Proof by state",
   "cc.map.legend.supported": "Supported",
   "cc.map.legend.testing": "Testing",
   "cc.map.legend.untested": "Untested",
@@ -160,7 +160,7 @@ const en = {
   "cc.compare.unavailable": "Not available yet",
   "cc.b.step.aria": "From your chosen direction to your first week",
   "cc.b.step.roadmap": "Roadmap",
-  "cc.b.step.evidence": "Evidence",
+  "cc.b.step.evidence": "Proof",
   "cc.b.step.building": "Building…",
   "cc.b.step.failed": "Needs a retry",
   "cc.b.hint": "Week 1 is written now. Each later week adapts to what you learn.",
@@ -169,7 +169,7 @@ const en = {
   "cc.none.step.you": "Your signals",
   "cc.none.step.directions": "Directions",
   "cc.none.step.roadmap": "Roadmap",
-  "cc.none.step.proof": "Evidence",
+  "cc.none.step.proof": "Proof",
   "cc.none.step.next": "Next move",
 
   "cc.recent.heading": "Recent changes",
@@ -222,7 +222,7 @@ const en = {
   "opp.tabs.aria": "Opportunity sections",
   "opp.tab.overview": "Overview",
   "opp.tab.fit": "Fit with you",
-  "opp.tab.market": "Market & validation",
+  "opp.tab.market": "Market & testing",
 
   "opp.ov.customer": "Customer",
   "opp.ov.customerCap": "Who pays for this",
@@ -250,7 +250,7 @@ const en = {
   "opp.fit.learn": "You'd need to learn {skill}.",
 
   // Market
-  "opp.market.none": "Market evidence hasn't been collected yet.",
+  "opp.market.none": "Market proof hasn't been collected yet.",
   "opp.market.noneBody":
     "Solventia doesn't guess at market size. Look for real, citable sources — or go straight to testing the direction with people.",
   "opp.market.sourcesTitle": "What Solventia found",
@@ -265,13 +265,13 @@ const en = {
     "Do the people you'd serve feel this problem strongly enough to change what they do?",
   "opp.market.q2": "Would they pay for a solution — and how much?",
   "opp.market.q3": "Can you reach them without spending money you don't have?",
-  "opp.market.start": "Start validation",
+  "opp.market.start": "Start testing",
   "opp.market.label.strong_signal": "Strong signal",
   "opp.market.label.early_signal": "Early signal",
   "opp.market.label.emerging": "Emerging",
   "opp.market.label.competitive": "Competitive",
-  "opp.market.label.needs_validation": "Needs validation",
-  "opp.market.label.limited_evidence": "Limited evidence",
+  "opp.market.label.needs_validation": "Needs testing",
+  "opp.market.label.limited_evidence": "Limited proof",
 
   // Economics — founder-entered assumptions only, never AI-generated.
   "opp.econ.empty.title": "No economics yet",
@@ -308,12 +308,12 @@ const en = {
   // Proof tab
   "opp.proof.noneTitle": "Nothing tested yet",
   "opp.proof.noneBody":
-    "List what has to be true for this business to work, then collect evidence for each assumption.",
-  "opp.proof.assumptions": "{n} assumptions to test",
+    "List what has to be true for this business to work, then collect proof for each thing to check.",
+  "opp.proof.assumptions": "{n} things to test",
   "opp.proof.summary": "{supported} supported · {untested} still untested",
   "opp.proof.open": "Open Proof",
   "opp.proof.unavailable":
-    "Evidence isn't available yet on this workspace. It will appear shortly.",
+    "Proof isn't available yet on this workspace. It will appear shortly.",
 
   // ── Founder fit ────────────────────────────────────────────────────────
   "fit.strong": "Strong fit",
@@ -470,17 +470,17 @@ const hi: Record<keyof typeof en, string> = {
   "cc.c.proofPulse": "सबूत",
   "cc.c.pulseSupported": "{n} की पुष्टि हुई",
   "cc.c.pulseUntested": "{n} अभी परखी नहीं",
-  "cc.c.pulseNone": "अभी कोई धारणा परखी नहीं गई। सीखते हुए साक्ष्य जोड़ें।",
+  "cc.c.pulseNone": "अभी कोई जाँचने वाली बात परखी नहीं गई। सीखते हुए सबूत जोड़ें।",
   "cc.c.openProof": "सबूत खोलें",
   "cc.c.roadmap": "रोडमैप",
   "cc.c.weekOf": "सप्ताह {x} / {y}",
   "cc.c.openRoadmap": "रोडमैप खोलें",
   "cc.c.latestChange": "क्या बदला",
-  "cc.c.noChange": "साक्ष्य दर्ज करते ही आपका रोडमैप ढल जाता है। अभी कुछ नहीं बदला।",
+  "cc.c.noChange": "सबूत दर्ज करते ही आपका रोडमैप ढल जाता है। अभी कुछ नहीं बदला।",
 
   "cc.surface.direction": "सक्रिय दिशा",
   "cc.surface.week": "मौजूदा सप्ताह",
-  "cc.surface.evidence": "साक्ष्य",
+  "cc.surface.evidence": "सबूत",
   "cc.surface.evidenceNone": "अभी तक कोई नहीं",
 
   "cc.path.heading": "निष्पादन पथ",
@@ -500,7 +500,7 @@ const hi: Record<keyof typeof en, string> = {
   "cc.path.state.none": "अभी मैप नहीं हुआ",
   "cc.path.count": "{total} में से {supported} समर्थित",
   "cc.path.chosen": "चुनी गई",
-  "cc.path.empty": "अनुमानों के परखे जाने पर यह पथ भरता जाएगा।",
+  "cc.path.empty": "जाँचने वाली बातें परखी जाने पर यह पथ भरता जाएगा।",
 
   "cc.greet.morning": "सुप्रभात, {name}।",
   "cc.greet.afternoon": "नमस्कार, {name}।",
@@ -517,13 +517,13 @@ const hi: Record<keyof typeof en, string> = {
   "cc.today.why": "क्यों",
   "cc.today.unlocks": "अनलॉक करता है",
 
-  "cc.map.heading": "साक्ष्य मानचित्र",
-  "cc.map.empty": "आपका रोडमैप बनते ही अनुमान तैयार होंगे और यह मानचित्र भरने लगेगा।",
+  "cc.map.heading": "सबूत मानचित्र",
+  "cc.map.empty": "आपका रोडमैप बनते ही जाँचने वाली बातें तैयार होंगी और यह मानचित्र भरने लगेगा।",
 
   "cc.pulse.heading": "इस सप्ताह की झलक",
   "cc.pulse.week": "सप्ताह",
   "cc.pulse.missions": "{total} में से {done} मिशन",
-  "cc.pulse.evidence": "{n} साक्ष्य आइटम",
+  "cc.pulse.evidence": "{n} सबूत",
   "cc.pulse.assumptions": "{n} समर्थित",
   "cc.pulse.nextUnlock": "अगला अनलॉक",
 
@@ -545,10 +545,10 @@ const hi: Record<keyof typeof en, string> = {
   "cc.ring.weeks": "सप्ताह",
   "cc.mom.heading": "पिछले 14 दिन",
   "cc.mom.missions": "मिशन",
-  "cc.mom.evidence": "साक्ष्य",
-  "cc.mom.aria": "पिछले 14 दिनों में पूरे हुए मिशन और दर्ज साक्ष्य",
+  "cc.mom.evidence": "सबूत",
+  "cc.mom.aria": "पिछले 14 दिनों में पूरे हुए मिशन और दर्ज सबूत",
   "cc.mom.empty": "आपका पहला मिशन इस रेखा की शुरुआत करेगा।",
-  "cc.surface.evidenceAria": "स्थिति के अनुसार साक्ष्य",
+  "cc.surface.evidenceAria": "स्थिति के अनुसार सबूत",
   "cc.map.legend.supported": "समर्थित",
   "cc.map.legend.testing": "परीक्षण में",
   "cc.map.legend.untested": "अपरीक्षित",
@@ -561,7 +561,7 @@ const hi: Record<keyof typeof en, string> = {
   "cc.compare.unavailable": "अभी उपलब्ध नहीं",
   "cc.b.step.aria": "आपकी चुनी हुई दिशा से पहले सप्ताह तक",
   "cc.b.step.roadmap": "रोडमैप",
-  "cc.b.step.evidence": "साक्ष्य",
+  "cc.b.step.evidence": "सबूत",
   "cc.b.step.building": "बन रहा है…",
   "cc.b.step.failed": "फिर कोशिश करें",
   "cc.b.hint": "सप्ताह 1 अभी लिखा जाता है। हर अगला सप्ताह आपके सीखे के अनुसार ढलता है।",
@@ -570,7 +570,7 @@ const hi: Record<keyof typeof en, string> = {
   "cc.none.step.you": "आपके संकेत",
   "cc.none.step.directions": "दिशाएं",
   "cc.none.step.roadmap": "रोडमैप",
-  "cc.none.step.proof": "साक्ष्य",
+  "cc.none.step.proof": "सबूत",
   "cc.none.step.next": "अगला कदम",
 
   "cc.recent.heading": "हाल के बदलाव",
@@ -649,7 +649,7 @@ const hi: Record<keyof typeof en, string> = {
     "Solventia बाज़ार के आकार का अंदाज़ा नहीं लगाता। असली, प्रमाणित स्रोत खोजिए — या सीधे लोगों के साथ दिशा को परखना शुरू करें।",
   "opp.market.sourcesTitle": "Solventia को क्या मिला",
   "opp.market.sourcesNote":
-    "स्रोत खोज से मिले हैं और सिर्फ़ शुरुआती संकेत हैं। इन्हें जांचने वाले सुराग मानें, प्रमाण नहीं।",
+    "स्रोत खोज से मिले हैं और सिर्फ़ शुरुआती संकेत हैं। इन्हें जांचने वाले सुराग मानें, सबूत नहीं।",
   "opp.market.found": "{n} स्रोत मिले।",
   "opp.market.error": "अभी स्रोत नहीं खोज पाए। कृपया फिर कोशिश करें।",
   "opp.market.lookFor": "बाज़ार स्रोत खोजें",
@@ -665,7 +665,7 @@ const hi: Record<keyof typeof en, string> = {
   "opp.market.label.emerging": "उभरता हुआ",
   "opp.market.label.competitive": "प्रतिस्पर्धी",
   "opp.market.label.needs_validation": "परखना बाकी",
-  "opp.market.label.limited_evidence": "सीमित साक्ष्य",
+  "opp.market.label.limited_evidence": "सीमित सबूत",
 
   "opp.econ.empty.title": "अभी तक कोई अर्थशास्त्र नहीं",
   "opp.econ.empty.body":
@@ -700,8 +700,8 @@ const hi: Record<keyof typeof en, string> = {
 
   "opp.proof.noneTitle": "अभी कुछ परखा नहीं गया",
   "opp.proof.noneBody":
-    "लिखिए कि इस बिज़नेस के चलने के लिए क्या सच होना चाहिए, फिर हर धारणा के लिए साक्ष्य जुटाइए।",
-  "opp.proof.assumptions": "परखने के लिए {n} धारणाएं",
+    "लिखिए कि इस बिज़नेस के चलने के लिए क्या सच होना चाहिए, फिर हर जाँचने वाली बात के लिए सबूत जुटाइए।",
+  "opp.proof.assumptions": "जाँचने के लिए {n} बातें",
   "opp.proof.summary": "{supported} की पुष्टि · {untested} अभी परखी नहीं",
   "opp.proof.open": "सबूत खोलें",
   "opp.proof.unavailable": "इस वर्कस्पेस पर सबूत अभी उपलब्ध नहीं है। यह जल्द दिखेगा।",
@@ -786,7 +786,7 @@ const hi: Record<keyof typeof en, string> = {
   "hist.delete": "हटाएँ",
   "hist.deleteTitle": "क्या यह परामर्श हटाएँ?",
   "hist.deleteBody":
-    "यह परामर्श, उसकी दिशाएँ, रोडमैप और प्रमाण हमेशा के लिए हट जाएँगे। इसे वापस नहीं किया जा सकता।",
+    "यह परामर्श, उसकी दिशाएँ, रोडमैप और सबूत हमेशा के लिए हट जाएँगे। इसे वापस नहीं किया जा सकता।",
   "hist.deleteConfirm": "हमेशा के लिए हटाएँ",
   "hist.deleted": "परामर्श हटा दिया गया।",
   "hist.deleteError": "वह परामर्श हटा नहीं पाए। कृपया फिर कोशिश करें।",

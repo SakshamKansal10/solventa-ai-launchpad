@@ -85,8 +85,8 @@ const en = {
   "howItWorks.step1.body": "Seven short stages capture what you can actually execute.",
   "howItWorks.step2.title": "Discover",
   "howItWorks.step2.body": "Three directions, each built around your real position.",
-  "howItWorks.step3.title": "Validate",
-  "howItWorks.step3.body": "Turn the riskiest assumptions into recorded evidence.",
+  "howItWorks.step3.title": "Test",
+  "howItWorks.step3.body": "Turn the riskiest things to check into recorded proof.",
   "howItWorks.step4.title": "Execute",
   "howItWorks.step4.body": "Weekly missions you can actually finish.",
 
@@ -94,9 +94,9 @@ const en = {
   "adaptiveRoadmap.headline": "Your plan changes when reality does.",
   "adaptiveRoadmap.demoLabel": "PRODUCT DEMONSTRATION",
   "adaptiveRoadmap.week": "Week 01",
-  "adaptiveRoadmap.weekTitle": "Validate customer pain",
+  "adaptiveRoadmap.weekTitle": "Test customer pain",
   "adaptiveRoadmap.missions": "3/4 missions complete",
-  "adaptiveRoadmap.evidenceLabel": "Evidence",
+  "adaptiveRoadmap.evidenceLabel": "Proof",
   "adaptiveRoadmap.evidence": "5/8 customers repeated the same pain",
   "adaptiveRoadmap.adapts": "Solventia adapts",
   "adaptiveRoadmap.next": "Week 02 unlocks",
@@ -108,10 +108,10 @@ const en = {
   "whySolventia.generic": "Generic chatbot",
   "whySolventia.generic1": "Forgets structure",
   "whySolventia.generic2": "One-off answers",
-  "whySolventia.generic3": "No persistent evidence",
+  "whySolventia.generic3": "No persistent proof",
   "whySolventia.generic4": "No adaptive execution",
   "whySolventia.solventia1": "Remembers founder context",
-  "whySolventia.solventia2": "Tracks real evidence",
+  "whySolventia.solventia2": "Tracks real proof",
   "whySolventia.solventia3": "Maintains a roadmap",
   "whySolventia.solventia4": "Changes next actions when reality changes",
 
@@ -147,7 +147,7 @@ const en = {
   "adaptiveRoadmap.m4": "Summarise what repeated",
   "adaptiveRoadmap.reason":
     "Five of eight repeated the same pain, so Week 02 tests whether they would pay to fix it.",
-  "adaptiveRoadmap.lockedNow": "Locked until Week 01's evidence is in.",
+  "adaptiveRoadmap.lockedNow": "Locked until Week 01's proof is in.",
   "whySolventia.solventia": "Solventia",
   "faq.q1": "What exactly does Solventia do?",
   "faq.a1":
@@ -160,7 +160,7 @@ const en = {
     "No. The consultation starts from where you are today — your skills, time and resources — not from an assumed baseline of experience.",
   "faq.q4": "What happens after I choose a direction?",
   "faq.a4":
-    "Solventia builds a roadmap in phases and weeks. Only the current week is written in detail; the next one is written after you finish this one, from the evidence you recorded.",
+    "Solventia builds a roadmap in phases and weeks. Only the current week is written in detail; the next one is written after you finish this one, from the proof you recorded.",
   "faq.q5": "Is my information private?",
   "faq.a5":
     "What you share is used to personalize your directions and roadmap, and is not sold to third parties. Full details are in our privacy policy.",
@@ -196,7 +196,7 @@ const hi: Record<keyof typeof en, string> = {
   "hero.signal.adaptive": "अनुकूलनशील",
   "hero.card.fit": "फाउंडर फ़िट",
   "hero.card.fitValue": "मज़बूत",
-  "hero.card.proof": "प्रमाण संकेत",
+  "hero.card.proof": "सबूत संकेत",
   "hero.card.proofValue": "समर्थित",
   "hero.card.week": "सप्ताह 01",
   "hero.card.weekValue": "तैयार",
@@ -252,7 +252,7 @@ const hi: Record<keyof typeof en, string> = {
   "howItWorks.step2.title": "खोजें",
   "howItWorks.step2.body": "तीन दिशाएं, हर एक आपकी असली स्थिति पर बनी।",
   "howItWorks.step3.title": "परखें",
-  "howItWorks.step3.body": "सबसे जोखिम भरी धारणाओं को दर्ज किए गए प्रमाण में बदलें।",
+  "howItWorks.step3.body": "सबसे जोखिम भरी जाँचने वाली बातों को दर्ज किए गए सबूत में बदलें।",
   "howItWorks.step4.title": "अमल करें",
   "howItWorks.step4.body": "साप्ताहिक मिशन जिन्हें आप सच में पूरा कर सकें।",
 
@@ -262,7 +262,7 @@ const hi: Record<keyof typeof en, string> = {
   "adaptiveRoadmap.week": "सप्ताह 01",
   "adaptiveRoadmap.weekTitle": "ग्राहक की परेशानी की पुष्टि करें",
   "adaptiveRoadmap.missions": "4 में से 3 मिशन पूरे",
-  "adaptiveRoadmap.evidenceLabel": "प्रमाण",
+  "adaptiveRoadmap.evidenceLabel": "सबूत",
   "adaptiveRoadmap.evidence": "8 में से 5 ग्राहकों ने वही परेशानी दोहराई",
   "adaptiveRoadmap.adapts": "Solventia योजना बदलता है",
   "adaptiveRoadmap.next": "सप्ताह 02 खुलता है",
@@ -274,10 +274,10 @@ const hi: Record<keyof typeof en, string> = {
   "whySolventia.generic": "आम चैटबॉट",
   "whySolventia.generic1": "ढांचा भूल जाता है",
   "whySolventia.generic2": "बस एक बार का जवाब",
-  "whySolventia.generic3": "कोई स्थायी प्रमाण नहीं",
+  "whySolventia.generic3": "कोई स्थायी सबूत नहीं",
   "whySolventia.generic4": "अनुकूली अमल नहीं",
   "whySolventia.solventia1": "फाउंडर का संदर्भ याद रखता है",
-  "whySolventia.solventia2": "असली प्रमाण दर्ज करता है",
+  "whySolventia.solventia2": "असली सबूत दर्ज करता है",
   "whySolventia.solventia3": "रोडमैप संभालकर रखता है",
   "whySolventia.solventia4": "हकीकत बदलते ही अगले कदम बदल देता है",
 
@@ -313,7 +313,7 @@ const hi: Record<keyof typeof en, string> = {
   "adaptiveRoadmap.m4": "जो बात बार-बार आई उसका सार लिखें",
   "adaptiveRoadmap.reason":
     "आठ में से पांच ने वही परेशानी दोहराई, इसलिए सप्ताह 02 परखता है कि क्या वे उसे सुलझाने के लिए पैसे देंगे।",
-  "adaptiveRoadmap.lockedNow": "सप्ताह 01 का प्रमाण आने तक बंद।",
+  "adaptiveRoadmap.lockedNow": "सप्ताह 01 का सबूत आने तक बंद।",
   "whySolventia.solventia": "Solventia",
   "faq.q1": "Solventia असल में क्या करता है?",
   "faq.a1":
@@ -326,7 +326,7 @@ const hi: Record<keyof typeof en, string> = {
     "नहीं। कंसल्टेशन वहीं से शुरू होती है जहां आप आज हैं — आपके कौशल, समय और संसाधन — किसी मान लिए गए अनुभव के स्तर से नहीं।",
   "faq.q4": "दिशा चुनने के बाद क्या होता है?",
   "faq.a4":
-    "Solventia चरणों और सप्ताहों में एक रोडमैप बनाता है। केवल मौजूदा सप्ताह विस्तार से लिखा जाता है; अगला सप्ताह आपके यह सप्ताह पूरा करने के बाद, आपके दर्ज किए साक्ष्य से लिखा जाता है।",
+    "Solventia चरणों और सप्ताहों में एक रोडमैप बनाता है। केवल मौजूदा सप्ताह विस्तार से लिखा जाता है; अगला सप्ताह आपके यह सप्ताह पूरा करने के बाद, आपके दर्ज किए सबूत से लिखा जाता है।",
   "faq.q5": "क्या मेरी जानकारी निजी रहती है?",
   "faq.a5":
     "आप जो साझा करते हैं वह आपकी दिशाओं और रोडमैप को व्यक्तिगत बनाने में काम आता है, और तीसरे पक्षों को बेचा नहीं जाता। पूरा ब्योरा हमारी गोपनीयता नीति में है।",

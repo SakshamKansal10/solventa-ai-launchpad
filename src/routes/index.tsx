@@ -32,7 +32,7 @@ export const Route = createFileRoute("/")({
         {
           name: "description",
           content:
-            "Solventia turns your skills, resources, and ambition into personalized business opportunities, real-world validation, and adaptive founder roadmaps.",
+            "Solventia turns your skills, resources, and ambition into personalized business opportunities, real-world testing, and adaptive founder roadmaps.",
         },
         {
           property: "og:title",
@@ -41,7 +41,7 @@ export const Route = createFileRoute("/")({
         {
           property: "og:description",
           content:
-            "Personalized business directions, real-world evidence, and an adaptive weekly roadmap — for founders, not just idea browsers.",
+            "Personalized business directions, real-world proof, and an adaptive weekly roadmap — for founders, not just idea browsers.",
         },
         { property: "og:url", content: url },
         { property: "og:image", content: card },
@@ -52,7 +52,7 @@ export const Route = createFileRoute("/")({
         {
           name: "twitter:description",
           content:
-            "Personalized business directions, real-world evidence, and an adaptive weekly roadmap — for founders, not just idea browsers.",
+            "Personalized business directions, real-world proof, and an adaptive weekly roadmap — for founders, not just idea browsers.",
         },
         { name: "twitter:image", content: card },
       ],

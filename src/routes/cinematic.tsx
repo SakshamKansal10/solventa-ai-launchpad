@@ -22,7 +22,7 @@ export const Route = createFileRoute("/cinematic")({
       {
         name: "description",
         content:
-          "Solventia turns your skills, resources and constraints into personalised business directions, real-world evidence and an adaptive founder roadmap.",
+          "Solventia turns your skills, resources and constraints into personalised business directions, real-world proof and an adaptive founder roadmap.",
       },
       { name: "robots", content: "noindex, nofollow" },
     ],

@@ -149,3 +149,14 @@ Each entry: what was ambiguous, what I chose, why.
     current week, by earliest deadline) in the founder's saved language. The one-time question
     sits on the Roadmap page until answered (yes with a day, or no thanks); Settings changes it
     any time. Crons only run on production deployments, so nothing is sent from previews.
+32. **Plain words (feature 9).** Every user-facing message value (not keys, not code names) in
+    en and hi: assumption(s) → thing(s) to check, evidence → proof, validation/validate → testing/
+    test, provisional → depends on what you learn; a few phrases rewritten by hand where the swap
+    read badly. Hindi: धारणा/मान्यता → जाँचने वाली बात(ें), साक्ष्य/प्रमाण → सबूत, अस्थायी → "आप जो
+    सीखेंगे उस पर निर्भर"; अनुमान is changed only where it meant "assumption" (it also means
+    "estimate", the Estimate tag). Kept as they are: the brand triad "Validate • Build • Elevate"
+    (a brand name), the OTP "सत्यापन कोड" (verification), "प्रमाणित स्रोत" (verified sources), and
+    the economics tab's strings (that component is not rendered anywhere). The film's hard-coded
+    English (still version, product preview, chain labels) and two SEO descriptions follow the
+    same words. The fake Gemini now keeps the `workspace` enum untranslated, as real structured
+    output does (it made week 1 fail in the Hindi e2e).
