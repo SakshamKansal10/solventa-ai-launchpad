@@ -81,7 +81,7 @@ Blockers: `blocked.md`. Final report: `REPORT.md`.
 - [x] 0 finish the current feature (ea15552)
 - [x] 1 opening: "What brings you here?" (758ba9f)
 - [x] 2 3D ready faster (measure, then fix) (68fe040)
-- [ ] 3 film: the new Today screen as the dashboard scene
+- [x] 3 film: the new Today screen as the dashboard scene (c2d9b90)
 - [ ] 4 S-mark scene check
 - [ ] 5a part 4 feature 10 drop-off admin page
 - [ ] 5b part 5 idea engine (all steps, 10-profile comparison)
