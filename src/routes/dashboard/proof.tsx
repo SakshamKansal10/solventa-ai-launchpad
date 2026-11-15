@@ -1,40 +1,27 @@
 import { useEffect, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { z } from "zod";
-import {
-  ArrowRight,
-  Check,
-  ChevronDown,
-  Compass,
-  ExternalLink,
-  FileText,
-  Loader2,
-  Plus,
-  Repeat,
-  Route as RouteIcon,
-  Search,
-  ShieldCheck,
-  Tag,
-  Wallet,
-  type LucideIcon,
-} from "lucide-react";
+import { ExternalLink, FileText, Loader2 } from "lucide-react";
 
-import { PageHero } from "@/components/founder/proof/PageHero";
-import { EvidenceDialog } from "@/components/founder/proof/EvidenceDialog";
-import { SignalBadge, StatusBadge, formatDate } from "@/components/founder/proof/bits";
-import { useEvidenceWorkspace, useMissionTitle } from "@/components/founder/proof/useEvidence";
 import { useAskSol } from "@/components/founder/DashboardShell";
+import { isProofChecked } from "@/components/founder/dash/missions";
+import { StatusShape } from "@/components/founder/dash/StatusShape";
 import {
-  Button,
-  Card,
-  EmptyState,
-  ErrorPanel,
-  LinkButton,
-  PageSkeleton,
-  Pill,
-} from "@/components/founder/ui";
+  ActionButton,
+  ActionLink,
+  Arrow,
+  DashError,
+  DashPage,
+  DashSkeleton,
+  Label,
+  MistCard,
+  QuietRow,
+} from "@/components/founder/dash/ui";
+import { EvidenceDialog } from "@/components/founder/proof/EvidenceDialog";
+import { SignalBadge, formatDate } from "@/components/founder/proof/bits";
+import { useEvidenceWorkspace, useMissionTitle } from "@/components/founder/proof/useEvidence";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -45,7 +32,6 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { getOpportunityDetail } from "@/lib/actions/opportunities";
 import {
   deleteProofEvidence,
   getProofFileUrl,
@@ -53,14 +39,8 @@ import {
   type EvidenceDTO,
   type LinkedMissionDTO,
 } from "@/lib/actions/proof";
-import { ASSUMPTION_STATUSES, type AssumptionStatus } from "@/lib/proof/links";
 import { useLocale } from "@/lib/i18n/LocaleProvider";
-import { qk, useFounderState, useInvalidateFounder } from "@/lib/queries";
-import {
-  useTranslatedEntity,
-  useTranslatedTitle,
-  type OpportunityOverlay,
-} from "@/lib/use-translation";
+import { useFounderState, useInvalidateFounder } from "@/lib/queries";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/dashboard/proof")({
@@ -80,76 +60,52 @@ export const Route = createFileRoute("/dashboard/proof")({
   }),
 });
 
-const CATEGORY_ICON: Record<string, LucideIcon> = {
-  problem: Search,
-  willingness_to_pay: Wallet,
-  distribution: RouteIcon,
-  delivery: RouteIcon,
-  retention: Repeat,
-  pricing: Tag,
-  competition: ShieldCheck,
-};
-
-/** The status bar's segment colours, in the same order as the legend. */
-const STATUS_FILL: Record<AssumptionStatus, string> = {
-  not_tested: "bg-sol-border-strong",
-  testing: "bg-sol-cobalt",
-  inconclusive: "bg-sol-cobalt/35",
-  supported: "bg-sol-champagne",
-  contradicted: "bg-sol-warning",
-};
-
 function ProofPage() {
   const { t } = useLocale();
   const search = Route.useSearch();
   const founder = useFounderState();
 
-  if (founder.isPending) return <PageSkeleton label={t("shell.skeleton.loading")} />;
+  if (founder.isPending) return <DashSkeleton label={t("shell.skeleton.loading")} />;
   if (founder.isError || !founder.data) {
-    return <ErrorPanel onRetry={() => void founder.refetch()} retrying={founder.isFetching} />;
+    return <DashError onRetry={() => void founder.refetch()} retrying={founder.isFetching} />;
   }
   const opportunityId = search.opportunity ?? founder.data.direction.selectedId ?? null;
-
   if (!opportunityId) {
     return (
-      <div className="flex flex-col gap-8">
-        <PageHero title={t("pf.title")} subtitle={t("pf.page.sub")} />
-        <EmptyState
-          title={t("pf.noDirection.title")}
-          body={t("pf.noDirection.body")}
-          action={
-            <LinkButton to="/dashboard/opportunities" variant="primary" size="lg">
-              {t("shell.nav.opportunities")}
-            </LinkButton>
-          }
-        />
-      </div>
+      <DashPage>
+        <h1 className="dash-headline">{t("v2.proof.title")}</h1>
+        <p className="dash-lead max-w-[32em]">{t("pf.noDirection.body")}</p>
+        <ActionLink to="/dashboard/opportunities" className="self-start">
+          {t("v2.dir.open")}
+        </ActionLink>
+      </DashPage>
     );
   }
-  return <EvidenceWorkspace opportunityId={opportunityId} openFirst={search.assumption ?? null} />;
+  return (
+    <ProofWorkspace
+      opportunityId={opportunityId}
+      openFirst={search.assumption ?? null}
+      hasRoadmap={Boolean(founder.data.direction.roadmap)}
+    />
+  );
 }
 
-/** Evidence: what has to be true for the direction to work, the missions that
- * test each assumption, and what the founder has actually recorded. Statuses
- * come only from recorded evidence — a finished mission is never proof. */
-function EvidenceWorkspace({
+/** Proof — "What have I proved?" (screen 8). What has to be true for the direction to work,
+ * how each one is checked, and the count of things with a result. Statuses come only from
+ * recorded proof — a finished mission is never proof by itself. */
+function ProofWorkspace({
   opportunityId,
   openFirst,
+  hasRoadmap,
 }: {
   opportunityId: string;
   openFirst: string | null;
+  hasRoadmap: boolean;
 }) {
-  const { t, locale } = useLocale();
+  const { t } = useLocale();
   const invalidate = useInvalidateFounder();
   const askSol = useAskSol();
   const { overview, assumptions, generate, needsGeneration } = useEvidenceWorkspace(opportunityId);
-  const detailQuery = useQuery({
-    queryKey: qk.opportunity(opportunityId),
-    queryFn: () => getOpportunityDetail({ data: { id: opportunityId } }),
-    staleTime: 15_000,
-  });
-  const oppOverlay = useTranslatedEntity<OpportunityOverlay>("opportunity", opportunityId);
-  const opportunityTitle = useTranslatedTitle(opportunityId, overview.data?.opportunity?.title);
   const [openId, setOpenId] = useState<string | null>(openFirst);
   const [dialog, setDialog] = useState<{
     assumptionId: string | null;
@@ -178,114 +134,136 @@ function EvidenceWorkspace({
       setDeleting(null);
     },
     onError: (err) => {
-      console.error("[evidence] delete failed:", err);
+      console.error("[proof] delete failed:", err);
       toast.error(t("pf.deleteError"));
     },
   });
 
-  if (overview.isPending) return <PageSkeleton label={t("shell.skeleton.loading")} />;
+  if (overview.isPending) return <DashSkeleton label={t("shell.skeleton.loading")} />;
   if (overview.isError || !overview.data) {
-    return <ErrorPanel onRetry={() => void overview.refetch()} retrying={overview.isFetching} />;
+    return <DashError onRetry={() => void overview.refetch()} retrying={overview.isFetching} />;
   }
   const data = overview.data;
-
   if (!data.available) {
     return (
-      <div className="flex flex-col gap-8">
-        <PageHero title={t("pf.title")} subtitle={t("pf.page.sub")} />
-        <ErrorPanel title={t("pf.unavailable.title")} body={t("pf.unavailable.body")} />
-      </div>
+      <DashPage>
+        <h1 className="dash-headline">{t("v2.proof.title")}</h1>
+        <p className="dash-lead max-w-[32em]">{t("pf.unavailable.body")}</p>
+      </DashPage>
     );
   }
 
-  const dto = detailQuery.data;
-  const detail = dto ? { ...dto.detail, ...(oppOverlay.data?.detail ?? {}) } : null;
-  const advantages = dto
-    ? (detail && detail.whyThisFounder.length > 0
-        ? detail.whyThisFounder
-        : dto.fit.advantages
-      ).slice(0, 4)
-    : [];
-  // The first assumption that still needs evidence is where "Record evidence" starts.
-  const firstOpen =
-    assumptions.find((a) => a.status !== "supported" && a.status !== "contradicted") ??
-    assumptions[0];
+  const total = assumptions.length;
+  const checked = assumptions.filter((a) => isProofChecked(a.status)).length;
+  // "Add other proof" starts on the first assumption that still needs a result.
+  const firstOpen = assumptions.find((a) => !isProofChecked(a.status)) ?? assumptions[0];
 
   return (
-    <div className="flex flex-col gap-8" data-testid="proof-page">
-      <PageHero
-        title={t("pf.title")}
-        subtitle={opportunityTitle ? `${opportunityTitle} — ${t("pf.page.sub")}` : t("pf.page.sub")}
-        action={
-          assumptions.length > 0 ? (
-            <Button
-              size="lg"
-              onClick={() => setDialog({ assumptionId: firstOpen?.id ?? null, editing: null })}
-              data-testid="add-evidence"
-            >
-              <Plus className="size-4" aria-hidden="true" />
-              {t("pf.record")}
-            </Button>
-          ) : undefined
-        }
-      />
+    <DashPage data-testid="proof-page">
+      <div className="flex flex-wrap items-end justify-between gap-8">
+        <div className="flex min-w-0 flex-[999_1_560px] flex-col gap-[18px]">
+          <h1 className="dash-headline">{t("v2.proof.title")}</h1>
+          <p className="dash-lead max-w-[33em]">
+            {total > 0 ? t("v2.proof.lead", { n: total }) : t("pf.page.sub")}
+          </p>
+          <div className="flex flex-wrap items-center gap-3.5">
+            {hasRoadmap ? (
+              <ActionLink to="/dashboard/roadmap">{t("v2.proof.continue")}</ActionLink>
+            ) : (
+              <ActionLink to="/dashboard/opportunities/$id" params={{ id: opportunityId }}>
+                {t("v2.proof.toDirection")}
+              </ActionLink>
+            )}
+            {total > 0 && (
+              <ActionButton
+                tone="secondary"
+                arrow={false}
+                onClick={() => setDialog({ assumptionId: firstOpen?.id ?? null, editing: null })}
+                data-testid="add-evidence"
+              >
+                {t("v2.proof.add")}
+              </ActionButton>
+            )}
+          </div>
+        </div>
+        {total > 0 && (
+          <div className="flex flex-[0_1_320px] flex-col gap-4" data-testid="proof-count">
+            <span className="whitespace-nowrap font-display text-[clamp(80px,8.4vw,124px)] font-medium leading-[0.85] tracking-[-0.05em] text-sol-ink">
+              {checked}
+              <span className="text-sol-muted"> / {total}</span>
+            </span>
+            <p className="text-[19px] text-sol-secondary">{t("v2.today.proof.checked")}</p>
+            <span aria-hidden="true" className="flex max-w-[320px] gap-1.5">
+              {assumptions.map((a) => (
+                <span
+                  key={a.id}
+                  className={cn(
+                    "h-3 flex-1 rounded-full",
+                    a.status === "supported"
+                      ? "bg-sol-champagne"
+                      : a.status === "contradicted"
+                        ? "dash-hatch"
+                        : a.status === "inconclusive"
+                          ? "bg-sol-muted"
+                          : a.status === "testing"
+                            ? "border-2 border-sol-cobalt"
+                            : "bg-sol-ivory-depth",
+                  )}
+                />
+              ))}
+            </span>
+          </div>
+        )}
+      </div>
 
       {generate.isPending || (needsGeneration && !generate.isError) ? (
-        <div
-          role="status"
-          className="flex items-center gap-3 rounded-2xl border border-sol-cobalt/25 bg-sol-cobalt-soft px-5 py-4 text-[1.0625rem] text-sol-ink"
-        >
-          <Loader2 className="size-5 animate-spin text-sol-cobalt" aria-hidden="true" />
+        <p role="status" className="dash-lead flex items-center gap-3">
+          <Loader2 className="size-6 shrink-0 animate-spin text-sol-cobalt" aria-hidden="true" />
           {t("pf.generating")}
-        </div>
+        </p>
       ) : generate.isError ? (
-        <ErrorPanel
-          title={t("pf.generateError.title")}
-          body={t("pf.generateError.body")}
-          onRetry={() => generate.mutate()}
-          retrying={generate.isPending}
-        />
+        <div
+          role="alert"
+          className="flex flex-col items-start gap-4 rounded-[32px] border border-sol-warning/50 bg-sol-warning-soft p-[clamp(24px,2.8vw,40px)]"
+        >
+          <p className="dash-statement">{t("pf.generateError.title")}</p>
+          <p className="dash-body text-sol-ink">{t("pf.generateError.body")}</p>
+          <ActionButton
+            tone="secondary"
+            size="md"
+            arrow={false}
+            onClick={() => generate.mutate()}
+            loading={generate.isPending}
+          >
+            {t("common.retry")}
+          </ActionButton>
+        </div>
       ) : null}
 
-      {assumptions.length > 0 && (
-        <StatusSummary counts={data.statusCounts} total={assumptions.length} />
-      )}
-
-      {assumptions.length > 0 && (
-        <section aria-labelledby="assume-h" className="flex flex-col gap-4">
-          <div>
-            <h2 id="assume-h" className="sol-h-sm !text-[1.125rem]">
-              {t("pf.assume.title")}
-            </h2>
-            <p className="mt-1 text-[0.9375rem] text-sol-secondary">{t("pf.assume.sub")}</p>
-          </div>
-          <ul className="flex flex-col gap-3">
-            {assumptions.map((a) => (
-              <li key={a.id} id={`assumption-${a.id}`} className="scroll-mt-24">
-                <AssumptionCard
-                  assumption={a}
-                  open={openId === a.id}
-                  onToggle={() => setOpenId(openId === a.id ? null : a.id)}
-                  onRecord={() => setDialog({ assumptionId: a.id, editing: null })}
-                  onEdit={(e) => setDialog({ assumptionId: a.id, editing: e })}
-                  onDelete={(e) => setDeleting(e)}
-                  roadmapId={data.roadmapId}
-                />
-              </li>
-            ))}
-          </ul>
-        </section>
+      {total > 0 && (
+        <ul className="grid items-stretch gap-5 [grid-template-columns:repeat(auto-fit,minmax(min(480px,100%),1fr))]">
+          {assumptions.map((a) => (
+            <li key={a.id} id={`assumption-${a.id}`} className="flex scroll-mt-24">
+              <AssumptionCard
+                assumption={a}
+                open={openId === a.id}
+                onToggle={() => setOpenId(openId === a.id ? null : a.id)}
+                onRecord={() => setDialog({ assumptionId: a.id, editing: null })}
+                onEdit={(e) => setDialog({ assumptionId: a.id, editing: e })}
+                onDelete={(e) => setDeleting(e)}
+              />
+            </li>
+          ))}
+        </ul>
       )}
 
       {data.unassigned.length > 0 && (
         <section aria-labelledby="unassigned-h" className="flex flex-col gap-3">
-          <div>
-            <h2 id="unassigned-h" className="sol-h-sm !text-[1.0625rem]">
-              {t("pf.unassigned.title")}
-            </h2>
-            <p className="mt-1 text-[0.9375rem] text-sol-secondary">{t("pf.unassigned.body")}</p>
-          </div>
-          <ul className="flex flex-col gap-3">
+          <h2 id="unassigned-h" className="dash-label">
+            {t("pf.unassigned.title")}
+          </h2>
+          <p className="dash-body">{t("pf.unassigned.body")}</p>
+          <ul className="flex flex-col">
             {data.unassigned.map((e) => (
               <li key={e.id}>
                 <EvidenceItem
@@ -300,60 +278,15 @@ function EvidenceWorkspace({
         </section>
       )}
 
-      {dto && (
-        <div className="grid gap-4 @2xl:grid-cols-2">
-          <Card className="flex flex-col gap-4 p-5 sm:p-6" data-testid="proof-fit">
-            <h2 className="sol-h-sm !text-[1.0625rem]">{t("pf.fitLink.title")}</h2>
-            {advantages.length > 0 && (
-              <ul className="flex flex-col gap-2.5">
-                {advantages.map((reason) => (
-                  <li
-                    key={reason}
-                    className="flex items-start gap-3 text-[0.9375rem] leading-snug text-sol-ink"
-                  >
-                    <span className="mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full bg-sol-cobalt-soft text-sol-cobalt-deep">
-                      <Check className="size-3" strokeWidth={3} aria-hidden="true" />
-                    </span>
-                    <span className="min-w-0">{reason}</span>
-                  </li>
-                ))}
-              </ul>
-            )}
-            <Link
-              to="/dashboard/opportunities/$id"
-              params={{ id: opportunityId }}
-              search={{ tab: "fit" }}
-              className="mt-auto inline-flex min-h-10 w-fit items-center gap-2 text-[0.9375rem] font-medium text-sol-cobalt-deep hover:underline"
-            >
-              {t("pf.fitLink.open")}
-              <ArrowRight className="size-4" aria-hidden="true" />
-            </Link>
-          </Card>
-          <Card className="flex flex-col gap-4 p-5 sm:p-6">
-            <h2 className="sol-h-sm !text-[1.0625rem]">{t("pf.marketLink")}</h2>
-            <p className="text-[0.9375rem] leading-snug text-sol-secondary">
-              {dto.sources.length > 0 ? t("opp.market.sourcesTitle") : t("opp.market.none")}
-            </p>
-            {dto.sources.length > 0 && (
-              <ul className="flex flex-col gap-2">
-                {dto.sources.slice(0, 3).map((s) => (
-                  <li key={s.id} className="text-[0.9375rem] leading-snug text-sol-ink">
-                    {s.claim}
-                  </li>
-                ))}
-              </ul>
-            )}
-            <Link
-              to="/dashboard/opportunities/$id"
-              params={{ id: opportunityId }}
-              search={{ tab: "market" }}
-              className="mt-auto inline-flex min-h-10 w-fit items-center gap-2 text-[0.9375rem] font-medium text-sol-cobalt-deep hover:underline"
-            >
-              {t("pf.marketLink.open")}
-              <ArrowRight className="size-4" aria-hidden="true" />
-            </Link>
-          </Card>
-        </div>
+      {total > 0 && (
+        <QuietRow className="gap-x-8 py-7" data-testid="if-check-fails">
+          <h2 className="font-display text-[26px] font-medium tracking-[-0.015em] text-sol-ink">
+            {t("v2.proof.fails.title")}
+          </h2>
+          <p className="flex-[1_1_480px] text-[19px] leading-[1.45] text-sol-secondary">
+            {t("v2.proof.fails.body")}
+          </p>
+        </QuietRow>
       )}
 
       {dialog && (
@@ -388,54 +321,12 @@ function EvidenceWorkspace({
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </div>
+    </DashPage>
   );
 }
 
-/** One bar for the whole direction: how many assumptions sit in each status. */
-function StatusSummary({
-  counts,
-  total,
-}: {
-  counts: Record<AssumptionStatus, number>;
-  total: number;
-}) {
-  const { t } = useLocale();
-  return (
-    <Card className="flex flex-col gap-4 p-5 sm:p-6" data-testid="assumption-summary">
-      <p className="text-[0.9375rem] font-semibold text-sol-ink">
-        {t("pf.summary.total", { n: total })}
-      </p>
-      <div
-        className="flex h-2.5 overflow-hidden rounded-full bg-sol-pearl"
-        role="img"
-        aria-label={ASSUMPTION_STATUSES.map(
-          (s) => `${t(`pf.status.${s}` as const)}: ${counts[s]}`,
-        ).join(", ")}
-      >
-        {ASSUMPTION_STATUSES.filter((s) => counts[s] > 0).map((s) => (
-          <span
-            key={s}
-            className={cn("h-full border-r-2 border-sol-surface last:border-r-0", STATUS_FILL[s])}
-            style={{ width: `${(counts[s] / total) * 100}%` }}
-          />
-        ))}
-      </div>
-      <ul className="flex flex-wrap gap-x-6 gap-y-2" aria-label={t("pf.summary.aria")}>
-        {ASSUMPTION_STATUSES.map((s) => (
-          <li key={s} className="flex items-center gap-2 text-[0.9375rem] text-sol-secondary">
-            <span className={cn("size-2.5 rounded-full", STATUS_FILL[s])} aria-hidden="true" />
-            {t(`pf.status.${s}` as const)}
-            <span className="font-semibold text-sol-ink" data-testid={`count-${s}`}>
-              {counts[s]}
-            </span>
-          </li>
-        ))}
-      </ul>
-    </Card>
-  );
-}
-
+/** One assumption: type, status (shape + word), the statement, and how you check it. The
+ * recorded proof opens below it. */
 function AssumptionCard({
   assumption: a,
   open,
@@ -443,7 +334,6 @@ function AssumptionCard({
   onRecord,
   onEdit,
   onDelete,
-  roadmapId,
 }: {
   assumption: AssumptionDTO;
   open: boolean;
@@ -451,142 +341,123 @@ function AssumptionCard({
   onRecord: () => void;
   onEdit: (e: EvidenceDTO) => void;
   onDelete: (e: EvidenceDTO) => void;
-  roadmapId: string | null;
 }) {
   const { t, locale } = useLocale();
-  const Icon = CATEGORY_ICON[a.category] ?? Compass;
   const actionMission = a.missions.find((m) => m.id === a.nextAction.missionId) ?? null;
+  const checkMission =
+    actionMission ?? a.missions.find((m) => m.state !== "completed") ?? a.missions[0];
   return (
-    <Card
+    <MistCard
       as="article"
-      className={cn(
-        "p-0 shadow-none transition-colors",
-        open ? "border-sol-cobalt/40" : "border-sol-border hover:border-sol-cobalt/40",
-      )}
+      className="w-full gap-[18px] rounded-[36px]"
       data-testid="assumption-card"
       data-status={a.status}
     >
-      <button
-        type="button"
-        aria-expanded={open}
-        aria-controls={`assume-${a.id}`}
-        onClick={onToggle}
-        data-testid="view-details"
-        className="flex w-full cursor-pointer items-start gap-4 rounded-2xl px-5 py-4 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sol-cobalt/50"
-      >
-        <span className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-sol-cobalt-soft text-sol-cobalt-deep">
-          <Icon className="size-5" strokeWidth={1.75} aria-hidden="true" />
-        </span>
-        <span className="min-w-0 flex-1">
-          <span className="flex flex-wrap items-center gap-2">
-            <Pill tone="neutral">{t(`pf.category.${a.category}` as const)}</Pill>
-            <StatusBadge status={a.status} />
-          </span>
-          <span className="sol-h-sm mt-1.5 block text-sol-ink">{a.title}</span>
-          {!open && (
-            <span className="mt-1 block text-[0.9375rem] leading-snug text-sol-secondary">
-              <NextActionText assumption={a} mission={actionMission} />
-            </span>
-          )}
-        </span>
-        <ChevronDown
-          className={cn(
-            "mt-3 size-5 shrink-0 text-sol-secondary transition-transform duration-200",
-            open && "rotate-180",
-          )}
-          aria-hidden="true"
-        />
-      </button>
+      <div className="flex flex-wrap items-center justify-between gap-2.5">
+        <Label>{t(`pf.category.${a.category}` as const)}</Label>
+        <StatusShape status={a.status} className="bg-white" />
+      </div>
+      <p className="font-display text-[clamp(22px,2vw,28px)] font-medium leading-[1.2] tracking-[-0.015em] text-sol-ink">
+        {a.title}
+      </p>
+      <div className="mt-auto flex flex-col gap-1.5 border-t border-sol-ink/10 pt-[18px]">
+        <Label as="p" className="!tracking-[0.06em]">
+          {t("v2.proof.howCheck")}
+        </Label>
+        {checkMission ? (
+          <MissionLink mission={checkMission} />
+        ) : (
+          <p className="flex min-h-11 items-center text-[18px] leading-[1.35] text-sol-secondary">
+            {t("v2.proof.laterMission")}
+          </p>
+        )}
+        <p className="text-[17px] leading-snug text-sol-secondary">
+          <NextActionText assumption={a} mission={actionMission} />
+        </p>
+        <div className="flex flex-wrap items-center gap-x-5 gap-y-2 pt-2">
+          <button
+            type="button"
+            aria-expanded={open}
+            aria-controls={`assume-${a.id}`}
+            onClick={onToggle}
+            data-testid="view-details"
+            className="inline-flex min-h-11 items-center text-[17px] font-medium text-sol-cobalt-deep hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sol-cobalt"
+          >
+            {open ? t("v2.proof.hide") : t("v2.proof.show", { n: a.evidence.length })}
+          </button>
+          <button
+            type="button"
+            onClick={onRecord}
+            data-testid="record-evidence"
+            className="inline-flex min-h-11 items-center text-[17px] font-medium text-sol-cobalt-deep hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sol-cobalt"
+          >
+            {t("v2.proof.record")}
+          </button>
+        </div>
+      </div>
       {open && (
         <div
           id={`assume-${a.id}`}
-          className="flex flex-col gap-6 border-t border-sol-border px-5 py-5 sm:px-6"
+          className="flex flex-col gap-4 border-t border-sol-ink/10 pt-[18px]"
         >
-          <div
-            className="flex flex-col gap-3 rounded-2xl border border-sol-cobalt/25 bg-sol-cobalt-ultralight px-4 py-4 sm:flex-row sm:items-center sm:justify-between"
-            data-testid="next-action"
-          >
-            <div className="min-w-0">
-              <p className="text-[0.9375rem] font-semibold text-sol-cobalt-deep">
-                {t("pf.next.title")}
-              </p>
-              <p className="mt-1 text-[1rem] leading-snug text-sol-ink">
-                <NextActionText assumption={a} mission={actionMission} />
-              </p>
+          {a.whyItMatters && (
+            <div className="flex flex-col gap-1.5">
+              <Label as="p">{t("pf.detail.whyMatters")}</Label>
+              <p className="dash-body text-sol-ink">{a.whyItMatters}</p>
             </div>
-            <Button size="md" onClick={onRecord} data-testid="record-evidence">
-              <Plus className="size-4" aria-hidden="true" />
-              {t("pf.record")}
-            </Button>
+          )}
+          <div className="flex flex-wrap items-baseline justify-between gap-2">
+            <Label as="p">
+              {t("pf.evidence.title")} · {a.evidence.length}
+            </Label>
+            <p className="dash-meta">
+              {t("pf.updated", { date: formatDate(a.updatedAt, locale) })}
+            </p>
           </div>
-
-          <div className="grid gap-6 @2xl:grid-cols-2">
-            <div className="flex flex-col gap-4">
-              {a.whyItMatters && (
-                <div>
-                  <p className="text-[0.9375rem] font-semibold text-sol-secondary">
-                    {t("pf.detail.whyMatters")}
-                  </p>
-                  <p className="mt-1 text-[1rem] leading-relaxed text-sol-ink">{a.whyItMatters}</p>
-                </div>
-              )}
-              {a.nextTest && (
-                <div>
-                  <p className="text-[0.9375rem] font-semibold text-sol-secondary">
-                    {t("pf.testMethod")}
-                  </p>
-                  <p className="mt-1 text-[1rem] leading-relaxed text-sol-ink">{a.nextTest}</p>
-                </div>
-              )}
-            </div>
-            <div>
-              <p className="text-[0.9375rem] font-semibold text-sol-secondary">
-                {t("pf.missions.title")}
-              </p>
-              {a.missions.length === 0 ? (
-                <p className="mt-1 text-[0.9375rem] text-sol-secondary">{t("pf.missions.none")}</p>
-              ) : (
-                <ul className="mt-2 flex flex-col gap-2" data-testid="assumption-missions">
-                  {a.missions.map((m) => (
-                    <li key={m.id}>
-                      <LinkedMission mission={m} roadmapId={roadmapId} />
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </div>
-          </div>
-
-          <div>
-            <div className="flex flex-wrap items-baseline justify-between gap-2">
-              <p className="text-[0.9375rem] font-semibold text-sol-secondary">
-                {t("pf.evidence.title")} · {a.evidence.length}
-              </p>
-              <p className="text-[0.9375rem] text-sol-secondary">
-                {t("pf.updated", { date: formatDate(a.updatedAt, locale) })}
-              </p>
-            </div>
-            {a.evidence.length === 0 ? (
-              <p className="mt-1 text-[0.9375rem] leading-snug text-sol-secondary">
-                {t("pf.evidence.none")}
-              </p>
-            ) : (
-              <ul className="mt-2 flex flex-col gap-2.5" data-testid="assumption-evidence">
-                {a.evidence.map((e) => (
-                  <li key={e.id}>
-                    <EvidenceItem
-                      evidence={e}
-                      onEdit={() => onEdit(e)}
-                      onDelete={() => onDelete(e)}
-                    />
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
+          {a.evidence.length === 0 ? (
+            <p className="dash-body">{t("pf.evidence.none")}</p>
+          ) : (
+            <ul className="flex flex-col" data-testid="assumption-evidence">
+              {a.evidence.map((e) => (
+                <li key={e.id}>
+                  <EvidenceItem
+                    evidence={e}
+                    onEdit={() => onEdit(e)}
+                    onDelete={() => onDelete(e)}
+                  />
+                </li>
+              ))}
+            </ul>
+          )}
         </div>
       )}
-    </Card>
+    </MistCard>
+  );
+}
+
+function MissionLink({ mission: m }: { mission: LinkedMissionDTO }) {
+  const { t } = useLocale();
+  const title = useMissionTitle(m.weekId, m.id, m.title);
+  const label = [m.weekNumber ? t("pf.missions.week", { n: m.weekNumber }) : null, title]
+    .filter(Boolean)
+    .join(": ");
+  return m.weekNumber ? (
+    <Link
+      to="/dashboard/roadmap/mission/$missionId"
+      params={{ missionId: m.id }}
+      data-testid="linked-mission"
+      className="inline-flex min-h-11 flex-wrap items-center gap-2.5 text-[18px] font-medium leading-[1.3] text-sol-cobalt-deep hover:underline"
+    >
+      {label}
+      <span className="font-normal text-sol-secondary">
+        · {t(`pf.missions.state.${m.state}` as const)}
+      </span>
+      <Arrow />
+    </Link>
+  ) : (
+    <p className="flex min-h-11 items-center text-[18px] text-sol-ink" data-testid="linked-mission">
+      {label}
+    </p>
   );
 }
 
@@ -610,64 +481,7 @@ function NextActionText({
   return <>{t(`pf.next.${code}` as const, { mission: title, n: a.nextAction.n ?? 1 })}</>;
 }
 
-function LinkedMission({
-  mission: m,
-  roadmapId,
-}: {
-  mission: LinkedMissionDTO;
-  roadmapId: string | null;
-}) {
-  const { t } = useLocale();
-  const title = useMissionTitle(m.weekId, m.id, m.title);
-  const body = (
-    <>
-      <span
-        className={cn(
-          "flex size-7 shrink-0 items-center justify-center rounded-full border text-[0.9375rem] font-semibold",
-          m.state === "completed"
-            ? "border-sol-champagne bg-sol-champagne text-sol-ink"
-            : m.state === "in_progress"
-              ? "border-sol-cobalt bg-sol-cobalt text-white"
-              : "border-sol-border-strong bg-sol-surface text-sol-secondary",
-        )}
-        aria-hidden="true"
-      >
-        {m.state === "completed" ? (
-          <Check className="size-3.5" strokeWidth={3} />
-        ) : (
-          (m.weekNumber ?? "·")
-        )}
-      </span>
-      <span className="min-w-0 flex-1">
-        <span className="block text-[0.9375rem] font-medium leading-snug text-sol-ink">
-          {title}
-        </span>
-        <span className="block text-[0.9375rem] text-sol-secondary">
-          {m.weekNumber ? `${t("pf.missions.week", { n: m.weekNumber })} · ` : ""}
-          {t(`pf.missions.state.${m.state}` as const)}
-          {m.evidenceCount > 0 && ` · ${t("pf.mission.recorded", { n: m.evidenceCount })}`}
-        </span>
-      </span>
-    </>
-  );
-  const cls =
-    "flex items-center gap-3 rounded-xl border border-sol-border bg-sol-surface px-3 py-2.5 transition-colors";
-  return roadmapId && m.weekNumber ? (
-    <Link
-      to="/dashboard/roadmap"
-      search={{ week: m.weekNumber, mission: m.id }}
-      className={cn(cls, "hover:border-sol-cobalt/40")}
-      data-testid="linked-mission"
-    >
-      {body}
-    </Link>
-  ) : (
-    <div className={cls} data-testid="linked-mission">
-      {body}
-    </div>
-  );
-}
-
+/** One recorded piece of proof, as a row (no card inside the card). */
 function EvidenceItem({
   evidence: e,
   onEdit,
@@ -688,61 +502,45 @@ function EvidenceItem({
     },
     onError: () => toast.error(t("pf.file.unavailable")),
   });
+  const link =
+    "inline-flex min-h-11 items-center gap-1.5 text-[17px] font-medium text-sol-cobalt-deep hover:underline";
   return (
     <div
-      className={cn(
-        "flex flex-col gap-2 rounded-xl border bg-sol-surface px-4 py-3",
-        e.signal === "contradicts" ? "border-sol-warning/40" : "border-sol-border",
-      )}
+      className="flex flex-col gap-2 border-b border-sol-ink/10 py-4 first:pt-0 last:border-b-0"
       data-testid="evidence-item"
       data-signal={e.signal}
     >
-      <div className="flex flex-wrap items-center gap-2">
+      <div className="flex flex-wrap items-center gap-2.5">
         <SignalBadge signal={e.signal} />
-        <span className="text-[0.9375rem] text-sol-secondary">
+        <span className="dash-meta">
           {t(`pf.type.${e.type}` as const)} · {formatDate(e.occurredOn, locale)}
           {e.sourcePerson ? ` · ${e.sourcePerson}` : ""}
         </span>
       </div>
-      {e.title && <p className="text-[0.9375rem] font-semibold text-sol-ink">{e.title}</p>}
-      <p className="whitespace-pre-line text-[0.9375rem] leading-relaxed text-sol-ink" dir="auto">
+      {e.title && <p className="text-[18px] font-semibold text-sol-ink">{e.title}</p>}
+      <p className="whitespace-pre-line text-[18px] leading-relaxed text-sol-ink" dir="auto">
         {e.summary}
       </p>
-      {e.taskTitle && (
-        <p className="text-[0.9375rem] text-sol-secondary">
-          {t("pf.fromMission", { title: e.taskTitle })}
-        </p>
-      )}
-      <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
+      {e.taskTitle && <p className="dash-meta">{t("pf.fromMission", { title: e.taskTitle })}</p>}
+      <div className="flex flex-wrap items-center gap-x-5 gap-y-1">
         {e.url && (
-          <a
-            href={e.url}
-            target="_blank"
-            rel="noreferrer noopener"
-            className="inline-flex min-h-9 items-center gap-1.5 text-[0.9375rem] font-medium text-sol-cobalt-deep hover:underline"
-          >
+          <a href={e.url} target="_blank" rel="noreferrer noopener" className={link}>
             {t("pf.link")}
-            <ExternalLink className="size-3.5" aria-hidden="true" />
+            <ExternalLink className="size-4" aria-hidden="true" />
           </a>
         )}
         {e.hasFile && (
-          <button
-            type="button"
-            onClick={() => file.mutate()}
-            className="inline-flex min-h-9 items-center gap-1.5 text-[0.9375rem] font-medium text-sol-cobalt-deep hover:underline"
-          >
-            <FileText className="size-3.5" aria-hidden="true" />
+          <button type="button" onClick={() => file.mutate()} className={link}>
+            <FileText className="size-4" aria-hidden="true" />
             {e.fileName ?? t("pf.file.open")}
           </button>
         )}
-        <span className="ml-auto flex items-center gap-1">
-          <Button size="sm" variant="ghost" onClick={onEdit} data-testid="edit-evidence">
-            {editLabel ?? t("pf.edit")}
-          </Button>
-          <Button size="sm" variant="ghost" onClick={onDelete} data-testid="delete-evidence">
-            {t("pf.delete")}
-          </Button>
-        </span>
+        <button type="button" onClick={onEdit} data-testid="edit-evidence" className={link}>
+          {editLabel ?? t("pf.edit")}
+        </button>
+        <button type="button" onClick={onDelete} data-testid="delete-evidence" className={link}>
+          {t("pf.delete")}
+        </button>
       </div>
     </div>
   );
