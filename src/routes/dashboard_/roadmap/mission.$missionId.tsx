@@ -31,6 +31,7 @@ import {
 import { EvidenceDialog } from "@/components/founder/proof/EvidenceDialog";
 import { useEvidenceWorkspace } from "@/components/founder/proof/useEvidence";
 import { useRoadmapText } from "@/components/founder/roadmap/text";
+import { reportStuck } from "@/lib/actions/missions";
 import { getRoadmapView, setMissionState } from "@/lib/actions/roadmap";
 import { useLocale } from "@/lib/i18n/LocaleProvider";
 import { qk, useFounderState, useInvalidateFounder } from "@/lib/queries";
@@ -77,7 +78,7 @@ function MissionRoute() {
 function MissionPage() {
   const { missionId } = Route.useParams();
   const search = Route.useSearch();
-  const { t } = useLocale();
+  const { t, locale } = useLocale();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const invalidate = useInvalidateFounder();
@@ -97,6 +98,18 @@ function MissionPage() {
   const opportunityId = view?.roadmap.opportunityId ?? null;
   const evidence = useEvidenceWorkspace(opportunityId);
   const workspace = useMissionWorkspace(missionId);
+  const [showFallback, setShowFallback] = useState(false);
+  const [stuckNote, setStuckNote] = useState<string | null>(null);
+  const stuckMutation = useMutation({
+    mutationFn: (reason: "cant" | "time" | "wrong") =>
+      reportStuck({ data: { taskId: missionId, reason } }),
+    onError: (err) => console.error("[mission] stuck report failed:", err),
+  });
+  const dayOf = (iso: string) =>
+    new Date(`${iso}T00:00:00`).toLocaleDateString(locale === "hi" ? "hi-IN" : "en-IN", {
+      day: "numeric",
+      month: "long",
+    });
   const gateReason = useGateReason()(workspace.data);
   const [recording, setRecording] = useState(false);
 
@@ -219,9 +232,9 @@ function MissionPage() {
       mission.assumption.title)
     : null;
   const stuck = [
-    { key: "cant", label: t("v2.mission.stuck.cant") },
-    { key: "time", label: t("v2.mission.stuck.time") },
-    { key: "wrong", label: t("v2.mission.stuck.wrong") },
+    { key: "cant" as const, label: t("v2.mission.stuck.cant") },
+    { key: "time" as const, label: t("v2.mission.stuck.time") },
+    { key: "wrong" as const, label: t("v2.mission.stuck.wrong") },
   ];
 
   return (
@@ -413,8 +426,9 @@ function MissionPage() {
             </div>
           )}
 
-          {/* TODO(task 4, "Stuck?"): each answer gets its own help; until then each one hands
-              the founder's situation to Ask Sol. */}
+          {/* Stuck? — each answer leads somewhere, and is stored with the mission (drop-off data):
+              can't do it → the mission's easier route; no time → the week moves by seven days, no
+              penalty; doesn't feel right → Ask Sol with the mission as context. */}
           <section
             aria-label={t("v2.mission.stuck.aria")}
             className="flex flex-wrap items-center gap-3 rounded-[32px] border border-sol-border px-[clamp(20px,2.6vw,32px)] py-6"
@@ -428,14 +442,49 @@ function MissionPage() {
                 key={s.key}
                 type="button"
                 data-testid={`stuck-${s.key}`}
-                onClick={() =>
-                  ask.open(t("v2.mission.stuck.ask", { reason: s.label, mission: title }))
-                }
+                onClick={() => {
+                  stuckMutation.mutate(s.key, {
+                    onSuccess: (res) => {
+                      if (s.key === "time" && res.moved) {
+                        setStuckNote(
+                          res.newDeadline
+                            ? t("v2.mission.stuck.moved", { date: dayOf(res.newDeadline) })
+                            : t("v2.mission.stuck.movedPlain"),
+                        );
+                        void invalidate();
+                      }
+                    },
+                  });
+                  if (s.key === "cant" && workspace.data?.fallback) {
+                    setStuckNote(null);
+                    setShowFallback(true);
+                  } else if (s.key !== "time") {
+                    ask.open(t("v2.mission.stuck.ask", { reason: s.label, mission: title }));
+                  }
+                }}
                 className="min-h-12 rounded-full border border-sol-ink/30 bg-white px-5 text-[17px] font-medium text-sol-ink transition-colors hover:border-sol-ink/60 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sol-cobalt"
               >
                 {s.label}
               </button>
             ))}
+            {showFallback && workspace.data?.fallback && (
+              <div
+                className="basis-full rounded-[24px] bg-sol-ivory p-5"
+                data-testid="stuck-fallback"
+              >
+                <p className="dash-label pb-2">{t("v2.mission.stuck.easier")}</p>
+                <p className="dash-body text-sol-ink">{workspace.data.fallback}</p>
+              </div>
+            )}
+            {stuckNote && (
+              <p
+                role="status"
+                className="dash-body basis-full text-sol-ink"
+                data-testid="stuck-note"
+              >
+                {stuckNote}
+              </p>
+            )}
           </section>
         </DashPage>
       </main>

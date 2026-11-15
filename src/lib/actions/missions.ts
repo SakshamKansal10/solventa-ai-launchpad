@@ -171,3 +171,64 @@ export const deleteMissionEntry = createServerFn({ method: "POST" })
     if (error) throw new Error(error.message);
     return { ok: true as const };
   });
+
+/**
+ * "Stuck?" (part 4, feature 3). Every answer is stored with its mission (drop-off data, once
+ * migration 0017 is applied). "No time this week" moves the week's open missions by seven days —
+ * no penalty, nothing lost. The other two answers are handled on the page (the mission's fallback;
+ * Ask Sol with the mission as context).
+ */
+export const reportStuck = createServerFn({ method: "POST" })
+  .validator(z.object({ taskId: z.string().uuid(), reason: z.enum(["cant", "time", "wrong"]) }))
+  .handler(async ({ data }): Promise<{ moved: boolean; newDeadline: string | null }> => {
+    const { supabase, user } = await requireUser();
+    const caps = await getSchemaCapabilities(supabase);
+    const { data: task, error } = await db(supabase)
+      .from("roadmap_tasks")
+      .select("id, week_id")
+      .eq("id", data.taskId)
+      .eq("user_id", user.id)
+      .maybeSingle();
+    if (error) throw new Error(error.message);
+    if (!task) throw new Error("Mission not found");
+    if (caps.stuck) {
+      await db(supabase)
+        .from("mission_stuck_events")
+        .insert({ user_id: user.id, task_id: data.taskId, reason: data.reason });
+    }
+    if (data.reason !== "time" || !task.week_id) return { moved: false, newDeadline: null };
+
+    const { data: open } = await db(supabase)
+      .from("roadmap_tasks")
+      .select("id, deadline")
+      .eq("week_id", task.week_id)
+      .eq("user_id", user.id)
+      .neq("status", "done");
+    let newDeadline: string | null = null;
+    for (const t of open ?? []) {
+      if (!t.deadline) continue;
+      const d = new Date(`${t.deadline}T00:00:00Z`);
+      d.setUTCDate(d.getUTCDate() + 7);
+      const next = d.toISOString().slice(0, 10);
+      if (!newDeadline || next > newDeadline) newDeadline = next;
+      await db(supabase)
+        .from("roadmap_tasks")
+        .update({ deadline: next })
+        .eq("id", t.id)
+        .eq("user_id", user.id);
+    }
+    if (caps.stuck) {
+      const { data: week } = await db(supabase)
+        .from("roadmap_weeks")
+        .select("shifted_days")
+        .eq("id", task.week_id)
+        .eq("user_id", user.id)
+        .maybeSingle();
+      await db(supabase)
+        .from("roadmap_weeks")
+        .update({ shifted_days: Number(week?.shifted_days ?? 0) + 7 })
+        .eq("id", task.week_id)
+        .eq("user_id", user.id);
+    }
+    return { moved: true, newDeadline };
+  });

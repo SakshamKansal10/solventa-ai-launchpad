@@ -186,6 +186,18 @@ const en = {
   "v2.ws.int.tooNeat":
     "Sol: these logs look very alike. Could you add one detail from each conversation — a number, a name, or something they said? It makes the result easier to trust.",
   "v2.ws.int.tooNeatAsk": "Help me remember one concrete detail from each conversation I logged.",
+  "v2.mission.stuck.moved": "Moved by a week — this week now runs to {date}. Nothing is lost.",
+  "v2.mission.stuck.movedPlain": "Moved by a week. Nothing is lost.",
+  "v2.mission.stuck.easier": "An easier way to the same goal",
+  "v2.failed.tag": "A check didn't hold",
+  "v2.failed.title": "That is a result, not a failure.",
+  "v2.failed.learned": "What you learned",
+  "v2.failed.count": "{yes} of {logged} said yes — {need} were needed.",
+  "v2.failed.lead": "Choose how to go on. Nothing you have done is lost either way.",
+  "v2.failed.adjust": "Adjust this direction",
+  "v2.failed.switch": "Switch direction",
+  "v2.failed.note":
+    "Adjust: close this week on your roadmap — the next week is written from what your checks found. Switch: pick another direction; this one stays in your history.",
 } as const;
 
 const hi: Record<keyof typeof en, string> = {
@@ -375,6 +387,19 @@ const hi: Record<keyof typeof en, string> = {
     "Sol: ये बातचीत काफ़ी मिलती-जुलती लग रही हैं। क्या आप हर बातचीत से एक बात जोड़ सकते हैं — कोई संख्या, नाम, या उन्होंने जो कहा? इससे नतीजे पर भरोसा करना आसान होगा।",
   "v2.ws.int.tooNeatAsk":
     "मैंने जो बातचीत दर्ज की हैं, उनमें से हर एक की एक ठोस बात याद करने में मदद करें।",
+  "v2.mission.stuck.moved": "एक हफ़्ता आगे — यह हफ़्ता अब {date} तक है। कुछ नहीं खोया।",
+  "v2.mission.stuck.movedPlain": "एक हफ़्ता आगे। कुछ नहीं खोया।",
+  "v2.mission.stuck.easier": "उसी लक्ष्य तक पहुँचने का आसान रास्ता",
+  "v2.failed.tag": "एक जाँच सही नहीं निकली",
+  "v2.failed.title": "यह एक नतीजा है, नाकामी नहीं।",
+  "v2.failed.learned": "आपने क्या सीखा",
+  "v2.failed.count": "{logged} में से {yes} ने हाँ कहा — {need} की ज़रूरत थी।",
+  "v2.failed.lead":
+    "चुनें कि आगे कैसे बढ़ें। दोनों में से किसी भी रास्ते पर आपका किया हुआ कुछ नहीं खोता।",
+  "v2.failed.adjust": "इस दिशा को बदलें",
+  "v2.failed.switch": "दूसरी दिशा चुनें",
+  "v2.failed.note":
+    "बदलें: अपने रोडमैप पर यह हफ़्ता बंद करें — अगला हफ़्ता आपकी जाँचों के नतीजों से लिखा जाएगा। दूसरी दिशा: कोई और दिशा चुनें; यह आपके इतिहास में रहेगी।",
 };
 
 export default { en, hi };

@@ -20,7 +20,9 @@ import {
   Segments,
   Tag,
 } from "@/components/founder/dash/ui";
+import { useMissionWorkspace } from "@/components/founder/dash/MissionWorkspace";
 import { useEvidenceWorkspace } from "@/components/founder/proof/useEvidence";
+import type { AssumptionDTO } from "@/lib/actions/proof";
 import { useRoadmapText } from "@/components/founder/roadmap/text";
 import { getRoadmapView, type RoadmapView } from "@/lib/actions/roadmap";
 import { useLocale } from "@/lib/i18n/LocaleProvider";
@@ -327,6 +329,9 @@ function RoadmapToday({
   const view: RoadmapView | null | undefined = roadmap.data;
   const week = view?.weeks.find((w) => w.id === view.currentWeekId) ?? null;
   const text = useRoadmapText(view, week);
+  // A check that did not hold takes over the headline area: what was learned, two choices.
+  const proof = useEvidenceWorkspace(opportunityId);
+  const failedCheck = proof.assumptions.find((a) => a.rule && a.status === "contradicted") ?? null;
 
   if (roadmap.isPending) return <DashSkeleton label={t("shell.skeleton.loading")} />;
   if (roadmap.isError || !view) {
@@ -365,7 +370,9 @@ function RoadmapToday({
         {weekLine && !completed && <p className="dash-meta">{weekLine}</p>}
       </div>
 
-      {completed ? (
+      {failedCheck && !completed ? (
+        <FailedCheck assumption={failedCheck} opportunityId={opportunityId} />
+      ) : completed ? (
         <section className="flex flex-col items-start gap-7 pb-4 pt-[clamp(8px,1.4vw,20px)]">
           <h1 className="dash-headline max-w-[15em]">{t("cc.c.completedTitle")}</h1>
           <p className="dash-lead max-w-[32em]">{t("cc.c.completedBody")}</p>
@@ -497,6 +504,65 @@ function MissionHero({
         </p>
         <Segments total={missions.length} done={done} current={index} className="max-w-[220px]" />
       </div>
+    </section>
+  );
+}
+
+/** One screen when a check comes back "not supported": what was learned, then two choices.
+ * Nothing is deleted either way. */
+function FailedCheck({
+  assumption,
+  opportunityId,
+}: {
+  assumption: AssumptionDTO;
+  opportunityId: string;
+}) {
+  const { t } = useLocale();
+  const ws = useMissionWorkspace(assumption.rule!.missionId);
+  const quotes = (ws.data?.entries ?? [])
+    .filter(
+      (e) => e.kind === "interview" && e.data.answer === "no" && String(e.data.words ?? "").trim(),
+    )
+    .slice(0, 2)
+    .map((e) => String(e.data.words));
+  const r = assumption.rule!;
+  return (
+    <section
+      aria-labelledby="failed-title"
+      data-testid="failed-check"
+      className="flex flex-col items-start gap-7 pb-4 pt-[clamp(8px,1.4vw,20px)]"
+    >
+      <Tag tone="warning">{t("v2.failed.tag")}</Tag>
+      <h1 id="failed-title" className="dash-headline max-w-[15em]">
+        {t("v2.failed.title")}
+      </h1>
+      <MistCard className="w-full max-w-[44rem] gap-3">
+        <Label as="h2">{t("v2.failed.learned")}</Label>
+        <p className="dash-statement">{assumption.title}</p>
+        <p className="dash-body text-sol-ink">
+          {t("v2.failed.count", { yes: r.matching, logged: r.logged, need: r.threshold })}
+        </p>
+        {quotes.map((q) => (
+          <p key={q} className="dash-body" dir="auto">
+            “{q}”
+          </p>
+        ))}
+      </MistCard>
+      <p className="dash-lead max-w-[34em]">{t("v2.failed.lead")}</p>
+      <div className="flex flex-wrap items-center gap-3.5">
+        <ActionLink to="/dashboard/roadmap" data-testid="failed-adjust">
+          {t("v2.failed.adjust")}
+        </ActionLink>
+        <ActionLink
+          to="/dashboard/opportunities"
+          tone="secondary"
+          arrow={false}
+          data-testid="failed-switch"
+        >
+          {t("v2.failed.switch")}
+        </ActionLink>
+      </div>
+      <p className="dash-meta max-w-[40em]">{t("v2.failed.note")}</p>
     </section>
   );
 }

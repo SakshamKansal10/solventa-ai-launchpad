@@ -154,3 +154,69 @@ test.describe("proof that updates itself (part 4, feature 2)", () => {
     await expect(page.getByTestId("proof-count")).toContainText("1 / ");
   });
 });
+
+test.describe("Stuck? and a failed check (part 4, feature 3)", () => {
+  test("can't do it shows the easier way; no time moves the week by seven days; both are stored", async ({
+    page,
+    context,
+  }) => {
+    const { user } = await founderWithRoadmap(page, context);
+    const before = await sql<{ deadline: string }>(
+      "select deadline::text as deadline from roadmap_tasks where user_id = $1 and order_index = 0",
+      [user.id],
+    );
+    await openMission(page, 0);
+    await expect(page.getByTestId("mission-workspace")).toBeVisible();
+    await page.getByTestId("stuck-cant").click();
+    await expect(page.getByTestId("stuck-fallback")).toContainText("Start from three questions");
+    await page.getByTestId("stuck-time").click();
+    await expect(page.getByTestId("stuck-note")).toContainText("Moved by a week");
+    await expect
+      .poll(
+        async () =>
+          (
+            await sql<{ n: string }>(
+              "select count(*)::text as n from mission_stuck_events where user_id = $1",
+              [user.id],
+            )
+          )[0].n,
+      )
+      .toBe("2");
+    const after = await sql<{ deadline: string }>(
+      "select deadline::text as deadline from roadmap_tasks where user_id = $1 and order_index = 0",
+      [user.id],
+    );
+    const days = (Date.parse(after[0].deadline) - Date.parse(before[0].deadline)) / 86_400_000;
+    expect(days).toBe(7);
+  });
+
+  test("a check that can no longer pass takes over Today: what was learned, adjust or switch", async ({
+    page,
+    context,
+  }) => {
+    const { user } = await founderWithRoadmap(page, context);
+    await sql(
+      `update roadmap_tasks set workspace_spec = workspace_spec || '{"target":4}'::jsonb,
+       done_rule = '{"metric":"interviews.count","min":4}'::jsonb
+       where user_id = $1 and order_index = 1`,
+      [user.id],
+    );
+    await gotoApp(page, "/dashboard/proof");
+    await expect(page.getByTestId("rule-progress")).toBeVisible({ timeout: 45_000 });
+    await openMission(page, 1);
+    for (const [i, person] of ["Dr Rao", "Dr Shah"].entries()) {
+      await page.getByTestId("int-person").fill(person);
+      await page.getByTestId("int-answer-no").check({ force: true });
+      await page.getByTestId("int-words").fill(`${person}: our front desk already calls everyone.`);
+      await page.getByTestId("int-save").click();
+      await expect(page.getByTestId("interview-entries").getByRole("listitem")).toHaveCount(i + 1);
+    }
+    await gotoApp(page, "/dashboard");
+    const failed = page.getByTestId("failed-check");
+    await expect(failed).toBeVisible({ timeout: 30_000 });
+    await expect(failed).toContainText("0 of 2 said yes — 3 were needed.");
+    await expect(failed).toContainText("our front desk already calls everyone");
+    await page.getByTestId("failed-switch").click();
+    await expect(page).toHaveURL(/\/dashboard\/opportunities/);
+  });
+});

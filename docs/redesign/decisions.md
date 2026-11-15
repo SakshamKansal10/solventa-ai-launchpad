@@ -94,3 +94,9 @@ Each entry: what was ambiguous, what I chose, why.
     shifts later); status derived from the logs every read.
 23. **"Too neat" prompt** fires at 3+ logs when all answers match with little detail, or the
     logs were saved within 10 minutes. It is a note with an Ask Sol button — never a block.
+24. **"Adjust this direction"** goes to the Roadmap: closing the week there writes the next week
+    from the proof so far (the week-detail prompt already receives the assumption states). A
+    full regeneration of every remaining week is part 5's executable-roadmap work; noted as a
+    TODO in REPORT.md. "Switch direction" opens Directions; nothing is deleted either way.
+25. **"No time this week"** moves the deadlines of the week's open missions by seven days and
+    records `shifted_days`; done missions keep their dates. No penalty, no guilt wording.

@@ -33,6 +33,8 @@ export interface SchemaCapabilities {
   missionWorkspaces: boolean;
   /** proof_assumptions.success_rule / check_task_id, proof_evidence.added_by_user (0016). */
   proofRules: boolean;
+  /** mission_stuck_events, roadmap_weeks.shifted_days, profile reminder fields (0017). */
+  stuck: boolean;
 }
 
 const ALL_OFF: SchemaCapabilities = {
@@ -46,6 +48,7 @@ const ALL_OFF: SchemaCapabilities = {
   evidenceTitle: false,
   missionWorkspaces: false,
   proofRules: false,
+  stuck: false,
 };
 
 let cache: { at: number; caps: SchemaCapabilities } | null = null;
@@ -89,6 +92,7 @@ export async function getSchemaCapabilities(
     evidenceTitle,
     missionWorkspaces,
     proofRules,
+    stuck,
   ] = await Promise.all([
     probe("roadmap_weeks", "generation_status"),
     probe("proof_assumptions", "id"),
@@ -101,6 +105,7 @@ export async function getSchemaCapabilities(
     probe("proof_evidence", "title"),
     probe("mission_entries", "id"),
     probe("proof_assumptions", "success_rule"),
+    probe("mission_stuck_events", "id"),
   ]);
 
   const caps: SchemaCapabilities = {
@@ -115,6 +120,7 @@ export async function getSchemaCapabilities(
     evidenceTitle,
     missionWorkspaces,
     proofRules,
+    stuck,
   };
   cache = { at: Date.now(), caps };
   return caps;
