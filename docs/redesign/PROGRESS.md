@@ -41,8 +41,8 @@ Blockers: `blocked.md`. Final report: `REPORT.md`.
 ## Part 2c — cinematic bounded pass (owner decisions, 2026-11-15)
 - [x] A: adaptive sampling while the story moves; notch ≤ 2, never up, no visible hitch (c358578)
 - [x] 2: lite gate parts 16 sweep segments (implemented as one bevel segment — decisions 18; cb04ee3)
-- [ ] missing graphics: 21 scenes live (49d3ead) vs HEAD lite, diff, fix, record (docs/redesign/perf/scenes/)
-- [ ] re-measure (lite, notch not pinned) and record
+- [x] missing graphics: 21 scenes live (49d3ead) vs HEAD lite, diff, fix, record (docs/redesign/perf/scenes/) — none missing at 1440 on the Vega 3; laptop report in blocked.md
+- [x] re-measure (lite, notch not pinned) and record — p95 17.0/16.9 ms, 0 long tasks; 4×: 0 long tasks
 
 ## Part 3 — dashboard redesign
 - [x] plan-3.md file map
