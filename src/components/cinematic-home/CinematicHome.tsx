@@ -104,9 +104,11 @@ export function CinematicHome({
     setCapability(decided);
   }, [store, tierOverride]);
 
-  // Review/test hook (only with ?freeze or ?debug): scene ranges + live state for frame capture.
+  // Review/test hook (only with ?freeze, ?debug or ?perf): scene ranges + live state for frame
+  // capture; ?perf exposes the same counters without the HUD, for scripts/film-perf.mjs.
   useEffect(() => {
-    if (!freeze && !debug) return;
+    const perf = new URLSearchParams(window.location.search).has("perf");
+    if (!freeze && !debug && !perf) return;
     const w = window as unknown as Record<string, unknown>;
     w.__cine = {
       scenes: SCENE_RANGES,

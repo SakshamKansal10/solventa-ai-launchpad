@@ -7,6 +7,7 @@ import { z } from "zod";
  *   ?tier=high|medium|low|fallback   force a quality tier or the static fallback
  *   ?debug=1 | ?debug=0              show / hide the dev HUD (shown by default in `vite dev`)
  *   ?freeze=1                        deterministic frames (no ambient motion) for review/tests
+ *   ?perf=1                          expose live counters (window.__cine) without the HUD
  */
 export const cinematicSearch = {
   tier: z.enum(["high", "medium", "low", "fallback"]).optional().catch(undefined),
