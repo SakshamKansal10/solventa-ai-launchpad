@@ -29,6 +29,8 @@ export interface SchemaCapabilities {
   economics: boolean;
   /** proof_evidence.title and the url/screenshot/survey types (migration 0012). */
   evidenceTitle: boolean;
+  /** roadmap_tasks.workspace and mission_entries (migration 0015). */
+  missionWorkspaces: boolean;
 }
 
 const ALL_OFF: SchemaCapabilities = {
@@ -40,6 +42,7 @@ const ALL_OFF: SchemaCapabilities = {
   roadmapStates: false,
   economics: false,
   evidenceTitle: false,
+  missionWorkspaces: false,
 };
 
 let cache: { at: number; caps: SchemaCapabilities } | null = null;
@@ -81,6 +84,7 @@ export async function getSchemaCapabilities(
     roadmapStates,
     economics,
     evidenceTitle,
+    missionWorkspaces,
   ] = await Promise.all([
     probe("roadmap_weeks", "generation_status"),
     probe("proof_assumptions", "id"),
@@ -91,6 +95,7 @@ export async function getSchemaCapabilities(
     probe("roadmaps", "build_error"),
     probe("opportunity_economics", "id"),
     probe("proof_evidence", "title"),
+    probe("mission_entries", "id"),
   ]);
 
   const caps: SchemaCapabilities = {
@@ -103,6 +108,7 @@ export async function getSchemaCapabilities(
     roadmapStates,
     economics,
     evidenceTitle,
+    missionWorkspaces,
   };
   cache = { at: Date.now(), caps };
   return caps;

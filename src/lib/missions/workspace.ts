@@ -49,10 +49,12 @@ export const doneRuleSchema = z.object({
 export type DoneRule = z.infer<typeof doneRuleSchema>;
 
 export type EntryKind = "list_row" | "interview" | "quiz" | "note" | "summary";
+/** What an entry holds: small, flat values typed by the founder. */
+export type EntryValue = string | number | boolean | (string | number)[];
 export interface MissionEntry {
   id: string;
   kind: EntryKind;
-  data: Record<string, unknown>;
+  data: Record<string, EntryValue>;
   createdAt: string;
 }
 
