@@ -214,7 +214,14 @@ export function createOverlaySync(store: ExperienceStore) {
           const o = (to ? 1 : 1 - t) * recede * (name === "mark" ? 1 - dark : 1) * (1 - handOff);
           el.style.opacity = o.toFixed(3);
         }
-        if (brand.cue) brand.cue.style.opacity = Math.max(0, 1 - t * 3).toFixed(3);
+        if (brand.cue) {
+          const cue = Math.max(0, 1 - t * 3);
+          brand.cue.style.opacity = cue.toFixed(3);
+          // Once faded, the cue leaves the render tree: its infinite line animation otherwise
+          // kept re-styling the page on every frame of the whole film.
+          const display = cue > 0 ? "" : "none";
+          if (brand.cue.style.display !== display) brand.cue.style.display = display;
+        }
       }
     }
 

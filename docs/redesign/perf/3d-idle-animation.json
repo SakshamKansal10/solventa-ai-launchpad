@@ -1,0 +1,153 @@
+{
+ "label": "3d-idle-animation",
+ "tier": "auto",
+ "unthrottled": {
+  "throttle": 1,
+  "info": {
+   "mode": "lite",
+   "tier": "lite",
+   "reasons": [
+    "integrated graphics"
+   ],
+   "gpu": "ANGLE (AMD, AMD Radeon(TM) Vega 3 Graphics (0x000015D8) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+   "dpr": 1,
+   "notch": 0,
+   "windowMedians": [
+    16.7
+   ],
+   "programs": 31,
+   "textures": 5,
+   "geometries": 26
+  },
+  "frames": 1737,
+  "frameMs": {
+   "p50": 16.7,
+   "p95": 33.3,
+   "worst": 116.7
+  },
+  "longTasksOver50": 1,
+  "worstLongTask": 70,
+  "traceSplitMs": {
+   "scripting": 3909,
+   "rendering": 3365,
+   "painting": 793,
+   "other": 1236,
+   "gpu": 25541,
+   "otherTop": [
+    "148 ms AsyncTask Run",
+    "142 ms PageAnimator::serviceScriptedAnimations",
+    "79 ms LocalFrameView::RunPaintLifecyclePhase",
+    "78 ms CommandBufferProxyImpl::Flush",
+    "74 ms CommandBufferProxyImpl::WaitForGetOffset",
+    "63 ms Blink.CompositingInputs.UpdateTime",
+    "54 ms LocalFrameView::performLayout",
+    "51 ms AnimationTimeline::serviceAnimations"
+   ]
+  },
+  "chromeMetricsMs": {
+   "script": 3821,
+   "styleRecalc": 3027,
+   "layout": 60,
+   "allTasks": 9747
+  },
+  "perScene": [
+   "scene  0: p95  50.1 ms ·  14 draw calls · 22266 triangles · 126 frames",
+   "scene  1: p95  16.8 ms ·  38 draw calls · 60186 triangles · 81 frames",
+   "scene  2: p95  16.8 ms ·  57 draw calls · 66390 triangles · 208 frames",
+   "scene  3: p95    50 ms ·  87 draw calls · 160522 triangles · 37 frames",
+   "scene  4: p95  16.8 ms ·  63 draw calls · 122602 triangles · 44 frames",
+   "scene  5: p95  16.8 ms ·  51 draw calls · 111376 triangles · 68 frames",
+   "scene  6: p95  16.8 ms ·  49 draw calls · 110776 triangles · 175 frames",
+   "scene  7: p95  33.3 ms ·  40 draw calls · 148108 triangles · 125 frames",
+   "scene  8: p95  33.3 ms ·  32 draw calls · 164212 triangles · 74 frames",
+   "scene  9: p95  16.8 ms ·  29 draw calls · 145820 triangles · 29 frames",
+   "scene 10: p95  16.8 ms ·  15 draw calls · 145820 triangles · 53 frames",
+   "scene 11: p95  16.8 ms ·  24 draw calls · 256084 triangles · 30 frames",
+   "scene 12: p95  33.3 ms ·  21 draw calls · 234452 triangles · 32 frames",
+   "scene 13: p95  33.3 ms ·  27 draw calls · 235148 triangles · 43 frames",
+   "scene 14: p95  33.4 ms ·  32 draw calls · 253204 triangles · 41 frames",
+   "scene 15: p95  33.4 ms ·  34 draw calls · 252580 triangles · 64 frames",
+   "scene 16: p95  33.3 ms ·  34 draw calls · 237462 triangles · 52 frames",
+   "scene 17: p95  33.3 ms ·  23 draw calls · 237440 triangles · 103 frames",
+   "scene 18: p95  33.4 ms ·  34 draw calls · 237462 triangles · 67 frames",
+   "scene 19: p95  33.4 ms ·  15 draw calls · 14050 triangles · 33 frames",
+   "scene 20: p95  33.1 ms ·  15 draw calls · 14050 triangles · 252 frames"
+  ],
+  "hotFunctions": [
+   "   180 ms  updateMatrixWorld  CinematicCanvas-lf3OKvy_.js:1:63476",
+   "   153 ms  vt  CinematicCanvas-lf3OKvy_.js:4220:41294",
+   "   122 ms  bufferSubData  :0:0",
+   "   101 ms  (anonymous)  core-design-BMrWUBhB.js:1:17499",
+   "   100 ms  (garbage collector)  :0:0",
+   "   100 ms  Vy  CinematicCanvas-lf3OKvy_.js:4231:13489",
+   "    98 ms  h  CinematicCanvas-lf3OKvy_.js:4169:2274",
+   "    85 ms  multiplyMatrices  CinematicCanvas-lf3OKvy_.js:1:49332",
+   "    82 ms  q  core-design-BMrWUBhB.js:1:16377",
+   "    76 ms  setFromEuler  CinematicCanvas-lf3OKvy_.js:1:12586",
+   "    73 ms  tick  :8:18",
+   "    72 ms  (anonymous)  CinematicCanvas-lf3OKvy_.js:4249:50442",
+   "    70 ms  getPoint  CinematicCanvas-lf3OKvy_.js:1:200944",
+   "    70 ms  renderBufferDirect  CinematicCanvas-lf3OKvy_.js:4220:29376"
+  ],
+  "errors": []
+ },
+ "throttled4x": {
+  "throttle": 4,
+  "info": {
+   "mode": "lite",
+   "tier": "lite",
+   "reasons": [
+    "integrated graphics"
+   ],
+   "gpu": "ANGLE (AMD, AMD Radeon(TM) Vega 3 Graphics (0x000015D8) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+   "dpr": 1,
+   "notch": 0,
+   "windowMedians": [
+    16.7
+   ],
+   "programs": 31,
+   "textures": 5,
+   "geometries": 26
+  },
+  "frames": 766,
+  "frameMs": {
+   "p50": 16.7,
+   "p95": 66.7,
+   "worst": 116.6
+  },
+  "longTasksOver50": 44,
+  "worstLongTask": 107,
+  "traceSplitMs": null,
+  "chromeMetricsMs": {
+   "script": 5728,
+   "styleRecalc": 4796,
+   "layout": 92,
+   "allTasks": 13288
+  },
+  "perScene": [
+   "scene  0: p95    50 ms ·  14 draw calls · 22266 triangles · 27 frames",
+   "scene  1: p95  33.3 ms ·  38 draw calls · 60186 triangles · 57 frames",
+   "scene  2: p95  33.4 ms ·  57 draw calls · 66390 triangles · 97 frames",
+   "scene  3: p95 116.6 ms ·  85 draw calls · 159922 triangles · 14 frames",
+   "scene  4: p95  33.3 ms ·  63 draw calls · 122602 triangles · 33 frames",
+   "scene  5: p95  33.3 ms ·  51 draw calls · 111376 triangles · 42 frames",
+   "scene  6: p95  33.3 ms ·  49 draw calls · 110776 triangles · 84 frames",
+   "scene  7: p95  83.4 ms ·  40 draw calls · 144492 triangles · 42 frames",
+   "scene  8: p95  83.3 ms ·  32 draw calls · 164212 triangles · 22 frames",
+   "scene  9: p95  33.3 ms ·  29 draw calls · 120156 triangles · 4 frames",
+   "scene 10: p95  33.3 ms ·  20 draw calls · 145820 triangles · 15 frames",
+   "scene 11: p95  33.3 ms ·  24 draw calls · 256084 triangles · 10 frames",
+   "scene 12: p95  33.3 ms ·  21 draw calls · 234452 triangles · 12 frames",
+   "scene 13: p95  83.4 ms ·  27 draw calls · 235148 triangles · 13 frames",
+   "scene 14: p95   100 ms ·  32 draw calls · 253204 triangles · 10 frames",
+   "scene 15: p95   100 ms ·  26 draw calls · 252580 triangles · 18 frames",
+   "scene 16: p95  66.6 ms ·  34 draw calls · 237462 triangles · 23 frames",
+   "scene 17: p95  33.3 ms ·  23 draw calls · 237440 triangles · 50 frames",
+   "scene 18: p95  33.5 ms ·  34 draw calls · 237462 triangles · 28 frames",
+   "scene 19: p95 100.1 ms ·  15 draw calls · 14050 triangles · 13 frames",
+   "scene 20: p95  33.4 ms ·  15 draw calls · 14050 triangles · 152 frames"
+  ],
+  "hotFunctions": null,
+  "errors": []
+ }
+}
