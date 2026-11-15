@@ -37,7 +37,7 @@ Blockers: `blocked.md`. Final report: `REPORT.md`.
 - [x] 3 JourneyArc + fit bar (1ff6f82)
 - [x] 4 Today (five states) (4641294)
 - [x] 5 Directions + Direction detail + two sub-pages (e8aa6ab)
-- [ ] 6 Roadmap + mission page shell
+- [x] 6 Roadmap + mission page shell (b7f0cdd)
 - [ ] 7 Proof
 - [ ] 8 Building, History, Settings
 - [ ] 9 Hindi + 390px pass
