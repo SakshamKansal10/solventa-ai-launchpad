@@ -160,3 +160,21 @@ Each entry: what was ambiguous, what I chose, why.
     English (still version, product preview, chain labels) and two SEO descriptions follow the
     same words. The fake Gemini now keeps the `workspace` enum untranslated, as real structured
     output does (it made week 1 fail in the Hindi e2e).
+33. **The opening (owner follow-up step 1).** A server-rendered DOM/CSS layer over the film's
+    first frame; an inline <head> script (`INTRO_GATE_SCRIPT`) decides before the first paint
+    whether it shows, so returning visitors never see it flash. Skipped for: seen before
+    (localStorage `sol-intro-seen`), #hash or ?next deep links, reload and back/forward
+    navigations, a page already scrolled, review URLs (?tier, ?freeze, ?debug, ?perf, ?notch) and
+    automated browsers — `?intro=1` forces it, `?intro=auto` applies the real rules in tests.
+    Timing: choices up to 3 s (or a tap) → answer line 1.1 s → "Here is Solventia." 0.9 s →
+    collapse 0.56 s into the lockup that is already beneath (same pearl ground), so a tap at ~1.5 s
+    gives a ~4 s opening. The 3D bundle starts downloading as the homepage module evaluates
+    (Vite's preload helper adds its modulepreload links), not after hydration; phones and reduced
+    motion skip it (they get the still version). At the lockup: ready → the film starts; else
+    the lockup holds (scroll locked, aria-busy, a quiet progress line instead of "Scroll to
+    explore", Skip intro still there); 8 s after the lockup without ready → the still version
+    for this visit. This replaces the 4 s bundle rule on intro visits only. The choice is kept
+    in sessionStorage and adds ONE line under "Your reality. Made actionable." (the film's
+    awakening caption; shown only when there is a choice). No consultation field matches
+    "stage" (status is occupation, not where they are with an idea), so nothing is pre-filled.
+    The capital-question idea is dropped. The film's own copy is English-only, as before.

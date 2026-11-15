@@ -3,6 +3,7 @@ import { z } from "zod";
 import { getSiteUrl } from "@/lib/actions/site-url.server";
 import { sanitizeNextPath } from "@/lib/safe-redirect";
 import { CinematicPage } from "@/components/cinematic-home/CinematicPage";
+import { INTRO_GATE_SCRIPT } from "@/components/cinematic-home/intro/intro-gate";
 import {
   BRAND_FONT_PRELOAD,
   CINEMATIC_FONTS,
@@ -58,6 +59,8 @@ export const Route = createFileRoute("/")({
       ],
       links: [BRAND_FONT_PRELOAD, { rel: "canonical", href: url }, CINEMATIC_FONTS],
       scripts: [
+        // The opening question: decided before the first paint (see intro-gate.ts).
+        { children: INTRO_GATE_SCRIPT },
         {
           type: "application/ld+json",
           children: JSON.stringify({

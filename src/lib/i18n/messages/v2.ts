@@ -235,6 +235,16 @@ const en = {
   "v2.rem.askNote": "You can change this any time in Settings.",
   "v2.rem.askYes": "Remind me",
   "v2.rem.askNo": "No thanks",
+  "v2.intro.q": "What brings you here?",
+  "v2.intro.c.start": "I want to start, but don't know what",
+  "v2.intro.c.idea": "I have an idea. Will it work?",
+  "v2.intro.c.stuck": "I've started. I'm stuck.",
+  "v2.intro.a.start": "Then you need a plan built around you.",
+  "v2.intro.a.idea": "Then you need to test it before you spend on it.",
+  "v2.intro.a.stuck": "Then you need the next step, not more ideas.",
+  "v2.intro.here": "Here is Solventia.",
+  "v2.intro.skip": "Skip intro",
+  "v2.intro.loading": "Preparing the experience",
 } as const;
 
 const hi: Record<keyof typeof en, string> = {
@@ -475,6 +485,16 @@ const hi: Record<keyof typeof en, string> = {
   "v2.rem.askNote": "आप इसे कभी भी सेटिंग्स में बदल सकते हैं।",
   "v2.rem.askYes": "याद दिलाएँ",
   "v2.rem.askNo": "नहीं, धन्यवाद",
+  "v2.intro.q": "आप यहाँ किसलिए आए हैं?",
+  "v2.intro.c.start": "कुछ शुरू करना है, पर पता नहीं क्या",
+  "v2.intro.c.idea": "मेरे पास एक आइडिया है। क्या यह चलेगा?",
+  "v2.intro.c.stuck": "शुरू कर दिया है, पर अब आगे रास्ता नहीं दिख रहा।",
+  "v2.intro.a.start": "तो आपको अपने हिसाब से बनी योजना चाहिए।",
+  "v2.intro.a.idea": "तो पैसा लगाने से पहले उसे परखना होगा।",
+  "v2.intro.a.stuck": "तो आपको और आइडिया नहीं, अगला क़दम चाहिए।",
+  "v2.intro.here": "यह रहा Solventia।",
+  "v2.intro.skip": "इंट्रो छोड़ें",
+  "v2.intro.loading": "अनुभव तैयार हो रहा है",
 };
 
 export default { en, hi };

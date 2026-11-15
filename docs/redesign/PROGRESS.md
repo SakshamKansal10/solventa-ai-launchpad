@@ -77,5 +77,16 @@ Blockers: `blocked.md`. Final report: `REPORT.md`.
 - [ ] 5 reliability
 - [ ] 6 10-profile comparison + command
 
+## Owner follow-up (2026-11-15) — in this order
+- [x] 0 finish the current feature (ea15552)
+- [ ] 1 opening: "What brings you here?"
+- [ ] 2 3D ready faster (measure, then fix)
+- [ ] 3 film: the new Today screen as the dashboard scene
+- [ ] 4 S-mark scene check
+- [ ] 5a part 4 feature 10 drop-off admin page
+- [ ] 5b part 5 idea engine (all steps, 10-profile comparison)
+- [ ] 6 final verification on the Vercel preview
+- [ ] 7 REPORT.md
+
 ## Final
 - [ ] REPORT.md

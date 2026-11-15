@@ -19,6 +19,8 @@ import {
   isFilm,
 } from "./device/capabilities";
 import { StaticFallback } from "./fallback/StaticFallback";
+import { introRequested, markIntroSeen } from "./intro/intro-gate";
+import { IntroQuestion } from "./intro/IntroQuestion";
 import { CinematicOverlay } from "./overlay/CinematicOverlay";
 import { Narrative } from "./overlay/Narrative";
 import { ProductLayer } from "./overlay/ProductLayer";
@@ -39,6 +41,18 @@ import { PEARL_WORLD } from "./world/tone";
 let canvasChunk: Promise<typeof import("./scene/CinematicCanvas")> | null = null;
 const loadCanvas = () => (canvasChunk ??= import("./scene/CinematicCanvas"));
 const CinematicCanvas = lazy(loadCanvas);
+
+// The 3D bundle starts downloading the moment this module runs in the browser — while the opening
+// question is on screen — for any visit that may get the film (Vite's preload helper adds the
+// modulepreload links for its dependencies). Phones and reduced motion get the still version, so
+// they skip it. The rejection is handled where the bundle is awaited.
+if (
+  typeof window !== "undefined" &&
+  window.innerWidth >= 768 &&
+  !window.matchMedia("(prefers-reduced-motion: reduce)").matches
+) {
+  loadCanvas().catch(() => undefined);
+}
 const DebugHud = lazy(() => import("./debug/DebugHud"));
 
 const HIDE_SCROLLBAR =
@@ -47,6 +61,13 @@ const HIDE_SCROLLBAR =
 /** If the 3D bundle has not arrived by then and the visitor has not started the film, the visit
  * gets the still version — decided once, before they are inside the story. */
 const BUNDLE_WAIT_MS = 4_000;
+
+/** After the opening's lockup forms, how long the visit waits for the world before it is served
+ * the still version instead. */
+const LOCKUP_WAIT_MS = 8_000;
+
+/** The opening: asked (first visits only), holding at the lockup for the world, or finished. */
+type IntroState = "ask" | "hold" | "off";
 
 /**
  * The visit's mode, decided ONCE (module scope: it survives remounts and client navigations) and
@@ -95,6 +116,11 @@ export function CinematicHome({
   // Problems inside the 3D world hide the world; the film itself keeps running on the overlay.
   const [worldOff, setWorldOff] = useState<string | null>(null);
   const ready = useExperienceValue(store, (s) => s.ready);
+  // Server and first client render agree on "ask" (the markup is hidden by CSS unless the head
+  // gate asked for it); the layout effect below switches it off before the first paint otherwise.
+  const [intro, setIntro] = useState<IntroState>("ask");
+  const introRef = useRef<IntroState>("ask");
+  introRef.current = intro;
 
   // Decide the experience once, before the browser paints the hydrated intro (the server render
   // is the void + first line). Never re-decided for this visit.
@@ -103,7 +129,49 @@ export function CinematicHome({
     store.state.device = probeDevice();
     store.state.capability = decided;
     setCapability(decided);
+    if (introRequested()) markIntroSeen();
+    else setIntro("off");
   }, [store, tierOverride]);
+
+  const serveStill = (reason: string) => {
+    const still: Capability = { mode: "fallback", tier: "lite", reasons: [reason] };
+    visitDecision = { override: tierOverride, capability: still };
+    store.state.capability = still;
+    setCapability(still);
+  };
+
+  // While the question is asked and while the lockup holds for the world, the story cannot move:
+  // the page does not scroll, and assistive technology is told the region is busy.
+  useEffect(() => {
+    // The gate itself is asked, not only the state: the first client render starts at "ask" for
+    // every visit (to match the server), and a mid-story reload must never be scrolled to the top.
+    if (intro === "off" || !introRequested()) return;
+    const root = document.documentElement;
+    const before = root.style.overflow;
+    root.style.overflow = "hidden";
+    // The gate only asks at the very top of a fresh page; this just keeps it there.
+    if (window.scrollY !== 0) window.scrollTo(0, 0);
+    return () => {
+      root.style.overflow = before;
+    };
+  }, [intro]);
+
+  // The lockup holds until the world is ready; after LOCKUP_WAIT_MS the visit gets the still
+  // version instead (decided before the visitor is inside the film, never mid-film).
+  useEffect(() => {
+    if (intro !== "hold") return;
+    if (ready) {
+      setIntro("off");
+      return;
+    }
+    const id = window.setTimeout(() => {
+      console.warn("[cinematic] Not ready 8 s after the opening — serving the still version.");
+      serveStill("not ready 8 s after the opening");
+      setIntro("off");
+    }, LOCKUP_WAIT_MS);
+    return () => window.clearTimeout(id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [intro, ready]);
 
   // Review/test hook (only with ?freeze, ?debug or ?perf): scene ranges + live state for frame
   // capture; ?perf exposes the same counters without the HUD, for scripts/film-perf.mjs.
@@ -143,20 +211,14 @@ export function CinematicHome({
       },
     );
     const id = window.setTimeout(() => {
-      if (loaded || window.scrollY > 40) return;
+      if (loaded || window.scrollY > 40 || introRef.current !== "off") return;
       console.warn(
         "[cinematic] 3D bundle slower than 4 s — serving the still version for this visit.",
       );
-      const still: Capability = {
-        mode: "fallback",
-        tier: "lite",
-        reasons: ["3D bundle slower than 4 s"],
-      };
-      visitDecision = { override: tierOverride, capability: still };
-      store.state.capability = still;
-      setCapability(still);
+      serveStill("3D bundle slower than 4 s");
     }, BUNDLE_WAIT_MS);
     return () => window.clearTimeout(id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mode, tierOverride, store]);
 
   useScrollController(store, sectionRef, mode !== "fallback");
@@ -186,6 +248,10 @@ export function CinematicHome({
         data-mode={mode}
         data-tier={capability?.tier ?? ""}
         data-ready={String(ready || mode === "fallback")}
+        data-intro-state={intro}
+        // Only once the client knows the opening is running (`capability` is set in the same
+        // layout effect): the server HTML never tells a returning visitor the page is busy.
+        aria-busy={(capability !== null && intro !== "off") || undefined}
         // The first paint is the pearl opening; the world fades up over it once it renders.
         style={{ backgroundColor: PEARL_WORLD.sky }}
       >
@@ -260,6 +326,16 @@ export function CinematicHome({
               <ProductLayer />
             </div>
           </section>
+        )}
+
+        {intro !== "off" && (
+          <IntroQuestion
+            holding={intro === "hold"}
+            still={mode === "fallback"}
+            reducedMotion={reducedMotion}
+            onLockup={() => setIntro(mode === "fallback" || store.state.ready ? "off" : "hold")}
+            onSkip={() => setIntro("off")}
+          />
         )}
 
         {/* Client only: `capability` is first set after mount, so the HUD never server-renders. */}

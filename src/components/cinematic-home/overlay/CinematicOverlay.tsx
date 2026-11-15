@@ -1,4 +1,6 @@
+import { useEffect, useState } from "react";
 import { Link } from "@tanstack/react-router";
+import { INTRO_CHOICE_EVENT, readIntroChoice, type IntroChoice } from "../intro/intro-gate";
 import {
   ArrowRight,
   Briefcase,
@@ -16,6 +18,7 @@ import { BrandMark, BrandSignature, BrandWordmark } from "@/components/brand/Bra
 import { useExperienceStore } from "../scroll/experience-store";
 import {
   accentRuns,
+  AWAKENING_SUB,
   CAPTIONS,
   COUNT_LABEL,
   LABELS,
@@ -81,6 +84,15 @@ const KICKER =
 
 export function CinematicOverlay() {
   const store = useExperienceStore();
+  // The opening's answer tailors one line (read after hydration, and again when it is made).
+  const [choice, setChoice] = useState<IntroChoice | null>(null);
+  useEffect(() => {
+    const read = () => setChoice(readIntroChoice());
+    read();
+    window.addEventListener(INTRO_CHOICE_EVENT, read);
+    return () => window.removeEventListener(INTRO_CHOICE_EVENT, read);
+  }, []);
+
   const reg = (map: Map<string, HTMLElement>, id: string) => (el: HTMLElement | null) => {
     if (el) map.set(id, el);
     else map.delete(id);
@@ -146,7 +158,9 @@ export function CinematicOverlay() {
             visibility: "hidden",
           }}
         >
-          <CaptionBody caption={c} />
+          <CaptionBody
+            caption={c.id === "awakening" && choice ? { ...c, sub: AWAKENING_SUB[choice] } : c}
+          />
         </div>
       ))}
       {/* The narrowing count: one very large figure, read like a statement. */}

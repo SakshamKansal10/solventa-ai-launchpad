@@ -137,7 +137,8 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
 function RootShell({ children }: { children: ReactNode }) {
   const { locale } = Route.useRouteContext();
   return (
-    <html lang={locale ?? DEFAULT_LOCALE}>
+    // The homepage's head script may set data-intro on <html> before hydration.
+    <html lang={locale ?? DEFAULT_LOCALE} suppressHydrationWarning>
       <head>
         <HeadContent />
       </head>
