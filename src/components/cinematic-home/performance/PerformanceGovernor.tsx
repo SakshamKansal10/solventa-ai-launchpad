@@ -20,8 +20,18 @@ export function PerformanceGovernor({
   preset: QualityPreset;
   adaptive: boolean;
 }) {
-  const setDpr = useThree((s) => s.setDpr);
   const sample = useRef({ frames: [] as number[], time: 0, windows: 0 });
+
+  // Measurement aid (scripts/film-perf.mjs): ?perf=1&notch=N pins a notch and turns adapting off.
+  useEffect(() => {
+    const q = new URLSearchParams(window.location.search);
+    const pinned = Number(q.get("notch"));
+    if (!q.has("perf") || !q.has("notch") || !(pinned in QUALITY_NOTCHES)) return;
+    sample.current.windows = ADAPT.windows;
+    store.state.perf.notch = pinned;
+    store.state.perf.filamentShare = QUALITY_NOTCHES[pinned].filamentShare;
+    store.emit();
+  }, [store]);
 
   useFrame((state, delta) => {
     const s = store.state;
@@ -51,7 +61,9 @@ export function PerformanceGovernor({
     if (notch !== s.perf.notch) {
       s.perf.notch = notch;
       s.perf.filamentShare = QUALITY_NOTCHES[notch].filamentShare;
-      setDpr(notchDpr(preset, window.devicePixelRatio || 1, notch));
+      // The canvas takes its pixel ratio from the notch as a prop (CinematicCanvas): R3F re-applies
+      // its dpr prop on every canvas render, which would silently undo a setDpr() here.
+      store.emit();
     }
   }, -3);
 

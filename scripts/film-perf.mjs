@@ -16,6 +16,7 @@ const args = process.argv.slice(2);
 const [base, label] = args.filter((a) => !a.startsWith("--"));
 const flag = (name) => args.find((a) => a.startsWith(`--${name}`));
 const tier = flag("tier")?.split("=")[1];
+const notch = flag("notch")?.split("=")[1];
 const headless = Boolean(flag("headless"));
 const throttleToo = !flag("no-throttle");
 
@@ -146,7 +147,7 @@ async function run({ throttle = 1, trace = false, profile = false, passes = ["do
     }).observe({ type: "longtask", buffered: false });
   });
   const cdp = await ctx.newCDPSession(page);
-  const q = tier ? `&tier=${tier}` : "";
+  const q = (tier ? `&tier=${tier}` : "") + (notch ? `&notch=${notch}` : "");
   await page.goto(`${base}/?perf=1${q}`, { waitUntil: "domcontentloaded", timeout: 90_000 });
   await page.waitForFunction(
     () => {

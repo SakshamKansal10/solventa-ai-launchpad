@@ -1,8 +1,8 @@
 import { Canvas } from "@react-three/fiber";
 
 import { BASE_FOV } from "../camera/camera-path";
-import type { QualityPreset } from "../performance/quality";
-import type { ExperienceStore } from "../scroll/experience-store";
+import { notchDpr, type QualityPreset } from "../performance/quality";
+import { useExperienceValue, type ExperienceStore } from "../scroll/experience-store";
 import { SceneRoot } from "./SceneRoot";
 
 /**
@@ -28,6 +28,9 @@ export default function CinematicCanvas({
   onContextLost: () => void;
   onContextRestored: () => void;
 }) {
+  // Adaptive quality: notch 0 is the tier's range; a lower notch is an exact, lower pixel ratio.
+  const notch = useExperienceValue(store, (s) => s.perf.notch);
+  const dpr = notch === 0 ? preset.dpr : notchDpr(preset, window.devicePixelRatio || 1, notch);
   return (
     <Canvas
       aria-hidden="true"
@@ -37,7 +40,7 @@ export default function CinematicCanvas({
       // starts the loop) — a first frame would otherwise compile them all synchronously and
       // freeze the page for seconds on modest GPUs.
       frameloop="never"
-      dpr={preset.dpr}
+      dpr={dpr}
       gl={{
         antialias: preset.antialias,
         alpha: false,

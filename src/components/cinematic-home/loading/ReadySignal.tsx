@@ -1,6 +1,6 @@
 import { useFrame, useThree } from "@react-three/fiber";
 import { useEffect, useRef } from "react";
-import type { Object3D, Texture } from "three";
+import { Vector4, type Object3D, type Texture } from "three";
 
 import { useExperienceValue, type ExperienceStore } from "../scroll/experience-store";
 
@@ -16,7 +16,11 @@ import { useExperienceValue, type ExperienceStore } from "../scroll/experience-s
  * is visited — a program also depends on the geometry it draws, so objects sharing a material can
  * need different programs — but only an object that actually created new programs waits for them
  * (cached ones cost nothing). Its textures are then uploaded the same way, one per frame, so the
- * first rendered frame does not have to. Two rendered frames after that, the world is ready.
+ * first rendered frame does not have to. Then the geometry: each world group is drawn once, with
+ * everything in it visible, into a 1×1 scissor of the canvas — one group per frame — so its vertex and instance
+ * buffers are on the GPU before the scene that needs them (measured: geometry uploads otherwise
+ * happened mid-scroll, 26 → 98 buffers as the story advanced). Two rendered frames after that,
+ * the world is ready.
  */
 export function ReadySignal({ store }: { store: ExperienceStore }) {
   const gl = useThree((s) => s.gl);
@@ -65,6 +69,43 @@ export function ReadySignal({ store }: { store: ExperienceStore }) {
         gl.initTexture(texture);
         await nextFrame();
       }
+      // Geometry: the real scene (same lights, fog and environment) with only one group shown,
+      // everything in it visible and un-culled, drawn into a 1×1 scissor of the canvas itself —
+      // an off-screen target would compile different programs (no tone mapping / output
+      // encoding there). The canvas is not shown yet, and the first real frame clears it.
+      const scissor = new Vector4();
+      const scissorTest = gl.getScissorTest();
+      gl.getScissor(scissor);
+      const groups = scene.children.filter((c) => {
+        let meshes = 0;
+        c.traverse((o) => {
+          if ((o as { isMesh?: boolean }).isMesh) meshes++;
+        });
+        return meshes > 0;
+      });
+      const shown = new Map(scene.children.map((c) => [c, c.visible] as const));
+      for (const group of groups) {
+        if (cancelled) break;
+        const restore: [Object3D, boolean, boolean][] = [];
+        group.traverse((o) => {
+          restore.push([o, o.visible, o.frustumCulled]);
+          o.visible = true;
+          o.frustumCulled = false;
+        });
+        for (const c of scene.children) if (c !== group && groups.includes(c)) c.visible = false;
+        gl.setScissorTest(true);
+        gl.setScissor(0, 0, 1, 1);
+        gl.render(scene, camera);
+        gl.setScissor(scissor);
+        gl.setScissorTest(scissorTest);
+        for (const [o, visible, culled] of restore) {
+          o.visible = visible;
+          o.frustumCulled = culled;
+        }
+        for (const [c, visible] of shown) c.visible = visible;
+        await nextFrame();
+      }
+
       if (cancelled) return;
       store.state.compiled = true;
       store.emit();
