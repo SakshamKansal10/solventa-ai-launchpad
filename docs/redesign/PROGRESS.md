@@ -71,7 +71,7 @@ Blockers: `blocked.md`. Final report: `REPORT.md`.
 
 ## Part 5 — idea engine
 - [x] plan-5.md audit (29466d1)
-- [ ] 2 better inputs
+- [x] 2 better inputs (361dad0)
 - [ ] 3 staged pipeline
 - [ ] 4 executable roadmaps
 - [ ] 5 reliability
