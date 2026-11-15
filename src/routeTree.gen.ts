@@ -25,6 +25,7 @@ import { Route as SignInRouteImport } from './routes/sign-in'
 import { Route as TermsRouteImport } from './routes/terms'
 import { Route as AuthCallbackRouteImport } from './routes/auth/callback'
 import { Route as DashboardIndexRouteImport } from './routes/dashboard/index'
+import { Route as DashboardAdminRouteImport } from './routes/dashboard/admin'
 import { Route as DashboardHistoryRouteImport } from './routes/dashboard/history'
 import { Route as DashboardProofRouteImport } from './routes/dashboard/proof'
 import { Route as DashboardSettingsRouteImport } from './routes/dashboard/settings'
@@ -118,6 +119,11 @@ const DashboardIndexRoute = DashboardIndexRouteImport.update({
   path: '/',
   getParentRoute: () => DashboardRoute,
 } as any)
+const DashboardAdminRoute = DashboardAdminRouteImport.update({
+  id: '/admin',
+  path: '/admin',
+  getParentRoute: () => DashboardRoute,
+} as any)
 const DashboardHistoryRoute = DashboardHistoryRouteImport.update({
   id: '/history',
   path: '/history',
@@ -202,6 +208,7 @@ export interface FileRoutesByFullPath {
   '/sign-in': typeof SignInRoute
   '/terms': typeof TermsRoute
   '/auth/callback': typeof AuthCallbackRoute
+  '/dashboard/admin': typeof DashboardAdminRoute
   '/dashboard/history': typeof DashboardHistoryRoute
   '/dashboard/proof': typeof DashboardProofRoute
   '/dashboard/settings': typeof DashboardSettingsRoute
@@ -231,6 +238,7 @@ export interface FileRoutesByTo {
   '/sign-in': typeof SignInRoute
   '/terms': typeof TermsRoute
   '/auth/callback': typeof AuthCallbackRoute
+  '/dashboard/admin': typeof DashboardAdminRoute
   '/dashboard/history': typeof DashboardHistoryRoute
   '/dashboard/proof': typeof DashboardProofRoute
   '/dashboard/settings': typeof DashboardSettingsRoute
@@ -262,6 +270,7 @@ export interface FileRoutesById {
   '/sign-in': typeof SignInRoute
   '/terms': typeof TermsRoute
   '/auth/callback': typeof AuthCallbackRoute
+  '/dashboard/admin': typeof DashboardAdminRoute
   '/dashboard/history': typeof DashboardHistoryRoute
   '/dashboard/proof': typeof DashboardProofRoute
   '/dashboard/settings': typeof DashboardSettingsRoute
@@ -294,6 +303,7 @@ export interface FileRouteTypes {
     | '/sign-in'
     | '/terms'
     | '/auth/callback'
+    | '/dashboard/admin'
     | '/dashboard/history'
     | '/dashboard/proof'
     | '/dashboard/settings'
@@ -323,6 +333,7 @@ export interface FileRouteTypes {
     | '/sign-in'
     | '/terms'
     | '/auth/callback'
+    | '/dashboard/admin'
     | '/dashboard/history'
     | '/dashboard/proof'
     | '/dashboard/settings'
@@ -353,6 +364,7 @@ export interface FileRouteTypes {
     | '/sign-in'
     | '/terms'
     | '/auth/callback'
+    | '/dashboard/admin'
     | '/dashboard/history'
     | '/dashboard/proof'
     | '/dashboard/settings'
@@ -503,6 +515,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardIndexRouteImport
       parentRoute: typeof DashboardRoute
     }
+    '/dashboard/admin': {
+      id: '/dashboard/admin'
+      path: '/admin'
+      fullPath: '/dashboard/admin'
+      preLoaderRoute: typeof DashboardAdminRouteImport
+      parentRoute: typeof DashboardRoute
+    }
     '/dashboard/history': {
       id: '/dashboard/history'
       path: '/history'
@@ -591,6 +610,7 @@ declare module '@tanstack/react-router' {
 }
 
 interface DashboardRouteChildren {
+  DashboardAdminRoute: typeof DashboardAdminRoute
   DashboardHistoryRoute: typeof DashboardHistoryRoute
   DashboardProofRoute: typeof DashboardProofRoute
   DashboardSettingsRoute: typeof DashboardSettingsRoute
@@ -604,6 +624,7 @@ interface DashboardRouteChildren {
 }
 
 const DashboardRouteChildren: DashboardRouteChildren = {
+  DashboardAdminRoute: DashboardAdminRoute,
   DashboardHistoryRoute: DashboardHistoryRoute,
   DashboardProofRoute: DashboardProofRoute,
   DashboardSettingsRoute: DashboardSettingsRoute,

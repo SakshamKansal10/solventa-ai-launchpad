@@ -192,3 +192,10 @@ Each entry: what was ambiguous, what I chose, why.
     large mission headline, cobalt action and numeral, navy journey block) at the panel's real
     size via container units; sample founder data, labelled illustrative. Its nav is a real
     tablist (Today / Roadmap / Proof); the cinematic e2e follows the new tab names.
+36. **Drop-off page (feature 10).** `/dashboard/admin`, not linked anywhere. Counts come from one
+    `SECURITY DEFINER` SQL function (`admin_dropoff_counts`, migration 0019) that refuses anyone
+    whose own profile is not `is_admin` (set by hand by the owner) and returns counts only — no
+    names, ids or content; no service key in the app, no third-party tracker. Steps: consultation
+    finished, direction chosen, roadmap built (active/completed), mission 1 started / done (the
+    first mission of the week numbered 1), week 1 done, and the stuck reasons. The e2e harness's
+    fake PostgREST gained a minimal `rpc` route for it.

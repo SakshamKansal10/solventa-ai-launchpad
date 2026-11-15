@@ -245,6 +245,21 @@ const en = {
   "v2.intro.here": "Here is Solventia.",
   "v2.intro.skip": "Skip intro",
   "v2.intro.loading": "Preparing the experience",
+  "v2.admin.title": "Where founders drop off",
+  "v2.admin.lead": "Counts of founders who reached each step, from Solventia's own tables. No tracker, no names.",
+  "v2.admin.private": "This page is private.",
+  "v2.admin.privateLead": "It is only for the Solventia team.",
+  "v2.admin.kept": "{p}% of the step before",
+  "v2.admin.step.consultation_finished": "Consultation finished",
+  "v2.admin.step.direction_chosen": "Direction chosen",
+  "v2.admin.step.roadmap_built": "Roadmap built",
+  "v2.admin.step.mission1_started": "Mission 1 started",
+  "v2.admin.step.mission1_done": "Mission 1 done",
+  "v2.admin.step.week1_done": "Week 1 done",
+  "v2.admin.stuck": "Why founders said they were stuck",
+  "v2.admin.reason.cant": "I can't do this part",
+  "v2.admin.reason.time": "No time this week",
+  "v2.admin.reason.wrong": "This doesn't feel right",
 } as const;
 
 const hi: Record<keyof typeof en, string> = {
@@ -495,6 +510,21 @@ const hi: Record<keyof typeof en, string> = {
   "v2.intro.here": "यह रहा Solventia।",
   "v2.intro.skip": "इंट्रो छोड़ें",
   "v2.intro.loading": "अनुभव तैयार हो रहा है",
+  "v2.admin.title": "फ़ाउंडर कहाँ रुक जाते हैं",
+  "v2.admin.lead": "हर क़दम तक पहुँचे फ़ाउंडर की गिनती, Solventia की अपनी टेबल से। कोई ट्रैकर नहीं, कोई नाम नहीं।",
+  "v2.admin.private": "यह पेज निजी है।",
+  "v2.admin.privateLead": "यह सिर्फ़ Solventia टीम के लिए है।",
+  "v2.admin.kept": "पिछले क़दम का {p}%",
+  "v2.admin.step.consultation_finished": "परामर्श पूरा हुआ",
+  "v2.admin.step.direction_chosen": "दिशा चुनी",
+  "v2.admin.step.roadmap_built": "रोडमैप बना",
+  "v2.admin.step.mission1_started": "मिशन 1 शुरू हुआ",
+  "v2.admin.step.mission1_done": "मिशन 1 पूरा हुआ",
+  "v2.admin.step.week1_done": "हफ़्ता 1 पूरा हुआ",
+  "v2.admin.stuck": "फ़ाउंडर ने अटकने की क्या वजह बताई",
+  "v2.admin.reason.cant": "यह हिस्सा मुझसे नहीं होगा",
+  "v2.admin.reason.time": "इस हफ़्ते समय नहीं",
+  "v2.admin.reason.wrong": "यह ठीक नहीं लग रहा",
 };
 
 export default { en, hi };
