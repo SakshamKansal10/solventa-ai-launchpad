@@ -209,6 +209,9 @@ const en = {
   "v2.contra.line": "{a} and “{b}” don't usually go together. Is one of them out of date?",
   "v2.contra.age": "Age {n}",
   "v2.contra.cta": "Correct it",
+  "v2.est.tag": "Estimate",
+  "v2.est.line": "Your first weeks check it.",
+  "v2.est.checked": "Checked {date}",
 } as const;
 
 const hi: Record<keyof typeof en, string> = {
@@ -422,6 +425,9 @@ const hi: Record<keyof typeof en, string> = {
   "v2.contra.line": "{a} और “{b}” आम तौर पर साथ नहीं होते। क्या इनमें से कोई पुराना है?",
   "v2.contra.age": "उम्र {n}",
   "v2.contra.cta": "ठीक करें",
+  "v2.est.tag": "अनुमान",
+  "v2.est.line": "आपके पहले हफ़्ते इसे जाँचेंगे।",
+  "v2.est.checked": "{date} को जाँचा गया",
 };
 
 export default { en, hi };

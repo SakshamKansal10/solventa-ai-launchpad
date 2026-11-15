@@ -4,6 +4,7 @@ import { Check, Minus } from "lucide-react";
 import { BackLink, DirectionAction, useDirectionDetail } from "@/components/founder/dash/direction";
 import { FitBar, kindOf, sortFactors } from "@/components/founder/dash/FitBar";
 import { DashError, DashPage, DashSkeleton, Label, MistCard } from "@/components/founder/dash/ui";
+import { EstimateTag } from "@/components/founder/dash/Estimate";
 import { useFitReasonText } from "@/components/founder/fit";
 import { useLocale } from "@/lib/i18n/LocaleProvider";
 import { cn } from "@/lib/utils";
@@ -84,6 +85,9 @@ function FitPage() {
                 </span>
               </div>
               <p className="dash-body">{reasonText(row.reason, dto.fit.currency)}</p>
+              {typeof row.reason.params.need === "number" && row.reason.params.need > 0 && (
+                <EstimateTag />
+              )}
             </MistCard>
           );
         })}

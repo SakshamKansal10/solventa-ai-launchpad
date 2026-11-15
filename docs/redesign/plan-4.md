@@ -36,7 +36,12 @@ migration is applied, so a deploy before the migration never breaks a page.
 - `roadmap_weeks` + `shifted_days int default 0` ("No time this week" moves the week 7 days).
 - `profiles` + `weekly_reminder boolean default false`, `reminder_weekday smallint` (0–6),
   `reminder_asked_at timestamptz`.
-### 0018_admin_flag.sql
+### 0018_number_kinds.sql (added while building feature 6)
+- `opportunity_evidence` + `kind text` (`estimate | sourced`); existing rows backfilled from
+  `source_url` (fills empty values only). `retrieved_at` already holds the date. A direction's
+  own numbers are estimates by construction: `candidate.numberKind = "estimate"` (jsonb, no
+  column).
+### 0019_admin_flag.sql
 - `profiles` + `is_admin boolean default false` (set by hand by the owner) for the drop-off page.
 
 ## Derived, never stored

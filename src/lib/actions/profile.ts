@@ -3,6 +3,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 
 import { requireUser } from "@/lib/supabase/server";
+import { DIRECTION_NUMBER_KIND } from "@/lib/market/number-kind";
 import { normalizeProfile, type NormalizedProfile } from "@/lib/profile/normalize";
 import { assessFit, fitSortScore } from "@/lib/fit/model";
 import { MESSAGES } from "@/lib/i18n";
@@ -230,7 +231,8 @@ export const completeConsultation = createServerFn({ method: "POST" })
             who_for: opp.customer,
             fit_score: score.score ?? 0,
             score_breakdown: score as unknown as Json,
-            candidate: opp as unknown as Json,
+            // A direction's numbers are estimates by construction (part 4, feature 6).
+            candidate: { ...opp, numberKind: DIRECTION_NUMBER_KIND } as unknown as Json,
             status: "active",
             batch_number: 1,
             ai_model: MODEL,

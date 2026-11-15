@@ -116,3 +116,11 @@ Each entry: what was ambiguous, what I chose, why.
     21+, college student under 15, working professional under 16), age vs education (degree under
     18, postgraduate under 20), and below-10th education with "college student". They are shown
     to correct, never fixed silently.
+28. **Estimates and sources (feature 6).** The direction generator has no sources, so every
+    number in a direction is an estimate by construction: stored as `candidate.numberKind =
+    "estimate"` on new directions (older ones read as estimates), and any direction text that
+    states a number shows the amber Estimate tag with "Your first weeks check it." (direction
+    "How you earn", "Where it goes", Market's longer earn line, and fit reasons that quote the
+    direction's estimated starting cost or hours). Cited-search claims are `sourced` only with a
+    URL (`opportunity_evidence.kind`, migration 0018) and show the link and the date checked
+    (`retrieved_at`); one without a URL is an estimate and tagged. Admin flag renumbered 0019.

@@ -4,6 +4,7 @@ import { Check, ExternalLink } from "lucide-react";
 import { toast } from "sonner";
 
 import { BackLink, useDirectionDetail } from "@/components/founder/dash/direction";
+import { EstimateTag } from "@/components/founder/dash/Estimate";
 import {
   ActionButton,
   ActionLink,
@@ -17,6 +18,7 @@ import {
 import { refreshMarketEvidence } from "@/lib/actions/opportunities";
 import type { MessageKey } from "@/lib/i18n";
 import { useLocale } from "@/lib/i18n/LocaleProvider";
+import { hasNumber } from "@/lib/market/number-kind";
 import { useInvalidateFounder } from "@/lib/queries";
 
 export const Route = createFileRoute("/dashboard/opportunities/$id/market")({
@@ -39,7 +41,13 @@ export const Route = createFileRoute("/dashboard/opportunities/$id/market")({
  * Market tab, the "More detail" expanders and "How it's delivered".) */
 function MarketPage() {
   const { id } = Route.useParams();
-  const { t } = useLocale();
+  const { t, locale } = useLocale();
+  const formatDate = (iso: string) =>
+    new Date(iso).toLocaleDateString(locale === "hi" ? "hi-IN" : "en-IN", {
+      day: "numeric",
+      month: "long",
+      year: "numeric",
+    });
   const invalidate = useInvalidateFounder();
   const { query, dto, detail } = useDirectionDetail(id);
   const research = useMutation({
@@ -97,7 +105,13 @@ function MarketPage() {
           </h2>
           <ul className="flex flex-col gap-3">
             {dto.sources.map((s) => (
-              <MistCard as="li" key={s.id} className="gap-3">
+              <MistCard
+                as="li"
+                key={s.id}
+                className="gap-3"
+                data-kind={s.kind}
+                data-testid="market-claim"
+              >
                 <p className="text-[20px] leading-snug text-sol-ink">{s.claim}</p>
                 <div className="flex flex-wrap items-center gap-3">
                   <Tag
@@ -109,16 +123,25 @@ function MarketPage() {
                   >
                     {t(`opp.market.label.${s.label}` as const)}
                   </Tag>
-                  {s.sourceUrl && (
-                    <a
-                      href={s.sourceUrl}
-                      target="_blank"
-                      rel="noreferrer noopener"
-                      className="inline-flex min-h-11 items-center gap-2 text-[17px] font-semibold text-sol-cobalt-deep hover:underline"
-                    >
-                      {s.sourceTitle ?? s.sourceUrl}
-                      <ExternalLink className="size-4" aria-hidden="true" />
-                    </a>
+                  {s.kind === "sourced" && s.sourceUrl ? (
+                    <>
+                      <a
+                        href={s.sourceUrl}
+                        target="_blank"
+                        rel="noreferrer noopener"
+                        className="inline-flex min-h-11 items-center gap-2 text-[17px] font-semibold text-sol-cobalt-deep hover:underline"
+                      >
+                        {s.sourceTitle ?? s.sourceUrl}
+                        <ExternalLink className="size-4" aria-hidden="true" />
+                      </a>
+                      {s.retrievedAt && (
+                        <span className="dash-meta" data-testid="source-date">
+                          {t("v2.est.checked", { date: formatDate(s.retrievedAt) })}
+                        </span>
+                      )}
+                    </>
+                  ) : (
+                    <EstimateTag />
                   )}
                 </div>
               </MistCard>
@@ -223,7 +246,10 @@ function MarketPage() {
             {more.map((m) => (
               <MistCard as="div" key={m.key} className="gap-2.5">
                 <dt className="dash-label">{m.label}</dt>
-                <dd className="dash-body text-sol-ink">{m.value}</dd>
+                <dd className="dash-body flex flex-col items-start gap-3 text-sol-ink">
+                  <span>{m.value}</span>
+                  {m.key === "earn" && hasNumber(m.value) && <EstimateTag />}
+                </dd>
               </MistCard>
             ))}
           </dl>

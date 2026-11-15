@@ -63,7 +63,7 @@ Blockers: `blocked.md`. Final report: `REPORT.md`.
 - [x] 3 Stuck? + failed check (f6c2d68)
 - [x] 4 scripts and message templates (60839a6)
 - [x] 5 ask what is missing (a9156eb)
-- [ ] 6 estimates and sources
+- [x] 6 estimates and sources ()
 - [ ] 7 Make it official guide
 - [ ] 8 weekly reminder
 - [ ] 9 plain words

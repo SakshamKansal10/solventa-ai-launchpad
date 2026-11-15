@@ -3,6 +3,8 @@ import { z } from "zod";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 import { requireUser } from "@/lib/supabase/server";
+import { getSchemaCapabilities } from "@/lib/schema-capabilities.server";
+import { DIRECTION_NUMBER_KIND, evidenceKind, type NumberKind } from "@/lib/market/number-kind";
 import type { Database, Json } from "@/lib/supabase/types";
 import type { NormalizedProfile } from "@/lib/profile/normalize";
 import {
@@ -107,7 +109,8 @@ async function persistOpportunityPackage(
       who_for: pkg.customer,
       fit_score: assessment.score ?? 0,
       score_breakdown: assessment as unknown as Json,
-      candidate: pkg as unknown as Json,
+      // A direction's numbers are estimates by construction (part 4, feature 6).
+      candidate: { ...pkg, numberKind: DIRECTION_NUMBER_KIND } as unknown as Json,
       status: "active" as const,
       batch_number: batchNumber,
       ai_model: MODEL,
@@ -187,6 +190,10 @@ export interface OpportunityDetailDTO {
     label: MarketEvidenceItem["label"];
     sourceTitle: string | null;
     sourceUrl: string | null;
+    /** sourced = it has a source URL; anything else is an estimate and is tagged. */
+    kind: NumberKind;
+    /** When the source was looked up. */
+    retrievedAt: string | null;
   }[];
   proof: ProofSummary;
   isSelected: boolean;
@@ -282,6 +289,8 @@ export const getOpportunityDetail = createServerFn({ method: "GET" })
         label: e.label,
         sourceTitle: e.source_title,
         sourceUrl: e.source_url,
+        kind: evidenceKind(e as { kind?: string | null; source_url: string | null }),
+        retrievedAt: e.retrieved_at ?? null,
       })),
       proof,
       isSelected: opportunity.status === "selected",
@@ -353,6 +362,7 @@ export const refreshMarketEvidence = createServerFn({ method: "POST" })
 
     // Replace rather than accumulate.
     await supabase.from("opportunity_evidence").delete().eq("opportunity_id", opportunity.id);
+    const caps = await getSchemaCapabilities(supabase);
     const rows = items.map((item) => ({
       opportunity_id: opportunity.id,
       user_id: user.id,
@@ -360,9 +370,14 @@ export const refreshMarketEvidence = createServerFn({ method: "POST" })
       label: item.label,
       source_title: item.sourceTitle,
       source_url: item.sourceUrl,
+      // Estimates and sources (part 4, feature 6): sourced only with a URL.
+      ...(caps.evidenceKind ? { kind: evidenceKind({ source_url: item.sourceUrl }) } : {}),
     }));
     if (rows.length > 0) {
-      const inserted = await supabase.from("opportunity_evidence").insert(rows);
+      // `kind` (0018) is newer than the generated database types.
+      const inserted = await (supabase as unknown as SupabaseClient)
+        .from("opportunity_evidence")
+        .insert(rows);
       if (inserted.error) throw new Error(inserted.error.message);
     }
     return { count: rows.length };

@@ -2,6 +2,8 @@ import { createFileRoute, redirect } from "@tanstack/react-router";
 import { z } from "zod";
 
 import { BackLink, DirectionAction, useDirectionDetail } from "@/components/founder/dash/direction";
+import { EstimateTag } from "@/components/founder/dash/Estimate";
+import { hasNumber } from "@/lib/market/number-kind";
 import { FitSummaryCard } from "@/components/founder/dash/FitBar";
 import {
   DashError,
@@ -15,8 +17,6 @@ import {
 } from "@/components/founder/dash/ui";
 import { useLocale } from "@/lib/i18n/LocaleProvider";
 import { useFounderState } from "@/lib/queries";
-
-const AMBER_ON_NAVY = "color-mix(in oklab, var(--sol-warning) 45%, white)";
 
 export const Route = createFileRoute("/dashboard/opportunities/$id/")({
   // Old deep links (`?tab=fit|market`) land on the sub-pages that replaced the tabs.
@@ -66,7 +66,7 @@ function DirectionPage() {
     { key: "offer", label: t("v2.detail.offer"), value: detail.solutionHeadline },
     { key: "earn", label: t("v2.detail.earn"), value: detail.moneyHeadline },
   ].filter((l) => l.value);
-  const projected = /\d/.test(detail.revenuePath);
+  const projected = hasNumber(detail.revenuePath);
 
   return (
     <DashPage className="sm:gap-8" data-testid="opportunity-page">
@@ -109,6 +109,7 @@ function DirectionPage() {
             <MistCard key={l.key} as="div" className="gap-3.5" data-testid={`block-${l.key}`}>
               <Label>{l.label}</Label>
               <p className="dash-statement">{l.value}</p>
+              {l.key === "earn" && hasNumber(l.value) && <EstimateTag />}
             </MistCard>
           ))}
         </section>
@@ -137,16 +138,7 @@ function DirectionPage() {
             <div className="flex min-w-0 flex-[1_1_320px] flex-col gap-3.5">
               <h2 className="dash-label !text-white/75">{t("v2.detail.whereItGoes")}</h2>
               <p className="text-[20px] leading-[1.45]">{detail.revenuePath}</p>
-              {projected && (
-                <p
-                  className="inline-flex min-h-[34px] items-center self-start rounded-full border px-3.5 text-[15px] font-semibold"
-                  // The warning token, lifted to read on navy.
-                  style={{ color: AMBER_ON_NAVY, borderColor: AMBER_ON_NAVY }}
-                  data-testid="estimate-tag"
-                >
-                  {t("v2.detail.estimate")}
-                </p>
-              )}
+              {projected && <EstimateTag onNavy />}
             </div>
           )}
         </NavyBlock>
