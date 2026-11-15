@@ -51,7 +51,7 @@ Blockers: `blocked.md`. Final report: `REPORT.md`.
 - [ ] 9 Hindi + 390px pass
 
 ## Part 4 — working features
-- [ ] plan-4.md data model
+- [x] plan-4.md data model
 - [ ] 1 mission workspaces + done rules
 - [ ] 2 proof that updates itself
 - [ ] 3 Stuck? + failed check
