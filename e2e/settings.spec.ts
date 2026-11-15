@@ -292,7 +292,7 @@ test.describe("Settings — language, notifications, account", () => {
     await page.getByTestId("lang-hi").click();
     await expect(page.getByTestId("topnav")).toContainText("आज");
     await expect(page.locator("html")).toHaveAttribute("lang", "hi");
-    await expect(page.getByTestId("topbar")).toContainText("SOLVENTIA");
+    await expect(page.getByTestId("topbar")).toContainText(/solventia/i);
 
     await expect
       .poll(

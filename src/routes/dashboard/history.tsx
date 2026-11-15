@@ -160,7 +160,7 @@ function HistoryPage() {
   };
 
   return (
-    <div className="flex flex-col gap-8" data-testid="history-page">
+    <div className="dash-page flex flex-col gap-8" data-testid="history-page">
       <PageHero title={t("hist.title")} subtitle={t("hist.subtitle2")} />
 
       {entries.length === 0 ? (

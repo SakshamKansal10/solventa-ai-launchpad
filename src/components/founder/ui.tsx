@@ -10,33 +10,32 @@ import { Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useLocale } from "@/lib/i18n/LocaleProvider";
 
-/** One button language for the whole logged-in product:
- *  primary   — navy, the single main action on a surface
- *  secondary — outlined, the alternative
- *  soft      — cobalt-soft surface + cobalt border (a noticeable tertiary action)
+/** The button language for dialogs, sheets, History and Settings — the v2 dashboard tokens
+ * (the pages themselves use founder/dash/ui):
+ *  primary   — cobalt pill, the single main action on a surface
+ *  secondary — outlined pill, the alternative
+ *  soft      — pearl pill (a quiet tertiary action)
  *  ghost     — text only
- *  champagne — ivory-to-champagne, the single main action on a dark surface
- * Every one has a visible disabled and loading state. */
+ *  champagne — white pill with ink text, the main action on a dark surface (name kept)
+ * Every one has a visible disabled and loading state and a 2px cobalt focus ring. */
 export type ButtonVariant = "primary" | "secondary" | "soft" | "ghost" | "danger" | "champagne";
 export type ButtonSize = "md" | "lg" | "sm";
 
 export function buttonClasses(variant: ButtonVariant = "primary", size: ButtonSize = "md") {
   return cn(
     // A long label wraps inside its container instead of running past the edge.
-    "inline-flex max-w-full select-none items-center justify-center gap-2 text-center leading-tight rounded-2xl font-semibold transition-[color,background-color,border-color,transform] duration-[180ms] ease-[var(--sol-ease)] active:scale-[0.98] disabled:pointer-events-none disabled:opacity-50 aria-disabled:pointer-events-none aria-disabled:opacity-50",
-    size === "sm" && "min-h-10 px-4 py-2 text-[0.9375rem]",
-    size === "md" && "min-h-12 px-6 py-2.5 text-[1rem]",
-    size === "lg" && "min-h-14 px-8 py-3 text-[1.0625rem]",
-    variant === "primary" && "bg-sol-navy text-white hover:bg-sol-navy-soft",
+    "inline-flex max-w-full select-none items-center justify-center gap-2 text-center leading-tight rounded-full font-semibold transition-[color,background-color,border-color,transform] duration-[180ms] ease-[var(--sol-ease)] active:scale-[0.98] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sol-cobalt disabled:pointer-events-none disabled:opacity-50 aria-disabled:pointer-events-none aria-disabled:opacity-50",
+    size === "sm" && "min-h-11 px-5 py-2 text-[16px]",
+    size === "md" && "min-h-12 px-6 py-2.5 text-[17px]",
+    size === "lg" && "min-h-14 px-7 py-3 text-[18px]",
+    variant === "primary" && "bg-sol-cobalt text-white hover:bg-sol-cobalt-deep",
     variant === "secondary" &&
-      "border border-sol-border-strong bg-sol-surface text-sol-ink hover:border-sol-cobalt/50",
-    variant === "soft" &&
-      "border border-sol-cobalt/40 bg-sol-cobalt-soft text-sol-cobalt-deep hover:border-sol-cobalt hover:bg-sol-cobalt-soft/70",
-    variant === "ghost" && "text-sol-cobalt-deep hover:bg-sol-cobalt-soft",
-    variant === "champagne" &&
-      "bg-[linear-gradient(135deg,#FFFDFB_0%,#F2ECE2_55%,#DCC08B_100%)] text-sol-navy shadow-[0_10px_30px_rgba(220,192,139,0.22)] hover:brightness-[1.04]",
+      "border border-sol-ink/30 bg-white font-medium text-sol-ink hover:border-sol-ink/60",
+    variant === "soft" && "bg-sol-ivory font-medium text-sol-ink hover:bg-sol-ivory-depth",
+    variant === "ghost" && "font-medium text-sol-cobalt-deep hover:bg-sol-ivory",
+    variant === "champagne" && "bg-white text-sol-ink hover:bg-sol-ivory",
     variant === "danger" &&
-      "border border-sol-warning/50 bg-sol-warning-soft text-sol-warning hover:border-sol-warning",
+      "dash-warn-text border border-sol-warning/50 bg-sol-warning-soft hover:border-sol-warning",
   );
 }
 
@@ -93,18 +92,26 @@ export function Card({
   as?: "section" | "div" | "article" | "aside";
 } & Omit<React.HTMLAttributes<HTMLElement>, "children" | "className">) {
   return (
-    <Tag className={cn(feature ? "sol-card-feature" : "sol-card", className)} {...rest}>
+    <Tag
+      className={cn(
+        // v2: the pearl supporting card — no border, no shadow (`feature` kept for callers).
+        "rounded-[32px] bg-sol-ivory",
+        feature && "bg-sol-ivory",
+        className,
+      )}
+      {...rest}
+    >
       {children}
     </Tag>
   );
 }
 
 const PILL: Record<string, string> = {
-  cobalt: "bg-sol-cobalt-soft text-sol-cobalt-deep border-sol-cobalt/25",
-  champagne: "bg-sol-champagne-soft text-sol-champagne-deep border-sol-champagne/40",
-  neutral: "bg-sol-ivory text-sol-secondary border-sol-border",
-  warning: "bg-sol-warning-soft text-sol-warning border-sol-warning/30",
-  navy: "bg-sol-navy text-white border-sol-navy",
+  cobalt: "bg-white text-sol-cobalt-deep border-sol-cobalt/50",
+  champagne: "bg-sol-champagne-soft text-sol-ink border-sol-champagne",
+  neutral: "bg-white text-sol-secondary border-sol-ink/25",
+  warning: "dash-warn-text bg-sol-warning-soft border-sol-warning/50",
+  navy: "bg-sol-ink text-white border-sol-ink",
 };
 
 export type PillTone = keyof typeof PILL;
@@ -121,7 +128,7 @@ export function Pill({
   return (
     <span
       className={cn(
-        "inline-flex min-h-7 items-center gap-1.5 rounded-full border px-3 text-[0.9375rem] font-semibold",
+        "inline-flex min-h-[34px] items-center gap-1.5 rounded-full border px-3.5 text-[15px] font-semibold",
         PILL[tone],
         className,
       )}
@@ -132,7 +139,7 @@ export function Pill({
 }
 
 export function Eyebrow({ children, className }: { children: ReactNode; className?: string }) {
-  return <p className={cn("sol-eyebrow", className)}>{children}</p>;
+  return <p className={cn("dash-label", className)}>{children}</p>;
 }
 
 export function PageHeader({
@@ -147,11 +154,11 @@ export function PageHeader({
   eyebrow?: string;
 }) {
   return (
-    <header className="flex flex-wrap items-end justify-between gap-4">
-      <div className="min-w-0">
-        {eyebrow && <Eyebrow className="mb-2">{eyebrow}</Eyebrow>}
-        <h1 className="sol-page-title">{title}</h1>
-        {subtitle && <p className="sol-body sol-prose mt-3 text-sol-secondary">{subtitle}</p>}
+    <header className="flex flex-wrap items-end justify-between gap-6">
+      <div className="flex min-w-0 flex-col gap-[18px]">
+        {eyebrow && <Eyebrow>{eyebrow}</Eyebrow>}
+        <h1 className="dash-headline">{title}</h1>
+        {subtitle && <p className="dash-lead max-w-[34em]">{subtitle}</p>}
       </div>
       {action}
     </header>
@@ -162,7 +169,7 @@ export function Skeleton({ className }: { className?: string }) {
   return (
     <div
       aria-hidden="true"
-      className={cn("animate-pulse rounded-2xl bg-sol-ivory-depth/70", className)}
+      className={cn("animate-pulse rounded-[24px] bg-sol-ivory", className)}
     />
   );
 }
@@ -205,10 +212,10 @@ export function ErrorPanel({
     <div
       role="alert"
       data-testid="error-panel"
-      className="flex flex-col items-start gap-3 rounded-[1.25rem] border border-sol-warning/40 bg-sol-warning-soft p-6"
+      className="flex flex-col items-start gap-4 rounded-[32px] border border-sol-warning/50 bg-sol-warning-soft p-[clamp(24px,2.8vw,40px)]"
     >
-      <p className="sol-h3">{title ?? t("shell.error.title")}</p>
-      <p className="sol-body sol-prose">{body ?? t("shell.error.body")}</p>
+      <p className="dash-statement">{title ?? t("shell.error.title")}</p>
+      <p className="dash-body text-sol-ink">{body ?? t("shell.error.body")}</p>
       {onRetry && (
         <Button variant="secondary" onClick={onRetry} loading={retrying}>
           {t("common.retry")}
@@ -228,9 +235,9 @@ export function EmptyState({
   action?: ReactNode;
 }) {
   return (
-    <div className="sol-card flex flex-col items-start gap-3 p-8">
-      <p className="sol-h3">{title}</p>
-      {body && <p className="sol-body sol-prose text-sol-secondary">{body}</p>}
+    <div className="flex flex-col items-start gap-4 rounded-[32px] bg-sol-ivory p-[clamp(24px,2.8vw,40px)]">
+      <p className="dash-statement">{title}</p>
+      {body && <p className="dash-body max-w-[36em]">{body}</p>}
       {action && <div className="mt-2">{action}</div>}
     </div>
   );
@@ -240,10 +247,8 @@ export function EmptyState({
 export function Fact({ label, children }: { label: string; children: ReactNode }) {
   return (
     <div className="min-w-0">
-      <dt className="text-[0.9375rem] font-bold uppercase tracking-[0.1em] text-sol-champagne-deep">
-        {label}
-      </dt>
-      <dd className="mt-1.5 text-[1.0625rem] leading-snug text-sol-ink">{children}</dd>
+      <dt className="dash-label">{label}</dt>
+      <dd className="mt-1.5 text-[19px] leading-snug text-sol-ink">{children}</dd>
     </div>
   );
 }

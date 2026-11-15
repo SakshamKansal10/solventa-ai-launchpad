@@ -2,9 +2,8 @@ import type { ReactNode } from "react";
 
 import { cn } from "@/lib/utils";
 
-/** The shared premium page header: a white-to-pearl atmosphere panel with
- * the title, a short line, an optional action and optional facts underneath. No
- * decorative 3D object: the page's content is the visual. */
+/** A page's headline area in the v2 scale: the headline carries the hierarchy through size,
+ * not a coloured box (History, Settings). */
 export function PageHero({
   title,
   subtitle,
@@ -19,15 +18,13 @@ export function PageHero({
   className?: string;
 }) {
   return (
-    <header className={cn("sol-atmosphere px-6 py-6 sm:px-9 sm:py-8", className)}>
-      <div className="relative z-10 flex flex-wrap items-center justify-between gap-6">
-        <div className="min-w-0 flex-1 basis-[18rem]">
-          <h1 className="sol-page-title">{title}</h1>
-          {subtitle && <p className="sol-body sol-prose mt-2 text-sol-secondary">{subtitle}</p>}
-          {action && <div className="mt-5">{action}</div>}
-        </div>
-        {children && <div className="flex items-center gap-5">{children}</div>}
+    <header className={cn("flex flex-wrap items-end justify-between gap-6 pb-2", className)}>
+      <div className="flex min-w-0 flex-[1_1_28rem] flex-col gap-[18px]">
+        <h1 className="dash-headline">{title}</h1>
+        {subtitle && <p className="dash-lead max-w-[34em]">{subtitle}</p>}
+        {action && <div className="pt-2">{action}</div>}
       </div>
+      {children && <div className="flex items-center gap-5">{children}</div>}
     </header>
   );
 }

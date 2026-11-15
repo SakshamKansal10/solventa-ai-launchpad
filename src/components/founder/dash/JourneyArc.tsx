@@ -50,6 +50,7 @@ export function JourneyArc({
   label,
   className,
   draw,
+  loop = false,
 }: {
   totalWeeks: number | null;
   phases?: ArcPhase[];
@@ -61,6 +62,8 @@ export function JourneyArc({
   className?: string;
   /** Force the drawing animation (the building screen draws on every visit). */
   draw?: boolean;
+  /** Keep redrawing (the building screen, while the roadmap is being written). */
+  loop?: boolean;
 }) {
   // Draw once per visit (module scope survives client navigation), unless asked to draw.
   const [animate] = useState(() => draw || !drawnThisVisit);
@@ -92,7 +95,7 @@ export function JourneyArc({
         strokeOpacity={0.22}
         strokeWidth={2}
         pathLength={1}
-        className={animate ? "dash-arc-draw" : undefined}
+        className={loop ? "dash-arc-loop" : animate ? "dash-arc-draw" : undefined}
       />
       {n && currentPhase && (
         <path

@@ -56,14 +56,19 @@ function SettingsPage() {
   const data = query.data;
 
   return (
-    <div className="flex max-w-[56rem] flex-col gap-6" data-testid="settings-page">
+    <div className="dash-page flex flex-col gap-8" data-testid="settings-page">
       <PageHero title={t("set.title")} subtitle={t("set.subtitle")} />
-      <ProfileSection data={data} />
-      <PhotoSection available={data.extrasAvailable} />
-      <FounderProfileSection data={data} />
-      <LanguageSection />
-      <NotificationSection data={data} />
-      <AccountSection />
+      {/* Two columns on desktop; the founder profile (the longest section) spans both. */}
+      <div className="grid items-start gap-6 lg:grid-cols-2">
+        <ProfileSection data={data} />
+        <PhotoSection available={data.extrasAvailable} />
+        <div className="min-w-0 lg:col-span-2">
+          <FounderProfileSection data={data} />
+        </div>
+        <LanguageSection />
+        <NotificationSection data={data} />
+        <AccountSection />
+      </div>
     </div>
   );
 }
@@ -107,11 +112,11 @@ function ProfileSection({ data }: { data: SettingsData }) {
 
   return (
     <Card
-      className="flex flex-col gap-5 border-sol-border p-6 shadow-none sm:p-7"
+      className="flex flex-col gap-5 p-[clamp(24px,2.8vw,40px)]"
       aria-labelledby="profile-h"
       data-testid="profile-section"
     >
-      <h2 id="profile-h" className="sol-h3">
+      <h2 id="profile-h" className="dash-statement">
         {t("set.profile.title")}
       </h2>
       <form
@@ -181,12 +186,12 @@ function LanguageSection() {
   ];
   return (
     <Card
-      className="flex flex-col gap-4 border-sol-border p-6 shadow-none sm:p-7"
+      className="flex flex-col gap-4 p-[clamp(24px,2.8vw,40px)]"
       aria-labelledby="lang-h"
       data-testid="language-section"
     >
       <div>
-        <h2 id="lang-h" className="sol-h3">
+        <h2 id="lang-h" className="dash-statement">
           {t("set.lang.title")}
         </h2>
         <p className="sol-support mt-1 max-w-[60ch]">{t("set.lang.body")}</p>
@@ -244,12 +249,12 @@ function NotificationSection({ data }: { data: SettingsData }) {
 
   return (
     <Card
-      className="flex flex-col gap-4 border-sol-border p-6 shadow-none sm:p-7"
+      className="flex flex-col gap-4 p-[clamp(24px,2.8vw,40px)]"
       aria-labelledby="notif-h"
       data-testid="notification-section"
     >
       <div>
-        <h2 id="notif-h" className="sol-h3">
+        <h2 id="notif-h" className="dash-statement">
           {t("set.notif.title")}
         </h2>
         <p className="sol-support mt-1">
@@ -293,11 +298,11 @@ function AccountSection() {
   });
   return (
     <Card
-      className="flex flex-col gap-5 border-sol-border p-6 shadow-none sm:p-7"
+      className="flex flex-col gap-5 p-[clamp(24px,2.8vw,40px)]"
       aria-labelledby="account-h"
       data-testid="account-section"
     >
-      <h2 id="account-h" className="sol-h3">
+      <h2 id="account-h" className="dash-statement">
         {t("set.account.title")}
       </h2>
       <div className="flex flex-wrap gap-3">

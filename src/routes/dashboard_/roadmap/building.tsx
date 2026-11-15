@@ -1,12 +1,14 @@
 import { useEffect, useRef, useState } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { Loader2 } from "lucide-react";
 import { z } from "zod";
 
 import { BrandLockup } from "@/components/brand/Brand";
 import { LanguageSwitcher } from "@/components/solventia/LanguageSwitcher";
-import { Button, LinkButton } from "@/components/founder/ui";
+import { DASH_FRAME } from "@/components/founder/DashboardShell";
+import { JourneyArc } from "@/components/founder/dash/JourneyArc";
+import { ActionButton, ActionLink, NavyBlock } from "@/components/founder/dash/ui";
+import { cn } from "@/lib/utils";
 import { buildRoadmap } from "@/lib/actions/roadmap";
 import { useLocale } from "@/lib/i18n/LocaleProvider";
 import { qk, useFounderState, useInvalidateFounder } from "@/lib/queries";
@@ -27,17 +29,6 @@ export const Route = createFileRoute("/dashboard_/roadmap/building")({
   }),
 });
 
-/** What building a roadmap involves. The server does it in ONE request that reports
- * no intermediate progress, so these are listed — never ticked off on a timer, never
- * given a percentage: the page only says it is done when the request has resolved. */
-const STATUS_KEYS = [
-  "rm.build.s1",
-  "rm.build.s2",
-  "rm.build.s3",
-  "rm.build.s4",
-  "rm.build.s5",
-] as const;
-
 function BuildingPage() {
   const { opportunityId } = Route.useSearch();
   const { t, locale } = useLocale();
@@ -45,7 +36,6 @@ function BuildingPage() {
   const queryClient = useQueryClient();
   const invalidate = useInvalidateFounder();
   const founder = useFounderState();
-  const [statusIndex, setStatusIndex] = useState(0);
   const [waitingOnOther, setWaitingOnOther] = useState(false);
   const [timedOut, setTimedOut] = useState(false);
   const startedRef = useRef(false);
@@ -62,7 +52,7 @@ function BuildingPage() {
           // screen spinning once the roadmap itself is confirmed built.
           void navigate({
             to: "/dashboard/roadmap",
-            search: { tab: "week", week: 1 },
+            search: { week: 1 },
             replace: true,
           });
         }
@@ -108,7 +98,6 @@ function BuildingPage() {
     const id = window.setInterval(() => setElapsed(Math.round((Date.now() - start) / 1000)), 1000);
     return () => window.clearInterval(id);
   }, [build.isPending, waitingOnOther]);
-  void statusIndex;
 
   // When someone else is building it, watch the real state until it finishes.
   useEffect(() => {
@@ -121,7 +110,7 @@ function BuildingPage() {
   const roadmapStatus = founder.data?.direction.roadmap?.status;
   useEffect(() => {
     if (waitingOnOther && roadmapStatus === "active") {
-      void navigate({ to: "/dashboard/roadmap", search: { tab: "week", week: 1 }, replace: true });
+      void navigate({ to: "/dashboard/roadmap", search: { week: 1 }, replace: true });
     }
   }, [waitingOnOther, roadmapStatus, navigate]);
 
@@ -132,81 +121,68 @@ function BuildingPage() {
     timedOut;
 
   return (
-    <div className="sol-world-bg flex min-h-dvh flex-col text-sol-ink">
-      <header className="flex h-[72px] items-center justify-between px-5 sm:px-10">
-        <Link to="/" className="flex items-center gap-3" aria-label={t("nav.homeAria")}>
+    <div className="app-inter flex min-h-dvh flex-col bg-white text-sol-ink">
+      <header
+        className={cn(
+          DASH_FRAME,
+          "flex flex-wrap items-center justify-between gap-4 pb-[clamp(20px,3vw,44px)] pt-5 sm:pt-[26px]",
+        )}
+      >
+        <Link
+          to="/"
+          className="rounded-xl focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-sol-cobalt"
+          aria-label={t("nav.homeAria")}
+        >
           <BrandLockup preset="compact" />
         </Link>
-        <LanguageSwitcher />
+        <LanguageSwitcher className="inline-flex min-h-[46px] items-center rounded-full border border-sol-ink/20 bg-white px-[18px] text-[16px] font-medium text-sol-ink transition-colors hover:border-sol-ink/50" />
       </header>
 
-      <main className="flex flex-1 items-center justify-center px-5 pb-16">
-        <div
-          className="flex w-full max-w-[560px] flex-col items-center gap-6 text-center"
-          data-testid="building"
-        >
+      <main className={cn(DASH_FRAME, "flex flex-1 flex-col pb-16")}>
+        <div className="dash-page flex w-full flex-col gap-8" data-testid="building">
           {failed ? (
             <div
               role="alert"
-              className="flex flex-col items-center gap-4"
+              className="flex flex-col items-start gap-7"
               data-testid="build-failed"
             >
-              <h1 className="sol-h2">{t("rm.build.failedTitle")}</h1>
-              <p className="sol-body sol-prose text-sol-secondary">{t("rm.build.failedBody")}</p>
-              <div className="flex flex-wrap justify-center gap-3">
-                <Button
-                  size="lg"
+              <h1 className="dash-headline max-w-[15em]">{t("rm.build.failedTitle")}</h1>
+              <p className="dash-lead max-w-[32em]">{t("rm.build.failedBody")}</p>
+              <div className="flex flex-wrap items-center gap-3.5">
+                <ActionButton
                   loading={build.isPending}
                   onClick={() => {
                     setWaitingOnOther(false);
-                    setStatusIndex(0);
                     setTimedOut(false);
                     build.mutate();
                   }}
                   data-testid="retry-build"
                 >
                   {t("common.retry")}
-                </Button>
-                <LinkButton to="/dashboard" variant="secondary" size="lg">
+                </ActionButton>
+                <ActionLink to="/dashboard" tone="secondary" arrow={false}>
                   {t("shell.nav.commandCenter")}
-                </LinkButton>
+                </ActionLink>
               </div>
             </div>
           ) : (
             <>
-              <h1 className="sol-h2">{t("rm.build.title")}</h1>
-              <p
-                role="status"
-                aria-live="polite"
-                className="min-h-8 text-[1.125rem] text-sol-ink"
-                data-testid="build-status"
-              >
-                {waitingOnOther ? t("rm.build.other") : t("rm.build.working", { s: elapsed })}
-              </p>
-              {/* Indeterminate: movement without a number, because none is measurable. */}
-              <div
-                className="h-1 w-full max-w-[320px] overflow-hidden rounded-full bg-sol-cobalt-soft"
-                aria-hidden="true"
-              >
-                <div className="h-full w-1/3 rounded-full bg-sol-cobalt motion-safe:animate-[sol-indeterminate_1.6s_ease-in-out_infinite]" />
-              </div>
-              <div className="w-full max-w-[420px] text-left">
-                <p className="text-[0.9375rem] font-semibold text-sol-secondary">
-                  {t("rm.build.whatHappens")}
+              <div className="flex flex-col gap-[18px]">
+                <h1 className="dash-headline">{t("rm.build.title")}</h1>
+                <p
+                  role="status"
+                  aria-live="polite"
+                  className="dash-lead min-h-8"
+                  data-testid="build-status"
+                >
+                  {waitingOnOther ? t("rm.build.other") : t("rm.build.working", { s: elapsed })}
                 </p>
-                <ul className="mt-2 flex flex-col gap-1.5 text-[0.9375rem] text-sol-ink">
-                  {STATUS_KEYS.map((k) => (
-                    <li key={k} className="flex gap-2.5">
-                      <span
-                        className="mt-2 size-1.5 shrink-0 rounded-full bg-sol-border-strong"
-                        aria-hidden="true"
-                      />
-                      {t(k)}
-                    </li>
-                  ))}
-                </ul>
               </div>
-              <p className="sol-support max-w-[38ch]">{t("rm.build.honest")}</p>
+              {/* The arc draws itself while the roadmap is written. Its length is unknown until
+                  the roadmap exists, so no week count is invented. */}
+              <NavyBlock aria-hidden="false">
+                <JourneyArc totalWeeks={null} label={t("v2.building.arc")} draw loop />
+              </NavyBlock>
             </>
           )}
         </div>

@@ -179,7 +179,7 @@ function EditSheet({
         data-testid="founder-edit-sheet"
       >
         <SheetHeader className="text-left">
-          <SheetTitle className="sol-h3">
+          <SheetTitle className="dash-statement">
             {row ? t("set.founder.sheetTitle", { section: t(row.label) }) : ""}
           </SheetTitle>
           <SheetDescription className="text-[1rem] text-sol-secondary">
@@ -267,12 +267,12 @@ export function FounderProfileSection({ data }: { data: SettingsData }) {
 
   return (
     <Card
-      className="flex flex-col gap-5 border-sol-border p-6 shadow-none sm:p-7"
+      className="flex flex-col gap-5 p-[clamp(24px,2.8vw,40px)]"
       aria-labelledby="founder-h"
       data-testid="founder-section"
     >
       <div>
-        <h2 id="founder-h" className="sol-h3">
+        <h2 id="founder-h" className="dash-statement">
           {t("set.founder.title")}
         </h2>
         <p className="sol-support mt-1 max-w-[60ch]">{t("set.founder.subtitle")}</p>
