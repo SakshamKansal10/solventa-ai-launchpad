@@ -3,6 +3,7 @@ import type { CSSProperties } from "react";
 import { Footer } from "@/components/solventia/Footer";
 
 import { CinematicHome } from "./CinematicHome";
+import { normalizeTierOverride } from "./device/capabilities";
 import { CinematicNav } from "./nav/CinematicNav";
 import { PEARL_DEFAULTS } from "./overlay/palette";
 import { PEARL_WORLD } from "./world/tone";
@@ -26,7 +27,7 @@ export function CinematicPage({
   freeze,
   pendingNext,
 }: {
-  tier?: "high" | "medium" | "low" | "fallback";
+  tier?: "full" | "lite" | "fallback" | "high" | "medium" | "low";
   debug?: boolean;
   freeze?: boolean;
   /** A same-origin destination to sign in toward (the `/?next=` redirect from a protected route). */
@@ -37,7 +38,7 @@ export function CinematicPage({
       {/* Technical typography is scoped to the experience; the shared footer keeps its own. */}
       <div data-cine-tone style={TECH_TYPE}>
         <CinematicNav pendingNext={pendingNext} />
-        <CinematicHome tierOverride={tier} debug={debug} freeze={freeze} />
+        <CinematicHome tierOverride={normalizeTierOverride(tier)} debug={debug} freeze={freeze} />
       </div>
       {/* Opaque and stacked above the fixed WebGL stage: the footer slides over it. */}
       <div className="relative z-20">

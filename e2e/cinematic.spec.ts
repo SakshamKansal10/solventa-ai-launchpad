@@ -27,7 +27,7 @@ function collectErrors(page: Page): string[] {
   return errors;
 }
 
-async function open(page: Page, query = "tier=medium&freeze=1") {
+async function open(page: Page, query = "tier=full&freeze=1") {
   await gotoApp(page, `/cinematic?${query}`);
   const home = page.getByTestId("cinematic-home");
   await expect(home).toHaveAttribute("data-ready", "true", { timeout: 45_000 });
@@ -75,7 +75,7 @@ test.describe("cinematic homepage", () => {
   }) => {
     test.setTimeout(90_000);
     // A cold load (fresh context, empty cache) of the real, WebGL page — no frozen frames.
-    await gotoApp(page, "/cinematic?tier=medium");
+    await gotoApp(page, "/cinematic?tier=full");
     const img = page.locator("[data-brand-opening] [data-brand-part=mark] img");
     await expect(img).toBeVisible();
 
@@ -150,7 +150,7 @@ test.describe("cinematic homepage", () => {
   test("the whole story plays on one WebGL stage, scene by scene", async ({ page }) => {
     const errors = collectErrors(page);
     const home = await open(page);
-    await expect(home).toHaveAttribute("data-mode", "webgl");
+    await expect(home).toHaveAttribute("data-mode", "full");
     await expect(page.locator("canvas")).toHaveCount(1);
     // The opening is the identity alone, centred: one SOLVENTIA on screen, not two.
     await expect(page.locator("[data-brand-opening] [data-brand-part=word]")).toBeVisible();
@@ -282,7 +282,7 @@ test.describe("cinematic homepage", () => {
   test("the canvas follows the viewport through resizes, without horizontal overflow", async ({
     page,
   }) => {
-    await open(page, "tier=low&freeze=1");
+    await open(page, "tier=lite&freeze=1");
     await goTo(page, "three", 0.5);
     for (const [width, height] of [
       [390, 844],
@@ -357,7 +357,7 @@ test.describe("cinematic homepage", () => {
         }
       }
     };
-    await open(page, "tier=low&freeze=1");
+    await open(page, "tier=lite&freeze=1");
     await audit("start");
     // Deep in the film the navigation recedes — it must stay legible (AA) while it does.
     await goTo(page, "computation", 0.5);

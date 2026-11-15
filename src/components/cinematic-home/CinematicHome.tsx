@@ -16,6 +16,7 @@ import {
   probeDevice,
   type Capability,
   type TierOverride,
+  isFilm,
 } from "./device/capabilities";
 import { StaticFallback } from "./fallback/StaticFallback";
 import { CinematicOverlay } from "./overlay/CinematicOverlay";
@@ -132,7 +133,7 @@ export function CinematicHome({
   // version (the one moment a decision can still change, before they enter the film). If they
   // are already scrolling, the film continues on the overlay and the world joins if it arrives.
   useEffect(() => {
-    if (mode !== "webgl" || tierOverride) return;
+    if (!isFilm(mode) || tierOverride) return;
     let loaded = false;
     loadCanvas().then(
       () => (loaded = true),
@@ -148,7 +149,7 @@ export function CinematicHome({
       );
       const still: Capability = {
         mode: "fallback",
-        tier: "low",
+        tier: "lite",
         reasons: ["3D bundle slower than 4 s"],
       };
       visitDecision = { override: tierOverride, capability: still };
@@ -166,9 +167,9 @@ export function CinematicHome({
     animate: !reducedMotion,
     freeze,
   });
-  usePointerInput(store, mode === "webgl" && !reducedMotion && !freeze);
+  usePointerInput(store, isFilm(mode) && !reducedMotion && !freeze);
   // The soundtrack is offered with the WebGL experience only (off until the visitor asks).
-  useEffect(() => (mode === "webgl" ? soundController.attach(store) : undefined), [mode, store]);
+  useEffect(() => (isFilm(mode) ? soundController.attach(store) : undefined), [mode, store]);
 
   const showHud = debug ?? import.meta.env.DEV;
   const status =
@@ -227,7 +228,7 @@ export function CinematicHome({
                   className="absolute inset-0"
                   style={{ opacity: worldOff ? 0 : "var(--world-in, 0)" }}
                 >
-                  {mode === "webgl" && capability && !worldOff?.startsWith("error") && (
+                  {isFilm(mode) && capability && !worldOff?.startsWith("error") && (
                     <CanvasErrorBoundary
                       onError={(reason) => {
                         console.error(

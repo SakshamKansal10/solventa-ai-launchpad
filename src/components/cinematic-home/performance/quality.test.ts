@@ -2,24 +2,25 @@ import { describe, expect, it } from "vitest";
 
 import { DPR_STEP, governDpr, GOVERNOR, QUALITY_PRESETS, type GovernorState } from "./quality";
 
-const { high, medium, low } = QUALITY_PRESETS;
+const { full: high, lite } = QUALITY_PRESETS;
 
 describe("quality presets", () => {
-  it("spend less at every lower tier, within a restrained universe (clarity over density)", () => {
+  it("lite spends less on every cost, within a restrained universe (clarity over density)", () => {
     expect(high.universeCount).toBeGreaterThanOrEqual(130);
     expect(high.universeCount).toBeLessThanOrEqual(220);
-    expect(medium.universeCount).toBeGreaterThanOrEqual(110);
-    expect(medium.universeCount).toBeLessThan(high.universeCount);
-    expect(low.universeCount).toBeGreaterThanOrEqual(80);
-    expect(low.universeCount).toBeLessThan(medium.universeCount);
-    expect(high.filamentCapacity).toBeGreaterThan(low.filamentCapacity);
-    expect(high.coreSegments).toBeGreaterThan(low.coreSegments);
-    expect(high.dpr[1]).toBeGreaterThanOrEqual(medium.dpr[1]);
-    expect(medium.dpr[1]).toBeGreaterThanOrEqual(low.dpr[1]);
+    expect(lite.universeCount).toBeGreaterThanOrEqual(80);
+    expect(lite.universeCount).toBeLessThan(high.universeCount);
+    expect(high.filamentCapacity).toBeGreaterThan(lite.filamentCapacity);
+    expect(high.filamentSegments).toBeGreaterThan(lite.filamentSegments);
+    expect(high.coreSegments).toBeGreaterThan(lite.coreSegments);
+    expect(high.dpr[1]).toBeGreaterThan(lite.dpr[1]);
+    expect(lite.dpr[1]).toBeLessThanOrEqual(1);
+    expect(lite.antialias).toBe(false);
+    expect(lite.physicalMaterials).toBe(false);
   });
 
   it("have valid resolution ranges", () => {
-    for (const preset of [high, medium, low]) {
+    for (const preset of [high, lite]) {
       expect(preset.dpr[0]).toBeGreaterThan(0);
       expect(preset.dpr[0]).toBeLessThanOrEqual(preset.dpr[1]);
     }

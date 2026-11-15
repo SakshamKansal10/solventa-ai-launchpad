@@ -26,25 +26,8 @@ const phone: DeviceProfile = {
 const motionOk = { reducedMotion: false };
 
 describe("classifyDevice", () => {
-  it("gives a capable desktop the high tier", () => {
-    expect(classifyDevice(desktop, motionOk)).toMatchObject({ mode: "webgl", tier: "high" });
-  });
-
-  it("gives a modest desktop the medium tier", () => {
-    expect(classifyDevice({ ...desktop, cores: 4 }, motionOk)).toMatchObject({ tier: "medium" });
-    expect(classifyDevice({ ...desktop, memoryGb: 4 }, motionOk)).toMatchObject({ tier: "medium" });
-  });
-
-  it("keeps integrated graphics on the medium tier, even with many cores", () => {
-    for (const gpu of [
-      "ANGLE (Intel, Intel(R) UHD Graphics 620 Direct3D11 vs_5_0 ps_5_0, D3D11)",
-      "ANGLE (Intel, Intel(R) Iris(R) Xe Graphics Direct3D11 vs_5_0 ps_5_0, D3D11)",
-      "ANGLE (AMD, AMD Radeon(TM) Vega 3 Graphics Direct3D11 vs_5_0 ps_5_0, D3D11)",
-      "ANGLE (AMD, AMD Radeon(TM) Graphics Direct3D11 vs_5_0 ps_5_0, D3D11)",
-      "ANGLE (AMD, AMD Radeon 780M Graphics Direct3D11 vs_5_0 ps_5_0, D3D11)",
-    ]) {
-      expect(classifyDevice({ ...desktop, gpu }, motionOk)).toMatchObject({ tier: "medium" });
-    }
+  it("gives a capable desktop with dedicated graphics the full film", () => {
+    expect(classifyDevice(desktop, motionOk)).toMatchObject({ mode: "full", tier: "full" });
     for (const gpu of [
       desktop.gpu,
       "ANGLE (AMD, AMD Radeon RX 6600 Direct3D11 vs_5_0 ps_5_0, D3D11)",
@@ -52,32 +35,42 @@ describe("classifyDevice", () => {
       "Apple M2 Pro",
       null,
     ]) {
-      expect(classifyDevice({ ...desktop, gpu }, motionOk)).toMatchObject({ tier: "high" });
+      expect(classifyDevice({ ...desktop, gpu }, motionOk).mode).toBe("full");
     }
+  });
+
+  it("gives the same film at the lite budget to machines that pass the gates but cannot sustain full", () => {
+    // Integrated graphics, even with many cores (the owner's laptop class: a Radeon Vega APU).
+    for (const gpu of [
+      "ANGLE (Intel, Intel(R) UHD Graphics 620 Direct3D11 vs_5_0 ps_5_0, D3D11)",
+      "ANGLE (Intel, Intel(R) Iris(R) Xe Graphics Direct3D11 vs_5_0 ps_5_0, D3D11)",
+      "ANGLE (AMD, AMD Radeon(TM) Vega 3 Graphics (0x000015D8) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+      "ANGLE (AMD, AMD Radeon(TM) Graphics Direct3D11 vs_5_0 ps_5_0, D3D11)",
+      "ANGLE (AMD, AMD Radeon 780M Graphics Direct3D11 vs_5_0 ps_5_0, D3D11)",
+    ]) {
+      expect(classifyDevice({ ...desktop, gpu }, motionOk)).toMatchObject({ mode: "lite" });
+    }
+    expect(classifyDevice({ ...desktop, cores: 4 }, motionOk).mode).toBe("lite");
+    expect(classifyDevice({ ...desktop, memoryGb: 4 }, motionOk).mode).toBe("lite");
+    expect(classifyDevice({ ...desktop, saveData: true }, motionOk).mode).toBe("lite");
   });
 
   it("serves phones and other screens narrower than 768px the still version", () => {
     expect(classifyDevice(phone, motionOk)).toMatchObject({ mode: "fallback" });
     expect(classifyDevice({ ...desktop, viewportWidth: 767 }, motionOk).mode).toBe("fallback");
-    expect(classifyDevice({ ...desktop, viewportWidth: 768 }, motionOk).mode).toBe("webgl");
+    expect(classifyDevice({ ...desktop, viewportWidth: 768 }, motionOk).mode).toBe("full");
   });
 
   it("serves slow machines the still version: under 4 cores or under 4 GB", () => {
     expect(classifyDevice({ ...desktop, cores: 2 }, motionOk).mode).toBe("fallback");
     expect(classifyDevice({ ...desktop, memoryGb: 2 }, motionOk).mode).toBe("fallback");
     // Browsers that hide these numbers are not penalised for it.
-    expect(classifyDevice({ ...desktop, cores: null, memoryGb: null }, motionOk).mode).toBe(
-      "webgl",
-    );
+    expect(classifyDevice({ ...desktop, cores: null, memoryGb: null }, motionOk).mode).toBe("full");
   });
 
-  it("gives a large touch screen (tablet) the medium tier", () => {
+  it("gives a large touch screen (tablet) the lite film", () => {
     const tablet = { ...phone, viewportWidth: 1024, viewportHeight: 1366, memoryGb: 4 };
-    expect(classifyDevice(tablet, motionOk)).toMatchObject({ mode: "webgl", tier: "medium" });
-  });
-
-  it("drops to the low tier when the visitor has data saver on", () => {
-    expect(classifyDevice({ ...desktop, saveData: true }, motionOk)).toMatchObject({ tier: "low" });
+    expect(classifyDevice(tablet, motionOk)).toMatchObject({ mode: "lite", tier: "lite" });
   });
 
   it("serves the static fallback for reduced motion, missing WebGL2 or a software GPU", () => {
@@ -89,14 +82,14 @@ describe("classifyDevice", () => {
   });
 
   it("honours a forced tier for testing, but never without WebGL2", () => {
-    expect(classifyDevice(phone, { ...motionOk, override: "high" })).toMatchObject({
-      mode: "webgl",
-      tier: "high",
+    expect(classifyDevice(phone, { ...motionOk, override: "full" })).toMatchObject({
+      mode: "full",
+      tier: "full",
     });
-    expect(classifyDevice(desktop, { reducedMotion: true, override: "low" }).mode).toBe("webgl");
+    expect(classifyDevice(desktop, { reducedMotion: true, override: "lite" }).mode).toBe("lite");
     expect(classifyDevice(desktop, { ...motionOk, override: "fallback" }).mode).toBe("fallback");
     expect(
-      classifyDevice({ ...desktop, webgl2: false }, { ...motionOk, override: "high" }).mode,
+      classifyDevice({ ...desktop, webgl2: false }, { ...motionOk, override: "full" }).mode,
     ).toBe("fallback");
   });
 

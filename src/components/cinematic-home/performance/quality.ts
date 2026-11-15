@@ -3,8 +3,9 @@ import type { QualityTier } from "../device/capabilities";
 /**
  * Per-tier rendering budgets. Scene code reads these values; it never checks
  * the tier itself, so a new cost is added once here and every tier already
- * knows whether it may pay for it. LOW keeps every scene and the composition —
- * it only spends less on resolution, counts and material complexity.
+ * knows whether it may pay for it. LITE keeps every scene, the camera path and
+ * the composition — it only spends less on resolution, antialiasing, instance
+ * counts and material complexity.
  */
 export interface QualityPreset {
   /** Device-pixel-ratio range: [floor the governor may drop to, ceiling]. */
@@ -26,7 +27,7 @@ export interface QualityPreset {
 }
 
 export const QUALITY_PRESETS: Record<QualityTier, QualityPreset> = {
-  high: {
+  full: {
     dpr: [1, 1.5],
     antialias: true,
     universeCount: 140,
@@ -37,25 +38,17 @@ export const QUALITY_PRESETS: Record<QualityTier, QualityPreset> = {
     physicalMaterials: true,
     minFps: 50,
   },
-  medium: {
-    dpr: [1, 1.5],
-    antialias: true,
-    universeCount: 124,
-    filamentCapacity: 700,
-    filamentSegments: 20,
-    coreSegments: 56,
-    pathGates: 30,
-    physicalMaterials: true,
-    minFps: 45,
-  },
-  low: {
-    dpr: [0.75, 1.25],
+  lite: {
+    // Never above 1: on a 1440×900 laptop panel this is 1.3 MP instead of up to 2.9 MP.
+    dpr: [0.65, 1],
+    // No MSAA: the multisampled resolve is the single largest fill cost on integrated GPUs.
     antialias: false,
-    universeCount: 96,
-    filamentCapacity: 460,
-    filamentSegments: 14,
-    coreSegments: 36,
+    universeCount: 84,
+    filamentCapacity: 420,
+    filamentSegments: 12,
+    coreSegments: 32,
     pathGates: 24,
+    // Standard (one-lobe) materials everywhere, glass and smoked included.
     physicalMaterials: false,
     minFps: 40,
   },

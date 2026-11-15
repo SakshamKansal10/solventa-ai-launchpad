@@ -101,7 +101,7 @@ function hotFunctions(profile, top = 14) {
     const cf = n.callFrame;
     if (cf.functionName === "(idle)" || cf.functionName === "(program)") continue;
     const file = (cf.url || "").split("/").pop()?.split("?")[0] ?? "";
-    const key = `${cf.functionName || "(anonymous)"}  ${file}:${cf.lineNumber + 1}`;
+    const key = `${cf.functionName || "(anonymous)"}  ${file}:${cf.lineNumber + 1}:${cf.columnNumber + 1}`;
     selfUs.set(key, (selfUs.get(key) ?? 0) + dt);
   }
   return [...selfUs.entries()]
