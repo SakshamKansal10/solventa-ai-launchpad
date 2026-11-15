@@ -35,8 +35,8 @@ Blockers: `blocked.md`. Final report: `REPORT.md`.
 - [x] 1 tokens and base components (24dcf02)
 - [x] 2 app shell (top bar, phone bottom bar, avatar menu, Ask Sol trigger) (622a3a2)
 - [x] 3 JourneyArc + fit bar (1ff6f82)
-- [ ] 4 Today (five states)
-- [ ] 5 Directions + Direction detail + two sub-pages
+- [x] 4 Today (five states) (4641294)
+- [x] 5 Directions + Direction detail + two sub-pages (e8aa6ab)
 - [ ] 6 Roadmap + mission page shell
 - [ ] 7 Proof
 - [ ] 8 Building, History, Settings
