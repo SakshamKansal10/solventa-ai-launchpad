@@ -130,30 +130,55 @@ const tmpT = new Vector3();
 const tmpN = new Vector3();
 const tmpP = new Vector3();
 
+const ORIGIN = new Vector3();
+const tmpBack = new Vector3();
+
 /** Orientation whose local +z runs along `tangent` (gates face the traveller). */
 function alongQuaternion(tangent: Vector3, out: Quaternion) {
-  m4.lookAt(new Vector3(), tangent.clone().negate(), UP);
+  m4.lookAt(ORIGIN, tmpBack.copy(tangent).negate(), UP);
   return out.setFromRotationMatrix(m4);
 }
 
+/**
+ * Resting frames are pure functions of the gate index, so each is sampled from its curve once and
+ * then copied: the path asked three.js for points and tangents on every frame (getTangent
+ * allocates two vectors per call — measured as the film's largest garbage source).
+ */
+const originalFrames = new Map<number, GateFrame>();
+const revisedFrames = new Map<number, GateFrame>();
+const copyFrame = (from: GateFrame, out: GateFrame) => {
+  out.position.copy(from.position);
+  out.quaternion.copy(from.quaternion);
+  out.scale = from.scale;
+  return out;
+};
+
 /** Gate i's resting frame on the ORIGINAL path. */
 export function originalFrame(i: number, out: GateFrame): GateFrame {
-  const d = gateDistance(i);
-  pointAtDistance(originalPath, ORIGINAL_LENGTH, d, out.position);
-  tangentAtDistance(originalPath, ORIGINAL_LENGTH, d, tmpT);
-  alongQuaternion(tmpT, out.quaternion);
-  out.scale = 1;
-  return out;
+  let cached = originalFrames.get(i);
+  if (!cached) {
+    const d = gateDistance(i);
+    cached = { position: new Vector3(), quaternion: new Quaternion(), scale: 1 };
+    pointAtDistance(originalPath, ORIGINAL_LENGTH, d, cached.position);
+    tangentAtDistance(originalPath, ORIGINAL_LENGTH, d, tmpT);
+    alongQuaternion(tmpT, cached.quaternion);
+    originalFrames.set(i, cached);
+  }
+  return copyFrame(cached, out);
 }
 
 /** Slot j on the REVISED path (j = 0 is the first rebuilt gate). */
 export function revisedFrame(j: number, out: GateFrame): GateFrame {
-  const d = (j + 1) * GATE_SPACING;
-  pointAtDistance(revisedPath, REVISED_LENGTH, d, out.position);
-  tangentAtDistance(revisedPath, REVISED_LENGTH, d, tmpT);
-  alongQuaternion(tmpT, out.quaternion);
-  out.scale = 1;
-  return out;
+  let cached = revisedFrames.get(j);
+  if (!cached) {
+    const d = (j + 1) * GATE_SPACING;
+    cached = { position: new Vector3(), quaternion: new Quaternion(), scale: 1 };
+    pointAtDistance(revisedPath, REVISED_LENGTH, d, cached.position);
+    tangentAtDistance(revisedPath, REVISED_LENGTH, d, tmpT);
+    alongQuaternion(tmpT, cached.quaternion);
+    revisedFrames.set(j, cached);
+  }
+  return copyFrame(cached, out);
 }
 
 /**
@@ -185,6 +210,9 @@ export function branchLocal(i: number, side: number, b: number, out: Vector3): V
   );
 }
 
+const twistQ = new Quaternion();
+const Z_AXIS = new Vector3(0, 0, 1);
+
 /** Frame i inside the chosen sculpture: a tight nest that twists as it recedes. */
 export function sculptureFrame(i: number, out: GateFrame, order = 0): GateFrame {
   const depth = i * 0.34;
@@ -193,11 +221,7 @@ export function sculptureFrame(i: number, out: GateFrame, order = 0): GateFrame 
   out.position
     .set(WINNER_POS[0], WINNER_POS[1] + 0.9, WINNER_POS[2])
     .addScaledVector(tmpT, depth - 2.2);
-  const twist = new Quaternion().setFromAxisAngle(
-    new Vector3(0, 0, 1),
-    (i * 0.21 - 0.9) * (1 - 0.82 * order),
-  );
-  out.quaternion.multiply(twist);
+  out.quaternion.multiply(twistQ.setFromAxisAngle(Z_AXIS, (i * 0.21 - 0.9) * (1 - 0.82 * order)));
   out.scale = 0.62 - i * 0.018;
   return out;
 }

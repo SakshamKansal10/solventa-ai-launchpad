@@ -22,7 +22,7 @@ export const NAV_CLEARANCE = 96;
 const last = new WeakMap<HTMLElement, Record<string, string>>();
 export function setStyle(
   el: HTMLElement,
-  key: "opacity" | "transform" | "visibility" | "pointerEvents",
+  key: "opacity" | "transform" | "visibility" | "pointerEvents" | "contentVisibility",
   value: string,
 ) {
   let cache = last.get(el);
@@ -53,9 +53,19 @@ function boxOf(el: HTMLElement, key: string): Box {
   captionBox.set(el, box);
   return box;
 }
+/**
+ * Hidden overlay elements also leave style and layout (content-visibility: hidden): the tone the
+ * film writes on the page is inherited by every caption, label and the product panel, and while
+ * they were merely invisible each tone step re-styled all of them — measured, ~460 elements in
+ * the long tasks at 4× CPU throttle. Nothing changes on screen (they are invisible either way).
+ */
+const hide = (el: HTMLElement, hidden: boolean) => {
+  setStyle(el, "visibility", hidden ? "hidden" : "visible");
+  setStyle(el, "contentVisibility", hidden ? "hidden" : "visible");
+};
 export const show = (el: HTMLElement, o: number) => {
   setStyle(el, "opacity", o.toFixed(3));
-  setStyle(el, "visibility", o > 0.002 ? "visible" : "hidden");
+  hide(el, o <= 0.002);
 };
 /** Writes a CSS custom property only when it changed. */
 const lastVar = new WeakMap<HTMLElement, Record<string, string>>();
@@ -76,7 +86,7 @@ function setVar(el: HTMLElement, name: string, value: string) {
 function present(el: HTMLElement, o: number, leaving: boolean) {
   setVar(el, "--o", o.toFixed(3));
   setVar(el, "--d", leaving ? "-1" : "1");
-  setStyle(el, "visibility", o > 0.002 ? "visible" : "hidden");
+  hide(el, o <= 0.002);
 }
 /**
  * The opening identity's journey into the site bar: one object (emblem, wordmark, signature),

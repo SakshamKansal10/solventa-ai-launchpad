@@ -35,7 +35,18 @@ export interface Phases {
   fadeOut: number;
 }
 
+/** The overlay, the universe and its territories all ask for the same progress in a frame: the
+ * phases are computed once per progress value (they were rebuilt, with their arrays, per call). */
+let lastPhases: { p: number; phases: Phases } | null = null;
+
 export function universePhases(p: number): Phases {
+  if (lastPhases && lastPhases.p === p) return lastPhases.phases;
+  const phases = computePhases(p);
+  lastPhases = { p, phases };
+  return phases;
+}
+
+function computePhases(p: number): Phases {
   const w = local(p, "computation");
   const waves = SIGNALS.map((_, k) => {
     const start = 0.04 + k * 0.115;
@@ -134,13 +145,14 @@ export function nodeFrame(
   const appear = smoothstep(d - 4, d + 6, ph.revealFront);
   let know = 0;
   let active = 0;
-  SIGNALS.forEach((sig, k) => {
+  // A plain loop: a callback here allocated a closure per node per frame.
+  for (let k = 0; k < SIGNALS.length; k++) {
     const r = smoothstep(d - 6, d + 3, ph.waves[k]);
-    revealed[sig.id] = r;
+    revealed[SIGNALS[k].id] = r;
     know += r / SIGNALS.length;
     // Peaks as the wave front crosses it, and is quiet again once the signal is known.
     active = Math.max(active, 4 * r * (1 - r));
-  });
+  }
   const s = partialScore(o.fits, revealed);
   const q = Math.min(1, Math.max(0, (s - 0.38) / (0.86 - 0.38)));
 
@@ -211,7 +223,9 @@ export function nodeFrame(
                 ? model.formations.three.get(o.index)
                 : undefined;
         if (!target) continue;
-        [tx, ty, tz] = target;
+        tx = target[0];
+        ty = target[1];
+        tz = target[2];
         if (k === 3) scale *= 1 + 0.25 * e;
         if (k === 4) scale *= 1 + 1.3 * e;
       }
