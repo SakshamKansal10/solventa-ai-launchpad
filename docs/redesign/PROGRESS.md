@@ -73,7 +73,7 @@ Blockers: `blocked.md`. Final report: `REPORT.md`.
 - [x] plan-5.md audit (29466d1)
 - [x] 2 better inputs (361dad0)
 - [x] 3 staged pipeline (b87504b)
-- [ ] 4 executable roadmaps
+- [x] 4 executable roadmaps (639076c)
 - [ ] 5 reliability
 - [ ] 6 10-profile comparison + command
 
