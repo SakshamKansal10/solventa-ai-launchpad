@@ -232,10 +232,14 @@ test.describe("cinematic homepage", () => {
     const preview = page.getByTestId("product-preview");
     await expect(preview).toBeVisible();
     await expect(page.getByText("Illustrative preview · sample founder")).toBeVisible();
-    const direction = page.getByRole("tab", { name: "Direction" });
-    await direction.focus();
+    // The redesigned Today screen (owner step 3): Today, Roadmap, Proof.
+    await expect(preview.getByRole("heading", { level: 3 })).toContainText(
+      "Talk to five clinic owners",
+    );
+    const today = page.getByRole("tab", { name: "Today" });
+    await today.focus();
     await page.keyboard.press("ArrowRight");
-    await expect(page.getByRole("tab", { name: "This week" })).toHaveAttribute(
+    await expect(page.getByRole("tab", { name: "Roadmap" })).toHaveAttribute(
       "aria-selected",
       "true",
     );

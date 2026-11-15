@@ -185,3 +185,10 @@ Each entry: what was ambiguous, what I chose, why.
     fresh browsers (cold GPU cache) because same-browser runs flatter first visits by seconds.
     Cold broadband is 6.9 s: inside the 8 s lockup rule, not inside the opening; the remaining
     levers are listed in part2-perf.md 2d and left to the owner.
+35. **The film's dashboard scene (owner step 3)** is the redesigned Today screen as a static DOM
+    overlay (the scene was already one: `ProductPreview`, mapped onto the 3D slab and released
+    as real DOM), not an image: it stays crisp at any scale and is the same component in the
+    still version. Drawn with the dashboard's own tokens (white canvas, pill navigation, the
+    large mission headline, cobalt action and numeral, navy journey block) at the panel's real
+    size via container units; sample founder data, labelled illustrative. Its nav is a real
+    tablist (Today / Roadmap / Proof); the cinematic e2e follows the new tab names.
