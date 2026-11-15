@@ -109,3 +109,69 @@ Cost drivers measured:
 4. Remaining 4× long tasks (2–4 per pass) coincide with the large tone steps (101–300 element
    recalcs). Moving the tone variables from the page root to the nav and the visible overlay
    only would remove them; a larger refactor of the overlay, not attempted.
+
+---
+
+# Part 2c — bounded pass (owner decisions, 2026-11-15)
+
+**Adaptive quality (proposal A, c358578)** samples while the story moves, steps down to notch 2,
+never up; the step is applied through R3F's setDpr at a calm moment. **Lite gate parts
+(proposal 2, cb04ee3)**: one bevel subdivision (108 instead of 300 triangles per bar, lock,
+module and node).
+
+## Re-measure (Vega 3, lite, notch not pinned, 2 runs — perf/2c-run*.json)
+| | Run 1 | Run 2 |
+|---|---|---|
+| Unthrottled p50 / p95 / worst | 16.7 / 17.0 / 266.8 ms | 16.7 / 16.9 / 266.7 ms |
+| Unthrottled long tasks > 50 ms | 0 | 0 |
+| Window medians while moving | all 16.7 → stays at notch 0 | all 16.7 → notch 0 |
+| 4× CPU p95 / long tasks > 50 ms | 33.4 ms / **0** | 33.4 ms / **0** |
+| 4× notch at the end | 0 | **1** (one window at 25 ms; no long task at the step) |
+
+One 267 ms frame appears in each run, including run 1 where no notch changed (so it is not the
+step); see blocked.md.
+
+## Live vs HEAD, scene by scene (missing graphics)
+Live = https://solventia.in (49d3ead) with `?tier=medium&freeze=1` (what this machine got there);
+HEAD = local build with `?tier=lite&freeze=1`; 1440×900, middle of each of the 21 scenes
+(`scripts/film-scenes.mjs`), pixel diff in a canvas (`scripts/film-scenes-diff.mjs`, a pixel
+counts when R+G+B differ by more than 90). Images: `perf/scenes/NN-scene-{live,head,diff}.jpg`.
+
+| Scene | Pixels that differ | Where most |
+|---|---|---|
+| 00-void | 0.0% | row 1 col 3 |
+| 01-awakening | 0.4% | row 4 col 2 |
+| 02-context | 0.3% | row 2 col 2 |
+| 03-passage | 0.1% | row 3 col 2 |
+| 04-universe | 1.7% | row 2 col 4 |
+| 05-computation | 2.0% | row 2 col 4 |
+| 06-convergence | 1.4% | row 3 col 1 |
+| 07-three | 0.4% | row 2 col 2 |
+| 08-selection | 1.3% | row 2 col 3 |
+| 09-unfold | 1.2% | row 3 col 3 |
+| 10-validate | 0.5% | row 1 col 1 |
+| 11-build | 0.7% | row 2 col 2 |
+| 12-elevate | 1.5% | row 2 col 2 |
+| 13-evidence | 0.7% | row 3 col 3 |
+| 14-crisis | 0.2% | row 2 col 1 |
+| 15-adaptation | 0.7% | row 2 col 2 |
+| 16-handoff | 0.1% | row 3 col 2 |
+| 17-product | 0.5% | row 2 col 1 |
+| 18-connected | 0.0% | row 1 col 1 |
+| 19-return | 0.1% | row 2 col 3 |
+| 20-finale | 0.0% | row 1 col 1 |
+
+Looked at every scene over 1%: **no element present live is missing or broken at HEAD.** What
+differs, all from lite on purpose:
+1. **Fewer universe nodes and filaments, in other seeded places** (universe, computation,
+   convergence, selection, unfold): 84 instead of 124 nodes, 420 instead of 700 filaments. The
+   scenes read the same (the arc, the frames, the shelves of candidates, the narrowing).
+2. **No MSAA:** every silhouette aliases — the red outlines in `08-selection-diff`. Thin gold
+   filaments look slightly stepped.
+3. **Standard instead of clear-coat materials:** a little less sheen on the gates (`12-elevate`).
+
+Not reproduced on this machine: the owner's report of missing graphics on his laptop. Likely
+candidates, in order: (a) his screen narrower than 768px or fewer than 4 cores / 4 GB → the still
+version by design (part 2); (b) MSAA off on lite makes 1px filaments shimmer and partly vanish,
+more so if the governor stepped to pixel ratio 0.65; (c) an older preview. Recorded in
+blocked.md with what the owner can send to settle it.

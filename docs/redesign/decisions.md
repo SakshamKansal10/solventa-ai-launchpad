@@ -70,3 +70,8 @@ Each entry: what was ambiguous, what I chose, why.
 16. **`?perf=1` and `?notch=N`** are measurement aids only (counters without the HUD; a pinned
     notch). They change nothing for visitors.
 17. **No scene content was cut.** Cuts are proposed with numbers in part2-perf.md.
+18. **Proposal 2 as implemented.** The owner approved "16 sweep segments instead of 32 for the
+    gate parts (lite)". Lite gate corners already use 6 curve segments, so that number does not
+    exist on lite; the real triangle sources in the path scenes are the rounded bars, locks,
+    modules and nodes (300 triangles each, ~100k per scene). Lite gives them one bevel
+    subdivision (108 triangles). Same intent: fewer gate-part triangles, same look.
