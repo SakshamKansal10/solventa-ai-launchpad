@@ -61,7 +61,7 @@ Blockers: `blocked.md`. Final report: `REPORT.md`.
 - [x] 1 mission workspaces + done rules (5a28c90)
 - [x] 2 proof that updates itself (3c338b4)
 - [x] 3 Stuck? + failed check (f6c2d68)
-- [ ] 4 scripts and message templates
+- [x] 4 scripts and message templates (60839a6)
 - [ ] 5 ask what is missing
 - [ ] 6 estimates and sources
 - [ ] 7 Make it official guide
