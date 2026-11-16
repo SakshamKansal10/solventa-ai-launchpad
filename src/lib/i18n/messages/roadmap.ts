@@ -173,7 +173,7 @@ const en = {
 
   // Building page
   "rm.build.title": "Building your roadmap",
-  "rm.build.working": "Working on it — {s}s so far. This usually takes under a minute.",
+  "rm.build.working": "Working on it — {s}s so far. This can take up to a minute or two.",
   "rm.build.whatHappens": "What happens while it is built",
   "rm.build.s1": "Your profile and chosen direction are read",
   "rm.build.s2": "What needs testing first is identified",
@@ -354,7 +354,7 @@ const hi: Record<keyof typeof en, string> = {
   "rm.progress.evidenceAria": "{title}: {n} सबूत। सबूत में खोलें।",
 
   "rm.build.title": "आपका रोडमैप बन रहा है",
-  "rm.build.working": "काम चल रहा है — अब तक {s} सेकंड। आमतौर पर एक मिनट से कम लगता है।",
+  "rm.build.working": "काम चल रहा है — अब तक {s} सेकंड। इसमें एक-दो मिनट तक लग सकते हैं।",
   "rm.build.whatHappens": "बनाते समय क्या होता है",
   "rm.build.s1": "आपकी प्रोफ़ाइल और चुनी हुई दिशा पढ़ी जाती है",
   "rm.build.s2": "पहले क्या परखना है, यह तय होता है",

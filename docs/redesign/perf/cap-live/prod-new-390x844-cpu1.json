@@ -1,0 +1,22 @@
+{
+  "label": "prod-new-390x844-cpu1",
+  "path": "world",
+  "holdMs": 1515,
+  "holdToFirstExitFrameMs": 1539,
+  "hydratedAfterShownMs": -793,
+  "drawnFrames": 387,
+  "worstDrawGapMs": 35,
+  "worstDrawGapAtMs": 67,
+  "drawGaps": "",
+  "worstScreencastGapMs": 33,
+  "worstGapAtMs": 143,
+  "sMovedPx": 0,
+  "sMovedAt": "",
+  "sInvisibleFrames": 0,
+  "holdStateMs": 0,
+  "gaps": "",
+  "longTasks": "",
+  "rafGaps": "",
+  "states": "755:ask 3978:reveal 7260:off",
+  "mode": "fallback/lite"
+}

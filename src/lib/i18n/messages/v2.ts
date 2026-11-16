@@ -212,18 +212,22 @@ const en = {
   "v2.est.line": "Your first weeks check it.",
   "v2.est.checked": "Checked {date}",
   "v2.official.back": "Roadmap",
-  "v2.official.lead": "Setting up a small business properly in India: how it's set up, Udyam registration, a current account and GST. Each step says when you need it.",
+  "v2.official.lead":
+    "Setting up a small business properly in India: how it's set up, Udyam registration, a current account and GST. Each step says when you need it.",
   "v2.official.needed": "Needed now",
   "v2.official.notYet": "Not needed yet",
   "v2.official.reviewing": "Being reviewed",
-  "v2.official.reviewingNote": "We're checking this step against the official site before we show it.",
+  "v2.official.reviewingNote":
+    "We're checking this step against the official site before we show it.",
   "v2.official.when": "When you need it",
   "v2.official.documents": "What you need",
   "v2.official.steps": "Steps",
   "v2.official.open": "Open {site}",
   "v2.official.checked": "Last checked {date}",
-  "v2.official.minorSafe": "You're under 18. Do these steps together with a parent or guardian, and confirm with a CA.",
-  "v2.official.footer": "General guidance, not legal or tax advice. Confirm with a CA before you register.",
+  "v2.official.minorSafe":
+    "You're under 18. Do these steps together with a parent or guardian, and confirm with a CA.",
+  "v2.official.footer":
+    "General guidance, not legal or tax advice. Confirm with a CA before you register.",
   "v2.rem.title": "Weekly reminder",
   "v2.rem.body": "One email a week with your next mission. Nothing else.",
   "v2.rem.toggle": "Send me one reminder a week",
@@ -246,7 +250,8 @@ const en = {
   "v2.intro.skip": "Skip intro",
   "v2.intro.loading": "Preparing the experience",
   "v2.admin.title": "Where founders drop off",
-  "v2.admin.lead": "Counts of founders who reached each step, from Solventia's own tables. No tracker, no names.",
+  "v2.admin.lead":
+    "Counts of founders who reached each step, from Solventia's own tables. No tracker, no names.",
   "v2.admin.private": "This page is private.",
   "v2.admin.privateLead": "It is only for the Solventia team.",
   "v2.admin.kept": "{p}% of the step before",
@@ -300,72 +305,100 @@ const en = {
   "pub.nav.about": "About",
   "pub.nav.faq": "Questions",
   "pub.home.title": "Solventia, in brief",
-  "pub.home.body": "Solventia turns your skills, money, time and place into a few business directions that fit you. Then it gives you a week-by-week roadmap whose missions test the riskiest things first. Every number is marked as an estimate until your own proof checks it.",
+  "pub.home.body":
+    "Solventia turns your skills, money, time and place into a few business directions that fit you. Then it gives you a week-by-week roadmap whose missions test the riskiest things first. Every number is marked as an estimate until your own proof checks it.",
   "pub.ideas.crumb": "Idea examples",
   "pub.ideas.title": "Business idea examples",
-  "pub.ideas.lead": "Directions Solventia wrote for sample founders. Yours are built from your own answers, so they will be different.",
+  "pub.ideas.lead":
+    "Directions Solventia wrote for sample founders. Yours are built from your own answers, so they will be different.",
   "pub.ideas.label": "Examples for sample founders",
   "pub.ideas.for": "For:",
   "pub.ideas.test": "First test this week:",
   "pub.ideas.yours": "Want directions built around you?",
   "pub.ideas.cta": "Find my business idea",
   "pub.ideas.clinics.title": "Google listings for clinics in Pune",
-  "pub.ideas.clinics.who": "a working professional in Pune with digital marketing skills, 5–10 hours a week",
-  "pub.ideas.clinics.what": "Help solo doctors set up and improve their Google map listing, so nearby patients find them instead of competing clinics.",
-  "pub.ideas.clinics.test": "Message three local doctors with a free one-page audit of their listing and see who replies.",
+  "pub.ideas.clinics.who":
+    "a working professional in Pune with digital marketing skills, 5–10 hours a week",
+  "pub.ideas.clinics.what":
+    "Help solo doctors set up and improve their Google map listing, so nearby patients find them instead of competing clinics.",
+  "pub.ideas.clinics.test":
+    "Message three local doctors with a free one-page audit of their listing and see who replies.",
   "pub.ideas.farm.title": "Farm equipment sharing in a small town",
   "pub.ideas.farm.who": "a farmer's son near Barabanki with little money and 20–30 hours a week",
-  "pub.ideas.farm.what": "Connect small farmers who need a tractor or rotavator with owners whose machines sit idle, and coordinate the bookings.",
-  "pub.ideas.farm.test": "Ask two tractor owners for three idle slots this week and offer them to three neighbouring farmers.",
+  "pub.ideas.farm.what":
+    "Connect small farmers who need a tractor or rotavator with owners whose machines sit idle, and coordinate the bookings.",
+  "pub.ideas.farm.test":
+    "Ask two tractor owners for three idle slots this week and offer them to three neighbouring farmers.",
   "pub.ideas.tailoring.title": "Tailoring accessory kits",
   "pub.ideas.tailoring.who": "a skilled tailor in Darbhanga with very little time",
-  "pub.ideas.tailoring.what": "Small ready-to-use kits of matching threads, needles, hooks and tapes for women in the neighbourhood who stitch at home.",
-  "pub.ideas.tailoring.test": "Show two sample kits to five members of a community group and see who orders one upfront.",
+  "pub.ideas.tailoring.what":
+    "Small ready-to-use kits of matching threads, needles, hooks and tapes for women in the neighbourhood who stitch at home.",
+  "pub.ideas.tailoring.test":
+    "Show two sample kits to five members of a community group and see who orders one upfront.",
   "pub.ideas.student.title": "A semester planner template for students",
   "pub.ideas.student.who": "a design student in Mysuru, 10–20 hours a week",
-  "pub.ideas.student.what": "A ready-made digital planner built around Indian college syllabi, sold directly to students.",
-  "pub.ideas.student.test": "Share a short video of the planner with twenty student contacts and ask who would buy it.",
+  "pub.ideas.student.what":
+    "A ready-made digital planner built around Indian college syllabi, sold directly to students.",
+  "pub.ideas.student.test":
+    "Share a short video of the planner with twenty student contacts and ask who would buy it.",
   "pub.ideas.gst.title": "Monthly GST filing for local shops",
   "pub.ideas.gst.who": "a freelance accountant in Chennai, 20–30 hours a week",
-  "pub.ideas.gst.what": "A monthly package for shopkeepers that handles their GST filings and purchase records.",
-  "pub.ideas.gst.test": "Offer ten shopkeepers you know a free tax check and ask who would pay a monthly fee.",
+  "pub.ideas.gst.what":
+    "A monthly package for shopkeepers that handles their GST filings and purchase records.",
+  "pub.ideas.gst.test":
+    "Offer ten shopkeepers you know a free tax check and ask who would pay a monthly fee.",
   "pub.founders.crumb": "For founders",
   "pub.founders.title": "Whichever way you are starting",
-  "pub.founders.lead": "Most people who come to Solventia are in one of three places. Here is what it does for each.",
-  "pub.founders.start": "A short consultation about your skills, money, time and place. Then a few directions that fit you, each showing how well it fits and why. Each one comes with a first test you can do this week without spending money.",
-  "pub.founders.idea": "Your roadmap lists what must be true for the idea to work. Its missions check those things — conversations to log, people to list. The proof page then shows what held and what did not.",
-  "pub.founders.stuck": "One mission for today, sized to the hours you have. If a mission does not work for you, the Stuck? button gives an easier way, moves the week, or lets you talk it through.",
+  "pub.founders.lead":
+    "Most people who come to Solventia are in one of three places. Here is what it does for each.",
+  "pub.founders.start":
+    "A short consultation about your skills, money, time and place. Then a few directions that fit you, each showing how well it fits and why. Each one comes with a first test you can do this week without spending money.",
+  "pub.founders.idea":
+    "Your roadmap lists what must be true for the idea to work. Its missions check those things — conversations to log, people to list. The proof page then shows what held and what did not.",
+  "pub.founders.stuck":
+    "One mission for today, sized to the hours you have. If a mission does not work for you, the Stuck? button gives an easier way, moves the week, or lets you talk it through.",
   "pub.founders.cta": "Start the consultation",
   "pub.faq.crumb": "Questions",
   "pub.faq.title": "Questions founders ask",
   "pub.faq.lead": "Short answers about how Solventia works.",
   "pub.faq.1.q": "How does Solventia find business directions for me?",
-  "pub.faq.1.a": "You answer a consultation about your skills, money, time, place and limits. Solventia's AI writes directions from those answers. Then code checks how well each one fits you on five things: who you can reach, money, skills, time and goals. It always uses your own answers.",
+  "pub.faq.1.a":
+    "You answer a consultation about your skills, money, time, place and limits. Solventia's AI writes directions from those answers. Then code checks how well each one fits you on five things: who you can reach, money, skills, time and goals. It always uses your own answers.",
   "pub.faq.2.q": "What does 'fit' mean?",
-  "pub.faq.2.a": "A label — strong, moderate, conditional, weak, or depends on what you learn — worked out from your answers, never a percentage. Where an answer is missing, that part says 'Not known yet' instead of guessing.",
+  "pub.faq.2.a":
+    "A label — strong, moderate, conditional, weak, or depends on what you learn — worked out from your answers, never a percentage. Where an answer is missing, that part says 'Not known yet' instead of guessing.",
   "pub.faq.3.q": "What is the roadmap?",
-  "pub.faq.3.a": "A plan in weeks. Only the current week is written in detail; the next is written when you finish it, from what you recorded. Each mission produces something you keep — a list, logged conversations, a summary.",
+  "pub.faq.3.a":
+    "A plan in weeks. Only the current week is written in detail; the next is written when you finish it, from what you recorded. Each mission produces something you keep — a list, logged conversations, a summary.",
   "pub.faq.4.q": "What is 'proof'?",
-  "pub.faq.4.a": "What you actually learned from real people. When you log conversations on a mission, the related thing to check updates itself — supported or not — from your own logs.",
+  "pub.faq.4.a":
+    "What you actually learned from real people. When you log conversations on a mission, the related thing to check updates itself — supported or not — from your own logs.",
   "pub.faq.5.q": "Are the numbers real?",
-  "pub.faq.5.a": "Numbers about money or the market are estimates unless they come with a source. Estimates carry an 'Estimate' tag until your first weeks check them.",
+  "pub.faq.5.a":
+    "Numbers about money or the market are estimates unless they come with a source. Estimates carry an 'Estimate' tag until your first weeks check them.",
   "pub.faq.6.q": "Can I use Solventia in Hindi?",
-  "pub.faq.6.a": "Yes. The dashboard, the consultation and your directions and roadmap can be read in Hindi; switch the language from the top of the page.",
+  "pub.faq.6.a":
+    "Yes. The dashboard, the consultation and your directions and roadmap can be read in Hindi; switch the language from the top of the page.",
   "pub.faq.7.q": "Does Solventia register my business?",
-  "pub.faq.7.a": "No. A 'Make it official' guide explains the steps — structure, Udyam, a current account, GST — and when you need them. It is general guidance, not legal or tax advice; confirm with a CA before you register.",
+  "pub.faq.7.a":
+    "No. A 'Make it official' guide explains the steps — structure, Udyam, a current account, GST — and when you need them. It is general guidance, not legal or tax advice; confirm with a CA before you register.",
   "pub.faq.8.q": "Will Solventia keep messaging me?",
-  "pub.faq.8.a": "Only if you ask. There is one optional weekly reminder email with your next mission, off unless you turn it on, and you can turn it off in Settings.",
+  "pub.faq.8.a":
+    "Only if you ask. There is one optional weekly reminder email with your next mission, off unless you turn it on, and you can turn it off in Settings.",
   "pub.faq.9.q": "Can I delete my data?",
-  "pub.faq.9.a": "Yes. The data deletion page explains how to delete your account and everything in it.",
+  "pub.faq.9.a":
+    "Yes. The data deletion page explains how to delete your account and everything in it.",
   "pub.how.shotTitle": "Your Today screen",
-  "pub.how.shotBody": "One mission at a time, sized to your hours, with your week and your 12-week path one click away. Sample founder shown.",
-  "pub.how.shotAlt": "Solventia's Today screen for a sample founder: today's mission, a Start mission button, mission 2 of 3 this week, and the 12-week journey",
+  "pub.how.shotBody":
+    "One mission at a time, sized to your hours, with your week and your 12-week path one click away. Sample founder shown.",
+  "pub.how.shotAlt":
+    "Solventia's Today screen for a sample founder: today's mission, a Start mission button, mission 2 of 3 this week, and the 12-week journey",
   "v2.intro.back.named": "Welcome back, {name}.",
   "v2.intro.back.pickup": "Pick up where you left off.",
   "v2.intro.back2.start": "Still looking for the right business to start?",
   "v2.intro.back2.idea": "Still wondering if your idea will work?",
   "v2.intro.back2.stuck": "Still stuck on the next step?",
-  "v2.build.time": "This usually takes about 20 seconds.",
+  "v2.build.time": "This can take up to a minute or two.",
   "v2.build.step.read": "Reading your profile and your idea",
   "v2.build.step.plan": "Planning your phases and weeks",
   "v2.build.step.week1": "Writing your week 1 missions",
@@ -374,15 +407,19 @@ const en = {
   "v2.build.phaseWeeks": "{n} weeks",
   "v2.build.missions": "Week 1 missions",
   "v2.build.task.title": "While you wait: write down 5 people you could ask about this idea.",
-  "v2.build.task.hint": "Friends, family, shop owners, customers you know. We'll put them in your first mission.",
+  "v2.build.task.hint":
+    "Friends, family, shop owners, customers you know. We'll put them in your first mission.",
   "v2.build.task.name": "Person {n}",
   "v2.build.task.saved": "Saved for your first mission.",
   "v2.ws.list.useWarmup": "Add the {n} names you wrote down",
-  "v2.limit.consultation": "You've done {n} consultations today. That's the daily limit — you can start a new one after midnight.",
-  "v2.limit.roadmap": "You've built {n} roadmaps today. That's the daily limit — you can build again after midnight.",
-  "v2.limit.askSol": "You've sent Sol {n} messages today. That's the daily limit — Sol will be back after midnight.",
+  "v2.limit.consultation":
+    "You've done {n} consultations today. That's the daily limit — you can start a new one after midnight.",
+  "v2.limit.roadmap":
+    "You've built {n} roadmaps today. That's the daily limit — you can build again after midnight.",
+  "v2.limit.askSol":
+    "You've sent Sol {n} messages today. That's the daily limit — Sol will be back after midnight.",
   "v2.limit.title": "That's all for today",
-  "v2.gen.time": "This usually takes 20 to 30 seconds.",
+  "v2.gen.time": "This can take up to a minute.",
   "v2.gen.step.save": "Saving your answers",
   "v2.gen.step.write": "Writing your three directions",
   "v2.gen.step.open": "Opening your dashboard",
@@ -604,7 +641,8 @@ const hi: Record<keyof typeof en, string> = {
   "v2.est.line": "आपके पहले हफ़्ते इसे जाँचेंगे।",
   "v2.est.checked": "{date} को जाँचा गया",
   "v2.official.back": "रोडमैप",
-  "v2.official.lead": "भारत में छोटे बिज़नेस को सही तरीक़े से शुरू करना: वह किस रूप में चलेगा, उद्यम रजिस्ट्रेशन, करंट अकाउंट और GST। हर क़दम बताता है कि उसकी ज़रूरत कब है।",
+  "v2.official.lead":
+    "भारत में छोटे बिज़नेस को सही तरीक़े से शुरू करना: वह किस रूप में चलेगा, उद्यम रजिस्ट्रेशन, करंट अकाउंट और GST। हर क़दम बताता है कि उसकी ज़रूरत कब है।",
   "v2.official.needed": "अभी ज़रूरी",
   "v2.official.notYet": "अभी ज़रूरत नहीं",
   "v2.official.reviewing": "जाँच जारी है",
@@ -614,8 +652,10 @@ const hi: Record<keyof typeof en, string> = {
   "v2.official.steps": "क़दम",
   "v2.official.open": "{site} खोलें",
   "v2.official.checked": "आख़िरी बार जाँचा गया: {date}",
-  "v2.official.minorSafe": "आपकी उम्र 18 से कम है। ये क़दम माता-पिता या अभिभावक के साथ मिलकर उठाएँ, और किसी CA से पुष्टि करें।",
-  "v2.official.footer": "यह सामान्य जानकारी है, क़ानूनी या टैक्स सलाह नहीं। रजिस्ट्रेशन से पहले किसी CA से पुष्टि करें।",
+  "v2.official.minorSafe":
+    "आपकी उम्र 18 से कम है। ये क़दम माता-पिता या अभिभावक के साथ मिलकर उठाएँ, और किसी CA से पुष्टि करें।",
+  "v2.official.footer":
+    "यह सामान्य जानकारी है, क़ानूनी या टैक्स सलाह नहीं। रजिस्ट्रेशन से पहले किसी CA से पुष्टि करें।",
   "v2.rem.title": "साप्ताहिक रिमाइंडर",
   "v2.rem.body": "हफ़्ते में एक ईमेल, आपके अगले मिशन के साथ। और कुछ नहीं।",
   "v2.rem.toggle": "मुझे हफ़्ते में एक रिमाइंडर भेजें",
@@ -638,7 +678,8 @@ const hi: Record<keyof typeof en, string> = {
   "v2.intro.skip": "इंट्रो छोड़ें",
   "v2.intro.loading": "अनुभव तैयार हो रहा है",
   "v2.admin.title": "फ़ाउंडर कहाँ रुक जाते हैं",
-  "v2.admin.lead": "हर क़दम तक पहुँचे फ़ाउंडर की गिनती, Solventia की अपनी टेबल से। कोई ट्रैकर नहीं, कोई नाम नहीं।",
+  "v2.admin.lead":
+    "हर क़दम तक पहुँचे फ़ाउंडर की गिनती, Solventia की अपनी टेबल से। कोई ट्रैकर नहीं, कोई नाम नहीं।",
   "v2.admin.private": "यह पेज निजी है।",
   "v2.admin.privateLead": "यह सिर्फ़ Solventia टीम के लिए है।",
   "v2.admin.kept": "पिछले क़दम का {p}%",
@@ -681,7 +722,8 @@ const hi: Record<keyof typeof en, string> = {
   "consult.contra.fixBasics": "मेरी उम्र या स्थिति ठीक करें",
   "consult.contra.fixEducation": "मेरी पढ़ाई ठीक करें",
   "v2.intro.back.title": "फिर से स्वागत है।",
-  "v2.intro.back.start": "अभी भी तय कर रहे हैं कि क्या शुरू करें? जहाँ छोड़ा था, वहीं से आगे बढ़ते हैं।",
+  "v2.intro.back.start":
+    "अभी भी तय कर रहे हैं कि क्या शुरू करें? जहाँ छोड़ा था, वहीं से आगे बढ़ते हैं।",
   "v2.intro.back.idea": "अभी भी अपना आइडिया परख रहे हैं? जहाँ छोड़ा था, वहीं से आगे बढ़ते हैं।",
   "v2.intro.back.stuck": "अगले क़दम के लिए तैयार हैं? जहाँ छोड़ा था, वहीं से आगे बढ़ते हैं।",
   "v2.intro.back.none": "आपकी योजना आपका इंतज़ार कर रही है।",
@@ -692,72 +734,100 @@ const hi: Record<keyof typeof en, string> = {
   "pub.nav.about": "हमारे बारे में",
   "pub.nav.faq": "सवाल",
   "pub.home.title": "Solventia, संक्षेप में",
-  "pub.home.body": "Solventia आपके हुनर, पैसे, समय और जगह से आपके लायक कुछ बिज़नेस दिशाएँ बनाता है। फिर हफ़्ते-दर-हफ़्ते का रोडमैप देता है, जिसके मिशन सबसे ज़्यादा रिस्क वाली बातें पहले जाँचते हैं। जब तक आपका अपना सबूत न जाँच ले, हर नंबर अंदाज़ा ही दिखाया जाता है।",
+  "pub.home.body":
+    "Solventia आपके हुनर, पैसे, समय और जगह से आपके लायक कुछ बिज़नेस दिशाएँ बनाता है। फिर हफ़्ते-दर-हफ़्ते का रोडमैप देता है, जिसके मिशन सबसे ज़्यादा रिस्क वाली बातें पहले जाँचते हैं। जब तक आपका अपना सबूत न जाँच ले, हर नंबर अंदाज़ा ही दिखाया जाता है।",
   "pub.ideas.crumb": "आइडिया के उदाहरण",
   "pub.ideas.title": "बिज़नेस आइडिया के उदाहरण",
-  "pub.ideas.lead": "ये दिशाएँ Solventia ने नमूना फ़ाउंडर के लिए लिखीं। आपकी दिशाएँ आपके अपने जवाबों से बनती हैं, इसलिए अलग होंगी।",
+  "pub.ideas.lead":
+    "ये दिशाएँ Solventia ने नमूना फ़ाउंडर के लिए लिखीं। आपकी दिशाएँ आपके अपने जवाबों से बनती हैं, इसलिए अलग होंगी।",
   "pub.ideas.label": "नमूना फ़ाउंडर के लिए उदाहरण",
   "pub.ideas.for": "किसके लिए:",
   "pub.ideas.test": "इस हफ़्ते का पहला टेस्ट:",
   "pub.ideas.yours": "अपने हिसाब से बनी दिशाएँ चाहिए?",
   "pub.ideas.cta": "मेरा बिज़नेस आइडिया खोजें",
   "pub.ideas.clinics.title": "पुणे के क्लिनिक के लिए Google लिस्टिंग",
-  "pub.ideas.clinics.who": "पुणे के एक नौकरीपेशा व्यक्ति के लिए, जिन्हें डिजिटल मार्केटिंग आती है, हफ़्ते में 5–10 घंटे",
-  "pub.ideas.clinics.what": "अकेले प्रैक्टिस करने वाले डॉक्टरों की Google मैप लिस्टिंग बनाना और सुधारना, ताकि पास के मरीज़ उन्हें ढूँढ सकें।",
-  "pub.ideas.clinics.test": "तीन स्थानीय डॉक्टरों को उनकी लिस्टिंग की मुफ़्त एक-पेज जाँच भेजें और देखें कौन जवाब देता है।",
+  "pub.ideas.clinics.who":
+    "पुणे के एक नौकरीपेशा व्यक्ति के लिए, जिन्हें डिजिटल मार्केटिंग आती है, हफ़्ते में 5–10 घंटे",
+  "pub.ideas.clinics.what":
+    "अकेले प्रैक्टिस करने वाले डॉक्टरों की Google मैप लिस्टिंग बनाना और सुधारना, ताकि पास के मरीज़ उन्हें ढूँढ सकें।",
+  "pub.ideas.clinics.test":
+    "तीन स्थानीय डॉक्टरों को उनकी लिस्टिंग की मुफ़्त एक-पेज जाँच भेजें और देखें कौन जवाब देता है।",
   "pub.ideas.farm.title": "छोटे शहर में खेती के उपकरण साझा करना",
-  "pub.ideas.farm.who": "बाराबंकी के पास के एक किसान परिवार के बेटे के लिए, कम पैसे और हफ़्ते में 20–30 घंटे",
-  "pub.ideas.farm.what": "जिन छोटे किसानों को ट्रैक्टर या रोटावेटर चाहिए, उन्हें उन मालिकों से जोड़ना जिनकी मशीनें ख़ाली खड़ी रहती हैं, और बुकिंग संभालना।",
-  "pub.ideas.farm.test": "दो ट्रैक्टर मालिकों से इस हफ़्ते के तीन ख़ाली समय माँगें और उन्हें तीन पड़ोसी किसानों को दें।",
+  "pub.ideas.farm.who":
+    "बाराबंकी के पास के एक किसान परिवार के बेटे के लिए, कम पैसे और हफ़्ते में 20–30 घंटे",
+  "pub.ideas.farm.what":
+    "जिन छोटे किसानों को ट्रैक्टर या रोटावेटर चाहिए, उन्हें उन मालिकों से जोड़ना जिनकी मशीनें ख़ाली खड़ी रहती हैं, और बुकिंग संभालना।",
+  "pub.ideas.farm.test":
+    "दो ट्रैक्टर मालिकों से इस हफ़्ते के तीन ख़ाली समय माँगें और उन्हें तीन पड़ोसी किसानों को दें।",
   "pub.ideas.tailoring.title": "सिलाई के सामान की किट",
   "pub.ideas.tailoring.who": "दरभंगा की एक कुशल दर्ज़ी के लिए, बहुत कम समय के साथ",
-  "pub.ideas.tailoring.what": "घर पर सिलाई करने वाली मोहल्ले की महिलाओं के लिए मिलते धागे, सुई, हुक और फ़ीते की छोटी, तैयार किट।",
-  "pub.ideas.tailoring.test": "किसी सामुदायिक समूह के पाँच सदस्यों को दो नमूना किट दिखाएँ और देखें कौन पहले से ऑर्डर देता है।",
+  "pub.ideas.tailoring.what":
+    "घर पर सिलाई करने वाली मोहल्ले की महिलाओं के लिए मिलते धागे, सुई, हुक और फ़ीते की छोटी, तैयार किट।",
+  "pub.ideas.tailoring.test":
+    "किसी सामुदायिक समूह के पाँच सदस्यों को दो नमूना किट दिखाएँ और देखें कौन पहले से ऑर्डर देता है।",
   "pub.ideas.student.title": "छात्रों के लिए सेमेस्टर प्लानर टेम्पलेट",
   "pub.ideas.student.who": "मैसूरु के एक डिज़ाइन छात्र के लिए, हफ़्ते में 10–20 घंटे",
-  "pub.ideas.student.what": "भारतीय कॉलेज सिलेबस के हिसाब से बना तैयार डिजिटल प्लानर, सीधे छात्रों को बेचा जाए।",
-  "pub.ideas.student.test": "बीस छात्र-संपर्कों को प्लानर का छोटा वीडियो भेजें और पूछें कौन इसे ख़रीदेगा।",
+  "pub.ideas.student.what":
+    "भारतीय कॉलेज सिलेबस के हिसाब से बना तैयार डिजिटल प्लानर, सीधे छात्रों को बेचा जाए।",
+  "pub.ideas.student.test":
+    "बीस छात्र-संपर्कों को प्लानर का छोटा वीडियो भेजें और पूछें कौन इसे ख़रीदेगा।",
   "pub.ideas.gst.title": "स्थानीय दुकानों के लिए मासिक GST फ़ाइलिंग",
   "pub.ideas.gst.who": "चेन्नई के एक फ़्रीलांस अकाउंटेंट के लिए, हफ़्ते में 20–30 घंटे",
-  "pub.ideas.gst.what": "दुकानदारों के लिए मासिक पैकेज जो उनकी GST फ़ाइलिंग और ख़रीद का हिसाब संभाले।",
-  "pub.ideas.gst.test": "अपने जानने वाले दस दुकानदारों को मुफ़्त टैक्स जाँच दें और पूछें कौन मासिक फ़ीस देगा।",
+  "pub.ideas.gst.what":
+    "दुकानदारों के लिए मासिक पैकेज जो उनकी GST फ़ाइलिंग और ख़रीद का हिसाब संभाले।",
+  "pub.ideas.gst.test":
+    "अपने जानने वाले दस दुकानदारों को मुफ़्त टैक्स जाँच दें और पूछें कौन मासिक फ़ीस देगा।",
   "pub.founders.crumb": "फ़ाउंडर के लिए",
   "pub.founders.title": "आप चाहे जैसे शुरू कर रहे हों",
-  "pub.founders.lead": "Solventia पर आने वाले ज़्यादातर लोग इन तीन में से किसी एक जगह होते हैं। हर एक के लिए यह क्या करता है:",
-  "pub.founders.start": "आपके हुनर, पैसे, समय और जगह पर एक छोटी बातचीत। फिर आपके लायक कुछ दिशाएँ — हर एक के साथ कि वो कितनी फ़िट है और क्यों। साथ में एक पहला टेस्ट, जो आप इस हफ़्ते बिना पैसे लगाए कर सकें।",
-  "pub.founders.idea": "आपका रोडमैप वो बातें लिखता है जिनका सच होना आइडिया चलने के लिए ज़रूरी है। उसके मिशन इन्हें जाँचते हैं — बातचीत लिखना, लोगों की लिस्ट बनाना। फिर सबूत वाला पेज दिखाता है कि क्या सही निकला और क्या नहीं।",
-  "pub.founders.stuck": "आज के लिए एक मिशन, आपके पास के घंटों के हिसाब से। कोई मिशन न बने तो 'अटक गए?' बटन आसान तरीक़ा देता है, हफ़्ता आगे बढ़ाता है, या बात करने देता है।",
+  "pub.founders.lead":
+    "Solventia पर आने वाले ज़्यादातर लोग इन तीन में से किसी एक जगह होते हैं। हर एक के लिए यह क्या करता है:",
+  "pub.founders.start":
+    "आपके हुनर, पैसे, समय और जगह पर एक छोटी बातचीत। फिर आपके लायक कुछ दिशाएँ — हर एक के साथ कि वो कितनी फ़िट है और क्यों। साथ में एक पहला टेस्ट, जो आप इस हफ़्ते बिना पैसे लगाए कर सकें।",
+  "pub.founders.idea":
+    "आपका रोडमैप वो बातें लिखता है जिनका सच होना आइडिया चलने के लिए ज़रूरी है। उसके मिशन इन्हें जाँचते हैं — बातचीत लिखना, लोगों की लिस्ट बनाना। फिर सबूत वाला पेज दिखाता है कि क्या सही निकला और क्या नहीं।",
+  "pub.founders.stuck":
+    "आज के लिए एक मिशन, आपके पास के घंटों के हिसाब से। कोई मिशन न बने तो 'अटक गए?' बटन आसान तरीक़ा देता है, हफ़्ता आगे बढ़ाता है, या बात करने देता है।",
   "pub.founders.cta": "बातचीत शुरू करें",
   "pub.faq.crumb": "सवाल",
   "pub.faq.title": "फ़ाउंडर के आम सवाल",
   "pub.faq.lead": "Solventia कैसे काम करता है, इसके छोटे जवाब।",
   "pub.faq.1.q": "Solventia मेरे लिए बिज़नेस दिशाएँ कैसे ढूँढता है?",
-  "pub.faq.1.a": "आप अपने हुनर, पैसे, समय, जगह और सीमाओं के बारे में कुछ सवालों के जवाब देते हैं। Solventia का AI उन्हीं जवाबों से दिशाएँ लिखता है। फिर कोड पाँच बातों पर जाँचता है कि हर दिशा आपके लिए कितनी फ़िट है। ये बातें हैं: आप किन तक पहुँच सकते हैं, पैसा, हुनर, समय और लक्ष्य।",
+  "pub.faq.1.a":
+    "आप अपने हुनर, पैसे, समय, जगह और सीमाओं के बारे में कुछ सवालों के जवाब देते हैं। Solventia का AI उन्हीं जवाबों से दिशाएँ लिखता है। फिर कोड पाँच बातों पर जाँचता है कि हर दिशा आपके लिए कितनी फ़िट है। ये बातें हैं: आप किन तक पहुँच सकते हैं, पैसा, हुनर, समय और लक्ष्य।",
   "pub.faq.2.q": "'फ़िट' का मतलब क्या है?",
-  "pub.faq.2.a": "एक लेबल — मज़बूत, ठीक-ठाक, शर्तों के साथ, कमज़ोर, या 'सीख पर निर्भर' — जो आपके जवाबों से निकलता है, कभी प्रतिशत नहीं। जहाँ जवाब नहीं है, वहाँ अंदाज़ा लगाने के बजाय 'अभी पता नहीं' लिखा होता है।",
+  "pub.faq.2.a":
+    "एक लेबल — मज़बूत, ठीक-ठाक, शर्तों के साथ, कमज़ोर, या 'सीख पर निर्भर' — जो आपके जवाबों से निकलता है, कभी प्रतिशत नहीं। जहाँ जवाब नहीं है, वहाँ अंदाज़ा लगाने के बजाय 'अभी पता नहीं' लिखा होता है।",
   "pub.faq.3.q": "रोडमैप क्या है?",
-  "pub.faq.3.a": "हफ़्तों में बँटी योजना। सिर्फ़ इस हफ़्ते की पूरी जानकारी लिखी होती है; अगला हफ़्ता तब लिखा जाता है जब आप यह पूरा करें, आपके दर्ज किए से। हर मिशन से कुछ ऐसा बनता है जो आपके पास रहता है — एक सूची, दर्ज बातचीत, एक सार।",
+  "pub.faq.3.a":
+    "हफ़्तों में बँटी योजना। सिर्फ़ इस हफ़्ते की पूरी जानकारी लिखी होती है; अगला हफ़्ता तब लिखा जाता है जब आप यह पूरा करें, आपके दर्ज किए से। हर मिशन से कुछ ऐसा बनता है जो आपके पास रहता है — एक सूची, दर्ज बातचीत, एक सार।",
   "pub.faq.4.q": "'सबूत' क्या है?",
-  "pub.faq.4.a": "असली लोगों से आपने सच में क्या सीखा। जब आप किसी मिशन पर बातचीत दर्ज करते हैं, तो उससे जुड़ी जाँचने वाली बात आपके अपने रिकॉर्ड से अपने-आप अपडेट होती है।",
+  "pub.faq.4.a":
+    "असली लोगों से आपने सच में क्या सीखा। जब आप किसी मिशन पर बातचीत दर्ज करते हैं, तो उससे जुड़ी जाँचने वाली बात आपके अपने रिकॉर्ड से अपने-आप अपडेट होती है।",
   "pub.faq.5.q": "क्या संख्याएँ असली हैं?",
-  "pub.faq.5.a": "पैसे या बाज़ार की संख्याएँ अनुमान हैं, जब तक उनके साथ स्रोत न हो। अनुमानों पर 'अनुमान' टैग रहता है, जब तक आपके पहले हफ़्ते उन्हें जाँच न लें।",
+  "pub.faq.5.a":
+    "पैसे या बाज़ार की संख्याएँ अनुमान हैं, जब तक उनके साथ स्रोत न हो। अनुमानों पर 'अनुमान' टैग रहता है, जब तक आपके पहले हफ़्ते उन्हें जाँच न लें।",
   "pub.faq.6.q": "क्या मैं Solventia हिंदी में इस्तेमाल कर सकता/सकती हूँ?",
-  "pub.faq.6.a": "हाँ। डैशबोर्ड, परामर्श, आपकी दिशाएँ और रोडमैप हिंदी में पढ़े जा सकते हैं; पेज के ऊपर से भाषा बदलें।",
+  "pub.faq.6.a":
+    "हाँ। डैशबोर्ड, परामर्श, आपकी दिशाएँ और रोडमैप हिंदी में पढ़े जा सकते हैं; पेज के ऊपर से भाषा बदलें।",
   "pub.faq.7.q": "क्या Solventia मेरा बिज़नेस रजिस्टर करता है?",
-  "pub.faq.7.a": "नहीं। 'इसे आधिकारिक बनाएँ' गाइड क़दम समझाती है — बिज़नेस का रूप, उद्यम, करंट अकाउंट, GST — और कब ज़रूरत है। यह सामान्य जानकारी है, क़ानूनी या टैक्स सलाह नहीं; रजिस्ट्रेशन से पहले किसी CA से पुष्टि करें।",
+  "pub.faq.7.a":
+    "नहीं। 'इसे आधिकारिक बनाएँ' गाइड क़दम समझाती है — बिज़नेस का रूप, उद्यम, करंट अकाउंट, GST — और कब ज़रूरत है। यह सामान्य जानकारी है, क़ानूनी या टैक्स सलाह नहीं; रजिस्ट्रेशन से पहले किसी CA से पुष्टि करें।",
   "pub.faq.8.q": "क्या Solventia मुझे बार-बार मैसेज करेगा?",
-  "pub.faq.8.a": "सिर्फ़ अगर आप चाहें। हर हफ़्ते एक रिमाइंडर ईमेल आ सकता है जिसमें आपका अगला मिशन होता है। जब तक आप चालू न करें, यह बंद रहता है, और सेटिंग्स में बंद किया जा सकता है।",
+  "pub.faq.8.a":
+    "सिर्फ़ अगर आप चाहें। हर हफ़्ते एक रिमाइंडर ईमेल आ सकता है जिसमें आपका अगला मिशन होता है। जब तक आप चालू न करें, यह बंद रहता है, और सेटिंग्स में बंद किया जा सकता है।",
   "pub.faq.9.q": "क्या मैं अपना डेटा मिटा सकता/सकती हूँ?",
   "pub.faq.9.a": "हाँ। डेटा हटाने वाला पेज बताता है कि अपना खाता और उसमें सब कुछ कैसे मिटाएँ।",
   "pub.how.shotTitle": "आपकी 'आज' स्क्रीन",
-  "pub.how.shotBody": "एक समय में एक मिशन, आपके घंटों के हिसाब से, और आपका हफ़्ता और 12 हफ़्तों का रास्ता एक क्लिक पर। नमूना फ़ाउंडर दिखाया गया है।",
-  "pub.how.shotAlt": "नमूना फ़ाउंडर की 'आज' स्क्रीन: आज का मिशन, 'मिशन शुरू करें' बटन, हफ़्ते के 3 में से मिशन 2, और 12 हफ़्तों का सफ़र।",
+  "pub.how.shotBody":
+    "एक समय में एक मिशन, आपके घंटों के हिसाब से, और आपका हफ़्ता और 12 हफ़्तों का रास्ता एक क्लिक पर। नमूना फ़ाउंडर दिखाया गया है।",
+  "pub.how.shotAlt":
+    "नमूना फ़ाउंडर की 'आज' स्क्रीन: आज का मिशन, 'मिशन शुरू करें' बटन, हफ़्ते के 3 में से मिशन 2, और 12 हफ़्तों का सफ़र।",
   "v2.intro.back.named": "फिर से स्वागत है, {name}।",
   "v2.intro.back.pickup": "जहाँ छोड़ा था, वहीं से आगे बढ़ें।",
   "v2.intro.back2.start": "अभी भी सही बिज़नेस ढूँढ रहे हैं?",
   "v2.intro.back2.idea": "अभी भी सोच रहे हैं कि आपका आइडिया चलेगा या नहीं?",
   "v2.intro.back2.stuck": "अगले कदम पर अभी भी अटके हैं?",
-  "v2.build.time": "इसमें आमतौर पर करीब 20 सेकंड लगते हैं।",
+  "v2.build.time": "इसमें एक-दो मिनट तक लग सकते हैं।",
   "v2.build.step.read": "आपकी प्रोफ़ाइल और आइडिया पढ़ रहे हैं",
   "v2.build.step.plan": "आपके फ़ेज़ और हफ़्ते प्लान कर रहे हैं",
   "v2.build.step.week1": "हफ़्ते 1 के मिशन लिख रहे हैं",
@@ -765,16 +835,21 @@ const hi: Record<keyof typeof en, string> = {
   "v2.build.planSoFar": "अब तक आपका प्लान",
   "v2.build.phaseWeeks": "{n} हफ़्ते",
   "v2.build.missions": "हफ़्ते 1 के मिशन",
-  "v2.build.task.title": "तब तक: 5 ऐसे लोगों के नाम लिखें जिनसे आप इस आइडिया के बारे में पूछ सकते हैं।",
-  "v2.build.task.hint": "दोस्त, परिवार, दुकानदार, जान-पहचान के कस्टमर। हम इन्हें आपके पहले मिशन में डाल देंगे।",
+  "v2.build.task.title":
+    "तब तक: 5 ऐसे लोगों के नाम लिखें जिनसे आप इस आइडिया के बारे में पूछ सकते हैं।",
+  "v2.build.task.hint":
+    "दोस्त, परिवार, दुकानदार, जान-पहचान के कस्टमर। हम इन्हें आपके पहले मिशन में डाल देंगे।",
   "v2.build.task.name": "व्यक्ति {n}",
   "v2.build.task.saved": "पहले मिशन के लिए सेव हो गया।",
   "v2.ws.list.useWarmup": "आपके लिखे {n} नाम जोड़ें",
-  "v2.limit.consultation": "आज आप {n} कंसल्टेशन कर चुके हैं। यह आज की लिमिट है — रात 12 बजे के बाद नया शुरू कर सकते हैं।",
-  "v2.limit.roadmap": "आज आप {n} रोडमैप बना चुके हैं। यह आज की लिमिट है — रात 12 बजे के बाद फिर बना सकते हैं।",
-  "v2.limit.askSol": "आज आप Sol को {n} मैसेज भेज चुके हैं। यह आज की लिमिट है — रात 12 बजे के बाद Sol फिर मिलेगा।",
+  "v2.limit.consultation":
+    "आज आप {n} कंसल्टेशन कर चुके हैं। यह आज की लिमिट है — रात 12 बजे के बाद नया शुरू कर सकते हैं।",
+  "v2.limit.roadmap":
+    "आज आप {n} रोडमैप बना चुके हैं। यह आज की लिमिट है — रात 12 बजे के बाद फिर बना सकते हैं।",
+  "v2.limit.askSol":
+    "आज आप Sol को {n} मैसेज भेज चुके हैं। यह आज की लिमिट है — रात 12 बजे के बाद Sol फिर मिलेगा।",
   "v2.limit.title": "आज के लिए इतना ही",
-  "v2.gen.time": "इसमें आमतौर पर 20 से 30 सेकंड लगते हैं।",
+  "v2.gen.time": "इसमें एक मिनट तक लग सकता है।",
   "v2.gen.step.save": "आपके जवाब सेव कर रहे हैं",
   "v2.gen.step.write": "आपकी तीन दिशाएँ लिख रहे हैं",
   "v2.gen.step.open": "आपका डैशबोर्ड खोल रहे हैं",

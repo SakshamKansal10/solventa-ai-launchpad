@@ -1,0 +1,22 @@
+{
+  "label": "prod-signedin-390x844-cpu1",
+  "path": "world",
+  "holdMs": 2703,
+  "holdToFirstExitFrameMs": 2720,
+  "hydratedAfterShownMs": 380,
+  "drawnFrames": 388,
+  "worstDrawGapMs": 23,
+  "worstDrawGapAtMs": 1817,
+  "drawGaps": "",
+  "worstScreencastGapMs": 167,
+  "worstGapAtMs": 1145,
+  "sMovedPx": 0,
+  "sMovedAt": "",
+  "sInvisibleFrames": 0,
+  "holdStateMs": 0,
+  "gaps": "1145+167",
+  "longTasks": "",
+  "rafGaps": "",
+  "states": "500:ask 3559:reveal 6842:off",
+  "mode": "fallback/lite"
+}

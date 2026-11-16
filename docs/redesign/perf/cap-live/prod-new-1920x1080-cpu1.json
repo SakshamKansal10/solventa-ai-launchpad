@@ -1,0 +1,22 @@
+{
+  "label": "prod-new-1920x1080-cpu1",
+  "path": "world",
+  "holdMs": 3350,
+  "holdToFirstExitFrameMs": 3368,
+  "hydratedAfterShownMs": -1429,
+  "drawnFrames": 364,
+  "worstDrawGapMs": 37,
+  "worstDrawGapAtMs": 2237,
+  "drawGaps": "",
+  "worstScreencastGapMs": 97,
+  "worstGapAtMs": 982,
+  "sMovedPx": 0,
+  "sMovedAt": "",
+  "sInvisibleFrames": 0,
+  "holdStateMs": 0,
+  "gaps": "611+83 982+97 1061+83 2028+83",
+  "longTasks": "2285+59",
+  "rafGaps": "2278+52",
+  "states": "1007:ask 7635:reveal 10910:off",
+  "mode": "lite/lite"
+}

@@ -36,7 +36,7 @@ const en = {
   "cc.b.buildBody":
     "Solventia turns this direction into phases and weekly missions around your time and resources. Week 1 is written now; every later week adapts to what you learn.",
   "cc.b.buildCta": "Build my roadmap",
-  "cc.b.building": "Your roadmap is being built. This usually takes a minute or two.",
+  "cc.b.building": "Your roadmap is being built. This can take up to a minute or two.",
   "cc.b.viewProgress": "View progress",
   "cc.b.failed":
     "The last attempt to build your roadmap didn't finish. Your direction is saved — try again.",
@@ -312,8 +312,7 @@ const en = {
   "opp.proof.assumptions": "{n} things to test",
   "opp.proof.summary": "{supported} supported · {untested} still untested",
   "opp.proof.open": "Open Proof",
-  "opp.proof.unavailable":
-    "Proof isn't available yet on this workspace. It will appear shortly.",
+  "opp.proof.unavailable": "Proof isn't available yet on this workspace. It will appear shortly.",
 
   // ── Founder fit ────────────────────────────────────────────────────────
   "fit.strong": "Strong fit",
@@ -439,7 +438,7 @@ const hi: Record<keyof typeof en, string> = {
   "cc.b.buildBody":
     "Solventia इस दिशा को आपके समय और संसाधनों के हिसाब से चरणों और साप्ताहिक मिशनों में बदलता है। सप्ताह 1 अभी लिखा जाता है; आगे का हर सप्ताह आपकी सीख के अनुसार ढलता है।",
   "cc.b.buildCta": "मेरा रोडमैप बनाएं",
-  "cc.b.building": "आपका रोडमैप बन रहा है। इसमें आमतौर पर एक-दो मिनट लगते हैं।",
+  "cc.b.building": "आपका रोडमैप बन रहा है। इसमें एक-दो मिनट तक लग सकते हैं।",
   "cc.b.viewProgress": "प्रगति देखें",
   "cc.b.failed":
     "आपका रोडमैप बनाने की पिछली कोशिश पूरी नहीं हुई। आपकी दिशा सुरक्षित है — फिर कोशिश करें।",

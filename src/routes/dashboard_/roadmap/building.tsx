@@ -76,17 +76,17 @@ function BuildingPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // A hard ceiling so this screen can never spin forever: generation plus
-  // persistence normally finishes well under a minute, so anything still
-  // pending after this is a genuine failure (a hung request, a dead
-  // connection to the AI/database) even if no error ever came back.
+  // A hard ceiling so this screen can never spin forever — just past the server's own limit
+  // (vercel maxDuration 300 s): before that the request can still succeed, so no error is shown
+  // (owner, 2026-11-16: an error only when the request has actually failed); after it, the
+  // request is dead even if no error ever came back.
   useEffect(() => {
     if (!build.isPending) return;
     setTimedOut(false);
     const id = window.setTimeout(() => {
-      console.error("[roadmap] build request timed out client-side after 120s");
+      console.error("[roadmap] build request timed out client-side after 310s");
       setTimedOut(true);
-    }, 120_000);
+    }, 310_000);
     return () => window.clearTimeout(id);
   }, [build.isPending]);
 

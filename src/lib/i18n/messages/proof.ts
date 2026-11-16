@@ -56,8 +56,7 @@ const en = {
   "pf.saved.changed": "Proof saved. This thing to check moved from {from} to {to}.",
   "pf.saveError": "We couldn't save that. Your draft is kept — please try again.",
   "pf.deleteTitle": "Delete this proof?",
-  "pf.deleteBody":
-    "It will be removed and its state will be recalculated. This can't be undone.",
+  "pf.deleteBody": "It will be removed and its state will be recalculated. This can't be undone.",
   "pf.deleteError": "We couldn't delete that. Please try again.",
   "pf.deleted": "Proof deleted.",
   "pf.link": "Open link",
@@ -178,7 +177,8 @@ const hi: Record<keyof typeof en, string> = {
   "pf.type.screenshot": "स्क्रीनशॉट",
   "pf.type.survey": "सर्वे",
   "pf.noDirection.title": "पहले एक दिशा चुनें",
-  "pf.noDirection.body": "सबूत उस दिशा की जाँचने वाली बातों को दर्ज करता है जिस पर आप काम कर रहे हैं।",
+  "pf.noDirection.body":
+    "सबूत उस दिशा की जाँचने वाली बातों को दर्ज करता है जिस पर आप काम कर रहे हैं।",
   "pf.unavailable.title": "सबूत अभी तैयार नहीं है",
   "pf.unavailable.body":
     "यह वर्कस्पेस अभी अपडेट हो रहा है। आपके सबूत खोए नहीं हैं — थोड़ी देर बाद फिर कोशिश करें।",
@@ -247,8 +247,7 @@ const hi: Record<keyof typeof en, string> = {
     "{n} स्वतंत्र स्रोत इसके पक्ष में हैं (कसौटी {t} है), और कुछ भी इन्हें काटता नहीं।",
   "pf.reason.contradictions_outweigh":
     "{c} स्वतंत्र स्रोत इसके विरोध में हैं और केवल {s} पक्ष में। इस जाँचने वाली बात पर दोबारा सोचें।",
-  "pf.reason.conflicting":
-    "{s} स्रोत पक्ष में हैं और {c} विरोध में। सबूत आपस में सहमत नहीं हैं।",
+  "pf.reason.conflicting": "{s} स्रोत पक्ष में हैं और {c} विरोध में। सबूत आपस में सहमत नहीं हैं।",
   "pf.reason.weak_negative": "{c} स्रोत इसके विरोध में है। एक चेतावनी है, फ़ैसला नहीं — और खोजें।",
 
   "pf.detail.aria": "जाँचने वाली बात का विवरण",

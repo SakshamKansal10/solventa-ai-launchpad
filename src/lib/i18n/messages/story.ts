@@ -167,8 +167,7 @@ const hi: Record<keyof typeof en, string> = {
   "story.proof.waiting": "अगली बातचीत का इंतज़ार…",
 
   "story.ask.eyebrow": "Ask Sol",
-  "story.ask.subhead":
-    "Ask Sol आपके अवसर, आपके सप्ताह और आपके सबूत को पहले से जानकर जवाब देता है।",
+  "story.ask.subhead": "Ask Sol आपके अवसर, आपके सप्ताह और आपके सबूत को पहले से जानकर जवाब देता है।",
   "story.ask.prompt": "इन इंटरव्यू से मुझे क्या सीखना चाहिए?",
   "story.ask.chip.opp": "क्लीनिक फ़ॉलो-अप",
   "story.ask.chip.week": "सप्ताह 1",

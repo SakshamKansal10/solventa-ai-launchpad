@@ -1,0 +1,22 @@
+{
+  "label": "prod-signedin-1920x1080-cpu4",
+  "path": "flat",
+  "holdMs": 5090,
+  "holdToFirstExitFrameMs": 5114,
+  "hydratedAfterShownMs": 3127,
+  "drawnFrames": 331,
+  "worstDrawGapMs": 344,
+  "worstDrawGapAtMs": 23,
+  "drawGaps": "23+344 426+55",
+  "worstScreencastGapMs": 367,
+  "worstGapAtMs": 6,
+  "sMovedPx": 0,
+  "sMovedAt": "",
+  "sInvisibleFrames": 0,
+  "holdStateMs": 3952,
+  "gaps": "6+367 489+100 622+84 1990+82 2106+100 2239+267",
+  "longTasks": "422+67 496+53",
+  "rafGaps": "6+350 356+50 423+117 625+65 690+51 806+51 1890+68",
+  "states": "1017:ask 6887:reveal 10155:hold 14106:off",
+  "mode": "lite/lite"
+}

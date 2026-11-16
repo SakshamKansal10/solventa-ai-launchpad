@@ -415,4 +415,14 @@ Each entry: what was ambiguous, what I chose, why.
       still occasionally draws no frame for up to ~0.5 s early in the exit — V8 GC safepoints and
       GPU work outside our code. Gaps up to ~600 ms are accepted for now. Also: signed in at
       1920 with 4× CPU throttling the text held 4.3 s once (the browser drew no frame for
-      ~0.6 s at the cap); every other measured case ≤ 3.8 s.
+      ~0.6 s at the cap); on the live site the same case held 5.1 s (the page's scripts were
+      ready only 3.1 s after the text appeared, and the main thread stayed busy — an exit run by
+      React cannot start sooner). Every other measured case, local and live, ≤ 3.9 s
+      (docs/redesign/perf/cap-live).
+
+51. **Honest wait text (owner, 2026-11-16).** The idea screen says "This can take up to a
+    minute." and, after 60 s, "Still working. Your answers are saved, so you can leave and come
+    back." (en + hi). The roadmap screens state an upper limit ("up to a minute or two"). The
+    roadmap screen's client-side ceiling moved from 120 s to 310 s — just past the server's own
+    limit (maxDuration 300 s) — so it no longer reports a failure while the request can still
+    succeed.

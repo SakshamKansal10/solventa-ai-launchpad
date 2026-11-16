@@ -18,8 +18,10 @@ const GEN_STEPS = ["save", "write", "open"] as const;
 
 /** Honest waiting screen (go-live step 4). Every step is real: "Saving your answers" ticks when
  * the save has returned, "Writing your three directions" is the one model request, "Opening your
- * dashboard" is its answer arriving. The time quoted is the measured one (v1, 2026-11-16: 20 s),
- * and the seconds count up — nothing here claims progress it cannot see. */
+ * dashboard" is its answer arriving. The time quoted is an upper limit, not the typical time
+ * (owner, 2026-11-16: "up to a minute"), and the seconds count up — nothing here claims progress it
+ * cannot see. After a minute a calm line says the answers are safe; an error shows only when the
+ * request has actually failed. */
 function GeneratingPanel({ step }: { step: number }) {
   const { t } = useLocale();
   const [elapsed, setElapsed] = useState(0);
@@ -68,8 +70,10 @@ function GeneratingPanel({ step }: { step: number }) {
         >
           {t("v2.gen.elapsed", { s: elapsed })}
         </p>
-        {elapsed >= 45 && (
-          <p className="text-[0.9375rem] text-sol-secondary">{t("consult.generating.long")}</p>
+        {elapsed >= 60 && (
+          <p className="text-[0.9375rem] text-sol-secondary" data-testid="generating-long">
+            {t("consult.generating.long")}
+          </p>
         )}
       </div>
       <GenerationVisual />
