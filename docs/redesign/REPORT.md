@@ -1,5 +1,19 @@
 # Solventia redesign v2 — report
 
+## Live since 2026-11-16 — and how to roll back
+
+`redesign-v2` was merged into `main` (merge d5d1511, `--no-ff`) and pushed: Vercel deploys
+solventia.in from `main`. The previous production code is tagged `before-live-2026-11-16`.
+From now on work happens directly on `main`.
+
+To roll back, either:
+1. **Fastest (no code):** Vercel → the production project → Deployments → the last deployment
+   before d5d1511 → ⋯ → **Promote to Production**. Takes seconds; `main` stays as it is.
+2. **In git:** `git revert -m 1 d5d1511` on `main` and push. This adds a commit that undoes
+   the merge; nothing is rewritten. (To bring the redesign back later, revert that revert.)
+
+The database migrations are additive: rolling the code back does not need them undone.
+
 ## Before anything else: sign-in configuration to check (Google bug, 2026-11-16)
 The "Continue with Google → empty dashboard" bug had causes in code (fixed on this branch — see
 "Sign-in fix" below) and very likely one in configuration. Please make these exact:
