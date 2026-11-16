@@ -6,7 +6,7 @@ import path from "node:path";
 
 import { TestDb, type Claims } from "./db";
 import { FakeGemini, type GeminiConfig } from "./fake-gemini";
-import { handleRest } from "./postgrest";
+import { handleRest, handleRpc } from "./postgrest";
 
 /**
  * One local HTTP server that impersonates, for tests only:
@@ -642,7 +642,11 @@ export async function startFakeStack(
 
         if (url.pathname.startsWith("/rest/v1/")) {
           stats.rest++;
-          const table = url.pathname.replace("/rest/v1/", "").split("/")[0];
+          const [table, fn] = url.pathname.replace("/rest/v1/", "").split("/");
+          if (table === "rpc" && fn) {
+            const out = await handleRpc(db, fn, json(), claimsFrom(req));
+            return send(res, out.status, out.body ?? null, out.headers);
+          }
           const headers: Record<string, string | undefined> = {};
           for (const [k, v] of Object.entries(req.headers))
             headers[k] = Array.isArray(v) ? v.join(",") : v;

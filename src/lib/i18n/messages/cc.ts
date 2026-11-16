@@ -4,7 +4,7 @@
 const en = {
   "cc2.a.title": "Your strongest direction is ready to explore.",
   "cc2.a.subtitle":
-    "Based on what you've shared, this direction is worth examining first. Review why it may fit, then test its most important assumption.",
+    "Based on what you've shared, this direction is worth examining first. Review why it may fit, then test its most important thing to check.",
   "cc2.recommended": "Recommended direction",
   "cc2.preliminary":
     "A preliminary direction: we need a little more about you before we can judge its fit.",
@@ -16,7 +16,7 @@ const en = {
   "cc2.b.subtitle":
     "Your roadmap isn't built yet. It starts by testing whether real customers want this, and each later week adapts to what you learn.",
   "cc2.b.review": "Review this direction",
-  "cc2.b.validation": "Validation: not tested yet — no evidence collected.",
+  "cc2.b.validation": "Testing: not started — no proof collected.",
   "cc2.fit.heading": "How this direction fits you",
 
   "cc2.step.direction": "Direction",
@@ -27,16 +27,16 @@ const en = {
   "cc2.step.failed": "Needs a retry",
   "cc2.step.firstMission": "First mission",
   "cc2.step.notStarted": "Not started",
-  "cc2.step.evidence": "Evidence",
-  "cc2.step.noEvidence": "No evidence yet",
+  "cc2.step.evidence": "Proof",
+  "cc2.step.noEvidence": "No proof yet",
   "cc2.step.adapt": "Adapt",
-  "cc2.step.afterEvidence": "Available after evidence",
+  "cc2.step.afterEvidence": "Available after proof",
 };
 
 const hi: Record<keyof typeof en, string> = {
   "cc2.a.title": "आपकी सबसे मज़बूत दिशा देखने के लिए तैयार है।",
   "cc2.a.subtitle":
-    "आपने जो बताया उसके आधार पर, यह दिशा सबसे पहले देखने लायक़ है। देखें कि यह आपके लिए क्यों सही हो सकती है, फिर इसकी सबसे अहम धारणा को परखें।",
+    "आपने जो बताया उसके आधार पर, यह दिशा सबसे पहले देखने लायक़ है। देखें कि यह आपके लिए क्यों सही हो सकती है, फिर इसकी सबसे अहम जाँचने वाली बात को परखें।",
   "cc2.recommended": "सुझाई गई दिशा",
   "cc2.preliminary":
     "एक शुरुआती दिशा: इसका मेल परखने के लिए हमें आपके बारे में थोड़ा और जानना होगा।",

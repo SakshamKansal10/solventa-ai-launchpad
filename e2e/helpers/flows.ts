@@ -37,24 +37,26 @@ export async function founderWithRoadmap(page: Page, context: BrowserContext) {
   return f;
 }
 
-/** Starts and completes every mission of the current week the way a founder
- * does: Start, capture evidence where the mission asks for it, Mark complete. */
+/** Completes every mission of the current week the way a founder does: Start (or Open) on
+ * the Roadmap, Mark as done on the mission's own page, back to the week. Ends on the Roadmap. */
 export async function completeAllMissions(page: Page): Promise<void> {
   const cards = page.getByTestId("mission-card");
   // count() does not wait: on a freshly loaded page the cards are still loading.
   await expect(cards.first()).toBeVisible();
   const count = await cards.count();
   for (let i = 0; i < count; i++) {
-    const card = cards.nth(i);
+    const card = page.getByTestId("mission-card").nth(i);
     if ((await card.getAttribute("data-state")) === "completed") continue;
-    if ((await card.getAttribute("data-open")) !== "true") {
-      await card.getByTestId("mission-toggle").click();
-    }
-    if ((await card.getAttribute("data-state")) === "not_started") {
-      await card.getByTestId("mission-primary").click();
-      await expect(card).toHaveAttribute("data-state", "in_progress");
-    }
-    await card.getByTestId("mission-complete").click();
-    await expect(card).toHaveAttribute("data-state", "completed");
+    await card.getByRole("link").click();
+    const mission = page.getByTestId("mission-page");
+    await expect(mission).toBeVisible();
+    await page.getByTestId("mission-complete").click();
+    await expect(mission).toHaveAttribute("data-state", "completed");
+    await page.getByTestId("back-to-week").click();
+    await expect(page.getByTestId("roadmap-page")).toBeVisible();
+    await expect(page.getByTestId("mission-card").nth(i)).toHaveAttribute(
+      "data-state",
+      "completed",
+    );
   }
 }

@@ -69,7 +69,7 @@ export function SceneRoot({
       {/* The finale presents the approved emblem itself (overlay), not a constructed S. */}
       <FilamentSystem />
       <DomSync />
-      <PerformanceGovernor store={store} preset={preset} />
+      <PerformanceGovernor store={store} preset={preset} adaptive={!freeze} />
       <RenderGate store={store} />
       <ReadySignal store={store} />
     </WorldContext.Provider>

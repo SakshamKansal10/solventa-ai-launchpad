@@ -82,11 +82,11 @@ export function PhotoSection({ available }: { available: boolean }) {
 
   return (
     <Card
-      className="flex flex-col gap-5 border-sol-border p-6 shadow-none sm:p-7"
+      className="flex flex-col gap-5 p-[clamp(24px,2.8vw,40px)]"
       aria-labelledby="photo-h"
       data-testid="photo-section"
     >
-      <h2 id="photo-h" className="sol-h3">
+      <h2 id="photo-h" className="dash-statement">
         {t("set.photo.title")}
       </h2>
       <div className="flex flex-wrap items-center gap-6">

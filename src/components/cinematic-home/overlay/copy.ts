@@ -73,6 +73,17 @@ const DATA: Caption[] = SIGNALS.map((s, i) => {
   };
 });
 
+/**
+ * The one line of the film tailored to the opening's answer: under "Your reality. Made
+ * actionable." Shown only when the visitor answered (or was answered for) in this session;
+ * otherwise the statement stands alone, as before.
+ */
+export const AWAKENING_SUB: Record<"start" | "idea" | "stuck", string> = {
+  start: "Built from your skills, money and time — not from a list of ideas.",
+  idea: "Your idea, tested against your reality before you spend on it.",
+  stuck: "The next step that moves you, from where you actually are.",
+};
+
 export const CAPTIONS: Caption[] = [
   {
     id: "awakening",

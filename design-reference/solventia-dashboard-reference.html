@@ -1,0 +1,1051 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Solventia dashboard redesign: reference screens</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;family=Inter+Tight:wght@500;600&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#FFFFFF}
+.ref-label{margin:0;padding:14px 24px;background:#0A0E1A;color:#FFFFFF;font:600 15px/1.4 Inter,system-ui,sans-serif;letter-spacing:.04em}
+section{border-bottom:24px solid #E4E7EF}
+</style>
+</head>
+<body>
+<!--
+REFERENCE ONLY. Seven dashboard screens stacked in one file, as static HTML with inline styles.
+Read the inline styles for exact colours, sizes, radii and spacing. Do not copy this markup into the app:
+rebuild each screen with the project's own components, data and translations.
+The dark "ref-label" bars and the grey dividers between screens are not part of the design.
+-->
+<section id="today">
+<p class="ref-label">1. Today (roadmap active: the mission for today)</p>
+<div style="padding: 0 clamp(20px, 4.4vw, 64px) 72px; box-sizing: border-box; background: #FFFFFF; color: #0A0E1A; font-family: 'Inter', system-ui, sans-serif">
+<div style="max-width: 1312px; margin: 0 auto">
+<header style="display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px; padding: 26px 0 44px">
+<a href="#today" aria-label="Solventia home" style="display: inline-flex; align-items: center; gap: 12px; color: #0A0E1A; text-decoration: none">
+<span aria-hidden="true" style="flex: none; width: 42px; height: 42px; border-radius: 50%; background: #0F1B3D; color: #FFFFFF; display: inline-flex; align-items: center; justify-content: center; font-family: Georgia, 'Times New Roman', serif; font-size: 23px; font-style: italic">S</span>
+<span style="display: flex; flex-direction: column; gap: 5px"><span style="font-size: 19px; font-weight: 600; letter-spacing: 0.2em; line-height: 1">SOLVENTIA</span><span style="font-size: 10px; font-weight: 500; letter-spacing: 0.3em; line-height: 1; color: #3A4256">VALIDATE <span style="color: #B8892B">·</span> BUILD <span style="color: #B8892B">·</span> ELEVATE</span></span>
+</a>
+<nav aria-label="Dashboard" style="display: flex; flex-wrap: wrap; gap: 4px; padding: 6px; border-radius: 999px; background: #F1F3F9">
+<a href="#today" aria-current="page" style="display: inline-flex; align-items: center; min-height: 46px; padding: 0 24px; border-radius: 999px; font-size: 17px; text-decoration: none; background: #0A0E1A; color: #FFFFFF; font-weight: 600">Today</a>
+<a href="#directions" style="display: inline-flex; align-items: center; min-height: 46px; padding: 0 24px; border-radius: 999px; font-size: 17px; text-decoration: none; color: #3A4256; font-weight: 500">Directions</a>
+<a href="#roadmap" style="display: inline-flex; align-items: center; min-height: 46px; padding: 0 24px; border-radius: 999px; font-size: 17px; text-decoration: none; color: #3A4256; font-weight: 500">Roadmap</a>
+<a href="#proof" style="display: inline-flex; align-items: center; min-height: 46px; padding: 0 24px; border-radius: 999px; font-size: 17px; text-decoration: none; color: #3A4256; font-weight: 500">Proof</a>
+</nav>
+<div style="display: flex; align-items: center; gap: 10px">
+<button type="button" lang="hi" style="min-height: 46px; padding: 0 18px; border-radius: 999px; border: 1px solid rgba(10,14,26,0.2); background: #FFFFFF; color: #0A0E1A; font-family: inherit; font-size: 16px; font-weight: 500; cursor: pointer">हिन्दी</button>
+<button type="button" style="display: inline-flex; align-items: center; gap: 10px; min-height: 46px; padding: 0 20px; border-radius: 999px; border: 1px solid rgba(10,14,26,0.2); background: #FFFFFF; color: #0A0E1A; font-family: inherit; font-size: 16px; font-weight: 500; cursor: pointer"><span aria-hidden="true" style="width: 8px; height: 8px; border-radius: 50%; background: #2440F0"></span>Ask Sol</button>
+<button type="button" aria-label="Account, history and settings" style="width: 46px; height: 46px; border-radius: 50%; border: 0; background: #0A0E1A; color: #FFFFFF; font-family: inherit; font-size: 17px; font-weight: 600; cursor: pointer">B</button>
+</div>
+</header>
+<main style="display: flex; flex-direction: column; gap: 24px">
+
+<div style="display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 12px">
+<p style="margin: 0; font-size: 22px; line-height: 1.4; color: #5A6378">Good evening, Bhisham. <span style="color: #0A0E1A; font-weight: 500">One thing to do today.</span></p>
+<p style="margin: 0; font-size: 17px; color: #5A6378">Week 1 of 13 · Validate</p>
+</div>
+
+<section aria-labelledby="mission-title" style="display: flex; flex-wrap: wrap; gap: 40px; align-items: flex-end; padding: clamp(8px, 1.4vw, 20px) 0 clamp(16px, 2.4vw, 32px)">
+<div style="flex: 999 1 560px; min-width: 0; display: flex; flex-direction: column; gap: 28px">
+<div style="display: flex; flex-wrap: wrap; gap: 10px; align-items: center">
+<span style="display: inline-flex; align-items: center; min-height: 38px; padding: 0 16px; border-radius: 999px; font-size: 15px; background: #0A0E1A; color: #FFFFFF; font-weight: 600">Today's mission</span>
+<span style="display: inline-flex; align-items: center; min-height: 38px; padding: 0 16px; border-radius: 999px; font-size: 15px; border: 1px solid rgba(10,14,26,0.3); font-weight: 500; color: #3A4256">About 1 hour</span>
+</div>
+<h1 id="mission-title" style="margin: 0; font-family: 'Inter Tight', 'Inter', system-ui, sans-serif; font-weight: 500; font-size: clamp(44px, 6.2vw, 92px); line-height: 0.98; letter-spacing: -0.035em; text-wrap: balance">List six active event planners in Ambala.</h1>
+<p style="margin: 0; font-size: 22px; line-height: 1.45; max-width: 32em; color: #3A4256">You need contact details of real local organisers who manage heavy equipment for events.</p>
+<div style="display: flex; flex-wrap: wrap; gap: 14px; align-items: center">
+<a href="#mission-list" style="display: inline-flex; align-items: center; justify-content: center; gap: 14px; min-height: 68px; padding: 0 34px; border-radius: 999px; font-family: inherit; font-size: 21px; font-weight: 600; text-decoration: none; cursor: pointer; background: #2440F0; color: #FFFFFF">Start mission<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex: none"><path d="M5 12h14M13 6l6 6-6 6"></path></svg></a>
+<a href="#roadmap" style="display: inline-flex; align-items: center; justify-content: center; gap: 12px; min-height: 68px; padding: 0 28px; border-radius: 999px; font-family: inherit; font-size: 19px; font-weight: 500; text-decoration: none; cursor: pointer; border: 1px solid rgba(10,14,26,0.3); color: #0A0E1A">See this week's 4 missions</a>
+</div>
+</div>
+<div style="flex: 1 1 220px; display: flex; flex-direction: column; gap: 14px; align-items: flex-start">
+<div aria-hidden="true" style="font-family: 'Inter Tight', 'Inter', system-ui, sans-serif; font-weight: 500; font-size: clamp(88px, 12vw, 176px); line-height: 0.82; letter-spacing: -0.05em; color: #2440F0">01</div>
+<div style="font-size: 18px; font-weight: 500; color: #3A4256">Mission 1 of 4 this week</div>
+<div aria-hidden="true" style="display: flex; gap: 6px; width: 100%; max-width: 220px">
+<span style="flex: 1; height: 10px; border-radius: 999px; box-sizing: border-box; border: 2px solid #2440F0"></span>
+<span style="flex: 1; height: 10px; border-radius: 999px; background: #D9DDE8"></span>
+<span style="flex: 1; height: 10px; border-radius: 999px; background: #D9DDE8"></span>
+<span style="flex: 1; height: 10px; border-radius: 999px; background: #D9DDE8"></span>
+</div>
+</div>
+</section>
+
+<section aria-labelledby="journey-title" style="background: #0F1B3D; color: #FFFFFF; border-radius: 40px; padding: clamp(24px, 3.4vw, 48px); display: flex; flex-direction: column; gap: 20px">
+<div style="display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 12px">
+<div style="display: flex; flex-direction: column; gap: 8px">
+<h2 id="journey-title" style="margin: 0; font-family: 'Inter Tight', 'Inter', system-ui, sans-serif; font-weight: 500; font-size: clamp(28px, 2.8vw, 40px); letter-spacing: -0.02em">Your 13 weeks</h2>
+<p style="margin: 0; font-size: 18px; color: #C3CADB">From first conversations to a working booking desk.</p>
+</div>
+<a href="#roadmap" style="display: inline-flex; align-items: center; gap: 10px; min-height: 46px; font-size: 18px; font-weight: 500; color: #FFFFFF; text-decoration: none">Open roadmap<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex: none"><path d="M5 12h14M13 6l6 6-6 6"></path></svg></a>
+</div>
+<svg viewBox="-24 40 1248 190" role="img" aria-label="An arc of 13 weeks in four phases. You are at week 1, in the first phase." style="display: block; width: 100%; height: auto">
+<path d="M20 200 Q600 -60 1180 200" fill="none" stroke="#FFFFFF" stroke-opacity="0.22" stroke-width="2"></path>
+<path d="M20 200 Q116.7 156.7 213.3 127.8" fill="none" stroke="#7C93FF" stroke-width="5" stroke-linecap="round"></path>
+<line x1="261.7" y1="100" x2="261.7" y2="128" stroke="#FFFFFF" stroke-opacity="0.45" stroke-width="2"></line>
+<line x1="551.7" y1="57" x2="551.7" y2="85" stroke="#FFFFFF" stroke-opacity="0.45" stroke-width="2"></line>
+<line x1="841.7" y1="79" x2="841.7" y2="107" stroke="#FFFFFF" stroke-opacity="0.45" stroke-width="2"></line>
+<circle cx="116.7" cy="160.3" r="6" fill="#0F1B3D" stroke="#7C93FF" stroke-width="2.5"></circle>
+<circle cx="213.3" cy="127.8" r="6" fill="#0F1B3D" stroke="#7C93FF" stroke-width="2.5"></circle>
+<circle cx="310" cy="102.5" r="5" fill="#0F1B3D" stroke="#FFFFFF" stroke-opacity="0.5" stroke-width="2"></circle>
+<circle cx="406.7" cy="84.4" r="5" fill="#0F1B3D" stroke="#FFFFFF" stroke-opacity="0.5" stroke-width="2"></circle>
+<circle cx="503.3" cy="73.6" r="5" fill="#0F1B3D" stroke="#FFFFFF" stroke-opacity="0.5" stroke-width="2"></circle>
+<circle cx="600" cy="70" r="5" fill="#0F1B3D" stroke="#FFFFFF" stroke-opacity="0.5" stroke-width="2"></circle>
+<circle cx="696.7" cy="73.6" r="5" fill="#0F1B3D" stroke="#FFFFFF" stroke-opacity="0.5" stroke-width="2"></circle>
+<circle cx="793.3" cy="84.4" r="5" fill="#0F1B3D" stroke="#FFFFFF" stroke-opacity="0.5" stroke-width="2"></circle>
+<circle cx="890" cy="102.5" r="5" fill="#0F1B3D" stroke="#FFFFFF" stroke-opacity="0.5" stroke-width="2"></circle>
+<circle cx="986.7" cy="127.8" r="5" fill="#0F1B3D" stroke="#FFFFFF" stroke-opacity="0.5" stroke-width="2"></circle>
+<circle cx="1083.3" cy="160.3" r="5" fill="#0F1B3D" stroke="#FFFFFF" stroke-opacity="0.5" stroke-width="2"></circle>
+<circle cx="1180" cy="200" r="9" fill="#0F1B3D" stroke="#FFFFFF" stroke-width="3"></circle>
+<circle cx="20" cy="200" r="22" fill="#7C93FF" fill-opacity="0.3"></circle>
+<circle cx="20" cy="200" r="11" fill="#7C93FF"></circle>
+</svg>
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(240px, 100%), 1fr)); gap: 12px">
+<div style="padding: 22px 24px; border-radius: 26px; background: #FFFFFF; color: #0A0E1A; display: flex; flex-direction: column; gap: 8px">
+<div style="font-size: 15px; font-weight: 600; letter-spacing: 0.04em; color: #2440F0">PHASE 1 · YOU ARE HERE</div>
+<div style="font-family: 'Inter Tight', 'Inter', system-ui, sans-serif; font-weight: 500; font-size: 22px; line-height: 1.15; letter-spacing: -0.01em">Planner demand validation</div>
+<div style="font-size: 17px; color: #3A4256">Weeks 1–3</div>
+</div>
+<div style="padding: 22px 24px; border-radius: 26px; border: 1px solid rgba(255,255,255,0.2); display: flex; flex-direction: column; gap: 8px">
+<div style="font-size: 15px; font-weight: 600; letter-spacing: 0.04em; color: #C3CADB">PHASE 2</div>
+<div style="font-family: 'Inter Tight', 'Inter', system-ui, sans-serif; font-weight: 500; font-size: 22px; line-height: 1.15; letter-spacing: -0.01em">Supplier network onboarding</div>
+<div style="font-size: 17px; color: #C3CADB">Weeks 4–6</div>
+</div>
+<div style="padding: 22px 24px; border-radius: 26px; border: 1px solid rgba(255,255,255,0.2); display: flex; flex-direction: column; gap: 8px">
+<div style="font-size: 15px; font-weight: 600; letter-spacing: 0.04em; color: #C3CADB">PHASE 3</div>
+<div style="font-family: 'Inter Tight', 'Inter', system-ui, sans-serif; font-weight: 500; font-size: 22px; line-height: 1.15; letter-spacing: -0.01em">Initial booking operations</div>
+<div style="font-size: 17px; color: #C3CADB">Weeks 7–9</div>
+</div>
+<div style="padding: 22px 24px; border-radius: 26px; border: 1px solid rgba(255,255,255,0.2); display: flex; flex-direction: column; gap: 8px">
+<div style="font-size: 15px; font-weight: 600; letter-spacing: 0.04em; color: #C3CADB">PHASE 4</div>
+<div style="font-family: 'Inter Tight', 'Inter', system-ui, sans-serif; font-weight: 500; font-size: 22px; line-height: 1.15; letter-spacing: -0.01em">Operations and scale</div>
+<div style="font-size: 17px; color: #C3CADB">Weeks 10–13</div>
+</div>
+</div>
+</section>
+
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(420px, 100%), 1fr)); gap: 24px">
+<section style="background: #F1F3F9; border-radius: 32px; padding: clamp(24px, 2.8vw, 40px); display: flex; flex-direction: column; gap: 16px">
+<h2 style="margin: 0; font-size: 15px; font-weight: 600; letter-spacing: 0.08em; color: #5A6378">THIS WEEK SUCCEEDS IF</h2>
+<p style="margin: 0; font-family: 'Inter Tight', 'Inter', system-ui, sans-serif; font-weight: 500; font-size: clamp(22px, 2.1vw, 30px); line-height: 1.25; letter-spacing: -0.01em; text-wrap: pretty">3 of the 4 planners you interview say that calling 3 or more suppliers per event causes delays or stress.</p>
+</section>
+<section style="background: #F1F3F9; border-radius: 32px; padding: clamp(24px, 2.8vw, 40px); display: flex; flex-wrap: wrap; gap: 24px; align-items: flex-end; justify-content: space-between">
+<div style="display: flex; flex-direction: column; gap: 16px">
+<h2 style="margin: 0; font-size: 15px; font-weight: 600; letter-spacing: 0.08em; color: #5A6378">PROOF SO FAR</h2>
+<div style="display: flex; align-items: baseline; gap: 14px">
+<span style="font-family: 'Inter Tight', 'Inter', system-ui, sans-serif; font-weight: 500; font-size: clamp(56px, 5.6vw, 80px); line-height: 0.9; letter-spacing: -0.04em; white-space: nowrap">0<span style="color: #5A6378"> / 4</span></span>
+<span style="font-size: 19px; color: #3A4256">things checked</span>
+</div>
+</div>
+<a href="#proof" style="display: inline-flex; align-items: center; justify-content: center; gap: 10px; min-height: 56px; padding: 0 24px; border-radius: 999px; font-family: inherit; font-size: 18px; font-weight: 500; text-decoration: none; cursor: pointer; border: 1px solid rgba(10,14,26,0.3); color: #0A0E1A">Open proof<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex: none"><path d="M5 12h14M13 6l6 6-6 6"></path></svg></a>
+</section>
+</div>
+
+</main>
+</div>
+</div>
+</section>
+
+<section id="today-first-visit">
+<p class="ref-label">2. Today (first visit: directions are ready, none chosen)</p>
+<div style="padding: 0 clamp(20px, 4.4vw, 64px) 72px; box-sizing: border-box; background: #FFFFFF; color: #0A0E1A; font-family: 'Inter', system-ui, sans-serif">
+<div style="max-width: 1312px; margin: 0 auto">
+<header style="display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px; padding: 26px 0 44px">
+<a href="#today-first-visit" aria-label="Solventia home" style="display: inline-flex; align-items: center; gap: 12px; color: #0A0E1A; text-decoration: none">
+<span aria-hidden="true" style="flex: none; width: 42px; height: 42px; border-radius: 50%; background: #0F1B3D; color: #FFFFFF; display: inline-flex; align-items: center; justify-content: center; font-family: Georgia, 'Times New Roman', serif; font-size: 23px; font-style: italic">S</span>
+<span style="display: flex; flex-direction: column; gap: 5px"><span style="font-size: 19px; font-weight: 600; letter-spacing: 0.2em; line-height: 1">SOLVENTIA</span><span style="font-size: 10px; font-weight: 500; letter-spacing: 0.3em; line-height: 1; color: #3A4256">VALIDATE <span style="color: #B8892B">·</span> BUILD <span style="color: #B8892B">·</span> ELEVATE</span></span>
+</a>
+<nav aria-label="Dashboard" style="display: flex; flex-wrap: wrap; gap: 4px; padding: 6px; border-radius: 999px; background: #F1F3F9">
+<a href="#today-first-visit" aria-current="page" style="display: inline-flex; align-items: center; min-height: 46px; padding: 0 24px; border-radius: 999px; font-size: 17px; text-decoration: none; background: #0A0E1A; color: #FFFFFF; font-weight: 600">Today</a>
+<a href="#directions" style="display: inline-flex; align-items: center; min-height: 46px; padding: 0 24px; border-radius: 999px; font-size: 17px; text-decoration: none; color: #3A4256; font-weight: 500">Directions</a>
+<span style="display: inline-flex; align-items: center; min-height: 46px; padding: 0 24px; border-radius: 999px; font-size: 17px; text-decoration: none; color: #5A6378; font-weight: 500">Roadmap</span>
+<span style="display: inline-flex; align-items: center; min-height: 46px; padding: 0 24px; border-radius: 999px; font-size: 17px; text-decoration: none; color: #5A6378; font-weight: 500">Proof</span>
+</nav>
+<div style="display: flex; align-items: center; gap: 10px">
+<button type="button" lang="hi" style="min-height: 46px; padding: 0 18px; border-radius: 999px; border: 1px solid rgba(10,14,26,0.2); background: #FFFFFF; color: #0A0E1A; font-family: inherit; font-size: 16px; font-weight: 500; cursor: pointer">हिन्दी</button>
+<button type="button" style="display: inline-flex; align-items: center; gap: 10px; min-height: 46px; padding: 0 20px; border-radius: 999px; border: 1px solid rgba(10,14,26,0.2); background: #FFFFFF; color: #0A0E1A; font-family: inherit; font-size: 16px; font-weight: 500; cursor: pointer"><span aria-hidden="true" style="width: 8px; height: 8px; border-radius: 50%; background: #2440F0"></span>Ask Sol</button>
+<button type="button" aria-label="Account, history and settings" style="width: 46px; height: 46px; border-radius: 50%; border: 0; background: #0A0E1A; color: #FFFFFF; font-family: inherit; font-size: 17px; font-weight: 600; cursor: pointer">B</button>
+</div>
+</header>
+<main style="display: flex; flex-direction: column; gap: 24px">
+
+<p style="margin: 0; font-size: 22px; line-height: 1.4; color: #5A6378">Welcome, Bhisham. <span style="color: #0A0E1A; font-weight: 500">We found 3 directions that fit your situation. Start with this one.</span></p>
+
+<section aria-labelledby="direction-title" style="display: flex; flex-wrap: wrap; gap: 40px; align-items: flex-end; padding: clamp(8px, 1.4vw, 20px) 0 clamp(16px, 2.4vw, 32px)">
+<div style="flex: 999 1 520px; min-width: 0; display: flex; flex-direction: column; gap: 28px">
+<div style="display: flex; flex-wrap: wrap; gap: 10px; align-items: center">
+<span style="display: inline-flex; align-items: center; min-height: 38px; padding: 0 16px; border-radius: 999px; font-size: 15px; background: #0A0E1A; color: #FFFFFF; font-weight: 600">Recommended for you</span>
+<span style="display: inline-flex; align-items: center; min-height: 38px; padding: 0 16px; border-radius: 999px; font-size: 15px; border: 1px solid rgba(10,14,26,0.3); font-weight: 500; color: #3A4256">Moderate fit</span>
+</div>
+<h1 id="direction-title" style="margin: 0; font-family: 'Inter Tight', 'Inter', system-ui, sans-serif; font-weight: 500; font-size: clamp(44px, 5.6vw, 80px); line-height: 1; letter-spacing: -0.035em; text-wrap: balance">Commercial Equipment Rental Dispatch Desk for Regional Events</h1>
+<p style="margin: 0; font-size: 22px; line-height: 1.45; max-width: 31em; color: #3A4256">One booking desk for generators, sound systems, staging and cold storage owned by local suppliers across Ambala and Kurukshetra.</p>
+<div style="display: flex; flex-wrap: wrap; gap: 14px; align-items: center">
+<a href="#direction" style="display: inline-flex; align-items: center; justify-content: center; gap: 14px; min-height: 68px; padding: 0 34px; border-radius: 999px; font-family: inherit; font-size: 21px; font-weight: 600; text-decoration: none; cursor: pointer; background: #2440F0; color: #FFFFFF">Explore this direction<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex: none"><path d="M5 12h14M13 6l6 6-6 6"></path></svg></a>
+<a href="#directions" style="display: inline-flex; align-items: center; justify-content: center; gap: 12px; min-height: 68px; padding: 0 28px; border-radius: 999px; font-family: inherit; font-size: 19px; font-weight: 500; text-decoration: none; cursor: pointer; border: 1px solid rgba(10,14,26,0.3); color: #0A0E1A">Compare all 3</a>
+</div>
+</div>
+<aside aria-labelledby="fit-title" style="flex: 1 1 340px; min-width: 0; box-sizing: border-box; background: #F1F3F9; border-radius: 32px; padding: 32px; display: flex; flex-direction: column; gap: 20px">
+<div style="display: flex; flex-direction: column; gap: 10px">
+<h2 id="fit-title" style="margin: 0; font-size: 15px; font-weight: 600; letter-spacing: 0.08em; color: #5A6378">HOW IT FITS YOU</h2>
+<p style="margin: 0; font-family: 'Inter Tight', 'Inter', system-ui, sans-serif; font-weight: 500; font-size: 36px; line-height: 1.05; letter-spacing: -0.02em">3 of 5 fit clearly</p>
+</div>
+<div aria-hidden="true" style="display: flex; gap: 6px">
+<span style="flex: 1; height: 16px; border-radius: 999px; box-sizing: border-box; background: #2440F0"></span>
+<span style="flex: 1; height: 16px; border-radius: 999px; box-sizing: border-box; background: #2440F0"></span>
+<span style="flex: 1; height: 16px; border-radius: 999px; box-sizing: border-box; background: #2440F0"></span>
+<span style="flex: 1; height: 16px; border-radius: 999px; box-sizing: border-box; border: 2px solid #A15C00; background: repeating-linear-gradient(135deg, #A15C00 0 3px, rgba(161,92,0,0) 3px 7px)"></span>
+<span style="flex: 1; height: 16px; border-radius: 999px; box-sizing: border-box; border: 2px dashed #7C859C"></span>
+</div>
+<ul style="margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 12px">
+<li style="display: flex; align-items: baseline; justify-content: space-between; gap: 12px; font-size: 18px"><span>Resources</span><span style="color: #5A6378">Clear fit</span></li>
+<li style="display: flex; align-items: baseline; justify-content: space-between; gap: 12px; font-size: 18px"><span>Time and constraints</span><span style="color: #5A6378">Clear fit</span></li>
+<li style="display: flex; align-items: baseline; justify-content: space-between; gap: 12px; font-size: 18px"><span>Goals and risk</span><span style="color: #5A6378">Clear fit</span></li>
+<li style="display: flex; align-items: baseline; justify-content: space-between; gap: 12px; font-size: 18px"><span>Customer access</span><span style="font-weight: 600; color: #A15C00">Significant gap</span></li>
+<li style="display: flex; align-items: baseline; justify-content: space-between; gap: 12px; font-size: 18px"><span>Capability</span><span style="color: #5A6378">Not known yet</span></li>
+</ul>
+</aside>
+</section>
+
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(320px, 100%), 1fr)); gap: 16px">
+<section style="background: #F1F3F9; border-radius: 32px; padding: clamp(24px, 2.8vw, 40px); display: flex; flex-direction: column; gap: 14px">
+<h2 style="margin: 0; font-size: 15px; font-weight: 600; letter-spacing: 0.08em; color: #5A6378">WHO IT'S FOR</h2>
+<p style="margin: 0; font-size: 22px; line-height: 1.35; text-wrap: pretty">Event organisers, wedding planners and corporate function managers in Haryana.</p>
+</section>
+<section style="background: #F1F3F9; border-radius: 32px; padding: clamp(24px, 2.8vw, 40px); display: flex; flex-direction: column; gap: 14px">
+<h2 style="margin: 0; font-size: 15px; font-weight: 600; letter-spacing: 0.08em; color: #5A6378">THEIR PROBLEM</h2>
+<p style="margin: 0; font-size: 22px; line-height: 1.35; text-wrap: pretty">They spend hours calling individual owners to check availability, pricing and transport.</p>
+</section>
+<section style="background: #F1F3F9; border-radius: 32px; padding: clamp(24px, 2.8vw, 40px); display: flex; flex-direction: column; gap: 14px">
+<h2 style="margin: 0; font-size: 15px; font-weight: 600; letter-spacing: 0.08em; color: #5A6378">WHAT YOU DO</h2>
+<p style="margin: 0; font-size: 22px; line-height: 1.35; text-wrap: pretty">Keep one registry of local equipment owners and handle booking, dispatch and billing for a commission.</p>
+</section>
+</div>
+
+<section aria-label="What happens next" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(280px, 100%), 1fr)); gap: 16px; padding: 12px 0 0">
+<div style="display: flex; align-items: center; gap: 16px">
+<span aria-hidden="true" style="flex: none; width: 52px; height: 52px; border-radius: 50%; background: #0A0E1A; color: #FFFFFF; display: inline-flex; align-items: center; justify-content: center; font-size: 20px; font-weight: 600">1</span>
+<span style="font-size: 19px; line-height: 1.35; font-weight: 500">Choose a direction</span>
+</div>
+<div style="display: flex; align-items: center; gap: 16px">
+<span aria-hidden="true" style="flex: none; width: 52px; height: 52px; border-radius: 50%; box-sizing: border-box; border: 1px solid rgba(10,14,26,0.35); display: inline-flex; align-items: center; justify-content: center; font-size: 20px; font-weight: 600">2</span>
+<span style="font-size: 19px; line-height: 1.35; color: #3A4256">Get a week-by-week roadmap</span>
+</div>
+<div style="display: flex; align-items: center; gap: 16px">
+<span aria-hidden="true" style="flex: none; width: 52px; height: 52px; border-radius: 50%; box-sizing: border-box; border: 1px solid rgba(10,14,26,0.35); display: inline-flex; align-items: center; justify-content: center; font-size: 20px; font-weight: 600">3</span>
+<span style="font-size: 19px; line-height: 1.35; color: #3A4256">Test it with real customers, one mission at a time</span>
+</div>
+</section>
+
+</main>
+</div>
+</div>
+</section>
+
+<section id="directions">
+<p class="ref-label">3. Directions (compare the three)</p>
+<div style="padding: 0 clamp(20px, 4.4vw, 64px) 72px; box-sizing: border-box; background: #FFFFFF; color: #0A0E1A; font-family: 'Inter', system-ui, sans-serif">
+<div style="max-width: 1312px; margin: 0 auto">
+<header style="display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px; padding: 26px 0 44px">
+<a href="#today" aria-label="Solventia home" style="display: inline-flex; align-items: center; gap: 12px; color: #0A0E1A; text-decoration: none">
+<span aria-hidden="true" style="flex: none; width: 42px; height: 42px; border-radius: 50%; background: #0F1B3D; color: #FFFFFF; display: inline-flex; align-items: center; justify-content: center; font-family: Georgia, 'Times New Roman', serif; font-size: 23px; font-style: italic">S</span>
+<span style="display: flex; flex-direction: column; gap: 5px"><span style="font-size: 19px; font-weight: 600; letter-spacing: 0.2em; line-height: 1">SOLVENTIA</span><span style="font-size: 10px; font-weight: 500; letter-spacing: 0.3em; line-height: 1; color: #3A4256">VALIDATE <span style="color: #B8892B">·</span> BUILD <span style="color: #B8892B">·</span> ELEVATE</span></span>
+</a>
+<nav aria-label="Dashboard" style="display: flex; flex-wrap: wrap; gap: 4px; padding: 6px; border-radius: 999px; background: #F1F3F9">
+<a href="#today" style="display: inline-flex; align-items: center; min-height: 46px; padding: 0 24px; border-radius: 999px; font-size: 17px; text-decoration: none; color: #3A4256; font-weight: 500">Today</a>
+<a href="#directions" aria-current="page" style="display: inline-flex; align-items: center; min-height: 46px; padding: 0 24px; border-radius: 999px; font-size: 17px; text-decoration: none; background: #0A0E1A; color: #FFFFFF; font-weight: 600">Directions</a>
+<a href="#roadmap" style="display: inline-flex; align-items: center; min-height: 46px; padding: 0 24px; border-radius: 999px; font-size: 17px; text-decoration: none; color: #3A4256; font-weight: 500">Roadmap</a>
+<a href="#proof" style="display: inline-flex; align-items: center; min-height: 46px; padding: 0 24px; border-radius: 999px; font-size: 17px; text-decoration: none; color: #3A4256; font-weight: 500">Proof</a>
+</nav>
+<div style="display: flex; align-items: center; gap: 10px">
+<button type="button" lang="hi" style="min-height: 46px; padding: 0 18px; border-radius: 999px; border: 1px solid rgba(10,14,26,0.2); background: #FFFFFF; color: #0A0E1A; font-family: inherit; font-size: 16px; font-weight: 500; cursor: pointer">हिन्दी</button>
+<button type="button" style="display: inline-flex; align-items: center; gap: 10px; min-height: 46px; padding: 0 20px; border-radius: 999px; border: 1px solid rgba(10,14,26,0.2); background: #FFFFFF; color: #0A0E1A; font-family: inherit; font-size: 16px; font-weight: 500; cursor: pointer"><span aria-hidden="true" style="width: 8px; height: 8px; border-radius: 50%; background: #2440F0"></span>Ask Sol</button>
+<button type="button" aria-label="Account, history and settings" style="width: 46px; height: 46px; border-radius: 50%; border: 0; background: #0A0E1A; color: #FFFFFF; font-family: inherit; font-size: 17px; font-weight: 600; cursor: pointer">B</button>
+</div>
+</header>
+<main style="display: flex; flex-direction: column; gap: 32px">
+
+<div style="display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 24px">
+<div style="display: flex; flex-direction: column; gap: 18px; min-width: 0">
+<h1 style="margin: 0; font-family: 'Inter Tight', 'Inter', system-ui, sans-serif; font-weight: 500; font-size: clamp(44px, 5.6vw, 80px); line-height: 1; letter-spacing: -0.035em; text-wrap: balance">Three directions. Choose one to test.</h1>
+<p style="margin: 0; font-size: 22px; line-height: 1.45; max-width: 36em; color: #3A4256">Built from what you told us: Ambala, 5–10 hours a week, ₹2,00,000–₹5,00,000 to start.</p>
+</div>
+<ul aria-label="How to read the fit bars" style="margin: 0; padding: 0; list-style: none; display: flex; flex-wrap: wrap; gap: 20px; font-size: 16px; color: #3A4256">
+<li style="display: flex; align-items: center; gap: 8px"><span aria-hidden="true" style="width: 28px; height: 12px; border-radius: 999px; background: #2440F0"></span>Clear fit</li>
+<li style="display: flex; align-items: center; gap: 8px"><span aria-hidden="true" style="width: 28px; height: 12px; border-radius: 999px; box-sizing: border-box; border: 2px solid #A15C00; background: repeating-linear-gradient(135deg, #A15C00 0 3px, rgba(161,92,0,0) 3px 7px)"></span>Gap</li>
+<li style="display: flex; align-items: center; gap: 8px"><span aria-hidden="true" style="width: 28px; height: 12px; border-radius: 999px; box-sizing: border-box; border: 2px dashed #7C859C"></span>Not known yet</li>
+</ul>
+</div>
+
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(360px, 100%), 1fr)); gap: 20px; align-items: stretch">
+<article style="background: #0F1B3D; color: #FFFFFF; border-radius: 36px; padding: clamp(24px, 2.6vw, 36px); display: flex; flex-direction: column; gap: 22px">
+<div style="display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px">
+<span style="font-family: 'Inter Tight', 'Inter', system-ui, sans-serif; font-weight: 500; font-size: 44px; line-height: 0.9; letter-spacing: -0.04em">01</span>
+<span style="display: inline-flex; align-items: center; min-height: 36px; padding: 0 14px; border-radius: 999px; background: #FFFFFF; color: #0A0E1A; font-size: 15px; font-weight: 600">Recommended</span>
+</div>
+<h2 style="margin: 0; font-family: 'Inter Tight', 'Inter', system-ui, sans-serif; font-weight: 500; font-size: 32px; line-height: 1.08; letter-spacing: -0.02em; text-wrap: balance">Commercial Equipment Rental Dispatch Desk for Regional Events</h2>
+<p style="margin: 0; font-size: 18px; line-height: 1.5; color: #C3CADB">One booking desk for generators, sound, staging and cold storage owned by local suppliers.</p>
+<div style="display: flex; flex-direction: column; gap: 10px">
+<div aria-hidden="true" style="display: flex; gap: 6px">
+<span style="flex: 1; height: 14px; border-radius: 999px; box-sizing: border-box; background: #FFFFFF"></span>
+<span style="flex: 1; height: 14px; border-radius: 999px; box-sizing: border-box; background: #FFFFFF"></span>
+<span style="flex: 1; height: 14px; border-radius: 999px; box-sizing: border-box; background: #FFFFFF"></span>
+<span style="flex: 1; height: 14px; border-radius: 999px; box-sizing: border-box; border: 2px solid #F2B84B; background: repeating-linear-gradient(135deg, #F2B84B 0 3px, rgba(242,184,75,0) 3px 7px)"></span>
+<span style="flex: 1; height: 14px; border-radius: 999px; box-sizing: border-box; border: 2px dashed rgba(255,255,255,0.75)"></span>
+</div>
+<p style="margin: 0; font-size: 17px; font-weight: 600">Moderate fit <span style="font-weight: 400; color: #C3CADB">· 3 clear, 1 gap, 1 not known</span></p>
+</div>
+<p style="margin: 0; display: flex; gap: 12px; align-items: flex-start; font-size: 17px; line-height: 1.45"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex: none; margin-top: 2px"><path d="M5 12.5l4.5 4.5L19 7.5"></path></svg><span>Your ₹2,00,000 covers local ads and small advance deposits to equipment owners.</span></p>
+<a href="#direction" style="margin-top: auto; display: inline-flex; align-items: center; justify-content: center; gap: 12px; min-height: 62px; padding: 0 28px; border-radius: 999px; background: #FFFFFF; color: #0A0E1A; font-size: 19px; font-weight: 600; text-decoration: none">Open direction<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex: none"><path d="M5 12h14M13 6l6 6-6 6"></path></svg></a>
+</article>
+<article style="background: #F1F3F9; border-radius: 36px; padding: clamp(24px, 2.6vw, 36px); display: flex; flex-direction: column; gap: 22px">
+<div style="display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px">
+<span style="font-family: 'Inter Tight', 'Inter', system-ui, sans-serif; font-weight: 500; font-size: 44px; line-height: 0.9; letter-spacing: -0.04em; color: #5A6378">02</span>
+</div>
+<h2 style="margin: 0; font-family: 'Inter Tight', 'Inter', system-ui, sans-serif; font-weight: 500; font-size: 32px; line-height: 1.08; letter-spacing: -0.02em; text-wrap: balance">Group Buying Procurement Desk for Hardware Retailers</h2>
+<p style="margin: 0; font-size: 18px; line-height: 1.5; color: #3A4256">Pool weekly orders from small hardware and electrical shops and buy direct from factories at bulk rates.</p>
+<div style="display: flex; flex-direction: column; gap: 10px">
+<div aria-hidden="true" style="display: flex; gap: 6px">
+<span style="flex: 1; height: 14px; border-radius: 999px; box-sizing: border-box; background: #2440F0"></span>
+<span style="flex: 1; height: 14px; border-radius: 999px; box-sizing: border-box; background: #2440F0"></span>
+<span style="flex: 1; height: 14px; border-radius: 999px; box-sizing: border-box; background: #2440F0"></span>
+<span style="flex: 1; height: 14px; border-radius: 999px; box-sizing: border-box; border: 2px solid #A15C00; background: repeating-linear-gradient(135deg, #A15C00 0 3px, rgba(161,92,0,0) 3px 7px)"></span>
+<span style="flex: 1; height: 14px; border-radius: 999px; box-sizing: border-box; border: 2px dashed #7C859C"></span>
+</div>
+<p style="margin: 0; font-size: 17px; font-weight: 600">Moderate fit <span style="font-weight: 400; color: #5A6378">· 3 clear, 1 gap, 1 not known</span></p>
+</div>
+<p style="margin: 0; display: flex; gap: 12px; align-items: flex-start; font-size: 17px; line-height: 1.45"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex: none; margin-top: 2px"><path d="M5 12.5l4.5 4.5L19 7.5"></path></svg><span>Needs little weekly time, because ordering runs on a fixed weekly cycle.</span></p>
+<a href="#direction" style="margin-top: auto; display: inline-flex; align-items: center; justify-content: center; gap: 12px; min-height: 62px; padding: 0 28px; border-radius: 999px; border: 1px solid rgba(10,14,26,0.35); color: #0A0E1A; font-size: 19px; font-weight: 600; text-decoration: none">Open direction<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex: none"><path d="M5 12h14M13 6l6 6-6 6"></path></svg></a>
+</article>
+<article style="background: #F1F3F9; border-radius: 36px; padding: clamp(24px, 2.6vw, 36px); display: flex; flex-direction: column; gap: 22px">
+<div style="display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px">
+<span style="font-family: 'Inter Tight', 'Inter', system-ui, sans-serif; font-weight: 500; font-size: 44px; line-height: 0.9; letter-spacing: -0.04em; color: #5A6378">03</span>
+</div>
+<h2 style="margin: 0; font-family: 'Inter Tight', 'Inter', system-ui, sans-serif; font-weight: 500; font-size: 32px; line-height: 1.08; letter-spacing: -0.02em; text-wrap: balance">Digital Catalog &amp; Sales Workflow Desk for Ambala Manufacturers</h2>
+<p style="margin: 0; font-size: 18px; line-height: 1.5; color: #3A4256">Set up online catalogues and WhatsApp enquiry handling for Ambala's instrument makers, for a monthly fee.</p>
+<div style="display: flex; flex-direction: column; gap: 10px">
+<div aria-hidden="true" style="display: flex; gap: 6px">
+<span style="flex: 1; height: 14px; border-radius: 999px; box-sizing: border-box; background: #2440F0"></span>
+<span style="flex: 1; height: 14px; border-radius: 999px; box-sizing: border-box; background: #2440F0"></span>
+<span style="flex: 1; height: 14px; border-radius: 999px; box-sizing: border-box; border: 2px solid #A15C00; background: repeating-linear-gradient(135deg, #A15C00 0 3px, rgba(161,92,0,0) 3px 7px)"></span>
+<span style="flex: 1; height: 14px; border-radius: 999px; box-sizing: border-box; border: 2px solid #A15C00; background: repeating-linear-gradient(135deg, #A15C00 0 3px, rgba(161,92,0,0) 3px 7px)"></span>
+<span style="flex: 1; height: 14px; border-radius: 999px; box-sizing: border-box; border: 2px dashed #7C859C"></span>
+</div>
+<p style="margin: 0; font-size: 17px; font-weight: 600">Conditional fit <span style="font-weight: 400; color: #5A6378">· 2 clear, 2 gaps, 1 not known</span></p>
+</div>
+<p style="margin: 0; display: flex; gap: 12px; align-items: flex-start; font-size: 17px; line-height: 1.45"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex: none; margin-top: 2px"><path d="M5 12.5l4.5 4.5L19 7.5"></path></svg><span>You are close to more than a thousand local manufacturing and assembly units.</span></p>
+<a href="#direction" style="margin-top: auto; display: inline-flex; align-items: center; justify-content: center; gap: 12px; min-height: 62px; padding: 0 28px; border-radius: 999px; border: 1px solid rgba(10,14,26,0.35); color: #0A0E1A; font-size: 19px; font-weight: 600; text-decoration: none">Open direction<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex: none"><path d="M5 12h14M13 6l6 6-6 6"></path></svg></a>
+</article>
+</div>
+
+<div style="display: flex; flex-direction: column; gap: 12px">
+<div style="display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px; padding: 24px clamp(20px, 2.6vw, 36px); border-radius: 32px; background: #F1F3F9">
+<p style="margin: 0; flex: 1 1 420px; font-size: 20px; line-height: 1.4"><span style="font-weight: 600">Capability shows "not known yet" on all three.</span> <span style="color: #3A4256">Answer 3 quick questions about your skills to sharpen the fit.</span></p>
+<button type="button" style="display: inline-flex; align-items: center; justify-content: center; gap: 10px; min-height: 56px; padding: 0 24px; border-radius: 999px; font-family: inherit; font-size: 18px; font-weight: 500; text-decoration: none; cursor: pointer; border: 1px solid rgba(10,14,26,0.35); background: #FFFFFF; color: #0A0E1A">Answer now<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex: none"><path d="M5 12h14M13 6l6 6-6 6"></path></svg></button>
+</div>
+<div style="display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px; padding: 24px clamp(20px, 2.6vw, 36px); border-radius: 32px; border: 1px solid rgba(10,14,26,0.12)">
+<p style="margin: 0; font-size: 20px; color: #3A4256">None of these feel right?</p>
+<button type="button" style="display: inline-flex; align-items: center; justify-content: center; gap: 10px; min-height: 56px; padding: 0 24px; border-radius: 999px; font-family: inherit; font-size: 18px; font-weight: 500; text-decoration: none; cursor: pointer; border: 1px solid rgba(10,14,26,0.35); background: #FFFFFF; color: #0A0E1A">Find more directions</button>
+</div>
+</div>
+
+</main>
+</div>
+</div>
+</section>
+
+<section id="direction">
+<p class="ref-label">4. Direction detail</p>
+<div style="padding: 0 clamp(20px, 4.4vw, 64px) 72px; box-sizing: border-box; background: #FFFFFF; color: #0A0E1A; font-family: 'Inter', system-ui, sans-serif">
+<div style="max-width: 1312px; margin: 0 auto">
+<header style="display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px; padding: 26px 0 44px">
+<a href="#today" aria-label="Solventia home" style="display: inline-flex; align-items: center; gap: 12px; color: #0A0E1A; text-decoration: none">
+<span aria-hidden="true" style="flex: none; width: 42px; height: 42px; border-radius: 50%; background: #0F1B3D; color: #FFFFFF; display: inline-flex; align-items: center; justify-content: center; font-family: Georgia, 'Times New Roman', serif; font-size: 23px; font-style: italic">S</span>
+<span style="display: flex; flex-direction: column; gap: 5px"><span style="font-size: 19px; font-weight: 600; letter-spacing: 0.2em; line-height: 1">SOLVENTIA</span><span style="font-size: 10px; font-weight: 500; letter-spacing: 0.3em; line-height: 1; color: #3A4256">VALIDATE <span style="color: #B8892B">·</span> BUILD <span style="color: #B8892B">·</span> ELEVATE</span></span>
+</a>
+<nav aria-label="Dashboard" style="display: flex; flex-wrap: wrap; gap: 4px; padding: 6px; border-radius: 999px; background: #F1F3F9">
+<a href="#today" style="display: inline-flex; align-items: center; min-height: 46px; padding: 0 24px; border-radius: 999px; font-size: 17px; text-decoration: none; color: #3A4256; font-weight: 500">Today</a>
+<a href="#directions" aria-current="page" style="display: inline-flex; align-items: center; min-height: 46px; padding: 0 24px; border-radius: 999px; font-size: 17px; text-decoration: none; background: #0A0E1A; color: #FFFFFF; font-weight: 600">Directions</a>
+<a href="#roadmap" style="display: inline-flex; align-items: center; min-height: 46px; padding: 0 24px; border-radius: 999px; font-size: 17px; text-decoration: none; color: #3A4256; font-weight: 500">Roadmap</a>
+<a href="#proof" style="display: inline-flex; align-items: center; min-height: 46px; padding: 0 24px; border-radius: 999px; font-size: 17px; text-decoration: none; color: #3A4256; font-weight: 500">Proof</a>
+</nav>
+<div style="display: flex; align-items: center; gap: 10px">
+<button type="button" lang="hi" style="min-height: 46px; padding: 0 18px; border-radius: 999px; border: 1px solid rgba(10,14,26,0.2); background: #FFFFFF; color: #0A0E1A; font-family: inherit; font-size: 16px; font-weight: 500; cursor: pointer">हिन्दी</button>
+<button type="button" style="display: inline-flex; align-items: center; gap: 10px; min-height: 46px; padding: 0 20px; border-radius: 999px; border: 1px solid rgba(10,14,26,0.2); background: #FFFFFF; color: #0A0E1A; font-family: inherit; font-size: 16px; font-weight: 500; cursor: pointer"><span aria-hidden="true" style="width: 8px; height: 8px; border-radius: 50%; background: #2440F0"></span>Ask Sol</button>
+<button type="button" aria-label="Account, history and settings" style="width: 46px; height: 46px; border-radius: 50%; border: 0; background: #0A0E1A; color: #FFFFFF; font-family: inherit; font-size: 17px; font-weight: 600; cursor: pointer">B</button>
+</div>
+</header>
+<main style="display: flex; flex-direction: column; gap: 32px">
+
+<section aria-labelledby="dir-title" style="display: flex; flex-wrap: wrap; gap: 40px; align-items: flex-end; padding-bottom: 16px">
+<div style="flex: 999 1 560px; min-width: 0; display: flex; flex-direction: column; gap: 28px">
+<a href="#directions" style="display: inline-flex; align-items: center; gap: 10px; min-height: 44px; align-self: flex-start; font-size: 18px; font-weight: 500; color: #2440F0; text-decoration: none"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex: none"><path d="M19 12H5M11 6l-6 6 6 6"></path></svg>All directions</a>
+<div style="display: flex; flex-wrap: wrap; gap: 10px; align-items: center">
+<span style="display: inline-flex; align-items: center; min-height: 38px; padding: 0 16px; border-radius: 999px; font-size: 15px; background: #0A0E1A; color: #FFFFFF; font-weight: 600">Recommended</span>
+<span style="display: inline-flex; align-items: center; min-height: 38px; padding: 0 16px; border-radius: 999px; font-size: 15px; border: 1px solid rgba(10,14,26,0.3); font-weight: 500; color: #3A4256">Moderate fit</span>
+</div>
+<h1 id="dir-title" style="margin: 0; font-family: 'Inter Tight', 'Inter', system-ui, sans-serif; font-weight: 500; font-size: clamp(44px, 5.6vw, 80px); line-height: 1; letter-spacing: -0.035em; text-wrap: balance; max-width: 15em">Commercial Equipment Rental Dispatch Desk for Regional Events</h1>
+<p style="margin: 0; font-size: 22px; line-height: 1.45; max-width: 34em; color: #3A4256">Act as one booking coordinator for generators, heavy sound systems, staging and cold-chain storage owned by local suppliers across Ambala and Kurukshetra.</p>
+<div style="display: flex; flex-wrap: wrap; gap: 14px; align-items: center">
+<a href="#today" style="display: inline-flex; align-items: center; justify-content: center; gap: 14px; min-height: 68px; padding: 0 34px; border-radius: 999px; font-family: inherit; font-size: 21px; font-weight: 600; text-decoration: none; cursor: pointer; background: #2440F0; color: #FFFFFF">Choose this direction<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex: none"><path d="M5 12h14M13 6l6 6-6 6"></path></svg></a>
+<span style="font-size: 17px; color: #5A6378">Choosing builds your week-by-week roadmap.</span>
+</div>
+</div>
+<aside aria-labelledby="fit-title" style="flex: 1 1 340px; min-width: 0; box-sizing: border-box; background: #F1F3F9; border-radius: 32px; padding: 32px; display: flex; flex-direction: column; gap: 20px">
+<div style="display: flex; flex-direction: column; gap: 10px">
+<h2 id="fit-title" style="margin: 0; font-size: 15px; font-weight: 600; letter-spacing: 0.08em; color: #5A6378">HOW IT FITS YOU</h2>
+<p style="margin: 0; font-family: 'Inter Tight', 'Inter', system-ui, sans-serif; font-weight: 500; font-size: 36px; line-height: 1.05; letter-spacing: -0.02em">3 of 5 fit clearly</p>
+</div>
+<div aria-hidden="true" style="display: flex; gap: 6px">
+<span style="flex: 1; height: 16px; border-radius: 999px; box-sizing: border-box; background: #2440F0"></span>
+<span style="flex: 1; height: 16px; border-radius: 999px; box-sizing: border-box; background: #2440F0"></span>
+<span style="flex: 1; height: 16px; border-radius: 999px; box-sizing: border-box; background: #2440F0"></span>
+<span style="flex: 1; height: 16px; border-radius: 999px; box-sizing: border-box; border: 2px solid #A15C00; background: repeating-linear-gradient(135deg, #A15C00 0 3px, rgba(161,92,0,0) 3px 7px)"></span>
+<span style="flex: 1; height: 16px; border-radius: 999px; box-sizing: border-box; border: 2px dashed #7C859C"></span>
+</div>
+<p style="margin: 0; font-size: 18px; line-height: 1.45; color: #3A4256">Biggest gap: <strong style="color: #A15C00; font-weight: 600">customer access</strong>. Capability is not known yet.</p>
+</aside>
+</section>
+
+<section aria-label="The idea in four lines" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(480px, 100%), 1fr)); gap: 16px">
+<div style="background: #F1F3F9; border-radius: 32px; padding: clamp(24px, 2.8vw, 40px); display: flex; flex-direction: column; gap: 14px">
+<h2 style="margin: 0; font-size: 15px; font-weight: 600; letter-spacing: 0.08em; color: #5A6378">CUSTOMER</h2>
+<p style="margin: 0; font-family: 'Inter Tight', 'Inter', system-ui, sans-serif; font-weight: 500; font-size: clamp(24px, 2.3vw, 32px); line-height: 1.2; letter-spacing: -0.015em; text-wrap: balance">Regional event planners and wedding organisers</p>
+</div>
+<div style="background: #F1F3F9; border-radius: 32px; padding: clamp(24px, 2.8vw, 40px); display: flex; flex-direction: column; gap: 14px">
+<h2 style="margin: 0; font-size: 15px; font-weight: 600; letter-spacing: 0.08em; color: #5A6378">THEIR PROBLEM</h2>
+<p style="margin: 0; font-family: 'Inter Tight', 'Inter', system-ui, sans-serif; font-weight: 500; font-size: clamp(24px, 2.3vw, 32px); line-height: 1.2; letter-spacing: -0.015em; text-wrap: balance">Scattered equipment suppliers cause event delays</p>
+</div>
+<div style="background: #F1F3F9; border-radius: 32px; padding: clamp(24px, 2.8vw, 40px); display: flex; flex-direction: column; gap: 14px">
+<h2 style="margin: 0; font-size: 15px; font-weight: 600; letter-spacing: 0.08em; color: #5A6378">YOUR OFFER</h2>
+<p style="margin: 0; font-family: 'Inter Tight', 'Inter', system-ui, sans-serif; font-weight: 500; font-size: clamp(24px, 2.3vw, 32px); line-height: 1.2; letter-spacing: -0.015em; text-wrap: balance">One central dispatch registry for commercial equipment</p>
+</div>
+<div style="background: #F1F3F9; border-radius: 32px; padding: clamp(24px, 2.8vw, 40px); display: flex; flex-direction: column; gap: 14px">
+<h2 style="margin: 0; font-size: 15px; font-weight: 600; letter-spacing: 0.08em; color: #5A6378">HOW YOU EARN</h2>
+<p style="margin: 0; font-family: 'Inter Tight', 'Inter', system-ui, sans-serif; font-weight: 500; font-size: clamp(24px, 2.3vw, 32px); line-height: 1.2; letter-spacing: -0.015em; text-wrap: balance">A commission on the value of every rental booking</p>
+</div>
+</section>
+
+<section aria-labelledby="first-test" style="background: #0F1B3D; color: #FFFFFF; border-radius: 40px; padding: clamp(28px, 4vw, 56px); display: flex; flex-wrap: wrap; gap: 40px; align-items: flex-start">
+<div style="flex: 999 1 520px; min-width: 0; display: flex; flex-direction: column; gap: 18px">
+<h2 id="first-test" style="margin: 0; font-size: 15px; font-weight: 600; letter-spacing: 0.08em; color: #C3CADB">YOUR FIRST TEST</h2>
+<p style="margin: 0; font-family: 'Inter Tight', 'Inter', system-ui, sans-serif; font-weight: 500; font-size: clamp(26px, 2.6vw, 38px); line-height: 1.18; letter-spacing: -0.02em; text-wrap: pretty">Contact 5 generator and stage rental owners in Ambala, list what they have, and post 3 offers in local business groups.</p>
+</div>
+<div style="flex: 1 1 320px; min-width: 0; display: flex; flex-direction: column; gap: 14px">
+<h2 style="margin: 0; font-size: 15px; font-weight: 600; letter-spacing: 0.08em; color: #C3CADB">WHERE IT CAN GO</h2>
+<p style="margin: 0; font-size: 20px; line-height: 1.45">₹1,00,000 of monthly rental volume across 4 events earns you ₹15,000–₹20,000 in commission.</p>
+<p style="margin: 0; display: inline-flex; align-self: flex-start; align-items: center; min-height: 34px; padding: 0 14px; border-radius: 999px; border: 1px solid #F2B84B; color: #F2B84B; font-size: 15px; font-weight: 600">Estimate. Your first weeks check it.</p>
+</div>
+</section>
+
+<nav aria-label="More about this direction" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(480px, 100%), 1fr)); gap: 16px">
+<a href="#direction" style="display: flex; align-items: center; justify-content: space-between; gap: 20px; min-height: 104px; padding: 12px clamp(24px, 2.8vw, 40px); box-sizing: border-box; border-radius: 32px; border: 1px solid rgba(10,14,26,0.22); color: #0A0E1A; text-decoration: none">
+<span style="display: flex; flex-direction: column; gap: 6px"><span style="font-family: 'Inter Tight', 'Inter', system-ui, sans-serif; font-weight: 500; font-size: 28px; letter-spacing: -0.015em">How it fits you</span><span style="font-size: 17px; color: #5A6378">The reason behind each of the five</span></span>
+<span style="display: inline-flex; color: #2440F0"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex: none"><path d="M5 12h14M13 6l6 6-6 6"></path></svg></span>
+</a>
+<a href="#direction" style="display: flex; align-items: center; justify-content: space-between; gap: 20px; min-height: 104px; padding: 12px clamp(24px, 2.8vw, 40px); box-sizing: border-box; border-radius: 32px; border: 1px solid rgba(10,14,26,0.22); color: #0A0E1A; text-decoration: none">
+<span style="display: flex; flex-direction: column; gap: 6px"><span style="font-family: 'Inter Tight', 'Inter', system-ui, sans-serif; font-weight: 500; font-size: 28px; letter-spacing: -0.015em">Market and sources</span><span style="font-size: 17px; color: #5A6378">What is known, what is an estimate, and where it comes from</span></span>
+<span style="display: inline-flex; color: #2440F0"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex: none"><path d="M5 12h14M13 6l6 6-6 6"></path></svg></span>
+</a>
+</nav>
+
+</main>
+</div>
+</div>
+</section>
+
+<section id="roadmap">
+<p class="ref-label">5. Roadmap</p>
+<div style="padding: 0 clamp(20px, 4.4vw, 64px) 72px; box-sizing: border-box; background: #FFFFFF; color: #0A0E1A; font-family: 'Inter', system-ui, sans-serif">
+<div style="max-width: 1312px; margin: 0 auto">
+<header style="display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px; padding: 26px 0 44px">
+<a href="#today" aria-label="Solventia home" style="display: inline-flex; align-items: center; gap: 12px; color: #0A0E1A; text-decoration: none">
+<span aria-hidden="true" style="flex: none; width: 42px; height: 42px; border-radius: 50%; background: #0F1B3D; color: #FFFFFF; display: inline-flex; align-items: center; justify-content: center; font-family: Georgia, 'Times New Roman', serif; font-size: 23px; font-style: italic">S</span>
+<span style="display: flex; flex-direction: column; gap: 5px"><span style="font-size: 19px; font-weight: 600; letter-spacing: 0.2em; line-height: 1">SOLVENTIA</span><span style="font-size: 10px; font-weight: 500; letter-spacing: 0.3em; line-height: 1; color: #3A4256">VALIDATE <span style="color: #B8892B">·</span> BUILD <span style="color: #B8892B">·</span> ELEVATE</span></span>
+</a>
+<nav aria-label="Dashboard" style="display: flex; flex-wrap: wrap; gap: 4px; padding: 6px; border-radius: 999px; background: #F1F3F9">
+<a href="#today" style="display: inline-flex; align-items: center; min-height: 46px; padding: 0 24px; border-radius: 999px; font-size: 17px; text-decoration: none; color: #3A4256; font-weight: 500">Today</a>
+<a href="#directions" style="display: inline-flex; align-items: center; min-height: 46px; padding: 0 24px; border-radius: 999px; font-size: 17px; text-decoration: none; color: #3A4256; font-weight: 500">Directions</a>
+<a href="#roadmap" aria-current="page" style="display: inline-flex; align-items: center; min-height: 46px; padding: 0 24px; border-radius: 999px; font-size: 17px; text-decoration: none; background: #0A0E1A; color: #FFFFFF; font-weight: 600">Roadmap</a>
+<a href="#proof" style="display: inline-flex; align-items: center; min-height: 46px; padding: 0 24px; border-radius: 999px; font-size: 17px; text-decoration: none; color: #3A4256; font-weight: 500">Proof</a>
+</nav>
+<div style="display: flex; align-items: center; gap: 10px">
+<button type="button" lang="hi" style="min-height: 46px; padding: 0 18px; border-radius: 999px; border: 1px solid rgba(10,14,26,0.2); background: #FFFFFF; color: #0A0E1A; font-family: inherit; font-size: 16px; font-weight: 500; cursor: pointer">हिन्दी</button>
+<button type="button" style="display: inline-flex; align-items: center; gap: 10px; min-height: 46px; padding: 0 20px; border-radius: 999px; border: 1px solid rgba(10,14,26,0.2); background: #FFFFFF; color: #0A0E1A; font-family: inherit; font-size: 16px; font-weight: 500; cursor: pointer"><span aria-hidden="true" style="width: 8px; height: 8px; border-radius: 50%; background: #2440F0"></span>Ask Sol</button>
+<button type="button" aria-label="Account, history and settings" style="width: 46px; height: 46px; border-radius: 50%; border: 0; background: #0A0E1A; color: #FFFFFF; font-family: inherit; font-size: 17px; font-weight: 600; cursor: pointer">B</button>
+</div>
+</header>
+<main style="display: flex; flex-direction: column; gap: 32px">
+
+<div style="display: flex; flex-direction: column; gap: 18px">
+<p style="margin: 0; font-size: 17px; font-weight: 500; color: #5A6378">Commercial Equipment Rental Dispatch Desk for Regional Events</p>
+<h1 style="margin: 0; font-family: 'Inter Tight', 'Inter', system-ui, sans-serif; font-weight: 500; font-size: clamp(44px, 5.6vw, 80px); line-height: 1; letter-spacing: -0.035em; text-wrap: balance">Your 13-week roadmap</h1>
+<p style="margin: 0; font-size: 22px; line-height: 1.45; max-width: 34em; color: #3A4256">Test demand first. Build only what the proof supports.</p>
+</div>
+
+<section aria-label="The four phases" style="background: #0F1B3D; color: #FFFFFF; border-radius: 40px; padding: clamp(24px, 3.4vw, 48px); display: flex; flex-direction: column; gap: 20px">
+<svg viewBox="-24 40 1248 190" role="img" aria-label="An arc of 13 weeks in four phases. You are at week 1, in the first phase." style="display: block; width: 100%; height: auto">
+<path d="M20 200 Q600 -60 1180 200" fill="none" stroke="#FFFFFF" stroke-opacity="0.22" stroke-width="2"></path>
+<path d="M20 200 Q116.7 156.7 213.3 127.8" fill="none" stroke="#7C93FF" stroke-width="5" stroke-linecap="round"></path>
+<line x1="261.7" y1="100" x2="261.7" y2="128" stroke="#FFFFFF" stroke-opacity="0.45" stroke-width="2"></line>
+<line x1="551.7" y1="57" x2="551.7" y2="85" stroke="#FFFFFF" stroke-opacity="0.45" stroke-width="2"></line>
+<line x1="841.7" y1="79" x2="841.7" y2="107" stroke="#FFFFFF" stroke-opacity="0.45" stroke-width="2"></line>
+<circle cx="116.7" cy="160.3" r="6" fill="#0F1B3D" stroke="#7C93FF" stroke-width="2.5"></circle>
+<circle cx="213.3" cy="127.8" r="6" fill="#0F1B3D" stroke="#7C93FF" stroke-width="2.5"></circle>
+<circle cx="310" cy="102.5" r="5" fill="#0F1B3D" stroke="#FFFFFF" stroke-opacity="0.5" stroke-width="2"></circle>
+<circle cx="406.7" cy="84.4" r="5" fill="#0F1B3D" stroke="#FFFFFF" stroke-opacity="0.5" stroke-width="2"></circle>
+<circle cx="503.3" cy="73.6" r="5" fill="#0F1B3D" stroke="#FFFFFF" stroke-opacity="0.5" stroke-width="2"></circle>
+<circle cx="600" cy="70" r="5" fill="#0F1B3D" stroke="#FFFFFF" stroke-opacity="0.5" stroke-width="2"></circle>
+<circle cx="696.7" cy="73.6" r="5" fill="#0F1B3D" stroke="#FFFFFF" stroke-opacity="0.5" stroke-width="2"></circle>
+<circle cx="793.3" cy="84.4" r="5" fill="#0F1B3D" stroke="#FFFFFF" stroke-opacity="0.5" stroke-width="2"></circle>
+<circle cx="890" cy="102.5" r="5" fill="#0F1B3D" stroke="#FFFFFF" stroke-opacity="0.5" stroke-width="2"></circle>
+<circle cx="986.7" cy="127.8" r="5" fill="#0F1B3D" stroke="#FFFFFF" stroke-opacity="0.5" stroke-width="2"></circle>
+<circle cx="1083.3" cy="160.3" r="5" fill="#0F1B3D" stroke="#FFFFFF" stroke-opacity="0.5" stroke-width="2"></circle>
+<circle cx="1180" cy="200" r="9" fill="#0F1B3D" stroke="#FFFFFF" stroke-width="3"></circle>
+<circle cx="20" cy="200" r="22" fill="#7C93FF" fill-opacity="0.3"></circle>
+<circle cx="20" cy="200" r="11" fill="#7C93FF"></circle>
+</svg>
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(240px, 100%), 1fr)); gap: 12px">
+<div style="padding: 22px 24px; border-radius: 26px; background: #FFFFFF; color: #0A0E1A; display: flex; flex-direction: column; gap: 8px">
+<div style="font-size: 15px; font-weight: 600; letter-spacing: 0.04em; color: #2440F0">VALIDATE · WEEKS 1–3</div>
+<div style="font-family: 'Inter Tight', 'Inter', system-ui, sans-serif; font-weight: 500; font-size: 26px; line-height: 1.15; letter-spacing: -0.01em">Planner demand validation</div>
+<div style="font-size: 17px; color: #3A4256">You are here</div>
+</div>
+<div style="padding: 22px 24px; border-radius: 26px; border: 1px solid rgba(255,255,255,0.2); display: flex; flex-direction: column; gap: 8px">
+<div style="font-size: 15px; font-weight: 600; letter-spacing: 0.04em; color: #C3CADB">VALIDATE · WEEKS 4–6</div>
+<div style="font-family: 'Inter Tight', 'Inter', system-ui, sans-serif; font-weight: 500; font-size: 26px; line-height: 1.15; letter-spacing: -0.01em">Supplier network onboarding</div>
+<div style="font-size: 17px; color: #C3CADB">Depends on what you learn</div>
+</div>
+<div style="padding: 22px 24px; border-radius: 26px; border: 1px solid rgba(255,255,255,0.2); display: flex; flex-direction: column; gap: 8px">
+<div style="font-size: 15px; font-weight: 600; letter-spacing: 0.04em; color: #C3CADB">BUILD · WEEKS 7–9</div>
+<div style="font-family: 'Inter Tight', 'Inter', system-ui, sans-serif; font-weight: 500; font-size: 26px; line-height: 1.15; letter-spacing: -0.01em">Initial booking operations</div>
+<div style="font-size: 17px; color: #C3CADB">Depends on what you learn</div>
+</div>
+<div style="padding: 22px 24px; border-radius: 26px; border: 1px solid rgba(255,255,255,0.2); display: flex; flex-direction: column; gap: 8px">
+<div style="font-size: 15px; font-weight: 600; letter-spacing: 0.04em; color: #C3CADB">ELEVATE · WEEKS 10–13</div>
+<div style="font-family: 'Inter Tight', 'Inter', system-ui, sans-serif; font-weight: 500; font-size: 26px; line-height: 1.15; letter-spacing: -0.01em">Operations and scale</div>
+<div style="font-size: 17px; color: #C3CADB">Depends on what you learn</div>
+</div>
+</div>
+</section>
+
+<section aria-labelledby="week-title" style="display: flex; flex-direction: column; gap: 24px; padding-top: 16px">
+<div style="display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 20px">
+<div style="display: flex; flex-direction: column; gap: 14px; min-width: 0">
+<p style="margin: 0; font-size: 15px; font-weight: 600; letter-spacing: 0.08em; color: #5A6378">WEEK 01 · READY TO START</p>
+<h2 id="week-title" style="margin: 0; font-family: 'Inter Tight', 'Inter', system-ui, sans-serif; font-weight: 500; font-size: clamp(32px, 3.6vw, 52px); line-height: 1.04; letter-spacing: -0.03em">Event planner needs mapping</h2>
+<p style="margin: 0; max-width: 34em; font-size: 20px; line-height: 1.45; color: #3A4256">Interview local event planners in Ambala about their heavy equipment booking difficulties.</p>
+</div>
+<p style="margin: 0; font-size: 18px; color: #3A4256">4 missions · about 4 hours</p>
+</div>
+<ol style="margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 12px">
+<li style="background: #F1F3F9; border-radius: 32px; padding: 26px clamp(20px, 2.6vw, 36px); display: flex; flex-wrap: wrap; align-items: center; gap: 20px">
+<span aria-hidden="true" style="flex: none; font-family: 'Inter Tight', 'Inter', system-ui, sans-serif; font-weight: 500; font-size: 40px; line-height: 1; letter-spacing: -0.04em; color: #2440F0">01</span>
+<span style="flex: 999 1 380px; min-width: 0; display: flex; flex-direction: column; gap: 6px"><span style="font-family: 'Inter Tight', 'Inter', system-ui, sans-serif; font-weight: 500; font-size: clamp(22px, 2vw, 28px); line-height: 1.2; letter-spacing: -0.015em">List six active local event planners in Ambala</span><span style="font-size: 17px; color: #5A6378">About 1 hour · your next mission</span></span>
+<a href="#mission-list" style="flex: none; display: inline-flex; align-items: center; gap: 12px; min-height: 60px; padding: 0 28px; border-radius: 999px; background: #2440F0; color: #FFFFFF; font-size: 19px; font-weight: 600; text-decoration: none">Start<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex: none"><path d="M5 12h14M13 6l6 6-6 6"></path></svg></a>
+</li>
+<li style="background: #F1F3F9; border-radius: 32px; padding: 26px clamp(20px, 2.6vw, 36px); display: flex; flex-wrap: wrap; align-items: center; gap: 20px">
+<span aria-hidden="true" style="flex: none; font-family: 'Inter Tight', 'Inter', system-ui, sans-serif; font-weight: 500; font-size: 40px; line-height: 1; letter-spacing: -0.04em; color: #5A6378">02</span>
+<span style="flex: 999 1 380px; min-width: 0; display: flex; flex-direction: column; gap: 6px"><span style="font-family: 'Inter Tight', 'Inter', system-ui, sans-serif; font-weight: 500; font-size: clamp(22px, 2vw, 28px); line-height: 1.2; letter-spacing: -0.015em">Learn basic rules for non-sales customer discovery interviews</span><span style="font-size: 17px; color: #5A6378">About 30 minutes</span></span>
+<a href="#mission-list" style="flex: none; display: inline-flex; align-items: center; min-height: 60px; padding: 0 28px; border-radius: 999px; border: 1px solid rgba(10,14,26,0.35); color: #0A0E1A; font-size: 19px; font-weight: 500; text-decoration: none">Open</a>
+</li>
+<li style="background: #F1F3F9; border-radius: 32px; padding: 26px clamp(20px, 2.6vw, 36px); display: flex; flex-wrap: wrap; align-items: center; gap: 20px">
+<span aria-hidden="true" style="flex: none; font-family: 'Inter Tight', 'Inter', system-ui, sans-serif; font-weight: 500; font-size: 40px; line-height: 1; letter-spacing: -0.04em; color: #5A6378">03</span>
+<span style="flex: 999 1 380px; min-width: 0; display: flex; flex-direction: column; gap: 6px"><span style="font-family: 'Inter Tight', 'Inter', system-ui, sans-serif; font-weight: 500; font-size: clamp(22px, 2vw, 28px); line-height: 1.2; letter-spacing: -0.015em">Interview four Ambala event planners about equipment sourcing</span><span style="font-size: 17px; color: #5A6378">About 2 hours</span></span>
+<a href="#mission-interview" style="flex: none; display: inline-flex; align-items: center; min-height: 60px; padding: 0 28px; border-radius: 999px; border: 1px solid rgba(10,14,26,0.35); color: #0A0E1A; font-size: 19px; font-weight: 500; text-decoration: none">Open</a>
+</li>
+<li style="background: #F1F3F9; border-radius: 32px; padding: 26px clamp(20px, 2.6vw, 36px); display: flex; flex-wrap: wrap; align-items: center; gap: 20px">
+<span aria-hidden="true" style="flex: none; font-family: 'Inter Tight', 'Inter', system-ui, sans-serif; font-weight: 500; font-size: 40px; line-height: 1; letter-spacing: -0.04em; color: #5A6378">04</span>
+<span style="flex: 999 1 380px; min-width: 0; display: flex; flex-direction: column; gap: 6px"><span style="font-family: 'Inter Tight', 'Inter', system-ui, sans-serif; font-weight: 500; font-size: clamp(22px, 2vw, 28px); line-height: 1.2; letter-spacing: -0.015em">Document equipment booking friction points from planner responses</span><span style="font-size: 17px; color: #5A6378">About 30 minutes</span></span>
+<a href="#mission-list" style="flex: none; display: inline-flex; align-items: center; min-height: 60px; padding: 0 28px; border-radius: 999px; border: 1px solid rgba(10,14,26,0.35); color: #0A0E1A; font-size: 19px; font-weight: 500; text-decoration: none">Open</a>
+</li>
+</ol>
+</section>
+
+<a href="#setup" style="display: flex; align-items: center; justify-content: space-between; gap: 20px; min-height: 104px; padding: 12px clamp(24px, 2.8vw, 40px); box-sizing: border-box; border-radius: 32px; border: 1px solid rgba(10,14,26,0.22); color: #0A0E1A; text-decoration: none">
+<span style="display: flex; flex-direction: column; gap: 6px"><span style="font-family: 'Inter Tight', 'Inter', system-ui, sans-serif; font-weight: 500; font-size: 28px; letter-spacing: -0.015em">Make it official</span><span style="font-size: 17px; color: #5A6378">Registration, bank account and GST. Not needed yet: it opens up in the Build phase.</span></span>
+<span style="display: inline-flex; color: #2440F0"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex: none"><path d="M5 12h14M13 6l6 6-6 6"></path></svg></span>
+</a>
+
+</main>
+</div>
+</div>
+</section>
+
+<section id="mission-list">
+<p class="ref-label">6. Mission workspace, type A: build a list</p>
+<div style="padding: 0 clamp(20px, 4.4vw, 64px) 72px; box-sizing: border-box; background: #FFFFFF; color: #0A0E1A; font-family: 'Inter', system-ui, sans-serif">
+<div style="max-width: 1312px; margin: 0 auto">
+<header style="display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px; padding: 26px 0 44px">
+<a href="#today" aria-label="Solventia home" style="display: inline-flex; align-items: center; gap: 12px; color: #0A0E1A; text-decoration: none">
+<span aria-hidden="true" style="flex: none; width: 42px; height: 42px; border-radius: 50%; background: #0F1B3D; color: #FFFFFF; display: inline-flex; align-items: center; justify-content: center; font-family: Georgia, 'Times New Roman', serif; font-size: 23px; font-style: italic">S</span>
+<span style="display: flex; flex-direction: column; gap: 5px"><span style="font-size: 19px; font-weight: 600; letter-spacing: 0.2em; line-height: 1">SOLVENTIA</span><span style="font-size: 10px; font-weight: 500; letter-spacing: 0.3em; line-height: 1; color: #3A4256">VALIDATE <span style="color: #B8892B">·</span> BUILD <span style="color: #B8892B">·</span> ELEVATE</span></span>
+</a>
+<a href="#roadmap" style="display: inline-flex; align-items: center; gap: 10px; min-height: 46px; padding: 0 20px; border-radius: 999px; background: #F1F3F9; color: #0A0E1A; font-size: 17px; font-weight: 500; text-decoration: none"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex: none"><path d="M19 12H5M11 6l-6 6 6 6"></path></svg>Week 01</a>
+<button type="button" style="display: inline-flex; align-items: center; gap: 10px; min-height: 46px; padding: 0 20px; border-radius: 999px; border: 1px solid rgba(10,14,26,0.2); background: #FFFFFF; color: #0A0E1A; font-family: inherit; font-size: 16px; font-weight: 500; cursor: pointer"><span aria-hidden="true" style="width: 8px; height: 8px; border-radius: 50%; background: #2440F0"></span>Ask Sol</button>
+</header>
+<main style="max-width: 1040px; margin: 0 auto; display: flex; flex-direction: column; gap: 32px">
+
+<div style="display: flex; flex-direction: column; gap: 22px">
+<div style="display: flex; flex-wrap: wrap; gap: 10px; align-items: center">
+<span style="display: inline-flex; align-items: center; min-height: 38px; padding: 0 16px; border-radius: 999px; font-size: 15px; background: #0A0E1A; color: #FFFFFF; font-weight: 600">Mission 1 of 4</span>
+<span style="display: inline-flex; align-items: center; min-height: 38px; padding: 0 16px; border-radius: 999px; font-size: 15px; border: 1px solid rgba(10,14,26,0.3); font-weight: 500; color: #3A4256">About 1 hour</span>
+</div>
+<h1 style="margin: 0; font-family: 'Inter Tight', 'Inter', system-ui, sans-serif; font-weight: 500; font-size: clamp(44px, 5.6vw, 80px); line-height: 1; letter-spacing: -0.035em; text-wrap: balance">List six active event planners in Ambala</h1>
+<p style="margin: 0; font-size: 22px; line-height: 1.45; max-width: 32em; color: #3A4256">You need contact details of real local organisers who manage heavy equipment for events.</p>
+</div>
+
+<section aria-labelledby="list-title" style="background: #F1F3F9; border-radius: 32px; padding: clamp(24px, 2.8vw, 40px); display: flex; flex-direction: column; gap: 18px">
+<div style="display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 12px">
+<h2 id="list-title" style="margin: 0; font-family: 'Inter Tight', 'Inter', system-ui, sans-serif; font-weight: 500; font-size: clamp(26px, 2.6vw, 36px); letter-spacing: -0.02em">Your list</h2>
+<p style="margin: 0; font-size: 18px; color: #3A4256"><span style="font-weight: 600; color: #0A0E1A">0 of 6</span> added · saved as you type</p>
+</div>
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(200px, 100%), 1fr)); gap: 10px">
+<input type="text" aria-label="Planner 1 name" placeholder="1. Name" style="box-sizing: border-box; width: 100%; min-height: 56px; padding: 0 18px; border-radius: 16px; border: 1px solid rgba(10,14,26,0.22); background: #FFFFFF; color: #0A0E1A; font-family: inherit; font-size: 18px">
+<input type="tel" aria-label="Planner 1 phone number" placeholder="Phone number" style="box-sizing: border-box; width: 100%; min-height: 56px; padding: 0 18px; border-radius: 16px; border: 1px solid rgba(10,14,26,0.22); background: #FFFFFF; color: #0A0E1A; font-family: inherit; font-size: 18px">
+<input type="text" aria-label="Where you found planner 1" placeholder="Where you found them" style="box-sizing: border-box; width: 100%; min-height: 56px; padding: 0 18px; border-radius: 16px; border: 1px solid rgba(10,14,26,0.22); background: #FFFFFF; color: #0A0E1A; font-family: inherit; font-size: 18px">
+</div>
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(200px, 100%), 1fr)); gap: 10px">
+<input type="text" aria-label="Planner 2 name" placeholder="2. Name" style="box-sizing: border-box; width: 100%; min-height: 56px; padding: 0 18px; border-radius: 16px; border: 1px solid rgba(10,14,26,0.22); background: #FFFFFF; color: #0A0E1A; font-family: inherit; font-size: 18px">
+<input type="tel" aria-label="Planner 2 phone number" placeholder="Phone number" style="box-sizing: border-box; width: 100%; min-height: 56px; padding: 0 18px; border-radius: 16px; border: 1px solid rgba(10,14,26,0.22); background: #FFFFFF; color: #0A0E1A; font-family: inherit; font-size: 18px">
+<input type="text" aria-label="Where you found planner 2" placeholder="Where you found them" style="box-sizing: border-box; width: 100%; min-height: 56px; padding: 0 18px; border-radius: 16px; border: 1px solid rgba(10,14,26,0.22); background: #FFFFFF; color: #0A0E1A; font-family: inherit; font-size: 18px">
+</div>
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(200px, 100%), 1fr)); gap: 10px">
+<input type="text" aria-label="Planner 3 name" placeholder="3. Name" style="box-sizing: border-box; width: 100%; min-height: 56px; padding: 0 18px; border-radius: 16px; border: 1px solid rgba(10,14,26,0.22); background: #FFFFFF; color: #0A0E1A; font-family: inherit; font-size: 18px">
+<input type="tel" aria-label="Planner 3 phone number" placeholder="Phone number" style="box-sizing: border-box; width: 100%; min-height: 56px; padding: 0 18px; border-radius: 16px; border: 1px solid rgba(10,14,26,0.22); background: #FFFFFF; color: #0A0E1A; font-family: inherit; font-size: 18px">
+<input type="text" aria-label="Where you found planner 3" placeholder="Where you found them" style="box-sizing: border-box; width: 100%; min-height: 56px; padding: 0 18px; border-radius: 16px; border: 1px solid rgba(10,14,26,0.22); background: #FFFFFF; color: #0A0E1A; font-family: inherit; font-size: 18px">
+</div>
+<button type="button" style="align-self: flex-start; display: inline-flex; align-items: center; justify-content: center; gap: 10px; min-height: 56px; padding: 0 24px; border-radius: 999px; font-family: inherit; font-size: 18px; font-weight: 500; text-decoration: none; cursor: pointer; border: 1px dashed rgba(10,14,26,0.4); background: transparent; color: #0A0E1A"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true" style="flex: none"><path d="M12 5v14M5 12h14"></path></svg>Add another planner</button>
+</section>
+
+<section aria-labelledby="how-title" style="display: flex; flex-direction: column; gap: 6px">
+<h2 id="how-title" style="margin: 0; font-size: 15px; font-weight: 600; letter-spacing: 0.08em; color: #5A6378; padding-bottom: 10px">WHERE TO LOOK</h2>
+<ol style="margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column">
+<li style="display: flex; align-items: baseline; gap: 18px; padding: 18px 0; border-top: 1px solid rgba(10,14,26,0.12)"><span aria-hidden="true" style="flex: none; width: 1.4em; font-family: 'Inter Tight', 'Inter', system-ui, sans-serif; font-weight: 500; font-size: 24px; color: #5A6378">1</span><span style="font-size: clamp(20px, 1.9vw, 24px); line-height: 1.3">Search local online directories for Ambala planners</span></li>
+<li style="display: flex; align-items: baseline; gap: 18px; padding: 18px 0; border-top: 1px solid rgba(10,14,26,0.12)"><span aria-hidden="true" style="flex: none; width: 1.4em; font-family: 'Inter Tight', 'Inter', system-ui, sans-serif; font-weight: 500; font-size: 24px; color: #5A6378">2</span><span style="font-size: clamp(20px, 1.9vw, 24px); line-height: 1.3">Check social media pages for active local event contacts</span></li>
+<li style="display: flex; align-items: baseline; gap: 18px; padding: 18px 0; border-top: 1px solid rgba(10,14,26,0.12); border-bottom: 1px solid rgba(10,14,26,0.12)"><span aria-hidden="true" style="flex: none; width: 1.4em; font-family: 'Inter Tight', 'Inter', system-ui, sans-serif; font-weight: 500; font-size: 24px; color: #A15C00">!</span><span style="font-size: clamp(20px, 1.9vw, 24px); line-height: 1.3">Avoid friends and relatives. List real, active event organisers.</span></li>
+</ol>
+</section>
+
+<section aria-labelledby="done-title" style="display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 24px">
+<div style="flex: 999 1 420px; min-width: 0; display: flex; flex-direction: column; gap: 12px">
+<h2 id="done-title" style="margin: 0; font-size: 15px; font-weight: 600; letter-spacing: 0.08em; color: #5A6378">YOU ARE DONE WHEN</h2>
+<p style="margin: 0; font-family: 'Inter Tight', 'Inter', system-ui, sans-serif; font-weight: 500; font-size: clamp(24px, 2.4vw, 34px); line-height: 1.18; letter-spacing: -0.02em; text-wrap: pretty">Your list has 6 local event planners with phone numbers.</p>
+</div>
+<a href="#mission-interview" style="display: inline-flex; align-items: center; justify-content: center; gap: 14px; min-height: 68px; padding: 0 34px; border-radius: 999px; font-family: inherit; font-size: 21px; font-weight: 600; text-decoration: none; cursor: pointer; background: #2440F0; color: #FFFFFF">Mark as done<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex: none"><path d="M5 12h14M13 6l6 6-6 6"></path></svg></a>
+</section>
+
+<section aria-label="If you are stuck" style="display: flex; flex-wrap: wrap; align-items: center; gap: 12px; padding: 24px clamp(20px, 2.6vw, 32px); border-radius: 32px; border: 1px solid rgba(10,14,26,0.12)">
+<p style="margin: 0 8px 0 0; font-size: 20px; font-weight: 500">Stuck?</p>
+<button type="button" style="min-height: 48px; padding: 0 20px; border-radius: 999px; border: 1px solid rgba(10,14,26,0.3); background: #FFFFFF; color: #0A0E1A; font-family: inherit; font-size: 17px; font-weight: 500; cursor: pointer">I can't find six planners</button>
+<button type="button" style="min-height: 48px; padding: 0 20px; border-radius: 999px; border: 1px solid rgba(10,14,26,0.3); background: #FFFFFF; color: #0A0E1A; font-family: inherit; font-size: 17px; font-weight: 500; cursor: pointer">No time this week</button>
+<button type="button" style="min-height: 48px; padding: 0 20px; border-radius: 999px; border: 1px solid rgba(10,14,26,0.3); background: #FFFFFF; color: #0A0E1A; font-family: inherit; font-size: 17px; font-weight: 500; cursor: pointer">This doesn't feel right</button>
+</section>
+
+</main>
+</div>
+</div>
+</section>
+
+<section id="mission-interview">
+<p class="ref-label">7. Mission workspace, type B: script and interview log</p>
+<div style="padding: 0 clamp(20px, 4.4vw, 64px) 72px; box-sizing: border-box; background: #FFFFFF; color: #0A0E1A; font-family: 'Inter', system-ui, sans-serif">
+<div style="max-width: 1312px; margin: 0 auto">
+<header style="display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px; padding: 26px 0 44px">
+<a href="#today" aria-label="Solventia home" style="display: inline-flex; align-items: center; gap: 12px; color: #0A0E1A; text-decoration: none">
+<span aria-hidden="true" style="flex: none; width: 42px; height: 42px; border-radius: 50%; background: #0F1B3D; color: #FFFFFF; display: inline-flex; align-items: center; justify-content: center; font-family: Georgia, 'Times New Roman', serif; font-size: 23px; font-style: italic">S</span>
+<span style="display: flex; flex-direction: column; gap: 5px"><span style="font-size: 19px; font-weight: 600; letter-spacing: 0.2em; line-height: 1">SOLVENTIA</span><span style="font-size: 10px; font-weight: 500; letter-spacing: 0.3em; line-height: 1; color: #3A4256">VALIDATE <span style="color: #B8892B">·</span> BUILD <span style="color: #B8892B">·</span> ELEVATE</span></span>
+</a>
+<a href="#roadmap" style="display: inline-flex; align-items: center; gap: 10px; min-height: 46px; padding: 0 20px; border-radius: 999px; background: #F1F3F9; color: #0A0E1A; font-size: 17px; font-weight: 500; text-decoration: none"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex: none"><path d="M19 12H5M11 6l-6 6 6 6"></path></svg>Week 01</a>
+<button type="button" style="display: inline-flex; align-items: center; gap: 10px; min-height: 46px; padding: 0 20px; border-radius: 999px; border: 1px solid rgba(10,14,26,0.2); background: #FFFFFF; color: #0A0E1A; font-family: inherit; font-size: 16px; font-weight: 500; cursor: pointer"><span aria-hidden="true" style="width: 8px; height: 8px; border-radius: 50%; background: #2440F0"></span>Ask Sol</button>
+</header>
+<main style="display: flex; flex-direction: column; gap: 32px">
+
+<div style="display: flex; flex-direction: column; gap: 22px">
+<div style="display: flex; flex-wrap: wrap; gap: 10px; align-items: center">
+<span style="display: inline-flex; align-items: center; min-height: 38px; padding: 0 16px; border-radius: 999px; font-size: 15px; background: #0A0E1A; color: #FFFFFF; font-weight: 600">Mission 3 of 4</span>
+<span style="display: inline-flex; align-items: center; min-height: 38px; padding: 0 16px; border-radius: 999px; font-size: 15px; border: 1px solid rgba(10,14,26,0.3); font-weight: 500; color: #3A4256">About 2 hours</span>
+</div>
+<h1 style="margin: 0; font-family: 'Inter Tight', 'Inter', system-ui, sans-serif; font-weight: 500; font-size: clamp(44px, 5.6vw, 80px); line-height: 1; letter-spacing: -0.035em; text-wrap: balance">Interview four Ambala event planners</h1>
+<p style="margin: 0; font-size: 22px; line-height: 1.45; max-width: 34em; color: #3A4256">Find out how they source heavy equipment today. Listen. Do not pitch your idea.</p>
+</div>
+
+<div style="display: flex; flex-wrap: wrap; gap: 24px; align-items: flex-start">
+
+<section aria-labelledby="say-title" style="flex: 1 1 520px; min-width: 0; box-sizing: border-box; display: flex; flex-direction: column; gap: 22px">
+<div style="display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px">
+<h2 id="say-title" style="margin: 0; font-family: 'Inter Tight', 'Inter', system-ui, sans-serif; font-weight: 500; font-size: clamp(26px, 2.6vw, 36px); letter-spacing: -0.02em">What to say</h2>
+<div role="group" aria-label="Script language" style="display: flex; gap: 4px; padding: 5px; border-radius: 999px; background: #F1F3F9">
+<button type="button" aria-pressed="true" style="min-height: 44px; padding: 0 18px; border-radius: 999px; border: 0; background: #0A0E1A; color: #FFFFFF; font-family: inherit; font-size: 16px; font-weight: 600; cursor: pointer">English</button>
+<button type="button" aria-pressed="false" lang="hi" style="min-height: 44px; padding: 0 18px; border-radius: 999px; border: 0; background: transparent; color: #3A4256; font-family: inherit; font-size: 16px; font-weight: 500; cursor: pointer">हिन्दी</button>
+</div>
+</div>
+<div style="background: #F1F3F9; border-radius: 32px; padding: clamp(24px, 2.8vw, 40px); display: flex; flex-direction: column; gap: 16px">
+<h3 style="margin: 0; font-size: 15px; font-weight: 600; letter-spacing: 0.08em; color: #5A6378">FIRST MESSAGE ON WHATSAPP</h3>
+<p style="margin: 0; font-size: 20px; line-height: 1.5; text-wrap: pretty">Namaste. I am Bhisham from Ambala. I am studying how event planners arrange generators, sound and staging. Could I ask you 4 short questions about your last event? It takes 10 minutes.</p>
+<button type="button" style="align-self: flex-start; display: inline-flex; align-items: center; justify-content: center; gap: 10px; min-height: 56px; padding: 0 24px; border-radius: 999px; font-family: inherit; font-size: 18px; font-weight: 500; text-decoration: none; cursor: pointer; border: 1px solid rgba(10,14,26,0.35); background: #FFFFFF; color: #0A0E1A">Copy message</button>
+</div>
+<div style="display: flex; flex-direction: column; gap: 4px">
+<h3 style="margin: 0; font-size: 15px; font-weight: 600; letter-spacing: 0.08em; color: #5A6378; padding-bottom: 10px">THEN ASK</h3>
+<ol style="margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; border-bottom: 1px solid rgba(10,14,26,0.12)">
+<li style="display: flex; align-items: baseline; gap: 16px; padding: 16px 0; border-top: 1px solid rgba(10,14,26,0.12)"><span aria-hidden="true" style="flex: none; width: 1.2em; font-family: 'Inter Tight', 'Inter', system-ui, sans-serif; font-weight: 500; font-size: 24px; color: #5A6378">1</span><span style="font-size: clamp(20px, 1.8vw, 23px); line-height: 1.3">Tell me about the last event where you rented heavy equipment.</span></li>
+<li style="display: flex; align-items: baseline; gap: 16px; padding: 16px 0; border-top: 1px solid rgba(10,14,26,0.12)"><span aria-hidden="true" style="flex: none; width: 1.2em; font-family: 'Inter Tight', 'Inter', system-ui, sans-serif; font-weight: 500; font-size: 24px; color: #5A6378">2</span><span style="font-size: clamp(20px, 1.8vw, 23px); line-height: 1.3">How many suppliers did you call for it?</span></li>
+<li style="display: flex; align-items: baseline; gap: 16px; padding: 16px 0; border-top: 1px solid rgba(10,14,26,0.12)"><span aria-hidden="true" style="flex: none; width: 1.2em; font-family: 'Inter Tight', 'Inter', system-ui, sans-serif; font-weight: 500; font-size: 24px; color: #5A6378">3</span><span style="font-size: clamp(20px, 1.8vw, 23px); line-height: 1.3">What went wrong, or took the longest?</span></li>
+<li style="display: flex; align-items: baseline; gap: 16px; padding: 16px 0; border-top: 1px solid rgba(10,14,26,0.12)"><span aria-hidden="true" style="flex: none; width: 1.2em; font-family: 'Inter Tight', 'Inter', system-ui, sans-serif; font-weight: 500; font-size: 24px; color: #5A6378">4</span><span style="font-size: clamp(20px, 1.8vw, 23px); line-height: 1.3">What did you do about it?</span></li>
+</ol>
+</div>
+</section>
+
+<section aria-labelledby="log-title" style="flex: 1 1 420px; min-width: 0; box-sizing: border-box; background: #F1F3F9; border-radius: 32px; padding: clamp(24px, 2.8vw, 40px); display: flex; flex-direction: column; gap: 20px">
+<div style="display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 12px">
+<h2 id="log-title" style="margin: 0; font-family: 'Inter Tight', 'Inter', system-ui, sans-serif; font-weight: 500; font-size: clamp(26px, 2.6vw, 36px); letter-spacing: -0.02em">Log each interview</h2>
+<p style="margin: 0; font-size: 18px; color: #3A4256"><span style="font-weight: 600; color: #0A0E1A">0 of 4</span> logged</p>
+</div>
+<div style="display: flex; flex-direction: column; gap: 8px">
+<label for="who" style="font-size: 17px; font-weight: 500">Who did you speak to?</label>
+<select id="who" style="box-sizing: border-box; width: 100%; min-height: 56px; padding: 0 18px; border-radius: 16px; border: 1px solid rgba(10,14,26,0.22); background: #FFFFFF; color: #0A0E1A; font-family: inherit; font-size: 18px"><option>Choose from your list</option></select>
+</div>
+<div style="display: flex; flex-direction: column; gap: 8px">
+<label for="count" style="font-size: 17px; font-weight: 500">How many suppliers did they call for their last event?</label>
+<input id="count" type="number" min="0" placeholder="A number" style="box-sizing: border-box; width: 100%; min-height: 56px; padding: 0 18px; border-radius: 16px; border: 1px solid rgba(10,14,26,0.22); background: #FFFFFF; color: #0A0E1A; font-family: inherit; font-size: 18px">
+</div>
+<div style="display: flex; flex-direction: column; gap: 8px">
+<span id="q-stress" style="font-size: 17px; font-weight: 500">Did that cause delays or stress?</span>
+<div role="group" aria-labelledby="q-stress" style="display: flex; flex-wrap: wrap; gap: 8px">
+<button type="button" aria-pressed="false" style="flex: 1 1 96px; min-height: 56px; padding: 0 18px; border-radius: 16px; border: 1px solid rgba(10,14,26,0.3); background: #FFFFFF; color: #0A0E1A; font-family: inherit; font-size: 18px; font-weight: 500; cursor: pointer">Yes</button>
+<button type="button" aria-pressed="false" style="flex: 1 1 96px; min-height: 56px; padding: 0 18px; border-radius: 16px; border: 1px solid rgba(10,14,26,0.3); background: #FFFFFF; color: #0A0E1A; font-family: inherit; font-size: 18px; font-weight: 500; cursor: pointer">No</button>
+<button type="button" aria-pressed="false" style="flex: 1 1 96px; min-height: 56px; padding: 0 18px; border-radius: 16px; border: 1px solid rgba(10,14,26,0.3); background: #FFFFFF; color: #0A0E1A; font-family: inherit; font-size: 18px; font-weight: 500; cursor: pointer">Not sure</button>
+</div>
+</div>
+<div style="display: flex; flex-direction: column; gap: 8px">
+<label for="words" style="font-size: 17px; font-weight: 500">Their words</label>
+<textarea id="words" rows="3" placeholder="Write what they said, not what you hoped to hear" style="box-sizing: border-box; width: 100%; min-height: 56px; padding: 0 18px; border-radius: 16px; border: 1px solid rgba(10,14,26,0.22); background: #FFFFFF; color: #0A0E1A; font-family: inherit; font-size: 18px; padding: 14px 18px; line-height: 1.4; resize: vertical"></textarea>
+</div>
+<button type="button" style="display: inline-flex; align-items: center; justify-content: center; gap: 14px; min-height: 68px; padding: 0 34px; border-radius: 999px; font-family: inherit; font-size: 21px; font-weight: 600; text-decoration: none; cursor: pointer; border: 0; background: #2440F0; color: #FFFFFF">Save interview</button>
+<p style="margin: 0; font-size: 17px; line-height: 1.45; color: #3A4256">A "No" is as useful as a "Yes". It can save you weeks of work.</p>
+</section>
+
+</div>
+
+<a href="#proof" style="display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px; padding: 24px clamp(20px, 2.6vw, 36px); border-radius: 32px; border: 1px solid rgba(10,14,26,0.22); color: #0A0E1A; text-decoration: none">
+<span style="flex: 1 1 420px; font-size: 20px; line-height: 1.4"><span style="font-weight: 600">This mission checks:</span> <span style="color: #3A4256">planners prefer one booking desk over calling 5 vendors. Your proof page updates by itself as you log.</span></span>
+<span style="display: inline-flex; align-items: center; gap: 10px; font-size: 18px; font-weight: 500; color: #2440F0">Open proof<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex: none"><path d="M5 12h14M13 6l6 6-6 6"></path></svg></span>
+</a>
+
+<section aria-label="If you are stuck" style="display: flex; flex-wrap: wrap; align-items: center; gap: 12px; padding: 24px clamp(20px, 2.6vw, 32px); border-radius: 32px; border: 1px solid rgba(10,14,26,0.12)">
+<p style="margin: 0 8px 0 0; font-size: 20px; font-weight: 500">Stuck?</p>
+<button type="button" style="min-height: 48px; padding: 0 20px; border-radius: 999px; border: 1px solid rgba(10,14,26,0.3); background: #FFFFFF; color: #0A0E1A; font-family: inherit; font-size: 17px; font-weight: 500; cursor: pointer">Nobody replies</button>
+<button type="button" style="min-height: 48px; padding: 0 20px; border-radius: 999px; border: 1px solid rgba(10,14,26,0.3); background: #FFFFFF; color: #0A0E1A; font-family: inherit; font-size: 17px; font-weight: 500; cursor: pointer">They won't talk to me</button>
+<button type="button" style="min-height: 48px; padding: 0 20px; border-radius: 999px; border: 1px solid rgba(10,14,26,0.3); background: #FFFFFF; color: #0A0E1A; font-family: inherit; font-size: 17px; font-weight: 500; cursor: pointer">No time this week</button>
+</section>
+
+</main>
+</div>
+</div>
+</section>
+
+<section id="proof">
+<p class="ref-label">8. Proof (was Evidence)</p>
+<div style="padding: 0 clamp(20px, 4.4vw, 64px) 72px; box-sizing: border-box; background: #FFFFFF; color: #0A0E1A; font-family: 'Inter', system-ui, sans-serif">
+<div style="max-width: 1312px; margin: 0 auto">
+<header style="display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px; padding: 26px 0 44px">
+<a href="#today" aria-label="Solventia home" style="display: inline-flex; align-items: center; gap: 12px; color: #0A0E1A; text-decoration: none">
+<span aria-hidden="true" style="flex: none; width: 42px; height: 42px; border-radius: 50%; background: #0F1B3D; color: #FFFFFF; display: inline-flex; align-items: center; justify-content: center; font-family: Georgia, 'Times New Roman', serif; font-size: 23px; font-style: italic">S</span>
+<span style="display: flex; flex-direction: column; gap: 5px"><span style="font-size: 19px; font-weight: 600; letter-spacing: 0.2em; line-height: 1">SOLVENTIA</span><span style="font-size: 10px; font-weight: 500; letter-spacing: 0.3em; line-height: 1; color: #3A4256">VALIDATE <span style="color: #B8892B">·</span> BUILD <span style="color: #B8892B">·</span> ELEVATE</span></span>
+</a>
+<nav aria-label="Dashboard" style="display: flex; flex-wrap: wrap; gap: 4px; padding: 6px; border-radius: 999px; background: #F1F3F9">
+<a href="#today" style="display: inline-flex; align-items: center; min-height: 46px; padding: 0 24px; border-radius: 999px; font-size: 17px; text-decoration: none; color: #3A4256; font-weight: 500">Today</a>
+<a href="#directions" style="display: inline-flex; align-items: center; min-height: 46px; padding: 0 24px; border-radius: 999px; font-size: 17px; text-decoration: none; color: #3A4256; font-weight: 500">Directions</a>
+<a href="#roadmap" style="display: inline-flex; align-items: center; min-height: 46px; padding: 0 24px; border-radius: 999px; font-size: 17px; text-decoration: none; color: #3A4256; font-weight: 500">Roadmap</a>
+<a href="#proof" aria-current="page" style="display: inline-flex; align-items: center; min-height: 46px; padding: 0 24px; border-radius: 999px; font-size: 17px; text-decoration: none; background: #0A0E1A; color: #FFFFFF; font-weight: 600">Proof</a>
+</nav>
+<div style="display: flex; align-items: center; gap: 10px">
+<button type="button" lang="hi" style="min-height: 46px; padding: 0 18px; border-radius: 999px; border: 1px solid rgba(10,14,26,0.2); background: #FFFFFF; color: #0A0E1A; font-family: inherit; font-size: 16px; font-weight: 500; cursor: pointer">हिन्दी</button>
+<button type="button" style="display: inline-flex; align-items: center; gap: 10px; min-height: 46px; padding: 0 20px; border-radius: 999px; border: 1px solid rgba(10,14,26,0.2); background: #FFFFFF; color: #0A0E1A; font-family: inherit; font-size: 16px; font-weight: 500; cursor: pointer"><span aria-hidden="true" style="width: 8px; height: 8px; border-radius: 50%; background: #2440F0"></span>Ask Sol</button>
+<button type="button" aria-label="Account, history and settings" style="width: 46px; height: 46px; border-radius: 50%; border: 0; background: #0A0E1A; color: #FFFFFF; font-family: inherit; font-size: 17px; font-weight: 600; cursor: pointer">B</button>
+</div>
+</header>
+<main style="display: flex; flex-direction: column; gap: 40px">
+
+<div style="display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 32px">
+<div style="flex: 999 1 560px; min-width: 0; display: flex; flex-direction: column; gap: 18px">
+<h1 style="margin: 0; font-family: 'Inter Tight', 'Inter', system-ui, sans-serif; font-weight: 500; font-size: clamp(44px, 5.6vw, 80px); line-height: 1; letter-spacing: -0.035em; text-wrap: balance">What has to be true.</h1>
+<p style="margin: 0; font-size: 22px; line-height: 1.45; max-width: 33em; color: #3A4256">Four things decide whether this direction works. Each one fills in by itself as you log your missions.</p>
+<div style="display: flex; flex-wrap: wrap; gap: 14px; align-items: center">
+<a href="#roadmap" style="display: inline-flex; align-items: center; justify-content: center; gap: 14px; min-height: 68px; padding: 0 34px; border-radius: 999px; font-family: inherit; font-size: 21px; font-weight: 600; text-decoration: none; cursor: pointer; background: #2440F0; color: #FFFFFF">Continue this week's missions<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex: none"><path d="M5 12h14M13 6l6 6-6 6"></path></svg></a>
+<button type="button" style="display: inline-flex; align-items: center; justify-content: center; gap: 12px; min-height: 68px; padding: 0 28px; border-radius: 999px; font-family: inherit; font-size: 19px; font-weight: 500; text-decoration: none; cursor: pointer; border: 1px solid rgba(10,14,26,0.3); background: #FFFFFF; color: #0A0E1A">Add other proof</button>
+</div>
+</div>
+<div style="flex: 0 1 320px; display: flex; flex-direction: column; gap: 16px">
+<span style="font-family: 'Inter Tight', 'Inter', system-ui, sans-serif; font-weight: 500; font-size: clamp(80px, 8.4vw, 124px); line-height: 0.85; letter-spacing: -0.05em; white-space: nowrap">0<span style="color: #5A6378"> / 4</span></span>
+<p style="margin: 0; font-size: 19px; color: #3A4256">things checked</p>
+<div aria-hidden="true" style="display: flex; gap: 6px; max-width: 320px">
+<span style="flex: 1; height: 12px; border-radius: 999px; background: #D9DDE8"></span>
+<span style="flex: 1; height: 12px; border-radius: 999px; background: #D9DDE8"></span>
+<span style="flex: 1; height: 12px; border-radius: 999px; background: #D9DDE8"></span>
+<span style="flex: 1; height: 12px; border-radius: 999px; background: #D9DDE8"></span>
+</div>
+</div>
+</div>
+
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(480px, 100%), 1fr)); gap: 20px; align-items: stretch">
+<article style="background: #F1F3F9; border-radius: 32px; padding: clamp(24px, 2.8vw, 40px); border-radius: 36px; display: flex; flex-direction: column; gap: 20px">
+<div style="display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px">
+<h2 style="margin: 0; font-size: 15px; font-weight: 600; letter-spacing: 0.08em; color: #5A6378">THE PROBLEM</h2>
+<span style="display: inline-flex; align-items: center; gap: 8px; min-height: 36px; padding: 0 14px; border-radius: 999px; background: #FFFFFF; font-size: 15px; font-weight: 500; color: #3A4256"><span aria-hidden="true" style="width: 10px; height: 10px; border-radius: 50%; box-sizing: border-box; border: 2px dashed #7C859C"></span>Not checked yet</span>
+</div>
+<p style="margin: 0; font-family: 'Inter Tight', 'Inter', system-ui, sans-serif; font-weight: 500; font-size: clamp(22px, 2vw, 28px); line-height: 1.25; letter-spacing: -0.015em; text-wrap: pretty">Event planners in Ambala and Kurukshetra prefer renting from one reliable booking desk instead of calling 5 different vendors.</p>
+<div style="margin-top: auto; padding-top: 18px; border-top: 1px solid rgba(10,14,26,0.12); display: flex; flex-direction: column; gap: 6px">
+<span style="display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px"><span style="font-size: 15px; font-weight: 600; letter-spacing: 0.06em; color: #5A6378">HOW YOU CHECK IT</span><span aria-hidden="true" style="display: inline-flex; gap: 6px"><span style="width: 12px; height: 12px; border-radius: 50%; background: #D0D5E2"></span><span style="width: 12px; height: 12px; border-radius: 50%; background: #D0D5E2"></span><span style="width: 12px; height: 12px; border-radius: 50%; background: #D0D5E2"></span><span style="width: 12px; height: 12px; border-radius: 50%; background: #D0D5E2"></span></span></span>
+<a href="#mission-interview" style="display: inline-flex; flex-wrap: wrap; align-items: center; gap: 10px; min-height: 44px; font-size: 18px; font-weight: 500; line-height: 1.35; color: #2440F0; text-decoration: none">Mission 3: 0 of 4 interviews logged<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex: none"><path d="M5 12h14M13 6l6 6-6 6"></path></svg></a>
+</div>
+</article>
+<article style="background: #F1F3F9; border-radius: 32px; padding: clamp(24px, 2.8vw, 40px); border-radius: 36px; display: flex; flex-direction: column; gap: 20px">
+<div style="display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px">
+<h2 style="margin: 0; font-size: 15px; font-weight: 600; letter-spacing: 0.08em; color: #5A6378">DELIVERY</h2>
+<span style="display: inline-flex; align-items: center; gap: 8px; min-height: 36px; padding: 0 14px; border-radius: 999px; background: #FFFFFF; font-size: 15px; font-weight: 500; color: #3A4256"><span aria-hidden="true" style="width: 10px; height: 10px; border-radius: 50%; box-sizing: border-box; border: 2px dashed #7C859C"></span>Not checked yet</span>
+</div>
+<p style="margin: 0; font-family: 'Inter Tight', 'Inter', system-ui, sans-serif; font-weight: 500; font-size: clamp(22px, 2vw, 28px); line-height: 1.25; letter-spacing: -0.015em; text-wrap: pretty">Equipment owners will honour item availability on orders placed through an independent booking desk.</p>
+<div style="margin-top: auto; padding-top: 18px; border-top: 1px solid rgba(10,14,26,0.12); display: flex; flex-direction: column; gap: 6px">
+<span style="display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px"><span style="font-size: 15px; font-weight: 600; letter-spacing: 0.06em; color: #5A6378">HOW YOU CHECK IT</span></span>
+<p style="margin: 0; min-height: 44px; display: flex; align-items: center; font-size: 18px; line-height: 1.35; color: #3A4256">A later mission checks this.</p>
+</div>
+</article>
+<article style="background: #F1F3F9; border-radius: 32px; padding: clamp(24px, 2.8vw, 40px); border-radius: 36px; display: flex; flex-direction: column; gap: 20px">
+<div style="display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px">
+<h2 style="margin: 0; font-size: 15px; font-weight: 600; letter-spacing: 0.08em; color: #5A6378">WILLING TO PAY</h2>
+<span style="display: inline-flex; align-items: center; gap: 8px; min-height: 36px; padding: 0 14px; border-radius: 999px; background: #FFFFFF; font-size: 15px; font-weight: 500; color: #3A4256"><span aria-hidden="true" style="width: 10px; height: 10px; border-radius: 50%; box-sizing: border-box; border: 2px dashed #7C859C"></span>Not checked yet</span>
+</div>
+<p style="margin: 0; font-family: 'Inter Tight', 'Inter', system-ui, sans-serif; font-weight: 500; font-size: clamp(22px, 2vw, 28px); line-height: 1.25; letter-spacing: -0.015em; text-wrap: pretty">Equipment owners will pay a 15% to 20% commission on their rent in exchange for extra bookings.</p>
+<div style="margin-top: auto; padding-top: 18px; border-top: 1px solid rgba(10,14,26,0.12); display: flex; flex-direction: column; gap: 6px">
+<span style="display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px"><span style="font-size: 15px; font-weight: 600; letter-spacing: 0.06em; color: #5A6378">HOW YOU CHECK IT</span></span>
+<p style="margin: 0; min-height: 44px; display: flex; align-items: center; font-size: 18px; line-height: 1.35; color: #3A4256">A later mission checks this.</p>
+</div>
+</article>
+<article style="background: #F1F3F9; border-radius: 32px; padding: clamp(24px, 2.8vw, 40px); border-radius: 36px; display: flex; flex-direction: column; gap: 20px">
+<div style="display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px">
+<h2 style="margin: 0; font-size: 15px; font-weight: 600; letter-spacing: 0.08em; color: #5A6378">REACHING CUSTOMERS</h2>
+<span style="display: inline-flex; align-items: center; gap: 8px; min-height: 36px; padding: 0 14px; border-radius: 999px; background: #FFFFFF; font-size: 15px; font-weight: 500; color: #3A4256"><span aria-hidden="true" style="width: 10px; height: 10px; border-radius: 50%; box-sizing: border-box; border: 2px dashed #7C859C"></span>Not checked yet</span>
+</div>
+<p style="margin: 0; font-family: 'Inter Tight', 'Inter', system-ui, sans-serif; font-weight: 500; font-size: clamp(22px, 2vw, 28px); line-height: 1.25; letter-spacing: -0.015em; text-wrap: pretty">You can get first rental enquiries through direct contact within your planned 5 hours a week.</p>
+<div style="margin-top: auto; padding-top: 18px; border-top: 1px solid rgba(10,14,26,0.12); display: flex; flex-direction: column; gap: 6px">
+<span style="display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px"><span style="font-size: 15px; font-weight: 600; letter-spacing: 0.06em; color: #5A6378">HOW YOU CHECK IT</span><span aria-hidden="true" style="display: inline-flex; gap: 6px"><span style="width: 12px; height: 12px; border-radius: 50%; background: #D0D5E2"></span><span style="width: 12px; height: 12px; border-radius: 50%; background: #D0D5E2"></span><span style="width: 12px; height: 12px; border-radius: 50%; background: #D0D5E2"></span><span style="width: 12px; height: 12px; border-radius: 50%; background: #D0D5E2"></span><span style="width: 12px; height: 12px; border-radius: 50%; background: #D0D5E2"></span><span style="width: 12px; height: 12px; border-radius: 50%; background: #D0D5E2"></span></span></span>
+<a href="#mission-list" style="display: inline-flex; flex-wrap: wrap; align-items: center; gap: 10px; min-height: 44px; font-size: 18px; font-weight: 500; line-height: 1.35; color: #2440F0; text-decoration: none">Mission 1: 0 of 6 planners listed<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex: none"><path d="M5 12h14M13 6l6 6-6 6"></path></svg></a>
+</div>
+</article>
+</div>
+
+<section aria-labelledby="fail-title" style="display: flex; flex-wrap: wrap; align-items: center; gap: 12px 32px; padding: 28px clamp(20px, 2.6vw, 36px); border-radius: 32px; border: 1px solid rgba(10,14,26,0.12)">
+<h2 id="fail-title" style="margin: 0; font-family: 'Inter Tight', 'Inter', system-ui, sans-serif; font-weight: 500; font-size: 26px; letter-spacing: -0.015em">If a check fails</h2>
+<p style="margin: 0; flex: 1 1 480px; font-size: 19px; line-height: 1.45; color: #3A4256">That is a result, not a failure. You will get two choices: adjust this direction, or switch to another one without losing your work.</p>
+</section>
+
+</main>
+</div>
+</div>
+</section>
+
+<section id="setup">
+<p class="ref-label">9. Make it official (registration guide)</p>
+<div style="padding: 0 clamp(20px, 4.4vw, 64px) 72px; box-sizing: border-box; background: #FFFFFF; color: #0A0E1A; font-family: 'Inter', system-ui, sans-serif">
+<div style="max-width: 1312px; margin: 0 auto">
+<header style="display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px; padding: 26px 0 44px">
+<a href="#today" aria-label="Solventia home" style="display: inline-flex; align-items: center; gap: 12px; color: #0A0E1A; text-decoration: none">
+<span aria-hidden="true" style="flex: none; width: 42px; height: 42px; border-radius: 50%; background: #0F1B3D; color: #FFFFFF; display: inline-flex; align-items: center; justify-content: center; font-family: Georgia, 'Times New Roman', serif; font-size: 23px; font-style: italic">S</span>
+<span style="display: flex; flex-direction: column; gap: 5px"><span style="font-size: 19px; font-weight: 600; letter-spacing: 0.2em; line-height: 1">SOLVENTIA</span><span style="font-size: 10px; font-weight: 500; letter-spacing: 0.3em; line-height: 1; color: #3A4256">VALIDATE <span style="color: #B8892B">·</span> BUILD <span style="color: #B8892B">·</span> ELEVATE</span></span>
+</a>
+<nav aria-label="Dashboard" style="display: flex; flex-wrap: wrap; gap: 4px; padding: 6px; border-radius: 999px; background: #F1F3F9">
+<a href="#today" style="display: inline-flex; align-items: center; min-height: 46px; padding: 0 24px; border-radius: 999px; font-size: 17px; text-decoration: none; color: #3A4256; font-weight: 500">Today</a>
+<a href="#directions" style="display: inline-flex; align-items: center; min-height: 46px; padding: 0 24px; border-radius: 999px; font-size: 17px; text-decoration: none; color: #3A4256; font-weight: 500">Directions</a>
+<a href="#roadmap" aria-current="page" style="display: inline-flex; align-items: center; min-height: 46px; padding: 0 24px; border-radius: 999px; font-size: 17px; text-decoration: none; background: #0A0E1A; color: #FFFFFF; font-weight: 600">Roadmap</a>
+<a href="#proof" style="display: inline-flex; align-items: center; min-height: 46px; padding: 0 24px; border-radius: 999px; font-size: 17px; text-decoration: none; color: #3A4256; font-weight: 500">Proof</a>
+</nav>
+<div style="display: flex; align-items: center; gap: 10px">
+<button type="button" lang="hi" style="min-height: 46px; padding: 0 18px; border-radius: 999px; border: 1px solid rgba(10,14,26,0.2); background: #FFFFFF; color: #0A0E1A; font-family: inherit; font-size: 16px; font-weight: 500; cursor: pointer">हिन्दी</button>
+<button type="button" style="display: inline-flex; align-items: center; gap: 10px; min-height: 46px; padding: 0 20px; border-radius: 999px; border: 1px solid rgba(10,14,26,0.2); background: #FFFFFF; color: #0A0E1A; font-family: inherit; font-size: 16px; font-weight: 500; cursor: pointer"><span aria-hidden="true" style="width: 8px; height: 8px; border-radius: 50%; background: #2440F0"></span>Ask Sol</button>
+<button type="button" aria-label="Account, history and settings" style="width: 46px; height: 46px; border-radius: 50%; border: 0; background: #0A0E1A; color: #FFFFFF; font-family: inherit; font-size: 17px; font-weight: 600; cursor: pointer">B</button>
+</div>
+</header>
+<main style="display: flex; flex-direction: column; gap: 32px">
+
+<div style="display: flex; flex-direction: column; gap: 18px">
+<a href="#roadmap" style="display: inline-flex; align-items: center; gap: 10px; min-height: 44px; align-self: flex-start; font-size: 18px; font-weight: 500; color: #2440F0; text-decoration: none"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex: none"><path d="M19 12H5M11 6l-6 6 6 6"></path></svg>Roadmap</a>
+<h1 style="margin: 0; font-family: 'Inter Tight', 'Inter', system-ui, sans-serif; font-weight: 500; font-size: clamp(44px, 5.6vw, 80px); line-height: 1; letter-spacing: -0.035em; text-wrap: balance">Make it official.</h1>
+<p style="margin: 0; font-size: 22px; line-height: 1.45; max-width: 34em; color: #3A4256">You do not need any of this to start testing. Do each step when your roadmap reaches it.</p>
+</div>
+
+<p style="margin: 0; display: flex; gap: 14px; align-items: flex-start; padding: 22px clamp(20px, 2.6vw, 32px); border-radius: 28px; border: 1px solid #A15C00; font-size: 19px; line-height: 1.45"><span aria-hidden="true" style="flex: none; font-family: 'Inter Tight', 'Inter', system-ui, sans-serif; font-weight: 500; font-size: 22px; color: #A15C00">!</span><span><span style="font-weight: 600">Under 18?</span> <span style="color: #3A4256">You will need a parent or guardian for registrations and the bank account. Each step says how.</span></span></p>
+
+<ol style="margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 12px">
+<li style="background: #F1F3F9; border-radius: 32px; padding: clamp(24px, 2.8vw, 40px); display: flex; flex-wrap: wrap; align-items: center; gap: 20px 28px">
+<span aria-hidden="true" style="flex: none; font-family: 'Inter Tight', 'Inter', system-ui, sans-serif; font-weight: 500; font-size: 40px; line-height: 1; letter-spacing: -0.04em; color: #5A6378">01</span>
+<span style="flex: 999 1 420px; min-width: 0; display: flex; flex-direction: column; gap: 8px">
+<span style="font-family: 'Inter Tight', 'Inter', system-ui, sans-serif; font-weight: 500; font-size: clamp(24px, 2.2vw, 30px); line-height: 1.15; letter-spacing: -0.015em">Start as a sole proprietor</span>
+<span style="font-size: 19px; line-height: 1.45; color: #3A4256">The simplest way to begin. You trade in your own name and can move to a company later.</span>
+<span style="font-size: 17px; line-height: 1.4; color: #5A6378"><span style="font-weight: 600; color: #0A0E1A">When:</span> now, while you test · no registration to file</span>
+</span>
+<button type="button" style="flex: none; display: inline-flex; align-items: center; justify-content: center; gap: 10px; min-height: 56px; padding: 0 24px; border-radius: 999px; font-family: inherit; font-size: 18px; font-weight: 500; text-decoration: none; cursor: pointer; border: 1px solid rgba(10,14,26,0.35); background: #FFFFFF; color: #0A0E1A">Open steps<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex: none"><path d="M5 12h14M13 6l6 6-6 6"></path></svg></button>
+</li>
+<li style="background: #F1F3F9; border-radius: 32px; padding: clamp(24px, 2.8vw, 40px); display: flex; flex-wrap: wrap; align-items: center; gap: 20px 28px">
+<span aria-hidden="true" style="flex: none; font-family: 'Inter Tight', 'Inter', system-ui, sans-serif; font-weight: 500; font-size: 40px; line-height: 1; letter-spacing: -0.04em; color: #5A6378">02</span>
+<span style="flex: 999 1 420px; min-width: 0; display: flex; flex-direction: column; gap: 8px">
+<span style="font-family: 'Inter Tight', 'Inter', system-ui, sans-serif; font-weight: 500; font-size: clamp(24px, 2.2vw, 30px); line-height: 1.15; letter-spacing: -0.015em">Register as a small business (Udyam)</span>
+<span style="font-size: 19px; line-height: 1.45; color: #3A4256">A free online registration that gives your business an official identity.</span>
+<span style="font-size: 17px; line-height: 1.4; color: #5A6378"><span style="font-weight: 600; color: #0A0E1A">When:</span> before your first paid booking · udyamregistration.gov.in</span>
+</span>
+<button type="button" style="flex: none; display: inline-flex; align-items: center; justify-content: center; gap: 10px; min-height: 56px; padding: 0 24px; border-radius: 999px; font-family: inherit; font-size: 18px; font-weight: 500; text-decoration: none; cursor: pointer; border: 1px solid rgba(10,14,26,0.35); background: #FFFFFF; color: #0A0E1A">Open steps<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex: none"><path d="M5 12h14M13 6l6 6-6 6"></path></svg></button>
+</li>
+<li style="background: #F1F3F9; border-radius: 32px; padding: clamp(24px, 2.8vw, 40px); display: flex; flex-wrap: wrap; align-items: center; gap: 20px 28px">
+<span aria-hidden="true" style="flex: none; font-family: 'Inter Tight', 'Inter', system-ui, sans-serif; font-weight: 500; font-size: 40px; line-height: 1; letter-spacing: -0.04em; color: #5A6378">03</span>
+<span style="flex: 999 1 420px; min-width: 0; display: flex; flex-direction: column; gap: 8px">
+<span style="font-family: 'Inter Tight', 'Inter', system-ui, sans-serif; font-weight: 500; font-size: clamp(24px, 2.2vw, 30px); line-height: 1.15; letter-spacing: -0.015em">Open a current bank account</span>
+<span style="font-size: 19px; line-height: 1.45; color: #3A4256">Keeps business money separate from personal money, so your numbers stay honest.</span>
+<span style="font-size: 17px; line-height: 1.4; color: #5A6378"><span style="font-weight: 600; color: #0A0E1A">When:</span> when the first payment is due · your bank</span>
+</span>
+<button type="button" style="flex: none; display: inline-flex; align-items: center; justify-content: center; gap: 10px; min-height: 56px; padding: 0 24px; border-radius: 999px; font-family: inherit; font-size: 18px; font-weight: 500; text-decoration: none; cursor: pointer; border: 1px solid rgba(10,14,26,0.35); background: #FFFFFF; color: #0A0E1A">Open steps<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex: none"><path d="M5 12h14M13 6l6 6-6 6"></path></svg></button>
+</li>
+<li style="background: #F1F3F9; border-radius: 32px; padding: clamp(24px, 2.8vw, 40px); display: flex; flex-wrap: wrap; align-items: center; gap: 20px 28px">
+<span aria-hidden="true" style="flex: none; font-family: 'Inter Tight', 'Inter', system-ui, sans-serif; font-weight: 500; font-size: 40px; line-height: 1; letter-spacing: -0.04em; color: #5A6378">04</span>
+<span style="flex: 999 1 420px; min-width: 0; display: flex; flex-direction: column; gap: 8px">
+<span style="font-family: 'Inter Tight', 'Inter', system-ui, sans-serif; font-weight: 500; font-size: clamp(24px, 2.2vw, 30px); line-height: 1.15; letter-spacing: -0.015em">GST registration</span>
+<span style="font-size: 19px; line-height: 1.45; color: #3A4256">Whether you need it depends on your turnover and your type of business. The steps check your case.</span>
+<span style="font-size: 17px; line-height: 1.4; color: #5A6378"><span style="font-weight: 600; color: #0A0E1A">When:</span> before you invoice, if your case needs it · gst.gov.in</span>
+</span>
+<button type="button" style="flex: none; display: inline-flex; align-items: center; justify-content: center; gap: 10px; min-height: 56px; padding: 0 24px; border-radius: 999px; font-family: inherit; font-size: 18px; font-weight: 500; text-decoration: none; cursor: pointer; border: 1px solid rgba(10,14,26,0.35); background: #FFFFFF; color: #0A0E1A">Open steps<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex: none"><path d="M5 12h14M13 6l6 6-6 6"></path></svg></button>
+</li>
+</ol>
+
+<p style="margin: 0; font-size: 17px; line-height: 1.5; color: #5A6378">General guidance, not legal or tax advice. Rules change. Each step shows the date it was last checked against the official site: [LAST CHECKED DATE]. Confirm with a CA before you register.</p>
+
+</main>
+</div>
+</div>
+</section>
+
+<section id="today-phone">
+<p class="ref-label">10. Today at phone width, with the bottom tab bar</p>
+<div style="width: 390px; padding: 0 16px 0; box-sizing: border-box; background: #FFFFFF; color: #0A0E1A; font-family: 'Inter', system-ui, sans-serif">
+<div style="max-width: 1312px; margin: 0 auto">
+<header style="display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 18px 0 26px">
+<a href="#" aria-label="Solventia home" style="display: inline-flex; align-items: center; gap: 12px; color: #0A0E1A; text-decoration: none">
+<span aria-hidden="true" style="flex: none; width: 42px; height: 42px; border-radius: 50%; background: #0F1B3D; color: #FFFFFF; display: inline-flex; align-items: center; justify-content: center; font-family: Georgia, 'Times New Roman', serif; font-size: 23px; font-style: italic">S</span>
+<span style="display: flex; flex-direction: column; gap: 5px"><span style="font-size: 19px; font-weight: 600; letter-spacing: 0.2em; line-height: 1">SOLVENTIA</span><span style="font-size: 10px; font-weight: 500; letter-spacing: 0.3em; line-height: 1; color: #3A4256">VALIDATE <span style="color: #B8892B">·</span> BUILD <span style="color: #B8892B">·</span> ELEVATE</span></span>
+</a>
+<div style="display: flex; align-items: center; gap: 8px">
+<button type="button" lang="hi" style="min-height: 46px; padding: 0 14px; border-radius: 999px; border: 1px solid rgba(10,14,26,0.2); background: #FFFFFF; color: #0A0E1A; font-family: inherit; font-size: 16px; font-weight: 500; cursor: pointer">हिन्दी</button>
+<button type="button" aria-label="Account, history and settings" style="width: 46px; height: 46px; border-radius: 50%; border: 0; background: #0A0E1A; color: #FFFFFF; font-family: inherit; font-size: 17px; font-weight: 600; cursor: pointer">B</button>
+</div>
+</header>
+<main style="display: flex; flex-direction: column; gap: 20px; padding-bottom: 24px">
+
+<div style="display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 12px">
+<p style="margin: 0; font-size: 22px; line-height: 1.4; color: #5A6378">Good evening, Bhisham. <span style="color: #0A0E1A; font-weight: 500">One thing to do today.</span></p>
+<p style="margin: 0; font-size: 17px; color: #5A6378">Week 1 of 13 · Validate</p>
+</div>
+
+<section aria-labelledby="mission-title" style="display: flex; flex-wrap: wrap; gap: 40px; align-items: flex-end; padding: clamp(8px, 1.4vw, 20px) 0 clamp(16px, 2.4vw, 32px)">
+<div style="flex: 999 1 560px; min-width: 0; display: flex; flex-direction: column; gap: 28px">
+<div style="display: flex; flex-wrap: wrap; gap: 10px; align-items: center">
+<span style="display: inline-flex; align-items: center; min-height: 38px; padding: 0 16px; border-radius: 999px; font-size: 15px; background: #0A0E1A; color: #FFFFFF; font-weight: 600">Today's mission</span>
+<span style="display: inline-flex; align-items: center; min-height: 38px; padding: 0 16px; border-radius: 999px; font-size: 15px; border: 1px solid rgba(10,14,26,0.3); font-weight: 500; color: #3A4256">About 1 hour</span>
+</div>
+<h1 id="mission-title" style="margin: 0; font-family: 'Inter Tight', 'Inter', system-ui, sans-serif; font-weight: 500; font-size: clamp(44px, 6.2vw, 92px); line-height: 0.98; letter-spacing: -0.035em; text-wrap: balance">List six active event planners in Ambala.</h1>
+<p style="margin: 0; font-size: 22px; line-height: 1.45; max-width: 32em; color: #3A4256">You need contact details of real local organisers who manage heavy equipment for events.</p>
+<div style="display: flex; flex-wrap: wrap; gap: 14px; align-items: center">
+<a href="#mission-list" style="display: inline-flex; align-items: center; justify-content: center; gap: 14px; min-height: 68px; padding: 0 34px; border-radius: 999px; font-family: inherit; font-size: 21px; font-weight: 600; text-decoration: none; cursor: pointer; background: #2440F0; color: #FFFFFF">Start mission<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex: none"><path d="M5 12h14M13 6l6 6-6 6"></path></svg></a>
+<a href="#roadmap" style="display: inline-flex; align-items: center; justify-content: center; gap: 12px; min-height: 68px; padding: 0 28px; border-radius: 999px; font-family: inherit; font-size: 19px; font-weight: 500; text-decoration: none; cursor: pointer; border: 1px solid rgba(10,14,26,0.3); color: #0A0E1A">See this week's 4 missions</a>
+</div>
+</div>
+<div style="flex: 1 1 220px; display: flex; flex-direction: column; gap: 14px; align-items: flex-start">
+<div aria-hidden="true" style="font-family: 'Inter Tight', 'Inter', system-ui, sans-serif; font-weight: 500; font-size: clamp(88px, 12vw, 176px); line-height: 0.82; letter-spacing: -0.05em; color: #2440F0">01</div>
+<div style="font-size: 18px; font-weight: 500; color: #3A4256">Mission 1 of 4 this week</div>
+<div aria-hidden="true" style="display: flex; gap: 6px; width: 100%; max-width: 220px">
+<span style="flex: 1; height: 10px; border-radius: 999px; box-sizing: border-box; border: 2px solid #2440F0"></span>
+<span style="flex: 1; height: 10px; border-radius: 999px; background: #D9DDE8"></span>
+<span style="flex: 1; height: 10px; border-radius: 999px; background: #D9DDE8"></span>
+<span style="flex: 1; height: 10px; border-radius: 999px; background: #D9DDE8"></span>
+</div>
+</div>
+</section>
+
+<section aria-labelledby="journey-title" style="background: #0F1B3D; color: #FFFFFF; border-radius: 40px; padding: clamp(24px, 3.4vw, 48px); display: flex; flex-direction: column; gap: 20px">
+<div style="display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 12px">
+<div style="display: flex; flex-direction: column; gap: 8px">
+<h2 id="journey-title" style="margin: 0; font-family: 'Inter Tight', 'Inter', system-ui, sans-serif; font-weight: 500; font-size: clamp(28px, 2.8vw, 40px); letter-spacing: -0.02em">Your 13 weeks</h2>
+<p style="margin: 0; font-size: 18px; color: #C3CADB">From first conversations to a working booking desk.</p>
+</div>
+<a href="#roadmap" style="display: inline-flex; align-items: center; gap: 10px; min-height: 46px; font-size: 18px; font-weight: 500; color: #FFFFFF; text-decoration: none">Open roadmap<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex: none"><path d="M5 12h14M13 6l6 6-6 6"></path></svg></a>
+</div>
+<svg viewBox="-24 40 1248 190" role="img" aria-label="An arc of 13 weeks in four phases. You are at week 1, in the first phase." style="display: block; width: 100%; height: auto">
+<path d="M20 200 Q600 -60 1180 200" fill="none" stroke="#FFFFFF" stroke-opacity="0.22" stroke-width="2"></path>
+<path d="M20 200 Q116.7 156.7 213.3 127.8" fill="none" stroke="#7C93FF" stroke-width="5" stroke-linecap="round"></path>
+<line x1="261.7" y1="100" x2="261.7" y2="128" stroke="#FFFFFF" stroke-opacity="0.45" stroke-width="2"></line>
+<line x1="551.7" y1="57" x2="551.7" y2="85" stroke="#FFFFFF" stroke-opacity="0.45" stroke-width="2"></line>
+<line x1="841.7" y1="79" x2="841.7" y2="107" stroke="#FFFFFF" stroke-opacity="0.45" stroke-width="2"></line>
+<circle cx="116.7" cy="160.3" r="6" fill="#0F1B3D" stroke="#7C93FF" stroke-width="2.5"></circle>
+<circle cx="213.3" cy="127.8" r="6" fill="#0F1B3D" stroke="#7C93FF" stroke-width="2.5"></circle>
+<circle cx="310" cy="102.5" r="5" fill="#0F1B3D" stroke="#FFFFFF" stroke-opacity="0.5" stroke-width="2"></circle>
+<circle cx="406.7" cy="84.4" r="5" fill="#0F1B3D" stroke="#FFFFFF" stroke-opacity="0.5" stroke-width="2"></circle>
+<circle cx="503.3" cy="73.6" r="5" fill="#0F1B3D" stroke="#FFFFFF" stroke-opacity="0.5" stroke-width="2"></circle>
+<circle cx="600" cy="70" r="5" fill="#0F1B3D" stroke="#FFFFFF" stroke-opacity="0.5" stroke-width="2"></circle>
+<circle cx="696.7" cy="73.6" r="5" fill="#0F1B3D" stroke="#FFFFFF" stroke-opacity="0.5" stroke-width="2"></circle>
+<circle cx="793.3" cy="84.4" r="5" fill="#0F1B3D" stroke="#FFFFFF" stroke-opacity="0.5" stroke-width="2"></circle>
+<circle cx="890" cy="102.5" r="5" fill="#0F1B3D" stroke="#FFFFFF" stroke-opacity="0.5" stroke-width="2"></circle>
+<circle cx="986.7" cy="127.8" r="5" fill="#0F1B3D" stroke="#FFFFFF" stroke-opacity="0.5" stroke-width="2"></circle>
+<circle cx="1083.3" cy="160.3" r="5" fill="#0F1B3D" stroke="#FFFFFF" stroke-opacity="0.5" stroke-width="2"></circle>
+<circle cx="1180" cy="200" r="9" fill="#0F1B3D" stroke="#FFFFFF" stroke-width="3"></circle>
+<circle cx="20" cy="200" r="22" fill="#7C93FF" fill-opacity="0.3"></circle>
+<circle cx="20" cy="200" r="11" fill="#7C93FF"></circle>
+</svg>
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(240px, 100%), 1fr)); gap: 12px">
+<div style="padding: 22px 24px; border-radius: 26px; background: #FFFFFF; color: #0A0E1A; display: flex; flex-direction: column; gap: 8px">
+<div style="font-size: 15px; font-weight: 600; letter-spacing: 0.04em; color: #2440F0">PHASE 1 · YOU ARE HERE</div>
+<div style="font-family: 'Inter Tight', 'Inter', system-ui, sans-serif; font-weight: 500; font-size: 22px; line-height: 1.15; letter-spacing: -0.01em">Planner demand validation</div>
+<div style="font-size: 17px; color: #3A4256">Weeks 1–3</div>
+</div>
+<div style="padding: 22px 24px; border-radius: 26px; border: 1px solid rgba(255,255,255,0.2); display: flex; flex-direction: column; gap: 8px">
+<div style="font-size: 15px; font-weight: 600; letter-spacing: 0.04em; color: #C3CADB">PHASE 2</div>
+<div style="font-family: 'Inter Tight', 'Inter', system-ui, sans-serif; font-weight: 500; font-size: 22px; line-height: 1.15; letter-spacing: -0.01em">Supplier network onboarding</div>
+<div style="font-size: 17px; color: #C3CADB">Weeks 4–6</div>
+</div>
+<div style="padding: 22px 24px; border-radius: 26px; border: 1px solid rgba(255,255,255,0.2); display: flex; flex-direction: column; gap: 8px">
+<div style="font-size: 15px; font-weight: 600; letter-spacing: 0.04em; color: #C3CADB">PHASE 3</div>
+<div style="font-family: 'Inter Tight', 'Inter', system-ui, sans-serif; font-weight: 500; font-size: 22px; line-height: 1.15; letter-spacing: -0.01em">Initial booking operations</div>
+<div style="font-size: 17px; color: #C3CADB">Weeks 7–9</div>
+</div>
+<div style="padding: 22px 24px; border-radius: 26px; border: 1px solid rgba(255,255,255,0.2); display: flex; flex-direction: column; gap: 8px">
+<div style="font-size: 15px; font-weight: 600; letter-spacing: 0.04em; color: #C3CADB">PHASE 4</div>
+<div style="font-family: 'Inter Tight', 'Inter', system-ui, sans-serif; font-weight: 500; font-size: 22px; line-height: 1.15; letter-spacing: -0.01em">Operations and scale</div>
+<div style="font-size: 17px; color: #C3CADB">Weeks 10–13</div>
+</div>
+</div>
+</section>
+
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(420px, 100%), 1fr)); gap: 24px">
+<section style="background: #F1F3F9; border-radius: 32px; padding: clamp(24px, 2.8vw, 40px); display: flex; flex-direction: column; gap: 16px">
+<h2 style="margin: 0; font-size: 15px; font-weight: 600; letter-spacing: 0.08em; color: #5A6378">THIS WEEK SUCCEEDS IF</h2>
+<p style="margin: 0; font-family: 'Inter Tight', 'Inter', system-ui, sans-serif; font-weight: 500; font-size: clamp(22px, 2.1vw, 30px); line-height: 1.25; letter-spacing: -0.01em; text-wrap: pretty">3 of the 4 planners you interview say that calling 3 or more suppliers per event causes delays or stress.</p>
+</section>
+<section style="background: #F1F3F9; border-radius: 32px; padding: clamp(24px, 2.8vw, 40px); display: flex; flex-wrap: wrap; gap: 24px; align-items: flex-end; justify-content: space-between">
+<div style="display: flex; flex-direction: column; gap: 16px">
+<h2 style="margin: 0; font-size: 15px; font-weight: 600; letter-spacing: 0.08em; color: #5A6378">PROOF SO FAR</h2>
+<div style="display: flex; align-items: baseline; gap: 14px">
+<span style="font-family: 'Inter Tight', 'Inter', system-ui, sans-serif; font-weight: 500; font-size: clamp(56px, 5.6vw, 80px); line-height: 0.9; letter-spacing: -0.04em; white-space: nowrap">0<span style="color: #5A6378"> / 4</span></span>
+<span style="font-size: 19px; color: #3A4256">things checked</span>
+</div>
+</div>
+<a href="#proof" style="display: inline-flex; align-items: center; justify-content: center; gap: 10px; min-height: 56px; padding: 0 24px; border-radius: 999px; font-family: inherit; font-size: 18px; font-weight: 500; text-decoration: none; cursor: pointer; border: 1px solid rgba(10,14,26,0.3); color: #0A0E1A">Open proof<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex: none"><path d="M5 12h14M13 6l6 6-6 6"></path></svg></a>
+</section>
+</div>
+
+</main>
+<nav aria-label="Dashboard" style="display: flex; margin: 0 -16px; padding: 0 8px; border-top: 1px solid rgba(10,14,26,0.12); background: #FFFFFF">
+<a href="#" aria-current="page" style="flex: 1; display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 12px 0 14px; color: #2440F0; font-size: 15px; font-weight: 600; text-decoration: none"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M19 5l-2 2M7 17l-2 2"></path></svg>Today</a>
+<a href="#"  style="flex: 1; display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 12px 0 14px; color: #3A4256; font-size: 15px; font-weight: 500; text-decoration: none"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="M15.5 8.5l-2 5-5 2 2-5z"></path></svg>Directions</a>
+<a href="#"  style="flex: 1; display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 12px 0 14px; color: #3A4256; font-size: 15px; font-weight: 500; text-decoration: none"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 18c3-9 15-9 18 0"></path><circle cx="3" cy="18" r="1.5"></circle><circle cx="21" cy="18" r="1.5"></circle></svg>Roadmap</a>
+<a href="#"  style="flex: 1; display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 12px 0 14px; color: #3A4256; font-size: 15px; font-weight: 500; text-decoration: none"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="M8 12.5l3 3 5-6"></path></svg>Proof</a>
+</nav>
+</div>
+</div>
+</section>
+</body>
+</html>

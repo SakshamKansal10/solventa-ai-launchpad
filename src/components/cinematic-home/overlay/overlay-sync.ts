@@ -22,7 +22,7 @@ export const NAV_CLEARANCE = 96;
 const last = new WeakMap<HTMLElement, Record<string, string>>();
 export function setStyle(
   el: HTMLElement,
-  key: "opacity" | "transform" | "visibility" | "pointerEvents",
+  key: "opacity" | "transform" | "visibility" | "pointerEvents" | "contentVisibility",
   value: string,
 ) {
   let cache = last.get(el);
@@ -53,9 +53,19 @@ function boxOf(el: HTMLElement, key: string): Box {
   captionBox.set(el, box);
   return box;
 }
+/**
+ * Hidden overlay elements also leave style and layout (content-visibility: hidden): the tone the
+ * film writes on the page is inherited by every caption, label and the product panel, and while
+ * they were merely invisible each tone step re-styled all of them — measured, ~460 elements in
+ * the long tasks at 4× CPU throttle. Nothing changes on screen (they are invisible either way).
+ */
+const hide = (el: HTMLElement, hidden: boolean) => {
+  setStyle(el, "visibility", hidden ? "hidden" : "visible");
+  setStyle(el, "contentVisibility", hidden ? "hidden" : "visible");
+};
 export const show = (el: HTMLElement, o: number) => {
   setStyle(el, "opacity", o.toFixed(3));
-  setStyle(el, "visibility", o > 0.002 ? "visible" : "hidden");
+  hide(el, o <= 0.002);
 };
 /** Writes a CSS custom property only when it changed. */
 const lastVar = new WeakMap<HTMLElement, Record<string, string>>();
@@ -76,7 +86,7 @@ function setVar(el: HTMLElement, name: string, value: string) {
 function present(el: HTMLElement, o: number, leaving: boolean) {
   setVar(el, "--o", o.toFixed(3));
   setVar(el, "--d", leaving ? "-1" : "1");
-  setStyle(el, "visibility", o > 0.002 ? "visible" : "hidden");
+  hide(el, o <= 0.002);
 }
 /**
  * The opening identity's journey into the site bar: one object (emblem, wordmark, signature),
@@ -136,19 +146,21 @@ export function createOverlaySync(store: ExperienceStore) {
   /** The page element the tone variables are written on (nav and overlay inherit them). */
   const tone = { el: null as HTMLElement | null, key: "" };
   const world = { el: null as HTMLElement | null, value: "" };
+  const veils = { low: null as HTMLElement | null, top: null as HTMLElement | null };
   const shown: ShownBox[] = [];
+  const finaleCta: { el: HTMLElement | null | undefined } = { el: undefined };
 
   /** One frame at story position `p` on a stage of `width` × `height` px. */
-  const timeline = { el: null as HTMLElement | null, past: "" };
+  const timeline = { past: "" };
 
   return function sync(p: number, width: number, height: number, animate: boolean) {
     const s = store.state;
     const dom = s.dom;
     shown.length = 0;
-    // Read before any write this frame: how far the film has left the screen (0 while it
-    // plays, 1 once the footer has taken over) — the bar then carries its own identity.
-    timeline.el ??= document.querySelector<HTMLElement>("[data-testid=cinematic-timeline]");
-    const filmBottom = timeline.el ? timeline.el.getBoundingClientRect().bottom : Infinity;
+    // How far the film has left the screen (0 while it plays, 1 once the footer has taken
+    // over) — the bar then carries its own identity. From the scroll controller: the frame loop
+    // never measures the page.
+    const filmBottom = s.filmBottom;
     const pastFilm = Math.min(1, Math.max(0, (height - filmBottom) / (height * 0.12)));
     // Immersion: the navigation recedes during the deepest sequences, returns for the product.
     nav.el ??= document.querySelector<HTMLElement>("[data-testid=cinematic-nav]");
@@ -212,7 +224,14 @@ export function createOverlaySync(store: ExperienceStore) {
           const o = (to ? 1 : 1 - t) * recede * (name === "mark" ? 1 - dark : 1) * (1 - handOff);
           el.style.opacity = o.toFixed(3);
         }
-        if (brand.cue) brand.cue.style.opacity = Math.max(0, 1 - t * 3).toFixed(3);
+        if (brand.cue) {
+          const cue = Math.max(0, 1 - t * 3);
+          brand.cue.style.opacity = cue.toFixed(3);
+          // Once faded, the cue leaves the render tree: its infinite line animation otherwise
+          // kept re-styling the page on every frame of the whole film.
+          const display = cue > 0 ? "" : "none";
+          if (brand.cue.style.display !== display) brand.cue.style.display = display;
+        }
       }
     }
 
@@ -231,15 +250,18 @@ export function createOverlaySync(store: ExperienceStore) {
 
     // The tone: one set of colours for the current world, inherited by the overlay and the bar.
     tone.el ??= document.querySelector<HTMLElement>("[data-cine-tone]");
+    // Quantised to 1% steps: a tone change re-styles everything that inherits it (the nav and
+    // the whole overlay), so it is written only when it changes visibly, not on every frame
+    // of a transition.
+    const L = Math.round(lightAt(p) * 100) / 100;
+    const ink = Math.round(inkAt(L) * 100) / 100;
     if (tone.el) {
-      const L = lightAt(p);
-      const ink = inkAt(L);
-      const key = `${L.toFixed(3)}:${ink.toFixed(3)}`;
+      const key = `${L}:${ink}`;
       if (key !== tone.key) {
         tone.key = key;
         for (const r of ROLES) setVar(tone.el, ROLE_VAR[r], mixHex(WORLD[r][0], WORLD[r][1], ink));
-        setVar(tone.el, "--dark", (1 - ink).toFixed(3));
-        setVar(tone.el, "--light", L.toFixed(3));
+        setVar(tone.el, "--dark", (1 - ink).toFixed(2));
+        setVar(tone.el, "--light", L.toFixed(2));
       }
     }
 
@@ -282,16 +304,17 @@ export function createOverlaySync(store: ExperienceStore) {
           el.style.setProperty("--reveal", key);
         }
         // The CTA is only focusable once it is visibly there.
-        const cta = el.querySelector<HTMLElement>("[data-testid=cinematic-cta]");
-        if (cta) setStyle(cta, "visibility", r > 0.7 ? "visible" : "hidden");
+        if (finaleCta.el === undefined)
+          finaleCta.el = el.querySelector<HTMLElement>("[data-testid=cinematic-cta]");
+        if (finaleCta.el) setStyle(finaleCta.el, "visibility", r > 0.7 ? "visible" : "hidden");
       }
     }
 
-    const overlay = dom.counter?.parentElement;
-    if (overlay) {
-      setVar(overlay, "--veil-low", veilLow.toFixed(3));
-      setVar(overlay, "--veil-top", veilTop.toFixed(3));
-    }
+    // The veils: their own opacity (pearl world only), not variables on the overlay root.
+    veils.low ??= document.querySelector<HTMLElement>("[data-veil=low]");
+    veils.top ??= document.querySelector<HTMLElement>("[data-veil=top]");
+    if (veils.low) setStyle(veils.low, "opacity", (veilLow * ink).toFixed(3));
+    if (veils.top) setStyle(veils.top, "opacity", (veilTop * ink).toFixed(3));
 
     // The narrowing count: one figure that changes only as a stage completes (360 → 120 → 36 →
     // 9; the three that remain are then named by the statement).

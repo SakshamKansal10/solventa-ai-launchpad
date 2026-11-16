@@ -3,11 +3,11 @@ const en = {
   "rm.journey.eyebrow": "Roadmap",
   "rm.journey.title": "Your roadmap",
   "rm.journey.subtitle":
-    "Validate → Build → Elevate: test demand first, then build only what the evidence supports.",
+    "Validate → Build → Elevate: test demand first, then build only what the proof supports.",
   "rm.stage.validate": "Validate",
   "rm.stage.build": "Build",
   "rm.stage.elevate": "Elevate",
-  "rm.stage.provisional": "Provisional — depends on what you learn",
+  "rm.stage.provisional": "Depends on what you learn",
   "rm.journey.timeline": "Timeline",
   "rm.journey.map": "Map",
   "rm.journey.viewAria": "Journey view",
@@ -82,7 +82,7 @@ const en = {
 
   "rm.gen.preparingTitle": "Preparing Week {n}",
   "rm.gen.preparingBody":
-    "Solventia is writing it from your evidence. This takes a minute or two — you can leave and come back.",
+    "Solventia is writing it from your proof. This takes a minute or two — you can leave and come back.",
   "rm.gen.preparingShort": "Preparing your next week…",
   "rm.gen.failedTitle": "Week {n} couldn't be prepared",
   "rm.gen.failedBody":
@@ -111,7 +111,7 @@ const en = {
   "rm.rail.progress": "Progress",
   "rm.rail.missions": "{x} of {y} missions done",
   "rm.rail.threshold": "This week succeeds if",
-  "rm.rail.evidence": "Evidence",
+  "rm.rail.evidence": "Proof",
   "rm.rail.captured": "{n} captured",
   "rm.rail.remaining": "{n} still to capture",
   "rm.rail.avoid": "Avoid this",
@@ -120,7 +120,7 @@ const en = {
   // Week review
   "rm.review.title": "Review your week",
   "rm.review.body": "Two quick questions. Your answers shape what the next week asks of you.",
-  "rm.review.happened": "How did the evidence turn out?",
+  "rm.review.happened": "How did the proof turn out?",
   "rm.review.blocker": "What got in the way?",
   "rm.review.note": "Anything else Solventia should know?",
   "rm.review.prepare": "Prepare Week {n}",
@@ -161,15 +161,15 @@ const en = {
   "rm.progress.emptyBody":
     "Complete a mission or record what you learned — it shows here from your first week.",
   "rm.progress.missionsByWeek": "Missions done, by week",
-  "rm.progress.evidenceByAssumption": "Evidence, by assumption",
+  "rm.progress.evidenceByAssumption": "Proof, by thing to check",
   "rm.progress.phaseCompletion": "Phase completion",
   "rm.progress.viewTable": "View as a table",
   "rm.progress.completedCol": "Completed",
   "rm.progress.totalCol": "Total",
   "rm.progress.phaseCol": "Phase",
-  "rm.progress.noAssumptions": "No assumptions yet. Start in Proof.",
+  "rm.progress.noAssumptions": "No things to check yet. Start in Proof.",
   "rm.progress.barAria": "Week {n}: {x} of {y} missions done. Open this week.",
-  "rm.progress.evidenceAria": "{title}: {n} pieces of evidence. Open in Proof.",
+  "rm.progress.evidenceAria": "{title}: {n} pieces of proof. Open in Proof.",
 
   // Building page
   "rm.build.title": "Building your roadmap",
@@ -196,7 +196,7 @@ const hi: Record<keyof typeof en, string> = {
   "rm.stage.validate": "परखें",
   "rm.stage.build": "बनाएं",
   "rm.stage.elevate": "बढ़ाएं",
-  "rm.stage.provisional": "अस्थायी — आपकी सीख पर निर्भर",
+  "rm.stage.provisional": "आप जो सीखेंगे उस पर निर्भर",
   "rm.journey.timeline": "टाइमलाइन",
   "rm.journey.map": "मानचित्र",
   "rm.journey.viewAria": "यात्रा का दृश्य",
@@ -245,7 +245,7 @@ const hi: Record<keyof typeof en, string> = {
   "rm.empty.buildingTitle": "आपका रोडमैप बन रहा है",
   "rm.empty.failedTitle": "आपका रोडमैप पूरा नहीं हुआ",
   "rm.empty.noWeek": "अभी दिखाने के लिए कोई सप्ताह नहीं।",
-  "rm.completed.body": "आपने हर सप्ताह पूरा कर लिया। प्रमाण में देखिए कि आपने क्या सिद्ध किया।",
+  "rm.completed.body": "आपने हर सप्ताह पूरा कर लिया। सबूत में देखिए कि आपने क्या सिद्ध किया।",
   "rm.completed.toast": "रोडमैप पूरा हुआ। शाबाश।",
 
   "rm.phases.aria": "रोडमैप के चरण",
@@ -269,7 +269,7 @@ const hi: Record<keyof typeof en, string> = {
 
   "rm.gen.preparingTitle": "सप्ताह {n} तैयार हो रहा है",
   "rm.gen.preparingBody":
-    "Solventia इसे आपके साक्ष्य से लिख रहा है। इसमें एक-दो मिनट लगते हैं — आप जाकर लौट सकते हैं।",
+    "Solventia इसे आपके सबूत से लिख रहा है। इसमें एक-दो मिनट लगते हैं — आप जाकर लौट सकते हैं।",
   "rm.gen.preparingShort": "आपका अगला सप्ताह तैयार हो रहा है…",
   "rm.gen.failedTitle": "सप्ताह {n} तैयार नहीं हो पाया",
   "rm.gen.failedBody": "आपकी प्रगति सुरक्षित है। फिर कोशिश करें, Solventia इसे आपकी सीख से लिखेगा।",
@@ -295,7 +295,7 @@ const hi: Record<keyof typeof en, string> = {
   "rm.rail.progress": "प्रगति",
   "rm.rail.missions": "{y} में से {x} मिशन पूरे",
   "rm.rail.threshold": "यह सप्ताह सफल तब है जब",
-  "rm.rail.evidence": "साक्ष्य",
+  "rm.rail.evidence": "सबूत",
   "rm.rail.captured": "{n} जुटाए",
   "rm.rail.remaining": "{n} और जुटाने हैं",
   "rm.rail.avoid": "इससे बचें",
@@ -303,7 +303,7 @@ const hi: Record<keyof typeof en, string> = {
 
   "rm.review.title": "अपने सप्ताह की समीक्षा करें",
   "rm.review.body": "दो छोटे सवाल। आपके जवाब तय करते हैं कि अगला सप्ताह आपसे क्या मांगेगा।",
-  "rm.review.happened": "साक्ष्य कैसे निकले?",
+  "rm.review.happened": "सबूत कैसे निकले?",
   "rm.review.blocker": "क्या आड़े आया?",
   "rm.review.note": "कुछ और जो Solventia को पता होना चाहिए?",
   "rm.review.prepare": "सप्ताह {n} तैयार करें",
@@ -343,15 +343,15 @@ const hi: Record<keyof typeof en, string> = {
   "rm.progress.emptyBody":
     "कोई मिशन पूरा करें या जो सीखा उसे दर्ज करें — यह पहले हफ़्ते से यहां दिखेगा।",
   "rm.progress.missionsByWeek": "सप्ताह के अनुसार पूरे हुए मिशन",
-  "rm.progress.evidenceByAssumption": "धारणा के अनुसार साक्ष्य",
+  "rm.progress.evidenceByAssumption": "जाँचने वाली बात के अनुसार सबूत",
   "rm.progress.phaseCompletion": "चरणों की प्रगति",
   "rm.progress.viewTable": "तालिका के रूप में देखें",
   "rm.progress.completedCol": "पूरे",
   "rm.progress.totalCol": "कुल",
   "rm.progress.phaseCol": "चरण",
-  "rm.progress.noAssumptions": "अभी कोई धारणा नहीं। प्रमाण से शुरू करें।",
+  "rm.progress.noAssumptions": "अभी कोई जाँचने वाली बात नहीं। सबूत से शुरू करें।",
   "rm.progress.barAria": "सप्ताह {n}: {y} में से {x} मिशन पूरे। यह सप्ताह खोलें।",
-  "rm.progress.evidenceAria": "{title}: {n} साक्ष्य। प्रमाण में खोलें।",
+  "rm.progress.evidenceAria": "{title}: {n} सबूत। सबूत में खोलें।",
 
   "rm.build.title": "आपका रोडमैप बन रहा है",
   "rm.build.working": "काम चल रहा है — अब तक {s} सेकंड। आमतौर पर एक मिनट से कम लगता है।",

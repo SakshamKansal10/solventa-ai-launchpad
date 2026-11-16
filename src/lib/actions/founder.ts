@@ -6,7 +6,13 @@ import { requireUser } from "@/lib/supabase/server";
 import type { Database } from "@/lib/supabase/types";
 import { resolveDirection, type Direction, type DirectionOpportunity } from "@/lib/direction";
 import { isSchemaMissingError } from "@/lib/schema-capabilities.server";
-import { assessFit, fitSortScore, type FitLabel } from "@/lib/fit/model";
+import {
+  assessFit,
+  fitSortScore,
+  type FactorScore,
+  type FitFactorKey,
+  type FitLabel,
+} from "@/lib/fit/model";
 import { keepSupportedReasons } from "@/lib/ai/integrity";
 import type { FitFactors } from "@/lib/ai/schemas";
 import type { NormalizedProfile } from "@/lib/profile/normalize";
@@ -31,6 +37,9 @@ export interface OpportunityBrief {
   createdAt: string;
   /** The canonical founder-fit label (src/lib/fit/model.ts) — the same one every screen shows. */
   fit: FitLabel;
+  /** The same assessment, factor by factor (score 0–3, or null = not known yet) — for the fit
+   * bar. Null when the direction has no fit signals or the profile is missing. */
+  fitFactors: { key: FitFactorKey; score: FactorScore }[] | null;
   /** Plain-words category ("local service", "digital product") — picks the direction's icon. */
   category: string | null;
 }
@@ -86,6 +95,7 @@ async function loadOpportunityRows(
 }
 
 function toBrief(r: OppRow, profile: NormalizedProfile | null): OpportunityBrief {
+  const assessment = profile && r.signals ? assessFit(profile, r.signals) : null;
   const why = Array.isArray(r.why)
     ? (r.why as unknown[]).filter((w): w is string => typeof w === "string")
     : [];
@@ -102,7 +112,8 @@ function toBrief(r: OppRow, profile: NormalizedProfile | null): OpportunityBrief
     consultationId: r.business_dna_id,
     batch: r.batch_number,
     createdAt: r.created_at,
-    fit: profile && r.signals ? assessFit(profile, r.signals).label : "provisional",
+    fit: assessment?.label ?? "provisional",
+    fitFactors: assessment?.factors.map((f) => ({ key: f.key, score: f.score })) ?? null,
     category: r.category ?? null,
   };
 }

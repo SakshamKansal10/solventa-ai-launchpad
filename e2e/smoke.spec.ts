@@ -14,7 +14,10 @@ test("the harness is wired: a signed-in founder with no consultation sees the we
   const user = await createUser({ fullName: "Asha Verma" });
   await signIn(context, user);
   await page.goto("/dashboard");
-  await expect(page.getByRole("heading", { level: 1 })).toContainText("Welcome to Solventia");
+  await expect(page.getByRole("heading", { level: 1 })).toContainText(
+    "Find a business that fits your real situation.",
+  );
+  await expect(page.getByTestId("no-consultation")).toBeVisible();
   const rows = await sql<{ full_name: string }>("select full_name from profiles where id = $1", [
     user.id,
   ]);

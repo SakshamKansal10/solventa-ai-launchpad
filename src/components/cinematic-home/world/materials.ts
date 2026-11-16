@@ -35,12 +35,12 @@ export interface Materials {
   pearl: MeshStandardMaterial;
   champagne: MeshStandardMaterial;
   midnight: MeshStandardMaterial;
-  glass: MeshPhysicalMaterial;
+  glass: MeshPhysicalMaterial | MeshStandardMaterial;
   energy: MeshBasicMaterial;
   violet: MeshBasicMaterial;
   titanium: MeshStandardMaterial;
   graphite: MeshStandardMaterial;
-  smoked: MeshPhysicalMaterial;
+  smoked: MeshPhysicalMaterial | MeshStandardMaterial;
   /** Smoked glass that dissolves per instance (provisional → resolved). */
   smokedDissolve: MeshStandardMaterial;
   titaniumDissolve: MeshStandardMaterial;
@@ -100,18 +100,30 @@ export function createMaterials(preset: QualityPreset): Materials {
     metalness: 0.6,
     roughness: 0.42,
   });
-  const glass = new MeshPhysicalMaterial({
-    color: "#d9e2ee",
-    metalness: 0,
-    roughness: 0.05,
-    transparent: true,
-    opacity: 0.09,
-    clearcoat: 1,
-    clearcoatRoughness: 0.04,
-    side: DoubleSide,
-    depthWrite: false,
-    envMapIntensity: 1.6,
-  });
+  // Lite: the same tint, opacity and sides, without the clear-coat lobe.
+  const glass = physical
+    ? new MeshPhysicalMaterial({
+        color: "#d9e2ee",
+        metalness: 0,
+        roughness: 0.05,
+        transparent: true,
+        opacity: 0.09,
+        clearcoat: 1,
+        clearcoatRoughness: 0.04,
+        side: DoubleSide,
+        depthWrite: false,
+        envMapIntensity: 1.6,
+      })
+    : new MeshStandardMaterial({
+        color: "#d9e2ee",
+        metalness: 0,
+        roughness: 0.05,
+        transparent: true,
+        opacity: 0.09,
+        side: DoubleSide,
+        depthWrite: false,
+        envMapIntensity: 1.6,
+      });
   const energy = new MeshBasicMaterial({ color: "#ffffff" });
   const violet = new MeshBasicMaterial({ color: COLORS.violetGlow });
   const titanium = withRim(
@@ -132,19 +144,30 @@ export function createMaterials(preset: QualityPreset): Materials {
     0.22,
   );
   const smoked = withRim(
-    new MeshPhysicalMaterial({
-      color: COLORS.smoke,
-      metalness: 0.1,
-      roughness: 0.08,
-      transparent: true,
-      opacity: 0.22,
-      clearcoat: 1,
-      clearcoatRoughness: 0.05,
-      // Closed solids only: one front-faced pass (double-sided transparency draws twice).
-      side: FrontSide,
-      depthWrite: false,
-      envMapIntensity: 2.6,
-    }),
+    physical
+      ? new MeshPhysicalMaterial({
+          color: COLORS.smoke,
+          metalness: 0.1,
+          roughness: 0.08,
+          transparent: true,
+          opacity: 0.22,
+          clearcoat: 1,
+          clearcoatRoughness: 0.05,
+          // Closed solids only: one front-faced pass (double-sided transparency draws twice).
+          side: FrontSide,
+          depthWrite: false,
+          envMapIntensity: 2.6,
+        })
+      : new MeshStandardMaterial({
+          color: COLORS.smoke,
+          metalness: 0.1,
+          roughness: 0.08,
+          transparent: true,
+          opacity: 0.22,
+          side: FrontSide,
+          depthWrite: false,
+          envMapIntensity: 2.6,
+        }),
     "#a9b8d6",
     2.4,
     0.3,

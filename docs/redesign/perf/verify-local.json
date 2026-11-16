@@ -1,0 +1,123 @@
+{
+  "label": "local",
+  "base": "http://localhost:4175",
+  "at": "2026-11-16T03:23:53.829Z",
+  "runs": {
+    "broadband": {
+      "throttle": 1,
+      "readyMs": 4548,
+      "lockupMs": 5277,
+      "held": false,
+      "holdMs": 0,
+      "modeAtRelease": "lite",
+      "modeAtEnd": "lite",
+      "switchedModeAfterRelease": false,
+      "longTasks": 0,
+      "worstLongTaskMs": 0,
+      "p95FrameMs": 16.9,
+      "frames": 966,
+      "states": [
+        {
+          "t": 710,
+          "intro": "ask",
+          "mode": "pending",
+          "ready": "false"
+        },
+        {
+          "t": 1761,
+          "intro": "ask",
+          "mode": "lite",
+          "ready": "false"
+        },
+        {
+          "t": 4554,
+          "intro": "ask",
+          "mode": "lite",
+          "ready": "true"
+        },
+        {
+          "t": 5277,
+          "intro": "off",
+          "mode": "lite",
+          "ready": "true"
+        }
+      ],
+      "pass": true
+    },
+    "cpu4x": {
+      "throttle": 4,
+      "readyMs": 7121,
+      "lockupMs": 6247,
+      "held": true,
+      "holdMs": 897,
+      "modeAtRelease": "lite",
+      "modeAtEnd": "lite",
+      "switchedModeAfterRelease": false,
+      "longTasks": 0,
+      "worstLongTaskMs": 0,
+      "p95FrameMs": 33.4,
+      "frames": 854,
+      "states": [
+        {
+          "t": 335,
+          "intro": "ask",
+          "mode": "pending",
+          "ready": "false"
+        },
+        {
+          "t": 3377,
+          "intro": "ask",
+          "mode": "lite",
+          "ready": "false"
+        },
+        {
+          "t": 6247,
+          "intro": "hold",
+          "mode": "lite",
+          "ready": "false"
+        },
+        {
+          "t": 7130,
+          "intro": "hold",
+          "mode": "lite",
+          "ready": "true"
+        },
+        {
+          "t": 7144,
+          "intro": "off",
+          "mode": "lite",
+          "ready": "true"
+        }
+      ],
+      "pass": true
+    }
+  },
+  "checks": {
+    "reducedMotion": {
+      "asked": true,
+      "mode": "fallback",
+      "pass": true
+    },
+    "mobile390": {
+      "asked": true,
+      "mode": "fallback",
+      "sideways": false,
+      "pass": true
+    },
+    "returning": {
+      "welcomed": true,
+      "question": false,
+      "openingMs": 5612,
+      "readyMs": 5170,
+      "pass": true
+    },
+    "midPageReload": {
+      "before": 5211,
+      "after": 5211,
+      "state": "off",
+      "busy": null,
+      "pass": true
+    }
+  },
+  "pass": true
+}

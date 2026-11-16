@@ -27,7 +27,7 @@ function collectErrors(page: Page): string[] {
   return errors;
 }
 
-async function open(page: Page, query = "tier=medium&freeze=1") {
+async function open(page: Page, query = "tier=full&freeze=1") {
   await gotoApp(page, `/cinematic?${query}`);
   const home = page.getByTestId("cinematic-home");
   await expect(home).toHaveAttribute("data-ready", "true", { timeout: 45_000 });
@@ -75,8 +75,8 @@ test.describe("cinematic homepage", () => {
   }) => {
     test.setTimeout(90_000);
     // A cold load (fresh context, empty cache) of the real, WebGL page — no frozen frames.
-    await gotoApp(page, "/cinematic?tier=medium");
-    const img = page.locator("[data-brand-opening] [data-brand-part=mark] img");
+    await gotoApp(page, "/cinematic?tier=full");
+    const img = page.locator("[data-brand-opening] [data-brand-part=mark] [data-rv=top] img");
     await expect(img).toBeVisible();
 
     // The emblem asset is transparent: nothing is painted outside the S — no canvas to hide.
@@ -150,7 +150,7 @@ test.describe("cinematic homepage", () => {
   test("the whole story plays on one WebGL stage, scene by scene", async ({ page }) => {
     const errors = collectErrors(page);
     const home = await open(page);
-    await expect(home).toHaveAttribute("data-mode", "webgl");
+    await expect(home).toHaveAttribute("data-mode", "full");
     await expect(page.locator("canvas")).toHaveCount(1);
     // The opening is the identity alone, centred: one SOLVENTIA on screen, not two.
     await expect(page.locator("[data-brand-opening] [data-brand-part=word]")).toBeVisible();
@@ -232,14 +232,18 @@ test.describe("cinematic homepage", () => {
     const preview = page.getByTestId("product-preview");
     await expect(preview).toBeVisible();
     await expect(page.getByText("Illustrative preview · sample founder")).toBeVisible();
-    const direction = page.getByRole("tab", { name: "Direction" });
-    await direction.focus();
+    // The redesigned Today screen (owner step 3): Today, Roadmap, Proof.
+    await expect(preview.getByRole("heading", { level: 3 })).toContainText(
+      "Talk to five clinic owners",
+    );
+    const today = page.getByRole("tab", { name: "Today" });
+    await today.focus();
     await page.keyboard.press("ArrowRight");
-    await expect(page.getByRole("tab", { name: "This week" })).toHaveAttribute(
+    await expect(page.getByRole("tab", { name: "Roadmap" })).toHaveAttribute(
       "aria-selected",
       "true",
     );
-    await page.getByRole("tab", { name: "Evidence" }).click();
+    await page.getByRole("tab", { name: "Proof" }).click();
     await expect(
       page.getByRole("tabpanel").getByText("Contradicted", { exact: true }),
     ).toBeVisible();
@@ -282,7 +286,7 @@ test.describe("cinematic homepage", () => {
   test("the canvas follows the viewport through resizes, without horizontal overflow", async ({
     page,
   }) => {
-    await open(page, "tier=low&freeze=1");
+    await open(page, "tier=lite&freeze=1");
     await goTo(page, "three", 0.5);
     for (const [width, height] of [
       [390, 844],
@@ -357,7 +361,7 @@ test.describe("cinematic homepage", () => {
         }
       }
     };
-    await open(page, "tier=low&freeze=1");
+    await open(page, "tier=lite&freeze=1");
     await audit("start");
     // Deep in the film the navigation recedes — it must stay legible (AA) while it does.
     await goTo(page, "computation", 0.5);
@@ -392,35 +396,41 @@ test.describe("cinematic homepage", () => {
     await expect.poll(async () => (await cameraState(page)).scene).toBe(before.scene);
   });
 
-  test("sound belongs to the experience: no visible control, it starts with the first interaction, mute is remembered", async ({
+  test("sound is off until the visitor turns it on with the toggle in the bar; the choice is remembered", async ({
     page,
   }) => {
     await open(page);
     const toggle = page.getByTestId("sound-toggle");
-    // Arriving: nothing plays and no utility competes with the film.
-    await expect(toggle).toHaveCount(0);
-    // The first real interaction starts it; the mute control then exists — for the keyboard only:
-    // no icon is shown, and it takes no room in the bar.
+    const context = () =>
+      page.evaluate(() =>
+        (
+          window as unknown as { __cine: { sound: { context: () => string } } }
+        ).__cine.sound.context(),
+      );
+    // Arriving: the toggle is visible and off, and a click on the page creates no audio at all.
+    await expect(toggle).toBeVisible();
+    await expect(toggle).toHaveAttribute("aria-pressed", "false");
     await page.mouse.click(400, 400);
-    await expect(toggle).toHaveAttribute("data-audio", "running");
+    await page.waitForTimeout(400);
+    expect(await context()).toBe("none");
+    // Pressing the toggle starts it…
+    await toggle.click();
     await expect(toggle).toHaveAttribute("aria-pressed", "true");
-    expect(
-      await toggle.evaluate((el) => [getComputedStyle(el).opacity, getComputedStyle(el).position]),
-    ).toEqual(["0", "absolute"]);
-    // Muting is immediate…
+    await expect(toggle).toHaveAttribute("data-audio", "running");
+    // …muting is immediate…
     await toggle.press("Enter");
     await expect(toggle).toHaveAttribute("aria-pressed", "false");
     await expect(toggle).toHaveAttribute("data-audio", "idle");
-    // …and remembered for the visit: after a reload an interaction does not start it, and the
-    // control is there to turn it back on.
+    // …and the choice is remembered for the visit: on again, reload, and the next interaction
+    // resumes it.
+    await toggle.click();
+    await expect(toggle).toHaveAttribute("data-audio", "running");
     await page.reload();
     await expect(page.getByTestId("cinematic-home")).toHaveAttribute("data-ready", "true", {
       timeout: 45_000,
     });
+    await expect(toggle).toHaveAttribute("aria-pressed", "true");
     await page.mouse.click(400, 400);
-    await expect(toggle).toHaveAttribute("aria-pressed", "false");
-    await expect(toggle).toHaveAttribute("data-audio", "idle");
-    await toggle.press("Enter");
     await expect(toggle).toHaveAttribute("data-audio", "running");
   });
 
@@ -443,10 +453,10 @@ test.describe("cinematic homepage", () => {
       return max;
     };
     const toggle = page.getByTestId("sound-toggle");
-    // No autoplay: nothing exists before the visitor's first interaction.
+    // No autoplay: nothing exists before the visitor turns sound on.
     expect(await sound((s) => s.context())).toBe("none");
     await goTo(page, "awakening", 0.7);
-    await page.mouse.click(400, 400);
+    await toggle.click();
     await expect(toggle).toHaveAttribute("aria-pressed", "true");
     await expect(toggle).toHaveAttribute("aria-label", "Mute sound");
     await expect.poll(() => sound((s) => s.context())).toBe("running");

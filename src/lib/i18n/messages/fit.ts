@@ -6,8 +6,8 @@ const en = {
   "fit2.label.moderate": "Moderate fit",
   "fit2.label.conditional": "Conditional fit",
   "fit2.label.weak": "Weak fit",
-  "fit2.label.provisional": "Provisional — more information needed",
-  "fit2.labelShort.provisional": "Provisional",
+  "fit2.label.provisional": "Depends on what you learn — more information needed",
+  "fit2.labelShort.provisional": "Depends on what you learn",
 
   "fit2.level.3": "Clear fit",
   "fit2.level.2": "Manageable gap",
@@ -110,8 +110,8 @@ const hi: Record<keyof typeof en, string> = {
   "fit2.label.moderate": "ठीक-ठाक मेल",
   "fit2.label.conditional": "शर्तों के साथ मेल",
   "fit2.label.weak": "कमज़ोर मेल",
-  "fit2.label.provisional": "अस्थायी — और जानकारी चाहिए",
-  "fit2.labelShort.provisional": "अस्थायी",
+  "fit2.label.provisional": "आप जो सीखेंगे उस पर निर्भर — और जानकारी चाहिए",
+  "fit2.labelShort.provisional": "सीख पर निर्भर",
 
   "fit2.level.3": "साफ़ मेल",
   "fit2.level.2": "संभालने लायक़ कमी",

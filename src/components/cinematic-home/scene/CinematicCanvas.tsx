@@ -1,7 +1,8 @@
 import { Canvas } from "@react-three/fiber";
+import { markStage } from "../performance/marks";
 
 import { BASE_FOV } from "../camera/camera-path";
-import type { QualityPreset } from "../performance/quality";
+import { notchDpr, type QualityPreset } from "../performance/quality";
 import type { ExperienceStore } from "../scroll/experience-store";
 import { SceneRoot } from "./SceneRoot";
 
@@ -18,6 +19,7 @@ export default function CinematicCanvas({
   parallax,
   freeze,
   onContextLost,
+  onContextRestored,
 }: {
   store: ExperienceStore;
   preset: QualityPreset;
@@ -25,7 +27,13 @@ export default function CinematicCanvas({
   parallax: boolean;
   freeze: boolean;
   onContextLost: () => void;
+  onContextRestored: () => void;
 }) {
+  // Adaptive quality: notch 0 is the tier's range; a lower notch is an exact, lower pixel ratio.
+  // The governor applies a step through R3F's setDpr (no React render); if the canvas does render
+  // again it passes the CURRENT notch's ratio, so R3F never resets it to the range.
+  const notch = store.state.perf.notch;
+  const dpr = notch === 0 ? preset.dpr : notchDpr(preset, window.devicePixelRatio || 1, notch);
   return (
     <Canvas
       aria-hidden="true"
@@ -35,7 +43,7 @@ export default function CinematicCanvas({
       // starts the loop) — a first frame would otherwise compile them all synchronously and
       // freeze the page for seconds on modest GPUs.
       frameloop="never"
-      dpr={preset.dpr}
+      dpr={dpr}
       gl={{
         antialias: preset.antialias,
         alpha: false,
@@ -47,6 +55,7 @@ export default function CinematicCanvas({
       // a short resize debounce avoids reallocating buffers mid-drag.
       resize={{ scroll: false, debounce: { scroll: 0, resize: 120 } }}
       onCreated={({ gl }) => {
+        markStage("canvas-created");
         // Leaving the page never waits on the GPU. R3F releases the context as the stage
         // unmounts — inside the navigation itself — and losing a context blocks until the GPU
         // has finished what it is still doing: while the world was still compiling its shaders,
@@ -62,14 +71,13 @@ export default function CinematicCanvas({
             else lose();
           }, 1500);
         };
-        gl.domElement.addEventListener(
-          "webglcontextlost",
-          (event) => {
-            event.preventDefault();
-            onContextLost();
-          },
-          { once: true },
-        );
+        // preventDefault lets the browser restore the context; three.js re-creates its GPU
+        // state on "webglcontextrestored" and the world comes back in place.
+        gl.domElement.addEventListener("webglcontextlost", (event) => {
+          event.preventDefault();
+          onContextLost();
+        });
+        gl.domElement.addEventListener("webglcontextrestored", () => onContextRestored());
       }}
     >
       <SceneRoot

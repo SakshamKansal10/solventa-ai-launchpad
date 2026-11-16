@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { rememberAuthNext } from "@/lib/consultation/resume";
 import { Loader2 } from "lucide-react";
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
 import { cn } from "@/lib/utils";
@@ -52,9 +53,18 @@ export function GoogleSignInButton({ redirectPath, className }: GoogleSignInButt
     setError(null);
     try {
       const supabase = createSupabaseBrowserClient();
+      // Where to go after Google is kept on this device, not only in the URL: Supabase drops
+      // a redirect it does not allow-list (falling back to its Site URL), and with it any ?next=.
+      const target = new URL(redirectPath, window.location.origin);
+      rememberAuthNext(target.searchParams.get("next"));
       const { error: oauthError } = await supabase.auth.signInWithOAuth({
         provider: "google",
-        options: { redirectTo: `${window.location.origin}${redirectPath}` },
+        options: {
+          redirectTo: `${window.location.origin}${redirectPath}`,
+          // Always the account chooser, never a silent sign-in with whichever Google account
+          // the browser last used.
+          queryParams: { prompt: "select_account" },
+        },
       });
       if (oauthError) {
         console.error("[google-signin] failed:", oauthError);

@@ -87,6 +87,8 @@ export function weekDetail(opts: {
         evidenceRequired: false,
         assumptionCategory: "problem",
         dependsOn: null,
+        workspace: "generic",
+        fallback: "Start from three questions about the last time they had this problem.",
       },
       {
         what: "Talk to eight target customers",
@@ -105,6 +107,17 @@ export function weekDetail(opts: {
         evidenceRequired: true,
         assumptionCategory: "problem",
         dependsOn: "Write your interview script",
+        workspace: "interviews",
+        firstMessageEn:
+          "Hi, I am Asha from Pune. I am learning how clinics handle patient follow-ups. Could I ask you three quick questions this week?",
+        firstMessageHi:
+          "नमस्ते, मैं पुणे से आशा हूँ। मैं समझना चाहती हूँ कि क्लिनिक मरीज़ों के फ़ॉलो-अप कैसे संभालते हैं। क्या इस हफ़्ते मैं आपसे तीन छोटे सवाल पूछ सकती हूँ?",
+        questions: [
+          "Tell me about the last time a patient missed a follow-up.",
+          "Would you use an app that reminds patients?",
+          "How do you remind patients today?",
+        ],
+        fallback: "Ask two people you already know in this trade before contacting strangers.",
       },
       {
         what: "Summarise what repeated",
@@ -119,6 +132,8 @@ export function weekDetail(opts: {
         evidenceRequired: false,
         assumptionCategory: null,
         dependsOn: "Talk to eight target customers",
+        workspace: "summary",
+        fallback: "Write the one sentence you heard most often.",
       },
     ],
     mistakesToAvoid: [

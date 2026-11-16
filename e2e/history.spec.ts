@@ -98,7 +98,7 @@ test.describe("History", () => {
     await expect(page.getByTestId("earlier-consultation-banner")).toBeVisible();
 
     await gotoApp(page, "/dashboard");
-    await expect(page.locator("h1")).toHaveText("Your strongest direction is ready to explore."); // still the newest
+    await expect(page.getByTestId("flagship-card")).toBeVisible(); // still the newest
   });
 
   test("Restore Direction asks first; Cancel changes nothing; Confirm makes the older direction current and keeps its roadmap", async ({
@@ -114,13 +114,13 @@ test.describe("History", () => {
     await page.getByRole("button", { name: "Cancel" }).click();
     await expect(page.getByTestId("restore-dialog")).toBeHidden();
     await gotoApp(page, "/dashboard");
-    await expect(page.locator("h1")).toHaveText("Your strongest direction is ready to explore.");
+    await expect(page.getByTestId("flagship-card")).toBeVisible();
 
     await gotoApp(page, "/dashboard/history");
     await page.getByTestId("history-entry").nth(1).getByTestId("history-restore").click();
     await page.getByTestId("confirm-restore").click();
     await expect(page).toHaveURL(/\/dashboard$/, { timeout: 30_000 });
-    await expect(page.locator("h1")).toHaveText("Your next move is clear.", { timeout: 30_000 });
+    await expect(page.getByTestId("todays-move")).toBeVisible({ timeout: 30_000 });
 
     const profile = await sql<{ active_opportunity_id: string | null }>(
       "select active_opportunity_id from profiles where id = $1",
@@ -143,12 +143,12 @@ test.describe("History", () => {
     await gotoApp(page, "/dashboard/history");
     await page.getByTestId("history-entry").nth(1).getByTestId("history-restore").click();
     await page.getByTestId("confirm-restore").click();
-    await expect(page.locator("h1")).toHaveText("Your next move is clear.", { timeout: 30_000 });
+    await expect(page.getByTestId("todays-move")).toBeVisible({ timeout: 30_000 });
 
     // A brand-new consultation completes AFTER the restore.
     await seedDirections(user.id);
     await gotoApp(page, "/dashboard");
-    await expect(page.locator("h1")).toHaveText("Your strongest direction is ready to explore.", {
+    await expect(page.getByTestId("flagship-card")).toBeVisible({
       timeout: 30_000,
     });
   });

@@ -1,4 +1,7 @@
+import { useEffect, useState } from "react";
 import { Link } from "@tanstack/react-router";
+import { INTRO_CHOICE_EVENT, readIntroChoice, type IntroChoice } from "../intro/intro-gate";
+import { RevealLine, RevealMark } from "../intro/Reveal";
 import {
   ArrowRight,
   Briefcase,
@@ -16,6 +19,7 @@ import { BrandMark, BrandSignature, BrandWordmark } from "@/components/brand/Bra
 import { useExperienceStore } from "../scroll/experience-store";
 import {
   accentRuns,
+  AWAKENING_SUB,
   CAPTIONS,
   COUNT_LABEL,
   LABELS,
@@ -81,6 +85,15 @@ const KICKER =
 
 export function CinematicOverlay() {
   const store = useExperienceStore();
+  // The opening's answer tailors one line (read after hydration, and again when it is made).
+  const [choice, setChoice] = useState<IntroChoice | null>(null);
+  useEffect(() => {
+    const read = () => setChoice(readIntroChoice());
+    read();
+    window.addEventListener(INTRO_CHOICE_EVENT, read);
+    return () => window.removeEventListener(INTRO_CHOICE_EVENT, read);
+  }, []);
+
   const reg = (map: Map<string, HTMLElement>, id: string) => (el: HTMLElement | null) => {
     if (el) map.set(id, el);
     else map.delete(id);
@@ -102,12 +115,14 @@ export function CinematicOverlay() {
         }}
       />
       {/* The pearl world's counterpart: a soft veil in the ground's own colour behind a statement,
-          only while one is on screen (--veil-low / --veil-top, written by DomSync). */}
+          only while one is on screen. Its opacity is written straight onto it by overlay-sync
+          (an inherited variable on the overlay root re-styled all 270 overlay elements). */}
       <div
         aria-hidden="true"
+        data-veil="low"
         className="absolute inset-x-0 bottom-0 h-[62%]"
         style={{
-          opacity: "calc(var(--veil-low, 0) * (1 - var(--dark, 0)))",
+          opacity: 0,
           // Only behind the type (the left of the grid): the subject on the right stays whole.
           maskImage: VEIL_MASK,
           WebkitMaskImage: VEIL_MASK,
@@ -117,9 +132,10 @@ export function CinematicOverlay() {
       />
       <div
         aria-hidden="true"
+        data-veil="top"
         className="absolute inset-x-0 top-0 h-[55%]"
         style={{
-          opacity: "calc(var(--veil-top, 0) * (1 - var(--dark, 0)))",
+          opacity: 0,
           // Only behind the type (the left of the grid): the subject on the right stays whole.
           maskImage: VEIL_MASK,
           WebkitMaskImage: VEIL_MASK,
@@ -143,7 +159,9 @@ export function CinematicOverlay() {
             visibility: "hidden",
           }}
         >
-          <CaptionBody caption={c} />
+          <CaptionBody
+            caption={c.id === "awakening" && choice ? { ...c, sub: AWAKENING_SUB[choice] } : c}
+          />
         </div>
       ))}
       {/* The narrowing count: one very large figure, read like a statement. */}
@@ -287,19 +305,22 @@ function BrandOpening() {
       aria-hidden="true"
       className="absolute inset-x-[var(--gutter)] inset-y-0 flex flex-col items-center justify-center"
     >
+      <RevealLine />
       <div className="flex items-center gap-[clamp(0.9rem,2.4vw,2.4rem)] [--mark-h:clamp(52px,14vw,82px)] sm:[--mark-h:clamp(84px,10.4vw,152px)]">
-        <span data-brand-part="mark" className="block origin-top-left">
-          <BrandMark />
+        <span data-brand-part="mark" className="relative block origin-top-left">
+          <RevealMark />
         </span>
         <div className="flex flex-col gap-[clamp(0.55rem,1.4vw,1.4rem)]">
           <span data-brand-part="word" className="block origin-top-left self-start">
             <BrandWordmark
+              split
               className="text-[clamp(38px,10.4vw,62px)] sm:text-[clamp(62px,7.8vw,116px)]"
               color="var(--ink)"
             />
           </span>
           <span data-brand-part="sig" className="block origin-top-left self-start">
             <BrandSignature
+              split
               className="text-[clamp(10px,2.9vw,14px)] sm:text-[clamp(15px,1.75vw,26px)]"
               color="var(--ink)"
               separator="var(--accent-soft)"

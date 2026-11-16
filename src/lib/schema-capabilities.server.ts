@@ -29,6 +29,16 @@ export interface SchemaCapabilities {
   economics: boolean;
   /** proof_evidence.title and the url/screenshot/survey types (migration 0012). */
   evidenceTitle: boolean;
+  /** roadmap_tasks.workspace and mission_entries (migration 0015). */
+  missionWorkspaces: boolean;
+  /** proof_assumptions.success_rule / check_task_id, proof_evidence.added_by_user (0016). */
+  proofRules: boolean;
+  /** mission_stuck_events, roadmap_weeks.shifted_days, profile reminder fields (0017). */
+  stuck: boolean;
+  /** opportunity_evidence.kind — estimate | sourced (0018). */
+  evidenceKind: boolean;
+  /** business_dna.generation — how a result was produced (0020). */
+  generationRecord: boolean;
 }
 
 const ALL_OFF: SchemaCapabilities = {
@@ -40,6 +50,11 @@ const ALL_OFF: SchemaCapabilities = {
   roadmapStates: false,
   economics: false,
   evidenceTitle: false,
+  missionWorkspaces: false,
+  proofRules: false,
+  stuck: false,
+  evidenceKind: false,
+  generationRecord: false,
 };
 
 let cache: { at: number; caps: SchemaCapabilities } | null = null;
@@ -81,6 +96,11 @@ export async function getSchemaCapabilities(
     roadmapStates,
     economics,
     evidenceTitle,
+    missionWorkspaces,
+    proofRules,
+    stuck,
+    evidenceKind,
+    generationRecord,
   ] = await Promise.all([
     probe("roadmap_weeks", "generation_status"),
     probe("proof_assumptions", "id"),
@@ -91,6 +111,11 @@ export async function getSchemaCapabilities(
     probe("roadmaps", "build_error"),
     probe("opportunity_economics", "id"),
     probe("proof_evidence", "title"),
+    probe("mission_entries", "id"),
+    probe("proof_assumptions", "success_rule"),
+    probe("mission_stuck_events", "id"),
+    probe("opportunity_evidence", "kind"),
+    probe("business_dna", "generation"),
   ]);
 
   const caps: SchemaCapabilities = {
@@ -103,6 +128,11 @@ export async function getSchemaCapabilities(
     roadmapStates,
     economics,
     evidenceTitle,
+    missionWorkspaces,
+    proofRules,
+    stuck,
+    evidenceKind,
+    generationRecord,
   };
   cache = { at: Date.now(), caps };
   return caps;

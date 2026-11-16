@@ -33,6 +33,16 @@ export function useStoryDriver(
     let started = false;
     let last = 0;
     let raf = 0;
+    // The stage's size, kept by a ResizeObserver: the frame loop never reads layout.
+    const size = { w: window.innerWidth, h: window.innerHeight };
+    const stage = stageRef.current;
+    const observer = stage
+      ? new ResizeObserver(([entry]) => {
+          size.w = entry.contentRect.width || window.innerWidth;
+          size.h = entry.contentRect.height || window.innerHeight;
+        })
+      : null;
+    if (stage) observer?.observe(stage);
 
     const tick = (now: number) => {
       raf = requestAnimationFrame(tick);
@@ -65,15 +75,14 @@ export function useStoryDriver(
       }
 
       if (!s.stageActive) return;
-      const stage = stageRef.current;
-      sync(
-        s.progress,
-        stage?.clientWidth || window.innerWidth,
-        stage?.clientHeight || window.innerHeight,
-        animate && !freeze,
-      );
+      sync(s.progress, size.w, size.h, animate && !freeze);
+      // The world renders in this same frame (no second loop).
+      s.renderWorld?.(now);
     };
     raf = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(raf);
+    return () => {
+      cancelAnimationFrame(raf);
+      observer?.disconnect();
+    };
   }, [store, stageRef, enabled, animate, freeze]);
 }

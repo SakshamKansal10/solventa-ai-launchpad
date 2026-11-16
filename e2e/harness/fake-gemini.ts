@@ -98,6 +98,8 @@ const KEEP = new Set([
   "riskLevel",
   "motivationAlignment",
   "assumptionCategory",
+  // A mission's workspace kind (part 4): an enum the provider's structured output never changes.
+  "workspace",
 ]);
 
 function hindify(value: unknown, key = ""): unknown {

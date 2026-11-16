@@ -94,7 +94,13 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "apple-mobile-web-app-title", content: "Solventia" },
       { property: "og:type", content: "website" },
       { property: "og:site_name", content: "Solventia" },
-      { name: "twitter:card", content: "summary" },
+      // 1200×630: the logo lockup and the home page headline (public/og-image.png).
+      { property: "og:image", content: "https://solventia.in/og-image.png" },
+      { property: "og:image:width", content: "1200" },
+      { property: "og:image:height", content: "630" },
+      { property: "og:image:alt", content: "Solventia — Find the direction worth building." },
+      { name: "twitter:card", content: "summary_large_image" },
+      { name: "twitter:image", content: "https://solventia.in/og-image.png" },
     ],
     links: [
       {
@@ -114,10 +120,11 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       // all three derived from the same official Solventia mark, never a
       // different icon per size. No stray/duplicate favicon declaration
       // anywhere else in this app competes with these.
+      // The owner's icon set from the original logo (docs/brand/icons-README.md): the only icons.
       { rel: "icon", href: "/favicon.ico", sizes: "48x48" },
-      { rel: "icon", href: "/favicon-48x48.png", type: "image/png", sizes: "48x48" },
-      { rel: "icon", href: "/favicon-96x96.png", type: "image/png", sizes: "96x96" },
-      { rel: "apple-touch-icon", href: "/apple-touch-icon.png", sizes: "180x180" },
+      { rel: "icon", href: "/favicon.svg", type: "image/svg+xml" },
+      { rel: "icon", href: "/favicon-96.png", type: "image/png", sizes: "96x96" },
+      { rel: "apple-touch-icon", href: "/apple-touch-icon.png" },
       { rel: "manifest", href: "/site.webmanifest" },
     ],
   }),
@@ -131,7 +138,8 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
 function RootShell({ children }: { children: ReactNode }) {
   const { locale } = Route.useRouteContext();
   return (
-    <html lang={locale ?? DEFAULT_LOCALE}>
+    // The homepage's head script may set data-intro on <html> before hydration.
+    <html lang={locale ?? DEFAULT_LOCALE} suppressHydrationWarning>
       <head>
         <HeadContent />
       </head>

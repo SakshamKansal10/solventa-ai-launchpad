@@ -11,7 +11,7 @@ export const Route = createFileRoute("/privacy")({
     const canonical = `${url.replace(/\/$/, "")}/privacy`;
     return {
       meta: [
-        { title: "Privacy Policy | Solventia" },
+        { title: "Privacy Policy — Solventia" },
         {
           name: "description",
           content:

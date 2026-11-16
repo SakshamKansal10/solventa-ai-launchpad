@@ -1,0 +1,338 @@
+{
+  "label": "after-cold-lite",
+  "tier": "lite",
+  "runs": 3,
+  "intro": false,
+  "at": "2026-11-15T12:48:50.710Z",
+  "summary": {
+    "broadband": {
+      "runs": 3,
+      "notReady": 0,
+      "fcp": 1808,
+      "bundle-loaded": 1959,
+      "bundle-loadedΔ": 1959,
+      "canvas-created": 2765,
+      "canvas-createdΔ": 806,
+      "environment": 4198,
+      "environmentΔ": 1433,
+      "shaders": 6749,
+      "shadersΔ": 2551,
+      "textures": 6784,
+      "texturesΔ": 35,
+      "geometry": 6899,
+      "geometryΔ": 115,
+      "ready": 6935,
+      "readyΔ": 36,
+      "bundleStart": 1046
+    },
+    "fast4g": {
+      "runs": 3,
+      "notReady": 0,
+      "fcp": 2420,
+      "bundle-loaded": 3423,
+      "bundle-loadedΔ": 3423,
+      "canvas-created": 4229,
+      "canvas-createdΔ": 806,
+      "environment": 5755,
+      "environmentΔ": 1526,
+      "shaders": 8271,
+      "shadersΔ": 2516,
+      "textures": 8304,
+      "texturesΔ": 33,
+      "geometry": 9237,
+      "geometryΔ": 933,
+      "ready": 9272,
+      "readyΔ": 35,
+      "bundleStart": 3330
+    },
+    "cpu4x": {
+      "runs": 3,
+      "notReady": 0,
+      "fcp": 2704,
+      "bundle-loaded": 3437,
+      "bundle-loadedΔ": 3437,
+      "canvas-created": 5139,
+      "canvas-createdΔ": 1702,
+      "environment": 6729,
+      "environmentΔ": 1590,
+      "shaders": 9470,
+      "shadersΔ": 2741,
+      "textures": 9503,
+      "texturesΔ": 33,
+      "geometry": 9774,
+      "geometryΔ": 271,
+      "ready": 9912,
+      "readyΔ": 138,
+      "bundleStart": 3099
+    }
+  },
+  "results": {
+    "broadband": [
+      {
+        "ok": true,
+        "wallMs": 7078,
+        "marks": {
+          "bundle-start": 1951,
+          "bundle-loaded": 2099,
+          "canvas-created": 2765,
+          "environment": 4198,
+          "shaders": 6675,
+          "textures": 6708,
+          "geometry": 6842,
+          "ready": 6877
+        },
+        "details": {
+          "environment": {
+            "programs": 13
+          },
+          "shaders": {
+            "programs": 31,
+            "objects": 170
+          },
+          "geometry": {
+            "groups": 19
+          }
+        },
+        "fcp": 1808,
+        "domContentLoaded": 429,
+        "mode": "lite"
+      },
+      {
+        "ok": true,
+        "wallMs": 7492,
+        "marks": {
+          "bundle-start": 1006,
+          "bundle-loaded": 1959,
+          "canvas-created": 3132,
+          "environment": 4517,
+          "shaders": 6956,
+          "textures": 6989,
+          "geometry": 7106,
+          "ready": 7145
+        },
+        "details": {
+          "environment": {
+            "programs": 13
+          },
+          "shaders": {
+            "programs": 31,
+            "objects": 170
+          },
+          "geometry": {
+            "groups": 19
+          }
+        },
+        "fcp": 1856,
+        "domContentLoaded": 371,
+        "mode": "lite"
+      },
+      {
+        "ok": true,
+        "wallMs": 7060,
+        "marks": {
+          "bundle-start": 1046,
+          "bundle-loaded": 1886,
+          "canvas-created": 2565,
+          "environment": 3859,
+          "shaders": 6749,
+          "textures": 6784,
+          "geometry": 6899,
+          "ready": 6935
+        },
+        "details": {
+          "environment": {
+            "programs": 13
+          },
+          "shaders": {
+            "programs": 31,
+            "objects": 170
+          },
+          "geometry": {
+            "groups": 19
+          }
+        },
+        "fcp": 1732,
+        "domContentLoaded": 335,
+        "mode": "lite"
+      }
+    ],
+    "fast4g": [
+      {
+        "ok": true,
+        "wallMs": 10113,
+        "marks": {
+          "bundle-start": 3434,
+          "bundle-loaded": 3524,
+          "canvas-created": 4722,
+          "environment": 6114,
+          "shaders": 8956,
+          "textures": 8988,
+          "geometry": 9973,
+          "ready": 10006
+        },
+        "details": {
+          "environment": {
+            "programs": 13
+          },
+          "shaders": {
+            "programs": 31,
+            "objects": 170
+          },
+          "geometry": {
+            "groups": 19
+          }
+        },
+        "fcp": 2420,
+        "domContentLoaded": 955,
+        "mode": "lite"
+      },
+      {
+        "ok": true,
+        "wallMs": 9674,
+        "marks": {
+          "bundle-start": 3033,
+          "bundle-loaded": 3113,
+          "canvas-created": 4229,
+          "environment": 5755,
+          "shaders": 8100,
+          "textures": 8135,
+          "geometry": 9119,
+          "ready": 9154
+        },
+        "details": {
+          "environment": {
+            "programs": 13
+          },
+          "shaders": {
+            "programs": 31,
+            "objects": 170
+          },
+          "geometry": {
+            "groups": 19
+          }
+        },
+        "fcp": 2436,
+        "domContentLoaded": 958,
+        "mode": "lite"
+      },
+      {
+        "ok": true,
+        "wallMs": 9370,
+        "marks": {
+          "bundle-start": 3330,
+          "bundle-loaded": 3423,
+          "canvas-created": 4042,
+          "environment": 5708,
+          "shaders": 8271,
+          "textures": 8304,
+          "geometry": 9237,
+          "ready": 9272
+        },
+        "details": {
+          "environment": {
+            "programs": 13
+          },
+          "shaders": {
+            "programs": 31,
+            "objects": 170
+          },
+          "geometry": {
+            "groups": 19
+          }
+        },
+        "fcp": 2336,
+        "domContentLoaded": 984,
+        "mode": "lite"
+      }
+    ],
+    "cpu4x": [
+      {
+        "ok": true,
+        "wallMs": 12559,
+        "marks": {
+          "bundle-start": 3642,
+          "bundle-loaded": 3954,
+          "canvas-created": 5791,
+          "environment": 7734,
+          "shaders": 10778,
+          "textures": 10811,
+          "geometry": 11941,
+          "ready": 12065
+        },
+        "details": {
+          "environment": {
+            "programs": 13
+          },
+          "shaders": {
+            "programs": 31,
+            "objects": 170
+          },
+          "geometry": {
+            "groups": 19
+          }
+        },
+        "fcp": 3396,
+        "domContentLoaded": 343,
+        "mode": "lite"
+      },
+      {
+        "ok": true,
+        "wallMs": 10084,
+        "marks": {
+          "bundle-start": 2329,
+          "bundle-loaded": 2777,
+          "canvas-created": 4137,
+          "environment": 5590,
+          "shaders": 8171,
+          "textures": 8204,
+          "geometry": 9377,
+          "ready": 9466
+        },
+        "details": {
+          "environment": {
+            "programs": 13
+          },
+          "shaders": {
+            "programs": 31,
+            "objects": 170
+          },
+          "geometry": {
+            "groups": 19
+          }
+        },
+        "fcp": 2620,
+        "domContentLoaded": 231,
+        "mode": "lite"
+      },
+      {
+        "ok": true,
+        "wallMs": 10401,
+        "marks": {
+          "bundle-start": 3099,
+          "bundle-loaded": 3437,
+          "canvas-created": 5139,
+          "environment": 6729,
+          "shaders": 9470,
+          "textures": 9503,
+          "geometry": 9774,
+          "ready": 9912
+        },
+        "details": {
+          "environment": {
+            "programs": 13
+          },
+          "shaders": {
+            "programs": 31,
+            "objects": 170
+          },
+          "geometry": {
+            "groups": 19
+          }
+        },
+        "fcp": 2704,
+        "domContentLoaded": 364,
+        "mode": "lite"
+      }
+    ]
+  }
+}

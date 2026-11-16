@@ -18,6 +18,7 @@ import {
 } from "@/lib/ai/prompts/shared";
 import type { NormalizedProfile } from "@/lib/profile/normalize";
 import { fitTasksToBudget, weekHoursBudget } from "@/lib/roadmap/hours";
+import { keepWeekOneFree } from "@/lib/roadmap/week-one";
 
 /** Shared by every roadmap-generation prompt below — concrete over
  * abstract, short over long, a founder should never feel like they're
@@ -170,11 +171,13 @@ ${SKELETON_JSON_CONTRACT}${buildLanguageRule(locale)}`;
 
 const WEEK_DETAIL_SYSTEM_INSTRUCTION = `You are Sol, Solventia's execution planner. You are filling in the REAL detail for exactly ONE week of a founder's roadmap, right as it unlocks — not the whole roadmap. ${PLAIN_LANGUAGE_RULE} ${OUTPUT_STYLE_RULE}
 
-${DEMAND_FIRST_RULE} Give this week 2-5 concrete actions (tasks) that realistically fit this founder's weekly hours — never 15 microtasks; a founder should be able to hold this week's whole plan in their head. If the founder lacks a skill a task requires, insert a short learning task before the task that needs it. State honestly what real-world evidence (if any) this week should produce — interviews, a test purchase, a signed customer, direct observation — and what "this week worked" concretely looks like; a pure-execution week (no evidence to collect) should say so plainly rather than inventing evidence for its own sake. Name 1-3 real, specific mistakes founders make in exactly this kind of week — never generic advice like "stay organized". If this week follows an earlier one, actually use what happened in that earlier week (what got done, and the founder's own reflection if given) to shape this week — never ignore it and repeat a generic template. You may refine or flag a needed pivot based on what actually happened, but never silently rewrite what the founder already completed.`;
+${DEMAND_FIRST_RULE} Give this week 2-5 concrete actions (tasks) that realistically fit this founder's weekly hours — never 15 microtasks; a founder should be able to hold this week's whole plan in their head. If the founder lacks a skill a task requires, insert a short learning task before the task that needs it. State honestly what real-world evidence (if any) this week should produce — interviews, a test purchase, a signed customer, direct observation — and what "this week worked" concretely looks like; a pure-execution week (no evidence to collect) should say so plainly rather than inventing evidence for its own sake. Name 1-3 real, specific mistakes founders make in exactly this kind of week — never generic advice like "stay organized". If this week follows an earlier one, actually use what happened in that earlier week (what got done, and the founder's own reflection if given) to shape this week — never ignore it and repeat a generic template. You may refine or flag a needed pivot based on what actually happened, but never silently rewrite what the founder already completed.
+
+Give every mission a workspace — what the founder actually produces on its page: "list" (named people or businesses to contact, with workspaceTarget rows), "interviews" (conversations to log, with workspaceTarget, a first WhatsApp message in English and in natural Hindi using the founder's name, city and customer type, and 3-5 questions), "learn" (a method in 3-5 points and 3 check questions), or "summary" (2-3 prompts that turn earlier missions' logs into a conclusion). Interview questions ask about PAST BEHAVIOUR ("Tell me about the last time you…", "How do you handle … today?") — NEVER about opinions of the idea ("Would you use…?", "Do you like…?", "Would you pay for…?"). Every mission also gets a fallback: an easier way to reach the same goal.`;
 
 const WEEK_DETAIL_JSON_CONTRACT = `{
   "mission": string (short and concrete, 5-14 words — more specific than the objective already shown, not a restatement of it),
-  "tasks": [ 3-5 objects, each: { "what": string (mission title, 4-10 words), "why": string, "how": string, "steps": string[2-4] (each under 12 words — the bullets shown on the mission card, e.g. "Find 8 matching customers", "Ask the same core questions", "Do not pitch yet"), "resource": string|null, "timeEstimate": string (e.g. "~2 hrs"), "deadlineDaysFromStart": number, "doneWhen": string, "required": boolean, "evidenceRequired": boolean (true when this mission should leave behind recorded evidence), "assumptionCategory": "problem"|"willingness_to_pay"|"distribution"|"delivery"|"retention"|"pricing"|"competition"|"other"|null, "dependsOn": the exact "what" text of a prior task THIS WEEK, or null if it can start independently — NEVER an index, number, or ID } ],
+  "tasks": [ 3-5 objects, each: { "what": string (mission title, 4-10 words), "why": string, "how": string, "steps": string[2-4] (each under 12 words — the bullets shown on the mission card, e.g. "Find 8 matching customers", "Ask the same core questions", "Do not pitch yet"), "resource": string|null, "timeEstimate": string (e.g. "~2 hrs"), "deadlineDaysFromStart": number, "doneWhen": string, "required": boolean, "evidenceRequired": boolean (true when this mission should leave behind recorded evidence), "assumptionCategory": "problem"|"willingness_to_pay"|"distribution"|"delivery"|"retention"|"pricing"|"competition"|"other"|null, "dependsOn": the exact "what" text of a prior task THIS WEEK, or null if it can start independently — NEVER an index, number, or ID, "workspace": "list"|"interviews"|"learn"|"summary"|"generic", "workspaceTarget": integer|null (list rows or interviews to log), "firstMessageEn": string|null, "firstMessageHi": string|null (interviews only: the first WhatsApp message, natural Hindi), "questions": string[3-5]|null (interviews only), "lesson": string[3-5]|null (learn only), "quizQuestions": string[3]|null, "quizOptions": string[9]|null (three per question, in order), "quizAnswers": integer[3]|null (0-2), "prompts": string[2-3]|null (summary only), "fallback": string (an easier way to the same goal) } ],
   "mistakesToAvoid": string[1-3] (each 8-16 words),
   "evidenceRequired": string,
   "successThreshold": string (one measurable statement, e.g. "5 of 8 customers independently describe the same pain"),
@@ -188,6 +191,8 @@ export interface WeekGenerationContext {
   weekTitle: string;
   weekObjective: string;
   weekNumber: number;
+  /** For the first message an interview mission gives the founder to send (part 4, feature 4). */
+  founderFirstName?: string | null;
   /** Null for week 1 — nothing precedes it yet. */
   priorWeek: {
     title: string;
@@ -215,7 +220,7 @@ export async function generateWeekDetail(
 ): Promise<RoadmapWeekDetailPlan> {
   const priorWeekSection = context.priorWeek
     ? `\nPrevious week ("${context.priorWeek.title}") — what actually happened: completed missions: ${context.priorWeek.completedTasks.join("; ") || "nothing recorded"}. Outcome the founder reported: ${context.priorWeek.outcome ?? "not stated"}. Biggest blocker: ${context.priorWeek.blocker ?? "none named"}. Founder's own words: "${context.priorWeek.reflection ?? "none given"}". Evidence actually recorded: ${context.priorWeek.evidenceSummary ?? "none recorded"}. Assumption status: ${context.priorWeek.assumptionStates ?? "not tracked yet"}. Let this genuinely inform this week — adjust pace, address the blocker, follow the evidence (never claim evidence that was not recorded), and don't just continue a frozen plan. If the plan changes because of it, say so in adaptationNote.`
-    : "\nThis is Week 1 — nothing precedes it.";
+    : "\nThis is Week 1 — nothing precedes it. Week 1 NEVER needs money, a registration or a website: only actions that are free and done with what the founder already has (lists, conversations, observation, a simple message).";
 
   const prompt = `Founder profile:\n${formatProfileForPrompt(profile)}
 
@@ -230,6 +235,7 @@ Skills to learn: ${opportunity.skillsToLearn.join(", ") || "none listed"}
 ${formatDirectionStructure(opportunity)}
 Roadmap phase: ${context.phaseTitle} — ${context.phaseDescription}
 This week (already shown to the founder before it unlocked): "${context.weekTitle}" — ${context.weekObjective}
+Founder's first name (for interview first messages): ${context.founderFirstName?.trim() || "not given — write the message so the founder can add their name"}
 ${priorWeekSection}
 
 Generate this week's real detail now. deadlineDaysFromStart values must be 0-6 (days into THIS week, day 0 = the day it unlocked) and reflect ${planningHoursPhrase(profile)}. HOURS BUDGET: every task's timeEstimate is in hours (e.g. "~2 hrs"), and together this week's tasks must fit within ${weekHoursBudget(profile)} hours — 85% of the lower end of the founder's stated time, the rest left free. Each task's doneWhen states the output the founder will have (notes, a list, recorded answers) and what that result tells them.
@@ -244,6 +250,15 @@ ${WEEK_DETAIL_JSON_CONTRACT}${buildLanguageRule(locale)}`;
     purpose: "WEEK_DETAIL",
     route: "opportunity/build-roadmap",
   });
+  // Week 1 never needs money, registration or a website (part 5): checked in code, not trusted.
+  if (context.weekNumber === 1) {
+    const free = keepWeekOneFree(detail.tasks);
+    if (free.removed.length > 0)
+      console.warn(
+        `[roadmap] week 1 dropped ${free.removed.length} mission(s) needing money, registration or a website`,
+      );
+    detail.tasks = free.tasks;
+  }
   // The founder's stated time is a constraint, not a suggestion: optional work that
   // would overfill the week is dropped; required work is kept (and logged) if alone over.
   const budget = weekHoursBudget(profile);

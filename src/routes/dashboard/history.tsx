@@ -60,7 +60,11 @@ import { cn } from "@/lib/utils";
 export const Route = createFileRoute("/dashboard/history")({
   component: HistoryPage,
   head: () => ({
-    meta: [{ title: "History — Solventia" }, { name: "robots", content: "noindex" }],
+    meta: [
+      { title: "History | Solventia" },
+      { name: "description", content: "Every consultation you have done, and what came of it." },
+      { name: "robots", content: "noindex" },
+    ],
   }),
 });
 
@@ -156,7 +160,7 @@ function HistoryPage() {
   };
 
   return (
-    <div className="flex flex-col gap-8" data-testid="history-page">
+    <div className="dash-page flex flex-col gap-8" data-testid="history-page">
       <PageHero title={t("hist.title")} subtitle={t("hist.subtitle2")} />
 
       {entries.length === 0 ? (

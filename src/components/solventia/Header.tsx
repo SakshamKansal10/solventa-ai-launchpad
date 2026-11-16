@@ -207,6 +207,25 @@ export function Header({ pendingNext }: HeaderProps = {}) {
           >
             {t("nav.about")}
           </Link>
+          {(
+            [
+              ["/how-it-works", "pub.nav.how"],
+              ["/faq", "pub.nav.faq"],
+            ] as const
+          ).map(([href, key]) => (
+            <a
+              key={href}
+              href={href}
+              className={cn(
+                "text-[14px] font-[550] uppercase tracking-[0.04em] transition-colors duration-300",
+                overDarkHero
+                  ? "text-white/80 hover:text-white"
+                  : "text-sol-ink/80 hover:text-sol-navy",
+              )}
+            >
+              {t(key)}
+            </a>
+          ))}
         </nav>
 
         <div className="flex items-center gap-3">

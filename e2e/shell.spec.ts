@@ -28,14 +28,37 @@ async function noHorizontalOverflow(page: Page) {
 }
 
 test.describe("dashboard shell — geometry", () => {
-  test("desktop: 244px sidebar, 72px top bar", async ({ page, context }) => {
+  test("desktop: no sidebar; a top bar with the four pages in a pill nav, History and Settings in the avatar menu", async ({
+    page,
+    context,
+  }) => {
     await page.setViewportSize({ width: 1440, height: 900 });
     await founderWithDirections(context);
     await gotoApp(page, "/dashboard");
-    const sidebar = await box(page, "sidebar");
-    const topbar = await box(page, "topbar");
-    expect(Math.round(sidebar.width)).toBe(244);
-    expect(Math.round(topbar.height)).toBe(72);
+    await expect(page.getByTestId("sidebar")).toHaveCount(0);
+    const nav = page.getByTestId("topnav");
+    await expect(nav).toBeVisible();
+    await expect(nav.locator("a, [role=link]")).toHaveText([
+      "Today",
+      "Directions",
+      "Roadmap",
+      "Proof",
+    ]);
+    await expect(nav.getByRole("link", { name: "Today" })).toHaveAttribute("aria-current", "page");
+    // Before a direction is chosen, Roadmap and Proof are visible but disabled.
+    await expect(page.getByTestId("nav-roadmap")).toHaveAttribute("aria-disabled", "true");
+    await expect(page.getByTestId("nav-proof")).toHaveAttribute("aria-disabled", "true");
+    await expect(page.getByTestId("bottomnav")).toBeHidden();
+    // History and Settings moved into the avatar menu, with Sign out.
+    await page.getByTestId("topbar-avatar").click();
+    await expect(page.getByTestId("nav-history")).toBeVisible();
+    await expect(page.getByTestId("nav-settings")).toBeVisible();
+    await expect(page.getByTestId("sign-out")).toBeVisible();
+    await page.getByTestId("nav-history").click();
+    await expect(page).toHaveURL(/\/dashboard\/history/);
+    // No floating Ask Sol button on desktop: Ask Sol is in the top bar.
+    await expect(page.getByTestId("ask-sol-fab")).toBeHidden();
+    await expect(page.getByTestId("ask-sol-launcher")).toBeVisible();
     await noHorizontalOverflow(page);
   });
 
@@ -82,18 +105,26 @@ test.describe("dashboard shell — geometry", () => {
     await expect(page.getByTestId("ask-sol-drawer")).toBeHidden();
   });
 
-  test("phone: navigation lives in a drawer and nothing overflows horizontally", async ({
+  test("phone: the four pages are a bottom bar, Ask Sol a round button above it, and nothing overflows", async ({
     page,
     context,
   }) => {
     await page.setViewportSize({ width: 390, height: 844 });
     await founderWithDirections(context);
     await gotoApp(page, "/dashboard");
-    await expect(page.getByTestId("sidebar")).toBeHidden();
+    await expect(page.getByTestId("topnav")).toBeHidden();
+    const bar = page.getByTestId("bottomnav");
+    await expect(bar).toBeVisible();
+    const barBox = await box(page, "bottomnav");
+    expect(Math.round(barBox.y + barBox.height)).toBe(844);
+    const fab = await box(page, "ask-sol-fab");
+    expect(fab.y + fab.height).toBeLessThanOrEqual(barBox.y);
+    await expect(page.getByTestId("ask-sol-launcher")).toBeHidden();
     await noHorizontalOverflow(page);
-    await page.getByRole("button", { name: /open navigation/i }).click();
-    await expect(page.getByRole("link", { name: "Opportunities" }).first()).toBeVisible();
-    await page.getByRole("link", { name: "Opportunities" }).first().click();
+    await page.getByTestId("ask-sol-fab").click();
+    await expect(page.getByTestId("ask-sol-drawer")).toBeVisible();
+    await page.keyboard.press("Escape");
+    await bar.getByRole("link", { name: "Directions" }).click();
     await expect(page).toHaveURL(/\/dashboard\/opportunities/);
     await noHorizontalOverflow(page);
     for (const route of ["/dashboard/history", "/dashboard/settings", "/dashboard/proof"]) {
@@ -152,9 +183,19 @@ test.describe("Ask Sol", () => {
     );
   });
 
-  test("the Ask Sol button on the roadmap rail opens the panel", async ({ page, context }) => {
+  test("on a mission page, Ask Sol and each Stuck? answer open the panel", async ({
+    page,
+    context,
+  }) => {
     await founderWithRoadmap(page, context);
-    await page.getByTestId("rail-ask-sol").click();
+    await page.getByTestId("mission-primary").click();
+    await expect(page.getByTestId("mission-page")).toBeVisible();
+    await page.getByTestId("ask-sol-launcher").click();
+    await expect(page.getByTestId("ask-sol-panel")).toBeVisible();
+    await page.getByTestId("ask-sol-close").click();
+    // "No time this week" moves the week instead (part 4, feature 3); "This doesn't feel right"
+    // opens Ask Sol with the mission as context.
+    await page.getByTestId("stuck-wrong").click();
     await expect(page.getByTestId("ask-sol-panel")).toBeVisible();
   });
 });

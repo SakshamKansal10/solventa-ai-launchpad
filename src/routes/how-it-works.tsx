@@ -26,7 +26,7 @@ export const Route = createFileRoute("/how-it-works")({
     const canonical = `${url.replace(/\/$/, "")}/how-it-works`;
     return {
       meta: [
-        { title: "How Solventia Works | Personalized Founder Intelligence" },
+        { title: "How it works — Solventia" },
         {
           name: "description",
           content:
@@ -85,6 +85,24 @@ function HowItWorksPage() {
               <ArrowRight className="size-4 text-sol-champagne" aria-hidden="true" />
             </PremiumButton>
           </div>
+        </section>
+        {/* The founder's Today screen (sample data), as it looks in the product. */}
+        <section className="mx-auto max-w-[1040px] px-4 pb-20 sm:px-8">
+          <h2 className="text-[clamp(24px,2.6vw,32px)] font-semibold text-sol-ink">
+            {t("pub.how.shotTitle")}
+          </h2>
+          <p className="mt-2 max-w-[40em] text-[17px] text-sol-secondary">
+            {t("pub.how.shotBody")}
+          </p>
+          <img
+            src="/screens/today-dashboard.jpg"
+            width={1728}
+            height={930}
+            loading="lazy"
+            decoding="async"
+            alt={t("pub.how.shotAlt")}
+            className="mt-6 h-auto w-full rounded-[22px] ring-1 ring-sol-ink/10"
+          />
         </section>
       </main>
       <Footer />

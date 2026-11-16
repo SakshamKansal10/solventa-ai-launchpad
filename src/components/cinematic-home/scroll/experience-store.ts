@@ -28,6 +28,12 @@ export interface ExperienceState {
   camera: { x: number; y: number; z: number; fov: number };
   /** False once the cinematic section has scrolled fully out of view. */
   stageActive: boolean;
+  /** The film section's bottom edge in viewport px — kept by the scroll controller (it knows the
+   * section's top and height), so the frame loop never measures the page. */
+  filmBottom: number;
+  /** Renders one world frame (R3F advance), set while the world is on screen and compiled —
+   * called from the story driver's tick so the page runs a single animation loop. */
+  renderWorld: ((now: number) => void) | null;
   /** Still at the very top — drives the scroll cue. */
   atStart: boolean;
   /** First frames are on screen — the loading veil can lift. */
@@ -38,7 +44,15 @@ export interface ExperienceState {
   compiled: boolean;
   /** The captions currently on screen and their presence (labels yield to them). */
   captionBoxes: { box: { l: number; t: number; r: number; b: number }; o: number }[];
-  perf: { fps: number; dpr: number; dprChanges: number };
+  perf: {
+    dpr: number;
+    /** The adaptive quality notch inside the tier (0 = the tier's budget). */
+    notch: number;
+    /** Share of the filament pool drawn at this notch. */
+    filamentShare: number;
+    /** Median frame time (ms) of each adaptive sample window. */
+    medians: number[];
+  };
   renderer: {
     calls: number;
     triangles: number;
@@ -84,12 +98,14 @@ export function createExperienceStore() {
     pointer: { x: 0, y: 0 },
     camera: { x: 0, y: 0, z: 0, fov: 0 },
     stageActive: true,
+    renderWorld: null,
+    filmBottom: Infinity,
     atStart: true,
     ready: false,
     environment: false,
     compiled: false,
     captionBoxes: [],
-    perf: { fps: 0, dpr: 1, dprChanges: 0 },
+    perf: { dpr: 1, notch: 0, filamentShare: 1, medians: [] },
     renderer: { calls: 0, triangles: 0, filaments: 0, nodes: 0, geometries: 0, textures: 0 },
     device: null,
     capability: null,

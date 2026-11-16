@@ -74,17 +74,33 @@ export function BrandWordmark({
   className = "",
   style,
   color = BRAND_INK,
+  split = false,
 }: {
   className?: string;
   style?: CSSProperties;
   color?: string;
+  /** One span per letter (the opening's reveal animates them); identical at rest. */
+  split?: boolean;
 }) {
   return (
     <span
-      className={`block font-wordmark font-medium uppercase leading-none tracking-[0.13em] [margin-right:-0.13em] ${className}`}
+      className={`block font-wordmark font-medium uppercase leading-none tracking-[0.13em] [margin-right:-0.13em] ${split ? "[clip-path:inset(-0.3em_-1em_0_-1em)]" : ""} ${className}`}
       style={{ color, ...style }}
+      aria-label={split ? "Solventia" : undefined}
     >
-      Solventia
+      {split
+        ? "Solventia".split("").map((c, i) => (
+            <span
+              key={i}
+              aria-hidden="true"
+              data-rv="ch"
+              className="inline-block"
+              style={{ ["--i" as string]: i }}
+            >
+              {c}
+            </span>
+          ))
+        : "Solventia"}
     </span>
   );
 }
@@ -95,23 +111,43 @@ export function BrandSignature({
   style,
   color = SIGNATURE_INK,
   separator = SEPARATOR,
+  split = false,
 }: {
   className?: string;
   style?: CSSProperties;
   color?: string;
   separator?: string;
+  /** One span per word and dot (the opening's reveal animates them); identical at rest. */
+  split?: boolean;
 }) {
   const dot = (
-    <span aria-hidden="true" className="mx-[0.75em]" style={{ color: separator }}>
+    <span
+      aria-hidden="true"
+      className="mx-[0.75em] inline-block"
+      style={{ color: separator }}
+      data-rv={split ? "dot" : undefined}
+    >
       •
     </span>
   );
+  const word = (w: string, i: number) =>
+    split ? (
+      <span data-rv="w" className="inline-block" style={{ ["--i" as string]: i }}>
+        {w}
+      </span>
+    ) : (
+      w
+    );
   return (
     <span
       className={`block whitespace-nowrap font-wordmark font-medium uppercase leading-none tracking-[0.3em] [margin-right:-0.3em] ${className}`}
       style={{ color, ...style }}
     >
-      Validate{dot}Build{dot}Elevate
+      {word("Validate", 0)}
+      {dot}
+      {word("Build", 1)}
+      {dot}
+      {word("Elevate", 2)}
     </span>
   );
 }
@@ -121,14 +157,19 @@ export function BrandSignature({
  * bars, sidebars, footer). `stack`: emblem above, wordmark, signature (brand moments).
  */
 const PRESETS = {
-  /** The site bar: SOLVENTIA 26px on desktop, 20px on phones (signature hidden below 640px). */
+  /** The site bar: SOLVENTIA 26px on desktop, 17–20px on phones, the signature always shown. */
   nav: {
     mark: 36,
-    word: "text-[18px] min-[380px]:text-[20px] sm:text-[26px]",
-    sig: "text-[10px] sm:text-[12px]",
+    word: "text-[16px] min-[420px]:text-[19px] sm:text-[26px]",
+    sig: "text-[6px] min-[420px]:text-[7.5px] sm:text-[12px]",
   },
   /** Product sidebars and compact bars. */
-  compact: { mark: 28, word: "text-[18px]", sig: "text-[9px]" },
+  compact: {
+    mark: 28,
+    // Phones: a step smaller so the bar keeps room for its controls (the signature stays).
+    word: "text-[15px] min-[400px]:text-[18px]",
+    sig: "text-[7.5px] min-[400px]:text-[9px]",
+  },
   footer: { mark: 36, word: "text-[22px]", sig: "text-[10px]" },
 } as const;
 
@@ -162,10 +203,7 @@ export function BrandLockup({
           <BrandWordmark className={p.word} color={wordColor} />
         </span>
         {signature && (
-          <span
-            data-brand-part="sig"
-            className={`block self-start ${preset === "nav" ? "max-sm:hidden" : ""}`}
-          >
+          <span data-brand-part="sig" className="block self-start">
             <BrandSignature className={p.sig} color={signatureColor} />
           </span>
         )}

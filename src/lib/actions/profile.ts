@@ -3,6 +3,11 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 
 import { requireUser } from "@/lib/supabase/server";
+import { runEngineV2, type EngineNotes, type EngineTrace } from "@/lib/engine/pipeline.server";
+import { getSchemaCapabilities } from "@/lib/schema-capabilities.server";
+import type { SupabaseClient } from "@supabase/supabase-js";
+import { env } from "@/lib/env.server";
+import { DIRECTION_NUMBER_KIND } from "@/lib/market/number-kind";
 import { normalizeProfile, type NormalizedProfile } from "@/lib/profile/normalize";
 import { assessFit, fitSortScore } from "@/lib/fit/model";
 import { MESSAGES } from "@/lib/i18n";
@@ -104,8 +109,19 @@ export const completeConsultation = createServerFn({ method: "POST" })
 
     const overallStart = Date.now();
     let pkg: Awaited<ReturnType<typeof generateIntelligencePackage>>;
+    // Idea engine v2 (part 5): the staged pipeline, behind IDEA_ENGINE=v2 until the owner
+    // switches it on after reading the comparison (docs/redesign/engine-compare.md).
+    let engineNotes: EngineNotes[] | null = null;
+    let engineTrace: EngineTrace | null = null;
     try {
-      pkg = await generateIntelligencePackage(normalized, ambition, data.locale ?? "en");
+      if (env.IDEA_ENGINE === "v2") {
+        const run = await runEngineV2(normalized, data.locale ?? "en");
+        pkg = run.pkg;
+        engineNotes = run.notes;
+        engineTrace = run.trace;
+      } else {
+        pkg = await generateIntelligencePackage(normalized, ambition, data.locale ?? "en");
+      }
     } catch (err) {
       // Dev-diagnostic detail only — the category never reaches the user,
       // who always sees the same calm "couldn't complete your analysis"
@@ -123,7 +139,7 @@ export const completeConsultation = createServerFn({ method: "POST" })
     // (no callback surfaces whether it fired) — a call that returns at all
     // counts as 1 request here for telemetry purposes (item 74); a retry
     // only ever costs latency, never a second row in this counter.
-    const initialAiCalls = 1;
+    const initialAiCalls = engineTrace?.calls ?? 1;
     console.info(
       `[intelligence-package] model=${MODEL} calls=${initialAiCalls} duration=${durationMs}ms user=${user.id}`,
     );
@@ -166,6 +182,35 @@ export const completeConsultation = createServerFn({ method: "POST" })
       };
     }
     if (dnaError || !dnaRow) throw new Error(dnaError?.message ?? "Failed to save Business DNA");
+
+    // Reproducible and comparable (part 5, step 5): how this result was produced, with the
+    // validated response. Best-effort: a database without migration 0020 just skips it.
+    try {
+      const caps = await getSchemaCapabilities(supabase);
+      if (caps.generationRecord) {
+        await (supabase as unknown as SupabaseClient)
+          .from("business_dna")
+          .update({
+            generation: {
+              engine: env.IDEA_ENGINE,
+              promptVersion: engineTrace?.promptVersion ?? "intelligence-package-v1",
+              model: MODEL,
+              settings: {
+                thinkingLevel: env.INITIAL_AI_THINKING_LEVEL ?? "model default",
+                temperature: "model default",
+                maxOutputTokens: "model default",
+              },
+              calls: initialAiCalls,
+              durationMs,
+              trace: engineTrace,
+              response: pkg,
+            },
+          })
+          .eq("id", dnaRow.id);
+      }
+    } catch (err) {
+      console.error("[profile] generation record not stored (non-fatal):", err);
+    }
 
     // Best-effort only — a separate update, not part of the insert above,
     // specifically so a founder on a database that hasn't had migration
@@ -230,7 +275,12 @@ export const completeConsultation = createServerFn({ method: "POST" })
             who_for: opp.customer,
             fit_score: score.score ?? 0,
             score_breakdown: score as unknown as Json,
-            candidate: opp as unknown as Json,
+            // A direction's numbers are estimates by construction (part 4, feature 6).
+            candidate: {
+              ...opp,
+              numberKind: DIRECTION_NUMBER_KIND,
+              ...(engineNotes?.[originalIndex] ? { engine: engineNotes[originalIndex] } : {}),
+            } as unknown as Json,
             status: "active",
             batch_number: 1,
             ai_model: MODEL,

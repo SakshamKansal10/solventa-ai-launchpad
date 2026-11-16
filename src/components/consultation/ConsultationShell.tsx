@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { ArrowLeft, ArrowRight, UserRound, X } from "lucide-react";
 
-import { BrandLockup, BrandMark } from "@/components/brand/Brand";
+import { BrandLockup } from "@/components/brand/Brand";
 import { LanguageSwitcher } from "@/components/solventia/LanguageSwitcher";
 import {
   AlertDialog,
@@ -35,7 +35,10 @@ function StageProgress({ stage }: { stage: number }) {
   const { t } = useLocale();
   return (
     <div className="flex min-w-0 flex-1 flex-col gap-1.5 sm:max-w-md">
-      <p className="text-[0.9375rem] font-semibold text-sol-ink" data-testid="stage-label">
+      <p
+        className="whitespace-nowrap text-[0.9375rem] font-semibold text-sol-ink"
+        data-testid="stage-label"
+      >
         {t("consult.stageOf", { n: stage, total: STAGE_COUNT })}
         <span className="ml-2 hidden font-medium text-sol-secondary sm:inline">
           · {t(`consult.stage.${STAGE_IDS[stage - 1]}` as const)}
@@ -92,21 +95,19 @@ export function ConsultationShell({
         {t("common.skipToContent")}
       </a>
 
-      <header className="sticky top-0 z-30 flex h-[72px] items-center gap-4 border-b border-sol-border bg-sol-pearl/95 px-4 backdrop-blur sm:px-8">
+      <header className="sticky top-0 z-30 flex h-[72px] items-center gap-2 border-b border-sol-border bg-sol-pearl/95 px-3 backdrop-blur sm:gap-4 sm:px-8">
         <Link to="/" className="flex shrink-0 items-center" aria-label={t("nav.homeAria")}>
-          {/* Phones: the emblem alone (the questions need the width); wider: the lockup. */}
-          <BrandMark height={30} className="md:hidden" />
-          <span className="max-md:hidden">
-            <BrandLockup preset="compact" signature={false} />
-          </span>
+          <BrandLockup preset="compact" />
         </Link>
 
-        <div className="flex min-w-0 flex-1 items-center justify-center">
+        {/* Below 380px the bar has no room for it: the screen itself names the stage. */}
+        <div className="flex min-w-0 flex-1 items-center justify-center max-[379px]:hidden">
           <StageProgress stage={stage} />
         </div>
 
-        <div className="flex shrink-0 items-center gap-1 sm:gap-2">
-          <LanguageSwitcher />
+        <div className="ml-auto flex shrink-0 items-center gap-1 sm:gap-2">
+          {/* Icon-only on phones: the lockup keeps its signature, so the bar has no spare width. */}
+          <LanguageSwitcher compact />
           <Sheet open={profileOpen} onOpenChange={setProfileOpen}>
             <SheetTrigger asChild>
               <button

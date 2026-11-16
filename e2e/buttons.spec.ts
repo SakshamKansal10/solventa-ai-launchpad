@@ -54,11 +54,15 @@ test.describe("founder buttons", () => {
     await page.getByTestId("build-roadmap").click();
     await expect(page.getByTestId("roadmap-page")).toBeVisible({ timeout: 60_000 });
 
-    const first = page.getByTestId("mission-card").first();
-    await first.getByTestId("mission-primary").click();
-    await expect(first).toHaveAttribute("data-state", "in_progress");
-    await first.getByTestId("mission-complete").click();
-    await expect(first).toHaveAttribute("data-state", "completed");
+    // Start opens the mission's own page (part 3), where it is marked done.
+    await page.getByTestId("mission-card").first().getByTestId("mission-primary").click();
+    await expect(page.getByTestId("mission-page")).toBeVisible();
+    await page.getByTestId("mission-complete").click();
+    await gotoApp(page, "/dashboard/roadmap");
+    await expect(page.getByTestId("mission-card").first()).toHaveAttribute(
+      "data-state",
+      "completed",
+    );
 
     await completeAllMissions(page);
     await page.getByTestId("review-week").click();
@@ -67,7 +71,7 @@ test.describe("founder buttons", () => {
     await expect(page.getByTestId("adaptation-note")).toBeVisible({ timeout: 60_000 });
   });
 
-  test("dashboard controls navigate: Today's Move, a phase on the journey, and the evidence tile", async ({
+  test("dashboard controls navigate: today's mission, the journey's Open roadmap, and Open proof", async ({
     page,
     context,
   }) => {
@@ -83,7 +87,7 @@ test.describe("founder buttons", () => {
     await expect(page.getByTestId("proof-page")).toBeVisible();
 
     await gotoApp(page, "/dashboard");
-    await page.getByTestId("journey-ribbon").getByRole("button").first().click();
-    await expect(page).toHaveURL(/\/dashboard\/roadmap\?.*phase=/);
+    await page.getByTestId("journey-block").getByRole("link", { name: "Open roadmap" }).click();
+    await expect(page).toHaveURL(/\/dashboard\/roadmap/);
   });
 });

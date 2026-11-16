@@ -15,9 +15,9 @@ const en = {
   "about.faq2.q": "How does the AI actually find directions for me?",
   "about.faq2.a":
     "You share your background, skills, money, time and interests through a guided consultation. Solventia analyzes that full profile — not just a few keywords — to surface directions suited to you specifically.",
-  "about.faq3.q": "What does “validated” mean?",
+  "about.faq3.q": "What does “tested” mean?",
   "about.faq3.a":
-    "Solventia reasons through each direction against your own constraints — skills, money, time and appetite for risk — and shows you why it fits before you commit anything. That is a structured match, not a guarantee of market success. Real validation comes from the evidence you collect yourself, which you record in Proof.",
+    "Solventia reasons through each direction against your own constraints — skills, money, time and appetite for risk — and shows you why it fits before you commit anything. That is a structured match, not a guarantee of market success. Real testing comes from the proof you collect yourself, which you record in Proof.",
   "about.faq4.q": "Can NGOs or mentors get involved?",
   "about.faq4.before": "Yes — see ",
   "about.faq4.link": "Solventia for Organizations",
@@ -30,9 +30,9 @@ const en = {
   "mv.title": "Mission & Vision",
   "mv.mission.eyebrow": "Our mission",
   "mv.mission.statement":
-    "Give every ambitious person the intelligence, evidence and support once reserved for founders with the right connections.",
+    "Give every ambitious person the intelligence, proof and support once reserved for founders with the right connections.",
   "mv.mission.body":
-    "A good idea should only need to be good — not well-connected. Solventia pairs each founder with structured discovery, a way to collect real evidence, and a step-by-step roadmap, so ambition is never the limiting factor.",
+    "A good idea should only need to be good — not well-connected. Solventia pairs each founder with structured discovery, a way to collect real proof, and a step-by-step roadmap, so ambition is never the limiting factor.",
   "mv.vision.eyebrow": "Our vision",
   "mv.vision.statement":
     "A world where opportunity is distributed by ambition, not geography or background.",
@@ -80,7 +80,7 @@ const en = {
   "hiwPage.step3.body": "Pick the direction that actually fits where you are.",
   "hiwPage.step4.title": "Prove what matters",
   "hiwPage.step4.body":
-    "Turn the riskiest assumptions into evidence before you commit time or money.",
+    "Turn the riskiest things to check into proof before you commit time or money.",
   "hiwPage.step5.title": "Build an adaptive roadmap",
   "hiwPage.step5.body": "A staged plan that adjusts as you learn, not a fixed script.",
   "hiwPage.step6.title": "Execute week by week",
@@ -120,7 +120,7 @@ const hi: Record<keyof typeof en, string> = {
     "आप एक निर्देशित कंसल्टेशन में अपनी पृष्ठभूमि, कौशल, पैसा, समय और रुचियां साझा करते हैं। Solventia उस पूरी प्रोफ़ाइल का विश्लेषण करता है — सिर्फ़ कुछ कीवर्ड का नहीं — ताकि खास आपके लिए ठीक बैठने वाली दिशाएं सामने आएं।",
   "about.faq3.q": "“परखा हुआ” का क्या मतलब है?",
   "about.faq3.a":
-    "Solventia हर दिशा को आपकी अपनी सीमाओं — कौशल, पैसा, समय और जोखिम उठाने की क्षमता — के सामने रखकर परखता है, और कुछ भी लगाने से पहले बताता है कि वह क्यों ठीक बैठती है। यह एक सुव्यवस्थित मिलान है, बाज़ार में सफलता की गारंटी नहीं। असली परख उन साक्ष्यों से आती है जो आप खुद जुटाते हैं और प्रमाण में दर्ज करते हैं।",
+    "Solventia हर दिशा को आपकी अपनी सीमाओं — कौशल, पैसा, समय और जोखिम उठाने की क्षमता — के सामने रखकर परखता है, और कुछ भी लगाने से पहले बताता है कि वह क्यों ठीक बैठती है। यह एक सुव्यवस्थित मिलान है, बाज़ार में सफलता की गारंटी नहीं। असली परख उन सबूतों से आती है जो आप खुद जुटाते हैं और सबूत में दर्ज करते हैं।",
   "about.faq4.q": "क्या NGO या मेंटर जुड़ सकते हैं?",
   "about.faq4.before": "हां — देखें ",
   "about.faq4.link": "संस्थानों के लिए Solventia",
@@ -133,9 +133,9 @@ const hi: Record<keyof typeof en, string> = {
   "mv.title": "मिशन और विज़न",
   "mv.mission.eyebrow": "हमारा मिशन",
   "mv.mission.statement":
-    "हर महत्वाकांक्षी व्यक्ति को वह समझ, साक्ष्य और सहारा देना जो कभी सिर्फ़ सही जान-पहचान वाले फाउंडरों को मिलता था।",
+    "हर महत्वाकांक्षी व्यक्ति को वह समझ, सबूत और सहारा देना जो कभी सिर्फ़ सही जान-पहचान वाले फाउंडरों को मिलता था।",
   "mv.mission.body":
-    "अच्छे आइडिया को सिर्फ़ अच्छा होना चाहिए — जुड़ा हुआ नहीं। Solventia हर फाउंडर को सुव्यवस्थित खोज, असली साक्ष्य जुटाने का तरीका और कदम-दर-कदम रोडमैप देता है, ताकि महत्वाकांक्षा कभी रुकावट न बने।",
+    "अच्छे आइडिया को सिर्फ़ अच्छा होना चाहिए — जुड़ा हुआ नहीं। Solventia हर फाउंडर को सुव्यवस्थित खोज, असली सबूत जुटाने का तरीका और कदम-दर-कदम रोडमैप देता है, ताकि महत्वाकांक्षा कभी रुकावट न बने।",
   "mv.vision.eyebrow": "हमारा विज़न",
   "mv.vision.statement":
     "ऐसी दुनिया जहां अवसर महत्वाकांक्षा के आधार पर बंटे, भूगोल या पृष्ठभूमि के आधार पर नहीं।",
@@ -180,7 +180,7 @@ const hi: Record<keyof typeof en, string> = {
   "hiwPage.step3.title": "एक दिशा चुनें",
   "hiwPage.step3.body": "वह दिशा चुनें जो आप जहां हैं वहां सच में ठीक बैठती है।",
   "hiwPage.step4.title": "जो मायने रखता है उसे परखें",
-  "hiwPage.step4.body": "समय या पैसा लगाने से पहले सबसे जोखिम भरी धारणाओं को साक्ष्य में बदलें।",
+  "hiwPage.step4.body": "समय या पैसा लगाने से पहले सबसे जोखिम भरी जाँचने वाली बातों को सबूत में बदलें।",
   "hiwPage.step5.title": "अनुकूली रोडमैप बनाएं",
   "hiwPage.step5.body": "चरणों वाली ऐसी योजना जो आपकी सीख के साथ बदलती है, तय स्क्रिप्ट नहीं।",
   "hiwPage.step6.title": "सप्ताह-दर-सप्ताह अमल करें",

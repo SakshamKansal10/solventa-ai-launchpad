@@ -3,8 +3,9 @@ import type { QualityTier } from "../device/capabilities";
 /**
  * Per-tier rendering budgets. Scene code reads these values; it never checks
  * the tier itself, so a new cost is added once here and every tier already
- * knows whether it may pay for it. LOW keeps every scene and the composition —
- * it only spends less on resolution, counts and material complexity.
+ * knows whether it may pay for it. LITE keeps every scene, the camera path and
+ * the composition — it only spends less on resolution, antialiasing, instance
+ * counts and material complexity.
  */
 export interface QualityPreset {
   /** Device-pixel-ratio range: [floor the governor may drop to, ceiling]. */
@@ -19,101 +20,88 @@ export interface QualityPreset {
   coreSegments: number;
   /** Gates along the execution path. */
   pathGates: number;
+  /** Bevel subdivisions of the path's rounded parts (bars, locks, modules, nodes): 2 = 300
+   * triangles a part, 1 = 108. Their 0.03 bevel reads the same at either. */
+  gateBevel: number;
   /** Clear-coat / sheen ceramics (MeshPhysicalMaterial) instead of standard. */
   physicalMaterials: boolean;
-  /** Sustained frame rate below which the governor lowers resolution. */
-  minFps: number;
+  /** The prefiltered studio environment (PMREM) for reflections. Lite goes without: building it
+   * cost ~1.4 s of cold shader compiling before the world could be ready (owner step 3, 2026-11-16). */
+  studioEnvironment: boolean;
 }
 
 export const QUALITY_PRESETS: Record<QualityTier, QualityPreset> = {
-  high: {
-    dpr: [1, 2],
+  full: {
+    dpr: [1, 1.5],
     antialias: true,
     universeCount: 140,
     filamentCapacity: 900,
     filamentSegments: 24,
     coreSegments: 72,
     pathGates: 34,
+    gateBevel: 2,
     physicalMaterials: true,
-    minFps: 50,
+    studioEnvironment: true,
   },
-  medium: {
-    dpr: [1, 1.5],
-    antialias: true,
-    universeCount: 124,
-    filamentCapacity: 700,
-    filamentSegments: 20,
-    coreSegments: 56,
-    pathGates: 30,
-    physicalMaterials: true,
-    minFps: 45,
-  },
-  low: {
-    dpr: [0.75, 1.25],
+  lite: {
+    // Never above 1: on a 1440×900 laptop panel this is 1.3 MP instead of up to 2.9 MP.
+    dpr: [0.65, 1],
+    // No MSAA: the multisampled resolve is the single largest fill cost on integrated GPUs.
     antialias: false,
-    universeCount: 96,
-    filamentCapacity: 460,
-    filamentSegments: 14,
-    coreSegments: 36,
+    universeCount: 84,
+    filamentCapacity: 420,
+    filamentSegments: 12,
+    coreSegments: 32,
     pathGates: 24,
+    gateBevel: 1,
+    // Standard (one-lobe) materials everywhere, glass and smoked included.
     physicalMaterials: false,
-    minFps: 40,
+    studioEnvironment: false,
   },
 };
 
-export const DPR_STEP = 0.25;
+/**
+ * Quality inside a tier, adapted once at start-up. A notch only lowers the pixel ratio and how
+ * many filaments are drawn: nothing is unmounted, no shader is recompiled, the DOM and the scroll
+ * position never change — it is not a mode swap.
+ */
+export const QUALITY_NOTCHES = [
+  { dprScale: 1, filamentShare: 1 },
+  { dprScale: 0.8, filamentShare: 0.75 },
+  { dprScale: 0.65, filamentShare: 0.55 },
+] as const;
 
-/** How the governor reacts to one-second fps windows. */
-export const GOVERNOR = {
-  /** Consecutive slow windows before resolution drops one step. */
-  slowWindows: 2,
-  /** Consecutive comfortable windows before resolution recovers one step. */
-  fastWindows: 5,
-  /** "Comfortable" = this many fps above the tier's minimum. */
-  fastMargin: 8,
-  /** Recoveries allowed per visit — stops a borderline device oscillating. */
-  maxRecoveries: 2,
+export const ADAPT = {
+  /** Frame time is sampled, while the story moves, in windows of this much rendered time… */
+  windowMs: 2000,
+  /** …and a window whose median frame is slower than this steps down one notch (never up). */
+  slowMedianMs: 20,
+  /** Frames longer than this are stalls (tab switch, GC, debugger), not a signal. */
+  stallMs: 250,
+  /** Progress per second below which the story counts as at rest (a step is applied then)… */
+  calmVelocity: 0.002,
+  /** …or after this long, if the visitor never pauses. */
+  calmWaitMs: 3000,
 } as const;
 
-export interface GovernorState {
-  dpr: number;
-  slow: number;
-  fast: number;
-  recoveries: number;
+export function median(xs: readonly number[]): number {
+  if (xs.length === 0) return 0;
+  const s = [...xs].sort((a, b) => a - b);
+  const m = s.length >> 1;
+  return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2;
 }
 
-const round2 = (v: number) => Math.round(v * 100) / 100;
+/** The notch after one measured window. Pure. */
+export function nextNotch(notch: number, windowFrames: readonly number[]): number {
+  return median(windowFrames) > ADAPT.slowMedianMs
+    ? Math.min(QUALITY_NOTCHES.length - 1, notch + 1)
+    : notch;
+}
 
-/** The resolution to use after one more measured second of `fps`. Pure. */
-export function governDpr(
-  state: GovernorState,
-  fps: number,
-  preset: QualityPreset,
-  ceiling: number,
-): GovernorState {
-  const floor = Math.min(preset.dpr[0], ceiling);
-  if (fps < preset.minFps) {
-    const slow = state.slow + 1;
-    if (slow >= GOVERNOR.slowWindows && state.dpr > floor) {
-      return { ...state, dpr: Math.max(floor, round2(state.dpr - DPR_STEP)), slow: 0, fast: 0 };
-    }
-    return { ...state, slow, fast: 0 };
-  }
-  if (fps >= preset.minFps + GOVERNOR.fastMargin) {
-    const fast = state.fast + 1;
-    if (
-      fast >= GOVERNOR.fastWindows &&
-      state.dpr < ceiling &&
-      state.recoveries < GOVERNOR.maxRecoveries
-    ) {
-      return {
-        dpr: Math.min(ceiling, round2(state.dpr + DPR_STEP)),
-        slow: 0,
-        fast: 0,
-        recoveries: state.recoveries + 1,
-      };
-    }
-    return { ...state, fast, slow: 0 };
-  }
-  return { ...state, slow: 0, fast: 0 };
+/** The pixel ratio for a notch: the tier's ceiling (never above the screen's), scaled, never
+ * below the tier's floor. */
+export function notchDpr(preset: QualityPreset, deviceDpr: number, notch: number): number {
+  const ceiling = Math.min(preset.dpr[1], deviceDpr || 1);
+  const scaled = ceiling * QUALITY_NOTCHES[notch].dprScale;
+  return Math.round(Math.max(Math.min(preset.dpr[0], ceiling), scaled) * 100) / 100;
 }

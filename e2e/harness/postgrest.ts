@@ -360,6 +360,37 @@ export async function handleRest(
   }
 }
 
+/**
+ * POST /rest/v1/rpc/<fn>: calls a public function with named arguments from the JSON body, as
+ * the caller (same claims and RLS as a table request), and returns its value as PostgREST does.
+ */
+export async function handleRpc(
+  db: TestDb,
+  fn: string,
+  body: unknown,
+  claims: Claims,
+): Promise<RestResponse> {
+  const json = { "content-type": "application/json" };
+  try {
+    return await db.as(claims, async (tx) => {
+      const args = body && typeof body === "object" ? Object.entries(body as object) : [];
+      const named = args.map(([k], i) => `${q(k)} => ${i + 1}`).join(", ");
+      const res = await tx.query<{ r: unknown }>(
+        `select public.${q(fn)}(${named}) as r`,
+        args.map(([, v]) => v as never),
+      );
+      return { status: 200, headers: json, body: JSON.stringify(res.rows[0]?.r ?? null) };
+    });
+  } catch (err) {
+    const e = mapPgError(err);
+    return {
+      status: e.status,
+      headers: json,
+      body: JSON.stringify({ code: e.code, details: e.details, hint: e.hint, message: e.message }),
+    };
+  }
+}
+
 async function run(tx: PGliteTx, req: RestRequest): Promise<RestResponse> {
   const table = q(req.table);
   const prefer = preferences(req.headers["prefer"]);

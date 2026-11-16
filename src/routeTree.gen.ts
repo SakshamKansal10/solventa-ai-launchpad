@@ -15,9 +15,12 @@ import { Route as CinematicRouteImport } from './routes/cinematic'
 import { Route as ConsultationRouteImport } from './routes/consultation'
 import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as DataDeletionRouteImport } from './routes/data-deletion'
+import { Route as FaqRouteImport } from './routes/faq'
 import { Route as FindMyBusinessIdeaRouteImport } from './routes/find-my-business-idea'
+import { Route as ForFoundersRouteImport } from './routes/for-founders'
 import { Route as ForOrganizationsRouteImport } from './routes/for-organizations'
 import { Route as HowItWorksRouteImport } from './routes/how-it-works'
+import { Route as IdeasRouteImport } from './routes/ideas'
 import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as ReviewRouteImport } from './routes/review'
 import { Route as ReviewPublicRouteImport } from './routes/review-public'
@@ -25,13 +28,19 @@ import { Route as SignInRouteImport } from './routes/sign-in'
 import { Route as TermsRouteImport } from './routes/terms'
 import { Route as AuthCallbackRouteImport } from './routes/auth/callback'
 import { Route as DashboardIndexRouteImport } from './routes/dashboard/index'
+import { Route as DashboardAdminRouteImport } from './routes/dashboard/admin'
 import { Route as DashboardHistoryRouteImport } from './routes/dashboard/history'
 import { Route as DashboardProofRouteImport } from './routes/dashboard/proof'
 import { Route as DashboardSettingsRouteImport } from './routes/dashboard/settings'
+import { Route as ApiCronWeeklyRemindersRouteImport } from './routes/api/cron/weekly-reminders'
 import { Route as DashboardOpportunitiesIndexRouteImport } from './routes/dashboard/opportunities/index'
-import { Route as DashboardOpportunitiesIdRouteImport } from './routes/dashboard/opportunities/$id'
 import { Route as DashboardRoadmapIndexRouteImport } from './routes/dashboard/roadmap/index'
+import { Route as DashboardRoadmapOfficialRouteImport } from './routes/dashboard/roadmap/official'
 import { Route as DashboardRoadmapBuildingRouteImport } from './routes/dashboard_/roadmap/building'
+import { Route as DashboardOpportunitiesIdIndexRouteImport } from './routes/dashboard/opportunities/$id/index'
+import { Route as DashboardOpportunitiesIdFitRouteImport } from './routes/dashboard/opportunities/$id/fit'
+import { Route as DashboardOpportunitiesIdMarketRouteImport } from './routes/dashboard/opportunities/$id/market'
+import { Route as DashboardRoadmapMissionMissionIdRouteImport } from './routes/dashboard_/roadmap/mission.$missionId'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -63,9 +72,19 @@ const DataDeletionRoute = DataDeletionRouteImport.update({
   path: '/data-deletion',
   getParentRoute: () => rootRouteImport,
 } as any)
+const FaqRoute = FaqRouteImport.update({
+  id: '/faq',
+  path: '/faq',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const FindMyBusinessIdeaRoute = FindMyBusinessIdeaRouteImport.update({
   id: '/find-my-business-idea',
   path: '/find-my-business-idea',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ForFoundersRoute = ForFoundersRouteImport.update({
+  id: '/for-founders',
+  path: '/for-founders',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ForOrganizationsRoute = ForOrganizationsRouteImport.update({
@@ -76,6 +95,11 @@ const ForOrganizationsRoute = ForOrganizationsRouteImport.update({
 const HowItWorksRoute = HowItWorksRouteImport.update({
   id: '/how-it-works',
   path: '/how-it-works',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const IdeasRoute = IdeasRouteImport.update({
+  id: '/ideas',
+  path: '/ideas',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PrivacyRoute = PrivacyRouteImport.update({
@@ -113,6 +137,11 @@ const DashboardIndexRoute = DashboardIndexRouteImport.update({
   path: '/',
   getParentRoute: () => DashboardRoute,
 } as any)
+const DashboardAdminRoute = DashboardAdminRouteImport.update({
+  id: '/admin',
+  path: '/admin',
+  getParentRoute: () => DashboardRoute,
+} as any)
 const DashboardHistoryRoute = DashboardHistoryRouteImport.update({
   id: '/history',
   path: '/history',
@@ -128,16 +157,15 @@ const DashboardSettingsRoute = DashboardSettingsRouteImport.update({
   path: '/settings',
   getParentRoute: () => DashboardRoute,
 } as any)
+const ApiCronWeeklyRemindersRoute = ApiCronWeeklyRemindersRouteImport.update({
+  id: '/api/cron/weekly-reminders',
+  path: '/api/cron/weekly-reminders',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const DashboardOpportunitiesIndexRoute =
   DashboardOpportunitiesIndexRouteImport.update({
     id: '/opportunities/',
     path: '/opportunities/',
-    getParentRoute: () => DashboardRoute,
-  } as any)
-const DashboardOpportunitiesIdRoute =
-  DashboardOpportunitiesIdRouteImport.update({
-    id: '/opportunities/$id',
-    path: '/opportunities/$id',
     getParentRoute: () => DashboardRoute,
   } as any)
 const DashboardRoadmapIndexRoute = DashboardRoadmapIndexRouteImport.update({
@@ -145,10 +173,40 @@ const DashboardRoadmapIndexRoute = DashboardRoadmapIndexRouteImport.update({
   path: '/roadmap/',
   getParentRoute: () => DashboardRoute,
 } as any)
+const DashboardRoadmapOfficialRoute =
+  DashboardRoadmapOfficialRouteImport.update({
+    id: '/roadmap/official',
+    path: '/roadmap/official',
+    getParentRoute: () => DashboardRoute,
+  } as any)
 const DashboardRoadmapBuildingRoute =
   DashboardRoadmapBuildingRouteImport.update({
     id: '/dashboard_/roadmap/building',
     path: '/dashboard/roadmap/building',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const DashboardOpportunitiesIdIndexRoute =
+  DashboardOpportunitiesIdIndexRouteImport.update({
+    id: '/opportunities/$id/',
+    path: '/opportunities/$id/',
+    getParentRoute: () => DashboardRoute,
+  } as any)
+const DashboardOpportunitiesIdFitRoute =
+  DashboardOpportunitiesIdFitRouteImport.update({
+    id: '/opportunities/$id/fit',
+    path: '/opportunities/$id/fit',
+    getParentRoute: () => DashboardRoute,
+  } as any)
+const DashboardOpportunitiesIdMarketRoute =
+  DashboardOpportunitiesIdMarketRouteImport.update({
+    id: '/opportunities/$id/market',
+    path: '/opportunities/$id/market',
+    getParentRoute: () => DashboardRoute,
+  } as any)
+const DashboardRoadmapMissionMissionIdRoute =
+  DashboardRoadmapMissionMissionIdRouteImport.update({
+    id: '/dashboard_/roadmap/mission/$missionId',
+    path: '/dashboard/roadmap/mission/$missionId',
     getParentRoute: () => rootRouteImport,
   } as any)
 
@@ -159,23 +217,32 @@ export interface FileRoutesByFullPath {
   '/consultation': typeof ConsultationRoute
   '/dashboard': typeof DashboardRouteWithChildren
   '/data-deletion': typeof DataDeletionRoute
+  '/faq': typeof FaqRoute
   '/find-my-business-idea': typeof FindMyBusinessIdeaRoute
+  '/for-founders': typeof ForFoundersRoute
   '/for-organizations': typeof ForOrganizationsRoute
   '/how-it-works': typeof HowItWorksRoute
+  '/ideas': typeof IdeasRoute
   '/privacy': typeof PrivacyRoute
   '/review': typeof ReviewRoute
   '/review-public': typeof ReviewPublicRoute
   '/sign-in': typeof SignInRoute
   '/terms': typeof TermsRoute
   '/auth/callback': typeof AuthCallbackRoute
+  '/dashboard/admin': typeof DashboardAdminRoute
   '/dashboard/history': typeof DashboardHistoryRoute
   '/dashboard/proof': typeof DashboardProofRoute
   '/dashboard/settings': typeof DashboardSettingsRoute
   '/dashboard/': typeof DashboardIndexRoute
-  '/dashboard/opportunities/$id': typeof DashboardOpportunitiesIdRoute
+  '/api/cron/weekly-reminders': typeof ApiCronWeeklyRemindersRoute
+  '/dashboard/roadmap/official': typeof DashboardRoadmapOfficialRoute
   '/dashboard/roadmap/building': typeof DashboardRoadmapBuildingRoute
   '/dashboard/opportunities/': typeof DashboardOpportunitiesIndexRoute
   '/dashboard/roadmap/': typeof DashboardRoadmapIndexRoute
+  '/dashboard/opportunities/$id/fit': typeof DashboardOpportunitiesIdFitRoute
+  '/dashboard/opportunities/$id/market': typeof DashboardOpportunitiesIdMarketRoute
+  '/dashboard/roadmap/mission/$missionId': typeof DashboardRoadmapMissionMissionIdRoute
+  '/dashboard/opportunities/$id/': typeof DashboardOpportunitiesIdIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -183,23 +250,32 @@ export interface FileRoutesByTo {
   '/cinematic': typeof CinematicRoute
   '/consultation': typeof ConsultationRoute
   '/data-deletion': typeof DataDeletionRoute
+  '/faq': typeof FaqRoute
   '/find-my-business-idea': typeof FindMyBusinessIdeaRoute
+  '/for-founders': typeof ForFoundersRoute
   '/for-organizations': typeof ForOrganizationsRoute
   '/how-it-works': typeof HowItWorksRoute
+  '/ideas': typeof IdeasRoute
   '/privacy': typeof PrivacyRoute
   '/review': typeof ReviewRoute
   '/review-public': typeof ReviewPublicRoute
   '/sign-in': typeof SignInRoute
   '/terms': typeof TermsRoute
   '/auth/callback': typeof AuthCallbackRoute
+  '/dashboard/admin': typeof DashboardAdminRoute
   '/dashboard/history': typeof DashboardHistoryRoute
   '/dashboard/proof': typeof DashboardProofRoute
   '/dashboard/settings': typeof DashboardSettingsRoute
   '/dashboard': typeof DashboardIndexRoute
-  '/dashboard/opportunities/$id': typeof DashboardOpportunitiesIdRoute
+  '/api/cron/weekly-reminders': typeof ApiCronWeeklyRemindersRoute
+  '/dashboard/roadmap/official': typeof DashboardRoadmapOfficialRoute
   '/dashboard/roadmap/building': typeof DashboardRoadmapBuildingRoute
   '/dashboard/opportunities': typeof DashboardOpportunitiesIndexRoute
   '/dashboard/roadmap': typeof DashboardRoadmapIndexRoute
+  '/dashboard/opportunities/$id/fit': typeof DashboardOpportunitiesIdFitRoute
+  '/dashboard/opportunities/$id/market': typeof DashboardOpportunitiesIdMarketRoute
+  '/dashboard/roadmap/mission/$missionId': typeof DashboardRoadmapMissionMissionIdRoute
+  '/dashboard/opportunities/$id': typeof DashboardOpportunitiesIdIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -209,23 +285,32 @@ export interface FileRoutesById {
   '/consultation': typeof ConsultationRoute
   '/dashboard': typeof DashboardRouteWithChildren
   '/data-deletion': typeof DataDeletionRoute
+  '/faq': typeof FaqRoute
   '/find-my-business-idea': typeof FindMyBusinessIdeaRoute
+  '/for-founders': typeof ForFoundersRoute
   '/for-organizations': typeof ForOrganizationsRoute
   '/how-it-works': typeof HowItWorksRoute
+  '/ideas': typeof IdeasRoute
   '/privacy': typeof PrivacyRoute
   '/review': typeof ReviewRoute
   '/review-public': typeof ReviewPublicRoute
   '/sign-in': typeof SignInRoute
   '/terms': typeof TermsRoute
   '/auth/callback': typeof AuthCallbackRoute
+  '/dashboard/admin': typeof DashboardAdminRoute
   '/dashboard/history': typeof DashboardHistoryRoute
   '/dashboard/proof': typeof DashboardProofRoute
   '/dashboard/settings': typeof DashboardSettingsRoute
   '/dashboard/': typeof DashboardIndexRoute
-  '/dashboard/opportunities/$id': typeof DashboardOpportunitiesIdRoute
+  '/api/cron/weekly-reminders': typeof ApiCronWeeklyRemindersRoute
+  '/dashboard/roadmap/official': typeof DashboardRoadmapOfficialRoute
   '/dashboard_/roadmap/building': typeof DashboardRoadmapBuildingRoute
   '/dashboard/opportunities/': typeof DashboardOpportunitiesIndexRoute
   '/dashboard/roadmap/': typeof DashboardRoadmapIndexRoute
+  '/dashboard/opportunities/$id/fit': typeof DashboardOpportunitiesIdFitRoute
+  '/dashboard/opportunities/$id/market': typeof DashboardOpportunitiesIdMarketRoute
+  '/dashboard_/roadmap/mission/$missionId': typeof DashboardRoadmapMissionMissionIdRoute
+  '/dashboard/opportunities/$id/': typeof DashboardOpportunitiesIdIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -236,23 +321,32 @@ export interface FileRouteTypes {
     | '/consultation'
     | '/dashboard'
     | '/data-deletion'
+    | '/faq'
     | '/find-my-business-idea'
+    | '/for-founders'
     | '/for-organizations'
     | '/how-it-works'
+    | '/ideas'
     | '/privacy'
     | '/review'
     | '/review-public'
     | '/sign-in'
     | '/terms'
     | '/auth/callback'
+    | '/dashboard/admin'
     | '/dashboard/history'
     | '/dashboard/proof'
     | '/dashboard/settings'
     | '/dashboard/'
-    | '/dashboard/opportunities/$id'
+    | '/api/cron/weekly-reminders'
+    | '/dashboard/roadmap/official'
     | '/dashboard/roadmap/building'
     | '/dashboard/opportunities/'
     | '/dashboard/roadmap/'
+    | '/dashboard/opportunities/$id/fit'
+    | '/dashboard/opportunities/$id/market'
+    | '/dashboard/roadmap/mission/$missionId'
+    | '/dashboard/opportunities/$id/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -260,23 +354,32 @@ export interface FileRouteTypes {
     | '/cinematic'
     | '/consultation'
     | '/data-deletion'
+    | '/faq'
     | '/find-my-business-idea'
+    | '/for-founders'
     | '/for-organizations'
     | '/how-it-works'
+    | '/ideas'
     | '/privacy'
     | '/review'
     | '/review-public'
     | '/sign-in'
     | '/terms'
     | '/auth/callback'
+    | '/dashboard/admin'
     | '/dashboard/history'
     | '/dashboard/proof'
     | '/dashboard/settings'
     | '/dashboard'
-    | '/dashboard/opportunities/$id'
+    | '/api/cron/weekly-reminders'
+    | '/dashboard/roadmap/official'
     | '/dashboard/roadmap/building'
     | '/dashboard/opportunities'
     | '/dashboard/roadmap'
+    | '/dashboard/opportunities/$id/fit'
+    | '/dashboard/opportunities/$id/market'
+    | '/dashboard/roadmap/mission/$missionId'
+    | '/dashboard/opportunities/$id'
   id:
     | '__root__'
     | '/'
@@ -285,23 +388,32 @@ export interface FileRouteTypes {
     | '/consultation'
     | '/dashboard'
     | '/data-deletion'
+    | '/faq'
     | '/find-my-business-idea'
+    | '/for-founders'
     | '/for-organizations'
     | '/how-it-works'
+    | '/ideas'
     | '/privacy'
     | '/review'
     | '/review-public'
     | '/sign-in'
     | '/terms'
     | '/auth/callback'
+    | '/dashboard/admin'
     | '/dashboard/history'
     | '/dashboard/proof'
     | '/dashboard/settings'
     | '/dashboard/'
-    | '/dashboard/opportunities/$id'
+    | '/api/cron/weekly-reminders'
+    | '/dashboard/roadmap/official'
     | '/dashboard_/roadmap/building'
     | '/dashboard/opportunities/'
     | '/dashboard/roadmap/'
+    | '/dashboard/opportunities/$id/fit'
+    | '/dashboard/opportunities/$id/market'
+    | '/dashboard_/roadmap/mission/$missionId'
+    | '/dashboard/opportunities/$id/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -311,16 +423,21 @@ export interface RootRouteChildren {
   ConsultationRoute: typeof ConsultationRoute
   DashboardRoute: typeof DashboardRouteWithChildren
   DataDeletionRoute: typeof DataDeletionRoute
+  FaqRoute: typeof FaqRoute
   FindMyBusinessIdeaRoute: typeof FindMyBusinessIdeaRoute
+  ForFoundersRoute: typeof ForFoundersRoute
   ForOrganizationsRoute: typeof ForOrganizationsRoute
   HowItWorksRoute: typeof HowItWorksRoute
+  IdeasRoute: typeof IdeasRoute
   PrivacyRoute: typeof PrivacyRoute
   ReviewRoute: typeof ReviewRoute
   ReviewPublicRoute: typeof ReviewPublicRoute
   SignInRoute: typeof SignInRoute
   TermsRoute: typeof TermsRoute
   AuthCallbackRoute: typeof AuthCallbackRoute
+  ApiCronWeeklyRemindersRoute: typeof ApiCronWeeklyRemindersRoute
   DashboardRoadmapBuildingRoute: typeof DashboardRoadmapBuildingRoute
+  DashboardRoadmapMissionMissionIdRoute: typeof DashboardRoadmapMissionMissionIdRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -367,11 +484,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DataDeletionRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/faq': {
+      id: '/faq'
+      path: '/faq'
+      fullPath: '/faq'
+      preLoaderRoute: typeof FaqRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/find-my-business-idea': {
       id: '/find-my-business-idea'
       path: '/find-my-business-idea'
       fullPath: '/find-my-business-idea'
       preLoaderRoute: typeof FindMyBusinessIdeaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/for-founders': {
+      id: '/for-founders'
+      path: '/for-founders'
+      fullPath: '/for-founders'
+      preLoaderRoute: typeof ForFoundersRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/for-organizations': {
@@ -386,6 +517,13 @@ declare module '@tanstack/react-router' {
       path: '/how-it-works'
       fullPath: '/how-it-works'
       preLoaderRoute: typeof HowItWorksRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/ideas': {
+      id: '/ideas'
+      path: '/ideas'
+      fullPath: '/ideas'
+      preLoaderRoute: typeof IdeasRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/privacy': {
@@ -437,6 +575,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardIndexRouteImport
       parentRoute: typeof DashboardRoute
     }
+    '/dashboard/admin': {
+      id: '/dashboard/admin'
+      path: '/admin'
+      fullPath: '/dashboard/admin'
+      preLoaderRoute: typeof DashboardAdminRouteImport
+      parentRoute: typeof DashboardRoute
+    }
     '/dashboard/history': {
       id: '/dashboard/history'
       path: '/history'
@@ -458,18 +603,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardSettingsRouteImport
       parentRoute: typeof DashboardRoute
     }
+    '/api/cron/weekly-reminders': {
+      id: '/api/cron/weekly-reminders'
+      path: '/api/cron/weekly-reminders'
+      fullPath: '/api/cron/weekly-reminders'
+      preLoaderRoute: typeof ApiCronWeeklyRemindersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/dashboard/opportunities/': {
       id: '/dashboard/opportunities/'
       path: '/opportunities'
       fullPath: '/dashboard/opportunities/'
       preLoaderRoute: typeof DashboardOpportunitiesIndexRouteImport
-      parentRoute: typeof DashboardRoute
-    }
-    '/dashboard/opportunities/$id': {
-      id: '/dashboard/opportunities/$id'
-      path: '/opportunities/$id'
-      fullPath: '/dashboard/opportunities/$id'
-      preLoaderRoute: typeof DashboardOpportunitiesIdRouteImport
       parentRoute: typeof DashboardRoute
     }
     '/dashboard/roadmap/': {
@@ -479,6 +624,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardRoadmapIndexRouteImport
       parentRoute: typeof DashboardRoute
     }
+    '/dashboard/roadmap/official': {
+      id: '/dashboard/roadmap/official'
+      path: '/roadmap/official'
+      fullPath: '/dashboard/roadmap/official'
+      preLoaderRoute: typeof DashboardRoadmapOfficialRouteImport
+      parentRoute: typeof DashboardRoute
+    }
     '/dashboard_/roadmap/building': {
       id: '/dashboard_/roadmap/building'
       path: '/dashboard/roadmap/building'
@@ -486,27 +638,63 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardRoadmapBuildingRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/dashboard/opportunities/$id/': {
+      id: '/dashboard/opportunities/$id/'
+      path: '/opportunities/$id'
+      fullPath: '/dashboard/opportunities/$id/'
+      preLoaderRoute: typeof DashboardOpportunitiesIdIndexRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/dashboard/opportunities/$id/fit': {
+      id: '/dashboard/opportunities/$id/fit'
+      path: '/opportunities/$id/fit'
+      fullPath: '/dashboard/opportunities/$id/fit'
+      preLoaderRoute: typeof DashboardOpportunitiesIdFitRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/dashboard/opportunities/$id/market': {
+      id: '/dashboard/opportunities/$id/market'
+      path: '/opportunities/$id/market'
+      fullPath: '/dashboard/opportunities/$id/market'
+      preLoaderRoute: typeof DashboardOpportunitiesIdMarketRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/dashboard_/roadmap/mission/$missionId': {
+      id: '/dashboard_/roadmap/mission/$missionId'
+      path: '/dashboard/roadmap/mission/$missionId'
+      fullPath: '/dashboard/roadmap/mission/$missionId'
+      preLoaderRoute: typeof DashboardRoadmapMissionMissionIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 interface DashboardRouteChildren {
+  DashboardAdminRoute: typeof DashboardAdminRoute
   DashboardHistoryRoute: typeof DashboardHistoryRoute
   DashboardProofRoute: typeof DashboardProofRoute
   DashboardSettingsRoute: typeof DashboardSettingsRoute
   DashboardIndexRoute: typeof DashboardIndexRoute
-  DashboardOpportunitiesIdRoute: typeof DashboardOpportunitiesIdRoute
+  DashboardRoadmapOfficialRoute: typeof DashboardRoadmapOfficialRoute
   DashboardOpportunitiesIndexRoute: typeof DashboardOpportunitiesIndexRoute
   DashboardRoadmapIndexRoute: typeof DashboardRoadmapIndexRoute
+  DashboardOpportunitiesIdFitRoute: typeof DashboardOpportunitiesIdFitRoute
+  DashboardOpportunitiesIdMarketRoute: typeof DashboardOpportunitiesIdMarketRoute
+  DashboardOpportunitiesIdIndexRoute: typeof DashboardOpportunitiesIdIndexRoute
 }
 
 const DashboardRouteChildren: DashboardRouteChildren = {
+  DashboardAdminRoute: DashboardAdminRoute,
   DashboardHistoryRoute: DashboardHistoryRoute,
   DashboardProofRoute: DashboardProofRoute,
   DashboardSettingsRoute: DashboardSettingsRoute,
   DashboardIndexRoute: DashboardIndexRoute,
-  DashboardOpportunitiesIdRoute: DashboardOpportunitiesIdRoute,
+  DashboardRoadmapOfficialRoute: DashboardRoadmapOfficialRoute,
   DashboardOpportunitiesIndexRoute: DashboardOpportunitiesIndexRoute,
   DashboardRoadmapIndexRoute: DashboardRoadmapIndexRoute,
+  DashboardOpportunitiesIdFitRoute: DashboardOpportunitiesIdFitRoute,
+  DashboardOpportunitiesIdMarketRoute: DashboardOpportunitiesIdMarketRoute,
+  DashboardOpportunitiesIdIndexRoute: DashboardOpportunitiesIdIndexRoute,
 }
 
 const DashboardRouteWithChildren = DashboardRoute._addFileChildren(
@@ -520,16 +708,21 @@ const rootRouteChildren: RootRouteChildren = {
   ConsultationRoute: ConsultationRoute,
   DashboardRoute: DashboardRouteWithChildren,
   DataDeletionRoute: DataDeletionRoute,
+  FaqRoute: FaqRoute,
   FindMyBusinessIdeaRoute: FindMyBusinessIdeaRoute,
+  ForFoundersRoute: ForFoundersRoute,
   ForOrganizationsRoute: ForOrganizationsRoute,
   HowItWorksRoute: HowItWorksRoute,
+  IdeasRoute: IdeasRoute,
   PrivacyRoute: PrivacyRoute,
   ReviewRoute: ReviewRoute,
   ReviewPublicRoute: ReviewPublicRoute,
   SignInRoute: SignInRoute,
   TermsRoute: TermsRoute,
   AuthCallbackRoute: AuthCallbackRoute,
+  ApiCronWeeklyRemindersRoute: ApiCronWeeklyRemindersRoute,
   DashboardRoadmapBuildingRoute: DashboardRoadmapBuildingRoute,
+  DashboardRoadmapMissionMissionIdRoute: DashboardRoadmapMissionMissionIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

@@ -328,6 +328,8 @@ interface ExploreMoreOptions {
   dismissedNotes: string[];
   count: number;
   locale?: GenerationLocale;
+  /** Idea engine v2: write exactly these directions (see prompts/engine.ts seedsForExpansion). */
+  seeds?: string;
 }
 
 /** The one explicit, user-triggered Gemini call behind "Explore More
@@ -353,7 +355,11 @@ export async function generateOpportunityPackageBatch(
 }`;
   const prompt = `Founder profile:\n${formatProfileForPrompt(profile)}${exclusion}${feedback}
 
-Generate ${options.count} new, distinct business opportunity candidates (opportunityIndex 0${options.count > 1 ? `-${options.count - 1}` : ""}) for THIS founder, each with complete detail.
+${
+  options.seeds
+    ? `Write EXACTLY these ${options.count} directions as complete opportunities, in this order (opportunityIndex = the number given). Keep each one's customer, problem, offer, money and first test; the money stays an estimate. Where an objection is given, it is the first critical assumption and the first experiment tests it:\n${options.seeds}`
+    : `Generate ${options.count} new, distinct business opportunity candidates (opportunityIndex 0${options.count > 1 ? `-${options.count - 1}` : ""}) for THIS founder, each with complete detail.`
+}
 
 Respond with ONLY a single JSON object — no markdown fences, no commentary before or after — matching this exact shape:
 ${jsonContract}${buildLanguageRule(options.locale ?? "en")}`;
@@ -362,8 +368,8 @@ ${jsonContract}${buildLanguageRule(options.locale ?? "en")}`;
     systemInstruction: EXPLORE_SYSTEM_INSTRUCTION,
     prompt,
     callSite: "generateOpportunityPackageBatch",
-    purpose: "EXPLORE_MORE",
-    route: "dashboard/explore-more",
+    purpose: options.seeds ? "ENGINE_EXPAND" : "EXPLORE_MORE",
+    route: options.seeds ? "consultation/complete" : "dashboard/explore-more",
   });
 
   const opportunities: OpportunityPackage[] = (flat.opportunities as FlatExploreOpportunity[])

@@ -5,7 +5,7 @@ import { expect, test, type BrowserContext, type Page } from "@playwright/test";
 
 import { completeAllMissions, founderWithDirections } from "./helpers/flows";
 import { gotoApp } from "./helpers/page";
-import { appUrl, forbidRealBackends, resetStack, sql } from "./helpers/stack";
+import { appUrl, forbidRealBackends, resetStack } from "./helpers/stack";
 
 /**
  * Screenshots of every key screen at the three reference sizes, for a human to
@@ -127,53 +127,51 @@ for (const size of SIZES) {
 
     test("founder workspace", async ({ page, context }) => {
       test.setTimeout(900_000);
-      const { user, seeded } = await founderWithDirections(context);
+      const { seeded } = await founderWithDirections(context);
       await gotoApp(page, "/dashboard");
-      await shoot(page, size.name, "command-center-a", { tall: true });
+      await shoot(page, size.name, "today-directions-ready", { tall: true });
+
+      const opp = seeded.opportunityIds[0];
+      await gotoApp(page, "/dashboard/opportunities");
+      await shoot(page, size.name, "directions", { tall: true });
+      await gotoApp(page, `/dashboard/opportunities/${opp}`);
+      await shoot(page, size.name, "direction", { tall: true });
+      await gotoApp(page, `/dashboard/opportunities/${opp}/fit`);
+      await shoot(page, size.name, "direction-fit", { tall: true });
+      await gotoApp(page, `/dashboard/opportunities/${opp}/market`);
+      await shoot(page, size.name, "direction-market", { tall: true });
 
       // The recommended direction is reviewed, then chosen on its own page.
+      await gotoApp(page, "/dashboard");
       await page.getByTestId("flagship-explore").click();
       await page.getByTestId("choose-direction").click();
       await expect(page.getByTestId("build-roadmap")).toBeVisible();
       await gotoApp(page, "/dashboard");
       await expect(page.getByTestId("build-roadmap")).toBeVisible();
-      await shoot(page, size.name, "command-center-b");
+      await shoot(page, size.name, "today-direction-chosen");
 
       await page.getByTestId("build-roadmap").click();
-      await expect(
-        page.getByTestId("build-status").or(page.getByTestId("roadmap-page")),
-      ).toBeVisible({ timeout: 60_000 });
+      await expect(page.getByTestId("build-status")).toBeVisible({ timeout: 60_000 });
+      await shoot(page, size.name, "building");
       await expect(page.getByTestId("roadmap-page")).toBeVisible({ timeout: 60_000 });
-      await shoot(page, size.name, "roadmap-week", { tall: true });
-      await page.getByTestId("mission-card").nth(1).getByTestId("mission-toggle").click();
-      await shoot(page, size.name, "roadmap-week-mission-open");
-
-      await gotoApp(page, "/dashboard/roadmap?tab=plan");
-      await shoot(page, size.name, "roadmap-plan", { tall: true });
-      await gotoApp(page, "/dashboard/roadmap?tab=progress");
-      await shoot(page, size.name, "roadmap-progress");
+      await shoot(page, size.name, "roadmap", { tall: true });
 
       await gotoApp(page, "/dashboard");
-      await shoot(page, size.name, "command-center-c", { tall: true });
+      await expect(page.getByTestId("todays-move")).toBeVisible();
+      await shoot(page, size.name, "today-mission", { tall: true });
 
-      const opp = seeded.opportunityIds[0];
-      for (const tab of ["overview", "fit", "market", "economics", "proof"]) {
-        await gotoApp(page, `/dashboard/opportunities/${opp}?tab=${tab}`);
-        await shoot(page, size.name, `opportunity-${tab}`, {
-          tall: tab === "overview" || tab === "fit",
-        });
-      }
-      await gotoApp(page, "/dashboard/opportunities");
-      await shoot(page, size.name, "opportunities-list");
+      await page.getByTestId("start-mission").click();
+      await expect(page.getByTestId("mission-page")).toBeVisible();
+      await shoot(page, size.name, "mission", { tall: true });
 
       await gotoApp(page, "/dashboard/proof");
       await expect(page.getByTestId("assumption-card").first()).toBeVisible({ timeout: 60_000 });
       await shoot(page, size.name, "proof", { tall: true });
       await page.getByTestId("assumption-card").first().getByTestId("view-details").click();
-      await shoot(page, size.name, "proof-assumption-detail");
+      await shoot(page, size.name, "proof-assumption-open");
 
       await gotoApp(page, "/dashboard/history");
-      await shoot(page, size.name, "history");
+      await shoot(page, size.name, "history", { tall: true });
 
       await gotoApp(page, "/dashboard/settings");
       await shoot(page, size.name, "settings", { tall: true });
@@ -186,27 +184,29 @@ for (const size of SIZES) {
       await page.getByTestId("notification-bell").click();
       await shoot(page, size.name, "notifications");
       await page.keyboard.press("Escape");
-      await page.getByTestId("ask-sol-launcher").click();
+      await page.getByTestId(size.width < 768 ? "ask-sol-fab" : "ask-sol-launcher").click();
       await expect(page.getByTestId("ask-sol-panel")).toBeVisible();
       await page.waitForTimeout(500);
       await shoot(page, size.name, "ask-sol");
 
-      // Finish the week to see the review dialog and the generated Week 02.
+      // Finish the week: "Week 1 done." on Today, the review dialog, and Week 02.
       await gotoApp(page, "/dashboard/roadmap");
       await completeAllMissions(page);
       await shoot(page, size.name, "roadmap-ready-to-review");
+      await gotoApp(page, "/dashboard");
+      await expect(page.getByTestId("week-wrap")).toBeVisible();
+      await shoot(page, size.name, "today-week-done", { tall: true });
+      await gotoApp(page, "/dashboard/roadmap");
       await page.getByTestId("review-week").click();
       await shoot(page, size.name, "roadmap-review-dialog");
       await page.getByTestId("outcome-stronger").click();
       await page.getByTestId("prepare-next-week").click();
       await expect(page.getByTestId("adaptation-note")).toBeVisible({ timeout: 60_000 });
       await shoot(page, size.name, "roadmap-week-2", { tall: true });
-      void user;
-      void sql;
     });
 
     test("Hindi", async ({ page, context }) => {
-      test.setTimeout(240_000);
+      test.setTimeout(480_000);
       await useHindi(context);
       const { seeded } = await founderWithDirections(context);
       await gotoApp(page, "/");
@@ -214,8 +214,15 @@ for (const size of SIZES) {
       await gotoApp(page, "/consultation");
       await shoot(page, size.name, "hi-consultation");
       await gotoApp(page, "/dashboard");
-      await shoot(page, size.name, "hi-command-center", { tall: true });
+      await shoot(page, size.name, "hi-today-directions-ready", { tall: true });
+      await gotoApp(page, "/dashboard/opportunities");
+      await shoot(page, size.name, "hi-directions", { tall: true });
+      await gotoApp(page, `/dashboard/opportunities/${seeded.opportunityIds[0]}`);
+      await shoot(page, size.name, "hi-direction", { tall: true });
+      await gotoApp(page, `/dashboard/opportunities/${seeded.opportunityIds[0]}/fit`);
+      await shoot(page, size.name, "hi-direction-fit", { tall: true });
       // The recommended direction is reviewed, then chosen on its own page.
+      await gotoApp(page, "/dashboard");
       await page.getByTestId("flagship-explore").click();
       await page.getByTestId("choose-direction").click();
       await expect(page.getByTestId("build-roadmap")).toBeVisible();
@@ -223,8 +230,17 @@ for (const size of SIZES) {
       await page.getByTestId("build-roadmap").click();
       await expect(page.getByTestId("roadmap-page")).toBeVisible({ timeout: 60_000 });
       await shoot(page, size.name, "hi-roadmap", { tall: true });
-      await gotoApp(page, `/dashboard/opportunities/${seeded.opportunityIds[0]}?tab=fit`);
-      await shoot(page, size.name, "hi-opportunity-fit", { tall: true });
+      await gotoApp(page, "/dashboard");
+      await expect(page.getByTestId("todays-move")).toBeVisible();
+      await shoot(page, size.name, "hi-today-mission", { tall: true });
+      await page.getByTestId("start-mission").click();
+      await expect(page.getByTestId("mission-page")).toBeVisible();
+      await shoot(page, size.name, "hi-mission", { tall: true });
+      await gotoApp(page, "/dashboard/proof");
+      await expect(page.getByTestId("assumption-card").first()).toBeVisible({ timeout: 60_000 });
+      await shoot(page, size.name, "hi-proof", { tall: true });
+      await gotoApp(page, "/dashboard/history");
+      await shoot(page, size.name, "hi-history", { tall: true });
       await gotoApp(page, "/dashboard/settings");
       await shoot(page, size.name, "hi-settings", { tall: true });
     });
@@ -232,7 +248,7 @@ for (const size of SIZES) {
 }
 
 test.describe("text is never unreadably small", () => {
-  test("no visible body/interface text under 14px on the main screens (brand lockup excepted)", async ({
+  test("no visible text under 15px in the dashboard, or under 14px elsewhere (brand lockup excepted)", async ({
     page,
     context,
   }) => {
@@ -240,7 +256,8 @@ test.describe("text is never unreadably small", () => {
     await founderWithDirections(context);
     const tiny: string[] = [];
     const scan = async (label: string) => {
-      const found = await page.evaluate(() => {
+      const floor = label.startsWith("/dashboard") ? 14.5 : 13.5;
+      const found = await page.evaluate((floor) => {
         const out: string[] = [];
         const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
         let node: Node | null;
@@ -257,11 +274,11 @@ test.describe("text is never unreadably small", () => {
           const cs = getComputedStyle(el);
           if (cs.visibility === "hidden" || cs.display === "none") continue;
           const px = parseFloat(cs.fontSize);
-          if (px < 13.5 && !/VALIDATE|SOLVENTIA/.test(text))
+          if (px < floor && !/VALIDATE|SOLVENTIA/.test(text))
             out.push(`${px}px "${text.slice(0, 40)}"`);
         }
         return [...new Set(out)].slice(0, 8);
-      });
+      }, floor);
       found.forEach((f) => tiny.push(`${label}: ${f}`));
     };
     // `/` is the cinematic film: its small mono kickers are a deliberate third type level

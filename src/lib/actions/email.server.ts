@@ -180,3 +180,34 @@ ${bodyTextRow(`Your first founder mission is ready. Sol built a full roadmap for
     }),
   });
 }
+
+/** The one weekly reminder (redesign-v2 part 4, feature 8): one line and one button — the next
+ * mission. Written in the founder's language. */
+export async function sendWeeklyReminderEmail(
+  email: string,
+  data: { missionId: string; missionTitle: string; locale: "en" | "hi" },
+): Promise<void> {
+  const url = siteUrl(`/dashboard/roadmap/mission/${data.missionId}`);
+  const title = escapeHtml(data.missionTitle);
+  const copy =
+    data.locale === "hi"
+      ? {
+          subject: "इस हफ़्ते का आपका अगला मिशन",
+          line: `आपका अगला मिशन: <strong>${title}</strong>`,
+          button: "मिशन खोलें",
+        }
+      : {
+          subject: "Your next mission this week",
+          line: `Your next mission: <strong>${title}</strong>`,
+          button: "Open the mission",
+        };
+  const bodyRowsHtml = `
+${bodyTextRow(copy.line)}
+<tr><td style="padding:22px 40px 4px 40px;">${primaryCta(url, copy.button)}</td></tr>
+`;
+  await sendSafely({
+    to: email,
+    subject: copy.subject,
+    html: emailShell({ preheader: data.missionTitle, bodyRowsHtml }),
+  });
+}

@@ -5,8 +5,38 @@
 //     React/TanStack dedupe, error logger plugins, and sandbox detection (port/host/strictPort).
 // You can pass additional config via defineConfig({ vite: { ... }, etc... }) if needed.
 import { defineConfig } from "@lovable.dev/vite-tanstack-config";
+import type { Plugin } from "vite";
+
+/**
+ * The homepage's 3D bundle, preloaded from the very first HTML (owner step 2). Its file names
+ * are only known after the client build, so this records the CinematicCanvas chunk and its static
+ * imports there and hands them to the server build as `virtual:cinematic-preload`; the page
+ * calls ReactDOM.preloadModule() for each while rendering on the server, which puts
+ * <link rel="modulepreload"> in <head> — the download starts with the HTML, not after
+ * hydration. The client build (and `vite dev`) see an empty list.
+ */
+function cinematicPreload(): Plugin {
+  const id = "virtual:cinematic-preload";
+  let files: string[] = [];
+  return {
+    name: "sol-cinematic-preload",
+    resolveId: (source) => (source === id ? `\0${id}` : undefined),
+    load: (resolved) =>
+      resolved === `\0${id}` ? `export default ${JSON.stringify(files)};` : undefined,
+    generateBundle(_options, bundle) {
+      if (this.environment?.name !== "client") return;
+      for (const chunk of Object.values(bundle)) {
+        if (chunk.type !== "chunk") continue;
+        const facade = chunk.facadeModuleId?.replace(/\\/g, "/") ?? "";
+        if (!facade.endsWith("/cinematic-home/scene/CinematicCanvas.tsx")) continue;
+        files = [chunk.fileName, ...chunk.imports].map((f) => `/${f}`);
+      }
+    },
+  };
+}
 
 export default defineConfig({
+  plugins: [cinematicPreload()],
   tanstackStart: {
     // Redirect TanStack Start's bundled server entry to src/server.ts
     server: { entry: "server" },

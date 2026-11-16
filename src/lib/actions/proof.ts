@@ -1,5 +1,12 @@
 import { createServerFn } from "@tanstack/react-start";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { readWorkspace, type EntryValue } from "@/lib/missions/workspace";
+import {
+  deriveRuleStatus,
+  readSuccessRule,
+  type RuleProgress,
+  type SuccessRule,
+} from "@/lib/proof/rules";
 import { z } from "zod";
 
 import { requireUser } from "@/lib/supabase/server";
@@ -64,6 +71,8 @@ export interface EvidenceDTO {
   weekId: string | null;
   taskTitle: string | null;
   createdAt: string;
+  /** "Add other proof": shown on the card, never changes a rule-based status. */
+  addedByUser: boolean;
 }
 
 export interface AssumptionDTO {
@@ -88,6 +97,9 @@ export interface AssumptionDTO {
   nextAction: NextAction;
   /** The latest evidence date, else when the assumption was written. */
   updatedAt: string;
+  /** Proof that updates itself: the checking mission's live count against its success rule
+   * (migration 0016). When present, `status` comes from it — never from the AI or a pick. */
+  rule: (RuleProgress & { missionId: string }) | null;
   history: {
     evidenceId: string;
     at: string;
@@ -161,6 +173,7 @@ function toEvidenceDTO(row: EvidenceRow, taskTitles: Map<string, string>): Evide
     weekId: row.week_id,
     taskTitle: row.task_id ? (taskTitles.get(row.task_id) ?? null) : null,
     createdAt: row.created_at,
+    addedByUser: Boolean((row as { added_by_user?: boolean }).added_by_user),
   };
 }
 
@@ -241,6 +254,7 @@ export function buildAssumptionDTOs(
         missions,
         nextAction: nextAssumptionAction(status, result, threshold, missions),
         updatedAt: latest ?? a.updated_at ?? a.created_at,
+        rule: null,
         history: replayStateHistory(like, threshold),
       };
     });
@@ -357,6 +371,8 @@ export async function loadProofOverview(
     loadMissionLinks(supabase, userId, opportunityId),
   ]);
   const assumptions = buildAssumptionDTOs(aRes.data ?? [], evidence, taskTitles, links.tasks);
+  if (caps.proofRules && caps.missionWorkspaces)
+    await applySuccessRules(supabase, userId, aRes.data ?? [], assumptions);
   const statusCounts = { ...EMPTY_STATUS_COUNTS };
   for (const a of assumptions) statusCounts[a.status]++;
 
@@ -371,6 +387,90 @@ export async function loadProofOverview(
     titleSupported: caps.evidenceTitle,
     roadmapId: links.roadmapId,
   };
+}
+
+/**
+ * Proof that updates itself (part 4, feature 2). Each assumption is checked by one interview
+ * mission: the first of its linked missions with an interview workspace and a target. The link
+ * and its success rule (60% of the target saying yes) are stored once; the status is then derived
+ * from that mission's logs, every time — so after four interviews are logged the Proof page
+ * shows a result without the founder visiting it.
+ */
+async function applySuccessRules(
+  supabase: Db,
+  userId: string,
+  rows: { id: string; check_task_id?: string | null; success_rule?: unknown }[],
+  assumptions: AssumptionDTO[],
+) {
+  const raw = supabase as unknown as SupabaseClient;
+  const candidateIds = Array.from(new Set(assumptions.flatMap((a) => a.missions.map((m) => m.id))));
+  const { data: tasks } = candidateIds.length
+    ? await raw
+        .from("roadmap_tasks")
+        .select("id, workspace, workspace_spec, done_rule")
+        .in("id", candidateIds)
+        .eq("user_id", userId)
+    : {
+        data: [] as {
+          id: string;
+          workspace: string | null;
+          workspace_spec: unknown;
+          done_rule: unknown;
+        }[],
+      };
+  const byId = new Map((tasks ?? []).map((t) => [t.id as string, t]));
+  const link = new Map<string, { taskId: string; rule: SuccessRule }>();
+  for (const a of assumptions) {
+    const row = rows.find((r) => r.id === a.id);
+    const stored = readSuccessRule(row?.success_rule);
+    if (row?.check_task_id && stored) {
+      link.set(a.id, { taskId: row.check_task_id, rule: stored });
+      continue;
+    }
+    const check = a.missions
+      .map((m) => byId.get(m.id))
+      .find((t) => t && t.workspace === "interviews");
+    if (!check) continue;
+    const ws = readWorkspace(check);
+    const target = ws.rule?.metric === "interviews.count" ? ws.rule.min : ws.spec?.target;
+    if (!target) continue;
+    const rule: SuccessRule = {
+      metric: "interviews.answer",
+      equals: "yes",
+      threshold: Math.max(1, Math.ceil(target * 0.6)),
+      outOf: target,
+    };
+    link.set(a.id, { taskId: check.id as string, rule });
+    // Stored once (only where nothing is stored yet), so the link never shifts later.
+    await raw
+      .from("proof_assumptions")
+      .update({ check_task_id: check.id, success_rule: rule })
+      .eq("id", a.id)
+      .eq("user_id", userId)
+      .is("check_task_id", null);
+  }
+  if (link.size === 0) return;
+  const { data: logs } = await raw
+    .from("mission_entries")
+    .select("id, task_id, kind, data, created_at")
+    .in("task_id", Array.from(new Set(Array.from(link.values()).map((l) => l.taskId))))
+    .eq("user_id", userId)
+    .eq("kind", "interview");
+  for (const a of assumptions) {
+    const l = link.get(a.id);
+    if (!l) continue;
+    const entries = (logs ?? [])
+      .filter((e) => e.task_id === l.taskId)
+      .map((e) => ({
+        id: e.id as string,
+        kind: "interview" as const,
+        data: (e.data ?? {}) as Record<string, EntryValue>,
+        createdAt: e.created_at as string,
+      }));
+    const progress = deriveRuleStatus(l.rule, entries);
+    a.rule = { ...progress, missionId: l.taskId };
+    a.status = progress.status;
+  }
 }
 
 export const getProofOverview = createServerFn({ method: "GET" })
@@ -479,6 +579,8 @@ const evidenceInput = z.object({
   fileName: z.string().max(200).optional(),
   taskId: z.string().uuid().optional(),
   weekId: z.string().uuid().optional(),
+  /** From "Add other proof" on the Proof page. */
+  addedByUser: z.boolean().optional(),
 });
 
 async function stateForAssumption(supabase: Db, userId: string, assumptionId: string) {
@@ -569,6 +671,8 @@ export const addProofEvidence = createServerFn({ method: "POST" })
           file_name: data.fileName ?? null,
           task_id: data.taskId ?? null,
           week_id: data.weekId ?? null,
+          // added_by_user (migration 0016) is newer than the generated types.
+          ...((caps.proofRules && data.addedByUser ? { added_by_user: true } : {}) as object),
         })
         .select("id")
         .single();

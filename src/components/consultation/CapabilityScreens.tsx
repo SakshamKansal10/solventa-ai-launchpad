@@ -18,7 +18,7 @@ import {
 import { cn } from "@/lib/utils";
 import { useLabels } from "./labels";
 import { ChipCloud } from "./controls";
-import { ScreenBody, Segmented } from "./ui";
+import { Question, ScreenBody, Segmented, TextField } from "./ui";
 
 /** Skills: searchable multi-select. Each skill states how good it really is
  * AND whether it was ever used on a real project/job — that second answer is
@@ -288,6 +288,17 @@ export function ExecutionScreen() {
           )
         }
       />
+      <Question label={t("q.help.label")} helper={t("q.help.helper")} optional>
+        <TextField
+          id="q-help-asked"
+          label={t("q.help.label")}
+          hideLabel
+          value={answers.helpAskedFor ?? ""}
+          maxLength={160}
+          placeholder={t("q.help.placeholder")}
+          onChange={(v) => setAnswer("helpAskedFor", v)}
+        />
+      </Question>
     </ScreenBody>
   );
 }

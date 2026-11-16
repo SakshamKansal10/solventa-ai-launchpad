@@ -1,4 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
+import { hasFinishedLocalDraft, useResumeFinishedConsultation } from "@/lib/consultation/resume";
 import { Link, useRouter } from "@tanstack/react-router";
 import { ArrowRight } from "lucide-react";
 import { useEffect, useState } from "react";
@@ -12,8 +13,8 @@ import { SoundToggle } from "../sound/SoundToggle";
 /**
  * Navigation for the cinematic homepage only — the shared Header (used by the other pages) is
  * untouched. Very little chrome: the Solventia lockup anchors the top-left; sign-in and the one
- * call to action sit on the right. The site's other destinations live in the footer. Sound has no
- * control in the bar (see SoundToggle — a keyboard-only mute that takes no room).
+ * call to action sit on the right, with the sound toggle (sound is off until it is pressed — see
+ * SoundToggle). The site's other destinations live in the footer.
  *
  * Identity: during the film the bar's lockup is the DESTINATION of the opening identity — the
  * film carries the centred lockup here (DomSync), so the bar's own copy stays invisible and only
@@ -37,6 +38,12 @@ export function CinematicNav({ pendingNext }: { pendingNext?: string | null } = 
   // The same session query (and cache key) as the shared Header.
   const user = useQuery({ queryKey: ["current-user"], queryFn: () => getCurrentUser() });
   const signedIn = Boolean(user.data);
+  // Signed in (e.g. Google fell back to the home page) with a finished consultation not yet
+  // analysed on this device: back to its last step, where generation starts by itself.
+  useResumeFinishedConsultation({
+    signedIn,
+    hasAnalysis: signedIn && hasFinishedLocalDraft() ? false : null,
+  });
   // A signed-out visitor bounced here from a protected route (`/?next=…`) gets the sign-in
   // prompt straight away, exactly as the shared Header does — then the address bar is cleaned so
   // a refresh lands on a plain homepage.
@@ -101,8 +108,10 @@ export function CinematicNav({ pendingNext }: { pendingNext?: string | null } = 
             <BrandLockup preset="nav" wordColor="var(--ink)" signatureColor="var(--ink)" />
           </span>
         </Link>
-        <div className="relative flex items-center justify-end gap-2.5 sm:gap-5">
-          <SoundToggle />
+        <div className="relative flex items-center justify-end gap-2 min-[400px]:gap-2.5 sm:gap-5">
+          <div className="transition-opacity duration-700" style={recede(1)}>
+            <SoundToggle />
+          </div>
           <div className="transition-opacity duration-700" style={recede(1)} data-nav-secondary>
             {signedIn ? (
               <Link
@@ -134,7 +143,7 @@ export function CinematicNav({ pendingNext }: { pendingNext?: string | null } = 
             to="/consultation"
             preload="intent"
             data-nav-cta
-            className="inline-flex h-10 items-center gap-1.5 whitespace-nowrap rounded-full bg-[#102C57] px-3.5 text-[0.875rem] font-semibold text-[#F7F7F4] shadow-[inset_0_0_0_1px_rgba(201,170,121,0.55),0_8px_22px_-12px_rgba(16,44,87,0.7)] transition-[background-color,transform] duration-200 hover:bg-[#173C73] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[var(--accent)] active:scale-[0.98] sm:h-11 sm:px-5 sm:text-[0.95rem]"
+            className="inline-flex h-10 items-center gap-1.5 whitespace-nowrap rounded-full bg-[#102C57] px-3 text-[0.875rem] min-[400px]:px-3.5 font-semibold text-[#F7F7F4] shadow-[inset_0_0_0_1px_rgba(201,170,121,0.55),0_8px_22px_-12px_rgba(16,44,87,0.7)] transition-[background-color,transform] duration-200 hover:bg-[#173C73] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[var(--accent)] active:scale-[0.98] sm:h-11 sm:px-5 sm:text-[0.95rem]"
           >
             <span className="max-sm:hidden">Find My Business Idea</span>
             <span className="sm:hidden">Start</span>

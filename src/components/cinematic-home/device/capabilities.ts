@@ -6,10 +6,25 @@
  * carries the human-readable reasons it was chosen (shown in the dev HUD).
  */
 
-export type QualityTier = "high" | "medium" | "low";
-export type ExperienceMode = "webgl" | "fallback";
+/**
+ * Three experiences, decided once per visit:
+ *   full      the film at full cost — discrete GPU (or Apple silicon), ≥ 8 cores, ≥ 8 GB
+ *   lite      the SAME film and scroll story at reduced cost (pixel ratio, no MSAA, simpler
+ *             materials, fewer instances) — integrated graphics, modest CPUs, touch screens
+ *   fallback  the still narrative — no WebGL2, software GPU, reduced motion, small or slow
+ */
+export type QualityTier = "full" | "lite";
+export type ExperienceMode = QualityTier | "fallback";
 /** `?tier=` override for testing — forces a tier, or the static fallback. */
 export type TierOverride = QualityTier | "fallback";
+/** Older review links used high / medium / low. */
+export function normalizeTierOverride(
+  v: "full" | "lite" | "fallback" | "high" | "medium" | "low" | undefined,
+): TierOverride | undefined {
+  if (v === "high" || v === "medium") return "full";
+  if (v === "low") return "lite";
+  return v;
+}
 
 export interface DeviceProfile {
   webgl2: boolean;
@@ -27,9 +42,14 @@ export interface DeviceProfile {
 
 export interface Capability {
   mode: ExperienceMode;
+  /** The rendering budget (QUALITY_PRESETS); "lite" when the mode is the fallback. */
   tier: QualityTier;
   reasons: string[];
 }
+
+/** The film (full or lite) rather than the still version. */
+export const isFilm = (mode: ExperienceMode | "pending"): mode is QualityTier =>
+  mode === "full" || mode === "lite";
 
 // CPU rasterisers: WebGL "works" but a continuous 3D scene would crawl.
 const SOFTWARE_GPU = /swiftshader|llvmpipe|softpipe|software|basic render|mesa offscreen/i;
@@ -53,36 +73,36 @@ export function classifyDevice(
   { reducedMotion, override }: { reducedMotion: boolean; override?: TierOverride | null },
 ): Capability {
   if (override === "fallback")
-    return { mode: "fallback", tier: "low", reasons: ["forced: fallback"] };
-  if (!device.webgl2) return { mode: "fallback", tier: "low", reasons: ["WebGL2 unavailable"] };
-  if (override) return { mode: "webgl", tier: override, reasons: [`forced: ${override}`] };
+    return { mode: "fallback", tier: "lite", reasons: ["forced: fallback"] };
+  if (!device.webgl2) return { mode: "fallback", tier: "lite", reasons: ["WebGL2 unavailable"] };
+  if (override) return { mode: override, tier: override, reasons: [`forced: ${override}`] };
   // A scroll-driven camera flight is exactly the motion this setting asks us to avoid.
-  if (reducedMotion) return { mode: "fallback", tier: "low", reasons: ["prefers-reduced-motion"] };
+  if (reducedMotion) return { mode: "fallback", tier: "lite", reasons: ["prefers-reduced-motion"] };
   if (isSoftwareGpu(device.gpu))
-    return { mode: "fallback", tier: "low", reasons: ["software GPU"] };
+    return { mode: "fallback", tier: "lite", reasons: ["software GPU"] };
+  // Small screens and slow machines get the still version from the start (decided once).
+  if (device.viewportWidth < 768)
+    return { mode: "fallback", tier: "lite", reasons: ["viewport narrower than 768px"] };
+  if (device.cores !== null && device.cores < 4)
+    return { mode: "fallback", tier: "lite", reasons: ["fewer than 4 CPU cores"] };
+  if (device.memoryGb !== null && device.memoryGb < 4)
+    return { mode: "fallback", tier: "lite", reasons: ["less than 4 GB memory"] };
 
+  // Full only where the whole budget is sustainable; everything else that can run the film
+  // gets the same film at the lite budget (measured: an integrated Radeon Vega 3 holds p95
+  // 33 ms on the old "medium" budget — see docs/redesign/perf).
   const reasons: string[] = [];
-  let tier: QualityTier = "medium";
-  if (device.coarsePointer) {
-    reasons.push("touch device");
-    if (device.memoryGb !== null && device.memoryGb <= 3) {
-      tier = "low";
-      reasons.push("≤ 3 GB memory");
-    }
-  } else if ((device.cores ?? 0) >= 8 && (device.memoryGb === null || device.memoryGb >= 8)) {
-    if (isIntegratedGpu(device.gpu)) reasons.push("desktop, ≥ 8 cores, integrated graphics");
-    else {
-      tier = "high";
-      reasons.push("desktop, ≥ 8 cores");
-    }
-  } else {
-    reasons.push("desktop, modest CPU");
+  let tier: QualityTier = "lite";
+  if (device.saveData) reasons.push("data saver on");
+  else if (device.coarsePointer) reasons.push("touch device");
+  else if (isIntegratedGpu(device.gpu)) reasons.push("integrated graphics");
+  else if (device.cores !== null && device.cores < 8) reasons.push("fewer than 8 CPU cores");
+  else if (device.memoryGb !== null && device.memoryGb < 8) reasons.push("less than 8 GB memory");
+  else {
+    tier = "full";
+    reasons.push("desktop, ≥ 8 cores, dedicated graphics");
   }
-  if (device.saveData) {
-    tier = "low";
-    reasons.push("data saver on");
-  }
-  return { mode: "webgl", tier, reasons };
+  return { mode: tier, tier, reasons };
 }
 
 /** Reads the current browser. Client only — call from an effect, never during SSR. */

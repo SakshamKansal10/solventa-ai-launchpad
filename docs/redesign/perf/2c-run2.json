@@ -1,0 +1,201 @@
+{
+ "label": "2c-run2",
+ "tier": "auto",
+ "unthrottled": {
+  "throttle": 1,
+  "info": {
+   "mode": "lite",
+   "tier": "lite",
+   "reasons": [
+    "integrated graphics"
+   ],
+   "gpu": "ANGLE (AMD, AMD Radeon(TM) Vega 3 Graphics (0x000015D8) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+   "dpr": 1,
+   "notch": 0,
+   "windowMedians": [],
+   "programs": 31,
+   "textures": 5,
+   "geometries": 98
+  },
+  "frames": 1937,
+  "frameMs": {
+   "p50": 16.7,
+   "p95": 16.9,
+   "worst": 266.7
+  },
+  "reactCommitsWhileScrolling": 0,
+  "adaptive": {
+   "endNotch": 0,
+   "windowMedians": [
+    16.7,
+    16.7,
+    16.7,
+    16.7,
+    16.7,
+    16.7,
+    16.7,
+    16.7,
+    16.7,
+    16.7,
+    16.7,
+    16.7,
+    16.7,
+    16.7,
+    16.7,
+    16.7
+   ],
+   "endDpr": 1
+  },
+  "longTasksOver50": 0,
+  "worstLongTask": 0,
+  "traceSplitMs": {
+   "scripting": 4091,
+   "rendering": 1950,
+   "painting": 709,
+   "other": 1194,
+   "gpu": 29972,
+   "otherTop": [
+    "179 ms AsyncTask Run",
+    "141 ms PageAnimator::serviceScriptedAnimations",
+    "81 ms CommandBufferProxyImpl::Flush",
+    "64 ms AnimationTimeline::serviceAnimations",
+    "53 ms BlinkScheduler_PerformMicrotaskCheckpoint",
+    "49 ms LocalFrameView::RunPaintLifecyclePhase",
+    "46 ms WebFrameWidgetImpl::BeginMainFrame",
+    "46 ms WebFrameWidgetImpl::UpdateLifecycle"
+   ]
+  },
+  "chromeMetricsMs": {
+   "script": 3875,
+   "styleRecalc": 1650,
+   "layout": 35,
+   "allTasks": 8613
+  },
+  "perScene": [
+   "scene  0: p95  66.6 ms ·  14 draw calls · 22266 triangles · 137 frames",
+   "scene  1: p95  16.9 ms ·  38 draw calls · 60186 triangles · 99 frames",
+   "scene  2: p95  16.8 ms ·  57 draw calls · 66390 triangles · 219 frames",
+   "scene  3: p95  33.5 ms ·  88 draw calls · 160822 triangles · 50 frames",
+   "scene  4: p95  16.8 ms ·  63 draw calls · 122602 triangles · 51 frames",
+   "scene  5: p95  16.8 ms ·  51 draw calls · 111376 triangles · 75 frames",
+   "scene  6: p95  16.8 ms ·  49 draw calls · 110776 triangles · 184 frames",
+   "scene  7: p95  16.8 ms ·  40 draw calls · 133132 triangles · 142 frames",
+   "scene  8: p95  16.8 ms ·  32 draw calls · 132916 triangles · 81 frames",
+   "scene  9: p95  16.8 ms ·  29 draw calls · 100572 triangles · 35 frames",
+   "scene 10: p95  16.9 ms ·  15 draw calls · 99932 triangles · 60 frames",
+   "scene 11: p95  16.9 ms ·  24 draw calls · 174868 triangles · 36 frames",
+   "scene 12: p95  33.3 ms ·  21 draw calls · 179348 triangles · 35 frames",
+   "scene 13: p95  16.9 ms ·  27 draw calls · 180044 triangles · 50 frames",
+   "scene 14: p95  16.9 ms ·  32 draw calls · 193108 triangles · 52 frames",
+   "scene 15: p95  33.4 ms ·  34 draw calls · 192868 triangles · 79 frames",
+   "scene 16: p95  33.4 ms ·  34 draw calls · 182358 triangles · 58 frames",
+   "scene 17: p95  33.4 ms ·  34 draw calls · 182358 triangles · 102 frames",
+   "scene 18: p95    17 ms ·  34 draw calls · 182358 triangles · 75 frames",
+   "scene 19: p95  16.8 ms ·  15 draw calls · 14050 triangles · 40 frames",
+   "scene 20: p95  16.8 ms ·  15 draw calls · 14050 triangles · 277 frames"
+  ],
+  "hotFunctions": [
+   "   190 ms  updateMatrixWorld  CinematicCanvas-BDBESzl0.js:1:63480",
+   "   142 ms  bufferSubData  :0:0",
+   "   122 ms  vt  CinematicCanvas-BDBESzl0.js:4220:41288",
+   "   113 ms  Vy  CinematicCanvas-BDBESzl0.js:4231:13489",
+   "   111 ms  multiplyMatrices  CinematicCanvas-BDBESzl0.js:1:49336",
+   "    89 ms  (anonymous)  CinematicCanvas-BDBESzl0.js:4249:50777",
+   "    82 ms  (garbage collector)  :0:0",
+   "    75 ms  setFromEuler  CinematicCanvas-BDBESzl0.js:1:12592",
+   "    74 ms  renderBufferDirect  CinematicCanvas-BDBESzl0.js:4220:29369",
+   "    71 ms  Te  core-design-DLof5fJ-.js:1:11178",
+   "    66 ms  lt  CinematicCanvas-BDBESzl0.js:4220:34641",
+   "    59 ms  (anonymous)  CinematicCanvas-BDBESzl0.js:4249:38002",
+   "    59 ms  (anonymous)  core-design-DLof5fJ-.js:1:17697",
+   "    57 ms  tick  :22:18"
+  ],
+  "errors": []
+ },
+ "throttled4x": {
+  "throttle": 4,
+  "info": {
+   "mode": "lite",
+   "tier": "lite",
+   "reasons": [
+    "integrated graphics"
+   ],
+   "gpu": "ANGLE (AMD, AMD Radeon(TM) Vega 3 Graphics (0x000015D8) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+   "dpr": 1,
+   "notch": 0,
+   "windowMedians": [],
+   "programs": 31,
+   "textures": 5,
+   "geometries": 98
+  },
+  "frames": 812,
+  "frameMs": {
+   "p50": 16.7,
+   "p95": 33.4,
+   "worst": 266.7
+  },
+  "reactCommitsWhileScrolling": 0,
+  "adaptive": {
+   "endNotch": 1,
+   "windowMedians": [
+    16.7,
+    16.7,
+    16.7,
+    16.7,
+    16.7,
+    25
+   ],
+   "endDpr": 0.8
+  },
+  "longTasksOver50": 0,
+  "worstLongTask": 0,
+  "traceSplitMs": {
+   "scripting": 5282,
+   "rendering": 3376,
+   "painting": 1239,
+   "other": 1482,
+   "gpu": 8039,
+   "otherTop": [
+    "170 ms AsyncTask Run",
+    "149 ms CommandBufferProxyImpl::Flush",
+    "100 ms Blink.Paint.UpdateTime",
+    "89 ms WebFrameWidgetImpl::UpdateLifecycle",
+    "79 ms Blink.CompositingInputs.UpdateTime",
+    "78 ms PageAnimator::serviceScriptedAnimations",
+    "70 ms LocalFrameView::RunPaintLifecyclePhase",
+    "58 ms LocalFrameView::performLayout"
+   ]
+  },
+  "chromeMetricsMs": {
+   "script": 5142,
+   "styleRecalc": 2878,
+   "layout": 78,
+   "allTasks": 11889
+  },
+  "perScene": [
+   "scene  0: p95 266.7 ms ·  14 draw calls · 22266 triangles · 22 frames",
+   "scene  1: p95  16.8 ms ·  38 draw calls · 60186 triangles · 58 frames",
+   "scene  2: p95  33.3 ms ·  57 draw calls · 66390 triangles · 100 frames",
+   "scene  3: p95  33.4 ms ·  88 draw calls · 160822 triangles · 21 frames",
+   "scene  4: p95  33.3 ms ·  63 draw calls · 122602 triangles · 35 frames",
+   "scene  5: p95  33.5 ms ·  51 draw calls · 111376 triangles · 39 frames",
+   "scene  6: p95  33.4 ms ·  49 draw calls · 110776 triangles · 82 frames",
+   "scene  7: p95  33.4 ms ·  40 draw calls · 129060 triangles · 47 frames",
+   "scene  8: p95  49.9 ms ·  32 draw calls · 132916 triangles · 23 frames",
+   "scene  9: p95  16.8 ms ·  29 draw calls · 96860 triangles · 8 frames",
+   "scene 10: p95  33.4 ms ·  15 draw calls · 99932 triangles · 14 frames",
+   "scene 11: p95  33.5 ms ·  24 draw calls · 174868 triangles · 13 frames",
+   "scene 12: p95  33.3 ms ·  21 draw calls · 179348 triangles · 13 frames",
+   "scene 13: p95  49.9 ms ·  27 draw calls · 180044 triangles · 16 frames",
+   "scene 14: p95    50 ms ·  32 draw calls · 193108 triangles · 17 frames",
+   "scene 15: p95  33.4 ms ·  26 draw calls · 192868 triangles · 29 frames",
+   "scene 16: p95    50 ms ·  34 draw calls · 182358 triangles · 26 frames",
+   "scene 17: p95  33.4 ms ·  23 draw calls · 182336 triangles · 50 frames",
+   "scene 18: p95  33.5 ms ·  34 draw calls · 182358 triangles · 28 frames",
+   "scene 19: p95  33.5 ms ·  15 draw calls · 14050 triangles · 15 frames",
+   "scene 20: p95  33.6 ms ·  15 draw calls · 14050 triangles · 156 frames"
+  ],
+  "hotFunctions": null,
+  "errors": []
+ }
+}

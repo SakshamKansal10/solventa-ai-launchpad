@@ -1,3 +1,4 @@
+import { LOSS_SHARE_FRACTION } from "@/lib/consultation/options";
 import { getCurrencyForCountry, parseCurrencyAmount } from "@/lib/country-currency";
 import {
   bracketCount,
@@ -24,6 +25,25 @@ import type { SkillLevel } from "@/lib/onboarding-types";
 export function enLabel(group: string, id: string | undefined | null): string | null {
   if (!id) return null;
   return MESSAGES.en[optionKey(group, id)] ?? null;
+}
+
+/** What they could lose: their capital range × the share they said they could afford to lose. */
+function affordableLoss(
+  a: { capitalBracket?: number; lossShare?: string },
+  currencyCode: string,
+): { min: number; max: number | null } | null {
+  if (typeof a.capitalBracket !== "number") return null;
+  const tier = getBrackets("capital", currencyCode)[a.capitalBracket];
+  if (!tier) return null;
+  if (tier.zero) return { min: 0, max: 0 };
+  const share = a.lossShare
+    ? LOSS_SHARE_FRACTION[a.lossShare as keyof typeof LOSS_SHARE_FRACTION]
+    : undefined;
+  if (share === undefined) return null;
+  return {
+    min: Math.round((tier.min ?? 0) * share),
+    max: tier.max === null ? null : Math.round(tier.max * share),
+  };
 }
 
 function enLabels(group: string, ids: string[] | undefined): string[] {
@@ -290,6 +310,15 @@ export function normalizeV2(a: ConsultationAnswers): NormalizedProfile {
         (a.access ?? []).filter((x) => x !== "none"),
       ),
       accessNone: (a.access ?? []).includes("none"),
+      lossShare: enLabel("loss", a.lossShare),
+      affordableLoss: affordableLoss(a, currency.code),
+      reachThisWeek: enLabels(
+        "reach",
+        (a.reachThisWeek ?? []).filter((x) => x !== "none"),
+      ),
+      reachNone: (a.reachThisWeek ?? []).includes("none"),
+      workDays: enLabels("days", a.workDays),
+      helpAskedFor: a.helpAskedFor?.trim().slice(0, 160) || null,
       capitalTier: typeof a.capitalBracket === "number" ? a.capitalBracket : null,
       capitalTierCount: bracketCount("capital"),
       position: {

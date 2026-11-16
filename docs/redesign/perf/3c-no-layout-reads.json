@@ -1,0 +1,153 @@
+{
+ "label": "3c-no-layout-reads",
+ "tier": "auto",
+ "unthrottled": {
+  "throttle": 1,
+  "info": {
+   "mode": "lite",
+   "tier": "lite",
+   "reasons": [
+    "integrated graphics"
+   ],
+   "gpu": "ANGLE (AMD, AMD Radeon(TM) Vega 3 Graphics (0x000015D8) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+   "dpr": 1,
+   "notch": 0,
+   "windowMedians": [
+    16.7
+   ],
+   "programs": 31,
+   "textures": 5,
+   "geometries": 26
+  },
+  "frames": 1675,
+  "frameMs": {
+   "p50": 16.7,
+   "p95": 33.4,
+   "worst": 133.3
+  },
+  "longTasksOver50": 0,
+  "worstLongTask": 0,
+  "traceSplitMs": {
+   "scripting": 3812,
+   "rendering": 3065,
+   "painting": 676,
+   "other": 1177,
+   "gpu": 25719,
+   "otherTop": [
+    "135 ms AsyncTask Run",
+    "119 ms AnimationTimeline::serviceAnimations",
+    "85 ms PageAnimator::serviceScriptedAnimations",
+    "74 ms CommandBufferProxyImpl::Flush",
+    "72 ms Blink.CompositingInputs.UpdateTime",
+    "68 ms CommandBufferProxyImpl::WaitForGetOffset",
+    "57 ms LocalFrameView::RunPaintLifecyclePhase",
+    "46 ms WebFrameWidgetImpl::UpdateLifecycle"
+   ]
+  },
+  "chromeMetricsMs": {
+   "script": 3633,
+   "styleRecalc": 2742,
+   "layout": 48,
+   "allTasks": 9284
+  },
+  "perScene": [
+   "scene  0: p95  33.4 ms ·  14 draw calls · 22266 triangles · 129 frames",
+   "scene  1: p95  16.8 ms ·  38 draw calls · 60186 triangles · 81 frames",
+   "scene  2: p95  16.8 ms ·  57 draw calls · 66390 triangles · 203 frames",
+   "scene  3: p95  66.6 ms ·  87 draw calls · 160522 triangles · 35 frames",
+   "scene  4: p95  16.7 ms ·  63 draw calls · 122602 triangles · 42 frames",
+   "scene  5: p95  16.8 ms ·  51 draw calls · 111376 triangles · 68 frames",
+   "scene  6: p95  16.8 ms ·  49 draw calls · 110776 triangles · 175 frames",
+   "scene  7: p95  33.3 ms ·  40 draw calls · 148108 triangles · 121 frames",
+   "scene  8: p95  33.4 ms ·  32 draw calls · 164212 triangles · 62 frames",
+   "scene  9: p95  33.4 ms ·  29 draw calls · 145820 triangles · 27 frames",
+   "scene 10: p95  33.4 ms ·  15 draw calls · 145820 triangles · 48 frames",
+   "scene 11: p95  33.4 ms ·  24 draw calls · 256084 triangles · 30 frames",
+   "scene 12: p95  33.4 ms ·  21 draw calls · 234452 triangles · 28 frames",
+   "scene 13: p95  33.4 ms ·  27 draw calls · 235148 triangles · 40 frames",
+   "scene 14: p95  33.4 ms ·  32 draw calls · 253204 triangles · 30 frames",
+   "scene 15: p95  66.6 ms ·  34 draw calls · 252580 triangles · 47 frames",
+   "scene 16: p95  33.3 ms ·  34 draw calls · 237462 triangles · 56 frames",
+   "scene 17: p95  33.3 ms ·  23 draw calls · 237440 triangles · 103 frames",
+   "scene 18: p95  33.3 ms ·  34 draw calls · 237462 triangles · 67 frames",
+   "scene 19: p95  33.4 ms ·  15 draw calls · 14050 triangles · 32 frames",
+   "scene 20: p95  33.3 ms ·  15 draw calls · 14050 triangles · 251 frames"
+  ],
+  "hotFunctions": [
+   "   155 ms  updateMatrixWorld  CinematicCanvas-B8jWsBm9.js:1:63476",
+   "   144 ms  vt  CinematicCanvas-B8jWsBm9.js:4220:41294",
+   "   131 ms  (garbage collector)  :0:0",
+   "   117 ms  bufferSubData  :0:0",
+   "    91 ms  h  CinematicCanvas-B8jWsBm9.js:4169:2274",
+   "    87 ms  Vy  CinematicCanvas-B8jWsBm9.js:4231:13489",
+   "    82 ms  multiplyMatrices  CinematicCanvas-B8jWsBm9.js:1:49332",
+   "    73 ms  getPoint  CinematicCanvas-B8jWsBm9.js:1:200944",
+   "    65 ms  getProgramInfoLog  :0:0",
+   "    65 ms  setFromEuler  CinematicCanvas-B8jWsBm9.js:1:12586",
+   "    59 ms  (anonymous)  CinematicCanvas-B8jWsBm9.js:4249:50442",
+   "    56 ms  renderBufferDirect  CinematicCanvas-B8jWsBm9.js:4220:29376",
+   "    55 ms  setValue  CinematicCanvas-B8jWsBm9.js:4118:8554",
+   "    55 ms  (anonymous)  core-design-CMcBiDO6.js:1:17499"
+  ],
+  "errors": []
+ },
+ "throttled4x": {
+  "throttle": 4,
+  "info": {
+   "mode": "lite",
+   "tier": "lite",
+   "reasons": [
+    "integrated graphics"
+   ],
+   "gpu": "ANGLE (AMD, AMD Radeon(TM) Vega 3 Graphics (0x000015D8) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+   "dpr": 1,
+   "notch": 0,
+   "windowMedians": [
+    16.7
+   ],
+   "programs": 31,
+   "textures": 5,
+   "geometries": 26
+  },
+  "frames": 658,
+  "frameMs": {
+   "p50": 16.7,
+   "p95": 83.4,
+   "worst": 149.9
+  },
+  "longTasksOver50": 47,
+  "worstLongTask": 134,
+  "traceSplitMs": null,
+  "chromeMetricsMs": {
+   "script": 5059,
+   "styleRecalc": 4956,
+   "layout": 90,
+   "allTasks": 12710
+  },
+  "perScene": [
+   "scene  0: p95    50 ms ·  14 draw calls · 22266 triangles · 27 frames",
+   "scene  1: p95  33.3 ms ·  38 draw calls · 60186 triangles · 53 frames",
+   "scene  2: p95  33.4 ms ·  57 draw calls · 66390 triangles · 67 frames",
+   "scene  3: p95 149.9 ms ·  86 draw calls · 160222 triangles · 16 frames",
+   "scene  4: p95  33.4 ms ·  63 draw calls · 122602 triangles · 25 frames",
+   "scene  5: p95  33.8 ms ·  51 draw calls · 111376 triangles · 33 frames",
+   "scene  6: p95  33.4 ms ·  49 draw calls · 110776 triangles · 71 frames",
+   "scene  7: p95 116.6 ms ·  40 draw calls · 148108 triangles · 30 frames",
+   "scene  8: p95 116.6 ms ·  32 draw calls · 164212 triangles · 15 frames",
+   "scene  9: p95  33.4 ms ·  29 draw calls · 128772 triangles · 5 frames",
+   "scene 10: p95  33.4 ms ·  15 draw calls · 145820 triangles · 12 frames",
+   "scene 11: p95  33.4 ms ·  24 draw calls · 252340 triangles · 11 frames",
+   "scene 12: p95  33.4 ms ·  21 draw calls · 234452 triangles · 10 frames",
+   "scene 13: p95 133.2 ms ·  27 draw calls · 235148 triangles · 14 frames",
+   "scene 14: p95   100 ms ·  32 draw calls · 253204 triangles · 10 frames",
+   "scene 15: p95   100 ms ·  26 draw calls · 252580 triangles · 18 frames",
+   "scene 16: p95  66.7 ms ·  34 draw calls · 237462 triangles · 22 frames",
+   "scene 17: p95  33.4 ms ·  23 draw calls · 237440 triangles · 42 frames",
+   "scene 18: p95  49.9 ms ·  34 draw calls · 237462 triangles · 23 frames",
+   "scene 19: p95   100 ms ·  15 draw calls · 14050 triangles · 12 frames",
+   "scene 20: p95    50 ms ·  15 draw calls · 14050 triangles · 142 frames"
+  ],
+  "hotFunctions": null,
+  "errors": []
+ }
+}

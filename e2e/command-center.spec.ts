@@ -9,8 +9,8 @@ test.beforeEach(async ({ page }) => {
   await resetStack();
 });
 
-test.describe("Command Center — state A: directions ready", () => {
-  test("shows one flagship, two alternatives and a single Explore More button — no scores", async ({
+test.describe("Today — directions ready, none chosen", () => {
+  test("the recommended direction is the headline, with its fit summary and one way to compare — no scores", async ({
     page,
     context,
   }) => {
@@ -19,11 +19,17 @@ test.describe("Command Center — state A: directions ready", () => {
     const seeded = await seedDirections(user.id);
     await gotoApp(page, "/dashboard");
 
-    await expect(page.locator("h1")).toHaveText("Your strongest direction is ready to explore.");
     await expect(page.getByTestId("flagship-card")).toBeVisible();
-    // Only the recommended idea is here; the others live on the Opportunities page.
+    await expect(page.getByTestId("flagship-card")).toContainText("Recommended for you");
+    // Only the recommended idea is here; the others live on the Directions page.
     await expect(page.getByTestId("alternative-card")).toHaveCount(0);
-    await expect(page.getByTestId("explore-more")).toHaveCount(1);
+    await expect(page.getByTestId("explore-more")).toHaveText("Compare all 3");
+    await expect(page.getByTestId("fit-summary")).toContainText(/\d of 5 fit clearly/);
+    await expect(page.getByTestId("next-steps").locator("li[aria-current=step]")).toContainText(
+      "Choose a direction",
+    );
+    // Exactly one primary action on the page.
+    await expect(page.getByTestId("flagship-explore")).toHaveText("Explore this direction");
 
     // No numeric fit score, percentage or Business DNA anywhere on the screen.
     const text = await page.getByTestId("command-center").innerText();
@@ -31,11 +37,11 @@ test.describe("Command Center — state A: directions ready", () => {
     expect(text).not.toMatch(/Business DNA/i);
     expect(text).not.toMatch(/\b\d{2}\s*\/\s*100\b/);
     // The flagship is one of the seeded directions.
-    const flagship = await page.getByTestId("flagship-card").innerText();
-    expect(seeded.titles.some((t) => flagship.includes(t))).toBe(true);
+    const headline = await page.locator("h1").innerText();
+    expect(seeded.titles).toContain(headline);
   });
 
-  test("choosing a direction moves to state B and offers to build the roadmap", async ({
+  test("choosing a direction makes it the headline and offers to build the roadmap", async ({
     page,
     context,
   }) => {
@@ -48,15 +54,20 @@ test.describe("Command Center — state A: directions ready", () => {
     await page.getByTestId("flagship-explore").click();
     await page.getByTestId("choose-direction").click();
     await expect(page.getByTestId("build-roadmap")).toBeVisible();
+    const chosen = await page.getByTestId("opportunity-title").innerText();
     await gotoApp(page, "/dashboard");
-    await expect(page.locator("h1")).toHaveText("Your direction is chosen. Now let's test it.");
+    await expect(page.locator("h1")).toHaveText(chosen);
+    await expect(page.getByTestId("build-roadmap")).toHaveText("Build my roadmap");
     await expect(page.getByTestId("build-roadmap")).toBeEnabled();
+    await expect(page.getByTestId("next-steps").locator("li[aria-current=step]")).toContainText(
+      "roadmap",
+    );
     // Survives a reload (it is saved, not just local state).
     await page.reload();
-    await expect(page.locator("h1")).toHaveText("Your direction is chosen. Now let's test it.");
+    await expect(page.locator("h1")).toHaveText(chosen);
   });
 
-  test("Explore more opens the Opportunities page, where more directions are added through one Gemini call", async ({
+  test("Compare all opens the Directions page, where more directions are added through one Gemini call", async ({
     page,
     context,
   }) => {
@@ -119,9 +130,8 @@ test.describe("current-consultation rule", () => {
     });
 
     await gotoApp(page, "/dashboard");
-    await expect(page.locator("h1")).toHaveText("Your strongest direction is ready to explore.");
-    const flagship = await page.getByTestId("flagship-card").innerText();
-    expect(newer.titles.some((t) => flagship.includes(t))).toBe(true);
+    await expect(page.getByTestId("flagship-card")).toBeVisible();
+    expect(newer.titles).toContain(await page.locator("h1").innerText());
   });
 
   test("a deep link to an earlier consultation pins that view and says so", async ({

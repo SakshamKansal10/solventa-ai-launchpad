@@ -1,236 +1,68 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMutation } from "@tanstack/react-query";
+import { Check } from "lucide-react";
+import { useState } from "react";
 import { toast } from "sonner";
-import {
-  ArrowRight,
-  Check,
-  Compass,
-  Hammer,
-  Lightbulb,
-  Map as MapIcon,
-  Search,
-  SlidersHorizontal,
-  Target,
-  Users,
-  type LucideIcon,
-} from "lucide-react";
-import { useState, type ReactNode } from "react";
+import { z } from "zod";
 
-import { cn } from "@/lib/utils";
-
-import { OpportunityPhoto, useOpportunityImage } from "@/components/founder/OpportunityImage";
-import { directionIcon, FitPill } from "@/components/founder/OpportunityCards";
-import { DirectionCompare } from "@/components/founder/dashboard/DirectionCompare";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { FitBar, FitLegend, kindOf, useFitCounts } from "@/components/founder/dash/FitBar";
 import {
-  Button,
-  Card,
-  EmptyState,
-  ErrorPanel,
-  LinkButton,
-  PageSkeleton,
-  Pill,
-} from "@/components/founder/ui";
+  ContradictionRow,
+  FitQuestionsPanel,
+  useFitQuestions,
+} from "@/components/founder/dash/FitQuestions";
+import {
+  ActionButton,
+  ActionLink,
+  Arrow,
+  DashError,
+  DashPage,
+  DashSkeleton,
+  QuietRow,
+} from "@/components/founder/dash/ui";
 import type { OpportunityBrief } from "@/lib/actions/founder";
-import { chooseDirection, exploreMoreOpportunities } from "@/lib/actions/opportunities";
+import { exploreMoreOpportunities } from "@/lib/actions/opportunities";
+import type { FitFactorKey } from "@/lib/fit/model";
 import { useLocale } from "@/lib/i18n/LocaleProvider";
 import { useFounderState, useInvalidateFounder } from "@/lib/queries";
 import { useTranslatedBrief } from "@/lib/use-translation";
-import { z } from "zod";
+import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/dashboard/opportunities/")({
   validateSearch: z.object({ consultation: z.string().uuid().optional() }),
-  component: OpportunitiesPage,
+  component: DirectionsPage,
   head: () => ({
-    meta: [{ title: "Opportunities — Solventia" }, { name: "robots", content: "noindex" }],
+    meta: [
+      { title: "Directions | Solventia" },
+      {
+        name: "description",
+        content: "The business directions found for you, and how each one fits.",
+      },
+      { name: "robots", content: "noindex" },
+    ],
   }),
 });
 
-type Section = "selected" | "alternative";
-
-/** One opportunity. The selected one is a featured hero with its photo; the
- * alternatives are image cards: photo (only if one already exists), name, short
- * description, fit, and the Open / Choose actions. */
-function OpportunityRow({
-  brief: raw,
-  section,
-  onChoose,
-  choosing,
-  canChoose,
-  recommended = false,
-}: {
-  brief: OpportunityBrief;
-  section: Section;
-  /** The direction the Command Center recommends (before anything is chosen). */
-  recommended?: boolean;
-  onChoose?: () => void;
-  choosing?: boolean;
-  canChoose: boolean;
-}) {
-  const { t } = useLocale();
-  const brief = useTranslatedBrief(raw) ?? raw;
-  const selected = section === "selected";
-  const description = brief.oneLiner || brief.customer;
-  // The chosen idea gets its photo (generated once, then cached). Alternatives
-  // only show a thumbnail if one already exists — browsing never spends credits.
-  const image = useOpportunityImage(raw.id, { generate: selected });
-
-  if (selected) {
-    const facts: { key: string; icon: LucideIcon; label: string; value: string | null }[] = [
-      { key: "customer", icon: Users, label: t("opp.fact.customer"), value: brief.customer },
-      { key: "problem", icon: Target, label: t("opp.fact.problem"), value: brief.problem },
-      { key: "product", icon: Hammer, label: t("opp.ov.groupWhat"), value: brief.product },
-    ];
-    const shownFacts = facts.filter((f) => f.value);
-    return (
-      <article className="sol-atmosphere" data-testid="opp-selected" aria-label={brief.title}>
-        <div className="relative z-10 grid gap-6 p-6 sm:p-8 @4xl:grid-cols-[minmax(0,1fr)_minmax(0,1.15fr)] @4xl:items-center @4xl:gap-10">
-          <div className="flex flex-col justify-center gap-5">
-            <div className="flex flex-wrap items-center gap-2.5">
-              <p className="sol-eyebrow flex items-center gap-2 !text-[0.9375rem]">
-                <span className="h-3 w-0.5 rounded-full bg-sol-cobalt" aria-hidden="true" />
-                {t("opp.list.featured")}
-              </p>
-              <Pill tone="cobalt">{t("opp.status.selected")}</Pill>
-            </div>
-            <h3 className="max-w-[16ch] font-display text-[clamp(1.75rem,1.3rem+1.6vw,2.75rem)] font-medium leading-[1.1] text-sol-ink">
-              {brief.title}
-            </h3>
-            <div className="flex flex-wrap items-center gap-3">
-              <LinkButton to="/dashboard/opportunities/$id" params={{ id: brief.id }} size="md">
-                {t("common.open")}
-                <ArrowRight className="size-4" aria-hidden="true" />
-              </LinkButton>
-              <LinkButton to="/dashboard/roadmap" variant="secondary" size="md">
-                <MapIcon className="size-4" aria-hidden="true" />
-                {t("cc.hero.viewRoadmap")}
-              </LinkButton>
-            </div>
-          </div>
-          {(description || shownFacts.length > 0) && (
-            <div className="rounded-3xl border border-sol-border bg-white/70 p-5 backdrop-blur sm:p-6">
-              <p className="flex items-center gap-2.5 text-[1rem] font-medium text-sol-cobalt-deep">
-                <span className="flex size-8 items-center justify-center rounded-full bg-sol-champagne-soft">
-                  <Lightbulb className="size-4" aria-hidden="true" />
-                </span>
-                {t("opp.hero.simply")}
-              </p>
-              {description && (
-                <p className="mt-3 line-clamp-4 text-[0.9375rem] leading-relaxed text-sol-secondary">
-                  {description}
-                </p>
-              )}
-              {shownFacts.length > 0 && (
-                <ul className="mt-4 flex flex-col gap-3.5">
-                  {shownFacts.map((f) => (
-                    <li key={f.key} className="flex items-start gap-3.5">
-                      <span className="flex size-11 shrink-0 items-center justify-center rounded-full bg-sol-champagne-soft text-sol-champagne-deep">
-                        <f.icon className="size-5" aria-hidden="true" />
-                      </span>
-                      <div className="min-w-0">
-                        <p className="text-[0.9375rem] font-medium text-sol-ink">{f.label}</p>
-                        <p className="line-clamp-2 text-[0.9375rem] leading-snug text-sol-secondary">
-                          {f.value}
-                        </p>
-                      </div>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </div>
-          )}
-        </div>
-      </article>
-    );
-  }
-
-  const Icon = directionIcon(brief.category, brief.title);
-  return (
-    <Card
-      as="article"
-      className="group flex h-full flex-col p-5 transition-colors hover:border-sol-cobalt/40 sm:p-6"
-      data-testid={`opp-${section}`}
-    >
-      <div className="flex items-start gap-4">
-        <span
-          className="flex size-14 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-sol-cobalt-soft text-sol-cobalt-deep"
-          data-testid={image.url ? "opp-thumb" : undefined}
-        >
-          {image.url ? (
-            <img src={image.url} alt="" className="size-full object-cover" draggable={false} />
-          ) : (
-            <Icon className="size-6" strokeWidth={1.75} aria-hidden="true" />
-          )}
-        </span>
-        <div className="min-w-0 flex-1">
-          {recommended && (
-            <p className="sol-eyebrow mb-1 !text-[0.9375rem] !normal-case !tracking-normal !text-sol-champagne-deep">
-              {t("opp.list.recommendedTag")}
-            </p>
-          )}
-          <div className="flex items-start justify-between gap-3">
-            <h3 className="sol-h3 min-w-0">{brief.title}</h3>
-            <FitPill fit={brief.fit} />
-          </div>
-          {description && (
-            <p className="mt-1.5 line-clamp-3 text-[0.9375rem] leading-snug text-sol-secondary">
-              {description}
-            </p>
-          )}
-        </div>
-      </div>
-      {brief.whyFit.length > 0 && (
-        <ul className="mt-4 flex flex-col gap-2.5 border-t border-sol-border pt-4 sm:pl-[4.5rem]">
-          {brief.whyFit.slice(0, 3).map((reason) => (
-            <li key={reason} className="flex items-start gap-3 text-[0.9375rem] text-sol-secondary">
-              <span className="mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full bg-sol-cobalt-soft text-sol-cobalt-deep">
-                <Check className="size-3" strokeWidth={3} aria-hidden="true" />
-              </span>
-              <span className="min-w-0">{reason}</span>
-            </li>
-          ))}
-        </ul>
-      )}
-      <div className="mt-auto flex flex-wrap items-center gap-3 pt-5 sm:pl-[4.5rem]">
-        <LinkButton
-          to="/dashboard/opportunities/$id"
-          params={{ id: brief.id }}
-          variant="secondary"
-          size="sm"
-        >
-          {t("common.open")}
-          <ArrowRight className="size-4" aria-hidden="true" />
-        </LinkButton>
-        {section === "alternative" && canChoose && onChoose && (
-          <Button variant="soft" size="sm" onClick={onChoose} loading={choosing}>
-            {t("cc.choose")}
-          </Button>
-        )}
-      </div>
-    </Card>
-  );
-}
-
-function OpportunitiesPage() {
+/**
+ * Directions — "Which one?" (screen 3). One card per direction, the recommended (or chosen)
+ * one first on navy. Each card: number, name, one sentence, the fit bar, the overall fit label
+ * with counts, the single strongest reason, and one button: Open direction. Choosing happens
+ * on the direction's own page only.
+ */
+function DirectionsPage() {
   const { t, locale } = useLocale();
+  const formatDate = (iso: string) =>
+    new Date(iso).toLocaleDateString(locale === "hi" ? "hi-IN" : "en-IN", {
+      day: "numeric",
+      month: "long",
+      year: "numeric",
+    });
   const founder = useFounderState();
   const invalidate = useInvalidateFounder();
-  const navigate = useNavigate();
-  const [query, setQuery] = useState("");
-  const [fitFilter, setFitFilter] = useState<OpportunityBrief["fit"] | "all">("all");
-
-  const choose = useMutation({
-    mutationFn: (opportunityId: string) => chooseDirection({ data: { opportunityId } }),
-    onSuccess: async () => {
-      await invalidate();
-      toast.success(t("cc.chosen.toast"));
-      void navigate({ to: "/dashboard" });
-    },
-    onError: (err) => {
-      console.error("[opportunities] choose failed:", err);
-      toast.error(t("cc.chosen.error"));
-    },
-  });
+  const [asking, setAsking] = useState(false);
+  // Questions and contradictions are about the latest consultation (answers are saved there).
+  const latest = founder.data?.direction.isLatestConsultation ?? false;
+  const questions = useFitQuestions(latest);
 
   const explore = useMutation({
     mutationFn: () => exploreMoreOpportunities({ data: { locale } }),
@@ -239,180 +71,230 @@ function OpportunitiesPage() {
       toast.success(t("cc.explore.done", { n: res.added }));
     },
     onError: (err) => {
-      console.error("[opportunities] explore more failed:", err);
+      console.error("[directions] explore more failed:", err);
       toast.error(t("cc.explore.error"));
     },
   });
 
-  if (founder.isPending) return <PageSkeleton label={t("shell.skeleton.loading")} />;
+  if (founder.isPending) return <DashSkeleton label={t("shell.skeleton.loading")} />;
   if (founder.isError || !founder.data) {
-    return <ErrorPanel onRetry={() => void founder.refetch()} retrying={founder.isFetching} />;
+    return <DashError onRetry={() => void founder.refetch()} retrying={founder.isFetching} />;
   }
 
-  const { direction, briefs } = founder.data;
-  const all = Object.values(briefs);
-  const inView = all.filter((b) => b.consultationId === direction.consultationId);
-  const selected = direction.selectedId ? briefs[direction.selectedId] : null;
-  const alternatives = inView
-    .filter((b) => b.id !== selected?.id && b.status !== "dismissed")
+  const { direction, briefs, viewedConsultationAt } = founder.data;
+  const inView = Object.values(briefs)
+    .filter((b) => b.consultationId === direction.consultationId && b.status !== "dismissed")
     .sort((a, b) => direction.viewedIds.indexOf(a.id) - direction.viewedIds.indexOf(b.id));
-  const canChoose = direction.isLatestConsultation;
-  const q = query.trim().toLowerCase();
-  const textMatch = (b: OpportunityBrief) =>
-    q === "" || `${b.title} ${b.oneLiner ?? ""} ${b.customer ?? ""}`.toLowerCase().includes(q);
-  const shownAlternatives = alternatives.filter(
-    (b) => (fitFilter === "all" || b.fit === fitFilter) && textMatch(b),
+  // The chosen direction leads; before a choice, the recommended one does.
+  const leadId = direction.selectedId ?? direction.flagshipId;
+  const ordered = [
+    ...inView.filter((b) => b.id === leadId),
+    ...inView.filter((b) => b.id !== leadId),
+  ];
+
+  if (ordered.length === 0) {
+    return (
+      <DashPage data-testid="opportunities-page">
+        <h1 className="dash-headline max-w-[15em]">{t("v2.today.none.title")}</h1>
+        <p className="dash-lead max-w-[32em]">{t("v2.today.none.lead")}</p>
+        <ActionLink to="/consultation" className="self-start">
+          {t("v2.today.none.cta")}
+        </ActionLink>
+      </DashPage>
+    );
+  }
+
+  // A factor no direction could assess is worth asking about (one nudge, not one per card).
+  const unknownEverywhere = (
+    ["capability", "access", "resources", "time", "goals"] as FitFactorKey[]
+  ).find((key) =>
+    ordered.every((b) =>
+      b.fitFactors
+        ? kindOf(b.fitFactors.find((f) => f.key === key)?.score ?? null) === "unknown"
+        : false,
+    ),
   );
-  const filtering = q !== "" || fitFilter !== "all";
-  const fitOptions = (["strong", "moderate", "conditional", "weak", "provisional"] as const).filter(
-    (f) => alternatives.some((b) => b.fit === f),
-  );
-  const showToolbar = alternatives.length > 0;
-  // Every live direction of this consultation, in the order they were presented.
-  const comparable = inView
-    .filter((b) => b.status !== "dismissed")
-    .sort((a, b) => direction.viewedIds.indexOf(a.id) - direction.viewedIds.indexOf(b.id))
-    .slice(0, 4);
+  const canExplore = direction.isLatestConsultation;
+  const askable = canExplore && (questions.data?.missing.length ?? 0) > 0;
 
   return (
-    <div className="flex flex-col gap-8" data-testid="opportunities-page">
-      <h1 className="sr-only">{t("shell.nav.opportunities")}</h1>
-
-      {all.length === 0 && (
-        <EmptyState
-          title={t("cc.none.cardTitle")}
-          body={t("cc.none.cardBody")}
-          action={
-            <LinkButton to="/consultation" variant="primary" size="lg">
-              {t("nav.findMyBusinessIdea")}
-            </LinkButton>
-          }
-        />
-      )}
-
-      {selected && (
-        <section aria-label={t("opp.list.selected")} className="flex flex-col gap-3">
-          <OpportunityRow brief={selected} section="selected" canChoose={false} />
-        </section>
-      )}
-
-      {comparable.length > 1 && !filtering && (
-        <section id="compare" aria-label={t("cc.compare.heading")} className="scroll-mt-24">
-          <DirectionCompare briefs={comparable} />
-        </section>
-      )}
-
-      {showToolbar && (
-        <div className="flex items-center gap-3">
-          <label className="relative block min-w-0 flex-1">
-            <span className="sr-only">{t("opp.list.search")}</span>
-            <Search
-              className="pointer-events-none absolute left-4 top-1/2 size-4 -translate-y-1/2 text-sol-secondary"
-              aria-hidden="true"
-            />
-            <input
-              type="search"
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder={t("opp.list.searchPlaceholder")}
-              data-testid="opp-search"
-              className="h-12 w-full rounded-full border border-sol-border bg-sol-surface pl-11 pr-4 text-[0.9375rem] text-sol-ink outline-none placeholder:text-sol-secondary/70 focus-visible:border-sol-cobalt/60 focus-visible:ring-2 focus-visible:ring-sol-cobalt/30"
-            />
-          </label>
-          {fitOptions.length > 1 && (
-            <Popover>
-              <PopoverTrigger asChild>
-                <button
-                  type="button"
-                  data-testid="opp-filters"
-                  className="flex h-12 shrink-0 cursor-pointer items-center gap-2.5 rounded-full border border-sol-border bg-sol-surface px-5 text-[0.9375rem] font-medium text-sol-ink transition-colors hover:border-sol-cobalt/40"
-                >
-                  <SlidersHorizontal className="size-4" aria-hidden="true" />
-                  {t("opp.list.filters")}
-                  {fitFilter !== "all" && (
-                    <span className="size-2 rounded-full bg-sol-cobalt" aria-hidden="true" />
-                  )}
-                </button>
-              </PopoverTrigger>
-              <PopoverContent align="end" className="w-56 p-2">
-                <div role="group" aria-label={t("opp.list.filterAria")} className="flex flex-col">
-                  {(["all", ...fitOptions] as const).map((f) => (
-                    <button
-                      key={f}
-                      type="button"
-                      aria-pressed={fitFilter === f}
-                      onClick={() => setFitFilter(f)}
-                      className={cn(
-                        "flex min-h-10 cursor-pointer items-center justify-between rounded-xl px-3 text-left text-[0.9375rem] transition-colors",
-                        fitFilter === f
-                          ? "bg-sol-cobalt-soft font-medium text-sol-cobalt-deep"
-                          : "text-sol-ink hover:bg-sol-ivory",
-                      )}
-                    >
-                      {f === "all" ? t("opp.list.filterAll") : t(`fit2.label.${f}` as const)}
-                      {fitFilter === f && <Check className="size-4" aria-hidden="true" />}
-                    </button>
-                  ))}
-                </div>
-              </PopoverContent>
-            </Popover>
-          )}
+    <DashPage data-testid="opportunities-page">
+      <div className="flex flex-wrap items-end justify-between gap-6">
+        <div className="flex min-w-0 flex-col gap-[18px]">
+          <h1 className="dash-headline">
+            {direction.selectedId
+              ? t("v2.dir.titleChosen", { n: ordered.length })
+              : t("v2.dir.title", { n: ordered.length })}
+          </h1>
+          <p className="dash-lead max-w-[36em]">
+            {viewedConsultationAt
+              ? t("v2.dir.builtFrom", { date: formatDate(viewedConsultationAt) })
+              : t("v2.dir.builtFromNoDate")}
+          </p>
         </div>
-      )}
+        <FitLegend />
+      </div>
 
-      {filtering && shownAlternatives.length === 0 && (
-        <p className="text-[0.9375rem] text-sol-secondary" role="status">
-          {t("opp.list.noMatch")}
+      <ol className="grid items-stretch gap-5 [grid-template-columns:repeat(auto-fit,minmax(min(360px,100%),1fr))]">
+        {ordered.map((b, i) => (
+          <li key={b.id} className="flex">
+            <DirectionCard
+              brief={b}
+              index={i}
+              lead={b.id === leadId}
+              chosen={b.id === direction.selectedId}
+            />
+          </li>
+        ))}
+      </ol>
+
+      <div className="flex flex-col gap-3">
+        {canExplore && <ContradictionRow items={questions.data?.contradictions ?? []} />}
+        {unknownEverywhere && !asking && (
+          // Ask what is missing (part 4, feature 5): two to four questions for exactly the empty
+          // answers, inline; on an older consultation, Settings → Founder profile.
+          <QuietRow className="border-0 bg-sol-ivory" data-testid="fit-nudge">
+            <p className="flex-[1_1_420px] text-[20px] leading-[1.4] text-sol-ink">
+              <span className="font-semibold">
+                {t("v2.dir.nudge.title", {
+                  factor: t(`fit2.factor.${unknownEverywhere}` as const),
+                  n: ordered.length,
+                })}
+              </span>{" "}
+              <span className="text-sol-secondary">{t("v2.dir.nudge.body")}</span>
+            </p>
+            {askable ? (
+              <ActionButton
+                tone="secondary"
+                size="md"
+                arrow={false}
+                onClick={() => setAsking(true)}
+                data-testid="fit-nudge-open"
+              >
+                {t("v2.dir.nudge.cta")}
+              </ActionButton>
+            ) : (
+              <ActionLink to="/dashboard/settings" tone="secondary" size="md">
+                {t("v2.dir.nudge.cta")}
+              </ActionLink>
+            )}
+          </QuietRow>
+        )}
+        {asking && questions.data && questions.data.missing.length > 0 && (
+          <FitQuestionsPanel data={questions.data} onDone={() => setAsking(false)} />
+        )}
+        {canExplore && (
+          <QuietRow>
+            <p className="text-[20px] text-sol-secondary">{t("v2.dir.more.title")}</p>
+            <div className="flex flex-col items-start gap-2">
+              <ActionButton
+                tone="secondary"
+                size="md"
+                arrow={false}
+                onClick={() => explore.mutate()}
+                loading={explore.isPending}
+                data-testid="explore-more-generate"
+              >
+                {t("cc.findMore")}
+              </ActionButton>
+            </div>
+            {explore.isPending && (
+              <p role="status" className="basis-full text-[17px] text-sol-secondary">
+                {t("cc.explore.working")}
+              </p>
+            )}
+          </QuietRow>
+        )}
+      </div>
+    </DashPage>
+  );
+}
+
+function DirectionCard({
+  brief: raw,
+  index,
+  lead,
+  chosen,
+}: {
+  brief: OpportunityBrief;
+  index: number;
+  lead: boolean;
+  chosen: boolean;
+}) {
+  const { t } = useLocale();
+  const brief = useTranslatedBrief(raw) ?? raw;
+  const counts = useFitCounts();
+  const reason = brief.whyFit[0] ?? null;
+  return (
+    <article
+      data-testid={chosen ? "opp-selected" : "opp-alternative"}
+      data-lead={lead || undefined}
+      aria-labelledby={`dir-${raw.id}`}
+      className={cn(
+        "flex w-full min-w-0 flex-col gap-[22px] rounded-[36px] p-[clamp(24px,2.6vw,36px)]",
+        lead ? "bg-sol-navy text-white" : "bg-sol-ivory text-sol-ink",
+      )}
+    >
+      <div className="flex flex-wrap items-center justify-between gap-2.5">
+        <span
+          aria-hidden="true"
+          className="font-display text-[44px] font-medium leading-[0.9] tracking-[-0.04em]"
+        >
+          {String(index + 1).padStart(2, "0")}
+        </span>
+        {lead && (
+          <span className="inline-flex min-h-9 items-center rounded-full bg-white px-3.5 text-[15px] font-semibold text-sol-ink">
+            {chosen ? t("v2.today.chosen.tag") : t("v2.dir.recommended")}
+          </span>
+        )}
+      </div>
+      <h2
+        id={`dir-${raw.id}`}
+        className="font-display text-[clamp(26px,2.4vw,32px)] font-medium leading-[1.08] tracking-[-0.02em]"
+        style={{ textWrap: "balance" }}
+      >
+        {brief.title}
+      </h2>
+      {brief.oneLiner && (
+        <p
+          className={cn("text-[18px] leading-[1.5]", lead ? "text-white/75" : "text-sol-secondary")}
+        >
+          {brief.oneLiner}
         </p>
       )}
-
-      {shownAlternatives.length > 0 && (
-        <section aria-labelledby="alt-h" className="flex flex-col gap-4">
-          <div className="flex items-center gap-3">
-            <h2 id="alt-h" className="sol-h-sm !text-[1.0625rem]">
-              {/* Before a choice every direction is listed, the recommended one first. */}
-              {selected ? t("opp.list.alternatives") : t("opp.list.all")}
-            </h2>
-            <span className="rounded-full bg-sol-ivory px-2.5 py-0.5 text-[0.9375rem] font-medium text-sol-secondary">
-              {shownAlternatives.length}
+      <div className="flex flex-col gap-2.5">
+        {raw.fitFactors && <FitBar factors={raw.fitFactors} onNavy={lead} />}
+        <p className="text-[17px] font-semibold" data-testid="fit-label">
+          {t(`fit2.label.${brief.fit}` as const)}
+          {raw.fitFactors && (
+            <span className={cn("font-normal", lead ? "text-white/75" : "text-sol-secondary")}>
+              {" · "}
+              {counts(raw.fitFactors)}
             </span>
-          </div>
-          <div className="grid gap-5 @4xl:grid-cols-2">
-            {shownAlternatives.map((b) => (
-              <OpportunityRow
-                key={b.id}
-                brief={b}
-                section="alternative"
-                canChoose={canChoose}
-                choosing={choose.isPending && choose.variables === b.id}
-                onChoose={() => choose.mutate(b.id)}
-                recommended={!selected && b.id === direction.flagshipId}
-              />
-            ))}
-          </div>
-        </section>
-      )}
-
-      {canChoose && all.length > 0 && (
-        <div className="flex flex-col items-start gap-2">
-          <Button
-            variant="soft"
-            size="lg"
-            onClick={() => explore.mutate()}
-            loading={explore.isPending}
-            disabled={choose.isPending}
-            data-testid="explore-more-generate"
-          >
-            <Compass className="size-5" aria-hidden="true" />
-            {t("cc.findMore")}
-          </Button>
-          {explore.isPending && (
-            <p role="status" className="text-[1rem] text-sol-secondary">
-              {t("cc.explore.working")}
-            </p>
           )}
-        </div>
+        </p>
+      </div>
+      {reason && (
+        <p className="flex items-start gap-3 text-[17px] leading-[1.45]">
+          <Check className="mt-0.5 size-[22px] shrink-0" strokeWidth={2.4} aria-hidden="true" />
+          <span className="min-w-0">{reason}</span>
+        </p>
       )}
-    </div>
+      <Link
+        to="/dashboard/opportunities/$id"
+        params={{ id: raw.id }}
+        data-testid="open-direction"
+        aria-label={`${t("v2.dir.open")}: ${brief.title}`}
+        className={cn(
+          "mt-auto inline-flex min-h-[62px] items-center justify-center gap-3 rounded-full px-7 text-[19px] font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2",
+          lead
+            ? "bg-white text-sol-ink hover:bg-sol-ivory focus-visible:outline-white"
+            : "border border-sol-ink/35 text-sol-ink hover:border-sol-ink/60 focus-visible:outline-sol-cobalt",
+        )}
+      >
+        {t("v2.dir.open")}
+        <Arrow />
+      </Link>
+    </article>
   );
 }

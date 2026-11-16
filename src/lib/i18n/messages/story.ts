@@ -45,15 +45,15 @@ const en = {
   "story.how.aria": "Five steps from understanding the founder to adapting the plan",
 
   "story.road.missionsCount": "{done}/{total} missions complete",
-  "story.road.captured": "Evidence captured",
+  "story.road.captured": "Proof captured",
   "story.road.evidenceKind": "Customer interview",
   "story.road.evidenceQuote": "“Follow-ups get dropped every week.”",
   "story.road.reads": "Solventia reads it",
 
   "story.proof.eyebrow": "Proof engine",
-  "story.proof.headline": "Assumptions become evidence.",
+  "story.proof.headline": "Things to check become proof.",
   "story.proof.subhead":
-    "Every recorded conversation moves an assumption — including the ones that disagree with you.",
+    "Every recorded conversation moves a thing to check — including the ones that disagree with you.",
   "story.proof.node.problem": "Problem",
   "story.proof.node.customer": "Customer",
   "story.proof.node.payment": "Payment",
@@ -63,18 +63,18 @@ const en = {
   "story.proof.state.testing": "Testing",
   "story.proof.state.supported": "Supported",
   "story.proof.state.contradicted": "Contradicted",
-  "story.proof.stream": "Evidence stream",
+  "story.proof.stream": "Proof stream",
   "story.proof.ev1.quote": "“We lose patients because nobody follows up.”",
   "story.proof.ev1.meta": "Customer interview · Supports Problem",
   "story.proof.ev2.quote": "“I wouldn't pay for reminders.”",
   "story.proof.ev2.meta": "Customer interview · Contradicts Payment",
   "story.proof.askSol": "Ask Sol what this changes",
-  "story.proof.mapAria": "Assumption map with five assumptions and their current state",
+  "story.proof.mapAria": "Map of five things to check and their current state",
   "story.proof.waiting": "Waiting for the next conversation…",
 
   "story.ask.eyebrow": "Ask Sol",
   "story.ask.subhead":
-    "Ask Sol answers with your opportunity, your week and your evidence already in context.",
+    "Ask Sol answers with your opportunity, your week and your proof already in context.",
   "story.ask.prompt": "What should I learn from these interviews?",
   "story.ask.chip.opp": "Clinic follow-ups",
   "story.ask.chip.week": "Week 1",
@@ -83,7 +83,7 @@ const en = {
   "story.ask.answer.sol":
     "Two of your three clinic owners dropped follow-ups every week — the pain is real. None mentioned paying, so use Week 2 to test one concrete price before you build anything.",
   "story.ask.answer.generic":
-    "Look for common themes, ask open-ended questions and keep validating your assumptions with more customer research.",
+    "Look for common themes, ask open-ended questions and keep testing what you need to check with more customer research.",
   "story.ask.contextOn": "Context on — answers about your actual week",
   "story.ask.contextOff": "Context off — advice anyone could get",
   "story.ask.hint": "Tap a context chip to remove it and watch the answer change.",
@@ -92,8 +92,8 @@ const en = {
   "story.link.1": "Signals become opportunities",
   "story.link.2": "One direction becomes a plan",
   "story.link.3": "The plan becomes weekly missions",
-  "story.link.4": "Missions produce evidence",
-  "story.link.5": "Evidence shapes your next move",
+  "story.link.4": "Missions produce proof",
+  "story.link.5": "Proof shapes your next move",
 } as const;
 
 const hi: Record<keyof typeof en, string> = {
@@ -139,15 +139,15 @@ const hi: Record<keyof typeof en, string> = {
   "story.how.aria": "फाउंडर को समझने से लेकर योजना को ढालने तक पांच कदम",
 
   "story.road.missionsCount": "{total} में से {done} मिशन पूरे",
-  "story.road.captured": "साक्ष्य दर्ज हुआ",
+  "story.road.captured": "सबूत दर्ज हुआ",
   "story.road.evidenceKind": "ग्राहक इंटरव्यू",
   "story.road.evidenceQuote": "“हर हफ़्ते फ़ॉलो-अप छूट जाते हैं।”",
   "story.road.reads": "Solventia इसे पढ़ता है",
 
-  "story.proof.eyebrow": "प्रमाण इंजन",
-  "story.proof.headline": "अनुमान साक्ष्य बनते हैं।",
+  "story.proof.eyebrow": "सबूत इंजन",
+  "story.proof.headline": "जाँचने वाली बातें सबूत बनती हैं।",
   "story.proof.subhead":
-    "हर दर्ज बातचीत एक अनुमान को आगे बढ़ाती है — उन बातों समेत जो आपसे असहमत हैं।",
+    "हर दर्ज बातचीत किसी जाँचने वाली बात को आगे बढ़ाती है — उन बातों समेत जो आपसे असहमत हैं।",
   "story.proof.node.problem": "समस्या",
   "story.proof.node.customer": "ग्राहक",
   "story.proof.node.payment": "भुगतान",
@@ -157,18 +157,18 @@ const hi: Record<keyof typeof en, string> = {
   "story.proof.state.testing": "परीक्षण में",
   "story.proof.state.supported": "समर्थित",
   "story.proof.state.contradicted": "विरोधाभासी",
-  "story.proof.stream": "साक्ष्य धारा",
+  "story.proof.stream": "सबूत धारा",
   "story.proof.ev1.quote": "“फ़ॉलो-अप न होने से हम मरीज़ खो देते हैं।”",
   "story.proof.ev1.meta": "ग्राहक इंटरव्यू · समस्या का समर्थन",
   "story.proof.ev2.quote": "“मैं रिमाइंडर के लिए पैसे नहीं दूंगा।”",
   "story.proof.ev2.meta": "ग्राहक इंटरव्यू · भुगतान के विरुद्ध",
   "story.proof.askSol": "Sol से पूछें इससे क्या बदलता है",
-  "story.proof.mapAria": "पांच अनुमानों और उनकी मौजूदा स्थिति का मानचित्र",
+  "story.proof.mapAria": "पांच जाँचने वाली बातों और उनकी मौजूदा स्थिति का मानचित्र",
   "story.proof.waiting": "अगली बातचीत का इंतज़ार…",
 
   "story.ask.eyebrow": "Ask Sol",
   "story.ask.subhead":
-    "Ask Sol आपके अवसर, आपके सप्ताह और आपके साक्ष्य को पहले से जानकर जवाब देता है।",
+    "Ask Sol आपके अवसर, आपके सप्ताह और आपके सबूत को पहले से जानकर जवाब देता है।",
   "story.ask.prompt": "इन इंटरव्यू से मुझे क्या सीखना चाहिए?",
   "story.ask.chip.opp": "क्लीनिक फ़ॉलो-अप",
   "story.ask.chip.week": "सप्ताह 1",
@@ -177,7 +177,7 @@ const hi: Record<keyof typeof en, string> = {
   "story.ask.answer.sol":
     "आपके तीन में से दो क्लीनिक मालिकों के फ़ॉलो-अप हर हफ़्ते छूटते हैं — समस्या असली है। किसी ने भुगतान की बात नहीं की, इसलिए कुछ भी बनाने से पहले सप्ताह 2 में एक ठोस कीमत परखें।",
   "story.ask.answer.generic":
-    "साझा विषय खोजें, खुले सवाल पूछें और ज़्यादा ग्राहक शोध से अपने अनुमान परखते रहें।",
+    "साझा विषय खोजें, खुले सवाल पूछें और ज़्यादा ग्राहक शोध से जाँचते रहें कि क्या सच है।",
   "story.ask.contextOn": "संदर्भ चालू — आपके असली सप्ताह के बारे में जवाब",
   "story.ask.contextOff": "संदर्भ बंद — ऐसी सलाह जो कोई भी पा सकता है",
   "story.ask.hint": "संदर्भ चिप पर टैप करके उसे हटाएं और जवाब बदलते देखें।",
@@ -186,8 +186,8 @@ const hi: Record<keyof typeof en, string> = {
   "story.link.1": "संकेत अवसर बनते हैं",
   "story.link.2": "एक दिशा योजना बनती है",
   "story.link.3": "योजना साप्ताहिक मिशन बनती है",
-  "story.link.4": "मिशन साक्ष्य पैदा करते हैं",
-  "story.link.5": "साक्ष्य आपका अगला कदम तय करता है",
+  "story.link.4": "मिशन सबूत पैदा करते हैं",
+  "story.link.5": "सबूत आपका अगला कदम तय करता है",
 };
 
 export default { en, hi };

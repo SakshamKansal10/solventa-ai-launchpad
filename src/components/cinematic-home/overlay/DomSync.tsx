@@ -21,6 +21,8 @@ export function DomSync() {
   );
   /** The panel's first rasterisation is done right after load, invisibly, instead of mid-handoff. */
   const warmUntil = useMemo(() => ({ t: 0 }), []);
+  /** The panel's layout box, measured once per viewport size (its own size never animates). */
+  const panelBox = useMemo(() => ({ key: "", w: 1, h: 1 }), []);
 
   useFrame((state) => {
     const s = store.state;
@@ -106,8 +108,13 @@ export function DomSync() {
           const c = scratch.corners[i].set(x, y, zz).applyMatrix4(scratch.m).project(cam);
           return [(c.x * 0.5 + 0.5) * width, (-c.y * 0.5 + 0.5) * height] as [number, number];
         });
-        const w = panel.offsetWidth || 1;
-        const h = panel.offsetHeight || 1;
+        const key = `${width}x${height}`;
+        if (panelBox.key !== key) {
+          panelBox.key = key;
+          panelBox.w = panel.offsetWidth || 1;
+          panelBox.h = panel.offsetHeight || 1;
+        }
+        const { w, h } = panelBox;
         // Phones: the slab is too small to carry the panel — it arrives centred, full width.
         setStyle(
           panel,

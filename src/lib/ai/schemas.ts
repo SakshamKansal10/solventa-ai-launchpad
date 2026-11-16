@@ -170,6 +170,84 @@ export const RoadmapTaskSchema = z.object({
     .nullable()
     .optional()
     .describe("Which kind of business assumption the evidence from this mission speaks to."),
+  // Mission workspaces (redesign-v2 part 4). Optional and flat: older plans keep validating and
+  // the provider schema stays shallow (nested objects cost structured-output complexity).
+  workspace: z
+    .enum(["list", "interviews", "learn", "summary", "generic"])
+    .nullable()
+    .optional()
+    .describe(
+      "What the founder produces: list (people or businesses), interviews (logged conversations), learn (a short method lesson), summary (a conclusion from earlier missions), generic.",
+    ),
+  workspaceTarget: z
+    .number()
+    .int()
+    .min(1)
+    .max(20)
+    .nullable()
+    .optional()
+    .describe("list: how many rows; interviews: how many conversations to log."),
+  firstMessageEn: z
+    .string()
+    .nullable()
+    .optional()
+    .describe(
+      "interviews: the first WhatsApp message to send, in English, using the founder's name and city.",
+    ),
+  firstMessageHi: z
+    .string()
+    .nullable()
+    .optional()
+    .describe(
+      "interviews: the same first message written naturally in Hindi (not a word-for-word translation).",
+    ),
+  questions: z
+    .array(z.string())
+    .max(5)
+    .nullable()
+    .optional()
+    .describe(
+      "interviews: 3-5 open questions about PAST behaviour ('Tell me about the last time…'), never opinions of the idea ('Would you use…?').",
+    ),
+  lesson: z
+    .array(z.string())
+    .max(5)
+    .nullable()
+    .optional()
+    .describe("learn: the method in 3-5 short points."),
+  quizQuestions: z
+    .array(z.string())
+    .max(3)
+    .nullable()
+    .optional()
+    .describe("learn: 3 check questions."),
+  quizOptions: z
+    .array(z.string())
+    .max(9)
+    .nullable()
+    .optional()
+    .describe(
+      "learn: three options per check question, in order (question 1's three, then 2's, then 3's).",
+    ),
+  quizAnswers: z
+    .array(z.number().int().min(0).max(2))
+    .max(3)
+    .nullable()
+    .optional()
+    .describe("learn: the index (0-2) of the right option for each check question."),
+  prompts: z
+    .array(z.string())
+    .max(3)
+    .nullable()
+    .optional()
+    .describe("summary: 2-3 prompts for 'what I learned'."),
+  fallback: z
+    .string()
+    .nullable()
+    .optional()
+    .describe(
+      "An easier way to reach the same goal if the founder can't do this mission as written.",
+    ),
 });
 export type RoadmapTaskPlan = z.infer<typeof RoadmapTaskSchema>;
 

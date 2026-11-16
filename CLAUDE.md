@@ -23,7 +23,7 @@ Run prettier, typecheck and eslint on files you change before finishing.
 
 ## Dashboard design rules
 - One interface sans for the whole product: Geist (`--font-sans` = `--font-display`), Noto Sans Devanagari for Hindi; Montserrat only for the SOLVENTIA wordmark. No serif headings. `DashboardShell` still adds the `app-inter` class (name kept) so portals match. Overrides live at the end of `src/styles.css`.
-- Headings are capped (h1 ≈ 24–30px, h2 ≈ 19–22px); labels are sentence case, not ALL-CAPS; semibold renders as medium, bold as semibold.
+- Type scale (redesign v2, 2026-11 — replaces the old 24–30px heading cap): page headlines `clamp(44px, 5.6vw, 80px)` (weight 500, line-height 1, letter-spacing −0.035em); Today mission headline `clamp(44px, 6.2vw, 92px)`; section headlines `clamp(26px, 3.6vw, 52px)`; card statements `clamp(22px, 2.3vw, 32px)`; lead 22px; body 18–20px; meta 17px; labels 15px uppercase, weight 600, letter-spacing 0.08em, secondary colour. Nothing below 15px in the dashboard except the logo tagline. Devanagari headings line-height ≥ 1.3. The marketing homepage keeps its own look.
 - Use `sol-h-sm` for small card headings and `sol-h-hero` for the Opportunities hero title. To change a `sol-h-sm` size use a Tailwind `!text-[…]` override.
 - Palette (2026-10, set by the owner — supersedes the old ivory/violet rule): WHITE / COOL PEARL = canvas (`sol-surface`, `sol-pearl`; the `ivory` token names now hold cool neutrals), GRAPHITE = type (`sol-ink`, `sol-secondary`), DEEP NAVY = depth and primary actions (`sol-navy`), COBALT = interaction and current state (`sol-cobalt*`), CHAMPAGNE = selective emphasis (completed, milestones). No purple, no lavender or cream gradients. Thin cool borders (`sol-border`), minimal shadows.
 - Founder fit has ONE source: `assessFit` in `src/lib/fit/model.ts`. Never derive a fit label anywhere else, never show a percentage, and show the founder's stated ranges, never a midpoint.
@@ -32,3 +32,11 @@ Run prettier, typecheck and eslint on files you change before finishing.
 
 ## Permissions
 `.claude/settings.json` auto-approves edits and common dev commands and blocks `git push`, `git reset --hard`, `git clean`, `rm -rf`, rebase and amend. Only commit/push when asked.
+
+## Redesign v2 standing rules (from 2026-11-14)
+- All redesign work happens on `redesign-v2`. Never commit to the main branch, never force-push, never rewrite history, never delete branches or tags.
+- Commit after every completed step with a clear message.
+- Database changes are written as SQL migration files in `supabase/migrations/`. Never run destructive SQL. Tell the owner which migrations to apply.
+- Every new user-facing string goes through the existing translation system (`src/lib/i18n/messages/*.ts`) in English and Hindi.
+- Never invent data, statistics or legal facts.
+- Restore point for the site before the redesign: tag `before-redesign-v2`. Plan, progress, decisions and blockers live in `docs/redesign/`.

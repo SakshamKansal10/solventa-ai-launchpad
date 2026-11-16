@@ -63,15 +63,15 @@ const BARS = [
   { at: [hw - bar / 2, cy], open: [0.62, 0.1], tilt: 0.06, vertical: true },
 ] as const;
 
-function buildGate(curveSegments: number) {
+function buildGate(curveSegments: number, bevel: number) {
   const corner = cornerGeometry(radius, bar, depth, stub, curveSegments);
   const lenH = 2 * (hw - radius - stub);
   const lenV = 2 * (hh - radius - stub);
-  const barH = new RoundedBoxGeometry(lenH, bar - 0.02, depth - 0.02, 2, 0.03);
-  const barV = new RoundedBoxGeometry(bar - 0.02, lenV, depth - 0.02, 2, 0.03);
+  const barH = new RoundedBoxGeometry(lenH, bar - 0.02, depth - 0.02, bevel, 0.03);
+  const barV = new RoundedBoxGeometry(bar - 0.02, lenV, depth - 0.02, bevel, 0.03);
   // A logic lock on each bar: machined housing + a status window.
-  const lockH = new RoundedBoxGeometry(0.62, 0.2, 0.2, 2, 0.04);
-  const lockV = new RoundedBoxGeometry(0.2, 0.62, 0.2, 2, 0.04);
+  const lockH = new RoundedBoxGeometry(0.62, 0.2, 0.2, bevel, 0.04);
+  const lockV = new RoundedBoxGeometry(0.2, 0.62, 0.2, bevel, 0.04);
   const light = new BoxGeometry(1, 1, 1);
   // Build lays a deck under the gates: graphite plate with a pearl centre track.
   const deck = plateGeometry(hw - 0.35, GATE_SPACING / 2 - 0.12, 0.1, 0.12, 0, 3);
@@ -100,8 +100,8 @@ function buildGate(curveSegments: number) {
     curveSegments: farSegments,
   });
   // Build: functional modules mount onto the locked gates; the assumption node's housing.
-  const module = new RoundedBoxGeometry(0.46, 1.2, 0.46, 2, 0.06);
-  const node = new RoundedBoxGeometry(1.25, 0.62, 0.72, 2, 0.12);
+  const module = new RoundedBoxGeometry(0.46, 1.2, 0.46, bevel, 0.06);
+  const node = new RoundedBoxGeometry(1.25, 0.62, 0.72, bevel, 0.12);
   return {
     corner,
     barH,
@@ -150,11 +150,13 @@ type Mesh = InstancedMesh | null;
  *   Elevate  — reach: the path climbs, every gate grows satellite channels at
  *              altitude, interconnected; vast architecture opens far out.
  */
+const MILESTONE_KEYS = MILESTONES.map((_, k) => `milestone-${k}`);
+
 export function ExecutionPath() {
   const { store, materials, filaments, preset } = useWorld();
   const geo = useMemo(
-    () => buildGate(Math.max(6, Math.round(preset.coreSegments / 6))),
-    [preset.coreSegments],
+    () => buildGate(Math.max(6, Math.round(preset.coreSegments / 6)), preset.gateBevel),
+    [preset.coreSegments, preset.gateBevel],
   );
   const milestone = useMemo(() => buildMilestone(), []);
   useEffect(
@@ -268,6 +270,27 @@ export function ExecutionPath() {
     () => Array.from({ length: SATELLITES * BRANCH }, () => new Matrix4()),
     [],
   );
+  /** Reused every frame: the far end of the original future, and the anchor writer (it updates
+   * the existing record instead of allocating one per milestone per frame). */
+  const farFrame = useMemo(
+    () => ({ position: new Vector3(), quaternion: new Quaternion(), scale: 1 }),
+    [],
+  );
+  const setAnchor = (key: string, x: number, y: number, z: number, o: number) => {
+    const a = store.state.anchors.get(key);
+    if (!a) store.state.anchors.set(key, { x, y, z, o });
+    else {
+      a.x = x;
+      a.y = y;
+      a.z = z;
+      a.o = o;
+    }
+  };
+  /** Instance counters, reset every frame. */
+  const counts = useMemo(
+    () => ({ cs: 0, cg: 0, bs: [0, 0, 0, 0], bg: [0, 0, 0, 0], lk: [0, 0], ll: 0, dk: 0 }),
+    [],
+  );
 
   useFrame(() => {
     const grp = group.current;
@@ -278,9 +301,7 @@ export function ExecutionPath() {
     if (!active) {
       filaments.hideRange(rails);
       filaments.hideRange(links);
-      MILESTONES.forEach((_, k) =>
-        store.state.anchors.set(`milestone-${k}`, { x: 0, y: 0, z: 0, o: 0 }),
-      );
+      MILESTONES.forEach((_, k) => setAnchor(MILESTONE_KEYS[k], 0, 0, 0, 0));
       return;
     }
     const { m, g, lm, q, e, v, s, one, zero, color, gold, indigo } = scratch;
@@ -288,7 +309,15 @@ export function ExecutionPath() {
     const build = ramp(p, "build", 0, "build", 0.7);
     const elevate = ramp(p, "elevate", 0, "elevate", 0.7);
 
-    const n = { cs: 0, cg: 0, bs: [0, 0, 0, 0], bg: [0, 0, 0, 0], lk: [0, 0], ll: 0, dk: 0 };
+    // Reused every frame (it was allocated per frame, with its arrays).
+    const n = counts;
+    n.cs = 0;
+    n.cg = 0;
+    n.bs.fill(0);
+    n.bg.fill(0);
+    n.lk.fill(0);
+    n.ll = 0;
+    n.dk = 0;
     const put = (mesh: Mesh, index: number, matrix: Matrix4, alpha?: number) => {
       if (!mesh) return;
       mesh.setMatrixAt(index, matrix);
@@ -312,7 +341,9 @@ export function ExecutionPath() {
       const open = Math.min(1.4, 1 - st.crown + st.unstable * 0.9);
 
       // Corner brackets: always present — the gate's provisional skeleton.
-      CORNERS.forEach(([sx, sy], k) => {
+      for (let k = 0; k < CORNERS.length; k++) {
+        const sx = CORNERS[k][0];
+        const sy = CORNERS[k][1];
         e.set(0, 0, (k * Math.PI) / 2 + st.wobble[k % 3] * 0.2 * st.unstable);
         q.setFromEuler(e);
         v.set(
@@ -324,9 +355,10 @@ export function ExecutionPath() {
         m.multiplyMatrices(g, lm);
         if (solid > 0.01) put(cornerSolid.current, n.cs++, m, solid);
         if (solid < 0.99) put(cornerGlass.current, n.cg++, m, 1 - solid);
-      });
+      }
       // Bars: hang open in Validate, slide in and lock in Build.
-      BARS.forEach((b, k) => {
+      for (let k = 0; k < BARS.length; k++) {
+        const b = BARS[k];
         e.set(0, 0, b.tilt * open);
         q.setFromEuler(e);
         v.set(b.at[0] + b.open[0] * open, b.at[1] + b.open[1] * open, 0);
@@ -335,7 +367,7 @@ export function ExecutionPath() {
         if (solid > 0.01) put(barSolid.current[k], n.bs[k]++, m, solid);
         if (solid < 0.99) put(barGlass.current[k], n.bg[k]++, m, 1 - solid);
         // Logic locks ride the top and side bars; gold once locked, faint indigo while testing.
-        if (k === 1) return;
+        if (k === 1) continue;
         const vertical = b.vertical;
         lm.multiply(scratch.m.makeTranslation(0, 0, depth / 2 + 0.07));
         m.multiplyMatrices(g, lm);
@@ -349,7 +381,7 @@ export function ExecutionPath() {
           color.copy(indigo).multiplyScalar(0.5).lerp(gold, locked);
           lockLights.current.setColorAt(n.ll++, color.multiplyScalar(0.5 + 0.9 * locked));
         }
-      });
+      }
       // Build: the deck assembles under each gate, one plate after another.
       const deckIn =
         smoothstep(0.05 + (i % 12) * 0.03, 0.4 + (i % 12) * 0.03, build) * (1 - st.unstable);
@@ -476,14 +508,10 @@ export function ExecutionPath() {
     // The original future beyond the last gate: confident at first, retracts once the path is rebuilt.
     const crisis = local(p, "crisis");
     const adapt = local(p, "adaptation");
+    const far = originalFrame(GATE_COUNT + 6, farFrame);
     for (let r = 0; r < 3; r++) {
       const idx = rails.start + (GATE_COUNT - 1) * 3 + r;
       const last = states[GATE_COUNT - 1];
-      const far = originalFrame(GATE_COUNT + 6, {
-        position: new Vector3(),
-        quaternion: new Quaternion(),
-        scale: 1,
-      });
       const A = scratch.pts[0].copy(railAnchors[r]).applyMatrix4(gateMatrices[GATE_COUNT - 1]);
       const B = scratch.pts[1]
         .copy(railAnchors[r])
@@ -690,14 +718,14 @@ export function ExecutionPath() {
       const show = window * st.present * (1 - ramp(p, "elevate", 0.6, "evidence", 0.2));
       const idx = links.start + SATELLITES * 2 + k;
       if (show <= 0.01) {
-        store.state.anchors.set(`milestone-${k}`, { x: 0, y: 0, z: 0, o: 0 });
+        setAnchor(MILESTONE_KEYS[k], 0, 0, 0, 0);
         milestoneBody.current?.setMatrixAt(k, zero);
         milestoneBand.current?.setMatrixAt(k, zero);
         filaments.hide(idx);
         return;
       }
       v.set(0, cy + hh + 2.0, 0).applyMatrix4(gateMatrices[ms.gate]);
-      store.state.anchors.set(`milestone-${k}`, { x: v.x, y: v.y + 0.9, z: v.z, o: show });
+      setAnchor(MILESTONE_KEYS[k], v.x, v.y + 0.9, v.z, show);
       s.setScalar(show * 0.9);
       m.compose(v, st.quaternion, s);
       milestoneBody.current?.setMatrixAt(k, m);

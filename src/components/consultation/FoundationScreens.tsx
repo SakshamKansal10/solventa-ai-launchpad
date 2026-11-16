@@ -25,6 +25,7 @@ import {
   MAJOR_IDS,
   STATUS_IDS,
   STUDY_YEAR_IDS,
+  WORK_DAY_IDS,
 } from "@/lib/consultation/options";
 import {
   COUNTRY_OPTIONS,
@@ -600,6 +601,22 @@ export function LanguagesTimeScreen() {
           value={answers.weeklyHours}
           onChange={(id) => setAnswer("weeklyHours", id)}
           buttons
+        />
+      </Question>
+
+      <Question label={t("q.days.label")} optional>
+        <ChipCloud
+          name="days"
+          options={L.opts("days", WORK_DAY_IDS)}
+          value={answers.workDays}
+          onToggle={(id) =>
+            setAnswer(
+              "workDays",
+              (answers.workDays ?? []).includes(id)
+                ? (answers.workDays ?? []).filter((d) => d !== id)
+                : [...(answers.workDays ?? []), id],
+            )
+          }
         />
       </Question>
     </ScreenBody>
