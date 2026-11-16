@@ -103,7 +103,7 @@ Blockers: `blocked.md`. Final report: `REPORT.md`.
 ## Go live — 2026-11-16 (owner: live on solventia.in today)
 - [x] L1 opening (87b3f9a): the Solventia reveal on the real lockup, signed-in / returning variants
 - [x] L2 live (f663c9c): tag before-live-2026-11-16, redesign-v2 merged into main
-- [ ] L3 roadmap: week 1 fast and reliable
+- [x] L3 roadmap (c6b3e1b): week 1 fast and reliable
 - [ ] L4 cost and speed of idea generation, daily limits
 - [ ] L5 Hindi for everything, simpler words
 - [ ] L6 dashboard: width, tab flash, npm run scan, mobile
