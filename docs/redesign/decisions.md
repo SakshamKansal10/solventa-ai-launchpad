@@ -314,3 +314,17 @@ Each entry: what was ambiguous, what I chose, why.
     path existed; the local fake translator had stopped recognising the new prompt and was
     updated. The Hindi pass of `npm run scan` (42 pages: 3 founder states × 390/1440 × 7 routes)
     finds no untranslated text; the logo tagline is the brand's own and is marked translate="no".
+
+46. **Dashboard (go-live step 6).** Width: the frame is up to 1520 px with side padding
+    clamp(20px, 4vw, 64px) (was 1312 px), lead and body paragraphs stop at 68ch; the pages'
+    existing two-column layouts (headline + figure, card pairs) now get the room — checked at
+    1366, 1536, 1920 and 390 (docs/redesign/perf/width-*). Tab flash, reproduced frame by frame
+    (.e2e-tmp/tools/flash.mjs, 50 ms): the shell was NOT remounting and the data was cached; the
+    flash was the page entrance (dash-rise: every section from opacity 0, staggered to 700 ms)
+    replaying inside the persistent shell on each tab switch. It now plays once per visit;
+    after a switch the new page is fully there from the first frame. Links also preload on
+    intent (hover/touch). The active pill already followed the target path at navigation start.
+    `npm run scan` (scripts/scan.mjs): every dashboard route × 390/1440 × en/hi × three seeded
+    founder states, plus the top bar at 360 — 90 pages, 0 findings after fixing the two it
+    found: the phone top bar's logo link and the Settings switches were under 44 px (the shared
+    Switch is now a 44×44 target with the same visible track).

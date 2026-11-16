@@ -463,8 +463,8 @@ function AskSolFab() {
   );
 }
 
-/** Shared page frame: content max-width 1312px with the brief's side padding. */
-export const DASH_FRAME = "mx-auto w-full max-w-[1312px] px-[clamp(20px,4.4vw,64px)]";
+/** Shared page frame (go-live step 6): up to 1520px wide, side padding clamp(20px, 4vw, 64px). */
+export const DASH_FRAME = "mx-auto w-full max-w-[1520px] px-[clamp(20px,4vw,64px)]";
 
 /** The signed-in frame: a top bar (lockup · pill nav · language · notifications · Ask Sol ·
  * avatar) that scrolls with the page, the page, and on phones a fixed bottom bar. History and
@@ -472,6 +472,11 @@ export const DASH_FRAME = "mx-auto w-full max-w-[1312px] px-[clamp(20px,4.4vw,64
 export function DashboardShell({ children }: { children: ReactNode }) {
   const { t } = useLocale();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
+  // The page's entrance (dash-rise) plays once per visit. Switching tabs swaps the page inside
+  // a shell that stays mounted; replaying the rise there blanked the page for ~0.5 s each time —
+  // the "tab flash" (go-live step 6).
+  const [firstPath] = useState(pathname);
+  const switched = pathname !== firstPath;
   return (
     <AskSolProvider>
       <a
@@ -483,6 +488,7 @@ export function DashboardShell({ children }: { children: ReactNode }) {
       <div
         className="min-h-0 flex-1 overflow-y-auto overscroll-y-contain"
         data-testid="scroll-area"
+        data-dash-switched={switched ? "" : undefined}
       >
         <header
           data-testid="topbar"
@@ -494,7 +500,7 @@ export function DashboardShell({ children }: { children: ReactNode }) {
           <Link
             to="/dashboard"
             aria-label={t("nav.homeAria")}
-            className="rounded-xl focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-sol-cobalt"
+            className="inline-flex min-h-11 items-center rounded-xl focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-sol-cobalt"
           >
             <BrandLockup preset="compact" />
           </Link>

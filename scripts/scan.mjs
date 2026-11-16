@@ -227,6 +227,21 @@ function inspect({ locale, allow }) {
     if (!vis(el)) continue;
     if (!el.querySelector("a[href],button")) out.emptyNoStep.push(label(el));
   }
+  // Phones: every control is at least 44×44 px to tap. A link inside running text is exempt
+  // (WCAG 2.5.8), as is a hidden-until-focus skip link.
+  out.tap = [];
+  if (innerWidth <= 400) {
+    for (const el of document.querySelectorAll(
+      "a[href],button,[role=button],input,select,textarea,[role=tab]",
+    )) {
+      if (!vis(el) || el.closest("p,li > p,[data-inline-link]") || el.classList.contains("sr-only"))
+        continue;
+      if (getComputedStyle(el).display === "inline" && el.closest("p,span")) continue;
+      const r = el.getBoundingClientRect();
+      if (r.height < 44 || r.width < 44)
+        out.tap.push(`${Math.round(r.width)}×${Math.round(r.height)} ${label(el)}`);
+    }
+  }
   return out;
 }
 
@@ -289,6 +304,7 @@ for (const f of FOUNDERS) {
         add("dead-button", r.dead);
         add("empty-no-step", r.emptyNoStep);
         add("greyed-unexplained", r.greyed);
+        add("tap-target", r.tap);
         if (process.env.SCAN_SHOTS) {
           fs.mkdirSync(`${OUT}/shots`, { recursive: true });
           await page.screenshot({
@@ -301,6 +317,41 @@ for (const f of FOUNDERS) {
       }
       await ctx.close();
     }
+  }
+  // The top bar fits a 360 px phone, in both languages (Hindi labels are wider).
+  for (const locale of ["en", "hi"]) {
+    if (ONLY && /^[a-z]{2}$/.test(ONLY) && ONLY !== locale) continue;
+    const ctx = await browser.newContext({ viewport: { width: 360, height: 760 } });
+    await ctx.addCookies([
+      {
+        name: "sb-127-auth-token",
+        value: `base64-${Buffer.from(JSON.stringify(s)).toString("base64url")}`,
+        url: APP,
+      },
+      { name: "solventia-locale", value: locale, url: APP },
+    ]);
+    const page = await ctx.newPage();
+    await page.goto(`${APP}/dashboard`, { waitUntil: "networkidle" }).catch(() => {});
+    const bad = await page.evaluate(() => {
+      const bar = document.querySelector("[data-testid=topbar]");
+      if (!bar) return [];
+      return [...bar.querySelectorAll("*")]
+        .filter((e) => {
+          const r = e.getBoundingClientRect();
+          return r.width > 0 && (r.right > innerWidth + 0.5 || r.left < -0.5);
+        })
+        .slice(0, 4)
+        .map(
+          (e) =>
+            (e.getAttribute("data-testid") ?? e.tagName) +
+            " " +
+            Math.round(e.getBoundingClientRect().right),
+        );
+    });
+    pages++;
+    if (bad.length)
+      findings.push({ where: `${f.state} 360 ${locale} topbar`, kind: "topbar-360", items: bad });
+    await ctx.close();
   }
 }
 await browser.close();

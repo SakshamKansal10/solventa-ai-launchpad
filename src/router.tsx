@@ -35,6 +35,9 @@ export const getRouter = () => {
       firstRender = false;
       return typeof window === "undefined" || window.scrollY === 0;
     },
+    // Hovering or touching a link starts loading that page's code and data, so a tab is
+    // usually ready by the time it is clicked (go-live step 6).
+    defaultPreload: "intent",
     defaultPreloadStaleTime: 0,
     // The route guards fetch the signed-in user on the SERVER (and that data is
     // used while server-rendering the shell). Handing the same cache to the

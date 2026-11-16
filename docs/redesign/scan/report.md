@@ -1,4 +1,4 @@
 # Dashboard scan
 
-42 pages. 0 findings.
+90 pages. 0 findings.
 

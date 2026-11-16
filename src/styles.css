@@ -913,11 +913,14 @@
   line-height: 1.45;
   color: var(--sol-secondary);
   text-wrap: pretty;
+  /* A readable line on wide screens (go-live step 6). */
+  max-width: 68ch;
 }
 .dash-body {
   font-size: 19px;
   line-height: 1.5;
   color: var(--sol-secondary);
+  max-width: 68ch;
 }
 .dash-meta {
   font-size: 17px;
@@ -956,6 +959,10 @@ html[lang="hi"] .dash-label {
 }
 .dash-page > * {
   animation: dash-rise 400ms var(--sol-ease) both;
+}
+/* After the first page of a visit, tabs switch instantly: no entrance to sit through. */
+[data-dash-switched] .dash-page > * {
+  animation: none;
 }
 .dash-page > :nth-child(2) {
   animation-delay: 60ms;
