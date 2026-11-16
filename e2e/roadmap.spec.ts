@@ -55,6 +55,39 @@ test.describe("building a roadmap", () => {
     expect(await gemini.countOf("WEEK_DETAIL")).toBe(1);
   });
 
+  test("the wait is real: steps tick as they happen, the plan shows once saved, and the names written meanwhile are kept", async ({
+    page,
+    context,
+  }) => {
+    await founderWithDirections(context);
+    // Week 1 takes a while here, so the wait between the plan and its missions can be seen.
+    await gemini.delay("WEEK_DETAIL", 6_000);
+    await gotoApp(page, "/dashboard");
+    await page.getByTestId("flagship-explore").click();
+    await page.getByTestId("choose-direction").click();
+    await gotoApp(page, "/dashboard");
+    await page.getByTestId("build-roadmap").click();
+
+    const steps = page.getByTestId("build-steps").getByRole("listitem");
+    await expect(steps).toHaveCount(4);
+    // The skeleton is saved: its phases appear, and "Writing your week 1 missions" is current.
+    await expect(page.getByTestId("build-plan").getByRole("listitem")).toHaveCount(5, {
+      timeout: 30_000,
+    });
+    await expect(steps.nth(1)).toHaveAttribute("data-state", "done");
+    await expect(steps.nth(2)).toHaveAttribute("data-state", "current");
+
+    await page.getByTestId("warmup-name-1").fill("Ramesh, kirana shop");
+    await page.getByTestId("warmup-name-2").fill("Sunita didi");
+    await expect(page.getByTestId("warmup-saved")).toBeVisible();
+    expect(
+      await page.evaluate(() => JSON.parse(localStorage.getItem("sol-warmup-names") ?? "[]")),
+    ).toEqual(["Ramesh, kirana shop", "Sunita didi"]);
+
+    await expect(page).toHaveURL(/\/dashboard\/roadmap(\?|$)/, { timeout: 60_000 });
+    await expect(page.getByTestId("mission-card")).toHaveCount(3);
+  });
+
   test("a failed build is reported honestly and can be retried without duplicating anything", async ({
     page,
     context,

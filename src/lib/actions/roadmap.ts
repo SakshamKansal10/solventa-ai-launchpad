@@ -645,3 +645,55 @@ export const buildRoadmap = createServerFn({ method: "POST" })
 
     return { status: "ready", roadmapId, week1Ready };
   });
+
+/** ---- what the build has really done so far (the wait screen) ------------------------------ */
+
+export interface BuildProgress {
+  /** read → plan (skeleton being written) → week1 (week 1 being written) → done; or failed. */
+  stage: "read" | "plan" | "week1" | "done" | "failed";
+  /** The saved plan, the moment it exists: phase titles and their week counts. */
+  phases: { title: string; weeks: number }[];
+  week1: { title: string; objective: string } | null;
+  /** Week 1's missions, the moment they exist. */
+  missions: string[];
+}
+
+export const getBuildProgress = createServerFn({ method: "GET" })
+  .validator(z.object({ opportunityId: z.string().uuid() }))
+  .handler(async ({ data }): Promise<BuildProgress> => {
+    const { supabase, user } = await requireUser();
+    const empty: BuildProgress = { stage: "read", phases: [], week1: null, missions: [] };
+    const roadmap = await findRoadmapForOpportunity(supabase, user.id, data.opportunityId);
+    if (!roadmap) return empty;
+    if (roadmap.status === "failed") return { ...empty, stage: "failed" };
+    const { data: rows } = await supabase
+      .from("roadmap_phases")
+      .select(
+        "title, order_index, roadmap_weeks(title, objective, order_index, roadmap_tasks(what, order_index))",
+      )
+      .eq("roadmap_id", roadmap.id)
+      .eq("user_id", user.id)
+      .order("order_index");
+    type Row = { title: string; order_index: number };
+    const phases = rows as unknown as
+      | (Row & {
+          roadmap_weeks: (Row & {
+            objective: string;
+            roadmap_tasks: { what: string; order_index: number }[];
+          })[];
+        })[]
+      | null;
+    if (!phases || phases.length === 0) return { ...empty, stage: "plan" };
+    const firstWeek = [...(phases[0].roadmap_weeks ?? [])].sort(
+      (a, b) => a.order_index - b.order_index,
+    )[0];
+    const missions = [...(firstWeek?.roadmap_tasks ?? [])]
+      .sort((a, b) => a.order_index - b.order_index)
+      .map((t) => t.what);
+    return {
+      stage: missions.length > 0 ? "done" : "week1",
+      phases: phases.map((p) => ({ title: p.title, weeks: p.roadmap_weeks?.length ?? 0 })),
+      week1: firstWeek ? { title: firstWeek.title, objective: firstWeek.objective } : null,
+      missions,
+    };
+  });

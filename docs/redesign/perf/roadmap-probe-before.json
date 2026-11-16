@@ -1,0 +1,54 @@
+{
+  "at": "2026-11-16T08:44:58.112Z",
+  "skeletonMs": 13803,
+  "skeletonWeeks": 12,
+  "week1": {
+    "ok": true,
+    "ms": 18151,
+    "missions": 2
+  },
+  "calls": [
+    {
+      "requestId": "aaaddecc-7c54-4f5e-9608-0cdfa88fc3b2",
+      "purpose": "ROADMAP_SKELETON",
+      "route": "opportunity/build-roadmap",
+      "provider": "google",
+      "model": "gemini-3.6-flash",
+      "fallbackUsed": false,
+      "thinkingLevel": "default",
+      "attempt": 0,
+      "responseSchemaPresent": false,
+      "responseMimeType": "application/json",
+      "promptTokenCount": 2343,
+      "candidatesTokenCount": 876,
+      "thoughtsTokenCount": 1855,
+      "totalTokenCount": 5074,
+      "responseLength": 4100,
+      "durationMs": 13781,
+      "success": true,
+      "errorCategory": null,
+      "timestamp": "2026-11-16T08:45:11.916Z"
+    },
+    {
+      "requestId": "b7a92f7d-be32-4e17-aca5-38f58e11870f",
+      "purpose": "WEEK_DETAIL",
+      "route": "opportunity/build-roadmap",
+      "provider": "google",
+      "model": "gemini-3.6-flash",
+      "fallbackUsed": false,
+      "thinkingLevel": "default",
+      "attempt": 0,
+      "responseSchemaPresent": false,
+      "responseMimeType": "application/json",
+      "promptTokenCount": 2992,
+      "candidatesTokenCount": 1249,
+      "thoughtsTokenCount": 2452,
+      "totalTokenCount": 6693,
+      "responseLength": 5368,
+      "durationMs": 18144,
+      "success": true,
+      "errorCategory": null,
+      "timestamp": "2026-11-16T08:45:30.064Z"
+    }
+  ]
+}

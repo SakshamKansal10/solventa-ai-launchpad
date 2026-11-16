@@ -261,3 +261,24 @@ Each entry: what was ambiguous, what I chose, why.
     4× CPU the hold grows from about 0.9 s to 1.4 s. Kept, because the opening is the owner's
     requirement and the time is spent on screen, not on a spinner. A follow-up that would pay
     for it: create the canvas sooner (it starts ~0.7 s after the bundle has loaded).
+
+43. **Roadmap: "Week 01 couldn't be prepared" and the minute-long wait (go-live step 3).** The
+    one allowed real run (scripts/engine/roadmap-probe.test.ts, docs/redesign/perf/
+    roadmap-probe-before.json) SUCCEEDED: skeleton 13.8 s + week 1 18.1 s, one attempt each,
+    1.9k and 2.5k thinking tokens at the model's default thinking. So the slowness is structural
+    (two dependent calls, both thinking at full depth) and "failed" can only be stored when the
+    week call throws — which it does when the model's answer fails JSON or the strict schema
+    twice (a 5th step bullet, 25 list rows, a quiz answer of 3, "true" as a string). Each miss
+    doubles the week's time, which is the "over a minute". Production's own error text is in
+    `roadmap_weeks.generation_error`; I could not read it (anon key only). Fix: both calls at
+    thinking "low" with output caps; the week's answer is REPAIRED before validation
+    (src/lib/roadmap/repair.ts, unit-tested: clamps and trims, never invents); then the existing
+    retry that quotes the error back; then a much simpler prompt (minimal thinking, one try).
+    "Try again" (retryWeek) already regenerates only that week. Vercel maxDuration is now set
+    explicitly to 300 s (it was unset). Week 1 ≤ 25 s is an ESTIMATE from the measured token
+    rate (~200 tokens/s; low thinking removes most of the 4.3k thinking tokens): not measured
+    again, to stay within the one allowed real run. Skeleton and week 1 stay sequential (week 1
+    needs the skeleton's title and objective). The wait: real steps from the database, the
+    plan's phases the moment they are saved, week 1's missions the moment they exist, and
+    "write down 5 people you could ask" — kept in this browser and offered in Week 1's first
+    list mission ("Add the N names you wrote down").

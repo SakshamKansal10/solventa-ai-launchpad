@@ -18,7 +18,9 @@ import {
 } from "@/lib/ai/prompts/shared";
 import type { NormalizedProfile } from "@/lib/profile/normalize";
 import { fitTasksToBudget, weekHoursBudget } from "@/lib/roadmap/hours";
+import { repairWeekDetail } from "@/lib/roadmap/repair";
 import { keepWeekOneFree } from "@/lib/roadmap/week-one";
+import { z } from "zod";
 
 /** Shared by every roadmap-generation prompt below — concrete over
  * abstract, short over long, a founder should never feel like they're
@@ -166,6 +168,9 @@ ${SKELETON_JSON_CONTRACT}${buildLanguageRule(locale)}`;
     callSite: "generateRoadmapSkeleton",
     purpose: "ROADMAP_SKELETON",
     route: "opportunity/build-roadmap",
+    // Titles and objectives only: low thinking is enough, and it is most of the wait.
+    thinkingLevel: "low",
+    maxOutputTokens: 4096,
   });
 }
 
@@ -243,13 +248,7 @@ Generate this week's real detail now. deadlineDaysFromStart values must be 0-6 (
 Respond with ONLY a single JSON object — no markdown fences, no commentary before or after — matching this exact shape:
 ${WEEK_DETAIL_JSON_CONTRACT}${buildLanguageRule(locale)}`;
 
-  const detail = await generateJSON(RoadmapWeekDetailSchema, {
-    systemInstruction: WEEK_DETAIL_SYSTEM_INSTRUCTION,
-    prompt,
-    callSite: "generateWeekDetail",
-    purpose: "WEEK_DETAIL",
-    route: "opportunity/build-roadmap",
-  });
+  const detail = await generateWeekDetailReliably(prompt, context, locale);
   // Week 1 never needs money, registration or a website (part 5): checked in code, not trusted.
   if (context.weekNumber === 1) {
     const free = keepWeekOneFree(detail.tasks);
@@ -268,4 +267,63 @@ ${WEEK_DETAIL_JSON_CONTRACT}${buildLanguageRule(locale)}`;
       `[roadmap] week "${context.weekTitle}" needs ~${fitted.hours}h, over the ${budget}h budget`,
     );
   return { ...detail, tasks: fitted.tasks.length >= 2 ? fitted.tasks : detail.tasks };
+}
+
+/** The week's detail, repaired before it is validated (src/lib/roadmap/repair.ts). */
+const RepairedWeekDetailSchema = z.preprocess(
+  repairWeekDetail,
+  RoadmapWeekDetailSchema,
+) as unknown as z.ZodType<RoadmapWeekDetailPlan>;
+
+const SIMPLE_WEEK_SYSTEM_INSTRUCTION = `You are Sol, Solventia's execution planner. Plan ONE week for a founder: 3 simple, concrete actions they can do this week with what they already have. ${PLAIN_LANGUAGE_RULE}`;
+
+const SIMPLE_WEEK_JSON_CONTRACT = `{
+  "mission": string (5-14 words),
+  "tasks": [ exactly 3 objects, each: { "what": string (4-10 words), "why": string, "how": string, "timeEstimate": string (e.g. "~2 hrs"), "deadlineDaysFromStart": integer 0-6, "doneWhen": string, "fallback": string (an easier way to the same goal) } ],
+  "mistakesToAvoid": string[1-2],
+  "evidenceRequired": string,
+  "successThreshold": string (one measurable statement),
+  "evidenceTarget": integer|null
+}`;
+
+/**
+ * One reliable week (go-live step 3): the full prompt (with the wrapper's one retry that quotes
+ * the error back), then — if that still fails — a much simpler prompt that asks only for what a
+ * week cannot do without. Missions from the simple prompt get a plain notes workspace.
+ */
+async function generateWeekDetailReliably(
+  prompt: string,
+  context: WeekGenerationContext,
+  locale: GenerationLocale,
+): Promise<RoadmapWeekDetailPlan> {
+  try {
+    return await generateJSON(RepairedWeekDetailSchema, {
+      systemInstruction: WEEK_DETAIL_SYSTEM_INSTRUCTION,
+      prompt,
+      callSite: "generateWeekDetail",
+      purpose: "WEEK_DETAIL",
+      route: "opportunity/build-roadmap",
+      thinkingLevel: "low",
+      maxOutputTokens: 8192,
+    });
+  } catch (err) {
+    console.warn(
+      `[roadmap] week ${context.weekNumber} "${context.weekTitle}": the full prompt failed (${err instanceof Error ? err.message.slice(0, 300) : String(err)}) — trying the simple prompt`,
+    );
+  }
+  const simple = `This week: "${context.weekTitle}" — ${context.weekObjective}
+Phase: ${context.phaseTitle} — ${context.phaseDescription}
+${context.weekNumber === 1 ? "Week 1 never needs money, a registration or a website: free actions only (lists, conversations, observation, a simple message)." : ""}
+Respond with ONLY a single JSON object matching this exact shape:
+${SIMPLE_WEEK_JSON_CONTRACT}${buildLanguageRule(locale)}`;
+  return generateJSON(RepairedWeekDetailSchema, {
+    systemInstruction: SIMPLE_WEEK_SYSTEM_INSTRUCTION,
+    prompt: simple,
+    callSite: "generateWeekDetail.simple",
+    purpose: "WEEK_DETAIL",
+    route: "opportunity/build-roadmap",
+    thinkingLevel: "minimal",
+    maxOutputTokens: 4096,
+    allowRetry: false,
+  });
 }

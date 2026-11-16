@@ -365,6 +365,19 @@ const en = {
   "v2.intro.back2.start": "Still looking for the right business to start?",
   "v2.intro.back2.idea": "Still wondering if your idea will work?",
   "v2.intro.back2.stuck": "Still stuck on the next step?",
+  "v2.build.time": "This usually takes about 20 seconds.",
+  "v2.build.step.read": "Reading your profile and your idea",
+  "v2.build.step.plan": "Planning your phases and weeks",
+  "v2.build.step.week1": "Writing your week 1 missions",
+  "v2.build.step.open": "Opening your roadmap",
+  "v2.build.planSoFar": "Your plan so far",
+  "v2.build.phaseWeeks": "{n} weeks",
+  "v2.build.missions": "Week 1 missions",
+  "v2.build.task.title": "While you wait: write down 5 people you could ask about this idea.",
+  "v2.build.task.hint": "Friends, family, shop owners, customers you know. We'll put them in your first mission.",
+  "v2.build.task.name": "Person {n}",
+  "v2.build.task.saved": "Saved for your first mission.",
+  "v2.ws.list.useWarmup": "Add the {n} names you wrote down",
 } as const;
 
 const hi: Record<keyof typeof en, string> = {
@@ -735,6 +748,19 @@ const hi: Record<keyof typeof en, string> = {
   "v2.intro.back2.start": "अभी भी सही बिज़नेस ढूँढ रहे हैं?",
   "v2.intro.back2.idea": "अभी भी सोच रहे हैं कि आपका आइडिया चलेगा या नहीं?",
   "v2.intro.back2.stuck": "अगले कदम पर अभी भी अटके हैं?",
+  "v2.build.time": "इसमें आमतौर पर करीब 20 सेकंड लगते हैं।",
+  "v2.build.step.read": "आपकी प्रोफ़ाइल और आइडिया पढ़ रहे हैं",
+  "v2.build.step.plan": "आपके फ़ेज़ और हफ़्ते प्लान कर रहे हैं",
+  "v2.build.step.week1": "हफ़्ते 1 के मिशन लिख रहे हैं",
+  "v2.build.step.open": "आपका रोडमैप खोल रहे हैं",
+  "v2.build.planSoFar": "अब तक आपका प्लान",
+  "v2.build.phaseWeeks": "{n} हफ़्ते",
+  "v2.build.missions": "हफ़्ते 1 के मिशन",
+  "v2.build.task.title": "तब तक: 5 ऐसे लोगों के नाम लिखें जिनसे आप इस आइडिया के बारे में पूछ सकते हैं।",
+  "v2.build.task.hint": "दोस्त, परिवार, दुकानदार, जान-पहचान के कस्टमर। हम इन्हें आपके पहले मिशन में डाल देंगे।",
+  "v2.build.task.name": "व्यक्ति {n}",
+  "v2.build.task.saved": "पहले मिशन के लिए सेव हो गया।",
+  "v2.ws.list.useWarmup": "आपके लिखे {n} नाम जोड़ें",
 };
 
 export default { en, hi };

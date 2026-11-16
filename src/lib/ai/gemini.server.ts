@@ -208,6 +208,9 @@ interface GenerateStructuredParams {
   /** Gemini's thinkingConfig.thinkingLevel. Omit to use the model's own
    * default. */
   thinkingLevel?: ThinkingLevel;
+  /** Hard cap on the response (thinking excluded). A runaway answer costs money and time;
+   * a cut-off one fails JSON parsing and is retried with the error quoted back. */
+  maxOutputTokens?: number;
 }
 
 /** One structured line per Gemini request — this is what turns "a session
@@ -366,6 +369,7 @@ async function runGenerationLoop<T>(
             ...(params.thinkingLevel
               ? { thinkingConfig: { thinkingLevel: SDK_THINKING_LEVEL[params.thinkingLevel] } }
               : {}),
+            ...(params.maxOutputTokens ? { maxOutputTokens: params.maxOutputTokens } : {}),
           },
         });
         const usage = response.usageMetadata;

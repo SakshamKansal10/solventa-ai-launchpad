@@ -6,8 +6,8 @@ import { z } from "zod";
 import { BrandLockup } from "@/components/brand/Brand";
 import { LanguageSwitcher } from "@/components/solventia/LanguageSwitcher";
 import { DASH_FRAME } from "@/components/founder/DashboardShell";
-import { JourneyArc } from "@/components/founder/dash/JourneyArc";
-import { ActionButton, ActionLink, NavyBlock } from "@/components/founder/dash/ui";
+import { ActionButton, ActionLink } from "@/components/founder/dash/ui";
+import { BuildWait } from "@/components/founder/roadmap/BuildWait";
 import { cn } from "@/lib/utils";
 import { buildRoadmap } from "@/lib/actions/roadmap";
 import { useLocale } from "@/lib/i18n/LocaleProvider";
@@ -177,12 +177,9 @@ function BuildingPage() {
                 >
                   {waitingOnOther ? t("rm.build.other") : t("rm.build.working", { s: elapsed })}
                 </p>
+                <p className="dash-body text-sol-secondary">{t("v2.build.time")}</p>
               </div>
-              {/* The arc draws itself while the roadmap is written. Its length is unknown until
-                  the roadmap exists, so no week count is invented. */}
-              <NavyBlock aria-hidden="false">
-                <JourneyArc totalWeeks={null} label={t("v2.building.arc")} draw loop />
-              </NavyBlock>
+              <BuildWait opportunityId={opportunityId} active={build.isPending || waitingOnOther} />
             </>
           )}
         </div>

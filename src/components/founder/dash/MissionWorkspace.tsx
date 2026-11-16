@@ -16,6 +16,8 @@ import { looksTooNeat } from "@/lib/missions/honesty";
 import { useInvalidateFounder } from "@/lib/queries";
 import { useAskSol } from "../DashboardShell";
 import { cn } from "@/lib/utils";
+import { clearWarmupNames, readWarmupNames } from "@/lib/roadmap/warmup";
+
 import { ActionButton, Label, MistCard } from "./ui";
 
 /**
@@ -105,6 +107,11 @@ function ListWorkspace({ taskId, ws, locked }: WsProps) {
   const target = ws.spec?.target ?? Math.max(3, rows.length);
   const named = rows.filter((r) => String(r.data.name ?? "").trim()).length;
   const [drafts, setDrafts] = useState(rows.length === 0 ? 3 : 1);
+  // Names written down while the roadmap was built (BuildWait): offered once, in an empty list.
+  const [warmup, setWarmup] = useState<string[]>([]);
+  useEffect(() => {
+    if (rows.length === 0 && !locked) setWarmup(readWarmupNames());
+  }, [rows.length, locked]);
   return (
     <MistCard aria-labelledby="list-title" className="gap-[18px]">
       <div className="flex flex-wrap items-baseline justify-between gap-3">
@@ -121,6 +128,19 @@ function ListWorkspace({ taskId, ws, locked }: WsProps) {
           · {t("v2.ws.autosave")}
         </p>
       </div>
+      {warmup.length > 0 && rows.length === 0 && (
+        <ActionButton
+          tone="secondary"
+          onClick={() => {
+            for (const name of warmup) save.mutate({ kind: "list_row", data: { name } });
+            clearWarmupNames();
+            setWarmup([]);
+          }}
+          data-testid="list-use-warmup"
+        >
+          {t("v2.ws.list.useWarmup", { n: warmup.length })}
+        </ActionButton>
+      )}
       {rows.map((r, i) => (
         <ListRow
           key={r.id}

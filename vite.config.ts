@@ -56,7 +56,13 @@ export default defineConfig({
   nitro:
     process.env.E2E_BUILD === "1"
       ? { preset: "node-server", output: { dir: ".e2e-tmp/output" } }
-      : { preset: "vercel" },
+      : // A roadmap build (skeleton + week 1) or a consultation can take a minute when the model
+        // retries; never let the platform default cut one off halfway (go-live step 3). The
+        // wrapper spreads these options into nitro unchanged; only its type is narrower.
+        ({
+          preset: "vercel",
+          vercel: { functions: { maxDuration: 300 } },
+        } as { preset: string }),
 
   vite: {
     server: {
