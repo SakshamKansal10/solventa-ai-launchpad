@@ -360,6 +360,11 @@ const en = {
   "pub.how.shotTitle": "Your Today screen",
   "pub.how.shotBody": "One mission at a time, sized to your hours, with your week and your 12-week path one click away. Sample founder shown.",
   "pub.how.shotAlt": "Solventia's Today screen for a sample founder: today's mission, a Start mission button, mission 2 of 3 this week, and the 12-week journey",
+  "v2.intro.back.named": "Welcome back, {name}.",
+  "v2.intro.back.pickup": "Pick up where you left off.",
+  "v2.intro.back2.start": "Still looking for the right business to start?",
+  "v2.intro.back2.idea": "Still wondering if your idea will work?",
+  "v2.intro.back2.stuck": "Still stuck on the next step?",
 } as const;
 
 const hi: Record<keyof typeof en, string> = {
@@ -725,6 +730,11 @@ const hi: Record<keyof typeof en, string> = {
   "pub.how.shotTitle": "आपकी 'आज' स्क्रीन",
   "pub.how.shotBody": "एक समय में एक मिशन, आपके घंटों के हिसाब से, और आपका हफ़्ता और 12 हफ़्तों का रास्ता एक क्लिक पर। नमूना फ़ाउंडर दिखाया गया है।",
   "pub.how.shotAlt": "नमूना फ़ाउंडर के लिए Solventia की 'आज' स्क्रीन: आज का मिशन, मिशन शुरू करें बटन, इस हफ़्ते के 3 में से मिशन 2, और 12 हफ़्तों का सफ़र",
+  "v2.intro.back.named": "फिर से स्वागत है, {name}।",
+  "v2.intro.back.pickup": "जहाँ छोड़ा था, वहीं से आगे बढ़ें।",
+  "v2.intro.back2.start": "अभी भी सही बिज़नेस ढूँढ रहे हैं?",
+  "v2.intro.back2.idea": "अभी भी सोच रहे हैं कि आपका आइडिया चलेगा या नहीं?",
+  "v2.intro.back2.stuck": "अगले कदम पर अभी भी अटके हैं?",
 };
 
 export default { en, hi };

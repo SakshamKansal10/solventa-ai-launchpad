@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { INTRO_CHOICE_EVENT, readIntroChoice, type IntroChoice } from "../intro/intro-gate";
+import { RevealLine, RevealMark } from "../intro/Reveal";
 import {
   ArrowRight,
   Briefcase,
@@ -304,19 +305,22 @@ function BrandOpening() {
       aria-hidden="true"
       className="absolute inset-x-[var(--gutter)] inset-y-0 flex flex-col items-center justify-center"
     >
+      <RevealLine />
       <div className="flex items-center gap-[clamp(0.9rem,2.4vw,2.4rem)] [--mark-h:clamp(52px,14vw,82px)] sm:[--mark-h:clamp(84px,10.4vw,152px)]">
-        <span data-brand-part="mark" className="block origin-top-left">
-          <BrandMark />
+        <span data-brand-part="mark" className="relative block origin-top-left">
+          <RevealMark />
         </span>
         <div className="flex flex-col gap-[clamp(0.55rem,1.4vw,1.4rem)]">
           <span data-brand-part="word" className="block origin-top-left self-start">
             <BrandWordmark
+              split
               className="text-[clamp(38px,10.4vw,62px)] sm:text-[clamp(62px,7.8vw,116px)]"
               color="var(--ink)"
             />
           </span>
           <span data-brand-part="sig" className="block origin-top-left self-start">
             <BrandSignature
+              split
               className="text-[clamp(10px,2.9vw,14px)] sm:text-[clamp(15px,1.75vw,26px)]"
               color="var(--ink)"
               separator="var(--accent-soft)"

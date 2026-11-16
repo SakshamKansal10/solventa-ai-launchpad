@@ -74,17 +74,33 @@ export function BrandWordmark({
   className = "",
   style,
   color = BRAND_INK,
+  split = false,
 }: {
   className?: string;
   style?: CSSProperties;
   color?: string;
+  /** One span per letter (the opening's reveal animates them); identical at rest. */
+  split?: boolean;
 }) {
   return (
     <span
-      className={`block font-wordmark font-medium uppercase leading-none tracking-[0.13em] [margin-right:-0.13em] ${className}`}
+      className={`block font-wordmark font-medium uppercase leading-none tracking-[0.13em] [margin-right:-0.13em] ${split ? "[clip-path:inset(-0.3em_-1em_0_-1em)]" : ""} ${className}`}
       style={{ color, ...style }}
+      aria-label={split ? "Solventia" : undefined}
     >
-      Solventia
+      {split
+        ? "Solventia".split("").map((c, i) => (
+            <span
+              key={i}
+              aria-hidden="true"
+              data-rv="ch"
+              className="inline-block"
+              style={{ ["--i" as string]: i }}
+            >
+              {c}
+            </span>
+          ))
+        : "Solventia"}
     </span>
   );
 }
@@ -95,23 +111,43 @@ export function BrandSignature({
   style,
   color = SIGNATURE_INK,
   separator = SEPARATOR,
+  split = false,
 }: {
   className?: string;
   style?: CSSProperties;
   color?: string;
   separator?: string;
+  /** One span per word and dot (the opening's reveal animates them); identical at rest. */
+  split?: boolean;
 }) {
   const dot = (
-    <span aria-hidden="true" className="mx-[0.75em]" style={{ color: separator }}>
+    <span
+      aria-hidden="true"
+      className="mx-[0.75em] inline-block"
+      style={{ color: separator }}
+      data-rv={split ? "dot" : undefined}
+    >
       •
     </span>
   );
+  const word = (w: string, i: number) =>
+    split ? (
+      <span data-rv="w" className="inline-block" style={{ ["--i" as string]: i }}>
+        {w}
+      </span>
+    ) : (
+      w
+    );
   return (
     <span
       className={`block whitespace-nowrap font-wordmark font-medium uppercase leading-none tracking-[0.3em] [margin-right:-0.3em] ${className}`}
       style={{ color, ...style }}
     >
-      Validate{dot}Build{dot}Elevate
+      {word("Validate", 0)}
+      {dot}
+      {word("Build", 1)}
+      {dot}
+      {word("Elevate", 2)}
     </span>
   );
 }

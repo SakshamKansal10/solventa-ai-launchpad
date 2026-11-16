@@ -28,32 +28,33 @@ test.describe("What brings you here? (the opening)", () => {
     await expect(page.getByTestId("intro-answer")).toHaveText(
       "Then you need to test it before you spend on it.",
     );
-    await expect(page.getByTestId("intro-here")).toHaveText("Here is Solventia.");
+    // The answer leads out and the real lockup beneath is revealed (main carries the state).
+    await expect(page.locator("main[data-intro-state=reveal]")).toHaveCount(1, { timeout: 5_000 });
     // The words give way to the film (or, if the world is slow here, to the still version).
     await expect(intro).toHaveCount(0, { timeout: 15_000 });
     await expect(page.getByTestId("cinematic-home")).not.toHaveAttribute("aria-busy", "true");
     expect(await page.evaluate(() => sessionStorage.getItem("sol-intro-choice"))).toBe("idea");
     expect(await page.evaluate(() => localStorage.getItem("sol-intro-seen"))).not.toBeNull();
 
-    // A returning visit: no question — "Welcome back." with the line for their earlier answer,
-    // then the lockup.
+    // A returning visit: no question — one line for their earlier answer, then the lockup.
     await gotoApp(page, "/?intro=auto");
     await expect(page.getByTestId("intro")).toHaveCount(0);
-    await expect(page.getByTestId("intro-return-title")).toHaveText("Welcome back.");
+    await expect(page.locator("[data-return-line=idea]")).toHaveText(
+      "Still wondering if your idea will work?",
+    );
     await expect(page.locator("[data-return-line=idea]")).toBeVisible();
-    await expect(page.locator("[data-return-line=none]")).toBeHidden();
+    await expect(page.locator("[data-return-line=start]")).toBeHidden();
     await expect(page.getByTestId("intro-return-dashboard")).toHaveCount(0);
     await expect(page.getByTestId("intro-return")).toHaveCount(0, { timeout: 15_000 });
   });
 
-  test("a returning visit with no earlier answer: 'Your plan is waiting.'", async ({ page }) => {
+  test("a visitor who saw it but never tapped a choice gets the question again", async ({
+    page,
+  }) => {
     await page.addInitScript(() => localStorage.setItem("sol-intro-seen", "2026-11-15"));
     await gotoApp(page, "/?intro=auto");
-    await expect(page.getByTestId("intro-return-title")).toHaveText("Welcome back.");
-    // One line per earlier answer is rendered; CSS shows the one that applies.
-    await expect(page.locator("[data-return-line=none]")).toBeVisible();
-    await expect(page.locator("[data-return-line=none]")).toHaveText("Your plan is waiting.");
-    await expect(page.locator("[data-return-line=start]")).toBeHidden();
+    await expect(page.getByTestId("intro-question")).toBeVisible();
+    await expect(page.getByTestId("intro-return")).toHaveCount(0);
   });
 
   test("a signed-in founder coming back can go straight to the dashboard", async ({
@@ -63,8 +64,10 @@ test.describe("What brings you here? (the opening)", () => {
     await resetStack();
     const user = await createUser({ fullName: "Asha Verma" });
     await signIn(context, user);
-    await page.addInitScript(() => localStorage.setItem("sol-intro-seen", "2026-11-15"));
     await gotoApp(page, "/?intro=auto");
+    await expect(page.getByTestId("intro-question")).toHaveCount(0);
+    await expect(page.getByTestId("intro-return-title")).toHaveText("Welcome back, Asha.");
+    await expect(page.getByTestId("intro-return-line")).toHaveText("Pick up where you left off.");
     await page.getByTestId("intro-return-dashboard").click();
     await expect(page).toHaveURL(/\/dashboard/);
   });
@@ -78,7 +81,8 @@ test.describe("What brings you here? (the opening)", () => {
       "Then you need a plan built around you.",
       { timeout: 5_000 },
     );
-    expect(await page.evaluate(() => sessionStorage.getItem("sol-intro-choice"))).toBe("start");
+    // The default is not the visitor's answer: nothing is stored.
+    expect(await page.evaluate(() => localStorage.getItem("sol-intro-choice"))).toBeNull();
   });
 
   test("Skip intro ends it at once; a reload never shows it, even on a first visit", async ({

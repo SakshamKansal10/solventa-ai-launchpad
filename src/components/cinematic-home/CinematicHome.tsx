@@ -21,7 +21,7 @@ import {
   isFilm,
 } from "./device/capabilities";
 import { StaticFallback } from "./fallback/StaticFallback";
-import { introGate, markIntroSeen, type IntroGate } from "./intro/intro-gate";
+import { introGate, type IntroGate } from "./intro/intro-gate";
 import { IntroQuestion } from "./intro/IntroQuestion";
 import { IntroReturn } from "./intro/IntroReturn";
 import { IntroStyles, LockupHold } from "./intro/IntroShared";
@@ -82,7 +82,7 @@ const BUNDLE_WAIT_MS = 4_000;
 const LOCKUP_WAIT_MS = 8_000;
 
 /** The opening: asked (first visits only), holding at the lockup for the world, or finished. */
-type IntroState = "ask" | "hold" | "off";
+type IntroState = "ask" | "reveal" | "hold" | "off";
 
 /**
  * The visit's mode, decided ONCE (module scope: it survives remounts and client navigations) and
@@ -152,10 +152,8 @@ export function CinematicHome({
     store.state.capability = decided;
     setCapability(decided);
     const gate = introGate();
-    if (gate) {
-      setVariant(gate);
-      markIntroSeen();
-    } else setIntro("off");
+    if (gate) setVariant(gate);
+    else setIntro("off");
   }, [store, tierOverride]);
 
   // Either opening ends on the lockup: the film starts now if the world is ready, else it holds.
@@ -357,21 +355,30 @@ export function CinematicHome({
         )}
 
         <IntroStyles />
-        {intro === "ask" && variant !== "return" && (
+        {/* Both openings are server-rendered; the head gate shows the right one before hydration. */}
+        {(intro === "ask" || intro === "reveal") && (variant === null || variant === "show") && (
           <IntroQuestion
             still={mode === "fallback"}
             reducedMotion={reducedMotion}
+            onReveal={() => setIntro("reveal")}
             onLockup={toLockup}
             onSkip={() => setIntro("off")}
           />
         )}
-        {intro === "ask" && variant !== "show" && (
-          <IntroReturn
-            still={mode === "fallback"}
-            reducedMotion={reducedMotion}
-            onLockup={toLockup}
-            onSkip={() => setIntro("off")}
-          />
+        {(["return", "signedin"] as const).map(
+          (v) =>
+            (intro === "ask" || intro === "reveal") &&
+            (variant === null || variant === v) && (
+              <IntroReturn
+                key={v}
+                variant={v}
+                onReveal={() => setIntro("reveal")}
+                still={mode === "fallback"}
+                reducedMotion={reducedMotion}
+                onLockup={toLockup}
+                onSkip={() => setIntro("off")}
+              />
+            ),
         )}
         {intro === "hold" && <LockupHold onSkip={() => setIntro("off")} />}
 

@@ -22,21 +22,24 @@ export type IntroChoice = (typeof INTRO_CHOICES)[number];
 /** Chosen for the visitor when they do not tap within the question's time. */
 export const DEFAULT_CHOICE: IntroChoice = "start";
 
-export type IntroGate = "show" | "return";
+export type IntroGate = "show" | "return" | "signedin";
 
 /**
- * Skipped (no opening at all) for: a deep link (#hash, ?next=), a back / forward or reload
- * navigation (they arrive part-way), a page already scrolled, review and test URLs (?tier,
- * ?freeze, ?debug, ?perf, ?notch) and automated browsers — unless ?intro says otherwise. A
- * visitor who has seen the first opening gets the returning one. Plain ES5 in a try: if anything
- * throws, there is simply no opening.
+ * Who gets which opening — decided before the first paint:
+ *   signed in (a Supabase session cookie)          → "signedin": welcome back, by name
+ *   a choice they once tapped (sessionStorage/local) → "return": one line for that choice
+ *   anyone else (first visit, or never tapped)      → "show": "What brings you here?"
+ * No opening for: a deep link (#hash, ?next=), a back / forward or reload navigation, a page
+ * already scrolled, review and test URLs (?tier, ?freeze, ?debug, ?perf, ?notch) and automated
+ * browsers — unless ?intro says otherwise (1 / return / signedin force one; auto applies the
+ * rules). Plain ES5 in a try: if anything throws, there is simply no opening.
  */
 export const INTRO_GATE_SCRIPT = `(function(){try{
-var d=document.documentElement,q=new URLSearchParams(location.search),i=q.get("intro"),seen=null,c=null;
-try{seen=localStorage.getItem("${INTRO_SEEN_KEY}");c=sessionStorage.getItem("${INTRO_CHOICE_KEY}")||localStorage.getItem("${INTRO_CHOICE_KEY}");}catch(e){}
-if(c==="start"||c==="idea"||c==="stuck")d.setAttribute("data-intro-choice",c);
+var d=document.documentElement,q=new URLSearchParams(location.search),i=q.get("intro"),c=null;
+try{c=sessionStorage.getItem("${INTRO_CHOICE_KEY}")||localStorage.getItem("${INTRO_CHOICE_KEY}");}catch(e){}
+if(c==="start"||c==="idea"||c==="stuck")d.setAttribute("data-intro-choice",c);else c=null;
 if(i==="1"){d.setAttribute("data-intro","show");return;}
-if(i==="return"){d.setAttribute("data-intro","return");return;}
+if(i==="return"||i==="signedin"){d.setAttribute("data-intro",i);return;}
 if(navigator.webdriver&&i!=="auto")return;
 if(location.hash)return;
 var r=["tier","freeze","debug","perf","notch","next"];
@@ -44,14 +47,15 @@ for(var k=0;k<r.length;k++)if(q.has(r[k]))return;
 var n=performance.getEntriesByType&&performance.getEntriesByType("navigation")[0];
 if(n&&(n.type==="reload"||n.type==="back_forward"))return;
 if(window.scrollY>0)return;
-d.setAttribute("data-intro",seen?"return":"show");
+var signed=/(?:^|;\\s*)sb-[^=]*-auth-token/.test(document.cookie);
+d.setAttribute("data-intro",signed?"signedin":c?"return":"show");
 }catch(e){}})();`;
 
 /** What the head gate decided for this visit (null = no opening). */
 export function introGate(): IntroGate | null {
   if (typeof document === "undefined") return null;
   const v = document.documentElement.dataset.intro;
-  return v === "show" || v === "return" ? v : null;
+  return v === "show" || v === "return" || v === "signedin" ? v : null;
 }
 
 export function markIntroSeen() {

@@ -52,6 +52,7 @@ async function filmRun(throttle) {
     w.__rec = false;
     w.__frames = [];
     w.__lt = [];
+    w.__ltAll = [];
     w.__states = [];
     let last = 0;
     const tick = (now) => {
@@ -61,7 +62,10 @@ async function filmRun(throttle) {
     };
     requestAnimationFrame(tick);
     new PerformanceObserver((l) => {
-      for (const e of l.getEntries()) if (w.__rec) w.__lt.push(Math.round(e.duration));
+      for (const e of l.getEntries()) {
+        if (w.__rec) w.__lt.push(Math.round(e.duration));
+        w.__ltAll.push({ s: Math.round(e.startTime), d: Math.round(e.duration) });
+      }
     }).observe({ type: "longtask", buffered: false });
     const watch = () => {
       const el = document.querySelector("[data-testid=cinematic-home]");
@@ -122,6 +126,7 @@ async function filmRun(throttle) {
     return {
       frames: window.__frames,
       lt: window.__lt,
+      ltAll: window.__ltAll,
       states: window.__states,
       readyAt: ready && Math.round(ready),
       endMode: document.querySelector("[data-testid=cinematic-home]").getAttribute("data-mode"),
@@ -131,6 +136,10 @@ async function filmRun(throttle) {
   const hold = rec.states.find((s) => s.intro === "hold");
   const off = rec.states.find((s) => s.intro === "off");
   const lockupAt = hold?.t ?? off?.t ?? null;
+  // The reveal (answer lead-out → the lockup): it must add no long task of its own.
+  const revealAt = rec.states.find((s) => s.intro === "reveal")?.t ?? null;
+  const revealLt =
+    revealAt && lockupAt ? rec.ltAll.filter((e) => e.s + e.d > revealAt && e.s < lockupAt) : [];
   return {
     throttle,
     readyMs: rec.readyAt,
@@ -140,6 +149,9 @@ async function filmRun(throttle) {
     modeAtRelease: release.mode,
     modeAtEnd: rec.endMode,
     switchedModeAfterRelease: release.mode !== rec.endMode,
+    revealMs: revealAt && lockupAt ? lockupAt - revealAt : null,
+    revealLongTasks: revealLt.length,
+    revealWorstMs: revealLt.length ? Math.max(...revealLt.map((e) => e.d)) : 0,
     longTasks: rec.lt.length,
     worstLongTaskMs: rec.lt.length ? Math.max(...rec.lt) : 0,
     p95FrameMs: pct(rec.frames, 0.95),
@@ -206,23 +218,26 @@ async function checks() {
     await ctx.close();
   }
 
-  // A returning visit: no question — "Welcome back.", then the lockup and the film. The time on
+  // A returning visit: no question — the line for their earlier choice, then the lockup and the film. The time on
   // the opening is load → the story released (data-intro-state=off).
   for (const signedIn of [false, true]) {
     const ctx = await browser.newContext({
       viewport: { width: 1440, height: 900 },
       extraHTTPHeaders: headers,
     });
-    await ctx.addInitScript(() => localStorage.setItem("sol-intro-seen", "2026-11-15"));
+    await ctx.addInitScript(() => localStorage.setItem("sol-intro-choice", "idea"));
     const page = await ctx.newPage();
     if (signedIn) await page.route("**/_serverFn/**", (r) => r.continue());
     await page.goto(`${base}/?intro=auto`, { waitUntil: "domcontentloaded" });
     const welcomed = await page
-      .getByTestId("intro-return-title")
+      .locator("[data-return-line=idea]")
       .waitFor({ state: "visible", timeout: 15_000 })
       .then(() => true)
       .catch(() => false);
-    const question = await page.getByTestId("intro-question").isVisible().catch(() => false);
+    const question = await page
+      .getByTestId("intro-question")
+      .isVisible()
+      .catch(() => false);
     await page.waitForSelector(`${HOME}[data-intro-state=off]`, { timeout: 30_000 });
     const t = await page.evaluate(() => ({
       off: Math.round(performance.now()),
@@ -283,7 +298,8 @@ async function checks() {
 const runs = { broadband: await filmRun(1), cpu4x: await filmRun(4) };
 const other = await checks();
 const filmPass = (r) =>
-  !r.switchedModeAfterRelease && (r.throttle > 1 ? r.longTasks <= 4 : r.longTasks === 0);
+  !r.switchedModeAfterRelease &&
+  (r.throttle > 1 ? r.longTasks <= 4 : r.longTasks === 0 && r.revealLongTasks === 0);
 const result = {
   label,
   base,
@@ -296,7 +312,7 @@ result.pass =
 fs.writeFileSync(`docs/redesign/perf/verify-${label}.json`, JSON.stringify(result, null, 2));
 for (const [k, r] of Object.entries(result.runs))
   console.log(
-    `${k}: ready ${r.readyMs} ms · lockup ${r.lockupMs} ms · held ${r.held ? `${r.holdMs} ms` : "no"} · long tasks ${r.longTasks} (worst ${r.worstLongTaskMs} ms) · p95 ${r.p95FrameMs} ms · mode ${r.modeAtRelease}→${r.modeAtEnd} · ${r.pass ? "PASS" : "FAIL"}`,
+    `${k}: ready ${r.readyMs} ms · lockup ${r.lockupMs} ms · held ${r.held ? `${r.holdMs} ms` : "no"} · reveal long tasks ${r.revealLongTasks} (worst ${r.revealWorstMs} ms) · long tasks ${r.longTasks} (worst ${r.worstLongTaskMs} ms) · p95 ${r.p95FrameMs} ms · mode ${r.modeAtRelease}→${r.modeAtEnd} · ${r.pass ? "PASS" : "FAIL"}`,
   );
 for (const [k, c] of Object.entries(other))
   console.log(`${k}: ${c.pass ? "PASS" : "FAIL"} ${JSON.stringify(c)}`);

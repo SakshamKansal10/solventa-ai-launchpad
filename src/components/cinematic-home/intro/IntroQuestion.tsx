@@ -3,32 +3,36 @@ import { useEffect, useRef, useState } from "react";
 import { useLocale } from "@/lib/i18n/LocaleProvider";
 
 import { PEARL_WORLD } from "../world/tone";
-import { DEFAULT_CHOICE, INTRO_CHOICES, saveIntroChoice, type IntroChoice } from "./intro-gate";
-import { COLLAPSE_MS, SkipLink } from "./IntroShared";
+import {
+  DEFAULT_CHOICE,
+  INTRO_CHOICES,
+  markIntroSeen,
+  saveIntroChoice,
+  type IntroChoice,
+} from "./intro-gate";
+import { SkipLink } from "./IntroShared";
+import { REVEAL_MS, REVEAL_REDUCED_MS, RevealLockup } from "./Reveal";
 
 /** How long the question waits for a tap before answering for the visitor. */
 export const ASK_MS = 3_000;
 const ANSWER_MS = 1_100;
-const HERE_MS = 900;
 
-type Phase = "ask" | "answer" | "here" | "collapse" | "gone";
+type Phase = "ask" | "answer" | "reveal";
 
 /**
- * "What brings you here?" — the opening. DOM and CSS only (no canvas, no images, no library), so
- * it costs nothing while the 3D world compiles underneath. Three large choices; on a tap, or after
- * three seconds, one answer line for that choice, then "Here is Solventia.", then the words
- * collapse into the centred brand lockup — the film's own first frame, already there beneath this
- * layer — so the hand-off is seamless. With `still`, the last step fades to the still version.
- *
- * After the collapse the parent shows the lockup's hold (IntroShared LockupHold) if the world is
- * not ready yet.
+ * "What brings you here?" — the first-visit opening (also for anyone who never tapped a choice).
+ * DOM and CSS only. Three large choices; on a tap, or after three seconds, one answer line, then
+ * the Solventia reveal of the real lockup beneath (Reveal.tsx). A choice is stored only when the
+ * visitor taps one — the three-second default is not their answer.
  */
 export function IntroQuestion({
+  onReveal,
   onLockup,
   onSkip,
   still,
   reducedMotion,
 }: {
+  onReveal: () => void;
   onLockup: () => void;
   onSkip: () => void;
   still: boolean;
@@ -37,51 +41,40 @@ export function IntroQuestion({
   const { t } = useLocale();
   const [phase, setPhase] = useState<Phase>("ask");
   const [choice, setChoice] = useState<IntroChoice | null>(null);
-  const lockupRef = useRef(onLockup);
-  lockupRef.current = onLockup;
+  const cb = useRef({ onReveal, onLockup });
+  cb.current = { onReveal, onLockup };
 
   const choose = (c: IntroChoice) => {
     if (phase !== "ask") return;
     setChoice(c);
     saveIntroChoice(c);
+    markIntroSeen();
     setPhase("answer");
   };
 
-  // The question answers for the visitor if they do not tap.
   useEffect(() => {
-    if (phase !== "ask") return;
-    const id = window.setTimeout(() => {
-      setChoice(DEFAULT_CHOICE);
-      saveIntroChoice(DEFAULT_CHOICE);
-      setPhase("answer");
-    }, ASK_MS);
+    if (phase === "ask") {
+      const id = window.setTimeout(() => {
+        setChoice(DEFAULT_CHOICE);
+        setPhase("answer");
+      }, ASK_MS);
+      return () => window.clearTimeout(id);
+    }
+    if (phase === "answer") {
+      const id = window.setTimeout(() => {
+        setPhase("reveal");
+        cb.current.onReveal();
+      }, ANSWER_MS);
+      return () => window.clearTimeout(id);
+    }
+    const id = window.setTimeout(
+      () => cb.current.onLockup(),
+      reducedMotion ? REVEAL_REDUCED_MS : REVEAL_MS,
+    );
     return () => window.clearTimeout(id);
-  }, [phase]);
+  }, [phase, reducedMotion]);
 
-  useEffect(() => {
-    const next: Partial<Record<Phase, [Phase, number]>> = {
-      answer: ["here", ANSWER_MS],
-      here: ["collapse", HERE_MS],
-      collapse: ["gone", COLLAPSE_MS],
-    };
-    const step = next[phase];
-    if (!step) return;
-    const id = window.setTimeout(() => {
-      setPhase(step[0]);
-      if (step[0] === "gone") lockupRef.current();
-    }, step[1]);
-    return () => window.clearTimeout(id);
-  }, [phase]);
-
-  const collapsing = phase === "collapse" || phase === "gone";
-  // The words become the lockup: they draw in and soften into the centre while the pearl ground
-  // they sit on gives way to the identical ground of the film's first frame.
-  const wordsOut = collapsing
-    ? reducedMotion || still
-      ? { opacity: 0 }
-      : { opacity: 0, transform: "scale(0.86)", filter: "blur(6px)", letterSpacing: "-0.06em" }
-    : { opacity: 1 };
-
+  const revealing = phase === "reveal";
   return (
     <div
       data-intro-layer="first"
@@ -90,9 +83,10 @@ export function IntroQuestion({
       data-choice={choice ?? ""}
       className="fixed inset-0 z-[70] flex-col items-center justify-center"
       style={{
-        backgroundColor: collapsing ? "transparent" : PEARL_WORLD.sky,
-        transition: `background-color ${COLLAPSE_MS}ms cubic-bezier(0.4,0,0.2,1)`,
-        pointerEvents: collapsing ? "none" : "auto",
+        // The film's lockup is beneath: the ground gives way to it. The still version reveals its
+        // own lockup on the same ground.
+        backgroundColor: revealing && !still ? "transparent" : PEARL_WORLD.sky,
+        pointerEvents: revealing ? "none" : "auto",
         fontFamily: "var(--font-tech)",
         color: "var(--ink)",
       }}
@@ -135,32 +129,21 @@ export function IntroQuestion({
         </div>
       )}
 
-      {phase !== "ask" && phase !== "gone" && choice && (
-        <div
-          role="status"
-          aria-live="polite"
-          className="flex max-w-[min(1000px,100%-32px)] flex-col items-center gap-5 px-4 text-center"
-          style={{
-            ...wordsOut,
-            transition: `opacity ${COLLAPSE_MS}ms ease, transform ${COLLAPSE_MS}ms cubic-bezier(0.4,0,0.2,1), filter ${COLLAPSE_MS}ms ease, letter-spacing ${COLLAPSE_MS}ms ease`,
-          }}
-        >
+      {phase !== "ask" && choice && (
+        <div className="pointer-events-none absolute inset-0 flex items-center justify-center px-4">
           <p
-            className="font-medium leading-[1.08] tracking-[-0.035em] text-[clamp(1.8rem,5vw,4rem)] motion-safe:animate-[sol-intro-in_420ms_ease_both]"
+            role="status"
+            aria-live="polite"
+            data-lead-out={revealing ? "" : undefined}
+            className="max-w-[min(1000px,100%)] text-center font-medium leading-[1.08] tracking-[-0.035em] text-[clamp(1.8rem,5vw,4rem)] motion-safe:animate-[sol-intro-in_420ms_ease_both]"
             data-testid="intro-answer"
           >
             {t(`v2.intro.a.${choice}` as const)}
           </p>
-          {phase !== "answer" && (
-            <p
-              className="font-medium uppercase leading-none tracking-[-0.03em] text-[clamp(1.4rem,3.4vw,2.6rem)] motion-safe:animate-[sol-intro-in_420ms_ease_both]"
-              data-testid="intro-here"
-            >
-              {t("v2.intro.here")}
-            </p>
-          )}
         </div>
       )}
+
+      {revealing && still && <RevealLockup />}
     </div>
   );
 }

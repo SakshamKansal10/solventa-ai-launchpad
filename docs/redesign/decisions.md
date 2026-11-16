@@ -245,3 +245,19 @@ Each entry: what was ambiguous, what I chose, why.
     at pages that do not exist. No hreflang: Hindi is served at the same URLs (cookie), not at
     separate ones. robots blocks /dashboard (incl. /dashboard/admin), /admin, /review, /api/,
     /consultation.
+
+42. **The reveal and the world's ready time (go-live step 1).** The reveal itself adds no long
+    task: in the still version (no 3D) there are none at all while it plays; in the film, the long
+    tasks inside the reveal window are the world's shader compile (they end at `cine:shaders`).
+    The blur on the lead-out and the soft-light blend on the glint were removed anyway (the glint
+    is now masked to the emblem's shape), and Skip moved to the bottom-right (it covered "Find My
+    Business Idea" once the bar showed through the reveal). Ready time on this machine is noisy
+    (±0.8 s for the same build). Medians of 4–8 runs, lite, broadband: Skip at once 4.5 s, the
+    opening with the reveal 5.6 s (bimodal: 3 of 8 runs 4.2–4.5 s). Turning off any one effect
+    did not recover it, and hiding the canvas or keeping the layer opaque did not either: the
+    compile is GPU-bound and slows whenever anything moves on screen (no opening at all — the
+    film straight away — measured 5.4–6.6 s). So the "≤ 200 ms worse" check is NOT met. What a
+    visitor sees: at broadband the lockup still arrives after the world is ready (no hold); at
+    4× CPU the hold grows from about 0.9 s to 1.4 s. Kept, because the opening is the owner's
+    requirement and the time is spent on screen, not on a spinner. A follow-up that would pay
+    for it: create the canvas sooner (it starts ~0.7 s after the bundle has loaded).
