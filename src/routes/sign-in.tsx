@@ -224,7 +224,11 @@ function SignInPage() {
                 {t("signin.welcomeBack")}
               </h1>
               <p className="mt-1.5 text-[1rem] text-sol-secondary">
-                {nextPath ? t("auth.signin.nextSubhead") : t("signin.subhead")}
+                {nextPath?.startsWith("/dashboard/opportunities")
+                  ? t("auth.signin.directionsSubhead")
+                  : nextPath
+                    ? t("auth.signin.nextSubhead")
+                    : t("signin.subhead")}
               </p>
               <div className="mt-5">
                 <GoogleSignInButton redirectPath={googleRedirectPath} />

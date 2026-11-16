@@ -21,6 +21,9 @@ function getClient(): Resend | null {
 // Displays as "Solventia" in every inbox — never a Resend/Supabase
 // technical sender name.
 const FROM = "Solventia <sol@solventia.in>";
+/** Replies reach the team here until mail to sol@solventia.in is forwarded (no MX on
+ * solventia.in yet — owner, 2026-11-16); never shown in an email. */
+const REPLY_TO = "solventia.in@gmail.com";
 
 /** Every email send is best-effort. Resend being unconfigured or failing
  * must never break the core product flow it's attached to. */
@@ -31,7 +34,7 @@ async function sendSafely(payload: { to: string; subject: string; html: string }
     return;
   }
   try {
-    await resend.emails.send({ from: FROM, ...payload });
+    await resend.emails.send({ from: FROM, replyTo: REPLY_TO, ...payload });
   } catch (err) {
     console.error("[email] send failed:", err);
   }
@@ -98,7 +101,11 @@ export async function sendIdeasReadyEmail(
   fullName: string | null,
   data: IdeasReadyEmailData,
 ): Promise<void> {
-  const dashboardUrl = siteUrl(`/dashboard?consultation=${encodeURIComponent(data.businessDnaId)}`);
+  // The page that shows the three directions (in any state — /dashboard becomes Today once a
+  // direction is chosen), pinned to this consultation.
+  const dashboardUrl = siteUrl(
+    `/dashboard/opportunities?consultation=${encodeURIComponent(data.businessDnaId)}`,
+  );
   const totalIdeas = 1 + data.alternatives.length;
 
   const metrics = [
@@ -188,6 +195,8 @@ export async function sendWeeklyReminderEmail(
   data: { missionId: string; missionTitle: string; locale: "en" | "hi" },
 ): Promise<void> {
   const url = siteUrl(`/dashboard/roadmap/mission/${data.missionId}`);
+  // Reminders are changed (or turned off) in Settings → Weekly reminder.
+  const remindersUrl = siteUrl("/dashboard/settings#reminders");
   const title = escapeHtml(data.missionTitle);
   const copy =
     data.locale === "hi"
@@ -195,15 +204,18 @@ export async function sendWeeklyReminderEmail(
           subject: "इस हफ़्ते का आपका अगला मिशन",
           line: `आपका अगला मिशन: <strong>${title}</strong>`,
           button: "मिशन खोलें",
+          change: "रिमाइंडर बदलें",
         }
       : {
           subject: "Your next mission this week",
           line: `Your next mission: <strong>${title}</strong>`,
           button: "Open the mission",
+          change: "Change reminders",
         };
   const bodyRowsHtml = `
 ${bodyTextRow(copy.line)}
 <tr><td style="padding:22px 40px 4px 40px;">${primaryCta(url, copy.button)}</td></tr>
+<tr><td style="padding:18px 40px 0 40px; font-size:14px;"><a href="${escapeHtml(remindersUrl)}" style="color:#4B5563; text-decoration:underline;">${copy.change}</a></td></tr>
 `;
   await sendSafely({
     to: email,

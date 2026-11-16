@@ -30,7 +30,7 @@ export const Route = createFileRoute("/privacy")({
 });
 
 const LAST_UPDATED = "September 10, 2026";
-const CONTACT_EMAIL = "solventia.in@gmail.com";
+import { CONTACT_EMAIL } from "@/lib/contact";
 
 function List({ items }: { items: string[] }) {
   return (

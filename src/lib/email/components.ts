@@ -4,6 +4,7 @@ import {
   FONT_BODY,
   FONT_HEADING,
   escapeHtml,
+  SUPPORT_EMAIL,
 } from "@/lib/email/brand";
 import { siteUrl } from "@/lib/actions/site-url.server";
 
@@ -30,7 +31,8 @@ export function emailHeader(): string {
 }
 
 export function emailFooter(): string {
-  const home = siteUrl("/");
+  // A signed-in page, never the homepage (owner, 2026-11-16: every email link is a deep link).
+  const home = siteUrl("/dashboard");
   const privacy = siteUrl("/privacy");
   const terms = siteUrl("/terms");
   return `
@@ -47,7 +49,7 @@ export function emailFooter(): string {
           &nbsp;·&nbsp;
           <a href="${escapeHtml(terms)}" style="color:${EMAIL_COLORS.secondary}; text-decoration:underline;">Terms</a>
           <br /><br />
-          Questions? Write to <a href="mailto:solventia.in@gmail.com" style="color:${EMAIL_COLORS.secondary}; text-decoration:underline;">solventia.in@gmail.com</a>
+          Questions? Write to <a href="mailto:${SUPPORT_EMAIL}" style="color:${EMAIL_COLORS.secondary}; text-decoration:underline;">${SUPPORT_EMAIL}</a>
           <br /><br />
           © ${new Date().getFullYear()} Solventia
         </td>

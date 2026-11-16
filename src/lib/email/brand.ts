@@ -22,7 +22,7 @@ export const FONT_HEADING = "Helvetica, Arial, sans-serif";
 export const FONT_BODY = "Arial, Helvetica, sans-serif";
 
 export const BRAND_TAGLINE = "VALIDATE • BUILD • ELEVATE";
-export const SUPPORT_EMAIL = "solventia.in@gmail.com";
+export const SUPPORT_EMAIL = "sol@solventia.in";
 
 /** Every dynamic value (a founder's name, an AI-generated opportunity
  * title) is interpolated into raw HTML below — this is the one place

@@ -457,3 +457,13 @@ Each entry: what was ambiguous, what I chose, why.
     and works unchanged. In e2e, accounts.google.com is blocked by default (the fallback), and
     e2e/google-gis.spec.ts serves a fake Google script whose token the fake GoTrue checks for the
     hashed nonce.
+
+54. **Email links and one address (owner, 2026-11-16).** Every email link is a plain deep link
+    (table in REPORT.md); the ideas-ready email opens /dashboard/opportunities (the directions in
+    any state — /dashboard turns into Today once a direction is chosen), the weekly reminder gains
+    "Change reminders" (/dashboard/settings#reminders), and the footer's "Open Solventia" opens
+    /dashboard, never the homepage. The auth guard now sends signed-out visitors to /sign-in with
+    `?next=` (it used to send them to the homepage, whose opening and dialog came first). One
+    address everywhere: sol@solventia.in (site, legal pages, structured data, emails), sender
+    "Solventia <sol@solventia.in>"; replies go to solventia.in@gmail.com via a hidden reply-to
+    until mail to solventia.in is forwarded (no MX records yet).

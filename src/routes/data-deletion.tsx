@@ -31,7 +31,7 @@ export const Route = createFileRoute("/data-deletion")({
   },
 });
 
-const CONTACT_EMAIL = "solventia.in@gmail.com";
+import { CONTACT_EMAIL } from "@/lib/contact";
 
 const STEPS = [
   {

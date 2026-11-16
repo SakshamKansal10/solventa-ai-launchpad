@@ -111,6 +111,8 @@ export function ReminderSettingsSection({ className }: { className?: string }) {
     <Card
       className={cn("flex flex-col gap-4 p-[clamp(24px,2.8vw,40px)]", className)}
       aria-labelledby="reminder-h"
+      // The reminder email's "Change reminders" link: /dashboard/settings#reminders.
+      id="reminders"
       data-testid="reminder-section"
     >
       <div>

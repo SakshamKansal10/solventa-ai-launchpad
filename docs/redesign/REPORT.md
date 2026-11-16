@@ -1,5 +1,26 @@
 # Solventia redesign v2 — report
 
+## Email links open the right page (Job E, 2026-11-16)
+
+Every email button is a plain deep link to the exact page — no login token, no magic link:
+
+| Email | Button / link | Opens |
+|---|---|---|
+| Ideas ready | Explore My Directions | https://solventia.in/dashboard/opportunities?consultation=<id> — the three directions of that consultation |
+| Roadmap ready | Start Week 01 | https://solventia.in/dashboard/roadmap |
+| Weekly reminder | Open the mission / मिशन खोलें | https://solventia.in/dashboard/roadmap/mission/<mission id> |
+| Weekly reminder | Change reminders / रिमाइंडर बदलें | https://solventia.in/dashboard/settings#reminders |
+| Welcome | Continue My Consultation | https://solventia.in/consultation |
+| Every footer | Open Solventia · Privacy · Terms · sol@solventia.in | /dashboard · /privacy · /terms · mailto |
+
+Signed in, the link opens that page directly. Signed out (expired session, new browser), it
+opens the sign-in page (never the homepage) — Google first, with "Sign in to see your three
+directions." for the ideas link — and after signing in by Google's button, One Tap, the Google
+redirect, a code or a password, the founder lands on that exact page. A `next` pointing at
+another site is ignored. Tests (e2e/email-links.spec.ts, 2026-11-16, local): signed in → the
+directions in 1.66 s (limit 2 s) — pass; signed out → sign in → the exact page (password and
+Google) — pass; unsafe `next` (https://, //, /) ignored — pass.
+
 ## Owner steps — Google sign-in shows "Solventia" (Job C, 2026-11-16)
 
 Google's own button and One Tap (Google Identity Services) now sign founders in on solventia.in

@@ -6,12 +6,12 @@ import { env } from "@/lib/env.server";
 import { qk } from "@/lib/queries";
 import { sanitizeNextPath } from "@/lib/safe-redirect";
 
-/** Shared `beforeLoad` for every authenticated dashboard route — bounces
- * signed-out visitors back to the homepage instead of rendering a route
- * that has nothing to show them. Carries the exact path they were trying
- * to reach (a dashboard deep link from an email, say) along as `?next=`
- * so the homepage's sign-in flow can return them there once they're
- * signed in, instead of stranding them on the homepage.
+/** Shared `beforeLoad` for every authenticated dashboard route — sends
+ * signed-out visitors to the sign-in page (never the homepage and its opening:
+ * owner, 2026-11-16) with the exact path they were trying to reach (a deep
+ * link from an email, say) as `?next=`, so every way of signing in there —
+ * Google's button, One Tap, the redirect, a code or a password — returns them
+ * to that page.
  *
  * The user comes from the shared query cache when it is fresh, so moving
  * between dashboard pages does not pay a server round trip just to re-ask
@@ -34,7 +34,7 @@ export async function requireAuthLoader({
     : await fetchUser();
   if (!user) {
     const next = sanitizeNextPath(location.href);
-    throw redirect({ to: "/", search: next ? { next } : undefined });
+    throw redirect({ to: "/sign-in", search: next ? { next } : undefined });
   }
   return user;
 }

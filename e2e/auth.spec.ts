@@ -62,12 +62,11 @@ test.describe("sign in", () => {
   }) => {
     const user = await createUser({ fullName: "Asha Verma" });
     await page.goto("/dashboard/settings");
-    // The homepage opens sign-in itself and then tidies `?next=` out of the address bar.
-    const dialog = page.getByRole("dialog");
-    await expect(dialog).toBeVisible();
-    await dialog.getByLabel("Email").fill(user.email);
-    await dialog.getByLabel("Password").fill(user.password);
-    await dialog.getByRole("button", { name: "Sign In", exact: true }).click();
+    // The sign-in page (never the homepage: owner, 2026-11-16), with the path kept in `?next=`.
+    await expect(page).toHaveURL(/\/sign-in\?next=%2Fdashboard%2Fsettings/);
+    await page.locator("#page-signin-email").fill(user.email);
+    await page.locator("#page-signin-password").fill(user.password);
+    await page.locator("#page-signin-password").press("Enter");
     await expect(page).toHaveURL(/localhost:\d+\/dashboard\/settings$/, { timeout: 30_000 });
   });
 
