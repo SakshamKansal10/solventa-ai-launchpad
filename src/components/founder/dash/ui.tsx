@@ -5,11 +5,13 @@ import {
   type HTMLAttributes,
   type ReactNode,
 } from "react";
-import { createLink } from "@tanstack/react-router";
+import { createLink, useRouterState } from "@tanstack/react-router";
 import { ArrowRight, Loader2 } from "lucide-react";
 
 import { useLocale } from "@/lib/i18n/LocaleProvider";
 import { cn } from "@/lib/utils";
+
+import { dashPageFor } from "./tabs";
 
 /**
  * Dashboard v2 building blocks (docs/redesign/briefs/3-dashboard-redesign.md).
@@ -289,11 +291,20 @@ export function DashPage({
   );
 }
 
-/** Skeleton while a page's data loads. */
+/** Skeleton while a page's data (or code) loads. It names the page being opened — the page's
+ * name from the navigation — so a tab switch shows the new page at once, never the old one under
+ * a new highlight (owner, 2026-11-16). */
 export function DashSkeleton({ label }: { label?: string }) {
   const { t } = useLocale();
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const page = dashPageFor(pathname);
   return (
-    <div role="status" aria-busy="true" className="flex flex-col gap-8">
+    <div role="status" aria-busy="true" className="flex flex-col gap-8" data-testid="dash-skeleton">
+      {page && (
+        <p className="dash-label" data-testid="tab-heading">
+          {t(page.label)}
+        </p>
+      )}
       <span className="sr-only">{label ?? t("common.loading")}</span>
       <div className="h-6 w-48 animate-pulse rounded-full bg-sol-ivory" />
       <div className="h-[clamp(88px,10vw,160px)] w-[min(44rem,92%)] animate-pulse rounded-[24px] bg-sol-ivory" />

@@ -426,3 +426,21 @@ Each entry: what was ambiguous, what I chose, why.
     roadmap screen's client-side ceiling moved from 120 s to 310 s — just past the server's own
     limit (maxDuration 300 s) — so it no longer reports a failure while the request can still
     succeed.
+
+52. **Tab switch showed the old page for 6–7 s (owner, 2026-11-16).** Cause: the navigation
+    highlight follows the router's location (it changes at the click), but the page area renders
+    the old route until the new one has resolved — and a tab's code (Proof: 7 chunks) downloads on
+    its first click; there was no pending UI, so on a slow connection the old page stayed. Proof's
+    data was a second wait: the page fetched the founder state, THEN the proof overview (a client
+    waterfall), and the overview was six serial database round trips. No dashboard route blocks on
+    data (no awaited loaders; the auth guard reads the cached user), and Proof makes no AI call to
+    open (it writes a direction's assumptions once, the first time). Fix: the dashboard layout
+    shows the new page's frame (its name and skeletons) whenever the URL has moved to a page that
+    has not rendered yet (after a 50 ms grace, so a ready page never flashes); every page's
+    skeleton names the page; all dashboard pages' code loads in the background once the dashboard
+    is idle; Proof's route preload (hover/touch) starts its data without awaiting it; and the
+    overview's independent reads run together (6 round trips → 4). e2e/tab-switch.spec.ts: every
+    tab shows its page within 300 ms with the server 3 s slow (46–195 ms measured), and a tab whose
+    code is still downloading shows its frame in 84 ms (the old code fails this test: the Roadmap
+    page stayed on screen). Production timings per tab could not be measured here — it needs a
+    signed-in founder account on solventia.in.

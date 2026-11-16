@@ -333,8 +333,29 @@ export async function loadProofOverview(
   userId: string,
   opportunityId: string,
 ): Promise<ProofOverview> {
-  const caps = await getSchemaCapabilities(supabase);
-  const opp = await ownedOpportunity(supabase, userId, opportunityId);
+  // Everything that depends only on the opportunity id runs at once (it was a serial chain of six
+  // database round trips; 6–7 s to open Proof on production, owner 2026-11-16). Every read is
+  // scoped to this user, so nothing is read for someone else before ownership is confirmed.
+  const proofRows = () =>
+    Promise.all([
+      supabase
+        .from("proof_assumptions")
+        .select("*")
+        .eq("opportunity_id", opportunityId)
+        .eq("user_id", userId)
+        .order("position"),
+      supabase
+        .from("proof_evidence")
+        .select("*")
+        .eq("opportunity_id", opportunityId)
+        .eq("user_id", userId),
+    ]);
+  const [caps, opp, rows, earlyLinks] = await Promise.all([
+    getSchemaCapabilities(supabase),
+    ownedOpportunity(supabase, userId, opportunityId),
+    proofRows(),
+    loadMissionLinks(supabase, userId, opportunityId).catch(() => null),
+  ]);
   if (!caps.proof) {
     return {
       available: false,
@@ -349,26 +370,15 @@ export async function loadProofOverview(
     };
   }
 
-  const [aRes, eRes] = await Promise.all([
-    supabase
-      .from("proof_assumptions")
-      .select("*")
-      .eq("opportunity_id", opportunityId)
-      .eq("user_id", userId)
-      .order("position"),
-    supabase
-      .from("proof_evidence")
-      .select("*")
-      .eq("opportunity_id", opportunityId)
-      .eq("user_id", userId),
-  ]);
+  const [aRes, eRes] = rows;
   if (aRes.error) throw new Error(aRes.error.message);
   if (eRes.error) throw new Error(eRes.error.message);
 
   const evidence = eRes.data ?? [];
   const [taskTitles, links] = await Promise.all([
     loadTaskTitles(supabase, userId, evidence),
-    loadMissionLinks(supabase, userId, opportunityId),
+    // Read above; asked again only if that early read failed, so its error surfaces as before.
+    earlyLinks ?? loadMissionLinks(supabase, userId, opportunityId),
   ]);
   const assumptions = buildAssumptionDTOs(aRes.data ?? [], evidence, taskTitles, links.tasks);
   if (caps.proofRules && caps.missionWorkspaces)

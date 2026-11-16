@@ -35,12 +35,14 @@ import {
 import {
   deleteProofEvidence,
   getProofFileUrl,
+  getProofOverview,
   type AssumptionDTO,
   type EvidenceDTO,
   type LinkedMissionDTO,
 } from "@/lib/actions/proof";
 import { useLocale } from "@/lib/i18n/LocaleProvider";
-import { useFounderState, useInvalidateFounder } from "@/lib/queries";
+import type { FounderState } from "@/lib/actions/founder";
+import { qk, useFounderState, useInvalidateFounder } from "@/lib/queries";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/dashboard/proof")({
@@ -50,6 +52,18 @@ export const Route = createFileRoute("/dashboard/proof")({
     /** An assumption to open on arrival (from a mission's "Tests" link). */
     assumption: z.string().uuid().optional().catch(undefined),
   }),
+  loaderDeps: ({ search }) => ({ opportunity: search.opportunity }),
+  // Never awaited: navigation is not blocked on data; the page shows its skeleton meanwhile.
+  loader: ({ context, deps }) => {
+    const founder = context.queryClient.getQueryData<FounderState>(qk.founder(null));
+    const id = deps.opportunity ?? founder?.direction.selectedId ?? null;
+    if (id)
+      void context.queryClient.prefetchQuery({
+        queryKey: qk.proof(id),
+        queryFn: () => getProofOverview({ data: { opportunityId: id } }),
+        staleTime: 10_000,
+      });
+  },
   component: ProofPage,
   head: () => ({
     meta: [
