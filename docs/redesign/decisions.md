@@ -328,3 +328,12 @@ Each entry: what was ambiguous, what I chose, why.
     founder states, plus the top bar at 360 — 90 pages, 0 findings after fixing the two it
     found: the phone top bar's logo link and the Settings switches were under 44 px (the shared
     Switch is now a 44×44 target with the same visible track).
+
+47. **Small items (go-live step 7).** "How it works" appeared twice in the desktop header (a
+    scroll-nav button and the public-pages link) and twice in the footer (its list and the
+    public-pages row). Now one per menu: the header keeps the real <a href> (search engines
+    follow it; the button copy is hidden on desktop), the phone menu keeps its one entry, the
+    footer keeps its list entry, the homepage summary keeps its own. A test checks header and
+    footer. The silver S on lite (pre-baked matcap ≤ 150 KB, only if ≤ 0.3 s) was SKIPPED, as
+    the owner allowed when usage runs low: it changes the live 3D scene on launch day and needs
+    its own before/after measurement; the lite S keeps the 2026-11-16 hemisphere ×1.3 tune.

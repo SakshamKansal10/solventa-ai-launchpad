@@ -55,3 +55,11 @@ test.describe("public pages for search (site name, sitelinks)", () => {
     expect(sitemap).toContain("<lastmod>");
   });
 });
+
+test("How it works: exactly one link in the header and one in the footer", async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await gotoApp(page, "/faq");
+  const how = (scope: string) => page.locator(`${scope} a[href="/how-it-works"]:visible`);
+  await expect(how("header")).toHaveCount(1);
+  await expect(how("footer")).toHaveCount(1);
+});

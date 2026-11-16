@@ -159,7 +159,9 @@ export function Header({ pendingNext }: HeaderProps = {}) {
         </Link>
 
         <nav className="hidden items-center justify-center gap-[34px] pl-8 xl:flex">
-          {SCROLL_NAV.map((item) => (
+          {/* "How it works" is the real link further along (search engines follow it): one
+              link per menu (go-live step 7). The phone menu keeps its own single entry. */}
+          {SCROLL_NAV.filter((item) => item.id !== "how-it-works").map((item) => (
             <button
               key={item.id}
               type="button"

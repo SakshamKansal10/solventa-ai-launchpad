@@ -27,7 +27,11 @@ test.describe("public buttons", () => {
 
     // From another page the header's section links open real pages (the film has no anchors).
     await gotoApp(page, "/about");
-    await page.getByRole("banner").getByRole("button", { name: "How It Works" }).first().click();
+    await page
+      .getByRole("banner")
+      .getByRole("link", { name: /How it works/i })
+      .first()
+      .click();
     await expect(page).toHaveURL(/\/how-it-works$/);
 
     await gotoApp(page, "/how-it-works");

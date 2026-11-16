@@ -35,8 +35,8 @@ const FOOTER_LINKS: {
  * placeholder links would be exactly the kind of unsupported claim the
  * rest of this homepage was rebuilt to remove. */
 /** The public pages, as plain links on every page (site name and sitelinks for search). */
+// "How it works" is in the footer's own list above: one link per menu (go-live step 7).
 const PUBLIC_LINKS = [
-  ["/how-it-works", "pub.nav.how"],
   ["/ideas", "pub.nav.ideas"],
   ["/for-founders", "pub.nav.founders"],
   ["/about", "pub.nav.about"],
