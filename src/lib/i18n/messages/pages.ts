@@ -17,7 +17,7 @@ const en = {
     "You share your background, skills, money, time and interests through a guided consultation. Solventia analyzes that full profile — not just a few keywords — to surface directions suited to you specifically.",
   "about.faq3.q": "What does “tested” mean?",
   "about.faq3.a":
-    "Solventia reasons through each direction against your own constraints — skills, money, time and appetite for risk — and shows you why it fits before you commit anything. That is a structured match, not a guarantee of market success. Real testing comes from the proof you collect yourself, which you record in Proof.",
+    "Solventia checks each direction against your own limits — skills, money, time and how much risk you can take. It shows you why it fits before you commit anything. That is a careful match, not a promise of success. Real testing comes from the proof you collect yourself and record in Proof.",
   "about.faq4.q": "Can NGOs or mentors get involved?",
   "about.faq4.before": "Yes — see ",
   "about.faq4.link": "Solventia for Organizations",
@@ -37,19 +37,19 @@ const en = {
   "mv.vision.statement":
     "A world where opportunity is distributed by ambition, not geography or background.",
   "mv.vision.body":
-    "We're building toward a future where anyone with a real idea — in a metro city or a small town — can test it, build it and watch it create impact.",
+    "We want anyone with a real idea, in a big city or a small town, to be able to test it and build it. And to watch it make a difference.",
   "story.title": "Founder's story",
   "story.name": "Saksham Kansal",
   "story.role": "Founder, Solventia",
   "story.body":
-    "Most business advice assumes you already have money, connections or experience. Solventia started from a simpler premise: someone with real curiosity and no starting capital deserves a serious, structured path forward — not a generic list of ideas. That's the standard every part of this product is built against.",
+    "Most business advice assumes you already have money, contacts or experience. Solventia started from a simpler idea. Someone with real curiosity and no starting money deserves a serious, step-by-step path — not a generic list of ideas. Every part of this product is built to that standard.",
 
   // ── For Organizations ──────────────────────────────────────────────────
   "orgs.crumb": "For Organizations",
   "orgs.eyebrow": "For Organizations",
   "orgs.h1": "Bring the people you support into a real, structured path to execution.",
   "orgs.sub":
-    "Solventia works alongside schools, colleges, NGOs and incubators — not around them — giving the people you support a personalized direction and a roadmap they can actually follow.",
+    "Solventia works with schools, colleges, NGOs and incubators. It gives the people you support a direction made for them and a roadmap they can actually follow.",
   "orgs.aud.schools": "Schools",
   "orgs.aud.colleges": "Colleges",
   "orgs.aud.universities": "Universities",
@@ -114,13 +114,13 @@ const hi: Record<keyof typeof en, string> = {
   "about.more": "और सवाल",
   "about.faq1.q": "Solventia किसके लिए बना है?",
   "about.faq1.a":
-    "हर उस व्यक्ति के लिए जिसके पास सच्ची महत्वाकांक्षा है पर शुरुआत का कोई साफ़ रास्ता नहीं — विद्यार्थी, पहली बार बिज़नेस शुरू करने वाले और करियर बदलने वाले — और उनका साथ देने वाले संस्थान।",
+    "हर उस इंसान के लिए जिसमें आगे बढ़ने की चाह है पर शुरुआत का साफ़ रास्ता नहीं। जैसे स्टूडेंट, पहली बार बिज़नेस शुरू करने वाले और करियर बदलने वाले — और उनका साथ देने वाले संस्थान।",
   "about.faq2.q": "AI मेरे लिए दिशाएं असल में कैसे खोजता है?",
   "about.faq2.a":
     "आप एक निर्देशित कंसल्टेशन में अपनी पृष्ठभूमि, कौशल, पैसा, समय और रुचियां साझा करते हैं। Solventia उस पूरी प्रोफ़ाइल का विश्लेषण करता है — सिर्फ़ कुछ कीवर्ड का नहीं — ताकि खास आपके लिए ठीक बैठने वाली दिशाएं सामने आएं।",
   "about.faq3.q": "“परखा हुआ” का क्या मतलब है?",
   "about.faq3.a":
-    "Solventia हर दिशा को आपकी अपनी सीमाओं — कौशल, पैसा, समय और जोखिम उठाने की क्षमता — के सामने रखकर परखता है, और कुछ भी लगाने से पहले बताता है कि वह क्यों ठीक बैठती है। यह एक सुव्यवस्थित मिलान है, बाज़ार में सफलता की गारंटी नहीं। असली परख उन सबूतों से आती है जो आप खुद जुटाते हैं और सबूत में दर्ज करते हैं।",
+    "Solventia हर दिशा को आपकी अपनी सीमाओं से मिलाकर देखता है — हुनर, पैसा, समय और आप कितना रिस्क ले सकते हैं। कुछ भी लगाने से पहले बताता है कि वो दिशा क्यों ठीक बैठती है। यह सोच-समझकर किया गया मिलान है, कामयाबी की गारंटी नहीं। असली जाँच उन सबूतों से होती है जो आप खुद जुटाते हैं और सबूत पेज पर लिखते हैं।",
   "about.faq4.q": "क्या NGO या मेंटर जुड़ सकते हैं?",
   "about.faq4.before": "हां — देखें ",
   "about.faq4.link": "संस्थानों के लिए Solventia",
@@ -140,18 +140,18 @@ const hi: Record<keyof typeof en, string> = {
   "mv.vision.statement":
     "ऐसी दुनिया जहां अवसर महत्वाकांक्षा के आधार पर बंटे, भूगोल या पृष्ठभूमि के आधार पर नहीं।",
   "mv.vision.body":
-    "हम ऐसे भविष्य की ओर बढ़ रहे हैं जहां असली आइडिया वाला कोई भी — बड़े शहर में या छोटे कस्बे में — उसे परख सके, बना सके और उससे असर पैदा होते देख सके।",
+    "हम चाहते हैं कि असली आइडिया वाला कोई भी इंसान, बड़े शहर में हो या छोटे कस्बे में, उसे परख सके और बना सके। और उससे फ़र्क पड़ता देख सके।",
   "story.title": "फाउंडर की कहानी",
   "story.name": "Saksham Kansal",
   "story.role": "फाउंडर, Solventia",
   "story.body":
-    "ज़्यादातर बिज़नेस सलाह यह मानकर चलती है कि आपके पास पहले से पैसा, जान-पहचान या अनुभव है। Solventia एक सीधी सोच से शुरू हुआ: जिसमें सच्ची जिज्ञासा है पर शुरुआती पूंजी नहीं, वह एक गंभीर, सुव्यवस्थित रास्ते का हक़दार है — आइडिया की किसी आम सूची का नहीं। इस प्रोडक्ट का हर हिस्सा इसी कसौटी पर बनाया गया है।",
+    "ज़्यादातर बिज़नेस सलाह मानकर चलती है कि आपके पास पहले से पैसा, जान-पहचान या अनुभव है। Solventia एक सीधी सोच से शुरू हुआ। जिसमें सच्ची लगन है पर शुरू करने को पैसा नहीं, उसे भी एक पक्का, कदम-दर-कदम रास्ता मिलना चाहिए — आइडिया की कोई आम सूची नहीं। इस प्रोडक्ट का हर हिस्सा इसी सोच से बना है।",
 
   "orgs.crumb": "संस्थानों के लिए",
   "orgs.eyebrow": "संस्थानों के लिए",
   "orgs.h1": "जिनका आप साथ देते हैं, उन्हें अमल का असली, सुव्यवस्थित रास्ता दिखाएं।",
   "orgs.sub":
-    "Solventia स्कूलों, कॉलेजों, NGO और इन्क्यूबेटरों के साथ मिलकर काम करता है — उनके बगल से नहीं — और जिनका आप साथ देते हैं उन्हें एक व्यक्तिगत दिशा और ऐसा रोडमैप देता है जिस पर वे सच में चल सकें।",
+    "Solventia स्कूलों, कॉलेजों, NGO और इन्क्यूबेटरों के साथ मिलकर काम करता है। जिनका आप साथ देते हैं, उन्हें उनके लिए बनी दिशा और ऐसा रोडमैप मिलता है जिस पर वो सच में चल सकें।",
   "orgs.aud.schools": "स्कूल",
   "orgs.aud.colleges": "कॉलेज",
   "orgs.aud.universities": "विश्वविद्यालय",

@@ -75,7 +75,8 @@ function textOf(contents: unknown): string {
 
 export function detectPurpose(system: string, prompt: string, grounded: boolean): Purpose {
   if (grounded) return "MARKET_GROUNDED";
-  if (/professional business translator/i.test(system)) return "CONTENT_TRANSLATION";
+  if (/professional business translator|You translate for Solventia/i.test(system))
+    return "CONTENT_TRANSLATION";
   if (/validation planner/i.test(system)) return "PROOF_ASSUMPTIONS";
   if (/evidence interpreter/i.test(system)) return "EVIDENCE_INTERPRETATION";
   if (/design the long-term SHAPE/i.test(system)) return "ROADMAP_SKELETON";

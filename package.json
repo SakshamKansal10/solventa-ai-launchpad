@@ -15,7 +15,8 @@
     "test:e2e": "playwright test",
     "compare": "playwright test -c playwright.compare.config.ts",
     "compare:seed": "playwright test -c playwright.seed.config.ts",
-    "engine:compare": "vitest run -c vitest.engine.config.ts"
+    "engine:compare": "vitest run -c vitest.engine.config.ts",
+    "scan": "node scripts/scan.mjs"
   },
   "dependencies": {
     "@google/genai": "^2.17.1",

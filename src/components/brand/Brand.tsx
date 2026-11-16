@@ -142,6 +142,9 @@ export function BrandSignature({
     <span
       className={`block whitespace-nowrap font-wordmark font-medium uppercase leading-none tracking-[0.3em] [margin-right:-0.3em] ${className}`}
       style={{ color, ...style }}
+      // The brand's own signature: never translated, and the one text allowed under 15 px.
+      translate="no"
+      data-allow-small=""
     >
       {word("Validate", 0)}
       {dot}

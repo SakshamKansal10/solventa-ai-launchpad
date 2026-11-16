@@ -379,7 +379,7 @@ const en = {
   "opt.constraints.none": "None",
 
   "opt.scale.profitable": "A profitable, high-income business",
-  "opt.scale.national": "A scalable national company",
+  "opt.scale.national": "A company that sells across the country",
   "opt.scale.global": "A global / venture-scale company",
   "opt.scale.expand_existing": "Expand an existing business significantly",
   "opt.scale.not_sure": "Not sure yet",
@@ -529,7 +529,7 @@ const hi: Record<keyof typeof en, string> = {
   "q.skills.addCustom": "“{name}” जोड़ें",
   "q.skills.noMatches": "कोई मेल नहीं मिला।",
   "q.skills.empty":
-    "अभी कोई कौशल न होना शुरुआत के लिए सामान्य है — Solventia वे कौशल मानकर नहीं चलता जो आपके पास नहीं हैं, बल्कि सीखना आपकी योजना में जोड़ देता है।",
+    "अभी कोई हुनर न होना शुरुआत में आम बात है। Solventia वो हुनर मानकर नहीं चलता जो आपके पास नहीं है — सीखना आपके प्लान में जोड़ देता है।",
   "q.skills.level": "आप कितने अच्छे हैं?",
   "q.skills.usedInReal": "क्या इसे किसी असली प्रोजेक्ट या नौकरी में इस्तेमाल किया?",
   "q.skills.remove": "{name} हटाएं",

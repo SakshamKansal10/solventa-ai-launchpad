@@ -235,7 +235,7 @@ const hi: Record<keyof typeof en, string> = {
   "pf.category.delivery": "डिलीवरी",
   "pf.category.retention": "ग्राहकों का टिकना",
   "pf.category.pricing": "कीमत",
-  "pf.category.competition": "प्रतिस्पर्धा",
+  "pf.category.competition": "मुकाबला",
   "pf.category.other": "अन्य",
 
   "pf.reason.no_evidence": "आपने अभी तक इसके लिए कोई सबूत दर्ज नहीं किया है।",

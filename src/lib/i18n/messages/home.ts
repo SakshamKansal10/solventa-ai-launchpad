@@ -75,8 +75,8 @@ const en = {
   "founderSignal.dir.c2": "Software for your industry's slowest process",
   "founderSignal.dir.c3": "A marketplace built on your supplier network",
   "founderSignal.class.a": "Learn-first directions",
-  "founderSignal.class.b": "Scalable product directions",
-  "founderSignal.class.c": "Leverage-your-position directions",
+  "founderSignal.class.b": "Product directions that can grow big",
+  "founderSignal.class.c": "Directions that use what you already have",
 
   "howItWorks.eyebrow": "How Solventia works",
   "howItWorks.headline": "From uncertainty to execution.",
@@ -151,7 +151,7 @@ const en = {
   "whySolventia.solventia": "Solventia",
   "faq.q1": "What exactly does Solventia do?",
   "faq.a1":
-    "Solventia turns your background, skills, money and time into three business directions that fit you specifically, then gives you a week-by-week roadmap to test and build one.",
+    "Solventia turns your background, skills, money and time into three business directions that fit you. Then it gives you a week-by-week roadmap to test and build one.",
   "faq.q2": "How personalized are the recommendations?",
   "faq.a2":
     "Every direction is generated from your own answers, not from a shared list. Two people with different profiles get different directions, and each one shows honestly where you are strong and where you are not yet.",
@@ -300,7 +300,7 @@ const hi: Record<keyof typeof en, string> = {
   "signin.submit": "साइन इन करें",
   "signin.forgotPassword": "पासवर्ड भूल गए? इसके बजाय कोड से साइन इन करें",
   "signin.checkEmail": "कोड के लिए अपना ईमेल देखें",
-  "signin.verify": "सत्यापित करें और साइन इन करें",
+  "signin.verify": "कोड डालें और साइन इन करें",
   "signin.back": "वापस",
   "signin.resendCode": "कोड फिर से भेजें",
 
@@ -317,10 +317,10 @@ const hi: Record<keyof typeof en, string> = {
   "whySolventia.solventia": "Solventia",
   "faq.q1": "Solventia असल में क्या करता है?",
   "faq.a1":
-    "Solventia आपकी पृष्ठभूमि, कौशल, पैसे और समय को तीन ऐसी बिज़नेस दिशाओं में बदलता है जो खास आपके लिए ठीक बैठती हैं, फिर उनमें से एक को परखने और बनाने के लिए सप्ताह-दर-सप्ताह रोडमैप देता है।",
+    "Solventia आपके अनुभव, हुनर, पैसे और समय से तीन बिज़नेस दिशाएँ बनाता है जो आपके लिए ठीक बैठती हैं। फिर उनमें से एक को परखने और बनाने के लिए हफ़्ते-दर-हफ़्ते का रोडमैप देता है।",
   "faq.q2": "सिफ़ारिशें कितनी व्यक्तिगत होती हैं?",
   "faq.a2":
-    "हर दिशा आपके अपने जवाबों से बनती है, किसी साझा सूची से नहीं। अलग प्रोफ़ाइल वाले दो लोगों को अलग दिशाएं मिलती हैं, और हर दिशा ईमानदारी से बताती है कि आप कहां मज़बूत हैं और कहां अभी नहीं।",
+    "हर दिशा आपके अपने जवाबों से बनती है, किसी आम सूची से नहीं। अलग प्रोफ़ाइल वाले दो लोगों को अलग दिशाएँ मिलती हैं। हर दिशा साफ़ बताती है कि आप कहाँ मज़बूत हैं और कहाँ अभी नहीं।",
   "faq.q3": "क्या मुझे बिज़नेस का अनुभव चाहिए?",
   "faq.a3":
     "नहीं। कंसल्टेशन वहीं से शुरू होती है जहां आप आज हैं — आपके कौशल, समय और संसाधन — किसी मान लिए गए अनुभव के स्तर से नहीं।",

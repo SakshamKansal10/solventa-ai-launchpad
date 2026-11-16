@@ -300,3 +300,17 @@ Each entry: what was ambiguous, what I chose, why.
     limits count rows that already exist (business_dna, roadmaps, the founder's
     mentor_messages) since midnight India time; a counting error never blocks anyone. The wait
     screen now quotes the measured time ("20 to 30 seconds") and shows its three real steps.
+
+45. **Hindi and plain words (go-live step 5).** One style rule per language in
+    src/lib/ai/prompts/style.ts, used by every generator (PLAIN_LANGUAGE_RULE, buildLanguageRule)
+    and by the translator: spoken Haryana/Punjab Hindi in Devanagari with everyday English words
+    written in Devanagari, and English a 14-year-old reads, titles ≤ 6 plain words. The
+    translator now keeps only brand, app and tax names in Latin script (AI, GST, UPI, WhatsApp,
+    Instagram, LinkedIn, Excel, Google). style.test.ts checks a jargon list (English and
+    Sanskrit-heavy Hindi) and a 25-word sentence limit over the examples AND the whole UI
+    catalogue; 38 strings were rewritten to pass. "उद्यम" is not on the list: Udyam
+    Registration is the scheme's official name. AI content already stored in English is
+    translated once on demand (content_translations, now on GEMINI_LITE_MODEL) and reused — that
+    path existed; the local fake translator had stopped recognising the new prompt and was
+    updated. The Hindi pass of `npm run scan` (42 pages: 3 founder states × 390/1440 × 7 routes)
+    finds no untranslated text; the logo tagline is the brand's own and is marked translate="no".

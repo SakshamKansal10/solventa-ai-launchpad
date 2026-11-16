@@ -2,6 +2,7 @@ import { z } from "zod";
 
 import { generateStructured } from "@/lib/ai/gemini.server";
 import { FounderDNASchema } from "@/lib/ai/schemas";
+import { ENGLISH_STYLE_RULE } from "@/lib/ai/prompts/style";
 import type { Candidate, EngineBrief } from "@/lib/engine/stages";
 import { CandidateSchema, CANDIDATE_TYPES } from "@/lib/engine/stages";
 import type { NormalizedProfile } from "@/lib/profile/normalize";
@@ -14,7 +15,7 @@ import { buildLanguageRule, formatProfileForPrompt, type GenerationLocale } from
  */
 export const ENGINE_PROMPT_VERSION = "engine-v2-2026-11-15";
 
-const PLAIN = `Plain words a 16-year-old understands. No hype, no jargon. Every number is an estimate the founder's first weeks will check — never present one as known.`;
+const PLAIN = `${ENGLISH_STYLE_RULE} No hype, no jargon. Every number is an estimate the founder's first weeks will check — never present one as known.`;
 
 function formatBrief(brief: EngineBrief, currency: string): string {
   const l = brief.limits;
