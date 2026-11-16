@@ -99,3 +99,13 @@ Blockers: `blocked.md`. Final report: `REPORT.md`.
 - [x] 5 site name and sitelinks (ad3df89)
 - [x] 6 final check: typecheck, 460 unit, build, e2e 178 + the 4 fixed (51/51 on re-run)
 - [x] REPORT.md
+
+## Go live — 2026-11-16 (owner: live on solventia.in today)
+- [x] L1 opening (87b3f9a): the Solventia reveal on the real lockup, signed-in / returning variants
+- [ ] L2 live: tag before-live-2026-11-16, redesign-v2 merged into main
+- [ ] L3 roadmap: week 1 fast and reliable
+- [ ] L4 cost and speed of idea generation, daily limits
+- [ ] L5 Hindi for everything, simpler words
+- [ ] L6 dashboard: width, tab flash, npm run scan, mobile
+- [ ] L7 small items: one "How it works", silver S on lite
+- [ ] L8 final check and REPORT.md
