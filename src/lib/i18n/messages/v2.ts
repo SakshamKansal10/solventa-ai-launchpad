@@ -288,6 +288,12 @@ const en = {
   "q.help.placeholder": "e.g. fixing phones, filling forms, teaching maths",
   "consult.contra.fixBasics": "Fix my age or status",
   "consult.contra.fixEducation": "Fix my education",
+  "v2.intro.back.title": "Welcome back.",
+  "v2.intro.back.start": "Still deciding what to start? Let's pick up where you left off.",
+  "v2.intro.back.idea": "Still testing your idea? Let's pick up where you left off.",
+  "v2.intro.back.stuck": "Ready for your next step? Let's pick up where you left off.",
+  "v2.intro.back.none": "Your plan is waiting.",
+  "v2.intro.back.dashboard": "Go to my dashboard",
 } as const;
 
 const hi: Record<keyof typeof en, string> = {
@@ -581,6 +587,12 @@ const hi: Record<keyof typeof en, string> = {
   "q.help.placeholder": "जैसे फ़ोन ठीक करना, फ़ॉर्म भरना, गणित पढ़ाना",
   "consult.contra.fixBasics": "मेरी उम्र या स्थिति ठीक करें",
   "consult.contra.fixEducation": "मेरी पढ़ाई ठीक करें",
+  "v2.intro.back.title": "फिर से स्वागत है।",
+  "v2.intro.back.start": "अभी भी तय कर रहे हैं कि क्या शुरू करें? जहाँ छोड़ा था, वहीं से आगे बढ़ते हैं।",
+  "v2.intro.back.idea": "अभी भी अपना आइडिया परख रहे हैं? जहाँ छोड़ा था, वहीं से आगे बढ़ते हैं।",
+  "v2.intro.back.stuck": "अगले क़दम के लिए तैयार हैं? जहाँ छोड़ा था, वहीं से आगे बढ़ते हैं।",
+  "v2.intro.back.none": "आपकी योजना आपका इंतज़ार कर रही है।",
+  "v2.intro.back.dashboard": "मेरे डैशबोर्ड पर जाएँ",
 };
 
 export default { en, hi };

@@ -1,11 +1,12 @@
 import { expect, test } from "@playwright/test";
 
 import { gotoApp } from "./helpers/page";
-import { appUrl, forbidRealBackends } from "./helpers/stack";
+import { appUrl, createUser, forbidRealBackends, resetStack, signIn } from "./helpers/stack";
 
 /**
- * The opening question (redesign-v2 intro). Automated browsers skip it unless ?intro asks:
- * ?intro=1 always shows it, ?intro=auto applies the real first-visit rules.
+ * The openings (redesign-v2 intro): the question on a first visit, "Welcome back." on a later
+ * one. Automated browsers skip them unless ?intro asks: ?intro=1 always shows the question,
+ * ?intro=return the welcome, ?intro=auto applies the real rules.
  */
 test.beforeEach(async ({ page }) => {
   forbidRealBackends(page);
@@ -34,10 +35,38 @@ test.describe("What brings you here? (the opening)", () => {
     expect(await page.evaluate(() => sessionStorage.getItem("sol-intro-choice"))).toBe("idea");
     expect(await page.evaluate(() => localStorage.getItem("sol-intro-seen"))).not.toBeNull();
 
-    // A returning visit: no question.
+    // A returning visit: no question — "Welcome back." with the line for their earlier answer,
+    // then the lockup.
     await gotoApp(page, "/?intro=auto");
-    await expect(page.getByTestId("cinematic-home")).toHaveAttribute("data-intro-state", "off");
     await expect(page.getByTestId("intro")).toHaveCount(0);
+    await expect(page.getByTestId("intro-return-title")).toHaveText("Welcome back.");
+    await expect(page.locator("[data-return-line=idea]")).toBeVisible();
+    await expect(page.locator("[data-return-line=none]")).toBeHidden();
+    await expect(page.getByTestId("intro-return-dashboard")).toHaveCount(0);
+    await expect(page.getByTestId("intro-return")).toHaveCount(0, { timeout: 15_000 });
+  });
+
+  test("a returning visit with no earlier answer: 'Your plan is waiting.'", async ({ page }) => {
+    await page.addInitScript(() => localStorage.setItem("sol-intro-seen", "2026-11-15"));
+    await gotoApp(page, "/?intro=auto");
+    await expect(page.getByTestId("intro-return-title")).toHaveText("Welcome back.");
+    // One line per earlier answer is rendered; CSS shows the one that applies.
+    await expect(page.locator("[data-return-line=none]")).toBeVisible();
+    await expect(page.locator("[data-return-line=none]")).toHaveText("Your plan is waiting.");
+    await expect(page.locator("[data-return-line=start]")).toBeHidden();
+  });
+
+  test("a signed-in founder coming back can go straight to the dashboard", async ({
+    page,
+    context,
+  }) => {
+    await resetStack();
+    const user = await createUser({ fullName: "Asha Verma" });
+    await signIn(context, user);
+    await page.addInitScript(() => localStorage.setItem("sol-intro-seen", "2026-11-15"));
+    await gotoApp(page, "/?intro=auto");
+    await page.getByTestId("intro-return-dashboard").click();
+    await expect(page).toHaveURL(/\/dashboard/);
   });
 
   test("without a tap, the question answers for the visitor after three seconds", async ({

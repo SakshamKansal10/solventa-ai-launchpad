@@ -4,25 +4,14 @@ import { useLocale } from "@/lib/i18n/LocaleProvider";
 
 import { PEARL_WORLD } from "../world/tone";
 import { DEFAULT_CHOICE, INTRO_CHOICES, saveIntroChoice, type IntroChoice } from "./intro-gate";
+import { COLLAPSE_MS, SkipLink } from "./IntroShared";
 
 /** How long the question waits for a tap before answering for the visitor. */
 export const ASK_MS = 3_000;
 const ANSWER_MS = 1_100;
 const HERE_MS = 900;
-/** The words collapse into the lockup (or, for the still version, fade). */
-const COLLAPSE_MS = 560;
 
 type Phase = "ask" | "answer" | "here" | "collapse" | "gone";
-
-/** Hidden unless the head gate said "show" before the first paint (no flash for anyone else). */
-const GATE_CSS =
-  "[data-intro-layer]{display:none}html[data-intro=show] [data-intro-layer]{display:flex}" +
-  "@keyframes sol-intro-in{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}" +
-  "@keyframes sol-intro-bar{0%{transform:translateX(-100%)}100%{transform:translateX(250%)}}" +
-  "@media (prefers-reduced-motion: reduce){[data-intro-layer] *{animation:none!important}}" +
-  // No "Scroll to explore" while the story cannot move yet.
-  "html[data-intro=show] main[data-intro-state=ask] [data-brand-cue]," +
-  "main[data-intro-state=hold] [data-brand-cue]{visibility:hidden}";
 
 /**
  * "What brings you here?" — the opening. DOM and CSS only (no canvas, no images, no library), so
@@ -31,19 +20,17 @@ const GATE_CSS =
  * collapse into the centred brand lockup — the film's own first frame, already there beneath this
  * layer — so the hand-off is seamless. With `still`, the last step fades to the still version.
  *
- * After the collapse the layer stays only for the "Skip intro" link and, while the world is not
- * ready yet, a quiet progress line under the lockup (`holding`).
+ * After the collapse the parent shows the lockup's hold (IntroShared LockupHold) if the world is
+ * not ready yet.
  */
 export function IntroQuestion({
   onLockup,
   onSkip,
-  holding,
   still,
   reducedMotion,
 }: {
   onLockup: () => void;
   onSkip: () => void;
-  holding: boolean;
   still: boolean;
   reducedMotion: boolean;
 }) {
@@ -97,11 +84,10 @@ export function IntroQuestion({
 
   return (
     <div
-      data-intro-layer
+      data-intro-layer="first"
       data-testid="intro"
       data-phase={phase}
       data-choice={choice ?? ""}
-      data-holding={holding ? "true" : "false"}
       className="fixed inset-0 z-[70] flex-col items-center justify-center"
       style={{
         backgroundColor: collapsing ? "transparent" : PEARL_WORLD.sky,
@@ -111,17 +97,7 @@ export function IntroQuestion({
         color: "var(--ink)",
       }}
     >
-      <style>{GATE_CSS}</style>
-
-      <button
-        type="button"
-        onClick={onSkip}
-        className="pointer-events-auto absolute right-[clamp(16px,3vw,40px)] top-[clamp(14px,2.4vh,28px)] min-h-11 rounded-full px-3 font-mono text-[12px] uppercase tracking-[0.26em] underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--ink)]"
-        style={{ color: "var(--quiet)" }}
-        data-testid="intro-skip"
-      >
-        {t("v2.intro.skip")}
-      </button>
+      <SkipLink onSkip={onSkip} />
 
       {phase === "ask" && (
         <div className="flex w-full max-w-[min(1120px,100%-32px)] flex-col items-start gap-[clamp(22px,4.5vh,48px)] px-4 sm:px-8">
@@ -183,30 +159,6 @@ export function IntroQuestion({
               {t("v2.intro.here")}
             </p>
           )}
-        </div>
-      )}
-
-      {phase === "gone" && holding && (
-        // Under the lockup, in place of the scroll cue: the world is still being prepared.
-        <div
-          className="absolute bottom-[clamp(2.4rem,8svh,4.5rem)] flex flex-col items-center gap-3"
-          data-testid="intro-hold"
-        >
-          <span
-            className="relative block h-px w-28 overflow-hidden"
-            style={{ background: "var(--hair)" }}
-          >
-            <span
-              className="absolute inset-y-0 left-0 block w-2/5 motion-safe:animate-[sol-intro-bar_1.4s_cubic-bezier(0.45,0,0.2,1)_infinite]"
-              style={{ background: "var(--ink)" }}
-            />
-          </span>
-          <span
-            className="font-mono text-[12px] uppercase tracking-[0.3em]"
-            style={{ color: "var(--quiet)" }}
-          >
-            {t("v2.intro.loading")}
-          </span>
         </div>
       )}
     </div>

@@ -21,8 +21,10 @@ import {
   isFilm,
 } from "./device/capabilities";
 import { StaticFallback } from "./fallback/StaticFallback";
-import { introRequested, markIntroSeen } from "./intro/intro-gate";
+import { introGate, markIntroSeen, type IntroGate } from "./intro/intro-gate";
 import { IntroQuestion } from "./intro/IntroQuestion";
+import { IntroReturn } from "./intro/IntroReturn";
+import { IntroStyles, LockupHold } from "./intro/IntroShared";
 import { CinematicOverlay } from "./overlay/CinematicOverlay";
 import { Narrative } from "./overlay/Narrative";
 import { ProductLayer } from "./overlay/ProductLayer";
@@ -136,6 +138,9 @@ export function CinematicHome({
   // Server and first client render agree on "ask" (the markup is hidden by CSS unless the head
   // gate asked for it); the layout effect below switches it off before the first paint otherwise.
   const [intro, setIntro] = useState<IntroState>("ask");
+  // Which opening: unknown until the layout effect reads the head gate (both are server-rendered
+  // and the gate's CSS shows the right one before then).
+  const [variant, setVariant] = useState<IntroGate | null>(null);
   const introRef = useRef<IntroState>("ask");
   introRef.current = intro;
 
@@ -146,9 +151,15 @@ export function CinematicHome({
     store.state.device = probeDevice();
     store.state.capability = decided;
     setCapability(decided);
-    if (introRequested()) markIntroSeen();
-    else setIntro("off");
+    const gate = introGate();
+    if (gate) {
+      setVariant(gate);
+      markIntroSeen();
+    } else setIntro("off");
   }, [store, tierOverride]);
+
+  // Either opening ends on the lockup: the film starts now if the world is ready, else it holds.
+  const toLockup = () => setIntro(mode === "fallback" || store.state.ready ? "off" : "hold");
 
   const serveStill = (reason: string) => {
     const still: Capability = { mode: "fallback", tier: "lite", reasons: [reason] };
@@ -162,7 +173,7 @@ export function CinematicHome({
   useEffect(() => {
     // The gate itself is asked, not only the state: the first client render starts at "ask" for
     // every visit (to match the server), and a mid-story reload must never be scrolled to the top.
-    if (intro === "off" || !introRequested()) return;
+    if (intro === "off" || !introGate()) return;
     const root = document.documentElement;
     const before = root.style.overflow;
     root.style.overflow = "hidden";
@@ -345,15 +356,24 @@ export function CinematicHome({
           </section>
         )}
 
-        {intro !== "off" && (
+        <IntroStyles />
+        {intro === "ask" && variant !== "return" && (
           <IntroQuestion
-            holding={intro === "hold"}
             still={mode === "fallback"}
             reducedMotion={reducedMotion}
-            onLockup={() => setIntro(mode === "fallback" || store.state.ready ? "off" : "hold")}
+            onLockup={toLockup}
             onSkip={() => setIntro("off")}
           />
         )}
+        {intro === "ask" && variant !== "show" && (
+          <IntroReturn
+            still={mode === "fallback"}
+            reducedMotion={reducedMotion}
+            onLockup={toLockup}
+            onSkip={() => setIntro("off")}
+          />
+        )}
+        {intro === "hold" && <LockupHold onSkip={() => setIntro("off")} />}
 
         {/* Client only: `capability` is first set after mount, so the HUD never server-renders. */}
         {showHud && capability && (
