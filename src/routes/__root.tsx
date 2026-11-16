@@ -120,10 +120,11 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       // all three derived from the same official Solventia mark, never a
       // different icon per size. No stray/duplicate favicon declaration
       // anywhere else in this app competes with these.
+      // The owner's icon set from the original logo (docs/brand/icons-README.md): the only icons.
       { rel: "icon", href: "/favicon.ico", sizes: "48x48" },
-      { rel: "icon", href: "/favicon-48x48.png", type: "image/png", sizes: "48x48" },
-      { rel: "icon", href: "/favicon-96x96.png", type: "image/png", sizes: "96x96" },
-      { rel: "apple-touch-icon", href: "/apple-touch-icon.png", sizes: "180x180" },
+      { rel: "icon", href: "/favicon.svg", type: "image/svg+xml" },
+      { rel: "icon", href: "/favicon-96.png", type: "image/png", sizes: "96x96" },
+      { rel: "apple-touch-icon", href: "/apple-touch-icon.png" },
       { rel: "manifest", href: "/site.webmanifest" },
     ],
   }),

@@ -25,7 +25,8 @@ export const Route = createFileRoute("/")({
     // logo. Doubles as the interim OG image until a real 1200x630
     // marketing asset exists; every field below already reads from this
     // one constant so that's a one-line change later.
-    const image = `${url.replace(/\/$/, "")}/icon-512.png`;
+    // The transparent S mark from the owner's icon set.
+    const image = `${url.replace(/\/$/, "")}/brand/solventia-mark-512.png`;
     const card = `${url.replace(/\/$/, "")}/og-image.png`;
     return {
       meta: [

@@ -54,7 +54,7 @@ test.describe("site identity", () => {
     const org = parsed.find((p) => p["@type"] === "Organization");
     expect(site?.name).toBe("Solventia");
     expect(org?.name).toBe("Solventia");
-    expect(org?.logo).toMatch(/\/icon-512\.png$/);
+    expect(org?.logo).toMatch(/\/brand\/solventia-mark-512\.png$/);
     // Names the site "Solventia", never "Solventia.in".
     expect(JSON.stringify(parsed)).not.toMatch(/"name":"Solventia\.in"/);
     expect((site as unknown as { alternateName?: string[] }).alternateName).toEqual([
@@ -69,8 +69,8 @@ test.describe("site identity", () => {
 
     for (const href of [
       "/favicon.ico",
-      "/favicon-48x48.png",
-      "/favicon-96x96.png",
+      "/favicon.svg",
+      "/favicon-96.png",
       "/apple-touch-icon.png",
       "/icon-512.png",
       "/site.webmanifest",
