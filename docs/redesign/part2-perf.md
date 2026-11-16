@@ -234,3 +234,29 @@ no commit lost it. When it was missed, the visitor had scrolled past "Core awake
 the world was ready — the film runs on the overlay and the world joins later, after the S's
 moment. The new opening holds the lockup until the world is ready (≤ 8 s), so a first visit
 can no longer pass the S before it exists.
+
+## 2e — No hang after the opening (2026-11-16)
+Local production build, lite, fresh browser per run (`scripts/verify-intro.mjs`, `film-ready.mjs`).
+
+| | Before (2d) | After |
+|---|---|---|
+| Cold ready, broadband, no opening | 6.9 s | ≈4.6 s |
+| Cold ready, 4× CPU, no opening | 9.9 s | 7.9 s |
+| Broadband with the opening: ready / lockup / hold | 7.7 / 5.2 / **2.6 s** | 4.5 / 5.3 / **none** (95 ms in one run) |
+| 4× CPU with the opening: ready / lockup / hold | 9.2 / 6.9 / 2.3 s | 7.1 / 6.2 / 0.9 s |
+| Long tasks after release (broadband / 4×) | 0 / 9 | 0 / 0 |
+| p95 frame time (broadband / 4×) | — | 16.9 / 33.4 ms |
+| Returning visit ("Welcome back."): load → release | — | 4.2–5.2 s, world ready 3.8–4.7 s |
+
+Biggest stage was the studio environment: its PMREM filter shaders (~1.4 s cold) had to compile
+before any world program could. **Lite no longer builds it** (`studioEnvironment: false`), so the
+world compiles at once and with simpler programs (25 instead of 31); the sky fill is ×1.3 on lite.
+Trade-off, owner to decide: on lite the S and other metals read as dark anodised graphite
+instead of silver (`perf/scenes/smark-lite-noenv-0.6.png` vs `smark-lite-0.6.png`); full is
+unchanged. Setting `studioEnvironment: true` for lite restores the sheen at ~+1.4 s cold.
+
+Variance: in 2 of 4 runs at 4× CPU the world was not ready 8 s after the lockup and the visit
+got the still version (by design); a probe with the same tap was ready at 6.7 s. Open: the cause
+of those two slow runs. Background windows get 1 Hz frames in Chrome — the script now brings
+each page to the front. Not yet run on the Vercel preview: it is behind Vercel's login and needs
+the owner's "Protection Bypass for Automation" token (`VERCEL_BYPASS=… node scripts/verify-intro.mjs <preview> preview`).

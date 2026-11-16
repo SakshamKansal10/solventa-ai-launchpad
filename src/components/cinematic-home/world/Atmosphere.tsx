@@ -57,7 +57,7 @@ void main() {
  * state in between a continuous blend.
  */
 export function Atmosphere() {
-  const { store } = useWorld();
+  const { store, preset } = useWorld();
   const gl = useThree((s) => s.gl);
   const scene = useThree((s) => s.scene);
   const sky = useRef<Mesh>(null);
@@ -91,6 +91,18 @@ export function Atmosphere() {
     // Built without stalling the page (its shaders compile in parallel first). The world's own
     // shaders are compiled only once it exists, since they compile differently with an
     // environment — see ReadySignal.
+    // Lite: no studio environment — the world compiles straight away, with simpler programs.
+    if (!preset.studioEnvironment) {
+      markStage("environment", { programs: gl.info.programs?.length ?? 0 });
+      store.state.environment = true;
+      store.emit();
+      return () => {
+        cancelled = true;
+        scene.fog = null;
+        skyMaterial.dispose();
+        skyGeometry.dispose();
+      };
+    }
     void buildStudioEnvironment(gl, 0.04, () => cancelled)
       .then((env) => {
         if (!env) return;
@@ -117,7 +129,7 @@ export function Atmosphere() {
       skyMaterial.dispose();
       skyGeometry.dispose();
     };
-  }, [gl, scene, store, skyMaterial, skyGeometry]);
+  }, [gl, scene, store, skyMaterial, skyGeometry, preset.studioEnvironment]);
 
   useFrame((state) => {
     const p = store.state.progress;
@@ -138,7 +150,8 @@ export function Atmosphere() {
     // Soft studio light in the pearl world (shapes stay legible without glow).
     scene.environmentIntensity = 0.38 + 0.22 * L;
     if (hemi.current) {
-      hemi.current.intensity = 0.2 + 1.1 * L;
+      // Lite has no studio environment: the sky fill carries more of the light instead (×1.3).
+      hemi.current.intensity = (0.2 + 1.1 * L) * (preset.studioEnvironment ? 1 : 1.3);
       hemi.current.color.copy(HEMI.sky[0]).lerp(HEMI.sky[1], L);
       hemi.current.groundColor.copy(HEMI.ground[0]).lerp(HEMI.ground[1], L);
     }

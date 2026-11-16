@@ -45,6 +45,8 @@ async function filmRun(throttle) {
     extraHTTPHeaders: headers,
   });
   const page = await ctx.newPage();
+  // A background window gets 1 Hz animation frames in Chrome: always measure a visible one.
+  await page.bringToFront();
   await page.addInitScript(() => {
     const w = window;
     w.__rec = false;
@@ -204,20 +206,37 @@ async function checks() {
     await ctx.close();
   }
 
-  // A returning visit: no question.
-  {
+  // A returning visit: no question — "Welcome back.", then the lockup and the film. The time on
+  // the opening is load → the story released (data-intro-state=off).
+  for (const signedIn of [false, true]) {
     const ctx = await browser.newContext({
       viewport: { width: 1440, height: 900 },
       extraHTTPHeaders: headers,
     });
     await ctx.addInitScript(() => localStorage.setItem("sol-intro-seen", "2026-11-15"));
     const page = await ctx.newPage();
+    if (signedIn) await page.route("**/_serverFn/**", (r) => r.continue());
     await page.goto(`${base}/?intro=auto`, { waitUntil: "domcontentloaded" });
-    await page.waitForSelector(`${HOME}[data-mode]:not([data-mode=pending])`, { timeout: 30_000 });
-    const state = await page.getAttribute(HOME, "data-intro-state");
-    const shown = await page.evaluate(() => document.documentElement.dataset.intro ?? null);
-    out.returning = { state, gate: shown, pass: state === "off" && shown === null };
+    const welcomed = await page
+      .getByTestId("intro-return-title")
+      .waitFor({ state: "visible", timeout: 15_000 })
+      .then(() => true)
+      .catch(() => false);
+    const question = await page.getByTestId("intro-question").isVisible().catch(() => false);
+    await page.waitForSelector(`${HOME}[data-intro-state=off]`, { timeout: 30_000 });
+    const t = await page.evaluate(() => ({
+      off: Math.round(performance.now()),
+      ready: Math.round(performance.getEntriesByName("cine:ready")[0]?.startTime ?? -1),
+    }));
+    out[signedIn ? "returningSignedInCheck" : "returning"] = {
+      welcomed,
+      question,
+      openingMs: t.off,
+      readyMs: t.ready,
+      pass: welcomed && !question,
+    };
     await ctx.close();
+    if (!signedIn) break; // signed-in needs real credentials: measured in e2e (intro.spec.ts)
   }
 
   // A mid-page reload: no question, no hold, the place kept.

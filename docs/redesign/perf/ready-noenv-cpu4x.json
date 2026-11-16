@@ -1,0 +1,62 @@
+{
+  "label": "noenv-cpu4x",
+  "tier": "lite",
+  "runs": 1,
+  "intro": false,
+  "at": "2026-11-16T03:21:19.091Z",
+  "summary": {
+    "cpu4x": {
+      "runs": 1,
+      "notReady": 0,
+      "fcp": 2804,
+      "bundle-loaded": 2927,
+      "bundle-loadedΔ": 2927,
+      "canvas-created": 5161,
+      "canvas-createdΔ": 2234,
+      "environment": 5164,
+      "environmentΔ": 3,
+      "shaders": 7571,
+      "shadersΔ": 2407,
+      "textures": 7604,
+      "texturesΔ": 33,
+      "geometry": 7877,
+      "geometryΔ": 273,
+      "ready": 7918,
+      "readyΔ": 41,
+      "bundleStart": 2294
+    }
+  },
+  "results": {
+    "cpu4x": [
+      {
+        "ok": true,
+        "wallMs": 8333,
+        "marks": {
+          "bundle-start": 2294,
+          "bundle-loaded": 2927,
+          "canvas-created": 5161,
+          "environment": 5164,
+          "shaders": 7571,
+          "textures": 7604,
+          "geometry": 7877,
+          "ready": 7918
+        },
+        "details": {
+          "environment": {
+            "programs": 0
+          },
+          "shaders": {
+            "programs": 25,
+            "objects": 170
+          },
+          "geometry": {
+            "groups": 19
+          }
+        },
+        "fcp": 2804,
+        "domContentLoaded": 488,
+        "mode": "lite"
+      }
+    ]
+  }
+}

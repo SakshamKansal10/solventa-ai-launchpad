@@ -25,6 +25,9 @@ export interface QualityPreset {
   gateBevel: number;
   /** Clear-coat / sheen ceramics (MeshPhysicalMaterial) instead of standard. */
   physicalMaterials: boolean;
+  /** The prefiltered studio environment (PMREM) for reflections. Lite goes without: building it
+   * cost ~1.4 s of cold shader compiling before the world could be ready (owner step 3, 2026-11-16). */
+  studioEnvironment: boolean;
 }
 
 export const QUALITY_PRESETS: Record<QualityTier, QualityPreset> = {
@@ -38,6 +41,7 @@ export const QUALITY_PRESETS: Record<QualityTier, QualityPreset> = {
     pathGates: 34,
     gateBevel: 2,
     physicalMaterials: true,
+    studioEnvironment: true,
   },
   lite: {
     // Never above 1: on a 1440×900 laptop panel this is 1.3 MP instead of up to 2.9 MP.
@@ -52,6 +56,7 @@ export const QUALITY_PRESETS: Record<QualityTier, QualityPreset> = {
     gateBevel: 1,
     // Standard (one-lobe) materials everywhere, glass and smoked included.
     physicalMaterials: false,
+    studioEnvironment: false,
   },
 };
 

@@ -67,6 +67,8 @@ export function ReadySignal({ store }: { store: ExperienceStore }) {
     void (async () => {
       // One frame first, so the atmosphere has set the fog the programs also depend on.
       await nextFrame();
+      // Lite has no studio environment (it is "ready" at once): nothing to compile ahead of it.
+      if (cancelled || store.state.environment) return;
       const objects: Object3D[] = [];
       scene.traverse((o) => {
         if ((o as { material?: unknown }).material) objects.push(o);
@@ -98,7 +100,7 @@ export function ReadySignal({ store }: { store: ExperienceStore }) {
       cancelled = true;
       if (scene.environment === standIn) scene.environment = null;
     };
-  }, [environment, gl, scene, camera]);
+  }, [environment, gl, scene, camera, store]);
 
   useEffect(() => {
     if (!environment) return;
