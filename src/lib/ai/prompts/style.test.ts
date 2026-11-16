@@ -53,6 +53,9 @@ describe("plain words (go-live step 5)", () => {
         // Legal pages quote laws and terms as written; the rule is for the product's voice.
         if (key.startsWith("legal.") || key.startsWith("terms.") || key.startsWith("privacy."))
           continue;
+        // English option labels are the canonical values stored in founders' profiles
+        // (normalize-v2): changing one would orphan existing answers.
+        if (locale === "en" && key === "opt.scale.national") continue;
         const r = plainLanguageIssues(value, locale);
         if (r.jargon.length) problems.push(`${locale} ${key}: ${r.jargon.join(", ")}`);
         if (r.longSentences.length)

@@ -379,7 +379,7 @@ const en = {
   "opt.constraints.none": "None",
 
   "opt.scale.profitable": "A profitable, high-income business",
-  "opt.scale.national": "A company that sells across the country",
+  "opt.scale.national": "A scalable national company",
   "opt.scale.global": "A global / venture-scale company",
   "opt.scale.expand_existing": "Expand an existing business significantly",
   "opt.scale.not_sure": "Not sure yet",

@@ -14,6 +14,65 @@ To roll back, either:
 
 The database migrations are additive: rolling the code back does not need them undone.
 
+## Go live, 2026-11-16: what changed, the numbers, your steps
+
+### What changed today (all on `main`, live on solventia.in)
+1. **Opening:** "What brings you here?" (first visit), one line for your earlier choice (returning), "Welcome back, {name}." with Go to my dashboard (signed in), then the Solventia reveal on the film's real lockup. Six frames: `docs/redesign/perf/reveal-*.png`.
+2. **Live:** `redesign-v2` merged into `main` (d5d1511). Restore tag `before-live-2026-11-16`.
+3. **Roadmap:** week 1 is fast and reliable, the wait shows real progress, and Vercel `maxDuration` is set to 300 s.
+4. **Idea generation:** cheaper and faster. A ₹ estimate is logged on every AI call, and there are daily limits per founder.
+5. **Hindi and plain words:** one style rule per language for every AI call and the translator; a test enforces it; 38 UI strings were rewritten.
+6. **Dashboard:** wider frame (up to 1520 px), no tab flash, 44 px tap targets, and `npm run scan` (90 pages, 0 findings).
+7. **"How it works"** appears once per menu. The silver S on lite devices was skipped (decisions 47).
+
+### The roadmap: cause and fix (decisions 43)
+- **Not the cause:** the model call. The one allowed real run succeeded (skeleton 13.8 s + week 1 18.1 s = 32 s).
+- **What failed:**
+  - "Couldn't be prepared" is stored only when week 1's answer fails the strict format twice. Examples: a fifth step, 25 list rows, a quiz answer of 3.
+  - Each miss doubles the wait, which is the "over a minute".
+- **Fix:**
+  - Low thinking on both calls.
+  - The answer is repaired before checking: bounded fields are clamped and trimmed, never invented.
+  - The retry quotes the error back. If that also fails, a much simpler prompt runs.
+  - "Try again" redoes only that week.
+- **The real error text** is in `roadmap_weeks.generation_error`. If it happens again, run `select generation_error from roadmap_weeks where generation_status = 'failed' order by updated_at desc limit 5;`.
+- **Week 1 in ≤ 25 s** is an estimate from the measured token rate. It was not re-measured, to stay within the one allowed real run.
+
+### Cost and time, before → after (real model, same founder profile)
+
+| | Seconds | Input tokens | Output + thinking tokens |
+|---|---|---|---|
+| Consultation (v1, the default) | 35.5 → **20.4** | 4,950 → 4,950 | 7,450 → **3,649** |
+| Consultation (v2, not the default) | 76.2 → 57.3 | 5,292 → 7,711 | 18,135 → 12,237 |
+| Roadmap build, before (skeleton + week 1) | 31.9 | 5,335 | 6,432 |
+
+- **Roadmap after:** estimated ≤ 25 s, with most of the 4.3k thinking tokens gone. Not re-measured.
+- **₹ per call** = (input × `GEMINI_PRICE_IN` + (output + thinking) × `GEMINI_PRICE_OUT`) ÷ 1,000,000, with prices in ₹ per 1M tokens. Once you set the two prices in Vercel, every `GEMINI_CALL` log line shows `estCostInr`. No ₹ figure is given here because I don't want to guess this model's price.
+- **v2 stays off.** It missed both bars (≤ 45 s, ≤ v1's 12.4k tokens), so `IDEA_ENGINE` stays `v1` (decisions 44).
+
+### Daily limits per founder (reset at midnight India time)
+
+| What | Default | Vercel variable |
+|---|---|---|
+| Consultations | 3 | `DAILY_LIMIT_CONSULTATIONS` |
+| Roadmap builds and rebuilds | 5 | `DAILY_LIMIT_ROADMAPS` |
+| Ask Sol messages | 30 | `DAILY_LIMIT_ASK_SOL` |
+
+- `0` means no limit.
+- At the limit, each screen says so in plain words ("…you can start a new one after midnight").
+- A counting error never blocks anyone.
+
+### Your steps, in this order
+1. **Supabase → Authentication → URL Configuration → Redirect URLs.** Add `https://solventia.in/**` and `https://www.solventia.in/**`; keep the Site URL `https://solventia.in`. (Details in the next section.)
+2. **Apply the migrations 0015 → 0020** in `supabase/migrations/`, in order, in the Supabase SQL editor. All are additive. The site works without them but hides the features that need them.
+3. **Vercel → Settings → Environment Variables (Production), then redeploy:**
+   - `GEMINI_PRICE_IN` and `GEMINI_PRICE_OUT`: your Gemini prices, in ₹ per 1M tokens.
+   - `DAILY_LIMIT_CONSULTATIONS`, `DAILY_LIMIT_ROADMAPS`, `DAILY_LIMIT_ASK_SOL`: only to change the defaults above.
+   - Optional: `GEMINI_LITE_MODEL`, a cheaper model for Ask Sol and translation.
+4. **Google Cloud → Billing → Budgets & alerts:** a monthly budget on the Gemini project, with alerts at 50 / 90 / 100 %.
+5. **CA review** of the "Make it official" guide (`/dashboard/roadmap/official`) before founders rely on it.
+6. **Google Search Console:** add solventia.in, then submit `https://solventia.in/sitemap.xml`.
+
 ## Before anything else: sign-in configuration to check (Google bug, 2026-11-16)
 The "Continue with Google → empty dashboard" bug had causes in code (fixed on this branch — see
 "Sign-in fix" below) and very likely one in configuration. Please make these exact:

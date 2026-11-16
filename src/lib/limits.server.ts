@@ -11,22 +11,28 @@ type Db = SupabaseClient<Database>;
  * message = a founder's mentor_messages row. */
 async function countToday(db: Db, userId: string, kind: LimitKind): Promise<number> {
   const since = startOfIndianDay();
-  const q =
-    kind === "consultation"
-      ? db.from("business_dna").select("id", { count: "exact", head: true })
-      : kind === "roadmap"
-        ? db.from("roadmaps").select("id", { count: "exact", head: true })
-        : db
-            .from("mentor_messages")
-            .select("id", { count: "exact", head: true })
-            .eq("role", "user");
-  const { count, error } = await q.eq("user_id", userId).gte("created_at", since);
-  // A counting failure never blocks the founder: the limit protects cost, not correctness.
-  if (error) {
-    console.error(`[limits] could not count ${kind} for today:`, error.message);
+  // A counting failure — returned or thrown — never blocks the founder: the limit protects
+  // cost, not correctness.
+  try {
+    const q =
+      kind === "consultation"
+        ? db.from("business_dna").select("id", { count: "exact", head: true })
+        : kind === "roadmap"
+          ? db.from("roadmaps").select("id", { count: "exact", head: true })
+          : db
+              .from("mentor_messages")
+              .select("id", { count: "exact", head: true })
+              .eq("role", "user");
+    const { count, error } = await q.eq("user_id", userId).gte("created_at", since);
+    if (error) throw new Error(error.message);
+    return count ?? 0;
+  } catch (err) {
+    console.error(
+      `[limits] could not count ${kind} for today:`,
+      err instanceof Error ? err.message : err,
+    );
     return 0;
   }
-  return count ?? 0;
 }
 
 function limitFor(kind: LimitKind): number {
