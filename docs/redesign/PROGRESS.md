@@ -109,3 +109,8 @@ Blockers: `blocked.md`. Final report: `REPORT.md`.
 - [x] L6 dashboard (c3f0fc1): width, tab flash, npm run scan, mobile
 - [x] L7 small (d4d5b1b) items: one "How it works", silver S on lite
 - [ ] L8 final check and REPORT.md
+  - L8 next (exact): `npm run typecheck`; `npx vitest run`; `npm run build`; stop the review
+    server (`touch .e2e-tmp/compare/stop`), full `npx playwright test` once; restart the review
+    server and `npm run scan`; then REPORT.md "Go live 2026-11-16" section (changes, roadmap
+    cause + fix = decisions 43, cost before/after = decisions 44, daily limits, owner steps
+    1–6) and push main.
