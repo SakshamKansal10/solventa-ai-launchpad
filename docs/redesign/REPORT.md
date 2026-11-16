@@ -1,5 +1,18 @@
 # Solventia redesign v2 — report
 
+## Before anything else: sign-in configuration to check (Google bug, 2026-11-16)
+The "Continue with Google → empty dashboard" bug had causes in code (fixed on this branch — see
+"Sign-in fix" below) and very likely one in configuration. Please make these exact:
+- **Supabase → Authentication → URL Configuration**
+  - Site URL: `https://solventia.in`
+  - Redirect URLs (add all): `https://solventia.in/**`, `https://www.solventia.in/**`,
+    `https://*-solventia.vercel.app/**` (previews), `http://localhost:8083/**` (local dev)
+- **Google Cloud → APIs & Services → Credentials → the OAuth 2.0 Web client used by Supabase**
+  - Authorised JavaScript origins: `https://solventia.in`, `https://www.solventia.in`
+  - Authorised redirect URI: the Supabase project callback,
+    `https://<project-ref>.supabase.co/auth/v1/callback` (the host is the Project URL in
+    Supabase → Settings → API). The app's own `/auth/callback` does not go here.
+
 Branch `redesign-v2` (pushed; not merged to `main`). Restore point: tag `before-redesign-v2`
 (production `49d3ead`). Day-by-day status: `PROGRESS.md`; every judgement call: `decisions.md`
 (1–41); what needs the owner: `blocked.md`. Final checks: see "Final verification" below.

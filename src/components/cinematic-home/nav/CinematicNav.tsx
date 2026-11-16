@@ -1,4 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
+import { hasFinishedLocalDraft, useResumeFinishedConsultation } from "@/lib/consultation/resume";
 import { Link, useRouter } from "@tanstack/react-router";
 import { ArrowRight } from "lucide-react";
 import { useEffect, useState } from "react";
@@ -37,6 +38,12 @@ export function CinematicNav({ pendingNext }: { pendingNext?: string | null } = 
   // The same session query (and cache key) as the shared Header.
   const user = useQuery({ queryKey: ["current-user"], queryFn: () => getCurrentUser() });
   const signedIn = Boolean(user.data);
+  // Signed in (e.g. Google fell back to the home page) with a finished consultation not yet
+  // analysed on this device: back to its last step, where generation starts by itself.
+  useResumeFinishedConsultation({
+    signedIn,
+    hasAnalysis: signedIn && hasFinishedLocalDraft() ? false : null,
+  });
   // A signed-out visitor bounced here from a protected route (`/?next=…`) gets the sign-in
   // prompt straight away, exactly as the shared Header does — then the address bar is cleaned so
   // a refresh lands on a plain homepage.

@@ -8,6 +8,7 @@ import { exchangeCodeForSession } from "@/lib/actions/auth";
 import { CONSULTATION_STORAGE_KEY } from "@/lib/consultation/store";
 import { useLocale } from "@/lib/i18n/LocaleProvider";
 import { sanitizeNextPath } from "@/lib/safe-redirect";
+import { takeAuthNext } from "@/lib/consultation/resume";
 
 export const Route = createFileRoute("/auth/callback")({
   validateSearch: z.object({
@@ -82,7 +83,9 @@ function AuthCallback() {
       // the previous account's cached data.
       queryClient.clear();
 
-      const safeNext = sanitizeNextPath(next);
+      // The URL's next, else the one saved before leaving for Google (see consultation/resume).
+      const saved = takeAuthNext();
+      const safeNext = sanitizeNextPath(next) ?? sanitizeNextPath(saved ?? undefined);
       // A pending finished consultation wins over a generic `next`, except
       // when `next` already IS the consultation resume link.
       if (hasPendingSubmit() && !(safeNext ?? "").startsWith("/consultation")) {

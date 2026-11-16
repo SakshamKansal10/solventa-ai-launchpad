@@ -2,6 +2,8 @@ import { createFileRoute, Outlet } from "@tanstack/react-router";
 
 import { DashboardShell } from "@/components/founder/DashboardShell";
 import { requireAuthLoader } from "@/lib/route-guards";
+import { useResumeFinishedConsultation } from "@/lib/consultation/resume";
+import { useFounderState } from "@/lib/queries";
 
 /** Layout for every signed-in screen. Because the shell lives HERE (not inside
  * each page), it persists across navigation: the sidebar, the language switch,
@@ -14,6 +16,13 @@ export const Route = createFileRoute("/dashboard")({
 });
 
 function DashboardLayout() {
+  // Nobody lands on an empty dashboard after finishing the consultation: a finished, unanalysed
+  // consultation is sent back to its last step, where generation starts by itself.
+  const founder = useFounderState();
+  useResumeFinishedConsultation({
+    signedIn: true,
+    hasAnalysis: founder.data ? founder.data.consultations.length > 0 : null,
+  });
   return (
     <DashboardShell>
       <Outlet />
