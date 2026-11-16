@@ -90,3 +90,12 @@ Blockers: `blocked.md`. Final report: `REPORT.md`.
 
 ## Final
 - [ ] REPORT.md
+
+## Owner message 2026-11-16 — status
+- [x] 1 saved the uncommitted work (fee1363 engine fixes, 686a833 comparison, 7499fe6 returning opening, 5816ada verify script)
+- [x] 2 engine decided from the results: v2 clearly better on "all five" (23% vs 3%); IDEA_ENGINE stays v1 by default
+- [x] 3 no hang (505715b): broadband hold 2.6 s → none; preview run needs the owner's VERCEL_BYPASS token
+- [x] 4 favicons from the owner's logo (505dca1)
+- [x] 5 site name and sitelinks (ad3df89)
+- [ ] 6 final check (typecheck, unit, build, all e2e) — running; log in .e2e-tmp/final.log
+- [ ] REPORT.md — next step if the session stops: write docs/redesign/REPORT.md from PROGRESS, decisions 33–41, part2-perf 2d/2e, engine-compare.md
