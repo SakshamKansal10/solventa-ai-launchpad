@@ -58,7 +58,8 @@ test.describe("site identity", () => {
     // Names the site "Solventia", never "Solventia.in".
     expect(JSON.stringify(parsed)).not.toMatch(/"name":"Solventia\.in"/);
     expect((site as unknown as { alternateName?: string[] }).alternateName).toEqual([
-      "Solventia.in",
+      "Solventia AI",
+      "solventia.in",
     ]);
     // A real 1200×630 share card, not the square app icon.
     await expect(page.locator('meta[property="og:image"]').first()).toHaveAttribute(

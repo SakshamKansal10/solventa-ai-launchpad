@@ -11,7 +11,7 @@ export const Route = createFileRoute("/terms")({
     const canonical = `${url.replace(/\/$/, "")}/terms`;
     return {
       meta: [
-        { title: "Terms of Service | Solventia" },
+        { title: "Terms of Service — Solventia" },
         {
           name: "description",
           content: "The terms that govern your use of Solventia, including our AI disclaimer.",

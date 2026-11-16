@@ -14,7 +14,7 @@ export const Route = createFileRoute("/data-deletion")({
     const canonical = `${url.replace(/\/$/, "")}/data-deletion`;
     return {
       meta: [
-        { title: "Delete your data | Solventia" },
+        { title: "Delete your data — Solventia" },
         {
           name: "description",
           content: "How to request deletion of your Solventia account and personal data.",

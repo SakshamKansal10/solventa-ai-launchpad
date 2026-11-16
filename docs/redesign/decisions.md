@@ -235,3 +235,13 @@ Each entry: what was ambiguous, what I chose, why.
 40. **Flaky e2e:** `cinematic.spec.ts` "live sound…" measures real audio output; it failed once
     in a full cinematic run while the engine comparison loaded the machine and passed alone
     (2026-11-16). Not caused by the opening (the spec's URLs skip it). Left as is, noted.
+41. **Search (owner step 5).** New public pages /ideas (five real engine outputs for sample
+    founders, labelled as examples), /for-founders (the opening's three situations), /faq (nine
+    answers about what the product actually does, with FAQPage data); /how-it-works and /about
+    reused (How it works gains the new Today screenshot). Titles "<Page> — Solventia", one H1,
+    canonical, breadcrumb JSON-LD. Footer link row on every public page (plain <a>), How it works
+    + Questions in the header, a server-rendered "Solventia, in brief" with links under the film.
+    sameAs is an empty array with a TODO: placeholder URLs in structured data would point Google
+    at pages that do not exist. No hreflang: Hindi is served at the same URLs (cookie), not at
+    separate ones. robots blocks /dashboard (incl. /dashboard/admin), /admin, /review, /api/,
+    /consultation.

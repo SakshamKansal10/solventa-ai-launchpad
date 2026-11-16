@@ -33,7 +33,7 @@ export const Route = createFileRoute("/sign-in")({
   loader: () => getSiteUrl(),
   head: ({ loaderData: siteUrl }) => ({
     meta: [
-      { title: "Sign In | Solventia" },
+      { title: "Sign In — Solventia" },
       { name: "description", content: "Sign in to your Solventia account." },
     ],
     links: [{ rel: "canonical", href: `${(siteUrl ?? "").replace(/\/$/, "")}/sign-in` }],

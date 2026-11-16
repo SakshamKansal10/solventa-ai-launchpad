@@ -68,7 +68,7 @@ export const Route = createFileRoute("/")({
             "@context": "https://schema.org",
             "@type": "WebSite",
             name: "Solventia",
-            alternateName: ["Solventia.in"],
+            alternateName: ["Solventia AI", "solventia.in"],
             url,
           }),
         },
@@ -80,6 +80,10 @@ export const Route = createFileRoute("/")({
             name: "Solventia",
             url,
             logo: image,
+            // TODO(owner): add the real profile URLs, e.g. "https://www.linkedin.com/company/…",
+            // "https://www.instagram.com/…". Left empty until then — a placeholder URL in
+            // structured data would point Google at a page that does not exist.
+            sameAs: [] as string[],
           }),
         },
       ],

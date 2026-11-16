@@ -34,6 +34,15 @@ const FOOTER_LINKS: {
  * this product has no real, live social presence yet, and a row of
  * placeholder links would be exactly the kind of unsupported claim the
  * rest of this homepage was rebuilt to remove. */
+/** The public pages, as plain links on every page (site name and sitelinks for search). */
+const PUBLIC_LINKS = [
+  ["/how-it-works", "pub.nav.how"],
+  ["/ideas", "pub.nav.ideas"],
+  ["/for-founders", "pub.nav.founders"],
+  ["/about", "pub.nav.about"],
+  ["/faq", "pub.nav.faq"],
+] as const;
+
 export function Footer() {
   const navigate = useNavigate();
   const { t } = useLocale();
@@ -87,7 +96,22 @@ export function Footer() {
           </div>
         </div>
 
-        <div className="mt-9 flex flex-col items-center gap-3 border-t border-sol-border pt-6 text-[0.875rem] text-sol-muted sm:flex-row sm:justify-between">
+        <nav
+          aria-label="Solventia"
+          className="mt-9 flex flex-wrap justify-center gap-x-6 gap-y-2 text-[0.9375rem] sm:justify-start"
+        >
+          {PUBLIC_LINKS.map(([href, key]) => (
+            <a
+              key={href}
+              href={href}
+              className="text-sol-secondary transition-colors hover:text-sol-ink"
+            >
+              {t(key)}
+            </a>
+          ))}
+        </nav>
+
+        <div className="mt-6 flex flex-col items-center gap-3 border-t border-sol-border pt-6 text-[0.875rem] text-sol-muted sm:flex-row sm:justify-between">
           <p>
             © {new Date().getFullYear()} Solventia. {t("footer.rights")}
           </p>

@@ -15,9 +15,12 @@ import { Route as CinematicRouteImport } from './routes/cinematic'
 import { Route as ConsultationRouteImport } from './routes/consultation'
 import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as DataDeletionRouteImport } from './routes/data-deletion'
+import { Route as FaqRouteImport } from './routes/faq'
 import { Route as FindMyBusinessIdeaRouteImport } from './routes/find-my-business-idea'
+import { Route as ForFoundersRouteImport } from './routes/for-founders'
 import { Route as ForOrganizationsRouteImport } from './routes/for-organizations'
 import { Route as HowItWorksRouteImport } from './routes/how-it-works'
+import { Route as IdeasRouteImport } from './routes/ideas'
 import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as ReviewRouteImport } from './routes/review'
 import { Route as ReviewPublicRouteImport } from './routes/review-public'
@@ -69,9 +72,19 @@ const DataDeletionRoute = DataDeletionRouteImport.update({
   path: '/data-deletion',
   getParentRoute: () => rootRouteImport,
 } as any)
+const FaqRoute = FaqRouteImport.update({
+  id: '/faq',
+  path: '/faq',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const FindMyBusinessIdeaRoute = FindMyBusinessIdeaRouteImport.update({
   id: '/find-my-business-idea',
   path: '/find-my-business-idea',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ForFoundersRoute = ForFoundersRouteImport.update({
+  id: '/for-founders',
+  path: '/for-founders',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ForOrganizationsRoute = ForOrganizationsRouteImport.update({
@@ -82,6 +95,11 @@ const ForOrganizationsRoute = ForOrganizationsRouteImport.update({
 const HowItWorksRoute = HowItWorksRouteImport.update({
   id: '/how-it-works',
   path: '/how-it-works',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const IdeasRoute = IdeasRouteImport.update({
+  id: '/ideas',
+  path: '/ideas',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PrivacyRoute = PrivacyRouteImport.update({
@@ -199,9 +217,12 @@ export interface FileRoutesByFullPath {
   '/consultation': typeof ConsultationRoute
   '/dashboard': typeof DashboardRouteWithChildren
   '/data-deletion': typeof DataDeletionRoute
+  '/faq': typeof FaqRoute
   '/find-my-business-idea': typeof FindMyBusinessIdeaRoute
+  '/for-founders': typeof ForFoundersRoute
   '/for-organizations': typeof ForOrganizationsRoute
   '/how-it-works': typeof HowItWorksRoute
+  '/ideas': typeof IdeasRoute
   '/privacy': typeof PrivacyRoute
   '/review': typeof ReviewRoute
   '/review-public': typeof ReviewPublicRoute
@@ -229,9 +250,12 @@ export interface FileRoutesByTo {
   '/cinematic': typeof CinematicRoute
   '/consultation': typeof ConsultationRoute
   '/data-deletion': typeof DataDeletionRoute
+  '/faq': typeof FaqRoute
   '/find-my-business-idea': typeof FindMyBusinessIdeaRoute
+  '/for-founders': typeof ForFoundersRoute
   '/for-organizations': typeof ForOrganizationsRoute
   '/how-it-works': typeof HowItWorksRoute
+  '/ideas': typeof IdeasRoute
   '/privacy': typeof PrivacyRoute
   '/review': typeof ReviewRoute
   '/review-public': typeof ReviewPublicRoute
@@ -261,9 +285,12 @@ export interface FileRoutesById {
   '/consultation': typeof ConsultationRoute
   '/dashboard': typeof DashboardRouteWithChildren
   '/data-deletion': typeof DataDeletionRoute
+  '/faq': typeof FaqRoute
   '/find-my-business-idea': typeof FindMyBusinessIdeaRoute
+  '/for-founders': typeof ForFoundersRoute
   '/for-organizations': typeof ForOrganizationsRoute
   '/how-it-works': typeof HowItWorksRoute
+  '/ideas': typeof IdeasRoute
   '/privacy': typeof PrivacyRoute
   '/review': typeof ReviewRoute
   '/review-public': typeof ReviewPublicRoute
@@ -294,9 +321,12 @@ export interface FileRouteTypes {
     | '/consultation'
     | '/dashboard'
     | '/data-deletion'
+    | '/faq'
     | '/find-my-business-idea'
+    | '/for-founders'
     | '/for-organizations'
     | '/how-it-works'
+    | '/ideas'
     | '/privacy'
     | '/review'
     | '/review-public'
@@ -324,9 +354,12 @@ export interface FileRouteTypes {
     | '/cinematic'
     | '/consultation'
     | '/data-deletion'
+    | '/faq'
     | '/find-my-business-idea'
+    | '/for-founders'
     | '/for-organizations'
     | '/how-it-works'
+    | '/ideas'
     | '/privacy'
     | '/review'
     | '/review-public'
@@ -355,9 +388,12 @@ export interface FileRouteTypes {
     | '/consultation'
     | '/dashboard'
     | '/data-deletion'
+    | '/faq'
     | '/find-my-business-idea'
+    | '/for-founders'
     | '/for-organizations'
     | '/how-it-works'
+    | '/ideas'
     | '/privacy'
     | '/review'
     | '/review-public'
@@ -387,9 +423,12 @@ export interface RootRouteChildren {
   ConsultationRoute: typeof ConsultationRoute
   DashboardRoute: typeof DashboardRouteWithChildren
   DataDeletionRoute: typeof DataDeletionRoute
+  FaqRoute: typeof FaqRoute
   FindMyBusinessIdeaRoute: typeof FindMyBusinessIdeaRoute
+  ForFoundersRoute: typeof ForFoundersRoute
   ForOrganizationsRoute: typeof ForOrganizationsRoute
   HowItWorksRoute: typeof HowItWorksRoute
+  IdeasRoute: typeof IdeasRoute
   PrivacyRoute: typeof PrivacyRoute
   ReviewRoute: typeof ReviewRoute
   ReviewPublicRoute: typeof ReviewPublicRoute
@@ -445,11 +484,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DataDeletionRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/faq': {
+      id: '/faq'
+      path: '/faq'
+      fullPath: '/faq'
+      preLoaderRoute: typeof FaqRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/find-my-business-idea': {
       id: '/find-my-business-idea'
       path: '/find-my-business-idea'
       fullPath: '/find-my-business-idea'
       preLoaderRoute: typeof FindMyBusinessIdeaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/for-founders': {
+      id: '/for-founders'
+      path: '/for-founders'
+      fullPath: '/for-founders'
+      preLoaderRoute: typeof ForFoundersRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/for-organizations': {
@@ -464,6 +517,13 @@ declare module '@tanstack/react-router' {
       path: '/how-it-works'
       fullPath: '/how-it-works'
       preLoaderRoute: typeof HowItWorksRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/ideas': {
+      id: '/ideas'
+      path: '/ideas'
+      fullPath: '/ideas'
+      preLoaderRoute: typeof IdeasRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/privacy': {
@@ -648,9 +708,12 @@ const rootRouteChildren: RootRouteChildren = {
   ConsultationRoute: ConsultationRoute,
   DashboardRoute: DashboardRouteWithChildren,
   DataDeletionRoute: DataDeletionRoute,
+  FaqRoute: FaqRoute,
   FindMyBusinessIdeaRoute: FindMyBusinessIdeaRoute,
+  ForFoundersRoute: ForFoundersRoute,
   ForOrganizationsRoute: ForOrganizationsRoute,
   HowItWorksRoute: HowItWorksRoute,
+  IdeasRoute: IdeasRoute,
   PrivacyRoute: PrivacyRoute,
   ReviewRoute: ReviewRoute,
   ReviewPublicRoute: ReviewPublicRoute,
