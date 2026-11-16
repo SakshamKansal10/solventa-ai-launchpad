@@ -101,13 +101,15 @@ export function RenderGate({ store }: { store: ExperienceStore }) {
   const advance = useThree((s) => s.advance);
   const active = useExperienceValue(store, (s) => s.stageActive);
   const compiled = useExperienceValue(store, (s) => s.compiled);
+  const held = useExperienceValue(store, (s) => s.worldHeld);
   useEffect(() => {
     // R3F hands useFrame `timestamp − elapsedTime` as the delta, so the timestamp is in SECONDS
     // (rAF gives milliseconds): every frame callback then gets its delta in seconds.
-    store.state.renderWorld = active && compiled ? (now: number) => advance(now / 1000) : null;
+    store.state.renderWorld =
+      active && compiled && !held ? (now: number) => advance(now / 1000) : null;
     return () => {
       store.state.renderWorld = null;
     };
-  }, [store, active, compiled, advance]);
+  }, [store, active, compiled, held, advance]);
   return null;
 }

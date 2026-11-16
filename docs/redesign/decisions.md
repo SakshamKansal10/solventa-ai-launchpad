@@ -387,3 +387,32 @@ Each entry: what was ambiguous, what I chose, why.
       machines the text holds longer (≈ 5 s here) — still and readable — instead of freezing
       mid-motion. Frames: docs/redesign/perf/sequence/ (every 100 ms, 1920 and 390, new and
       signed in).
+
+50. **A 4 s cap on the opening, and the reveal without the world (owner, 2026-11-16).**
+    - The text holds ≥ 1.5 s (signed in: counted from the second line, which fades in 1.2 s
+      after "Welcome back, <name>." by CSS from the first paint) and never longer than 4.0 s
+      after it first appears — counted from the first contentful paint for the server-rendered
+      returning openings, not from hydration. The exit is aimed at 3.7 s and fired from both a
+      timer and a per-frame check (a due timer was held back 1.8 s while shaders compiled).
+    - World ready and calm before the cap → the reveal runs over the world ("world" path, as
+      before). Cap reached first → the "flat" path: the same reveal of the film's REAL lockup
+      (not a copy: 0 px movement by construction) over the pearl sky, with the world's drawing
+      AND its shader preparation held (`worldHeld`) until the reveal has finished; the lockup
+      then holds until the world is ready and calm (≤ 1.2 s wait for calm, never a downgrade).
+      The world is invisible at the film's opening anyway (`--world-in` 0 until the first
+      scroll), so there is nothing to crossfade: the finished frames of the two paths are
+      pixel-identical except the scroll cue's own moving line
+      (docs/redesign/perf/finished-frame-flat-vs-3d-*.png). Cost: on the flat path the world is
+      ready later (verify-intro: 5.8 s broadband, 12.4 s at 4× CPU), hidden behind the lockup.
+    - The exit is now compositor-only (transform/opacity; the wipe and grid are sliding windows,
+      the scan line shrinks with scaleY), every animated piece is its own layer from when the
+      text has faded in, the reveal's selectors no longer use `:is(main[…])` (that restyled the
+      whole page), the exit starts on the DOM directly, the film's prop-less layers are memoised,
+      the hand-off waits for the reveal's CSS animations to finish, and the openings' styles come
+      first in the HTML (streamed late, a slow device showed the lockup for ~2 s before the
+      question).
+    - **Known issue (accepted by the owner, 2026-11-16):** on this PC (Vega 3 GPU) the compositor
+      still occasionally draws no frame for up to ~0.5 s early in the exit — V8 GC safepoints and
+      GPU work outside our code. Gaps up to ~600 ms are accepted for now. Also: signed in at
+      1920 with 4× CPU throttling the text held 4.3 s once (the browser drew no frame for
+      ~0.6 s at the cap); every other measured case ≤ 3.8 s.

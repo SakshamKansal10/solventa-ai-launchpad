@@ -1,0 +1,22 @@
+{
+  "label": "fake-new-390x844-cpu1",
+  "path": "world",
+  "holdMs": 1510,
+  "holdToFirstExitFrameMs": 1530,
+  "hydratedAfterShownMs": -1004,
+  "drawnFrames": 388,
+  "worstDrawGapMs": 24,
+  "worstDrawGapAtMs": 147,
+  "drawGaps": "",
+  "worstScreencastGapMs": 34,
+  "worstGapAtMs": 47,
+  "sMovedPx": 0,
+  "sMovedAt": "",
+  "sInvisibleFrames": 0,
+  "holdStateMs": 0,
+  "gaps": "",
+  "longTasks": "",
+  "rafGaps": "",
+  "states": "581:ask 4053:reveal 7323:off",
+  "mode": "fallback/lite"
+}

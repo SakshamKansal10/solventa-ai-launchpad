@@ -41,6 +41,18 @@ const ENV_HEIGHT = 1024;
 /** World groups drawn per frame in the geometry warm-up (one per frame took ~1.2 s for 19). */
 const GEOMETRY_GROUPS_PER_FRAME = 3;
 
+/**
+ * The next painted frame — and, while the opening's reveal runs without the world
+ * (store.worldHeld, the flat path), not before it has finished: the world's preparation works the
+ * GPU hard enough to stall the reveal's frames.
+ */
+function paintedFrame(store: ExperienceStore) {
+  return new Promise<void>((resolve) => {
+    const step = () => (store.state.worldHeld ? requestAnimationFrame(step) : resolve());
+    requestAnimationFrame(step);
+  });
+}
+
 export function ReadySignal({ store }: { store: ExperienceStore }) {
   const gl = useThree((s) => s.gl);
   const scene = useThree((s) => s.scene);
@@ -63,7 +75,7 @@ export function ReadySignal({ store }: { store: ExperienceStore }) {
     const standIn = new Texture();
     standIn.mapping = CubeUVReflectionMapping;
     standIn.image = { width: ENV_WIDTH, height: ENV_HEIGHT };
-    const nextFrame = () => new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
+    const nextFrame = () => paintedFrame(store);
     void (async () => {
       // One frame first, so the atmosphere has set the fog the programs also depend on.
       await nextFrame();
@@ -124,7 +136,7 @@ export function ReadySignal({ store }: { store: ExperienceStore }) {
       }
     });
     const programs = () => gl.info.programs?.length ?? 0;
-    const nextFrame = () => new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
+    const nextFrame = () => paintedFrame(store);
     void (async () => {
       // Programs are compiled in small batches: each batch's programs are handed to the driver
       // together (with KHR_parallel_shader_compile it links them on its own threads), then the

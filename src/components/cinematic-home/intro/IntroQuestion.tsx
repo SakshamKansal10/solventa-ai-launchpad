@@ -3,7 +3,6 @@ import { useEffect, useRef, useState } from "react";
 import { useLocale } from "@/lib/i18n/LocaleProvider";
 
 import { PEARL_WORLD } from "../world/tone";
-import { OPENING_GROUND } from "./pacing";
 import {
   DEFAULT_CHOICE,
   INTRO_CHOICES,
@@ -12,7 +11,7 @@ import {
   type IntroChoice,
 } from "./intro-gate";
 import { SkipLink } from "./IntroShared";
-import { useExitTiming } from "./pacing";
+import { OPENING_GROUND, afterExitFrame, startExit, useExitTiming } from "./pacing";
 import { REVEAL_MS, REVEAL_REDUCED_MS, RevealLockup, ScanExit, WIPE_MS } from "./Reveal";
 
 /** How long the question waits for a tap before answering for the visitor. */
@@ -29,13 +28,16 @@ type Phase = "ask" | "answer" | "reveal";
 export function IntroQuestion({
   onReveal,
   onLockup,
+  onTextIn,
   onSkip,
   still,
   settled,
   reducedMotion,
 }: {
-  onReveal: () => void;
+  onReveal: (path: "world" | "flat") => void;
   onLockup: () => void;
+  /** The text has faded in: the lockup beneath may be pre-painted (pacing.ts). */
+  onTextIn: () => void;
   onSkip: () => void;
   still: boolean;
   /** The world is ready (or the still version was chosen): the exit may run without stalling. */
@@ -53,8 +55,12 @@ export function IntroQuestion({
   const [choice, setChoice] = useState<IntroChoice | null>(null);
   // The answer is wiped by the exit, then unmounted: nothing can show it again.
   const [wiped, setWiped] = useState(false);
-  const cb = useRef({ onReveal, onLockup });
-  cb.current = { onReveal, onLockup };
+  // Once the text has faded in, the exit's own pieces are mounted, all but invisible, so they are
+  // drawn once before the exit needs them (a first raster at the exit's start stalled it).
+  const [prepared, setPrepared] = useState(false);
+  const layerRef = useRef<HTMLDivElement>(null);
+  const cb = useRef({ onReveal, onLockup, onTextIn });
+  cb.current = { onReveal, onLockup, onTextIn };
 
   const choose = (c: IntroChoice) => {
     if (phase !== "ask") return;
@@ -73,24 +79,38 @@ export function IntroQuestion({
       return () => window.clearTimeout(id);
     }
     if (phase === "answer") return;
-    const ids = [
-      window.setTimeout(() => setWiped(true), reducedMotion ? REVEAL_REDUCED_MS : WIPE_MS),
-      window.setTimeout(() => cb.current.onLockup(), reducedMotion ? REVEAL_REDUCED_MS : REVEAL_MS),
-    ];
-    return () => ids.forEach((id) => window.clearTimeout(id));
+    return afterExitFrame([
+      { ms: reducedMotion ? REVEAL_REDUCED_MS : WIPE_MS, run: () => setWiped(true) },
+      {
+        ms: reducedMotion ? REVEAL_REDUCED_MS : REVEAL_MS,
+        run: () => cb.current.onLockup(),
+        whenDone: true,
+      },
+    ]);
   }, [phase, reducedMotion]);
 
   // The answer is on screen: hold, then exit once the world will not stall it (pacing.ts).
-  useExitTiming(phase === "answer", settled, () => {
-    setPhase("reveal");
-    cb.current.onReveal();
-  });
+  useExitTiming(
+    phase === "answer",
+    settled,
+    (path) => {
+      startExit(layerRef.current, path, still);
+      setPhase("reveal");
+      cb.current.onReveal(path);
+    },
+    undefined,
+    () => {
+      setPrepared(true);
+      cb.current.onTextIn();
+    },
+  );
 
   const revealing = phase === "reveal";
   return (
     <div
       data-intro-layer="first"
       data-testid="intro"
+      ref={layerRef}
       data-phase={phase}
       data-choice={choice ?? ""}
       className="fixed inset-0 z-[70] flex-col items-center justify-center"
@@ -142,25 +162,25 @@ export function IntroQuestion({
         </div>
       )}
 
-      {revealing && <ScanExit />}
+      {(prepared || revealing) && <ScanExit />}
       {phase !== "ask" && choice && !wiped && (
-        <div
-          data-wipe
-          className="pointer-events-none absolute inset-0 flex items-center justify-center px-4"
-        >
-          <p
-            role="status"
-            aria-live="polite"
-            data-tighten
-            className="max-w-[min(1000px,100%)] text-center font-medium leading-[1.08] tracking-[-0.035em] text-[clamp(1.8rem,5vw,4rem)] motion-safe:animate-[sol-intro-in_420ms_ease_both]"
-            data-testid="intro-answer"
-          >
-            {words.a[choice]}
-          </p>
+        // The wipe is a sliding window (IntroShared): this box moves right, its content left.
+        <div data-wipe className="pointer-events-none absolute inset-0 overflow-hidden">
+          <div data-wipe-in className="absolute inset-0 flex items-center justify-center px-4">
+            <p
+              role="status"
+              aria-live="polite"
+              data-tighten
+              className="max-w-[min(1000px,100%)] text-center font-medium leading-[1.08] tracking-[-0.035em] text-[clamp(1.8rem,5vw,4rem)] motion-safe:animate-[sol-intro-in_420ms_ease_both]"
+              data-testid="intro-answer"
+            >
+              {words.a[choice]}
+            </p>
+          </div>
         </div>
       )}
 
-      {revealing && still && <RevealLockup />}
+      {(prepared || revealing) && still && <RevealLockup run={revealing} />}
     </div>
   );
 }

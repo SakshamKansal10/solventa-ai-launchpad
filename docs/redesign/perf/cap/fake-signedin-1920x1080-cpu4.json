@@ -1,0 +1,22 @@
+{
+  "label": "fake-signedin-1920x1080-cpu4",
+  "path": "flat",
+  "holdMs": 4307,
+  "holdToFirstExitFrameMs": 4520,
+  "hydratedAfterShownMs": 2993,
+  "drawnFrames": 348,
+  "worstDrawGapMs": 48,
+  "worstDrawGapAtMs": 245,
+  "drawGaps": "",
+  "worstScreencastGapMs": 226,
+  "worstGapAtMs": -174,
+  "sMovedPx": 0,
+  "sMovedAt": "",
+  "sInvisibleFrames": 0,
+  "holdStateMs": 4792,
+  "gaps": "-174+226 226+84 293+102 596+147 1010+86 1128+82 1860+100 2643+83",
+  "longTasks": "-154+192 126+79 215+275 569+69 932+88",
+  "rafGaps": "-191+400 209+270 480+53 579+53 926+86 2343+50",
+  "states": "595:ask 6627:reveal 10135:hold 14927:off",
+  "mode": "lite/lite"
+}

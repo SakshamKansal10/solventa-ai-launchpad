@@ -98,12 +98,18 @@ export function ScanExit() {
   const grid = `repeating-linear-gradient(90deg, ${NAVY_HAIR} 0 1px, transparent 1px 56px), repeating-linear-gradient(0deg, ${NAVY_HAIR} 0 1px, transparent 1px 56px)`;
   return (
     <>
+      {/* A sliding window, like the wipe: it draws from the left by transform alone. */}
       <span
         data-rv="grid"
         aria-hidden="true"
-        className="pointer-events-none absolute inset-0 block"
-        style={{ backgroundImage: grid }}
-      />
+        className="pointer-events-none absolute inset-0 block overflow-hidden"
+      >
+        <span
+          data-rv-grid-in
+          className="absolute inset-0 block"
+          style={{ backgroundImage: grid }}
+        />
+      </span>
       <span
         data-rv="scan"
         aria-hidden="true"
@@ -114,11 +120,14 @@ export function ScanExit() {
   );
 }
 
-/** For the still version (it has no film first frame): the same lockup, revealed in place. */
-export function RevealLockup() {
+/** For the still version (it has no film first frame): the same lockup, revealed in place. Mounted
+ * before the exit (`run` false) it is drawn once at 0.4 % opacity — invisible over the ground — so
+ * the reveal does not pay its first raster; `run` starts the reveal. */
+export function RevealLockup({ run = true }: { run?: boolean }) {
   return (
     <div
-      data-reveal-run
+      data-reveal-run={run ? "" : undefined}
+      data-rv-prep={run ? undefined : ""}
       aria-hidden="true"
       className="absolute inset-0 flex items-center justify-center [--mark-h:clamp(48px,13vw,120px)]"
     >

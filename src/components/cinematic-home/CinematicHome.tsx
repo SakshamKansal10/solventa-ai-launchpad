@@ -4,6 +4,7 @@ import CINEMATIC_PRELOAD from "virtual:cinematic-preload";
 import {
   Component,
   lazy,
+  memo,
   Suspense,
   useEffect,
   useLayoutEffect,
@@ -25,9 +26,18 @@ import { introGate, type IntroGate } from "./intro/intro-gate";
 import { IntroQuestion } from "./intro/IntroQuestion";
 import { IntroReturn } from "./intro/IntroReturn";
 import { IntroStyles, LockupHold } from "./intro/IntroShared";
+import { useCalm } from "./intro/pacing";
 import { CinematicOverlay } from "./overlay/CinematicOverlay";
 import { Narrative } from "./overlay/Narrative";
 import { ProductLayer } from "./overlay/ProductLayer";
+
+// The film's own layers take no props: the opening's state changes (ask → reveal → hold → off)
+// must not re-render them — at the exit that render blocked the main thread for ~0.1 s (1920),
+// ~0.45 s at 4× CPU (measured 2026-11-16).
+const FilmOverlay = memo(CinematicOverlay);
+const FilmNarrative = memo(Narrative);
+const FilmProducts = memo(ProductLayer);
+const StillPage = memo(StaticFallback);
 import { markStage } from "./performance/marks";
 import { QUALITY_PRESETS } from "./performance/quality";
 import {
@@ -80,6 +90,9 @@ const BUNDLE_WAIT_MS = 4_000;
 /** After the opening's lockup forms, how long the visit waits for the world before it is served
  * the still version instead. */
 const LOCKUP_WAIT_MS = 8_000;
+/** Once the world is ready behind the held lockup, how long the hold waits for its first frames
+ * to have passed (smooth frames again) before the film is handed over anyway. */
+const CALM_WAIT_MS = 1_200;
 
 /** The opening: asked (first visits only), holding at the lockup for the world, or finished. */
 type IntroState = "ask" | "reveal" | "hold" | "off";
@@ -143,6 +156,11 @@ export function CinematicHome({
   const [variant, setVariant] = useState<IntroGate | null>(null);
   const introRef = useRef<IntroState>("ask");
   introRef.current = intro;
+  // How the opening exited: over the ready world, or (its time cap reached first) "flat" — the
+  // reveal on the pearl sky alone, with the world's drawing held until the reveal has finished.
+  const [introPath, setIntroPath] = useState<"world" | "flat" | null>(null);
+  // The opening's text has faded in: the lockup beneath is pre-painted from then (IntroShared).
+  const [textIn, setTextIn] = useState(false);
 
   // Decide the experience once, before the browser paints the hydrated intro (the server render
   // is the void + first line). Never re-decided for this visit.
@@ -156,8 +174,28 @@ export function CinematicHome({
     else setIntro("off");
   }, [store, tierOverride]);
 
-  // Either opening ends on the lockup: the film starts now if the world is ready, else it holds.
-  const toLockup = () => setIntro(mode === "fallback" || store.state.ready ? "off" : "hold");
+  // The exit starts. On the flat path the world draws nothing until the reveal has finished: its
+  // first frames stall the GPU, and nothing of the world shows at the film's opening anyway (it
+  // arrives with the first scroll), so the reveal is the same frames either way.
+  const onReveal = (path: "world" | "flat") => {
+    setIntroPath(path);
+    setIntro("reveal");
+    if (path === "flat" && mode !== "fallback") {
+      store.state.worldHeld = true;
+      store.emit();
+    }
+  };
+  // Either opening ends on the lockup: the film starts now if the world is ready and drawing
+  // smoothly, else the lockup holds (the world resumes drawing here on the flat path).
+  const toLockup = () =>
+    setIntro(mode === "fallback" || (store.state.ready && introPath !== "flat") ? "off" : "hold");
+  // The world draws again once the reveal is over, however it ended (lockup, Esc).
+  useEffect(() => {
+    if (intro === "reveal" || !store.state.worldHeld) return;
+    store.state.worldHeld = false;
+    store.emit();
+  }, [intro, store]);
+  const calmInHold = useCalm(intro === "hold" && ready);
 
   const serveStill = (reason: string) => {
     const still: Capability = { mode: "fallback", tier: "lite", reasons: [reason] };
@@ -194,11 +232,17 @@ export function CinematicHome({
 
   // The lockup holds until the world is ready; after LOCKUP_WAIT_MS the visit gets the still
   // version instead (decided before the visitor is inside the film, never mid-film).
+  // Once ready, it waits (briefly) for the world's first frames to pass, so the film's first
+  // movement does not stall; that wait never downgrades the visit.
   useEffect(() => {
     if (intro !== "hold") return;
     if (ready) {
-      setIntro("off");
-      return;
+      if (calmInHold) {
+        setIntro("off");
+        return;
+      }
+      const id = window.setTimeout(() => setIntro("off"), CALM_WAIT_MS);
+      return () => window.clearTimeout(id);
     }
     const id = window.setTimeout(() => {
       console.warn("[cinematic] Not ready 8 s after the opening — serving the still version.");
@@ -207,7 +251,7 @@ export function CinematicHome({
     }, LOCKUP_WAIT_MS);
     return () => window.clearTimeout(id);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [intro, ready]);
+  }, [intro, ready, calmInHold]);
 
   // Review/test hook (only with ?freeze, ?debug or ?perf): scene ranges + live state for frame
   // capture; ?perf exposes the same counters without the HUD, for scripts/film-perf.mjs.
@@ -285,21 +329,26 @@ export function CinematicHome({
         data-tier={capability?.tier ?? ""}
         data-ready={String(ready || mode === "fallback")}
         data-intro-state={intro}
-        data-prewarm={mode === "fallback" || ready ? "" : undefined}
+        data-intro-path={introPath ?? undefined}
+        data-prewarm={mode === "fallback" || ready || textIn ? "" : undefined}
         // Only once the client knows the opening is running (`capability` is set in the same
         // layout effect): the server HTML never tells a returning visitor the page is busy.
         aria-busy={(capability !== null && intro !== "off") || undefined}
         // The first paint is the pearl opening; the world fades up over it once it renders.
         style={{ backgroundColor: PEARL_WORLD.sky }}
       >
+        {/* First in the page: the openings' rules (which also hide the film's lockup under an
+            opening) must arrive before the lockup's markup — streamed after it, a slow device
+            painted the lockup for ~2 s before the question (4× CPU, measured 2026-11-16). */}
+        <IntroStyles />
         {/* The fallback is itself the semantic story — never read it twice. */}
-        {mode !== "fallback" && <Narrative />}
+        {mode !== "fallback" && <FilmNarrative />}
         <p role="status" aria-live="polite" className="sr-only">
           {status}
         </p>
 
         {mode === "fallback" ? (
-          <StaticFallback />
+          <StillPage />
         ) : (
           // Time, not a page: the document scrollbar is hidden on this route (scrolling, keys and
           // assistive navigation work as usual); the overlay shows a film-time hairline instead.
@@ -359,21 +408,21 @@ export function CinematicHome({
                   )}
                 </div>
               </div>
-              <CinematicOverlay />
-              <ProductLayer />
+              <FilmOverlay />
+              <FilmProducts />
             </div>
           </section>
         )}
 
-        <IntroStyles />
         {/* Both openings are server-rendered; the head gate shows the right one before hydration. */}
         {(intro === "ask" || intro === "reveal") && (variant === null || variant === "show") && (
           <IntroQuestion
             still={mode === "fallback"}
             settled={mode === "fallback" || ready}
             reducedMotion={reducedMotion}
-            onReveal={() => setIntro("reveal")}
+            onReveal={onReveal}
             onLockup={toLockup}
+            onTextIn={() => setTextIn(true)}
             onSkip={() => setIntro("off")}
           />
         )}
@@ -384,11 +433,12 @@ export function CinematicHome({
               <IntroReturn
                 key={v}
                 variant={v}
-                onReveal={() => setIntro("reveal")}
+                onReveal={onReveal}
                 still={mode === "fallback"}
                 settled={mode === "fallback" || ready}
                 reducedMotion={reducedMotion}
                 onLockup={toLockup}
+                onTextIn={() => setTextIn(true)}
                 onSkip={() => setIntro("off")}
               />
             ),

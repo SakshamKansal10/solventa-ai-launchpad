@@ -1,42 +1,57 @@
 {
   "label": "local",
   "base": "http://localhost:4175",
-  "at": "2026-11-16T03:23:53.829Z",
+  "at": "2026-11-16T16:27:58.603Z",
   "runs": {
     "broadband": {
       "throttle": 1,
-      "readyMs": 4548,
-      "lockupMs": 5277,
+      "readyMs": 5792,
+      "lockupMs": 9389,
       "held": false,
       "holdMs": 0,
       "modeAtRelease": "lite",
       "modeAtEnd": "lite",
       "switchedModeAfterRelease": false,
+      "revealMs": 3283,
+      "revealLongTasks": 0,
+      "revealWorstMs": 0,
       "longTasks": 0,
       "worstLongTaskMs": 0,
-      "p95FrameMs": 16.9,
-      "frames": 966,
+      "p95FrameMs": 17,
+      "frames": 981,
       "states": [
         {
-          "t": 710,
+          "t": 1024,
           "intro": "ask",
           "mode": "pending",
           "ready": "false"
         },
         {
-          "t": 1761,
+          "t": 1914,
           "intro": "ask",
           "mode": "lite",
           "ready": "false"
         },
         {
-          "t": 4554,
+          "t": 5795,
           "intro": "ask",
           "mode": "lite",
           "ready": "true"
         },
         {
-          "t": 5277,
+          "t": 6106,
+          "intro": "reveal",
+          "mode": "lite",
+          "ready": "true"
+        },
+        {
+          "t": 6107,
+          "intro": "reveal",
+          "mode": "lite",
+          "ready": "true"
+        },
+        {
+          "t": 9389,
           "intro": "off",
           "mode": "lite",
           "ready": "true"
@@ -46,44 +61,59 @@
     },
     "cpu4x": {
       "throttle": 4,
-      "readyMs": 7121,
-      "lockupMs": 6247,
+      "readyMs": 12446,
+      "lockupMs": 11322,
       "held": true,
-      "holdMs": 897,
+      "holdMs": 1477,
       "modeAtRelease": "lite",
       "modeAtEnd": "lite",
       "switchedModeAfterRelease": false,
-      "longTasks": 0,
-      "worstLongTaskMs": 0,
-      "p95FrameMs": 33.4,
-      "frames": 854,
+      "revealMs": 3274,
+      "revealLongTasks": 0,
+      "revealWorstMs": 0,
+      "longTasks": 4,
+      "worstLongTaskMs": 63,
+      "p95FrameMs": 33.5,
+      "frames": 838,
       "states": [
         {
-          "t": 335,
+          "t": 1540,
           "intro": "ask",
           "mode": "pending",
           "ready": "false"
         },
         {
-          "t": 3377,
+          "t": 3899,
           "intro": "ask",
           "mode": "lite",
           "ready": "false"
         },
         {
-          "t": 6247,
+          "t": 8048,
+          "intro": "reveal",
+          "mode": "lite",
+          "ready": "false"
+        },
+        {
+          "t": 8062,
+          "intro": "reveal",
+          "mode": "lite",
+          "ready": "false"
+        },
+        {
+          "t": 11322,
           "intro": "hold",
           "mode": "lite",
           "ready": "false"
         },
         {
-          "t": 7130,
+          "t": 12449,
           "intro": "hold",
           "mode": "lite",
           "ready": "true"
         },
         {
-          "t": 7144,
+          "t": 12799,
           "intro": "off",
           "mode": "lite",
           "ready": "true"
@@ -107,13 +137,13 @@
     "returning": {
       "welcomed": true,
       "question": false,
-      "openingMs": 5612,
-      "readyMs": 5170,
+      "openingMs": 7668,
+      "readyMs": 3793,
       "pass": true
     },
     "midPageReload": {
-      "before": 5211,
-      "after": 5211,
+      "before": 5334,
+      "after": 5334,
       "state": "off",
       "busy": null,
       "pass": true

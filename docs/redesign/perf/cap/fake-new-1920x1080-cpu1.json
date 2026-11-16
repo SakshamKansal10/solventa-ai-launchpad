@@ -1,0 +1,22 @@
+{
+  "label": "fake-new-1920x1080-cpu1",
+  "path": "world",
+  "holdMs": 3010,
+  "holdToFirstExitFrameMs": 3029,
+  "hydratedAfterShownMs": -1421,
+  "drawnFrames": 357,
+  "worstDrawGapMs": 44,
+  "worstDrawGapAtMs": 665,
+  "drawGaps": "",
+  "worstScreencastGapMs": 133,
+  "worstGapAtMs": 628,
+  "sMovedPx": 0,
+  "sMovedAt": "",
+  "sInvisibleFrames": 0,
+  "holdStateMs": 0,
+  "gaps": "628+133 878+102 1496+101 2029+133 2194+83",
+  "longTasks": "",
+  "rafGaps": "",
+  "states": "582:ask 6359:reveal 9633:off",
+  "mode": "lite/lite"
+}

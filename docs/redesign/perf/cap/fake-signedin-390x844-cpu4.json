@@ -1,0 +1,22 @@
+{
+  "label": "fake-signedin-390x844-cpu4",
+  "path": "world",
+  "holdMs": 2887,
+  "holdToFirstExitFrameMs": 2918,
+  "hydratedAfterShownMs": 1612,
+  "drawnFrames": 385,
+  "worstDrawGapMs": 32,
+  "worstDrawGapAtMs": 1711,
+  "drawGaps": "",
+  "worstScreencastGapMs": 216,
+  "worstGapAtMs": 2760,
+  "sMovedPx": 0,
+  "sMovedAt": "",
+  "sInvisibleFrames": 0,
+  "holdStateMs": 0,
+  "gaps": "2127+116 2293+83 2760+216 3026+100 3076+100",
+  "longTasks": "",
+  "rafGaps": "1710+250 2227+100 2710+50 2810+67",
+  "states": "633:ask 4891:reveal 8189:off",
+  "mode": "fallback/lite"
+}

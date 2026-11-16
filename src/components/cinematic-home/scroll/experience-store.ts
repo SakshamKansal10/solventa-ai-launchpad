@@ -42,6 +42,9 @@ export interface ExperienceState {
   environment: boolean;
   /** Every shader the film needs is compiled (in parallel) — the world may start rendering. */
   compiled: boolean;
+  /** The opening's reveal runs without the world (it reached its time cap first): the world draws
+   * nothing until the reveal has finished, so its first frames cannot stall the reveal. */
+  worldHeld: boolean;
   /** The captions currently on screen and their presence (labels yield to them). */
   captionBoxes: { box: { l: number; t: number; r: number; b: number }; o: number }[];
   perf: {
@@ -104,6 +107,7 @@ export function createExperienceStore() {
     ready: false,
     environment: false,
     compiled: false,
+    worldHeld: false,
     captionBoxes: [],
     perf: { dpr: 1, notch: 0, filamentShare: 1, medians: [] },
     renderer: { calls: 0, triangles: 0, filaments: 0, nodes: 0, geometries: 0, textures: 0 },

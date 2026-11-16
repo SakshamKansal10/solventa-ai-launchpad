@@ -5,9 +5,12 @@ import { useLocale } from "@/lib/i18n/LocaleProvider";
  * head gate picked it before the first paint (`html[data-intro]`), and the returning line follows
  * `html[data-intro-choice]` — so nobody sees the wrong opening, or the wrong line, even before the
  * page is interactive. It also carries the exit and the Solventia reveal (see Reveal.tsx):
- * transform, opacity and clip-path only.
+ * animated by transform and opacity only (clip-path is used only standing still: the emblem's halves).
  */
-const R = ":is(main[data-intro-state=reveal],[data-reveal-run])";
+/** `x` inside a running reveal (the film's lockup, or the still version's own). Written out, not
+ * as :is(main[…],[data-reveal-run]) x — Chrome cannot target that when main's attribute changes and
+ * restyled the whole page at the exit's first frame (61 ms at 1920, measured 2026-11-16). */
+const R = (x: string) => `main[data-intro-state=reveal] ${x},[data-reveal-run] ${x}`;
 /** The opening's own layer while it exits (both openings set data-phase=reveal). */
 const X = "[data-intro-layer][data-phase=reveal]";
 /** The sweep's easing — shared by the scan line, the wipe and the grid so they stay in step. */
@@ -23,44 +26,63 @@ const CSS = [
   "@keyframes sol-intro-bar{0%{transform:translateX(-100%)}100%{transform:translateX(250%)}}",
   "@keyframes sol-sig-breathe{0%,100%{opacity:1}50%{opacity:.62}}",
   // The film's lockup waits, hidden, under an opening; the reveal builds it.
-  // Pre-warm: once the world has settled (main[data-prewarm]) the film's lockup — and the emblem's
-  // halves — are painted under the opening's near-opaque ground, so everything the reveal shows
-  // is rasterised before it starts (hidden until then, the first paint of the logo SVGs froze the
-  // screen at the reveal's start; painted from the first frame, it delayed the first words by
-  // 0.5 s — measured 2026-11-16). Under a 99.6 % ground it is invisible; the exit waits for the
-  // frames to run smoothly again (pacing.ts).
+  // Pre-warm: once the opening's text has faded in, or the world has settled (main[data-prewarm]),
+  // the film's lockup — and the emblem's halves — are painted under the opening's near-opaque
+  // ground, so everything the reveal shows is rasterised before it starts (hidden until then, the
+  // first paint of the logo SVGs froze the screen at the reveal's start; painted from the first
+  // frame, it delayed the first words by 0.5 s — measured 2026-11-16). Under a 99.6 % ground it is
+  // invisible; the text holds still meanwhile (pacing.ts).
   "html[data-intro] main[data-intro-state=ask]:not([data-prewarm]) [data-brand-opening]{visibility:hidden}",
   "html[data-intro] main[data-intro-state=ask][data-prewarm] [data-rv-half]{visibility:visible}",
   "html[data-intro] main[data-intro-state=ask] [data-brand-cue],main[data-intro-state=reveal] [data-brand-cue],main[data-intro-state=hold] [data-brand-cue]{visibility:hidden}",
   "main[data-intro-state=hold] [data-brand-part=sig]{animation:sol-sig-breathe 2.2s ease-in-out infinite}",
   // The exit (0–900 ms): text tightens and is wiped by the gold scan line; the grid draws behind.
-  "[data-rv=scan],[data-rv=grid]{opacity:0}",
+  // Transform and opacity ONLY, so the compositor runs all of it even while the main thread is busy
+  // (an animation that also moved clip-path ran wholly on the main thread and stalled with it —
+  // 0.1–0.5 s at the exit's start, measured 2026-11-16). The wipe and the grid are sliding windows:
+  // an overflow-hidden box moves one way and its content the other, in step.
+  // Mounted once the text is in, at 0.4 % (drawn once, invisible) until the exit plays them.
+  "[data-rv=scan],[data-rv=grid]{opacity:.004}",
+  "[data-rv-prep]{opacity:.004}[data-rv-prep] [data-rv-half]{visibility:visible}",
+  // Every piece the exit and the reveal move is its own compositor layer from the moment it is
+  // prepared, so it is rasterised while the text holds still: a layer first made when its animation
+  // starts must be rasterised then, and the compositor drew nothing meanwhile (a full-screen grid
+  // and text layer: 0.1–0.6 s with no frame at the exit's start, measured 2026-11-16).
+  "[data-intro-layer] :is([data-wipe],[data-wipe-in],[data-tighten],[data-rv=grid],[data-rv-grid-in],[data-rv=scan]),[data-rv-prep] [data-rv],[data-reveal-run] [data-rv]{will-change:transform,opacity}",
+  "main[data-prewarm][data-intro-state=ask] [data-brand-opening] [data-rv],main[data-intro-state=reveal] [data-brand-opening] [data-rv]{will-change:transform,opacity}",
   `${X} [data-wipe]{animation:rv-wipe .6s ${SWEEP} both}`,
+  `${X} [data-wipe-in]{animation:rv-wipe-in .6s ${SWEEP} both}`,
   `${X} [data-tighten]{animation:rv-tight .6s ${SWEEP} both}`,
   `${X} [data-rv=grid]{animation:rv-grid .9s both}`,
+  `${X} [data-rv-grid-in]{animation:rv-grid-in .9s both}`,
   `${X} [data-rv=scan]{animation:rv-scan .9s both,rv-out .15s ease .97s forwards}`,
-  "@keyframes rv-wipe{from{clip-path:inset(0 0 0 0);opacity:1}99%{opacity:1}to{clip-path:inset(0 0 0 100%);opacity:0}}",
+  "@keyframes rv-wipe{from{transform:translateX(0);opacity:1}99%{opacity:1}to{transform:translateX(100%);opacity:0}}",
+  "@keyframes rv-wipe-in{from{transform:translateX(0)}to{transform:translateX(-100%)}}",
   "@keyframes rv-tight{from{transform:none}to{transform:scaleX(.94)}}",
-  `@keyframes rv-grid{0%{opacity:1;clip-path:inset(0 100% 0 0);animation-timing-function:${SWEEP}}66.667%{opacity:1;clip-path:inset(0 0 0 0);animation-timing-function:ease}100%{opacity:0;clip-path:inset(0 0 0 0)}}`,
-  `@keyframes rv-scan{0%{opacity:1;transform:translateX(0);clip-path:inset(0 0 0 0);animation-timing-function:${SWEEP}}66.667%{opacity:1;transform:translateX(calc(100vw - 2px));clip-path:inset(0 0 0 0);animation-timing-function:cubic-bezier(.5,0,.2,1)}100%{opacity:1;transform:translateX(calc(50vw - 1px));clip-path:inset(50% 0 calc(50% - 1px) 0)}}`,
+  `@keyframes rv-grid{0%{opacity:1;transform:translateX(-100%);animation-timing-function:${SWEEP}}66.667%{opacity:1;transform:translateX(0);animation-timing-function:ease}100%{opacity:0;transform:translateX(0)}}`,
+  `@keyframes rv-grid-in{0%{transform:translateX(100%);animation-timing-function:${SWEEP}}66.667%{transform:translateX(0)}100%{transform:translateX(0)}}`,
+  // The scan line sweeps across, then shrinks to the centre point (scaleY about its centre: ~1 px
+  // tall), where the reveal's hairline starts.
+  "[data-rv=scan]{transform-origin:50% 50%}",
+  `@keyframes rv-scan{0%{opacity:1;transform:translateX(0) scaleY(1);animation-timing-function:${SWEEP}}66.667%{opacity:1;transform:translateX(calc(100vw - 2px)) scaleY(1);animation-timing-function:cubic-bezier(.5,0,.2,1)}100%{opacity:1;transform:translateX(calc(50vw - 1px)) scaleY(.001)}}`,
   // The emblem: one whole logo at rest; the halves (and the glint) exist only while revealing.
   "[data-rv-half]{visibility:hidden}",
-  `${R} [data-rv-half]{visibility:visible}`,
-  `${R} [data-rv-whole]{visibility:hidden}`,
+  `${R("[data-rv-half]")}{visibility:visible}`,
+  `${R("[data-rv-whole]")}{visibility:hidden}`,
   // The reveal (900 ms on): hairline from the centre point, a still beat, then the lockup.
   "[data-rv=line],[data-rv=glint]{opacity:0}",
   "[data-rv=line]{transform-origin:50% 50%}",
   // Draws at the centre (0.9–1.3 s), drops below the lockup during the still beat (1.3–1.7 s,
   // before any letter shows: it never crosses them), fades at the end. rv-drop fills forwards
   // only, so it does not override the drawing before it starts.
-  `${R} [data-rv=line]{animation:rv-line .4s cubic-bezier(.2,.7,.2,1) .9s both,rv-drop .4s cubic-bezier(.5,0,.2,1) 1.3s forwards,rv-out .2s ease 3.05s forwards}`,
+  `${R("[data-rv=line]")}{animation:rv-line .4s cubic-bezier(.2,.7,.2,1) .9s both,rv-drop .4s cubic-bezier(.5,0,.2,1) 1.3s forwards,rv-out .2s ease 3.05s forwards}`,
   "@keyframes rv-drop{from{opacity:1;transform:translateY(0) scaleX(1)}to{opacity:1;transform:translateY(calc(var(--mark-h, 80px) / 2 + clamp(10px, 1.4vw, 20px))) scaleX(1)}}",
-  `${R} [data-rv=top]{animation:rv-top .5s cubic-bezier(.34,1.45,.64,1) 1.7s both}`,
-  `${R} [data-rv=bottom]{animation:rv-bottom .5s cubic-bezier(.34,1.45,.64,1) 1.7s both}`,
-  `${R} [data-rv=glint]{animation:rv-glint .45s ease-out 2.2s both}`,
-  `${R} [data-rv=ch]{animation:rv-ch .5s cubic-bezier(.2,.7,.2,1) calc(1.95s + var(--i) * 45ms) both}`,
-  `${R} [data-rv=w]{animation:rv-w .35s ease calc(2.5s + var(--i) * 120ms) both}`,
-  `${R} [data-rv=dot]{animation:rv-in .3s ease 2.9s both}`,
+  `${R("[data-rv=top]")}{animation:rv-top .5s cubic-bezier(.34,1.45,.64,1) 1.7s both}`,
+  `${R("[data-rv=bottom]")}{animation:rv-bottom .5s cubic-bezier(.34,1.45,.64,1) 1.7s both}`,
+  `${R("[data-rv=glint]")}{animation:rv-glint .45s ease-out 2.2s both}`,
+  `${R("[data-rv=ch]")}{animation:rv-ch .5s cubic-bezier(.2,.7,.2,1) calc(1.95s + var(--i) * 45ms) both}`,
+  `${R("[data-rv=w]")}{animation:rv-w .35s ease calc(2.5s + var(--i) * 120ms) both}`,
+  `${R("[data-rv=dot]")}{animation:rv-in .3s ease 2.9s both}`,
   "@keyframes rv-line{from{opacity:1;transform:scaleX(0)}to{opacity:1;transform:scaleX(1)}}",
   "@keyframes rv-out{from{opacity:1}to{opacity:0}}",
   "@keyframes rv-in{from{opacity:0}to{opacity:1}}",
@@ -70,7 +92,7 @@ const CSS = [
   "@keyframes rv-ch{from{opacity:0;transform:translate(calc((var(--i) - 4) * .2em),105%)}to{opacity:1;transform:none}}",
   "@keyframes rv-w{from{opacity:0;transform:translateY(.6em)}to{opacity:1;transform:none}}",
   // Reduced motion: no movement — the text fades and the whole lockup fades in over 300 ms.
-  `@media (prefers-reduced-motion: reduce){[data-intro-layer] *,[data-intro-hold] *,${R} [data-rv],main[data-intro-state=hold] [data-brand-part=sig]{animation:none!important}[data-rv=scan],[data-rv=grid]{display:none}${X} [data-wipe]{animation:rv-out .3s ease both!important}${R} [data-rv=line],${R} [data-rv=glint]{opacity:0}${R} [data-rv-half]{visibility:hidden}${R} [data-rv-whole]{visibility:visible}main[data-intro-state=reveal] [data-brand-opening],[data-reveal-run]{animation:rv-in .3s ease both}}`,
+  `@media (prefers-reduced-motion: reduce){[data-intro-layer] *,[data-intro-hold] *,${R("[data-rv]")},main[data-intro-state=hold] [data-brand-part=sig]{animation:none!important}[data-rv=scan],[data-rv=grid]{display:none}${X} [data-wipe]{animation:rv-out .3s ease both!important}${R("[data-rv=line]")},${R("[data-rv=glint]")}{opacity:0}${R("[data-rv-half]")}{visibility:hidden}${R("[data-rv-whole]")}{visibility:visible}main[data-intro-state=reveal] [data-brand-opening],[data-reveal-run]{animation:rv-in .3s ease both}}`,
 ].join("");
 
 export function IntroStyles() {
