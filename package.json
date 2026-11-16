@@ -14,7 +14,8 @@
     "typecheck": "tsc --noEmit -p .",
     "test:e2e": "playwright test",
     "compare": "playwright test -c playwright.compare.config.ts",
-    "compare:seed": "playwright test -c playwright.seed.config.ts"
+    "compare:seed": "playwright test -c playwright.seed.config.ts",
+    "engine:compare": "vitest run -c vitest.engine.config.ts"
   },
   "dependencies": {
     "@google/genai": "^2.17.1",
