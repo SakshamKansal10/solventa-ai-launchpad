@@ -85,11 +85,11 @@ Blockers: `blocked.md`. Final report: `REPORT.md`.
 - [x] 4 S-mark scene check (3a6e7e7)
 - [x] 5a part 4 feature 10 drop-off admin page (21578f4)
 - [x] 5b part 5 idea engine (all steps, 10-profile comparison) (686a833)
-- [ ] 6 final verification on the Vercel preview
-- [ ] 7 REPORT.md
+- [~] 6 final verification — done locally; the preview needs the owner's VERCEL_BYPASS token (REPORT.md)
+- [x] 7 REPORT.md
 
 ## Final
-- [ ] REPORT.md
+- [x] REPORT.md
 
 ## Owner message 2026-11-16 — status
 - [x] 1 saved the uncommitted work (fee1363 engine fixes, 686a833 comparison, 7499fe6 returning opening, 5816ada verify script)
@@ -97,5 +97,5 @@ Blockers: `blocked.md`. Final report: `REPORT.md`.
 - [x] 3 no hang (505715b): broadband hold 2.6 s → none; preview run needs the owner's VERCEL_BYPASS token
 - [x] 4 favicons from the owner's logo (505dca1)
 - [x] 5 site name and sitelinks (ad3df89)
-- [ ] 6 final check (typecheck, unit, build, all e2e) — running; log in .e2e-tmp/final.log
-- [ ] REPORT.md — next step if the session stops: write docs/redesign/REPORT.md from PROGRESS, decisions 33–41, part2-perf 2d/2e, engine-compare.md
+- [x] 6 final check: typecheck, 460 unit, build, e2e 178 + the 4 fixed (51/51 on re-run)
+- [x] REPORT.md
