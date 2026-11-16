@@ -114,3 +114,17 @@ Blockers: `blocked.md`. Final report: `REPORT.md`.
     server and `npm run scan`; then REPORT.md "Go live 2026-11-16" section (changes, roadmap
     cause + fix = decisions 43, cost before/after = decisions 44, daily limits, owner steps
     1–6) and push main.
+
+## Owner jobs — 2026-11-16 (work directly on `main`, live on solventia.in)
+- [x] Job D — done (owner confirmed)
+- [x] Job C Google shows "Solventia" (d557047): Google's own button + One Tap on our origin,
+  redirect fallback; owner steps in REPORT.md (origins + branding already done by the owner); decisions 53
+- [~] Job E emails
+  - [x] deep links to the exact page, signed-out → /sign-in?next= → that page (db02015); decisions 54
+  - [x] one address sol@solventia.in everywhere; hidden reply-to until forwarding exists
+  - [x] status + SMTP/DNS owner steps in REPORT.md (27f419d)
+  - [ ] **blocked: `email-kit/` folder not in the project** — shared layout, logo PNG
+    (public/brand/email-logo.png), Supabase templates (Confirm signup + Magic Link must show
+    `{{ .Token }}`), real test sends, screenshots. Resume here once the owner adds the folder.
+  - [ ] owner: confirm Email OTP Expiration (default 3600 s), turn on custom SMTP (Resend),
+    add the forwarding MX + one SPF on `@` for sol@solventia.in
