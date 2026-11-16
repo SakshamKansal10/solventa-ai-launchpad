@@ -88,4 +88,65 @@ export const gemini = {
 /** Fails the test if the page ever reaches for a real Supabase project. */
 export function forbidRealBackends(page: Page): void {
   void page.route(/https:\/\/[^/]*supabase\.(co|in)\//, (route) => route.abort());
+  // Google's sign-in script never loads from the real Google in tests: the "Continue with Google"
+  // button then keeps the redirect flow (its fallback). fakeGoogleIdentity() serves a fake one.
+  void page.route(/https:\/\/accounts\.google\.com\//, (route) => route.abort());
+}
+
+/**
+ * A stand-in for Google's sign-in script (accounts.google.com/gsi/client): renderButton draws a
+ * button that, when clicked, answers like Google — an ID token for `account` carrying the hashed
+ * nonce it was initialized with (the fake GoTrue checks it). prompt() (One Tap) is counted on
+ * window.__gis.prompts. Registered after forbidRealBackends, so it wins for this one URL.
+ */
+export async function fakeGoogleIdentity(
+  page: Page,
+  account = { email: "gis.tester@example.com", name: "Meera Gupta" },
+): Promise<void> {
+  const fake = (acct: { email: string; name: string }) => {
+    const b64 = (o: unknown) =>
+      btoa(JSON.stringify(o)).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+    type Config = { client_id: string; nonce: string; callback: (r: unknown) => void };
+    const state = { prompts: 0, config: null as Config | null, options: null as unknown };
+    (window as unknown as { __gis: typeof state }).__gis = state;
+    (window as unknown as { google: unknown }).google = {
+      accounts: {
+        id: {
+          initialize(config: Config) {
+            state.config = config;
+          },
+          renderButton(parent: HTMLElement, options: unknown) {
+            state.options = options;
+            const b = document.createElement("button");
+            b.type = "button";
+            b.textContent = "Continue with Google (Google's button)";
+            b.setAttribute("data-testid", "gis-button");
+            b.onclick = () => {
+              const c = state.config!;
+              const claims = {
+                iss: "https://accounts.google.com",
+                aud: c.client_id,
+                email: acct.email,
+                name: acct.name,
+                nonce: c.nonce,
+              };
+              c.callback({
+                credential: `${b64({ alg: "none" })}.${b64(claims)}.fake`,
+                select_by: "btn",
+              });
+            };
+            parent.appendChild(b);
+          },
+          prompt() {
+            state.prompts++;
+          },
+          cancel() {},
+        },
+      },
+    };
+  };
+  const body = `(${fake.toString()})(${JSON.stringify(account)});`;
+  await page.route(/https:\/\/accounts\.google\.com\/gsi\/client/, (route) =>
+    route.fulfill({ status: 200, contentType: "text/javascript", body }),
+  );
 }

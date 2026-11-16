@@ -125,3 +125,21 @@ export const exchangeCodeForSession = createServerFn({ method: "POST" })
     if (error) return { ok: false as const, error: error.message };
     return { ok: true as const };
   });
+
+/** Google's own button / One Tap (Google Identity Services): the browser has Google's ID token;
+ * Supabase verifies it — its signature, its audience (our Google client ID) and that its nonce is
+ * the SHA-256 of the raw `nonce` sent here — and sets the session cookies, exactly as the code
+ * exchange above does. Google's consent then names Solventia (our origin), not the Supabase
+ * project's domain. */
+export const signInWithGoogleIdToken = createServerFn({ method: "POST" })
+  .validator(z.object({ token: z.string().min(20).max(8_000), nonce: z.string().min(16).max(200) }))
+  .handler(async ({ data }) => {
+    const supabase = createSupabaseServerClient();
+    const { error } = await supabase.auth.signInWithIdToken({
+      provider: "google",
+      token: data.token,
+      nonce: data.nonce,
+    });
+    if (error) return { ok: false as const, error: error.message };
+    return { ok: true as const };
+  });

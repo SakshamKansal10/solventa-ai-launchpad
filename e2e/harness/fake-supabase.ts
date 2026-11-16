@@ -1,5 +1,5 @@
 import { createServer, type IncomingMessage, type Server, type ServerResponse } from "node:http";
-import { randomUUID } from "node:crypto";
+import { createHash, randomUUID } from "node:crypto";
 import type { AddressInfo } from "node:net";
 import fs from "node:fs";
 import path from "node:path";
@@ -168,7 +168,13 @@ export async function startFakeStack(
   const refreshTokens = new Map<string, string>();
   const revoked = new Set<string>();
   const oauthCodes = new Map<string, string>();
-  const stats = { rest: 0, auth: 0, storage: 0, gemini: 0 };
+  const stats: {
+    rest: number;
+    auth: number;
+    storage: number;
+    gemini: number;
+    idTokenSignIns?: number;
+  } = { rest: 0, auth: 0, storage: 0, gemini: 0 };
 
   let origin = "";
   const ANON_KEY = jwt({ role: "anon", iss: "supabase-test", exp: 4_102_444_800 });
@@ -328,6 +334,38 @@ export async function startFakeStack(
         });
       oauthCodes.delete(String(body.auth_code));
       return send(res, 200, makeSession(user));
+    }
+    if (route === "/token" && grant === "id_token") {
+      // Google Identity Services (signInWithIdToken): like real GoTrue, the token's nonce must be
+      // the SHA-256 (hex) of the raw nonce sent with it. The fake Google script (e2e) signs
+      // nothing; its token is "<header>.<base64url JSON claims>.fake".
+      let claims: { email?: string; name?: string; nonce?: string; picture?: string } = {};
+      try {
+        claims = JSON.parse(
+          Buffer.from(String(body.id_token ?? "").split(".")[1] ?? "", "base64url").toString(),
+        );
+      } catch {
+        /* rejected below */
+      }
+      const expected = createHash("sha256")
+        .update(String(body.nonce ?? ""))
+        .digest("hex");
+      if (body.provider !== "google" || !claims.email || claims.nonce !== expected) {
+        return send(res, 400, {
+          code: 400,
+          error_code: "bad_jwt",
+          msg: "Passed nonce and nonce in id_token should either both exist or not.",
+        });
+      }
+      const email = claims.email.toLowerCase();
+      const user =
+        (await findUser("email", email)) ??
+        (await (async () => {
+          const created = await createUser({ email, fullName: claims.name });
+          return findUser("id::text", created.user.id);
+        })());
+      stats.idTokenSignIns = (stats.idTokenSignIns ?? 0) + 1;
+      return send(res, 200, makeSession(user!));
     }
     if (route === "/signup") {
       const email = String(body.email ?? "").toLowerCase();

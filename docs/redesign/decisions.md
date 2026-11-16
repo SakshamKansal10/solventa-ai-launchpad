@@ -444,3 +444,16 @@ Each entry: what was ambiguous, what I chose, why.
     code is still downloading shows its frame in 84 ms (the old code fails this test: the Roadmap
     page stayed on screen). Production timings per tab could not be measured here — it needs a
     signed-in founder account on solventia.in.
+
+53. **Google sign-in through Google Identity Services (owner, 2026-11-16).** Google's consent
+    named the Supabase project's domain because the redirect flow passes through it; a paid
+    Supabase custom domain was ruled out. Google's own button (pill, large, outline/white —
+    Google's rules allow no other colours or type) plus One Tap now run on our origin, with the
+    same client ID; the ID token goes to our server (signInWithGoogleIdToken →
+    supabase.auth.signInWithIdToken with the raw nonce; Google got its SHA-256). Where the founder
+    lands is shared with /auth/callback (lib/auth/after-sign-in.ts): a finished consultation →
+    /consultation?submit=1, else the saved `next`, else the dashboard. Until Google's script has
+    loaded — or if it never does (blocked, offline, over 5 s) — the old redirect button shows
+    and works unchanged. In e2e, accounts.google.com is blocked by default (the fallback), and
+    e2e/google-gis.spec.ts serves a fake Google script whose token the fake GoTrue checks for the
+    hashed nonce.

@@ -1,6 +1,10 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { rememberAuthNext } from "@/lib/consultation/resume";
 import { Loader2 } from "lucide-react";
+import { signInWithGoogleIdToken } from "@/lib/actions/auth";
+import { pathAfterSignIn } from "@/lib/auth/after-sign-in";
+import { initGoogleIdentity, loadGoogleIdentity } from "@/lib/auth/google-identity";
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
 import { cn } from "@/lib/utils";
 import { useLocale } from "@/lib/i18n/LocaleProvider";
@@ -39,14 +43,78 @@ interface GoogleSignInButtonProps {
   className?: string;
 }
 
-/** A real OAuth trigger: clicking redirects the whole page to Google's
- * consent screen via Supabase Auth, then back to /auth/callback. Styled to
- * Google's "Sign in with Google" light-theme guidelines (white fill, 1px
- * neutral border, #1F1F1F medium-weight label, unmodified four-colour G). */
+/**
+ * "Continue with Google" (owner, 2026-11-16). Google's own button (and One Tap) when Google's
+ * script loads: Google then shows "to continue to Solventia" — the page's origin — and the ID
+ * token is verified by Supabase on our server (signInWithGoogleIdToken). Until the script is
+ * ready, or if it never loads (ad blockers, privacy browsers), this is the old redirect flow:
+ * the whole page goes to Google via Supabase Auth, then back to /auth/callback. Either way the
+ * founder lands where /auth/callback would send them (pathAfterSignIn): after the consultation,
+ * idea generation (/consultation?submit=1). The fallback is styled to Google's "Sign in with
+ * Google" light-theme guidelines (white fill, 1px neutral border, #1F1F1F medium-weight label,
+ * unmodified four-colour G); Google's button is its pill, large, outline (white) version.
+ */
 export function GoogleSignInButton({ redirectPath, className }: GoogleSignInButtonProps) {
-  const { t } = useLocale();
+  const { t, locale } = useLocale();
+  const queryClient = useQueryClient();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // Google's button: "loading" (the redirect button shows meanwhile), "ready", or "off".
+  const [gis, setGis] = useState<"loading" | "ready" | "off">("loading");
+  const slot = useRef<HTMLDivElement>(null);
+  const finishRef = useRef<(token: string, nonce: string) => void>(() => {});
+  finishRef.current = (token, nonce) => {
+    setLoading(true);
+    setError(null);
+    void (async () => {
+      try {
+        const result = await signInWithGoogleIdToken({ data: { token, nonce } });
+        if (!result.ok) throw new Error(result.error);
+        const next = new URL(redirectPath, window.location.origin).searchParams.get("next");
+        window.location.assign(pathAfterSignIn(next, queryClient));
+      } catch (err) {
+        console.error("[google-signin] Google ID token sign-in failed:", err);
+        setError(t("auth.google.error"));
+        setLoading(false);
+      }
+    })();
+  };
+
+  useEffect(() => {
+    let live = true;
+    void (async () => {
+      const api = await loadGoogleIdentity();
+      if (!live) return;
+      if (!api || !slot.current) {
+        setGis("off");
+        return;
+      }
+      try {
+        await initGoogleIdentity(api, (c, nonce) => finishRef.current(c.credential, nonce));
+        if (!live || !slot.current) return;
+        api.renderButton(slot.current, {
+          type: "standard",
+          theme: "outline",
+          size: "large",
+          text: "continue_with",
+          shape: "pill",
+          logo_alignment: "center",
+          width: Math.min(400, Math.max(200, Math.round(slot.current.clientWidth || 320))),
+          locale: locale === "hi" ? "hi" : "en",
+        });
+        setGis("ready");
+        // One Tap: Google's own prompt, for a founder already signed in to Google.
+        api.prompt();
+      } catch (err) {
+        console.error("[google-signin] Google's button failed; using the redirect:", err);
+        if (live) setGis("off");
+      }
+    })();
+    return () => {
+      live = false;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   async function handleClick() {
     setLoading(true);
@@ -81,19 +149,37 @@ export function GoogleSignInButton({ redirectPath, className }: GoogleSignInButt
 
   return (
     <div className="flex flex-col gap-1.5">
-      <button
-        type="button"
-        onClick={handleClick}
-        disabled={loading}
-        data-testid="google-signin"
-        className={cn(
-          "inline-flex h-12 w-full items-center justify-center gap-3 rounded-full border border-[#747775] bg-white px-4 text-[0.9375rem] font-medium text-[#1F1F1F] transition-colors hover:bg-[#F8F9FA] focus-visible:ring-2 focus-visible:ring-sol-cobalt/40 disabled:pointer-events-none disabled:opacity-60",
-          className,
-        )}
-      >
-        {loading ? <Loader2 className="size-5 animate-spin" aria-hidden="true" /> : <GoogleGlyph />}
-        {t("auth.google.continue")}
-      </button>
+      <div
+        ref={slot}
+        data-testid="google-gis"
+        data-state={gis}
+        className={cn("flex w-full justify-center", gis === "ready" ? "min-h-12 items-center" : "")}
+      />
+      {loading && gis === "ready" && (
+        <p role="status" className="flex items-center justify-center gap-2 text-[0.9375rem]">
+          <Loader2 className="size-4 animate-spin" aria-hidden="true" />
+          {t("auth.google.signingIn")}
+        </p>
+      )}
+      {gis !== "ready" && (
+        <button
+          type="button"
+          onClick={handleClick}
+          disabled={loading}
+          data-testid="google-signin"
+          className={cn(
+            "inline-flex h-12 w-full items-center justify-center gap-3 rounded-full border border-[#747775] bg-white px-4 text-[0.9375rem] font-medium text-[#1F1F1F] transition-colors hover:bg-[#F8F9FA] focus-visible:ring-2 focus-visible:ring-sol-cobalt/40 disabled:pointer-events-none disabled:opacity-60",
+            className,
+          )}
+        >
+          {loading ? (
+            <Loader2 className="size-5 animate-spin" aria-hidden="true" />
+          ) : (
+            <GoogleGlyph />
+          )}
+          {t("auth.google.continue")}
+        </button>
+      )}
       {error && (
         <p role="alert" className="text-center text-[0.9375rem] text-sol-warning">
           {error}

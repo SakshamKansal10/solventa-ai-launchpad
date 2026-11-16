@@ -5,10 +5,8 @@ import { z } from "zod";
 
 import { BrandMark } from "@/components/brand/Brand";
 import { exchangeCodeForSession } from "@/lib/actions/auth";
-import { CONSULTATION_STORAGE_KEY } from "@/lib/consultation/store";
 import { useLocale } from "@/lib/i18n/LocaleProvider";
-import { sanitizeNextPath } from "@/lib/safe-redirect";
-import { takeAuthNext } from "@/lib/consultation/resume";
+import { pathAfterSignIn } from "@/lib/auth/after-sign-in";
 
 export const Route = createFileRoute("/auth/callback")({
   validateSearch: z.object({
@@ -22,27 +20,6 @@ export const Route = createFileRoute("/auth/callback")({
   component: AuthCallback,
   head: () => ({ meta: [{ name: "robots", content: "noindex" }] }),
 });
-
-/** A founder who finished every question signed-out and then signed in with
- * Google left the page entirely (Google → back here), so the in-page submit
- * never ran. Their answers survive in localStorage at the submit step; when
- * that's the case we send them straight back to /consultation?submit=1, where
- * the now-signed-in page starts the analysis visibly — with the same
- * idempotency guard as any other submit — instead of generating invisibly
- * behind a spinner here. */
-function hasPendingSubmit(): boolean {
-  try {
-    const raw = window.localStorage.getItem(CONSULTATION_STORAGE_KEY);
-    if (!raw) return false;
-    const parsed = JSON.parse(raw) as {
-      answers?: Record<string, unknown>;
-      screenKey?: string | null;
-    };
-    return parsed.screenKey === "submit" && Object.keys(parsed.answers ?? {}).length > 0;
-  } catch {
-    return false;
-  }
-}
 
 /** Every OAuth provider redirect (Google) lands here with a one-time `code`;
  * this exchanges it for a real session, then returns the founder to exactly
@@ -79,27 +56,17 @@ function AuthCallback() {
         setError(t("auth.callback.generic"));
         return;
       }
-      // A different account may be completing OAuth on a tab that still holds
-      // the previous account's cached data.
-      queryClient.clear();
-
-      // The URL's next, else the one saved before leaving for Google (see consultation/resume).
-      const saved = takeAuthNext();
-      const safeNext = sanitizeNextPath(next) ?? sanitizeNextPath(saved ?? undefined);
-      // A pending finished consultation wins over a generic `next`, except
-      // when `next` already IS the consultation resume link.
-      if (hasPendingSubmit() && !(safeNext ?? "").startsWith("/consultation")) {
-        setResuming(true);
-        window.location.assign("/consultation?submit=1");
+      // Shared with Google's own button (after-sign-in.ts): a finished consultation → idea
+      // generation; else the saved `next`; else the dashboard.
+      const path = pathAfterSignIn(next, queryClient);
+      if (path === "/dashboard") {
+        navigate({ to: "/dashboard" });
         return;
       }
-      if (safeNext) {
-        // A full navigation — `next` can carry a query string (a specific
-        // consultation or week) a typed router navigate isn't built to pass.
-        window.location.assign(safeNext);
-        return;
-      }
-      navigate({ to: "/dashboard" });
+      if (path === "/consultation?submit=1") setResuming(true);
+      // A full navigation — `next` can carry a query string (a specific consultation or week)
+      // a typed router navigate isn't built to pass.
+      window.location.assign(path);
     })().catch(() => setError(t("auth.callback.generic")));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [code, error_description, next]);

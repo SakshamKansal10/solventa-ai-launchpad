@@ -1,5 +1,36 @@
 # Solventia redesign v2 — report
 
+## Owner steps — Google sign-in shows "Solventia" (Job C, 2026-11-16)
+
+Google's own button and One Tap (Google Identity Services) now sign founders in on solventia.in
+itself, so Google's screen says **"to continue to Solventia"** instead of
+"dcnurhuxgdzxruqsjglx.supabase.co". It uses the same Google OAuth client
+(1010411082234-fi2m…apps.googleusercontent.com) and Supabase verifies the token with a hashed
+nonce. If Google's script is blocked (ad blockers, privacy browsers), the old redirect button
+appears instead and works as before.
+
+- Google Cloud → Credentials → the web client → **Authorised JavaScript origins**:
+  https://solventia.in, https://www.solventia.in, http://localhost:8083 — **done by you.**
+- Google Cloud → OAuth consent screen → **Branding** (app name Solventia, logo icon-512.png,
+  home page, privacy and terms links, authorised domain solventia.in) — **verified and
+  published by you.**
+- Nothing to change in Supabase: the token's audience is the Google provider's own client ID,
+  which Supabase accepts by default. (Only if Supabase ever answers "Unacceptable audience":
+  Supabase → Authentication → Providers → Google → add the same client ID to
+  "Authorized Client IDs".)
+
+**Test it yourself** (any Google account; a private window shows the full first-time flow):
+1. Open https://solventia.in/consultation in a private window and answer every question.
+2. On the last step ("Create your account"), the white pill **Continue with Google** button is
+   Google's own: click it. Google's popup says **"to continue to Solventia"**; choose an account.
+3. You land on "Finding your strongest directions" (/consultation?submit=1), then on your three
+   directions on the dashboard — never an empty dashboard.
+4. One Tap: on https://solventia.in/sign-in, if your browser is signed in to Google, Google's
+   small "Sign in as …" prompt appears at the top right; it signs you in the same way.
+5. Fallback: with an ad blocker that blocks accounts.google.com (or uBlock "block 3rd-party
+   scripts"), the sign-in page shows our own Continue with Google button; it goes through the old
+   redirect and still ends on the same pages.
+
 ## Live since 2026-11-16 — and how to roll back
 
 `redesign-v2` was merged into `main` (merge d5d1511, `--no-ff`) and pushed: Vercel deploys
