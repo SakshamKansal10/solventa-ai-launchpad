@@ -193,8 +193,10 @@ test.describe("Ask Sol", () => {
     await page.getByTestId("ask-sol-launcher").click();
     await expect(page.getByTestId("ask-sol-panel")).toBeVisible();
     await page.getByTestId("ask-sol-close").click();
-    await page.getByTestId("stuck-time").click();
-    await expect(page.getByTestId("ask-sol-panel")).toContainText("No time this week");
+    // "No time this week" moves the week instead (part 4, feature 3); "This doesn't feel right"
+    // opens Ask Sol with the mission as context.
+    await page.getByTestId("stuck-wrong").click();
+    await expect(page.getByTestId("ask-sol-panel")).toBeVisible();
   });
 });
 

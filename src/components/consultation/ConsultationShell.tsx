@@ -95,16 +95,17 @@ export function ConsultationShell({
         {t("common.skipToContent")}
       </a>
 
-      <header className="sticky top-0 z-30 flex h-[72px] items-center gap-4 border-b border-sol-border bg-sol-pearl/95 px-4 backdrop-blur sm:px-8">
+      <header className="sticky top-0 z-30 flex h-[72px] items-center gap-2 border-b border-sol-border bg-sol-pearl/95 px-3 backdrop-blur sm:gap-4 sm:px-8">
         <Link to="/" className="flex shrink-0 items-center" aria-label={t("nav.homeAria")}>
           <BrandLockup preset="compact" />
         </Link>
 
-        <div className="flex min-w-0 flex-1 items-center justify-center">
+        {/* Below 380px the bar has no room for it: the screen itself names the stage. */}
+        <div className="flex min-w-0 flex-1 items-center justify-center max-[379px]:hidden">
           <StageProgress stage={stage} />
         </div>
 
-        <div className="flex shrink-0 items-center gap-1 sm:gap-2">
+        <div className="ml-auto flex shrink-0 items-center gap-1 sm:gap-2">
           {/* Icon-only on phones: the lockup keeps its signature, so the bar has no spare width. */}
           <LanguageSwitcher compact />
           <Sheet open={profileOpen} onOpenChange={setProfileOpen}>
