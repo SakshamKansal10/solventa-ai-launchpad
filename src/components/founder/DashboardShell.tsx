@@ -9,6 +9,7 @@ import {
 } from "react";
 import { Link, useNavigate, useParams, useRouterState } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { cacheWelcome, clearWelcome } from "@/components/cinematic-home/intro/intro-gate";
 import {
   Compass,
   FlaskConical,
@@ -254,6 +255,7 @@ export function useSignOut() {
   return async () => {
     try {
       await signOut();
+      clearWelcome();
     } catch (err) {
       console.error("[dashboard] sign out failed:", err);
     } finally {
@@ -269,6 +271,18 @@ function AccountMenu() {
   const { t } = useLocale();
   const user = useCurrentUserQuery();
   const handleSignOut = useSignOut();
+  const founder = useFounderState();
+  // The next opening's welcome ("Welcome back, <name>.", and whether a plan is waiting) comes
+  // from this cache, read before the first paint — never from a server call on the homepage.
+  const firstName = user.data?.fullName?.trim().split(/\s+/)[0] ?? null;
+  const status = founder.data?.direction.roadmap?.status;
+  useEffect(() => {
+    if (!firstName && status === undefined) return;
+    cacheWelcome(
+      firstName,
+      status === undefined ? undefined : status === "active" || status === "completed",
+    );
+  }, [firstName, status]);
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>

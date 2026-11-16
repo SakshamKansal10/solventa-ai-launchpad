@@ -303,10 +303,10 @@ function BrandOpening() {
     <div
       data-brand-opening
       aria-hidden="true"
-      className="absolute inset-x-[var(--gutter)] inset-y-0 flex flex-col items-center justify-center"
+      className="absolute inset-x-[var(--gutter)] inset-y-0 flex flex-col items-center justify-center [--mark-h:clamp(52px,14vw,82px)] sm:[--mark-h:clamp(84px,10.4vw,152px)]"
     >
       <RevealLine />
-      <div className="flex items-center gap-[clamp(0.9rem,2.4vw,2.4rem)] [--mark-h:clamp(52px,14vw,82px)] sm:[--mark-h:clamp(84px,10.4vw,152px)]">
+      <div className="flex items-center gap-[clamp(0.9rem,2.4vw,2.4rem)]">
         <span data-brand-part="mark" className="relative block origin-top-left">
           <RevealMark />
         </span>

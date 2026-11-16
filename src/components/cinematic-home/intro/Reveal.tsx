@@ -19,6 +19,8 @@ import { BrandMark, BrandSignature, BrandWordmark } from "@/components/brand/Bra
  * Reduced motion: a 300 ms fade.
  */
 export const REVEAL_MS = 3_450;
+/** The text's wipe (600 ms) is over: it is unmounted after this, never shown again. */
+export const WIPE_MS = 700;
 export const REVEAL_REDUCED_MS = 300;
 
 /** The brand's two colours for the transition. */
@@ -34,15 +36,19 @@ const NAVY_HAIR = "rgba(11,31,59,0.09)";
  */
 export function RevealMark({ height }: { height?: number }) {
   return (
-    <span className="relative block" data-rv-mark>
-      <span data-rv-whole className="block">
+    // flow-root everywhere: the logo crops its canvas with negative margins, and those margins
+    // collapse through plain blocks but not through the absolutely placed halves — which put the
+    // halves 59 px above the whole logo at 1920 (the "jump" and the "cut S", 2026-11-16). Each box
+    // here contains its own margins, so the halves and the whole are laid out identically.
+    <span className="relative flow-root" data-rv-mark>
+      <span data-rv-whole className="flow-root">
         <BrandMark height={height} />
       </span>
       <span data-rv-half aria-hidden="true" className="pointer-events-none absolute inset-0 block">
-        <span data-rv="top" className="absolute inset-0 block [clip-path:inset(0_0_50%_0)]">
+        <span data-rv="top" className="absolute inset-0 flow-root [clip-path:inset(0_0_50%_0)]">
           <BrandMark height={height} />
         </span>
-        <span data-rv="bottom" className="absolute inset-0 block [clip-path:inset(50%_0_0_0)]">
+        <span data-rv="bottom" className="absolute inset-0 flow-root [clip-path:inset(50%_0_0_0)]">
           <BrandMark height={height} />
         </span>
         {/* The glint, masked to the emblem's own shape: a plain composited sweep, no blending. */}
@@ -69,7 +75,9 @@ export function RevealMark({ height }: { height?: number }) {
   );
 }
 
-/** The champagne hairline the lockup assembles on (centred in its positioned parent). */
+/** The champagne hairline: it draws at the centre (where the scan line ends), then drops below
+ * the lockup — under the S and the tagline — before any letter appears, so it never crosses
+ * the letters. Needs --mark-h on an ancestor. */
 export function RevealLine() {
   return (
     <span
@@ -112,11 +120,11 @@ export function RevealLockup() {
     <div
       data-reveal-run
       aria-hidden="true"
-      className="absolute inset-0 flex items-center justify-center"
+      className="absolute inset-0 flex items-center justify-center [--mark-h:clamp(48px,13vw,120px)]"
     >
       <div className="relative flex w-full max-w-[min(820px,100%)] flex-col items-center justify-center gap-[clamp(0.55rem,1.4vw,1.2rem)] self-stretch px-4">
         <RevealLine />
-        <div className="relative flex items-center gap-[clamp(0.8rem,2.4vw,2rem)] [--mark-h:clamp(48px,13vw,120px)]">
+        <div className="relative flex items-center gap-[clamp(0.8rem,2.4vw,2rem)]">
           <RevealMark />
           <div className="flex flex-col gap-[clamp(0.5rem,1.2vw,1rem)]">
             <BrandWordmark split className="text-[clamp(30px,9vw,92px)]" color="var(--ink)" />

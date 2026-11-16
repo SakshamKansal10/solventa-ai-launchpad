@@ -285,6 +285,7 @@ export function CinematicHome({
         data-tier={capability?.tier ?? ""}
         data-ready={String(ready || mode === "fallback")}
         data-intro-state={intro}
+        data-prewarm={mode === "fallback" || ready ? "" : undefined}
         // Only once the client knows the opening is running (`capability` is set in the same
         // layout effect): the server HTML never tells a returning visitor the page is busy.
         aria-busy={(capability !== null && intro !== "off") || undefined}
@@ -369,6 +370,7 @@ export function CinematicHome({
         {(intro === "ask" || intro === "reveal") && (variant === null || variant === "show") && (
           <IntroQuestion
             still={mode === "fallback"}
+            settled={mode === "fallback" || ready}
             reducedMotion={reducedMotion}
             onReveal={() => setIntro("reveal")}
             onLockup={toLockup}
@@ -384,6 +386,7 @@ export function CinematicHome({
                 variant={v}
                 onReveal={() => setIntro("reveal")}
                 still={mode === "fallback"}
+                settled={mode === "fallback" || ready}
                 reducedMotion={reducedMotion}
                 onLockup={toLockup}
                 onSkip={() => setIntro("off")}

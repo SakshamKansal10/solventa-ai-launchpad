@@ -23,7 +23,14 @@ const CSS = [
   "@keyframes sol-intro-bar{0%{transform:translateX(-100%)}100%{transform:translateX(250%)}}",
   "@keyframes sol-sig-breathe{0%,100%{opacity:1}50%{opacity:.62}}",
   // The film's lockup waits, hidden, under an opening; the reveal builds it.
-  "html[data-intro] main[data-intro-state=ask] [data-brand-opening]{visibility:hidden}",
+  // Pre-warm: once the world has settled (main[data-prewarm]) the film's lockup — and the emblem's
+  // halves — are painted under the opening's near-opaque ground, so everything the reveal shows
+  // is rasterised before it starts (hidden until then, the first paint of the logo SVGs froze the
+  // screen at the reveal's start; painted from the first frame, it delayed the first words by
+  // 0.5 s — measured 2026-11-16). Under a 99.6 % ground it is invisible; the exit waits for the
+  // frames to run smoothly again (pacing.ts).
+  "html[data-intro] main[data-intro-state=ask]:not([data-prewarm]) [data-brand-opening]{visibility:hidden}",
+  "html[data-intro] main[data-intro-state=ask][data-prewarm] [data-rv-half]{visibility:visible}",
   "html[data-intro] main[data-intro-state=ask] [data-brand-cue],main[data-intro-state=reveal] [data-brand-cue],main[data-intro-state=hold] [data-brand-cue]{visibility:hidden}",
   "main[data-intro-state=hold] [data-brand-part=sig]{animation:sol-sig-breathe 2.2s ease-in-out infinite}",
   // The exit (0–900 ms): text tightens and is wiped by the gold scan line; the grid draws behind.
@@ -32,7 +39,7 @@ const CSS = [
   `${X} [data-tighten]{animation:rv-tight .6s ${SWEEP} both}`,
   `${X} [data-rv=grid]{animation:rv-grid .9s both}`,
   `${X} [data-rv=scan]{animation:rv-scan .9s both,rv-out .15s ease .97s forwards}`,
-  "@keyframes rv-wipe{from{clip-path:inset(0 0 0 0)}to{clip-path:inset(0 0 0 100%)}}",
+  "@keyframes rv-wipe{from{clip-path:inset(0 0 0 0);opacity:1}99%{opacity:1}to{clip-path:inset(0 0 0 100%);opacity:0}}",
   "@keyframes rv-tight{from{transform:none}to{transform:scaleX(.94)}}",
   `@keyframes rv-grid{0%{opacity:1;clip-path:inset(0 100% 0 0);animation-timing-function:${SWEEP}}66.667%{opacity:1;clip-path:inset(0 0 0 0);animation-timing-function:ease}100%{opacity:0;clip-path:inset(0 0 0 0)}}`,
   `@keyframes rv-scan{0%{opacity:1;transform:translateX(0);clip-path:inset(0 0 0 0);animation-timing-function:${SWEEP}}66.667%{opacity:1;transform:translateX(calc(100vw - 2px));clip-path:inset(0 0 0 0);animation-timing-function:cubic-bezier(.5,0,.2,1)}100%{opacity:1;transform:translateX(calc(50vw - 1px));clip-path:inset(50% 0 calc(50% - 1px) 0)}}`,
@@ -43,7 +50,11 @@ const CSS = [
   // The reveal (900 ms on): hairline from the centre point, a still beat, then the lockup.
   "[data-rv=line],[data-rv=glint]{opacity:0}",
   "[data-rv=line]{transform-origin:50% 50%}",
-  `${R} [data-rv=line]{animation:rv-line .4s cubic-bezier(.2,.7,.2,1) .9s both,rv-out .2s ease 3.05s forwards}`,
+  // Draws at the centre (0.9–1.3 s), drops below the lockup during the still beat (1.3–1.7 s,
+  // before any letter shows: it never crosses them), fades at the end. rv-drop fills forwards
+  // only, so it does not override the drawing before it starts.
+  `${R} [data-rv=line]{animation:rv-line .4s cubic-bezier(.2,.7,.2,1) .9s both,rv-drop .4s cubic-bezier(.5,0,.2,1) 1.3s forwards,rv-out .2s ease 3.05s forwards}`,
+  "@keyframes rv-drop{from{opacity:1;transform:translateY(0) scaleX(1)}to{opacity:1;transform:translateY(calc(var(--mark-h, 80px) / 2 + clamp(10px, 1.4vw, 20px))) scaleX(1)}}",
   `${R} [data-rv=top]{animation:rv-top .5s cubic-bezier(.34,1.45,.64,1) 1.7s both}`,
   `${R} [data-rv=bottom]{animation:rv-bottom .5s cubic-bezier(.34,1.45,.64,1) 1.7s both}`,
   `${R} [data-rv=glint]{animation:rv-glint .45s ease-out 2.2s both}`,

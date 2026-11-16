@@ -359,3 +359,31 @@ Each entry: what was ambiguous, what I chose, why.
     0.3 s (was 1.4 s). Long tasks inside the 4.3 s window come from the world's shader compile:
     with no 3D (still version) the transition and reveal produce none (two runs), and the one
     broadband long task starts as the shaders finish (5,010 → 5,044 ms).
+
+49. **The logo jump and the late name (owner, 2026-11-16, urgent).**
+    - Jump: the logo crops its canvas with negative margins; they collapsed through the whole
+      logo's plain wrappers but not through the absolutely placed halves, so during the reveal
+      the halves sat 59 px higher (1920) than the whole logo they hand over to — the same cause
+      as the earlier "cut S". All three boxes are now `flow-root`: measured identical (to 0.1 px),
+      and an e2e test records the S every frame from 1 s before the reveal ends to 1 s into the
+      film (≤ 1 px, never invisible). The hairline draws at the centre, then drops below the
+      lockup during the still beat (y 636 at 1920: under the S base 616 and the tagline 622),
+      before any letter shows; it never crosses the letters. All reveal animations fill.
+    - Name: the head gate reads the first name from the Supabase session cookie in this browser
+      (else the dashboard's cache, sol-first-name) before the first paint; an inline script by the
+      text writes it; React's first render reads the same, so it never changes. getWelcomeInfo
+      only refreshes the cache (no refetch on focus). All opening words are also frozen in the
+      language of their first render: the founder's saved language arriving after load had
+      switched "Welcome back" to Hindi mid-opening. The text is wiped to opacity 0 (fill) and
+      unmounted after the wipe.
+    - The freeze behind both: frame-by-frame capture showed the screen painting NO frames for
+      0.65–1.15 s as the exit began (no main-thread long task): the 3D canvas and the logo SVGs
+      were drawn for the first time the instant the reveal uncovered them. Now the opening's
+      ground is the sky at 99.6 % (same colour; the canvas keeps being drawn beneath), the
+      lockup is pre-painted under it once the world is ready, and the exit starts only when the
+      text has held ≥ 1.5 s AND the world is ready AND frames have run smoothly for 300 ms
+      (cap 6 s). Result: no frame gap during the exit or the reveal in 3 of 3 runs;
+      verify-intro 0 long tasks at broadband and 4×, ready 4.3 s / 7.9 s. Cost: on slow
+      machines the text holds longer (≈ 5 s here) — still and readable — instead of freezing
+      mid-motion. Frames: docs/redesign/perf/sequence/ (every 100 ms, 1920 and 390, new and
+      signed in).

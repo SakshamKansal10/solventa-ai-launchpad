@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import { useLocale } from "@/lib/i18n/LocaleProvider";
 
 import { PEARL_WORLD } from "../world/tone";
+import { OPENING_GROUND } from "./pacing";
 import {
   DEFAULT_CHOICE,
   INTRO_CHOICES,
@@ -11,12 +12,11 @@ import {
   type IntroChoice,
 } from "./intro-gate";
 import { SkipLink } from "./IntroShared";
-import { REVEAL_MS, REVEAL_REDUCED_MS, RevealLockup, ScanExit } from "./Reveal";
+import { useExitTiming } from "./pacing";
+import { REVEAL_MS, REVEAL_REDUCED_MS, RevealLockup, ScanExit, WIPE_MS } from "./Reveal";
 
 /** How long the question waits for a tap before answering for the visitor. */
 export const ASK_MS = 3_000;
-/** The answer line holds this long, to be read, before the exit (owner, 2026-11-16). */
-const ANSWER_MS = 1_500;
 
 type Phase = "ask" | "answer" | "reveal";
 
@@ -31,17 +31,28 @@ export function IntroQuestion({
   onLockup,
   onSkip,
   still,
+  settled,
   reducedMotion,
 }: {
   onReveal: () => void;
   onLockup: () => void;
   onSkip: () => void;
   still: boolean;
+  /** The world is ready (or the still version was chosen): the exit may run without stalling. */
+  settled: boolean;
   reducedMotion: boolean;
 }) {
   const { t } = useLocale();
+  // Every word is fixed at the first render: a later language switch never changes the opening.
+  const [words] = useState(() => ({
+    q: t("v2.intro.q"),
+    c: Object.fromEntries(INTRO_CHOICES.map((c) => [c, t(`v2.intro.c.${c}` as const)])),
+    a: Object.fromEntries(INTRO_CHOICES.map((c) => [c, t(`v2.intro.a.${c}` as const)])),
+  }));
   const [phase, setPhase] = useState<Phase>("ask");
   const [choice, setChoice] = useState<IntroChoice | null>(null);
+  // The answer is wiped by the exit, then unmounted: nothing can show it again.
+  const [wiped, setWiped] = useState(false);
   const cb = useRef({ onReveal, onLockup });
   cb.current = { onReveal, onLockup };
 
@@ -61,19 +72,19 @@ export function IntroQuestion({
       }, ASK_MS);
       return () => window.clearTimeout(id);
     }
-    if (phase === "answer") {
-      const id = window.setTimeout(() => {
-        setPhase("reveal");
-        cb.current.onReveal();
-      }, ANSWER_MS);
-      return () => window.clearTimeout(id);
-    }
-    const id = window.setTimeout(
-      () => cb.current.onLockup(),
-      reducedMotion ? REVEAL_REDUCED_MS : REVEAL_MS,
-    );
-    return () => window.clearTimeout(id);
+    if (phase === "answer") return;
+    const ids = [
+      window.setTimeout(() => setWiped(true), reducedMotion ? REVEAL_REDUCED_MS : WIPE_MS),
+      window.setTimeout(() => cb.current.onLockup(), reducedMotion ? REVEAL_REDUCED_MS : REVEAL_MS),
+    ];
+    return () => ids.forEach((id) => window.clearTimeout(id));
   }, [phase, reducedMotion]);
+
+  // The answer is on screen: hold, then exit once the world will not stall it (pacing.ts).
+  useExitTiming(phase === "answer", settled, () => {
+    setPhase("reveal");
+    cb.current.onReveal();
+  });
 
   const revealing = phase === "reveal";
   return (
@@ -86,7 +97,8 @@ export function IntroQuestion({
       style={{
         // The film's lockup is beneath: the ground gives way to it. The still version reveals its
         // own lockup on the same ground.
-        backgroundColor: revealing && !still ? "transparent" : PEARL_WORLD.sky,
+        backgroundColor:
+          revealing && !still ? "transparent" : still ? PEARL_WORLD.sky : OPENING_GROUND,
         pointerEvents: revealing ? "none" : "auto",
         fontFamily: "var(--font-tech)",
         color: "var(--ink)",
@@ -100,7 +112,7 @@ export function IntroQuestion({
             className="font-medium leading-[1.02] tracking-[-0.04em] text-[clamp(2.3rem,7.4vw,5.6rem)] motion-safe:animate-[sol-intro-in_520ms_cubic-bezier(0.2,0.7,0.2,1)_both]"
             data-testid="intro-question"
           >
-            {t("v2.intro.q")}
+            {words.q}
           </h1>
           <ul className="flex w-full flex-col gap-3 sm:gap-4">
             {INTRO_CHOICES.map((c, i) => (
@@ -116,7 +128,7 @@ export function IntroQuestion({
                   style={{ borderColor: "var(--hair)" }}
                   data-testid={`intro-choice-${c}`}
                 >
-                  {t(`v2.intro.c.${c}` as const)}
+                  {words.c[c]}
                   <span
                     aria-hidden="true"
                     className="text-[0.8em] opacity-60 group-hover:opacity-100"
@@ -131,7 +143,7 @@ export function IntroQuestion({
       )}
 
       {revealing && <ScanExit />}
-      {phase !== "ask" && choice && (
+      {phase !== "ask" && choice && !wiped && (
         <div
           data-wipe
           className="pointer-events-none absolute inset-0 flex items-center justify-center px-4"
@@ -143,7 +155,7 @@ export function IntroQuestion({
             className="max-w-[min(1000px,100%)] text-center font-medium leading-[1.08] tracking-[-0.035em] text-[clamp(1.8rem,5vw,4rem)] motion-safe:animate-[sol-intro-in_420ms_ease_both]"
             data-testid="intro-answer"
           >
-            {t(`v2.intro.a.${choice}` as const)}
+            {words.a[choice]}
           </p>
         </div>
       )}
