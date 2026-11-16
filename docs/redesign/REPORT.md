@@ -1,5 +1,34 @@
 # Solventia redesign v2 — report
 
+## Job E (emails) — status and owner steps, 2026-11-16
+
+**Waiting on you: the `email-kit/` folder is not in the project** (nor anywhere under your user
+folder), so the shared layout, the logo PNG (public/brand/email-logo.png), the Supabase templates,
+the real test sends and the screenshots are not done — they must follow the approved kit, not a
+redesign. Add the folder to the project root and they are next. Done without it: the deep links
+(below), one address everywhere, and these checks:
+
+- **How sign-in works:** codes only. `signInWithOtp` (no link) then `verifyOtp` with the typed
+  code. New users get Supabase's **Confirm signup** template and returning users **Magic Link**,
+  so both must show `{{ .Token }}` (and need no `{{ .ConfirmationURL }}` button). Reset password
+  and Change email are not used by the app today.
+- **Code expiry:** not in the repo (no supabase/config.toml setting); Supabase's default is
+  3600 s = 1 hour. Check Supabase → Authentication → Providers → Email → "Email OTP Expiration"
+  and tell me if it is not 3600, so the templates say the right time.
+- **Auth emails from "Solventia <sol@solventia.in>"** (if Supabase → Authentication → Emails →
+  SMTP Settings shows custom SMTP off): turn it on with host `smtp.resend.com`, port `465`,
+  username `resend`, password = a Resend API key with sending access to solventia.in, sender
+  email `sol@solventia.in`, sender name `Solventia`. (Without custom SMTP Supabase's own
+  sender is rate-limited to a few emails per hour.)
+- **Deliverability (DNS today, checked against 8.8.8.8):** DKIM `resend._domainkey` ✓; Resend's
+  bounce domain `send.solventia.in` has its MX (feedback-smtp.ap-northeast-1.amazonses.com) and
+  SPF (`v=spf1 include:amazonses.com ~all`) ✓; DMARC `p=quarantine` ✓ (aligned through
+  send.solventia.in, relaxed). Nothing to add for sending. **For forwarding to sol@solventia.in**
+  add, in GoDaddy, the forwarding service's MX records on `@` and ONE SPF TXT on `@`, e.g.
+  `v=spf1 include:<forwarder's include> ~all`. Resend's SPF lives on send.solventia.in, so it is
+  not merged into it; if you later add another sender on the root domain, put all includes in
+  that one record: `v=spf1 include:<forwarder> include:<other> ~all` (never two SPF records).
+
 ## Email links open the right page (Job E, 2026-11-16)
 
 Every email button is a plain deep link to the exact page — no login token, no magic link:
