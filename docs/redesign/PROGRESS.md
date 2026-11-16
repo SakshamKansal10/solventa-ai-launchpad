@@ -105,7 +105,7 @@ Blockers: `blocked.md`. Final report: `REPORT.md`.
 - [x] L2 live (f663c9c): tag before-live-2026-11-16, redesign-v2 merged into main
 - [x] L3 roadmap (c6b3e1b): week 1 fast and reliable
 - [x] L4 cost (9701b38) and speed of idea generation, daily limits
-- [ ] L5 Hindi for everything, simpler words
+- [x] L5 Hindi (dfce5f6) for everything, simpler words
 - [ ] L6 dashboard: width, tab flash, npm run scan, mobile
 - [ ] L7 small items: one "How it works", silver S on lite
 - [ ] L8 final check and REPORT.md
