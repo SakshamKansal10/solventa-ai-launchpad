@@ -75,7 +75,7 @@ Blockers: `blocked.md`. Final report: `REPORT.md`.
 - [x] 3 staged pipeline (b87504b)
 - [x] 4 executable roadmaps (639076c)
 - [x] 5 reliability (c0361a4)
-- [ ] 6 10-profile comparison + command
+- [x] 6 10-profile comparison + command (686a833)
 
 ## Owner follow-up (2026-11-15) — in this order
 - [x] 0 finish the current feature (ea15552)
@@ -84,7 +84,7 @@ Blockers: `blocked.md`. Final report: `REPORT.md`.
 - [x] 3 film: the new Today screen as the dashboard scene (c2d9b90)
 - [x] 4 S-mark scene check (3a6e7e7)
 - [x] 5a part 4 feature 10 drop-off admin page (21578f4)
-- [ ] 5b part 5 idea engine (all steps, 10-profile comparison)
+- [x] 5b part 5 idea engine (all steps, 10-profile comparison) (686a833)
 - [ ] 6 final verification on the Vercel preview
 - [ ] 7 REPORT.md
 
