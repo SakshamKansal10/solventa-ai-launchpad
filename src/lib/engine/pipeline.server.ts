@@ -44,7 +44,7 @@ export interface EngineTrace {
 }
 
 /** How many of the best-scored candidates the attack stage sees. */
-const SHORTLIST = 7;
+const SHORTLIST = 5;
 
 /**
  * Idea engine v2 (redesign-v2 part 5, step 3): understand → generate wide → filter on hard

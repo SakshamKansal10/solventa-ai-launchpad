@@ -1,4 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
+import { enforceDailyLimit } from "@/lib/limits.server";
 import { z } from "zod";
 
 import { requireUser } from "@/lib/supabase/server";
@@ -41,6 +42,7 @@ export const sendMentorMessage = createServerFn({ method: "POST" })
   )
   .handler(async ({ data }) => {
     const { supabase, user } = await requireUser();
+    await enforceDailyLimit(supabase, user.id, "askSol");
 
     const conversationId = await getOrCreateConversation(supabase, user.id, data.opportunityId);
 

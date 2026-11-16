@@ -1,0 +1,746 @@
+{
+  "at": "2026-11-16T09:08:38.036Z",
+  "model": "default",
+  "results": {
+    "P01": {
+      "label": "Metro, working professional, some money, 5–10 h, marketing skill",
+      "old": {
+        "ok": true,
+        "ms": 20417,
+        "usage": {
+          "calls": 1,
+          "prompt": 4950,
+          "output": 3649,
+          "thoughts": 0,
+          "total": 8599
+        },
+        "directions": [
+          {
+            "title": "Local Shop Social Growth Engine",
+            "score": {
+              "title": "Local Shop Social Growth Engine",
+              "place": true,
+              "week": true,
+              "money": false,
+              "quoted": true,
+              "labelled": true,
+              "total": 4
+            },
+            "detail": {
+              "title": "Local Shop Social Growth Engine",
+              "category": "Digital Service",
+              "plainEnglishSummary": "A specialized monthly social media management and WhatsApp customer-retention package tailored for independent retail shops in Pune. You run hyper-local content creation and automated WhatsApp broadcast setup to drive repeat foot traffic.",
+              "customer": "Independent retail store owners and boutiques in Pune.",
+              "problem": "Local shop owners lack the time and technical skill to maintain active social media pages that bring in foot traffic.",
+              "solution": "Provide a fixed-scope monthly service that produces weekly local promotional reels and sets up simple WhatsApp customer notification lists.",
+              "problemHeadline": "Local shops struggle to drive foot traffic",
+              "solutionHeadline": "Done-for-you local Instagram and WhatsApp marketing",
+              "customerHeadline": "Independent retail shops in Pune",
+              "moneyHeadline": "Monthly flat retainer per retail store",
+              "whyThisFounder": [
+                "You already have shop owners approaching you directly asking for help with their Instagram pages.",
+                "Your proven background in direct sales allows you to pitch and close local business owners comfortably.",
+                "Your applied digital marketing skills mean you can deliver content updates without requiring a steep technical learning curve."
+              ],
+              "businessModelPlainEnglish": "You charge local shop owners a recurring monthly retainer fee of ₹10,000 to ₹15,000 for managing content and setting up customer broadcasts.",
+              "startingCapital": "₹5,000–₹15,000 for basic tools and design templates (well within your ₹50,000–₹2,00,000 range).",
+              "weeklyTime": "5 hours per week (planning assumption based on your 5–10 hours available).",
+              "difficulty": "Beginner-friendly",
+              "skillsAlreadyOwned": [
+                "Digital Marketing",
+                "Direct Sales"
+              ],
+              "skillsToLearn": [
+                "Batch content scheduling tools",
+                "Basic WhatsApp Business API setup"
+              ],
+              "resourceRequirements": [
+                "Laptop with video editing software",
+                "Smartphone for filming store highlights"
+              ],
+              "advantages": [
+                "Immediate customer access via your existing store owner contacts",
+                "Predictable monthly recurring revenue with high gross margins"
+              ],
+              "tradeoffs": [
+                "Requires spending part of your weekend visiting store locations in Pune for content collection"
+              ],
+              "risks": [
+                "Client churn if store foot traffic does not visibly increase within 60 days"
+              ],
+              "unknowns": [
+                "The exact monthly budget local shop owners in your immediate Pune neighborhood are willing to commit"
+              ],
+              "validationNeeded": [
+                "Test if shop owners in your direct network will sign a 1-month paid pilot contract"
+              ],
+              "revenuePath": "Acquire 5 store clients at ₹10,000/month to hit your target threshold of ₹50,000/month, then productize content templates for junior contractors to scale.",
+              "firstExperiment": "Contact 5 shop owners in your immediate network this weekend and offer a 2-week trial content package for ₹3,000.",
+              "whyNow": "Local Pune retail stores are facing increased competition from quick-commerce apps and desperately need active hyper-local visual presence to attract nearby shoppers.",
+              "fitSignals": {
+                "requiredSkills": [
+                  {
+                    "name": "Digital Marketing",
+                    "minLevel": "beginner"
+                  }
+                ],
+                "startupCapitalAmount": 10000,
+                "weeklyHoursNeeded": 5,
+                "riskLevel": "cautious",
+                "motivationAlignment": "high",
+                "requiresLeadership": false,
+                "requiresSales": true,
+                "soloFriendly": true,
+                "relevantExperienceYears": 4.2,
+                "requiresDigitalAssets": true,
+                "locationFlexible": false,
+                "ceiling": "income"
+              },
+              "deliveryModel": "Batch content creation on weekends, followed by automated scheduled postings during the week.",
+              "criticalAssumptions": [
+                {
+                  "statement": "At least 3 out of 10 contacted local shop owners are willing to pay ₹10,000/month for done-for-you social media management.",
+                  "category": "willingness_to_pay"
+                },
+                {
+                  "statement": "Store visits and content batching can be reliably completed in under 5 hours every weekend.",
+                  "category": "delivery"
+                }
+              ],
+              "successCriteria": [
+                "2 store owners agree to a paid ₹3,000 2-week pilot trial within 7 days."
+              ],
+              "reconsiderIf": [
+                "Fewer than 1 out of 10 store owners express interest after direct face-to-face outreach."
+              ]
+            }
+          },
+          {
+            "title": "B2B Lead Generation for Local Services",
+            "score": {
+              "title": "B2B Lead Generation for Local Services",
+              "place": true,
+              "week": true,
+              "money": false,
+              "quoted": false,
+              "labelled": true,
+              "total": 3
+            },
+            "detail": {
+              "title": "B2B Lead Generation for Local Services",
+              "category": "Digital Service",
+              "plainEnglishSummary": "A performance-focused lead generation agency for Pune-based high-ticket service providers (such as interior designers, clinics, or event planners). You run hyper-targeted Meta ad campaigns and charge per qualified customer lead delivered.",
+              "customer": "High-ticket local service providers in Pune (interior designers, private dental clinics, wedding planners).",
+              "problem": "High-value local service businesses spend money on generic ads without getting verified customer inquiries.",
+              "solution": "Set up targeted local ad campaigns with automated pre-screening forms so business owners only receive validated leads.",
+              "problemHeadline": "Service businesses struggle to capture verified leads",
+              "solutionHeadline": "Pay-per-qualified-lead digital ad engine",
+              "customerHeadline": "Pune interior designers and private clinics",
+              "moneyHeadline": "Setup fee plus per-qualified-lead pricing",
+              "whyThisFounder": [
+                "Your proven sales experience makes qualified phone outreach and client closing straightforward.",
+                "Your working digital marketing capability is ideal for running direct-response Meta advertising campaigns.",
+                "It operates entirely online from your laptop during weekends without requiring physical presence."
+              ],
+              "businessModelPlainEnglish": "You charge an initial campaign setup fee of ₹15,000 plus a fixed fee per qualified booking or inquiry delivered.",
+              "startingCapital": "₹15,000–₹30,000 for ad testing and campaign management software (planning conservatively within your ₹50,000 budget).",
+              "weeklyTime": "5 hours per week (planning assumption).",
+              "difficulty": "Moderate",
+              "skillsAlreadyOwned": [
+                "Digital Marketing",
+                "Direct Sales"
+              ],
+              "skillsToLearn": [
+                "Conversion ad copy optimization",
+                "CRM integration for lead notification"
+              ],
+              "resourceRequirements": [
+                "Laptop",
+                "Meta Business Manager account",
+                "Basic lead-capture software"
+              ],
+              "advantages": [
+                "High profit margins and clear quantitative value proposition for client businesses",
+                "Fully remote work operational structure"
+              ],
+              "tradeoffs": [
+                "Requires tracking ad metrics regularly to prevent cost overruns"
+              ],
+              "risks": [
+                "Ad account suspensions or fluctuating cost-per-click rates on social platforms"
+              ],
+              "unknowns": [
+                "Average cost per acquired lead across specific local service niches in Pune"
+              ],
+              "validationNeeded": [
+                "Test target niche responsiveness by pitching 10 local interior designers on a zero-risk lead-trial offer"
+              ],
+              "revenuePath": "Sign 3 retainer clients at ₹20,000/month setup + management to cross ₹50,000/month, then build reusable ad templates across cities.",
+              "firstExperiment": "Message 10 interior designers or clinics in Pune offering to deliver 5 free pre-qualified lead contacts if they cover the raw ad budget.",
+              "whyNow": "Local service professionals are shifting ad budgets away from expensive print directories toward measurable digital campaigns.",
+              "fitSignals": {
+                "requiredSkills": [
+                  {
+                    "name": "Digital Marketing",
+                    "minLevel": "comfortable"
+                  }
+                ],
+                "startupCapitalAmount": 20000,
+                "weeklyHoursNeeded": 5,
+                "riskLevel": "balanced",
+                "motivationAlignment": "high",
+                "requiresLeadership": false,
+                "requiresSales": true,
+                "soloFriendly": true,
+                "relevantExperienceYears": 4.2,
+                "requiresDigitalAssets": true,
+                "locationFlexible": true,
+                "ceiling": "national"
+              },
+              "deliveryModel": "Remote setup of Meta ad campaigns and lead delivery directly to the client's WhatsApp or spreadsheet.",
+              "criticalAssumptions": [
+                {
+                  "statement": "Local high-ticket service businesses are willing to pay ₹500–₹1,000 per verified phone inquiry.",
+                  "category": "willingness_to_pay"
+                },
+                {
+                  "statement": "Target ad campaigns can generate qualified inquiries within a reasonable ad spend limit.",
+                  "category": "delivery"
+                }
+              ],
+              "successCriteria": [
+                "At least 2 business owners agree to a trial lead-generation campaign where they fund the ad spend."
+              ],
+              "reconsiderIf": [
+                "Cost per qualified lead exceeds client willingness to pay across two different industries tested."
+              ]
+            }
+          },
+          {
+            "title": "Digital Marketing Launchpads for Local Brands",
+            "score": {
+              "title": "Digital Marketing Launchpads for Local Brands",
+              "place": true,
+              "week": true,
+              "money": false,
+              "quoted": false,
+              "labelled": true,
+              "total": 3
+            },
+            "detail": {
+              "title": "Digital Marketing Launchpads for Local Brands",
+              "category": "Productized Service",
+              "plainEnglishSummary": "A standard, ready-to-use digital kit and launch setup for new local businesses opening in Pune. You provide Google Maps optimization, basic branding templates, social profile setup, and automated review collection cards.",
+              "customer": "Newly opening cafes, fitness studios, salons, and retail outlets in Pune.",
+              "problem": "New physical stores waste weeks setting up online map listings, business cards, and social pages individually.",
+              "solution": "Deliver a complete, 48-hour turnkey online store launch package including Google Business optimization, social profiles, and NFC review cards.",
+              "problemHeadline": "New stores lack fast turnkey digital setup",
+              "solutionHeadline": "48-hour complete digital store setup package",
+              "customerHeadline": "Newly opened cafes, salons, and stores in Pune",
+              "moneyHeadline": "One-time package fee per new location",
+              "whyThisFounder": [
+                "You have existing direct connections to local shop owners who regularly ask for social media assistance.",
+                "Your combined sales skills make off-the-shelf package pitching easy during weekend walking tours in active commercial hubs.",
+                "The project-based model fits cleanly within a 5-hour weekend availability window without ongoing weekly maintenance demands."
+              ],
+              "businessModelPlainEnglish": "You sell a fixed-price one-time package for ₹15,000 to ₹25,000 per store opening.",
+              "startingCapital": "₹10,000–₹20,000 for NFC card samples and printed marketing collaterals.",
+              "weeklyTime": "5 hours per week (planning assumption).",
+              "difficulty": "Beginner-friendly",
+              "skillsAlreadyOwned": [
+                "Digital Marketing",
+                "Direct Sales"
+              ],
+              "skillsToLearn": [
+                "Google Business Profile optimization hacks",
+                "NFC card programming for Google reviews"
+              ],
+              "resourceRequirements": [
+                "Laptop",
+                "Design templates"
+              ],
+              "advantages": [
+                "No ongoing delivery obligations once the 48-hour setup package is delivered",
+                "Simple visual proof of work makes closing sales straightforward"
+              ],
+              "tradeoffs": [
+                "Requires continuous outreach to find newly opening businesses every month"
+              ],
+              "risks": [
+                "Inconsistent cash flow if new business openings drop in target areas"
+              ],
+              "unknowns": [
+                "The monthly number of new store registrations in your accessible target neighborhoods in Pune"
+              ],
+              "validationNeeded": [
+                "Validate if store owners under launch preparation prefer a turnkey package over hiring separate freelancers"
+              ],
+              "revenuePath": "Complete 3 store launches per month at ₹20,000 each to cross your ₹50,000/month threshold, then package design assets into downloadable digital kits.",
+              "firstExperiment": "Visit 5 upcoming commercial retail complexes in Pune this weekend and pitch the package to 3 store owners currently setting up their interiors.",
+              "whyNow": "High commercial real estate activity in Pune means constant new store openings requiring immediate online visibility to compete.",
+              "fitSignals": {
+                "requiredSkills": [
+                  {
+                    "name": "Digital Marketing",
+                    "minLevel": "beginner"
+                  }
+                ],
+                "startupCapitalAmount": 15000,
+                "weeklyHoursNeeded": 5,
+                "riskLevel": "cautious",
+                "motivationAlignment": "high",
+                "requiresLeadership": false,
+                "requiresSales": true,
+                "soloFriendly": true,
+                "relevantExperienceYears": 4.2,
+                "requiresDigitalAssets": true,
+                "locationFlexible": false,
+                "ceiling": "income"
+              },
+              "deliveryModel": "One-time execution delivered over 48 hours following weekend client onboarding.",
+              "criticalAssumptions": [
+                {
+                  "statement": "New store owners prefer paying a single flat ₹20,000 fee for a complete online setup rather than coordinating separate tasks themselves.",
+                  "category": "willingness_to_pay"
+                },
+                {
+                  "statement": "You can consistently identify 5+ new stores opening every month in your local area.",
+                  "category": "distribution"
+                }
+              ],
+              "successCriteria": [
+                "1 new store owner pays a 50% deposit for a launch package within 14 days."
+              ],
+              "reconsiderIf": [
+                "Store owners insist on hiring full-time staff or low-cost freelancers for individual tasks instead of bundled packages."
+              ]
+            }
+          }
+        ]
+      },
+      "next": {
+        "ok": true,
+        "ms": 57342,
+        "usage": {
+          "calls": 5,
+          "prompt": 7711,
+          "output": 12237,
+          "thoughts": 0,
+          "total": 19948
+        },
+        "directions": [
+          {
+            "title": "Hyperlocal Instagram Lead Gen Agency for Pune Retailers",
+            "score": {
+              "title": "Hyperlocal Instagram Lead Gen Agency for Pune Retailers",
+              "place": true,
+              "week": false,
+              "money": true,
+              "quoted": true,
+              "labelled": true,
+              "total": 4
+            },
+            "engine": {
+              "promptVersion": "engine-v2-2026-11-15",
+              "type": "local_agency",
+              "money": {
+                "monthlyRevenue": 45000,
+                "monthlyProfit": 38250,
+                "weeklyHours": 4.2,
+                "unitsForTarget": 2,
+                "hoursForTarget": 2.8,
+                "meetsTarget": true,
+                "fitsHours": true,
+                "verdict": "ok",
+                "pricePerUnit": 15000,
+                "unit": "monthly retainer per shop",
+                "unitsPerMonth": 3
+              },
+              "evidence": {
+                "access": "access: Laptop / computer, Existing customer network",
+                "resources": "money: 50000–200000 INR",
+                "capability": "skills: Digital Marketing (working)",
+                "time": "hours a week: 5–10",
+                "goals": "goal: A profitable, high-income business; risk: balanced"
+              },
+              "objection": "With only 5 to 10 hours a week, managing 3 full Instagram accounts plus local ad campaigns will take roughly 18 hours per week, causing you to burn out or deliver bad results."
+            },
+            "detail": {
+              "title": "Hyperlocal Instagram Lead Gen Agency for Pune Retailers",
+              "category": "local_agency",
+              "plainEnglishSummary": "A digital marketing agency that sets up and manages hyper-local Instagram ads and direct WhatsApp lead flows for local retail stores in Pune.",
+              "customer": "Independent boutique owners and sweet shops in Kothrud and Laxmi Road, Pune.",
+              "problem": "Shop owners lose footfall to online e-commerce and lack time to run local Instagram ads.",
+              "solution": "Monthly Instagram management focused on local offer ads and direct WhatsApp inquiries.",
+              "problemHeadline": "Retailers Losing Footfall To Online Stores",
+              "solutionHeadline": "Local Instagram Ads Driving Store Inquiries",
+              "customerHeadline": "Boutiques And Sweet Shops In Pune",
+              "moneyHeadline": "Recurring Monthly Retainers Per Local Shop",
+              "whyThisFounder": [
+                "They have ~4.2 years of estimated working experience and have already sold to real customers.",
+                "They have hands-on digital marketing experience used on real projects.",
+                "Friends and acquaintances already ask them for help specifically with running Instagram pages for local shops."
+              ],
+              "businessModelPlainEnglish": "Local shop owners pay a monthly retainer fee for managing their local social media advertising and customer messaging setups.",
+              "startingCapital": "Plan around ₹50,000 (the lower end of the ₹50,000–₹2,00,000 budget range). Estimated start cost is ₹2,000.",
+              "weeklyTime": "Plan around 5 hours per week (the lower end of the 5–10 hours per week range, constrained to Saturdays and Sundays).",
+              "difficulty": "Moderate",
+              "skillsAlreadyOwned": [
+                "Digital Marketing",
+                "Selling"
+              ],
+              "skillsToLearn": [
+                "Local Ad Targeting Automation",
+                "Client Onboarding Systems"
+              ],
+              "resourceRequirements": [
+                "Laptop or computer",
+                "Existing network of local shop owners"
+              ],
+              "advantages": [
+                "Exploits an existing request people already ask the founder to do.",
+                "Can leverage immediate access to shop owners available in their network this week."
+              ],
+              "tradeoffs": [
+                "High weekend time pressure when balancing multiple manual account setups."
+              ],
+              "risks": [
+                "Time overruns from client communications exceeding the 5 weekend hours."
+              ],
+              "unknowns": [
+                "Whether shop owners will convert leads into actual store footfall consistently."
+              ],
+              "validationNeeded": [
+                "Confirm whether 3 local shop owners will pay a setup fee for a 14-day WhatsApp lead experiment."
+              ],
+              "revenuePath": "Charge ₹15,000 monthly retainer per shop. With an estimated 3 clients, target gross income is ~₹45,000/month keeping ~85% after basic software/ad overhead.",
+              "firstExperiment": "Pitch 3 shop owners in your network a 14-day WhatsApp lead test for ₹3,000 plus ad spend to see if you can run it within 5 weekend hours.",
+              "whyNow": "Local Pune retailers are facing increased margin pressure from quick-commerce apps and need hyper-local digital visibility to retain neighborhood buyers.",
+              "fitSignals": {
+                "requiredSkills": [
+                  {
+                    "name": "Digital Marketing",
+                    "minLevel": "comfortable"
+                  }
+                ],
+                "startupCapitalAmount": 50000,
+                "weeklyHoursNeeded": 5,
+                "riskLevel": "balanced",
+                "motivationAlignment": "high",
+                "requiresLeadership": false,
+                "requiresSales": true,
+                "soloFriendly": true,
+                "relevantExperienceYears": 4.2,
+                "requiresDigitalAssets": false,
+                "locationFlexible": false,
+                "ceiling": "income"
+              },
+              "deliveryModel": "Productized service delivered on weekends using templates and automated ad scheduling.",
+              "criticalAssumptions": [
+                {
+                  "statement": "With only 5 to 10 hours a week, managing 3 full Instagram accounts plus local ad campaigns will take roughly 18 hours per week, causing you to burn out or deliver bad results.",
+                  "category": "delivery"
+                },
+                {
+                  "statement": "Local Pune shop owners are willing to spend ₹15,000 monthly on digital marketing services.",
+                  "category": "willingness_to_pay"
+                }
+              ],
+              "successCriteria": [
+                "Sign 1 paid trial client within the first week of testing.",
+                "Deliver the trial campaign using under 5 total working hours over the weekend."
+              ],
+              "reconsiderIf": [
+                "Client management requires more than 5 hours per week during weekdays.",
+                "Shop owners refuse to pay more than ₹5,000 per month."
+              ]
+            }
+          },
+          {
+            "title": "B2B LinkedIn Content Creator for IT Mid-Managers",
+            "score": {
+              "title": "B2B LinkedIn Content Creator for IT Mid-Managers",
+              "place": true,
+              "week": true,
+              "money": true,
+              "quoted": true,
+              "labelled": true,
+              "total": 5
+            },
+            "engine": {
+              "promptVersion": "engine-v2-2026-11-15",
+              "type": "service",
+              "money": {
+                "monthlyRevenue": 54000,
+                "monthlyProfit": 51300,
+                "weeklyHours": 3.5,
+                "unitsForTarget": 2,
+                "hoursForTarget": 2.3,
+                "meetsTarget": true,
+                "fitsHours": true,
+                "verdict": "ok",
+                "pricePerUnit": 18000,
+                "unit": "monthly retainer per professional",
+                "unitsPerMonth": 3
+              },
+              "evidence": {
+                "access": "access: Laptop / computer, Existing customer network",
+                "resources": "money: 50000–200000 INR",
+                "capability": "skills: Digital Marketing (working)",
+                "time": "hours a week: 5–10",
+                "goals": "goal: A profitable, high-income business; risk: balanced"
+              },
+              "objection": "IT managers in Hinjewadi rarely pay ₹18,000 a month out of their own pockets for personal branding, making closing paid retainers very unlikely."
+            },
+            "detail": {
+              "title": "B2B LinkedIn Content Creator for IT Mid-Managers",
+              "category": "service",
+              "plainEnglishSummary": "A specialized executive ghostwriting service helping IT mid-managers in Pune tech hubs build industry authority on LinkedIn.",
+              "customer": "IT project managers and directors in Hinjewadi and Kharadi looking to build personal brands.",
+              "problem": "Professionals lack time to post consistently on LinkedIn to attract speaking roles or consulting work.",
+              "solution": "Ghostwriting 8 LinkedIn posts and 2 articles per month based on a 45-minute weekend voice interview.",
+              "problemHeadline": "IT Managers Lack Time For Visibility",
+              "solutionHeadline": "Done For You Executive Content Creation",
+              "customerHeadline": "Tech Managers In Hinjewadi And Kharadi",
+              "moneyHeadline": "Monthly Personal Brand Retainers Per Client",
+              "whyThisFounder": [
+                "Based in Pune, giving direct proximity to major IT corridors like Hinjewadi and Kharadi.",
+                "Has immediate access to IT colleagues in their network to talk to this week.",
+                "Possesses real digital marketing execution experience to structure personal branding strategy."
+              ],
+              "businessModelPlainEnglish": "Corporate professionals pay a flat monthly retainer for content interviewing, drafting, and post scheduling.",
+              "startingCapital": "Plan around ₹50,000 (lower end of ₹50,000–₹2,00,000 budget range). Estimated start cost is ₹0.",
+              "weeklyTime": "Plan around 5 hours per week (lower end of 5–10 hours range, executed on Saturday/Sunday).",
+              "difficulty": "Moderate",
+              "skillsAlreadyOwned": [
+                "Digital Marketing",
+                "Selling"
+              ],
+              "skillsToLearn": [
+                "Executive Interviewing Techniques",
+                "B2B Copywriting Frameworks"
+              ],
+              "resourceRequirements": [
+                "Laptop or computer",
+                "Existing network of IT colleagues"
+              ],
+              "advantages": [
+                "Zero initial start cost required.",
+                "Can leverage colleagues available in their immediate reach this week."
+              ],
+              "tradeoffs": [
+                "Relies on individual professional out-of-pocket spending power."
+              ],
+              "risks": [
+                "Clients canceling retainers due to perceived lack of tangible business return."
+              ],
+              "unknowns": [
+                "Whether IT managers will personally pay ₹18,000/month rather than seeking corporate expense approval."
+              ],
+              "validationNeeded": [
+                "Test if former IT colleagues will purchase a paid 2-week content trial."
+              ],
+              "revenuePath": "Charge ₹18,000 monthly retainer per professional. With 3 active clients, estimated monthly gross revenue is ₹54,000 keeping ~95%.",
+              "firstExperiment": "Pitch 5 former IT colleagues this Saturday to ghostwrite 4 posts for a ₹5,000 two-week trial.",
+              "whyNow": "Tech sector restructuring is driving mid-level managers to build visible personal brands on LinkedIn for career resilience and advisory side-roles.",
+              "fitSignals": {
+                "requiredSkills": [
+                  {
+                    "name": "Digital Marketing",
+                    "minLevel": "comfortable"
+                  }
+                ],
+                "startupCapitalAmount": 50000,
+                "weeklyHoursNeeded": 5,
+                "riskLevel": "balanced",
+                "motivationAlignment": "high",
+                "requiresLeadership": false,
+                "requiresSales": true,
+                "soloFriendly": true,
+                "relevantExperienceYears": 4.2,
+                "requiresDigitalAssets": false,
+                "locationFlexible": true,
+                "ceiling": "income"
+              },
+              "deliveryModel": "Batch content creation model via a single 45-minute weekend audio call per client.",
+              "criticalAssumptions": [
+                {
+                  "statement": "IT managers in Hinjewadi rarely pay ₹18,000 a month out of their own pockets for personal branding, making closing paid retainers very unlikely.",
+                  "category": "willingness_to_pay"
+                },
+                {
+                  "statement": "A single 45-minute call yields enough insights to write 8 distinct professional posts.",
+                  "category": "delivery"
+                }
+              ],
+              "successCriteria": [
+                "Convert at least 1 colleague into a ₹5,000 paid trial user this weekend.",
+                "Complete content drafting within 3 hours total execution time per client."
+              ],
+              "reconsiderIf": [
+                "Target customers insist on paying less than ₹5,000 per month.",
+                "Drafting posts requires extensive weekday revisions."
+              ]
+            }
+          },
+          {
+            "title": "Canva & Social Media Template Packs for Regional Real Estate Agents",
+            "score": {
+              "title": "Canva & Social Media Template Packs for Regional Real Estate Agents",
+              "place": true,
+              "week": true,
+              "money": true,
+              "quoted": false,
+              "labelled": true,
+              "total": 4
+            },
+            "engine": {
+              "promptVersion": "engine-v2-2026-11-15",
+              "type": "digital",
+              "money": {
+                "monthlyRevenue": 62475,
+                "monthlyProfit": 59351,
+                "weeklyHours": 2.9,
+                "unitsForTarget": 11,
+                "hoursForTarget": 1.3,
+                "meetsTarget": true,
+                "fitsHours": true,
+                "verdict": "ok",
+                "pricePerUnit": 2499,
+                "unit": "per template bundle",
+                "unitsPerMonth": 25
+              },
+              "evidence": {
+                "access": "access: Laptop / computer, Existing customer network",
+                "resources": "money: 50000–200000 INR",
+                "capability": "skills: Digital Marketing (working)",
+                "time": "hours a week: 5–10",
+                "goals": "goal: A profitable, high-income business; risk: balanced"
+              },
+              "objection": "Selling 25 template packs every month to local brokers requires constant cold sales calls that take way more than 5 hours per week."
+            },
+            "detail": {
+              "title": "Canva & Social Media Template Packs for Regional Real Estate Agents",
+              "category": "digital",
+              "plainEnglishSummary": "A digital product business selling ready-to-use, localized Canva social media design bundles to independent property brokers in growing Pune suburbs.",
+              "customer": "Property brokers and independent realtors in Pune (Pimple Saudagar, Ravet).",
+              "problem": "Realtors need clean social media property listings daily but cannot afford full graphic designers.",
+              "solution": "Ready-to-use localized Canva social media post templates + training video on how to edit.",
+              "problemHeadline": "Realtors Lack Fast Graphic Design",
+              "solutionHeadline": "Pre-Made Localized Real Estate Templates",
+              "customerHeadline": "Property Brokers In Growing Pune Suburbs",
+              "moneyHeadline": "Direct Digital Pack Sales",
+              "whyThisFounder": [
+                "Background includes demonstrated sales execution experience.",
+                "Possesses practical digital marketing capabilities useful for creating promotional graphic assets.",
+                "Needs a business model structured to run within a strict 5-hour weekend schedule."
+              ],
+              "businessModelPlainEnglish": "Brokers purchase digital template bundles via one-time payments for download access.",
+              "startingCapital": "Plan around ₹50,000 (lower end of ₹50,000–₹2,00,000 budget range). Estimated start cost is ₹1,000.",
+              "weeklyTime": "Plan around 5 hours per week (lower end of 5–10 hours range, limited to Saturdays and Sundays).",
+              "difficulty": "Beginner-friendly",
+              "skillsAlreadyOwned": [
+                "Digital Marketing",
+                "Selling"
+              ],
+              "skillsToLearn": [
+                "Canva Template Design Packaging",
+                "Digital Asset Sales Funnels"
+              ],
+              "resourceRequirements": [
+                "Laptop or computer"
+              ],
+              "advantages": [
+                "High profit margins with minimal ongoing cost after template creation.",
+                "Asynchronous sales model allows sales delivery without ongoing client calls."
+              ],
+              "tradeoffs": [
+                "Requires selling high transaction volumes to hit monthly income goals."
+              ],
+              "risks": [
+                "Brokers sharing downloaded files with peers instead of buying individual licenses."
+              ],
+              "unknowns": [
+                "Whether real estate brokers can easily edit Canva templates without asking for hand-holding support."
+              ],
+              "validationNeeded": [
+                "Verify if local brokers will buy raw graphic templates directly via WhatsApp messages."
+              ],
+              "revenuePath": "Sell bundles for ₹2,499 each. Selling ~25 packs per month generates ~₹62,475 gross income keeping ~95%.",
+              "firstExperiment": "Send 5 sample property templates on WhatsApp to 10 local real estate agents and try selling 3 bundles for ₹1,499 each.",
+              "whyNow": "Rapid residential expansion in suburban Pune areas like Ravet and Pimple Saudagar is creating fierce digital competition among local brokers.",
+              "fitSignals": {
+                "requiredSkills": [
+                  {
+                    "name": "Digital Marketing",
+                    "minLevel": "beginner"
+                  }
+                ],
+                "startupCapitalAmount": 50000,
+                "weeklyHoursNeeded": 5,
+                "riskLevel": "balanced",
+                "motivationAlignment": "high",
+                "requiresLeadership": false,
+                "requiresSales": true,
+                "soloFriendly": true,
+                "relevantExperienceYears": 4.2,
+                "requiresDigitalAssets": true,
+                "locationFlexible": true,
+                "ceiling": "national"
+              },
+              "deliveryModel": "Digital download bundle delivered via automated link or direct message after payment.",
+              "criticalAssumptions": [
+                {
+                  "statement": "Selling 25 template packs every month to local brokers requires constant cold sales calls that take way more than 5 hours per week.",
+                  "category": "distribution"
+                },
+                {
+                  "statement": "Real estate brokers have basic tech literacy to open and edit Canva templates themselves.",
+                  "category": "delivery"
+                }
+              ],
+              "successCriteria": [
+                "Sell at least 1 template bundle from the initial 10 WhatsApp outreach messages.",
+                "Complete customer delivery in under 15 minutes per transaction."
+              ],
+              "reconsiderIf": [
+                "Brokers demand custom design changes for free with every purchase.",
+                "No sales occur after reaching 30 targeted local brokers."
+              ]
+            }
+          }
+        ],
+        "trace": {
+          "promptVersion": "engine-v2-2026-11-15",
+          "brief": {
+            "strengths": [
+              "Digital Marketing",
+              "Sold to customers",
+              "Laptop / computer",
+              "Existing customer network",
+              "asked for help with: running Instagram pages for friends' shops"
+            ],
+            "limits": {
+              "maxStartCost": 100000,
+              "weeklyHours": {
+                "min": 5,
+                "max": 10
+              },
+              "age": 27,
+              "canTravel": false,
+              "refusals": [],
+              "monthlyIncomeTarget": 25000
+            },
+            "unknowns": []
+          },
+          "generated": 12,
+          "dropped": [],
+          "fatal": [],
+          "missing": [],
+          "calls": 3,
+          "ms": 57342
+        }
+      }
+    }
+  }
+}

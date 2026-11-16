@@ -2,34 +2,30 @@ import { useEffect, useRef, useState } from "react";
 import { findContradictions } from "@/lib/fit/gaps";
 import { useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { ArrowRight, Loader2 } from "lucide-react";
+import { ArrowRight, Check, Loader2 } from "lucide-react";
 
 import { getCurrentUser } from "@/lib/actions/auth";
 import { completeConsultation } from "@/lib/actions/profile";
 import { useLocale } from "@/lib/i18n/LocaleProvider";
+import { parseDailyLimit } from "@/lib/limits";
+import { cn } from "@/lib/utils";
 import { clearLocalDraft, useConsultation } from "@/lib/consultation/store";
 import { AccountGate } from "./AccountGate";
 import { GenerationVisual } from "./GenerationVisual";
 import { ScreenBody } from "./ui";
 
-const STATUS_KEYS = [
-  "consult.generating.s1",
-  "consult.generating.s2",
-  "consult.generating.s3",
-  "consult.generating.s4",
-  "consult.generating.s5",
-] as const;
+const GEN_STEPS = ["save", "write", "open"] as const;
 
-/** Honest waiting screen. The one real request can take up to a minute; the
- * lines below just narrate what Solventia is doing while it runs and rotate on
- * a timer — nothing here ever claims completion, and there is no progress
- * bar or percentage to fake. The screen leaves only when the request actually
- * resolves (see SubmitStep). */
-function GeneratingPanel() {
+/** Honest waiting screen (go-live step 4). Every step is real: "Saving your answers" ticks when
+ * the save has returned, "Writing your three directions" is the one model request, "Opening your
+ * dashboard" is its answer arriving. The time quoted is the measured one (v1, 2026-11-16: 20 s),
+ * and the seconds count up — nothing here claims progress it cannot see. */
+function GeneratingPanel({ step }: { step: number }) {
   const { t } = useLocale();
-  const [i, setI] = useState(0);
+  const [elapsed, setElapsed] = useState(0);
   useEffect(() => {
-    const id = window.setInterval(() => setI((n) => Math.min(n + 1, STATUS_KEYS.length - 1)), 4500);
+    const start = Date.now();
+    const id = window.setInterval(() => setElapsed(Math.round((Date.now() - start) / 1000)), 1000);
     return () => window.clearInterval(id);
   }, []);
   // Normal document flow inside the consultation card: the panel reserves its
@@ -43,14 +39,36 @@ function GeneratingPanel() {
     >
       <div className="flex max-w-md flex-col items-center gap-3">
         <h1 className="sol-h2">{t("consult.generating.title")}</h1>
+        <p className="text-[1.0625rem] text-sol-secondary">{t("v2.gen.time")}</p>
+        <ol className="flex flex-col items-start gap-2 text-left" data-testid="generating-steps">
+          {GEN_STEPS.map((k, i) => (
+            <li
+              key={k}
+              data-state={i < step ? "done" : i === step ? "current" : "next"}
+              className={cn(
+                "flex min-h-8 items-center gap-2.5 text-[1.0625rem]",
+                i <= step ? "text-sol-ink" : "text-sol-muted",
+                i === step && "font-semibold",
+              )}
+            >
+              {i < step ? (
+                <Check className="size-4 text-sol-navy" aria-hidden="true" />
+              ) : i === step ? (
+                <Loader2 className="size-4 animate-spin text-sol-cobalt" aria-hidden="true" />
+              ) : (
+                <span className="size-4" aria-hidden="true" />
+              )}
+              {t(`v2.gen.step.${k}` as const)}
+            </li>
+          ))}
+        </ol>
         <p
-          className="flex min-h-[1.75rem] items-center gap-2 text-[1.0625rem] text-sol-ink"
-          key={i}
+          className="text-[0.9375rem] tabular-nums text-sol-secondary"
+          data-testid="generating-elapsed"
         >
-          <Loader2 className="size-4 animate-spin text-sol-cobalt" aria-hidden="true" />
-          {t(STATUS_KEYS[i])}
+          {t("v2.gen.elapsed", { s: elapsed })}
         </p>
-        {i === STATUS_KEYS.length - 1 && (
+        {elapsed >= 45 && (
           <p className="text-[0.9375rem] text-sol-secondary">{t("consult.generating.long")}</p>
         )}
       </div>
@@ -79,6 +97,8 @@ export function SubmitStep({
     staleTime: 5 * 60_000,
   });
   const [phase, setPhase] = useState<"idle" | "generating" | "error">("idle");
+  const [limit, setLimit] = useState<number | null>(null);
+  const [genStep, setGenStep] = useState(0);
   // A ref, not state: two rapid triggers (a double click, or AccountGate's
   // onAuthenticated racing an auto-start) must see each other's guard synchronously.
   const submitting = useRef(false);
@@ -89,13 +109,17 @@ export function SubmitStep({
     submitting.current = true;
     dismissResumed();
     setPhase("generating");
+    setGenStep(0);
     try {
       await flush();
+      setGenStep(1);
       await completeConsultation({ data: { answers: answers as Record<string, unknown>, locale } });
+      setGenStep(2);
       clearLocalDraft();
       await navigate({ to: "/dashboard" });
     } catch (err) {
       console.error("[consultation] submission failed:", err);
+      setLimit(parseDailyLimit(err)?.limit ?? null);
       setPhase("error");
     } finally {
       submitting.current = false;
@@ -115,7 +139,7 @@ export function SubmitStep({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [autoStart, signedIn]);
 
-  if (phase === "generating") return <GeneratingPanel />;
+  if (phase === "generating") return <GeneratingPanel step={genStep} />;
 
   return (
     <ScreenBody title={t("consult.submit.title")}>
@@ -165,15 +189,24 @@ export function SubmitStep({
           className="rounded-2xl border border-sol-warning/40 bg-sol-warning-soft p-5"
           data-testid="generate-error"
         >
-          <p className="text-[1.0625rem] font-semibold text-sol-ink">{t("consult.error.title")}</p>
-          <p className="mt-1 text-[1rem] text-sol-ink">{t("consult.error.body")}</p>
-          <button
-            type="button"
-            onClick={run}
-            className="mt-4 inline-flex h-12 items-center gap-2 rounded-2xl bg-sol-navy px-6 text-[1rem] font-semibold text-white hover:bg-sol-navy-soft"
+          <p className="text-[1.0625rem] font-semibold text-sol-ink">
+            {limit !== null ? t("v2.limit.title") : t("consult.error.title")}
+          </p>
+          <p
+            className="mt-1 text-[1rem] text-sol-ink"
+            data-testid={limit !== null ? "daily-limit" : undefined}
           >
-            {t("consult.error.retry")}
-          </button>
+            {limit !== null ? t("v2.limit.consultation", { n: limit }) : t("consult.error.body")}
+          </p>
+          {limit === null && (
+            <button
+              type="button"
+              onClick={run}
+              className="mt-4 inline-flex h-12 items-center gap-2 rounded-2xl bg-sol-navy px-6 text-[1rem] font-semibold text-white hover:bg-sol-navy-soft"
+            >
+              {t("consult.error.retry")}
+            </button>
+          )}
         </div>
       )}
       {currentUser.isLoading ? (

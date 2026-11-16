@@ -208,10 +208,13 @@ describe("Stage 7 generation call path (mocked Gemini, no live network call)", (
     // Exactly the request-level keys the SDK expects — nothing extra,
     // nothing missing, nothing accidentally serialized as `undefined`.
     expect(shapeReport.topLevelKeys).toEqual(["config", "contents", "model"]);
+    // Low thinking and an output cap are part of every consultation call (go-live step 4).
     expect(shapeReport.configKeys).toEqual([
+      "maxOutputTokens",
       "responseMimeType",
       "responseSchema",
       "systemInstruction",
+      "thinkingConfig",
     ]);
     expect(shapeReport.hasResponseSchema).toBe(true);
     expect(shapeReport.anyUndefinedConfigValues).toBe(false);

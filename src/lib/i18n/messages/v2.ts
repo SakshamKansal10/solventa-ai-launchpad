@@ -378,6 +378,15 @@ const en = {
   "v2.build.task.name": "Person {n}",
   "v2.build.task.saved": "Saved for your first mission.",
   "v2.ws.list.useWarmup": "Add the {n} names you wrote down",
+  "v2.limit.consultation": "You've done {n} consultations today. That's the daily limit — you can start a new one after midnight.",
+  "v2.limit.roadmap": "You've built {n} roadmaps today. That's the daily limit — you can build again after midnight.",
+  "v2.limit.askSol": "You've sent Sol {n} messages today. That's the daily limit — Sol will be back after midnight.",
+  "v2.limit.title": "That's all for today",
+  "v2.gen.time": "This usually takes 20 to 30 seconds.",
+  "v2.gen.step.save": "Saving your answers",
+  "v2.gen.step.write": "Writing your three directions",
+  "v2.gen.step.open": "Opening your dashboard",
+  "v2.gen.elapsed": "{s} seconds so far",
 } as const;
 
 const hi: Record<keyof typeof en, string> = {
@@ -761,6 +770,15 @@ const hi: Record<keyof typeof en, string> = {
   "v2.build.task.name": "व्यक्ति {n}",
   "v2.build.task.saved": "पहले मिशन के लिए सेव हो गया।",
   "v2.ws.list.useWarmup": "आपके लिखे {n} नाम जोड़ें",
+  "v2.limit.consultation": "आज आप {n} कंसल्टेशन कर चुके हैं। यह आज की लिमिट है — रात 12 बजे के बाद नया शुरू कर सकते हैं।",
+  "v2.limit.roadmap": "आज आप {n} रोडमैप बना चुके हैं। यह आज की लिमिट है — रात 12 बजे के बाद फिर बना सकते हैं।",
+  "v2.limit.askSol": "आज आप Sol को {n} मैसेज भेज चुके हैं। यह आज की लिमिट है — रात 12 बजे के बाद Sol फिर मिलेगा।",
+  "v2.limit.title": "आज के लिए इतना ही",
+  "v2.gen.time": "इसमें आमतौर पर 20 से 30 सेकंड लगते हैं।",
+  "v2.gen.step.save": "आपके जवाब सेव कर रहे हैं",
+  "v2.gen.step.write": "आपकी तीन दिशाएँ लिख रहे हैं",
+  "v2.gen.step.open": "आपका डैशबोर्ड खोल रहे हैं",
+  "v2.gen.elapsed": "अब तक {s} सेकंड",
 };
 
 export default { en, hi };

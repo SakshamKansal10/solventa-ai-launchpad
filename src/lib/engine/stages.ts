@@ -222,7 +222,11 @@ export function checkMoney(c: Candidate, brief: EngineBrief): MoneyCheck {
   const profitPerUnit = (c.pricePerUnit * c.marginPercent) / 100;
   // "Do the numbers reach the target within their hours?" — not "in the first months".
   const unitsForTarget =
-    target === null || target <= 0 ? null : profitPerUnit > 0 ? Math.ceil(target / profitPerUnit) : Infinity;
+    target === null || target <= 0
+      ? null
+      : profitPerUnit > 0
+        ? Math.ceil(target / profitPerUnit)
+        : Infinity;
   const hoursForTarget =
     unitsForTarget === null
       ? null
@@ -244,8 +248,10 @@ export function checkMoney(c: Candidate, brief: EngineBrief): MoneyCheck {
     monthlyRevenue,
     monthlyProfit,
     weeklyHours,
-    unitsForTarget: unitsForTarget !== null && Number.isFinite(unitsForTarget) ? unitsForTarget : null,
-    hoursForTarget: hoursForTarget !== null && Number.isFinite(hoursForTarget) ? hoursForTarget : null,
+    unitsForTarget:
+      unitsForTarget !== null && Number.isFinite(unitsForTarget) ? unitsForTarget : null,
+    hoursForTarget:
+      hoursForTarget !== null && Number.isFinite(hoursForTarget) ? hoursForTarget : null,
     meetsTarget,
     fitsHours,
     verdict,

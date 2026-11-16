@@ -10,6 +10,7 @@ import { ActionButton, ActionLink } from "@/components/founder/dash/ui";
 import { BuildWait } from "@/components/founder/roadmap/BuildWait";
 import { cn } from "@/lib/utils";
 import { buildRoadmap } from "@/lib/actions/roadmap";
+import { parseDailyLimit } from "@/lib/limits";
 import { useLocale } from "@/lib/i18n/LocaleProvider";
 import { qk, useFounderState, useInvalidateFounder } from "@/lib/queries";
 import { requireAuthLoader } from "@/lib/route-guards";
@@ -114,6 +115,7 @@ function BuildingPage() {
     }
   }, [waitingOnOther, roadmapStatus, navigate]);
 
+  const limit = parseDailyLimit(build.error);
   const failed =
     build.isError ||
     build.data?.status === "failed" ||
@@ -146,8 +148,12 @@ function BuildingPage() {
               className="flex flex-col items-start gap-7"
               data-testid="build-failed"
             >
-              <h1 className="dash-headline max-w-[15em]">{t("rm.build.failedTitle")}</h1>
-              <p className="dash-lead max-w-[32em]">{t("rm.build.failedBody")}</p>
+              <h1 className="dash-headline max-w-[15em]">
+                {limit ? t("v2.limit.title") : t("rm.build.failedTitle")}
+              </h1>
+              <p className="dash-lead max-w-[32em]" data-testid={limit ? "daily-limit" : undefined}>
+                {limit ? t("v2.limit.roadmap", { n: limit.limit }) : t("rm.build.failedBody")}
+              </p>
               <div className="flex flex-wrap items-center gap-3.5">
                 <ActionButton
                   loading={build.isPending}

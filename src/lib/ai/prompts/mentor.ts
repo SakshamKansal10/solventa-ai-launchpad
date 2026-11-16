@@ -79,6 +79,8 @@ Reply as Sol. Be specific to their ACTUAL current week and next task when releva
     callSite: "generateMentorReply",
     purpose: "SOL_MESSAGE",
     route: "mentor/send",
-    thinkingLevel: env.MENTOR_AI_THINKING_LEVEL,
+    thinkingLevel: env.MENTOR_AI_THINKING_LEVEL ?? "low",
+    model: env.GEMINI_LITE_MODEL,
+    maxOutputTokens: 2048,
   });
 }

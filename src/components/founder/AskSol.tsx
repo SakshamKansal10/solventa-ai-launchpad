@@ -4,6 +4,7 @@ import { Loader2, Send, X } from "lucide-react";
 
 import { BrandMark } from "@/components/brand/Brand";
 import { getMentorConversation, sendMentorMessage } from "@/lib/actions/mentor";
+import { parseDailyLimit } from "@/lib/limits";
 import { useLocale } from "@/lib/i18n/LocaleProvider";
 import type { MessageKey } from "@/lib/i18n";
 import { qk } from "@/lib/queries";
@@ -86,10 +87,16 @@ export function AskSolPanel({
       void queryClient.invalidateQueries({ queryKey: qk.mentor(opportunityId) });
     } catch (err) {
       console.error("[ask-sol] send failed:", err);
-      setLastFailed(message);
+      const limit = parseDailyLimit(err);
+      // At the daily limit there is nothing to retry today: say so, without a retry.
+      if (!limit) setLastFailed(message);
       setMessages((prev) => [
         ...prev,
-        { role: "assistant", content: t("askSol.error"), failed: true },
+        {
+          role: "assistant",
+          content: limit ? t("v2.limit.askSol", { n: limit.limit }) : t("askSol.error"),
+          failed: !limit,
+        },
       ]);
     } finally {
       setSending(false);

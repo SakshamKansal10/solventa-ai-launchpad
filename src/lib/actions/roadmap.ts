@@ -1,4 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
+import { enforceDailyLimit } from "@/lib/limits.server";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { z } from "zod";
 
@@ -500,6 +501,8 @@ export const buildRoadmap = createServerFn({ method: "POST" })
 
     let takeover = false;
     if (!roadmap) {
+      // A new roadmap (a build or a rebuild) counts against today's limit; resuming one does not.
+      await enforceDailyLimit(supabase, user.id, "roadmap");
       const created = await createBuildingRoadmap(supabase, user.id, opp.id, caps);
       roadmap = await findRoadmapForOpportunity(supabase, user.id, opp.id);
       if (!roadmap) throw new Error("Failed to create roadmap");

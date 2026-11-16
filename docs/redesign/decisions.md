@@ -282,3 +282,21 @@ Each entry: what was ambiguous, what I chose, why.
     plan's phases the moment they are saved, week 1's missions the moment they exist, and
     "write down 5 people you could ask" — kept in this browser and offered in Week 1's first
     list mission ("Add the N names you wrote down").
+
+44. **Cost and speed of idea generation (go-live step 4).** Measured on the real model, profile
+    P01, one run each (docs/redesign/engine-compare-after.json vs engine-compare.json):
+    v1 35.5 s / 12.4k tokens (3.7k thinking) → 20.4 s / 8.6k (no thinking at "low");
+    v2 76.2 s / 23.4k → 57.3 s / 19.9k (12 candidates, the best 5 attacked, low thinking).
+    The bar for making v2 the default was ≤ 45 s AND no more tokens than today's v1 (12.4k):
+    v2 misses both, so **IDEA_ENGINE stays v1** — v2 still writes 12 candidates, attacks them and
+    then writes three full directions, which costs more than v1 writing three in one call.
+    One run per engine is a small sample; the quality figure (v2 1/3 directions passing all
+    five checks vs v1 0/3 here, 23% vs 3% over ten profiles before) is why v2 is kept behind the
+    switch. Every GEMINI_CALL line now carries `estCostInr` from GEMINI_PRICE_IN/OUT (₹ per 1M
+    tokens; thinking billed as output) — null until the owner sets the prices, because the
+    price of this model is not something to guess. The wide stage keeps its prompt contract
+    beside the provider schema on purpose: it is the fallback when Gemini rejects the schema.
+    GEMINI_LITE_MODEL (unset = the main model) is used for Ask Sol and translation. Daily
+    limits count rows that already exist (business_dna, roadmaps, the founder's
+    mentor_messages) since midnight India time; a counting error never blocks anyone. The wait
+    screen now quotes the measured time ("20 to 30 seconds") and shows its three real steps.

@@ -44,6 +44,16 @@ const fieldSchemas = {
   /** Which idea engine a consultation runs: v1 = one call (today), v2 = the staged pipeline
    * (part 5). v1 until the owner switches it after reading the comparison. */
   IDEA_ENGINE: z.enum(["v1", "v2"]).default("v1"),
+  /** A cheaper model for simple calls (translation, Ask Sol, short rewrites). Unset = GEMINI_MODEL. */
+  GEMINI_LITE_MODEL: z.string().min(1).optional(),
+  /** Prices in ₹ per 1M tokens, for the cost estimate on every GEMINI_CALL log line: input, and
+   * output (thinking tokens are billed as output). Unset = no estimate. */
+  GEMINI_PRICE_IN: z.coerce.number().min(0).optional(),
+  GEMINI_PRICE_OUT: z.coerce.number().min(0).optional(),
+  /** Per-founder daily limits (reset at midnight India time). 0 = no limit. */
+  DAILY_LIMIT_CONSULTATIONS: z.coerce.number().int().min(0).default(3),
+  DAILY_LIMIT_ROADMAPS: z.coerce.number().int().min(0).default(5),
+  DAILY_LIMIT_ASK_SOL: z.coerce.number().int().min(0).default(30),
   /** Scheduled jobs only (the weekly reminder cron): bypasses RLS. Unset = no reminders sent. */
   SUPABASE_SERVICE_ROLE_KEY: z.string().min(1).optional(),
   /** Vercel Cron sends it as a bearer token; the cron route refuses any other caller. */
@@ -118,6 +128,24 @@ export const env = {
   },
   get IDEA_ENGINE() {
     return readField("IDEA_ENGINE");
+  },
+  get GEMINI_LITE_MODEL() {
+    return readField("GEMINI_LITE_MODEL");
+  },
+  get GEMINI_PRICE_IN() {
+    return readField("GEMINI_PRICE_IN");
+  },
+  get GEMINI_PRICE_OUT() {
+    return readField("GEMINI_PRICE_OUT");
+  },
+  get DAILY_LIMIT_CONSULTATIONS() {
+    return readField("DAILY_LIMIT_CONSULTATIONS");
+  },
+  get DAILY_LIMIT_ROADMAPS() {
+    return readField("DAILY_LIMIT_ROADMAPS");
+  },
+  get DAILY_LIMIT_ASK_SOL() {
+    return readField("DAILY_LIMIT_ASK_SOL");
   },
   get SUPABASE_SERVICE_ROLE_KEY() {
     return readField("SUPABASE_SERVICE_ROLE_KEY");

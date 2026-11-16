@@ -44,7 +44,7 @@ const CANDIDATE_CONTRACT = `{ "title": string, "type": ${CANDIDATE_TYPES.map((t)
 
 const WideSchema = z.object({
   founderDNA: FounderDNASchema,
-  candidates: CandidateSchema.array().min(12).max(30),
+  candidates: CandidateSchema.array().min(8).max(16),
 });
 export type WideResult = z.infer<typeof WideSchema>;
 
@@ -64,7 +64,7 @@ ${formatBrief(brief, profile.identity.currency)}
 
 1. founderDNA — a short, honest synthesis of this person (not a restatement of every answer).
 
-2. candidates — 24 business directions this person could start testing NEXT WEEK in ${place}, spread across these types, at least 4 of each: ${CANDIDATE_TYPES.join(", ")}. Not variations of one idea. Each one:
+2. candidates — 12 business directions this person could start testing NEXT WEEK in ${place}, spread across these types, at least 2 of each: ${CANDIDATE_TYPES.join(", ")}. Not variations of one idea. Each one:
 - customer: who exactly pays, in ${place} (or reachable from it); problem; offer.
 - the money as estimates: pricePerUnit and unit, unitsPerMonth realistic for the first three months, marginPercent, hoursPerUnit (including finding the customer), startCost before the first sale — in ${profile.identity.currency}.
 - needsLicence, minAge (null if none), needsTravel.
@@ -73,13 +73,16 @@ ${formatBrief(brief, profile.identity.currency)}
 Respect every hard limit. Where something is UNKNOWN, choose directions that work either way rather than guessing it.
 
 Respond with ONLY a single JSON object — no markdown fences, no commentary — of exactly this shape:
-{ "founderDNA": ${FOUNDER_DNA_CONTRACT}, "candidates": [ 24 objects, each ${CANDIDATE_CONTRACT} ] }${buildLanguageRule(locale)}`;
+{ "founderDNA": ${FOUNDER_DNA_CONTRACT}, "candidates": [ 12 objects, each ${CANDIDATE_CONTRACT} ] }${buildLanguageRule(locale)}`;
   return generateStructured(WideSchema, {
     systemInstruction: WIDE_SYSTEM,
     prompt,
     callSite: "engine.generateCandidates",
     purpose: "ENGINE_WIDE",
     route: "consultation/complete",
+    // Structured generation: low thinking (go-live step 4) and a cap on a runaway answer.
+    thinkingLevel: "low",
+    maxOutputTokens: 12_000,
   });
 }
 
@@ -134,6 +137,8 @@ Respond with ONLY a JSON object: { "objections": [ { "index": number, "objection
     callSite: "engine.attackCandidates",
     purpose: "ENGINE_ATTACK",
     route: "consultation/complete",
+    thinkingLevel: "low",
+    maxOutputTokens: 4096,
   });
 }
 

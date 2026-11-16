@@ -286,7 +286,9 @@ ${IDEA_PACKAGE_JSON_CONTRACT}${buildLanguageRule(locale)}`;
     callSite: "generateIntelligencePackage",
     purpose: "INITIAL_INTELLIGENCE",
     route: "consultation/complete",
-    thinkingLevel: env.INITIAL_AI_THINKING_LEVEL,
+    // Structured generation at low thinking unless the owner sets another level (go-live step 4).
+    thinkingLevel: env.INITIAL_AI_THINKING_LEVEL ?? "low",
+    maxOutputTokens: 16_000,
   });
 
   return reconstructPackage(flat);
@@ -370,6 +372,8 @@ ${jsonContract}${buildLanguageRule(options.locale ?? "en")}`;
     callSite: "generateOpportunityPackageBatch",
     purpose: options.seeds ? "ENGINE_EXPAND" : "EXPLORE_MORE",
     route: options.seeds ? "consultation/complete" : "dashboard/explore-more",
+    thinkingLevel: "low",
+    maxOutputTokens: 16_000,
   });
 
   const opportunities: OpportunityPackage[] = (flat.opportunities as FlatExploreOpportunity[])

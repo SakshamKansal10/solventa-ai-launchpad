@@ -211,12 +211,31 @@ interface GenerateStructuredParams {
   /** Hard cap on the response (thinking excluded). A runaway answer costs money and time;
    * a cut-off one fails JSON parsing and is retried with the error quoted back. */
   maxOutputTokens?: number;
+  /** A different model for this call (e.g. GEMINI_LITE_MODEL for simple calls). Unset = MODEL. */
+  model?: string;
 }
 
 /** One structured line per Gemini request — this is what turns "a session
  * apparently cost ₹6" into an answerable question. Never includes the
  * prompt/systemInstruction text (carries the founder's profile/messages)
  * or any secret — only counts, ids, and labels. */
+/** ₹ for one call from GEMINI_PRICE_IN / GEMINI_PRICE_OUT (₹ per 1M tokens; thinking is billed
+ * as output). Null when the prices are not configured or nothing was counted. */
+export function estimateCostInr(
+  usage:
+    | { promptTokenCount?: number; candidatesTokenCount?: number; thoughtsTokenCount?: number }
+    | undefined,
+  prices: { in?: number; out?: number } = {
+    in: env.GEMINI_PRICE_IN,
+    out: env.GEMINI_PRICE_OUT,
+  },
+): number | null {
+  if (!usage || prices.in === undefined || prices.out === undefined) return null;
+  const input = usage.promptTokenCount ?? 0;
+  const output = (usage.candidatesTokenCount ?? 0) + (usage.thoughtsTokenCount ?? 0);
+  return Math.round(((input * prices.in + output * prices.out) / 1_000_000) * 10_000) / 10_000;
+}
+
 function logCallCost(fields: {
   requestId: string;
   purpose: GeminiCallPurpose;
@@ -266,6 +285,7 @@ function logCallCost(fields: {
       durationMs: fields.durationMs,
       success: fields.success,
       errorCategory: fields.errorCategory ?? null,
+      estCostInr: estimateCostInr(fields.usage),
       timestamp: new Date().toISOString(),
     }),
   );
@@ -313,7 +333,9 @@ async function runGenerationLoop<T>(
   // Fallback is a SEPARATE tier from the same-model retry above: at most one
   // other model is ever tried, and only once the primary model's own
   // attempt budget is fully exhausted with a transient/provider-side error.
-  const models = FALLBACK_MODEL ? [MODEL, FALLBACK_MODEL] : [MODEL];
+  const primary = params.model ?? MODEL;
+  const models =
+    FALLBACK_MODEL && FALLBACK_MODEL !== primary ? [primary, FALLBACK_MODEL] : [primary];
 
   // Proves, from real server logs, exactly which function/generator/
   // attempt-budget the current request actually runs with — never logs the

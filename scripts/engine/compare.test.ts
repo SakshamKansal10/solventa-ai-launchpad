@@ -147,14 +147,17 @@ describe("idea engine: old vs new on ten profiles (real model)", () => {
 
     fs.mkdirSync("docs/redesign", { recursive: true });
     fs.writeFileSync(
-      path.join("docs/redesign", "engine-compare.json"),
+      path.join("docs/redesign", `${process.env.ENGINE_COMPARE_OUT ?? "engine-compare"}.json`),
       JSON.stringify(
         { at: new Date().toISOString(), model: process.env.GEMINI_MODEL ?? "default", results },
         null,
         2,
       ),
     );
-    fs.writeFileSync(path.join("docs/redesign", "engine-compare.md"), table(results));
+    fs.writeFileSync(
+      path.join("docs/redesign", `${process.env.ENGINE_COMPARE_OUT ?? "engine-compare"}.md`),
+      table(results),
+    );
   });
 });
 

@@ -1,5 +1,6 @@
 import crypto from "node:crypto";
 import { createServerFn } from "@tanstack/react-start";
+import { enforceDailyLimit } from "@/lib/limits.server";
 import { z } from "zod";
 
 import { requireUser } from "@/lib/supabase/server";
@@ -106,6 +107,9 @@ export const completeConsultation = createServerFn({ method: "POST" })
     // the update after the insert) — never blocks consultation
     // completion if that persistence isn't available yet.
     const ambition = computeAmbitionCalibration(normalized, computeFounderGenome(normalized));
+
+    // Only a NEW consultation counts (the stored one above returned already).
+    await enforceDailyLimit(supabase, user.id, "consultation");
 
     const overallStart = Date.now();
     let pkg: Awaited<ReturnType<typeof generateIntelligencePackage>>;

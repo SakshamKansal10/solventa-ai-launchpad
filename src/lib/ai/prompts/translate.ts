@@ -1,6 +1,7 @@
 import { z } from "zod";
 
 import { generateJSON } from "@/lib/ai/gemini.server";
+import { env } from "@/lib/env.server";
 import type { Locale } from "@/lib/i18n/locale";
 
 const TranslationsSchema = z.object({ translations: z.array(z.string()) });
@@ -30,6 +31,8 @@ export async function translateStrings(strings: string[], target: Locale): Promi
       prompt,
       callSite: "translateStrings",
       purpose: "CONTENT_TRANSLATION",
+      model: env.GEMINI_LITE_MODEL,
+      thinkingLevel: "minimal",
       route: "content/translate",
     });
     out.push(...result.translations);
