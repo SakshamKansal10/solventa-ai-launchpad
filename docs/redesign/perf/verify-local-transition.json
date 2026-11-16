@@ -1,0 +1,141 @@
+{
+  "label": "local-transition",
+  "base": "http://localhost:4175",
+  "at": "2026-11-16T10:54:20.536Z",
+  "runs": {
+    "broadband": {
+      "throttle": 1,
+      "readyMs": 5225,
+      "lockupMs": 7358,
+      "held": false,
+      "holdMs": 0,
+      "modeAtRelease": "lite",
+      "modeAtEnd": "lite",
+      "switchedModeAfterRelease": false,
+      "revealMs": 3464,
+      "revealLongTasks": 2,
+      "revealWorstMs": 1055,
+      "longTasks": 0,
+      "worstLongTaskMs": 0,
+      "p95FrameMs": 16.9,
+      "frames": 963,
+      "states": [
+        {
+          "t": 566,
+          "intro": "ask",
+          "mode": "pending",
+          "ready": "false"
+        },
+        {
+          "t": 1079,
+          "intro": "ask",
+          "mode": "lite",
+          "ready": "false"
+        },
+        {
+          "t": 3894,
+          "intro": "reveal",
+          "mode": "lite",
+          "ready": "false"
+        },
+        {
+          "t": 5238,
+          "intro": "reveal",
+          "mode": "lite",
+          "ready": "true"
+        },
+        {
+          "t": 7358,
+          "intro": "off",
+          "mode": "lite",
+          "ready": "true"
+        }
+      ],
+      "pass": false
+    },
+    "cpu4x": {
+      "throttle": 4,
+      "readyMs": 9320,
+      "lockupMs": 9064,
+      "held": true,
+      "holdMs": 323,
+      "modeAtRelease": "lite",
+      "modeAtEnd": "lite",
+      "switchedModeAfterRelease": false,
+      "revealMs": 3687,
+      "revealLongTasks": 6,
+      "revealWorstMs": 628,
+      "longTasks": 0,
+      "worstLongTaskMs": 0,
+      "p95FrameMs": 33.4,
+      "frames": 835,
+      "states": [
+        {
+          "t": 1427,
+          "intro": "ask",
+          "mode": "pending",
+          "ready": "false"
+        },
+        {
+          "t": 3597,
+          "intro": "ask",
+          "mode": "lite",
+          "ready": "false"
+        },
+        {
+          "t": 5377,
+          "intro": "reveal",
+          "mode": "lite",
+          "ready": "false"
+        },
+        {
+          "t": 9064,
+          "intro": "hold",
+          "mode": "lite",
+          "ready": "false"
+        },
+        {
+          "t": 9354,
+          "intro": "hold",
+          "mode": "lite",
+          "ready": "true"
+        },
+        {
+          "t": 9387,
+          "intro": "off",
+          "mode": "lite",
+          "ready": "true"
+        }
+      ],
+      "pass": true
+    }
+  },
+  "checks": {
+    "reducedMotion": {
+      "asked": true,
+      "mode": "fallback",
+      "pass": true
+    },
+    "mobile390": {
+      "asked": true,
+      "mode": "fallback",
+      "sideways": false,
+      "pass": true
+    },
+    "returning": {
+      "welcomed": true,
+      "question": false,
+      "openingMs": 6418,
+      "readyMs": 4242,
+      "pass": true
+    },
+    "midPageReload": {
+      "before": 5334,
+      "after": 5334,
+      "state": "off",
+      "busy": null,
+      "pass": true
+    }
+  },
+  "pass": false
+}

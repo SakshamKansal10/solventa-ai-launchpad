@@ -22,7 +22,10 @@ test.describe("What brings you here? (the opening)", () => {
     await expect(page.getByTestId("cinematic-home")).toHaveAttribute("aria-busy", "true");
     for (const c of ["start", "idea", "stuck"])
       await expect(page.getByTestId(`intro-choice-${c}`)).toBeVisible();
-    await expect(page.getByTestId("intro-skip")).toBeVisible();
+    // No visible Skip (owner, 2026-11-16): a screen-reader-only control, never on screen.
+    expect(
+      await page.getByTestId("intro-skip").evaluate((el) => el.getBoundingClientRect().width),
+    ).toBeLessThanOrEqual(1);
 
     await page.getByTestId("intro-choice-idea").click();
     await expect(page.getByTestId("intro-answer")).toHaveText(
@@ -44,7 +47,6 @@ test.describe("What brings you here? (the opening)", () => {
     );
     await expect(page.locator("[data-return-line=idea]")).toBeVisible();
     await expect(page.locator("[data-return-line=start]")).toBeHidden();
-    await expect(page.getByTestId("intro-return-dashboard")).toHaveCount(0);
     await expect(page.getByTestId("intro-return")).toHaveCount(0, { timeout: 15_000 });
   });
 
@@ -57,7 +59,7 @@ test.describe("What brings you here? (the opening)", () => {
     await expect(page.getByTestId("intro-return")).toHaveCount(0);
   });
 
-  test("a signed-in founder coming back can go straight to the dashboard", async ({
+  test("a signed-in founder is welcomed by name, with no button, and goes on into the film", async ({
     page,
     context,
   }) => {
@@ -68,8 +70,11 @@ test.describe("What brings you here? (the opening)", () => {
     await expect(page.getByTestId("intro-question")).toHaveCount(0);
     await expect(page.getByTestId("intro-return-title")).toHaveText("Welcome back, Asha.");
     await expect(page.getByTestId("intro-return-line")).toHaveText("Pick up where you left off.");
-    await page.getByTestId("intro-return-dashboard").click();
-    await expect(page).toHaveURL(/\/dashboard/);
+    await expect(
+      page.locator("[data-intro-layer] a, [data-intro-layer] button:visible"),
+    ).toHaveCount(0);
+    // It ends by itself and hands over to the film.
+    await expect(page.getByTestId("intro-return")).toHaveCount(0, { timeout: 20_000 });
   });
 
   test("without a tap, the question answers for the visitor after three seconds", async ({
@@ -85,11 +90,10 @@ test.describe("What brings you here? (the opening)", () => {
     expect(await page.evaluate(() => localStorage.getItem("sol-intro-choice"))).toBeNull();
   });
 
-  test("Skip intro ends it at once; a reload never shows it, even on a first visit", async ({
-    page,
-  }) => {
+  test("Esc ends it at once; a reload never shows it, even on a first visit", async ({ page }) => {
     await gotoApp(page, "/?intro=auto");
-    await page.getByTestId("intro-skip").click();
+    await expect(page.getByTestId("intro-question")).toBeVisible();
+    await page.keyboard.press("Escape");
     await expect(page.getByTestId("intro")).toHaveCount(0);
     await expect(page.getByTestId("cinematic-home")).toHaveAttribute("data-intro-state", "off");
 
@@ -126,4 +130,20 @@ test.describe("What brings you here? (the opening)", () => {
     await expect(page.getByTestId("intro-question")).toHaveText("आप यहाँ किसलिए आए हैं?");
     await expect(page.getByTestId("intro-choice-idea")).toContainText("मेरे पास एक आइडिया है।");
   });
+});
+
+test("after the reveal the S is ONE whole logo: the halves and the glint are gone", async ({
+  page,
+}) => {
+  await gotoApp(page, "/?intro=1");
+  await page.getByTestId("intro-choice-start").click();
+  await expect(page.getByTestId("cinematic-home")).not.toHaveAttribute(
+    "data-intro-state",
+    /ask|reveal/,
+    { timeout: 20_000 },
+  );
+  const mark = page.locator("[data-brand-opening] [data-rv-mark]").first();
+  await expect(mark.locator("[data-rv-whole] img")).toBeVisible();
+  await expect(mark.locator("[data-rv-half]")).toBeHidden();
+  await expect(mark.locator("[data-rv=glint]")).toBeHidden();
 });

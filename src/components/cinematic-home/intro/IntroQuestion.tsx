@@ -11,11 +11,12 @@ import {
   type IntroChoice,
 } from "./intro-gate";
 import { SkipLink } from "./IntroShared";
-import { REVEAL_MS, REVEAL_REDUCED_MS, RevealLockup } from "./Reveal";
+import { REVEAL_MS, REVEAL_REDUCED_MS, RevealLockup, ScanExit } from "./Reveal";
 
 /** How long the question waits for a tap before answering for the visitor. */
 export const ASK_MS = 3_000;
-const ANSWER_MS = 1_100;
+/** The answer line holds this long, to be read, before the exit (owner, 2026-11-16). */
+const ANSWER_MS = 1_500;
 
 type Phase = "ask" | "answer" | "reveal";
 
@@ -129,12 +130,16 @@ export function IntroQuestion({
         </div>
       )}
 
+      {revealing && <ScanExit />}
       {phase !== "ask" && choice && (
-        <div className="pointer-events-none absolute inset-0 flex items-center justify-center px-4">
+        <div
+          data-wipe
+          className="pointer-events-none absolute inset-0 flex items-center justify-center px-4"
+        >
           <p
             role="status"
             aria-live="polite"
-            data-lead-out={revealing ? "" : undefined}
+            data-tighten
             className="max-w-[min(1000px,100%)] text-center font-medium leading-[1.08] tracking-[-0.035em] text-[clamp(1.8rem,5vw,4rem)] motion-safe:animate-[sol-intro-in_420ms_ease_both]"
             data-testid="intro-answer"
           >

@@ -1,6 +1,4 @@
 import { useQuery } from "@tanstack/react-query";
-import { Link } from "@tanstack/react-router";
-import { ArrowRight } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 
 import { getWelcomeInfo } from "@/lib/actions/welcome";
@@ -9,19 +7,18 @@ import { useLocale } from "@/lib/i18n/LocaleProvider";
 import { PEARL_WORLD } from "../world/tone";
 import { introGate } from "./intro-gate";
 import { SkipLink } from "./IntroShared";
-import { REVEAL_MS, REVEAL_REDUCED_MS, RevealLockup } from "./Reveal";
+import { REVEAL_MS, REVEAL_REDUCED_MS, RevealLockup, ScanExit } from "./Reveal";
 
-/** The returning line stays this long before the reveal. */
-export const RETURN_LINE_MS = 1_400;
-/** A signed-in founder gets a little longer, to choose "Go to my dashboard". */
-const SIGNED_IN_MS = 2_400;
+/** The returning line holds this long, to be read, before the exit (owner, 2026-11-16). */
+export const RETURN_LINE_MS = 1_500;
 
 /**
- * The returning openings (owner, 2026-11-16), DOM and CSS only, then the same reveal:
+ * The returning openings (owner, 2026-11-16), DOM and CSS only, then the same exit and reveal:
  * - "return": a visitor who once tapped a choice, not signed in — one line for that choice
  *   (chosen by CSS from the head gate's `data-intro-choice`, so it is right from the first paint);
- * - "signedin": "Welcome back, <first name>." and "Go to my dashboard"; "Your plan is waiting."
- *   only with a roadmap, otherwise "Pick up where you left off.".
+ * - "signedin": "Welcome back, <first name>."; "Your plan is waiting." only with a roadmap,
+ *   otherwise "Pick up where you left off.". No button: everyone goes on into the film, whose
+ *   bar has the Dashboard link.
  */
 export function IntroReturn({
   variant,
@@ -54,19 +51,16 @@ export function IntroReturn({
   useEffect(() => {
     const id =
       phase === "line"
-        ? window.setTimeout(
-            () => {
-              setPhase("reveal");
-              cb.current.onReveal();
-            },
-            signedIn ? SIGNED_IN_MS : RETURN_LINE_MS,
-          )
+        ? window.setTimeout(() => {
+            setPhase("reveal");
+            cb.current.onReveal();
+          }, RETURN_LINE_MS)
         : window.setTimeout(
             () => cb.current.onLockup(),
             reducedMotion ? REVEAL_REDUCED_MS : REVEAL_MS,
           );
     return () => window.clearTimeout(id);
-  }, [phase, signedIn, reducedMotion]);
+  }, [phase, reducedMotion]);
 
   const revealing = phase === "reveal";
   const name = info.data?.firstName;
@@ -75,19 +69,19 @@ export function IntroReturn({
       data-intro-layer={variant}
       data-testid="intro-return"
       data-phase={phase}
-      className="fixed inset-0 z-[70] flex-col items-center justify-center"
+      className="pointer-events-none fixed inset-0 z-[70] flex-col items-center justify-center"
       style={{
         backgroundColor: revealing && !still ? "transparent" : PEARL_WORLD.sky,
-        pointerEvents: revealing ? "none" : "auto",
         fontFamily: "var(--font-tech)",
         color: "var(--ink)",
       }}
     >
       <SkipLink onSkip={onSkip} />
-      <div className="pointer-events-none absolute inset-0 flex items-center justify-center px-4">
+      {revealing && <ScanExit />}
+      <div data-wipe className="absolute inset-0 flex items-center justify-center px-4">
         <div
-          data-lead-out={revealing ? "" : undefined}
-          className="pointer-events-auto flex max-w-[min(1000px,100%)] flex-col items-center gap-6 text-center motion-safe:animate-[sol-intro-in_520ms_cubic-bezier(0.2,0.7,0.2,1)_both]"
+          data-tighten
+          className="flex max-w-[min(1000px,100%)] flex-col items-center gap-6 text-center motion-safe:animate-[sol-intro-in_520ms_cubic-bezier(0.2,0.7,0.2,1)_both]"
         >
           {signedIn ? (
             <>
@@ -105,16 +99,6 @@ export function IntroReturn({
                 >
                   {info.data.hasRoadmap ? t("v2.intro.back.none") : t("v2.intro.back.pickup")}
                 </p>
-              )}
-              {!revealing && (
-                <Link
-                  to="/dashboard"
-                  className="inline-flex min-h-14 items-center gap-3 rounded-full bg-[#15181F] px-8 text-[1.0625rem] font-semibold text-[#F7F7F4] transition-colors hover:bg-[#0B1F3B] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#B8924F]"
-                  data-testid="intro-return-dashboard"
-                >
-                  {t("v2.intro.back.dashboard")}
-                  <ArrowRight className="size-5" aria-hidden="true" />
-                </Link>
               )}
             </>
           ) : (

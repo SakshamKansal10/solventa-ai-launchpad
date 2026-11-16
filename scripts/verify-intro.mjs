@@ -263,11 +263,13 @@ async function checks() {
     const page = await ctx.newPage();
     await page.goto(`${base}/?intro=auto`, { waitUntil: "domcontentloaded" });
     // First visit: skip the opening, then go part-way into the story.
+    // (No visible Skip since 2026-11-16: Esc ends the opening.)
     const first = await page
-      .getByTestId("intro-skip")
-      .isVisible({ timeout: 15_000 })
+      .getByTestId("intro-question")
+      .waitFor({ timeout: 15_000 })
+      .then(() => true)
       .catch(() => false);
-    if (first) await page.getByTestId("intro-skip").click();
+    if (first) await page.keyboard.press("Escape");
     await page.waitForTimeout(800);
     await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight * 0.35));
     await page.waitForTimeout(800);

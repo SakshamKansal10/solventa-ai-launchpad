@@ -182,6 +182,16 @@ export function CinematicHome({
     };
   }, [intro]);
 
+  // No visible Skip (owner, 2026-11-16): Esc ends the opening, the reveal or the hold silently.
+  useEffect(() => {
+    if (intro === "off") return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setIntro("off");
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [intro]);
+
   // The lockup holds until the world is ready; after LOCKUP_WAIT_MS the visit gets the still
   // version instead (decided before the visitor is inside the film, never mid-film).
   useEffect(() => {

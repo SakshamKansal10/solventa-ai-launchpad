@@ -76,7 +76,7 @@ test.describe("cinematic homepage", () => {
     test.setTimeout(90_000);
     // A cold load (fresh context, empty cache) of the real, WebGL page — no frozen frames.
     await gotoApp(page, "/cinematic?tier=full");
-    const img = page.locator("[data-brand-opening] [data-brand-part=mark] [data-rv=top] img");
+    const img = page.locator("[data-brand-opening] [data-brand-part=mark] [data-rv-whole] img");
     await expect(img).toBeVisible();
 
     // The emblem asset is transparent: nothing is painted outside the S — no canvas to hide.

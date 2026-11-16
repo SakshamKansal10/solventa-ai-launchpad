@@ -337,3 +337,25 @@ Each entry: what was ambiguous, what I chose, why.
     footer. The silver S on lite (pre-baked matcap ≤ 150 KB, only if ≤ 0.3 s) was SKIPPED, as
     the owner allowed when usage runs low: it changes the live 3D scene on launch day and needs
     its own before/after measurement; the lite S keeps the 2026-11-16 hemisphere ×1.3 tune.
+
+48. **The cut S, and the new transition (owner, 2026-11-16, urgent).** The S after the reveal
+    was two clipped halves of the logo; at fractional sizes and zooms their clip edges left a
+    seam. Now the mark at rest is ONE whole copy of the original logo; the halves (and the
+    glint) exist only while the reveal runs, in exactly the same box, and are hidden when it
+    ends, with reduced motion and on skip. Checked by pixels: after the full sequence the S is
+    identical to a fresh copy of the original drawn in the same box — 0 differing pixels at
+    1920×1080, 1366×768 and 390×844 (3×), max channel difference 3/255 at 125 % zoom
+    (docs/redesign/perf/s-compare-*.png). The original's gold is itself a soft glow; the
+    favicon is the same drawing on a white rounded tile. No visible buttons on any opening:
+    "Go to my dashboard" and the visible Skip are gone; Esc skips silently, a screen-reader-only
+    Skip remains (not visible, not in the tab order) so assistive technology is never held, and
+    every opening ends by itself (3 s default answer; 8 s still-version rule on the hold). The
+    exit (CSS only): the text holds 1.5 s, then over 0.6 s it tightens (scaleX .94) and is wiped
+    (clip-path) by a 2 px gold scan line sweeping left to right with a faint navy hairline grid
+    drawing behind it; in 0.3 s the line shrinks into the screen's centre point — measured at
+    exactly the hairline's centre at 1920, 1366 and 390 — and the hairline grows from it;
+    a 0.4 s still beat; then the reveal. Text to finished logo ≈ 4.95 s. verify-intro: ready
+    5.2 s broadband (was 5.7 s), 9.3 s at 4× (was 9.0 s, within the ±0.8 s noise); hold at 4×
+    0.3 s (was 1.4 s). Long tasks inside the 4.3 s window come from the world's shader compile:
+    with no 3D (still version) the transition and reveal produce none (two runs), and the one
+    broadband long task starts as the shaders finish (5,010 → 5,044 ms).
