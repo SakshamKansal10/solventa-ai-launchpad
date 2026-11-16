@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-import { generateJSON } from "@/lib/ai/gemini.server";
+import { generateStructured } from "@/lib/ai/gemini.server";
 import { FounderDNASchema } from "@/lib/ai/schemas";
 import type { Candidate, EngineBrief } from "@/lib/engine/stages";
 import { CandidateSchema, CANDIDATE_TYPES } from "@/lib/engine/stages";
@@ -30,6 +30,15 @@ function formatBrief(brief: EngineBrief, currency: string): string {
     `Unknown (never guess these): ${brief.unknowns.join(", ") || "nothing"}.`,
   ].join("\n");
 }
+
+// ---------- JSON contracts (the prompt carries the exact shape: a large provider schema can be
+// refused by the API, and the call then runs without one — zod still validates everything) ----
+
+const FOUNDER_DNA_CONTRACT = `{ "narrativeSummary": string, "strengths": string[2-5], "resources": string[1-5], "constraints": string[1-5], "workStyle": string, "riskProfile": string, "direction": string, "strategicSignals": string[1-4] }`;
+
+const FIT_SIGNALS_CONTRACT = `{ "requiredSkills": [{"name": string, "minLevel": "never_tried"|"beginner"|"comfortable"|"advanced"}], "startupCapitalAmount": number, "weeklyHoursNeeded": number, "riskLevel": "cautious"|"balanced"|"experimental", "motivationAlignment": "high"|"medium"|"low", "requiresLeadership": boolean, "requiresSales": boolean, "soloFriendly": boolean, "relevantExperienceYears": number, "requiresDigitalAssets": boolean, "locationFlexible": boolean, "ceiling": "income"|"national"|"venture" }`;
+
+const CANDIDATE_CONTRACT = `{ "title": string, "type": ${CANDIDATE_TYPES.map((t) => `"${t}"`).join("|")}, "customer": string, "problem": string, "offer": string, "pricePerUnit": number, "unit": string, "unitsPerMonth": number, "marginPercent": number (0-100), "hoursPerUnit": number, "startCost": number, "needsLicence": boolean, "minAge": number|null, "needsTravel": boolean, "firstTest": string, "firstTestCostsMoney": boolean, "fitSignals": ${FIT_SIGNALS_CONTRACT} }`;
 
 // ---------- generate wide ----------
 
@@ -63,8 +72,9 @@ ${formatBrief(brief, profile.identity.currency)}
 - fitSignals: what the direction really requires (skills with level, startupCapitalAmount = startCost, weeklyHoursNeeded, risk, sales, digital assets, location flexibility, realistic ceiling).
 Respect every hard limit. Where something is UNKNOWN, choose directions that work either way rather than guessing it.
 
-Respond with ONLY a JSON object: { "founderDNA": {...}, "candidates": [ ... ] }.${buildLanguageRule(locale)}`;
-  return generateJSON(WideSchema, {
+Respond with ONLY a single JSON object — no markdown fences, no commentary — of exactly this shape:
+{ "founderDNA": ${FOUNDER_DNA_CONTRACT}, "candidates": [ 24 objects, each ${CANDIDATE_CONTRACT} ] }${buildLanguageRule(locale)}`;
+  return generateStructured(WideSchema, {
     systemInstruction: WIDE_SYSTEM,
     prompt,
     callSite: "engine.generateCandidates",
@@ -118,7 +128,7 @@ ${rows}
 For EVERY direction (index as above): the strongest objection, whether it is fatal for this person, and the cheapest test that would show if the objection holds. Do not soften: an honest "this fails because…" saves the founder months.
 
 Respond with ONLY a JSON object: { "objections": [ { "index": number, "objection": string, "fatal": boolean, "test": string } ] }.${buildLanguageRule(locale)}`;
-  return generateJSON(AttackSchema, {
+  return generateStructured(AttackSchema, {
     systemInstruction: ATTACK_SYSTEM,
     prompt,
     callSite: "engine.attackCandidates",

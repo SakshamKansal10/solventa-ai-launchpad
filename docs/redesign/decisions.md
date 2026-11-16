@@ -232,3 +232,6 @@ Each entry: what was ambiguous, what I chose, why.
     text. Prompts live in versioned files (`ENGINE_PROMPT_VERSION`). Leave-and-return: roadmaps
     build in the background (part 3); a consultation's generation still runs within the
     request — moving it to a background job is a TODO in REPORT.md.
+40. **Flaky e2e:** `cinematic.spec.ts` "live sound…" measures real audio output; it failed once
+    in a full cinematic run while the engine comparison loaded the machine and passed alone
+    (2026-11-16). Not caused by the opening (the spec's URLs skip it). Left as is, noted.

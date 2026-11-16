@@ -9,6 +9,7 @@ import {
   type FitAssessment,
   type FitFactorKey,
 } from "@/lib/fit/model";
+import { getBrackets } from "@/lib/consultation/brackets";
 import type { NormalizedProfile } from "@/lib/profile/normalize";
 
 /**
@@ -68,10 +69,19 @@ export function understand(profile: NormalizedProfile): EngineBrief {
       age: profile.identity.age,
       canTravel: relocation ? !TRAVEL_NO.test(relocation) : null,
       refusals: [...profile.constraints.industryRestrictions, ...(v2?.hardConstraints ?? [])],
-      monthlyIncomeTarget: v2?.ambition.minimumMonthlyIncome ?? null,
+      monthlyIncomeTarget: incomeTargetFloor(profile),
     },
     unknowns,
   };
+}
+
+/** The low end of the income bracket the founder chose ("at least ₹X a month"), not its
+ * midpoint: the target is a floor they need, not a hope. */
+function incomeTargetFloor(profile: NormalizedProfile): number | null {
+  const value = profile.v2?.ambition.minimumMonthlyIncome ?? null;
+  if (value === null) return null;
+  const tier = getBrackets("minIncome", profile.identity.currency).find((b) => b.value === value);
+  return tier ? (tier.zero ? 0 : (tier.min ?? Math.round(value / 2))) : value;
 }
 
 // ---------- 2. Candidates (the shape the wide stage returns) ----------
@@ -191,6 +201,11 @@ export interface MoneyCheck {
   monthlyRevenue: number;
   monthlyProfit: number;
   weeklyHours: number;
+  /** Units a month, and founder hours a week, that the income target needs at this price and
+   * margin (null without a target). */
+  unitsForTarget: number | null;
+  hoursForTarget: number | null;
+  /** Can the target be reached within their hours at these numbers? */
   meetsTarget: boolean | null;
   fitsHours: boolean | null;
   verdict: "ok" | "below_target" | "over_hours" | "unknown_target";
@@ -204,7 +219,18 @@ export function checkMoney(c: Candidate, brief: EngineBrief): MoneyCheck {
   const weeklyHours = Math.round(((c.unitsPerMonth * c.hoursPerUnit) / WEEKS_PER_MONTH) * 10) / 10;
   const target = brief.limits.monthlyIncomeTarget;
   const cap = brief.limits.weeklyHours?.max ?? null;
-  const meetsTarget = target === null ? null : monthlyProfit >= target;
+  const profitPerUnit = (c.pricePerUnit * c.marginPercent) / 100;
+  // "Do the numbers reach the target within their hours?" — not "in the first months".
+  const unitsForTarget =
+    target === null || target <= 0 ? null : profitPerUnit > 0 ? Math.ceil(target / profitPerUnit) : Infinity;
+  const hoursForTarget =
+    unitsForTarget === null
+      ? null
+      : Math.round(((unitsForTarget * c.hoursPerUnit) / WEEKS_PER_MONTH) * 10) / 10;
+  const meetsTarget =
+    hoursForTarget === null
+      ? null
+      : Number.isFinite(hoursForTarget) && (cap === null || hoursForTarget <= cap * 1.25);
   const fitsHours = cap === null ? null : weeklyHours <= cap * 1.25;
   const verdict =
     fitsHours === false
@@ -214,7 +240,16 @@ export function checkMoney(c: Candidate, brief: EngineBrief): MoneyCheck {
         : meetsTarget === null
           ? "unknown_target"
           : "ok";
-  return { monthlyRevenue, monthlyProfit, weeklyHours, meetsTarget, fitsHours, verdict };
+  return {
+    monthlyRevenue,
+    monthlyProfit,
+    weeklyHours,
+    unitsForTarget: unitsForTarget !== null && Number.isFinite(unitsForTarget) ? unitsForTarget : null,
+    hoursForTarget: hoursForTarget !== null && Number.isFinite(hoursForTarget) ? hoursForTarget : null,
+    meetsTarget,
+    fitsHours,
+    verdict,
+  };
 }
 
 // ---------- 6. Score and choose ----------
