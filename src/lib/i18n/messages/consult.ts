@@ -75,7 +75,7 @@ const en = {
   "consult.generating.s4": "Checking each against your limits…",
   "consult.generating.s5": "Choosing your three strongest…",
   "consult.generating.long":
-    "Still working. Your answers are saved, so you can leave and come back.",
+    "Still working — this one is taking a little longer. Your answers are saved, so you can leave and come back.",
   "consult.error.title": "We couldn't finish your analysis",
   "consult.error.body": "Your answers are saved. Nothing was lost — try again.",
   "consult.error.retry": "Try again",
@@ -479,7 +479,7 @@ const hi: Record<keyof typeof en, string> = {
   "consult.generating.s4": "हर दिशा को आपकी सीमाओं पर परखा जा रहा है…",
   "consult.generating.s5": "आपकी तीन सबसे मज़बूत दिशाएं चुनी जा रही हैं…",
   "consult.generating.long":
-    "अभी काम चल रहा है। आपके जवाब सेव हैं, आप जा सकते हैं और बाद में लौट सकते हैं।",
+    "काम अभी जारी है — इस बार थोड़ा ज़्यादा समय लग रहा है। आपके जवाब सेव हैं, आप जा सकते हैं और बाद में लौट सकते हैं।",
   "consult.error.title": "हम आपका विश्लेषण पूरा नहीं कर सके",
   "consult.error.body": "आपके जवाब सहेजे हुए हैं। कुछ भी नहीं खोया — फिर कोशिश करें।",
   "consult.error.retry": "फिर कोशिश करें",

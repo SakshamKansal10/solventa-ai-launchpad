@@ -419,7 +419,7 @@ const en = {
   "v2.limit.askSol":
     "You've sent Sol {n} messages today. That's the daily limit — Sol will be back after midnight.",
   "v2.limit.title": "That's all for today",
-  "v2.gen.time": "This can take up to a minute.",
+  "v2.gen.time": "This takes a minute or two.",
   "v2.gen.step.save": "Saving your answers",
   "v2.gen.step.write": "Writing your three directions",
   "v2.gen.step.open": "Opening your dashboard",
@@ -849,7 +849,7 @@ const hi: Record<keyof typeof en, string> = {
   "v2.limit.askSol":
     "आज आप Sol को {n} मैसेज भेज चुके हैं। यह आज की लिमिट है — रात 12 बजे के बाद Sol फिर मिलेगा।",
   "v2.limit.title": "आज के लिए इतना ही",
-  "v2.gen.time": "इसमें एक मिनट तक लग सकता है।",
+  "v2.gen.time": "इसमें एक-दो मिनट लगते हैं।",
   "v2.gen.step.save": "आपके जवाब सेव कर रहे हैं",
   "v2.gen.step.write": "आपकी तीन दिशाएँ लिख रहे हैं",
   "v2.gen.step.open": "आपका डैशबोर्ड खोल रहे हैं",

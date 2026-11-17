@@ -138,3 +138,15 @@ describe("locale helpers", () => {
     expect(detectContentLocale(["12345", "—"])).toBe("en");
   });
 });
+
+describe("idea generation wait text (owner, 2026-11-17: 'a minute or two')", () => {
+  it("never says 'up to a minute' in either language", () => {
+    for (const locale of ["en", "hi"] as const) {
+      const all = Object.values(MESSAGES[locale]).join(" | ");
+      expect(all).not.toMatch(/up to a minute\./i);
+      expect(all).not.toContain("एक मिनट तक लग सकता है");
+    }
+    expect(MESSAGES.en["v2.gen.time"]).toBe("This takes a minute or two.");
+    expect(MESSAGES.hi["v2.gen.time"]).toBe("इसमें एक-दो मिनट लगते हैं।");
+  });
+});

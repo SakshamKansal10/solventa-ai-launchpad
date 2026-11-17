@@ -15,13 +15,15 @@ import { GenerationVisual } from "./GenerationVisual";
 import { ScreenBody } from "./ui";
 
 const GEN_STEPS = ["save", "write", "open"] as const;
+/** "A minute or two": the calm line shows once two minutes have passed. */
+const LONG_AFTER_S = 120;
 
 /** Honest waiting screen (go-live step 4). Every step is real: "Saving your answers" ticks when
  * the save has returned, "Writing your three directions" is the one model request, "Opening your
  * dashboard" is its answer arriving. The time quoted is an upper limit, not the typical time
- * (owner, 2026-11-16: "up to a minute"), and the seconds count up — nothing here claims progress it
- * cannot see. After a minute a calm line says the answers are safe; an error shows only when the
- * request has actually failed. */
+ * (owner, 2026-11-17: "a minute or two"), and the seconds count up — nothing here claims progress
+ * it cannot see. Past two minutes a calm line says it is taking a little longer and the answers
+ * are safe; an error shows only when the request has actually failed. */
 function GeneratingPanel({ step }: { step: number }) {
   const { t } = useLocale();
   const [elapsed, setElapsed] = useState(0);
@@ -70,7 +72,7 @@ function GeneratingPanel({ step }: { step: number }) {
         >
           {t("v2.gen.elapsed", { s: elapsed })}
         </p>
-        {elapsed >= 60 && (
+        {elapsed >= LONG_AFTER_S && (
           <p className="text-[0.9375rem] text-sol-secondary" data-testid="generating-long">
             {t("consult.generating.long")}
           </p>

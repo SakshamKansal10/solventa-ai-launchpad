@@ -5,8 +5,8 @@ import { STUDENT_ANSWERS } from "./helpers/seed";
 import { createUser, forbidRealBackends, resetStack, signIn } from "./helpers/stack";
 
 /**
- * Honest waiting (owner, 2026-11-16): the idea screen quotes an upper limit ("up to a minute"),
- * and after a minute says calmly that the answers are saved — never an error while the request
+ * Honest waiting (owner, 2026-11-17): the idea screen quotes "a minute or two",
+ * and after two minutes says calmly it is taking a little longer and the answers are saved — never an error while the request
  * is still running.
  */
 test.beforeEach(async ({ page }) => {
@@ -14,7 +14,7 @@ test.beforeEach(async ({ page }) => {
   await resetStack();
 });
 
-test("idea generation: 'up to a minute', then after 60 s a calm line and no error", async ({
+test("idea generation: 'a minute or two', then after two minutes a calm line and no error", async ({
   page,
   context,
 }) => {
@@ -39,13 +39,17 @@ test("idea generation: 'up to a minute', then after 60 s a calm line and no erro
     held.push(route);
   });
 
-  await expect(page.getByTestId("generating")).toContainText("This can take up to a minute.");
+  await expect(page.getByTestId("generating")).toContainText("This takes a minute or two.");
+  await expect(page.getByTestId("generating")).not.toContainText("up to a minute");
   await expect(page.getByTestId("generating")).not.toContainText("usually");
   await expect(page.getByTestId("generating-long")).toHaveCount(0);
 
+  // Not yet at one minute: "a minute or two" has not passed.
   await page.clock.fastForward(61_000);
+  await expect(page.getByTestId("generating-long")).toHaveCount(0);
+  await page.clock.fastForward(60_000);
   await expect(page.getByTestId("generating-long")).toHaveText(
-    "Still working. Your answers are saved, so you can leave and come back.",
+    "Still working — this one is taking a little longer. Your answers are saved, so you can leave and come back.",
   );
   await expect(page.getByTestId("generate-error")).toHaveCount(0);
   await expect(page.getByTestId("generating")).toBeVisible();
