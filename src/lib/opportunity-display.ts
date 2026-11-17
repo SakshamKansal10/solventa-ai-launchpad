@@ -115,7 +115,7 @@ function assumptionsOf(v: unknown): { statement: string; category: string }[] {
   });
 }
 
-function isPackageShape(
+export function isPackageShape(
   detail: OpportunityPackage | OpportunityDetail,
 ): detail is OpportunityPackage {
   return Boolean(detail) && "plainEnglishSummary" in detail;

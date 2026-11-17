@@ -14,6 +14,7 @@ import {
 } from "@/components/founder/DashboardShell";
 import { nextMissionId } from "@/components/founder/dash/missions";
 import {
+  preloadMissionWorkspace,
   MissionWorkspace,
   useGateReason,
   useMissionWorkspace,
@@ -49,6 +50,8 @@ export const Route = createFileRoute("/dashboard_/roadmap/mission/$missionId")({
     /** Set by a Start button: the mission moves to "in progress" when the page opens. */
     start: z.boolean().optional(),
   }),
+  // Hover or touch on a mission link starts its workspace (never blocks the navigation).
+  loader: ({ context, params }) => preloadMissionWorkspace(context.queryClient, params.missionId),
   component: MissionRoute,
   head: () => ({
     meta: [

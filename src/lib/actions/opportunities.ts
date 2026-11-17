@@ -25,9 +25,9 @@ import {
   setActivePointer,
 } from "@/lib/actions/direction.server";
 import { loadFounderState, type OpportunityBrief } from "@/lib/actions/founder";
-import { loadProofSummary, type ProofSummary } from "@/lib/actions/proof";
 import {
   getFitFactors,
+  isPackageShape,
   toDisplayDetail,
   type OpportunityDisplayDetail,
 } from "@/lib/opportunity-display";
@@ -195,10 +195,12 @@ export interface OpportunityDetailDTO {
     /** When the source was looked up. */
     retrievedAt: string | null;
   }[];
-  proof: ProofSummary;
   isSelected: boolean;
   isCurrentConsultation: boolean;
   roadmapStatus: "none" | "building" | "active" | "completed" | "failed" | "archived";
+  /** A very old direction whose full detail was never written: the page shows what is saved
+   * and asks for the rest in the background (prepareOpportunityDetail). Never AI on open. */
+  detailPreparing: boolean;
 }
 
 export const getOpportunityDetail = createServerFn({ method: "GET" })
@@ -214,8 +216,9 @@ export const getOpportunityDetail = createServerFn({ method: "GET" })
       .single();
     if (error || !opportunity) throw new Error(error?.message ?? "Opportunity not found");
 
-    // None of these depend on each other — only on `opportunity` above.
-    const [dnaRow, detailRes, evidenceRes, roadmapRes, state, proof] = await Promise.all([
+    // None of these depend on each other — only on `opportunity` above. (The proof summary that
+    // used to load here had no reader on the page; it cost a full proof overview per open.)
+    const [dnaRow, detailRes, evidenceRes, roadmapRes, state] = await Promise.all([
       supabase
         .from("business_dna")
         .select("normalized_signals, ambition_band")
@@ -234,34 +237,22 @@ export const getOpportunityDetail = createServerFn({ method: "GET" })
         .eq("user_id", user.id)
         .maybeSingle(),
       loadFounderState(supabase, user.id, null),
-      loadProofSummary(supabase, user.id, opportunity.id),
     ]);
     if (dnaRow.error || !dnaRow.data)
       throw new Error("Founder profile not found for this opportunity");
     const profile = dnaRow.data.normalized_signals as unknown as NormalizedProfile;
 
-    let detailRow = detailRes.data;
-    if (!detailRow) {
-      // Only pre-one-call rows ever reach this: newer ones mirror their detail at creation.
-      const generated = await generateOpportunityDetail(
-        profile,
-        opportunity.candidate as unknown as OpportunityCandidate,
-      );
-      const inserted = await supabase
-        .from("opportunity_details")
-        .insert({
-          opportunity_id: opportunity.id,
-          user_id: user.id,
-          detail: generated as unknown as Json,
-          ai_model: MODEL,
-        })
-        .select("detail")
-        .single();
-      if (inserted.error) throw new Error(inserted.error.message);
-      detailRow = inserted.data;
-    }
+    // Never an AI call on page open (owner, 2026-11-17, Job I: a direction took ~40 s to open).
+    // Every direction since the one-call engine carries its full detail in `candidate` (and a
+    // mirror row); a very old one shows what it has while prepareOpportunityDetail fills in the
+    // rest in the background.
+    const candidate = opportunity.candidate as unknown as OpportunityPackage | OpportunityCandidate;
+    const saved =
+      detailRes.data?.detail ??
+      (isPackageShape(candidate as unknown as OpportunityPackage) ? candidate : null);
+    const detailPreparing = !saved;
 
-    const raw = toDisplayDetail(detailRow.detail as unknown as OpportunityPackage);
+    const raw = toDisplayDetail((saved ?? candidate) as unknown as OpportunityPackage);
     // Personal reasons the founder's own profile does not support are never shown.
     const display = keepSupportedDetail(raw, profile);
     const factors = getFitFactors(opportunity.candidate as unknown as OpportunityPackage);
@@ -292,13 +283,60 @@ export const getOpportunityDetail = createServerFn({ method: "GET" })
         kind: evidenceKind(e as { kind?: string | null; source_url: string | null }),
         retrievedAt: e.retrieved_at ?? null,
       })),
-      proof,
       isSelected: opportunity.status === "selected",
       isCurrentConsultation: opportunity.business_dna_id === state.direction.consultationId,
       roadmapStatus: (roadmapRes.data?.status === "available"
         ? "archived"
         : (roadmapRes.data?.status ?? "none")) as OpportunityDetailDTO["roadmapStatus"],
+      detailPreparing,
     };
+  });
+
+/** The full detail of a very old direction that never had one written (pre-one-call rows) —
+ * asked for in the background by the direction page, never awaited by it. Idempotent: a
+ * second call finds the row the first one wrote. */
+export const prepareOpportunityDetail = createServerFn({ method: "POST" })
+  .validator(z.object({ id: z.string().uuid() }))
+  .handler(async ({ data }): Promise<{ prepared: boolean }> => {
+    const { supabase, user } = await requireUser();
+    const { data: opportunity, error } = await supabase
+      .from("opportunities")
+      .select("id, business_dna_id, candidate")
+      .eq("id", data.id)
+      .eq("user_id", user.id)
+      .single();
+    if (error || !opportunity) throw new Error(error?.message ?? "Opportunity not found");
+    const existing = await supabase
+      .from("opportunity_details")
+      .select("opportunity_id")
+      .eq("opportunity_id", opportunity.id)
+      .maybeSingle();
+    if (existing.data) return { prepared: true };
+    const candidate = opportunity.candidate as unknown as OpportunityPackage | OpportunityCandidate;
+    let detail: unknown = isPackageShape(candidate as unknown as OpportunityPackage)
+      ? candidate
+      : null;
+    if (!detail) {
+      const dna = await supabase
+        .from("business_dna")
+        .select("normalized_signals")
+        .eq("id", opportunity.business_dna_id)
+        .single();
+      if (dna.error || !dna.data) throw new Error("Founder profile not found for this opportunity");
+      detail = await generateOpportunityDetail(
+        dna.data.normalized_signals as unknown as NormalizedProfile,
+        candidate as OpportunityCandidate,
+      );
+    }
+    const { error: insertError } = await supabase.from("opportunity_details").insert({
+      opportunity_id: opportunity.id,
+      user_id: user.id,
+      detail: detail as Json,
+      ai_model: MODEL,
+    });
+    // 23505: a parallel call already wrote it — the same result.
+    if (insertError && insertError.code !== "23505") throw new Error(insertError.message);
+    return { prepared: true };
   });
 
 /** Founder Fit for several directions in ONE call — only the canonical assessment, so

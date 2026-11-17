@@ -59,9 +59,13 @@ export default defineConfig({
       : // A roadmap build (skeleton + week 1) or a consultation can take a minute when the model
         // retries; never let the platform default cut one off halfway (go-live step 3). The
         // wrapper spreads these options into nitro unchanged; only its type is narrower.
+        // Region (owner, 2026-11-17, Job I): the functions ran in Vercel's default iad1
+        // (Washington) while Supabase is in Mumbai (ap-south-1) — every database round trip
+        // crossed the world (~300 ms), so each page's server call took 0.7–2.3 s. bom1 is
+        // Mumbai: the same city as the database. (Written to the function's .vc-config.json.)
         ({
           preset: "vercel",
-          vercel: { functions: { maxDuration: 300 } },
+          vercel: { functions: { maxDuration: 300, regions: ["bom1"] } },
         } as { preset: string }),
 
   vite: {

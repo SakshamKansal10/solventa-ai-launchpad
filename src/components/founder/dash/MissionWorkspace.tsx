@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient, type QueryClient } from "@tanstack/react-query";
 import { Copy, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -29,12 +29,21 @@ import { ActionButton, Label, MistCard } from "./ui";
 
 export const missionWorkspaceKey = (taskId: string) => ["mission-workspace", taskId] as const;
 
+const missionWorkspaceQuery = (taskId: string) => ({
+  queryKey: missionWorkspaceKey(taskId),
+  queryFn: () => getMissionWorkspace({ data: { taskId } }),
+  staleTime: 10_000,
+});
+
 export function useMissionWorkspace(taskId: string) {
-  return useQuery({
-    queryKey: missionWorkspaceKey(taskId),
-    queryFn: () => getMissionWorkspace({ data: { taskId } }),
-    staleTime: 10_000,
-  });
+  return useQuery(missionWorkspaceQuery(taskId));
+}
+
+/** Route loader helper: hover or touch on a mission link starts its workspace (browser only,
+ * never awaited — the navigation does not wait for it). */
+export function preloadMissionWorkspace(queryClient: QueryClient, taskId: string) {
+  if (typeof window === "undefined") return;
+  void queryClient.prefetchQuery(missionWorkspaceQuery(taskId)).catch(() => {});
 }
 
 function useEntryMutations(taskId: string) {

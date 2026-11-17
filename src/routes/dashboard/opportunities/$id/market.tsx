@@ -3,7 +3,11 @@ import { useMutation } from "@tanstack/react-query";
 import { Check, ExternalLink } from "lucide-react";
 import { toast } from "sonner";
 
-import { BackLink, useDirectionDetail } from "@/components/founder/dash/direction";
+import {
+  BackLink,
+  preloadDirection,
+  useDirectionDetail,
+} from "@/components/founder/dash/direction";
 import { EstimateTag } from "@/components/founder/dash/Estimate";
 import {
   ActionButton,
@@ -22,6 +26,8 @@ import { hasNumber } from "@/lib/market/number-kind";
 import { useInvalidateFounder } from "@/lib/queries";
 
 export const Route = createFileRoute("/dashboard/opportunities/$id/market")({
+  // Hover or touch on a link to this page starts its data (never blocks the navigation).
+  loader: ({ context, params }) => preloadDirection(context.queryClient, params.id),
   component: MarketPage,
   head: () => ({
     meta: [

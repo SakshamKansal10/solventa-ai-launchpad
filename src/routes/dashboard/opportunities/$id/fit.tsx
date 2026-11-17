@@ -1,7 +1,12 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { Check, Minus } from "lucide-react";
 
-import { BackLink, DirectionAction, useDirectionDetail } from "@/components/founder/dash/direction";
+import {
+  BackLink,
+  DirectionAction,
+  preloadDirection,
+  useDirectionDetail,
+} from "@/components/founder/dash/direction";
 import { FitBar, kindOf, sortFactors } from "@/components/founder/dash/FitBar";
 import { DashError, DashPage, DashSkeleton, Label, MistCard } from "@/components/founder/dash/ui";
 import { EstimateTag } from "@/components/founder/dash/Estimate";
@@ -10,6 +15,8 @@ import { useLocale } from "@/lib/i18n/LocaleProvider";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/dashboard/opportunities/$id/fit")({
+  // Hover or touch on a link to this page starts its data (never blocks the navigation).
+  loader: ({ context, params }) => preloadDirection(context.queryClient, params.id),
   component: FitPage,
   head: () => ({
     meta: [

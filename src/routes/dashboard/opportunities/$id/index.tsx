@@ -1,7 +1,12 @@
 import { createFileRoute, redirect } from "@tanstack/react-router";
 import { z } from "zod";
 
-import { BackLink, DirectionAction, useDirectionDetail } from "@/components/founder/dash/direction";
+import {
+  BackLink,
+  DirectionAction,
+  preloadDirection,
+  useDirectionDetail,
+} from "@/components/founder/dash/direction";
 import { EstimateTag } from "@/components/founder/dash/Estimate";
 import { hasNumber } from "@/lib/market/number-kind";
 import { FitSummaryCard } from "@/components/founder/dash/FitBar";
@@ -17,6 +22,7 @@ import {
 } from "@/components/founder/dash/ui";
 import { useLocale } from "@/lib/i18n/LocaleProvider";
 import { useFounderState } from "@/lib/queries";
+import { useTranslatedBrief } from "@/lib/use-translation";
 
 export const Route = createFileRoute("/dashboard/opportunities/$id/")({
   // Old deep links (`?tab=fit|market`) land on the sub-pages that replaced the tabs.
@@ -29,6 +35,8 @@ export const Route = createFileRoute("/dashboard/opportunities/$id/")({
     if (search.tab === "market")
       throw redirect({ to: "/dashboard/opportunities/$id/market", params, replace: true });
   },
+  // Hover or touch on a link to this page starts its data (never blocks the navigation).
+  loader: ({ context, params }) => preloadDirection(context.queryClient, params.id),
   component: DirectionPage,
   head: () => ({
     meta: [
@@ -53,8 +61,20 @@ function DirectionPage() {
   const { t } = useLocale();
   const founder = useFounderState();
   const { query, dto, detail } = useDirectionDetail(id);
+  const savedBrief = useTranslatedBrief(founder.data?.briefs[id]);
 
-  if (query.isPending) return <DashSkeleton label={t("shell.skeleton.loading")} />;
+  // The summary the dashboard already holds shows at once; the rest follows (Job I).
+  if (query.isPending)
+    return savedBrief ? (
+      <DirectionSummary
+        brief={savedBrief}
+        recommended={
+          !founder.data?.direction.selectedId && founder.data?.direction.flagshipId === id
+        }
+      />
+    ) : (
+      <DashSkeleton label={t("shell.skeleton.loading")} />
+    );
   if (query.isError || !dto || !detail) {
     return <DashError onRetry={() => void query.refetch()} retrying={query.isFetching} />;
   }
@@ -163,6 +183,72 @@ function DirectionPage() {
           data-testid="link-market"
         />
       </nav>
+    </DashPage>
+  );
+}
+
+/** The direction page while its full detail loads: the saved summary (name, one paragraph, fit
+ * and the idea in up to four lines) at once, so opening a direction never shows an empty page. */
+function DirectionSummary({
+  brief,
+  recommended,
+}: {
+  brief: NonNullable<ReturnType<typeof useTranslatedBrief>>;
+  recommended: boolean;
+}) {
+  const { t } = useLocale();
+  const lines = [
+    { key: "customer", label: t("v2.detail.customer"), value: brief.customer },
+    { key: "problem", label: t("v2.card.problem"), value: brief.problem },
+    { key: "offer", label: t("v2.detail.offer"), value: brief.product },
+  ].filter((l) => l.value);
+  return (
+    <DashPage className="sm:gap-8" data-testid="opportunity-page" data-summary="">
+      <section aria-labelledby="opportunity-title" className="flex flex-wrap items-end gap-10 pb-4">
+        <div className="flex min-w-0 flex-[999_1_560px] flex-col gap-7">
+          <BackLink to="/dashboard/opportunities">{t("v2.detail.back")}</BackLink>
+          <div className="flex flex-wrap items-center gap-2.5">
+            {brief.status === "selected" ? (
+              <Tag tone="ink">{t("v2.today.chosen.tag")}</Tag>
+            ) : recommended ? (
+              <Tag tone="ink">{t("v2.dir.recommended")}</Tag>
+            ) : null}
+            <Tag>{t(`fit2.label.${brief.fit}` as const)}</Tag>
+          </div>
+          <h1
+            id="opportunity-title"
+            className="dash-headline max-w-[15em]"
+            data-testid="opportunity-title"
+          >
+            {brief.title}
+          </h1>
+          {brief.oneLiner && <p className="dash-lead max-w-[34em]">{brief.oneLiner}</p>}
+          <div
+            role="status"
+            aria-busy="true"
+            className="h-[52px] w-[min(20rem,80%)] animate-pulse rounded-full bg-sol-ivory"
+          >
+            <span className="sr-only">{t("shell.skeleton.loading")}</span>
+          </div>
+        </div>
+        {brief.fitFactors && (
+          <FitSummaryCard factors={brief.fitFactors} className="flex-[1_1_340px]" />
+        )}
+      </section>
+      {lines.length > 0 && (
+        <section
+          aria-label={t("v2.detail.fourLines")}
+          className="grid gap-4 [grid-template-columns:repeat(auto-fit,minmax(min(480px,100%),1fr))]"
+        >
+          {lines.map((l) => (
+            <MistCard key={l.key} as="div" className="gap-3.5">
+              <Label>{l.label}</Label>
+              <p className="dash-statement">{l.value}</p>
+            </MistCard>
+          ))}
+        </section>
+      )}
+      <div className="h-64 w-full animate-pulse rounded-[40px] bg-sol-navy/10" aria-hidden="true" />
     </DashPage>
   );
 }
