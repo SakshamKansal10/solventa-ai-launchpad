@@ -91,7 +91,8 @@ export function AskSolPanel({
 
   async function send(text?: string) {
     const message = (text ?? draft).trim();
-    if (!message || sending) return;
+    // Not before the earlier conversation has loaded: it would replace the message just sent.
+    if (!message || sending || conversation.isLoading) return;
     setDraft("");
     setLastFailed(null);
     setMessages((prev) => [...prev, { role: "user", content: message }]);
@@ -341,7 +342,7 @@ export function AskSolPanel({
         />
         <button
           type="submit"
-          disabled={sending || !draft.trim()}
+          disabled={sending || conversation.isLoading || !draft.trim()}
           aria-label={t("askSol.send")}
           data-testid="ask-sol-send"
           className="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-sol-navy text-white hover:bg-sol-navy-soft disabled:opacity-50"

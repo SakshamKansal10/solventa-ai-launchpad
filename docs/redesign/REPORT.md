@@ -1,5 +1,29 @@
 # Solventia redesign v2 — report
 
+## 2026-11-17 (evening) — Jobs I to N, and the dashboard scan (L)
+
+**I — slow page opens (14b6be5, 828b29c).** Root cause: the server functions ran in Vercel iad1
+(Washington) while Supabase is in Mumbai, so every page call waited 0.7–2.3 s. Now bom1: every
+dashboard page shows content in under 1 s on solventia.in (a direction 0.1 s from Directions,
+0.5–0.85 s on a full load). Numbers: docs/redesign/perf/open-times.md.
+**J — skills (19f6d2d):** chips that toggle in place, levels on one step after.
+**K — wait text (7af0b40):** "a minute or two" everywhere, en + hi.
+**N — Find 3 more directions (de04c41):** its own screen with real steps; one generation per
+founder (double click, second tab, leave and return all show the same job); Try again reuses it.
+**M — Ask Sol new facts (52fa85b):** "Want me to find new directions with this?" + one button;
+nothing changes before the tap; old answers kept; roadmap never changed.
+**L — scan:** headers never overlap at 320–430px en/hi (b7a6062, before/after in
+docs/redesign/perf/headers); "Sol" can no longer be translated to "Soul" (6a0713a); Ask Sol waits
+for its conversation before sending. npm run scan (now 390, 1440 and 1920px, plus direction, fit,
+market and mission pages): 174 pages, 0 findings. Full e2e: 240 passed, 1 failed (the new Sol
+test under load — fixed; its specs 34/34 after the fix).
+
+Migration 0021 is applied in production (checked: both tables answer).
+
+**Needs your decision:** after Ask Sol's "Find new directions" while you have a roadmap, Today and
+Directions show the new options and the roadmap stays saved (History → Restore). Keep that, or
+keep the roadmap on Today?
+
 ## 2026-11-17 — iPhone email links, dashboard width, emails finished
 
 **Job F — email links on iPhone (live, b7ad248).** Root cause: the site's CSS and JS files were

@@ -150,6 +150,8 @@ test('Ask Sol: the name stays "Sol" and is marked untranslatable (en + hi)', asy
     await page.getByTestId("ask-sol-launcher").click();
     await gemini.delay("SOL_MESSAGE", 4_000);
     await page.getByTestId("ask-sol-input").fill("Listen one thing");
+    // Send waits for the earlier conversation to load.
+    await expect(page.getByTestId("ask-sol-send")).toBeEnabled({ timeout: 30_000 });
     await page.getByTestId("ask-sol-send").click();
     // The waiting line: "Sol is thinking…" / "Sol सोच रहा है…", its name never translatable.
     const thinking = page

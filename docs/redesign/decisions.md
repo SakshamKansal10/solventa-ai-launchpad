@@ -528,3 +528,57 @@ Each entry: what was ambiguous, what I chose, why.
     test-send script. Guards: src/lib/contact.test.ts (the reply-to of a real send; no other
     address in src/, public/ or the Supabase templates) and e2e/contact-address.spec.ts (the
     served pages, en + hi: every mailto and every address in the HTML is sol@solventia.in).
+
+59. **Dashboard pages open in under a second (owner, 2026-11-17, Job I).** Root cause: every server
+    function ran in Vercel's default region iad1 (Washington) while Supabase is in Mumbai, so each
+    page's server call waited 0.7–2.3 s for its first byte and pages fire them in waves (a
+    direction 1.4–2 s, 10 s when the dashboard refetched at the same moment). The function region
+    is now bom1 (vite.config.ts → .vc-config.json): calls answer in 0.07–0.28 s and every page
+    shows content in under 1 s on solventia.in (docs/redesign/perf/open-times.md). Also: a
+    direction shows its saved summary at once; hover/touch preloads a direction's and a mission's
+    data; no AI call on page open (an old direction without a detail shows its saved package and
+    fills the rest in the background); the unread proof summary left the direction call. An
+    intermittent browser-side stall (12–19 s before a request is sent, 4 in ~50 loads) is network
+    level and not fixed by the app — see open-times.md for how to diagnose it if seen again.
+
+60. **Skills are chips; levels are one step after (owner, 2026-11-17, Job J).** The picker closed
+    after every pick and reopened at the top (518 / 1,530 / 2,086 px of scrolling for the 2nd, 3rd,
+    4th skill). Now each skill is a role=checkbox chip that toggles in place ("+" and "✓" the same
+    width, your own skills keep their place when untoggled), and the new screen skillLevels (only
+    when skills were picked) asks level and real use for all of them at once.
+
+61. **Idea generation says "a minute or two" (owner, 2026-11-17, Job K)**, in English and Hindi,
+    with the calm "taking a little longer" line after two minutes.
+
+62. **One generation per founder, on its own screen (owner, 2026-11-17, Job N).** "Find 3 more
+    directions" is a clear block under the set and opens /dashboard/directions/finding: the real
+    step (reading → fitting → writing), seconds from when the job started, a calm line past two
+    minutes, "Try again" reusing the same job. generation_jobs (migration 0021) holds at most one
+    running job per founder (unique partial index): a double click, a second tab or a return visit
+    gets the running job; the first consultation runs the same way. Until 0021 is applied an
+    in-process lock covers one server instance. The Directions page shows the newest set (and a
+    chosen direction); earlier sets are listed in History.
+
+63. **Ask Sol can refresh directions with new facts (owner, 2026-11-17, Job M).** The reply schema
+    has newFacts (only for new or changed facts about the founder's own situation); the card shows
+    what Sol understood, "Want me to find new directions with this?" and one button. The offer is
+    stored (profile_fact_updates, 0021); the tap applies it to a NEW copy of the latest answers
+    (src/lib/profile/apply-facts.ts: ₹ amount → capital tier, place, hours, days, skills, other
+    facts in the founder's words) and runs one generation (kind "refresh"). The newest
+    consultation is the current set, as before; an existing roadmap is never changed and stays
+    reachable in History (Restore). Needs decision: whether Today should keep showing the roadmap
+    after a refresh instead of the new options.
+
+64. **Headers never overlap on phones (owner, 2026-11-17, Job L).** The consultation header on
+    phones is the S mark and three 44px buttons, with "Stage n of 7" and its bar on a row below
+    (one grid, so the stage is a single element); from 640px the old single row. The home film bar
+    hides the (optional, off by default) sound toggle below 360px so Sign In and Start fit at
+    320px. e2e/header-overlap.spec.ts checks every header (home, consultation, sign-in, legal and
+    info pages, dashboard, mission, generation screen) at 320/360/390/430px in en and hi: no two
+    controls or texts intersect and nothing leaves the screen.
+
+65. **The assistant's name is never translated (owner, 2026-11-17).** An iPhone in the Google app
+    showed "Soul is thinking…" for the fixed string "Sol is thinking…" — rewritten on the phone,
+    not by the app. Every rendered "Sol" in the Ask Sol panel and its launchers is a span with
+    translate="no", class "notranslate", lang="en" (src/components/founder/SolText.tsx); the
+    dashboard walk fails on "Soul" anywhere.

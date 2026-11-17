@@ -1,6 +1,6 @@
 // `npm run scan` — the dashboard bug scanner (go-live step 6).
 //
-// Every dashboard route, at 390 and 1440 px, in English and Hindi, for seeded founders in each
+// Every dashboard route (and a direction, its fit and market pages, a mission), at 390, 1440 and 1920 px, in English and Hindi, for seeded founders in each
 // state (empty, directions revealed, roadmap active), on the LOCAL review server (never
 // production). It fails on: console errors, failed requests, sideways overflow, overlapping
 // controls, text under 15 px, untranslated text in Hindi, dead buttons, empty states with no next
@@ -37,6 +37,7 @@ const ROUTES = [
 const VIEWPORTS = [
   { name: "390", width: 390, height: 844 },
   { name: "1440", width: 1440, height: 900 },
+  { name: "1920", width: 1920, height: 1080 },
 ];
 
 /** Latin-script words that are right in Hindi: names, tax/app terms, units. */
@@ -96,6 +97,28 @@ async function session(email) {
   });
   if (!res.ok) throw new Error(`[scan] cannot sign in ${email}: ${res.status} (seed first)`);
   return res.json();
+}
+
+/** The founder's own pages: a direction, its fit and market pages, and a mission (2026-11-17,
+ * Job L: every page, not only the tabs). Read through the fake PostgREST as the founder. */
+async function founderRoutes(s) {
+  const get = async (path) => {
+    const res = await fetch(`${FAKE}/rest/v1/${path}`, {
+      headers: { authorization: `Bearer ${s.access_token}`, apikey: "local" },
+    });
+    return res.ok ? res.json() : [];
+  };
+  const out = [];
+  const [opp] = await get("opportunities?select=id&order=created_at.desc&limit=1");
+  if (opp)
+    out.push(
+      `/dashboard/opportunities/${opp.id}`,
+      `/dashboard/opportunities/${opp.id}/fit`,
+      `/dashboard/opportunities/${opp.id}/market`,
+    );
+  const [task] = await get("roadmap_tasks?select=id&order=created_at.asc&limit=1");
+  if (task) out.push(`/dashboard/roadmap/mission/${task.id}`);
+  return out;
 }
 
 /** Runs in the page: everything that can be judged from the rendered DOM. */
@@ -250,6 +273,7 @@ const findings = [];
 let pages = 0;
 for (const f of FOUNDERS) {
   const s = await session(f.email);
+  const routes = [...ROUTES, ...(await founderRoutes(s))];
   for (const vp of VIEWPORTS) {
     if (ONLY && /^\d+$/.test(ONLY) && ONLY !== vp.name) continue;
     for (const locale of ["en", "hi"]) {
@@ -264,7 +288,7 @@ for (const f of FOUNDERS) {
         { name: "solventia-locale", value: locale, url: APP },
       ]);
       const page = await ctx.newPage();
-      for (const route of ROUTES) {
+      for (const route of routes) {
         const console_ = [];
         const failed = [];
         page.removeAllListeners("console");

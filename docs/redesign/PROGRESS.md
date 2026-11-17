@@ -150,3 +150,16 @@ Blockers: `blocked.md`. Final report: `REPORT.md`.
 - [x] Reply-to sol@solventia.in (ImprovMX forwarding live): one address for sender, reply-to,
   site, legal pages and emails, src/lib/contact.ts; guards contact.test.ts +
   e2e/contact-address.spec.ts; decision 58
+
+## Owner jobs I–N, 2026-11-17 (evening)
+- [x] Job I page opens (14b6be5, 828b29c): functions in bom1 next to Supabase; direction summary
+  at once; hover preload; no AI on open; e2e/open-speed.spec.ts; docs/redesign/perf/open-times.md
+- [x] Job J skills chips + one levels step (19f6d2d); e2e/skills-pick.spec.ts
+- [x] Job K "a minute or two" (7af0b40)
+- [x] Job N "Find 3 more directions" screen + one generation per founder (de04c41); migration 0021
+- [x] Job M Ask Sol new facts → "Find new directions" (52fa85b)
+- [x] Job L headers never overlap 320–430 en/hi (b7a6062); "Sol" untranslatable (6a0713a); scan
+  extended (1920, direction pages, mission) — 174 pages, 0 findings; dashboard walk spec
+- [x] owner: migration 0021_generation_jobs.sql is applied in production (both tables answer, 2026-11-17)
+- [ ] owner decision: after Ask Sol's "Find new directions" with a roadmap, Today shows the new
+  options (roadmap kept, reachable via History → Restore) — or keep the roadmap on Today?
