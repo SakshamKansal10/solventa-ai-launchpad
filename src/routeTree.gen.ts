@@ -36,6 +36,7 @@ import { Route as ApiCronWeeklyRemindersRouteImport } from './routes/api/cron/we
 import { Route as DashboardOpportunitiesIndexRouteImport } from './routes/dashboard/opportunities/index'
 import { Route as DashboardRoadmapIndexRouteImport } from './routes/dashboard/roadmap/index'
 import { Route as DashboardRoadmapOfficialRouteImport } from './routes/dashboard/roadmap/official'
+import { Route as DashboardDirectionsFindingRouteImport } from './routes/dashboard_/directions/finding'
 import { Route as DashboardRoadmapBuildingRouteImport } from './routes/dashboard_/roadmap/building'
 import { Route as DashboardOpportunitiesIdIndexRouteImport } from './routes/dashboard/opportunities/$id/index'
 import { Route as DashboardOpportunitiesIdFitRouteImport } from './routes/dashboard/opportunities/$id/fit'
@@ -179,6 +180,12 @@ const DashboardRoadmapOfficialRoute =
     path: '/roadmap/official',
     getParentRoute: () => DashboardRoute,
   } as any)
+const DashboardDirectionsFindingRoute =
+  DashboardDirectionsFindingRouteImport.update({
+    id: '/dashboard_/directions/finding',
+    path: '/dashboard/directions/finding',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const DashboardRoadmapBuildingRoute =
   DashboardRoadmapBuildingRouteImport.update({
     id: '/dashboard_/roadmap/building',
@@ -236,6 +243,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/': typeof DashboardIndexRoute
   '/api/cron/weekly-reminders': typeof ApiCronWeeklyRemindersRoute
   '/dashboard/roadmap/official': typeof DashboardRoadmapOfficialRoute
+  '/dashboard/directions/finding': typeof DashboardDirectionsFindingRoute
   '/dashboard/roadmap/building': typeof DashboardRoadmapBuildingRoute
   '/dashboard/opportunities/': typeof DashboardOpportunitiesIndexRoute
   '/dashboard/roadmap/': typeof DashboardRoadmapIndexRoute
@@ -269,6 +277,7 @@ export interface FileRoutesByTo {
   '/dashboard': typeof DashboardIndexRoute
   '/api/cron/weekly-reminders': typeof ApiCronWeeklyRemindersRoute
   '/dashboard/roadmap/official': typeof DashboardRoadmapOfficialRoute
+  '/dashboard/directions/finding': typeof DashboardDirectionsFindingRoute
   '/dashboard/roadmap/building': typeof DashboardRoadmapBuildingRoute
   '/dashboard/opportunities': typeof DashboardOpportunitiesIndexRoute
   '/dashboard/roadmap': typeof DashboardRoadmapIndexRoute
@@ -304,6 +313,7 @@ export interface FileRoutesById {
   '/dashboard/': typeof DashboardIndexRoute
   '/api/cron/weekly-reminders': typeof ApiCronWeeklyRemindersRoute
   '/dashboard/roadmap/official': typeof DashboardRoadmapOfficialRoute
+  '/dashboard_/directions/finding': typeof DashboardDirectionsFindingRoute
   '/dashboard_/roadmap/building': typeof DashboardRoadmapBuildingRoute
   '/dashboard/opportunities/': typeof DashboardOpportunitiesIndexRoute
   '/dashboard/roadmap/': typeof DashboardRoadmapIndexRoute
@@ -340,6 +350,7 @@ export interface FileRouteTypes {
     | '/dashboard/'
     | '/api/cron/weekly-reminders'
     | '/dashboard/roadmap/official'
+    | '/dashboard/directions/finding'
     | '/dashboard/roadmap/building'
     | '/dashboard/opportunities/'
     | '/dashboard/roadmap/'
@@ -373,6 +384,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/api/cron/weekly-reminders'
     | '/dashboard/roadmap/official'
+    | '/dashboard/directions/finding'
     | '/dashboard/roadmap/building'
     | '/dashboard/opportunities'
     | '/dashboard/roadmap'
@@ -407,6 +419,7 @@ export interface FileRouteTypes {
     | '/dashboard/'
     | '/api/cron/weekly-reminders'
     | '/dashboard/roadmap/official'
+    | '/dashboard_/directions/finding'
     | '/dashboard_/roadmap/building'
     | '/dashboard/opportunities/'
     | '/dashboard/roadmap/'
@@ -436,6 +449,7 @@ export interface RootRouteChildren {
   TermsRoute: typeof TermsRoute
   AuthCallbackRoute: typeof AuthCallbackRoute
   ApiCronWeeklyRemindersRoute: typeof ApiCronWeeklyRemindersRoute
+  DashboardDirectionsFindingRoute: typeof DashboardDirectionsFindingRoute
   DashboardRoadmapBuildingRoute: typeof DashboardRoadmapBuildingRoute
   DashboardRoadmapMissionMissionIdRoute: typeof DashboardRoadmapMissionMissionIdRoute
 }
@@ -631,6 +645,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardRoadmapOfficialRouteImport
       parentRoute: typeof DashboardRoute
     }
+    '/dashboard_/directions/finding': {
+      id: '/dashboard_/directions/finding'
+      path: '/dashboard/directions/finding'
+      fullPath: '/dashboard/directions/finding'
+      preLoaderRoute: typeof DashboardDirectionsFindingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/dashboard_/roadmap/building': {
       id: '/dashboard_/roadmap/building'
       path: '/dashboard/roadmap/building'
@@ -721,6 +742,7 @@ const rootRouteChildren: RootRouteChildren = {
   TermsRoute: TermsRoute,
   AuthCallbackRoute: AuthCallbackRoute,
   ApiCronWeeklyRemindersRoute: ApiCronWeeklyRemindersRoute,
+  DashboardDirectionsFindingRoute: DashboardDirectionsFindingRoute,
   DashboardRoadmapBuildingRoute: DashboardRoadmapBuildingRoute,
   DashboardRoadmapMissionMissionIdRoute: DashboardRoadmapMissionMissionIdRoute,
 }

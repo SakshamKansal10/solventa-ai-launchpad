@@ -1,8 +1,7 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
-import { useMutation } from "@tanstack/react-query";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { useQuery } from "@tanstack/react-query";
 import { Check } from "lucide-react";
 import { useState } from "react";
-import { toast } from "sonner";
 import { z } from "zod";
 
 import { FitBar, FitLegend, kindOf, useFitCounts } from "@/components/founder/dash/FitBar";
@@ -21,10 +20,10 @@ import {
   QuietRow,
 } from "@/components/founder/dash/ui";
 import type { OpportunityBrief } from "@/lib/actions/founder";
-import { exploreMoreOpportunities } from "@/lib/actions/opportunities";
+import { getGenerationJob } from "@/lib/actions/opportunities";
 import type { FitFactorKey } from "@/lib/fit/model";
 import { useLocale } from "@/lib/i18n/LocaleProvider";
-import { useFounderState, useInvalidateFounder } from "@/lib/queries";
+import { useFounderState } from "@/lib/queries";
 import { useTranslatedBrief } from "@/lib/use-translation";
 import { cn } from "@/lib/utils";
 
@@ -58,23 +57,20 @@ function DirectionsPage() {
       year: "numeric",
     });
   const founder = useFounderState();
-  const invalidate = useInvalidateFounder();
+  const navigate = useNavigate();
   const [asking, setAsking] = useState(false);
+  // "Find 3 more directions" disables at the first tap (Job N); a job already running shows its
+  // progress instead of the button.
+  const [finding, setFinding] = useState(false);
+  const job = useQuery({
+    queryKey: ["generation-job"],
+    queryFn: () => getGenerationJob(),
+    staleTime: 5_000,
+  });
+  const jobRunning = job.data?.status === "running";
   // Questions and contradictions are about the latest consultation (answers are saved there).
   const latest = founder.data?.direction.isLatestConsultation ?? false;
   const questions = useFitQuestions(latest);
-
-  const explore = useMutation({
-    mutationFn: () => exploreMoreOpportunities({ data: { locale } }),
-    onSuccess: async (res) => {
-      await invalidate();
-      toast.success(t("cc.explore.done", { n: res.added }));
-    },
-    onError: (err) => {
-      console.error("[directions] explore more failed:", err);
-      toast.error(t("cc.explore.error"));
-    },
-  });
 
   if (founder.isPending) return <DashSkeleton label={t("shell.skeleton.loading")} />;
   if (founder.isError || !founder.data) {
@@ -82,11 +78,19 @@ function DirectionsPage() {
   }
 
   const { direction, briefs, viewedConsultationAt } = founder.data;
-  const inView = Object.values(briefs)
+  const allInView = Object.values(briefs)
     .filter((b) => b.consultationId === direction.consultationId && b.status !== "dismissed")
     .sort((a, b) => direction.viewedIds.indexOf(a.id) - direction.viewedIds.indexOf(b.id));
-  // The chosen direction leads; before a choice, the recommended one does.
-  const leadId = direction.selectedId ?? direction.flagshipId;
+  // The newest set (Job N: "Find 3 more" adds a set; earlier sets stay under History). A chosen
+  // direction from an earlier set stays here, leading.
+  const latestBatch = Math.max(1, ...allInView.map((b) => b.batch));
+  const inView = allInView.filter((b) => b.batch === latestBatch || b.id === direction.selectedId);
+  const hasEarlierSets = latestBatch > 1;
+  // The chosen direction leads; before a choice, the recommended one does (in the newest set,
+  // the first of it).
+  const leadId =
+    direction.selectedId ??
+    (inView.some((b) => b.id === direction.flagshipId) ? direction.flagshipId : inView[0]?.id);
   const ordered = [
     ...inView.filter((b) => b.id === leadId),
     ...inView.filter((b) => b.id !== leadId),
@@ -148,6 +152,58 @@ function DirectionsPage() {
         ))}
       </ol>
 
+      {canExplore && (
+        <section
+          aria-labelledby="find-more-title"
+          data-testid="find-more"
+          className="flex flex-wrap items-center justify-between gap-6 rounded-[32px] border border-sol-border bg-white p-[clamp(24px,2.6vw,36px)]"
+        >
+          <div className="flex min-w-0 flex-[1_1_420px] flex-col gap-2">
+            <h2 id="find-more-title" className="dash-statement">
+              {t("v2.dir.more.title")}
+            </h2>
+            <p className="dash-body text-sol-secondary">{t("gen.more.note")}</p>
+            {hasEarlierSets && (
+              <p className="dash-meta">
+                {t("gen.earlier")}{" "}
+                <Link
+                  to="/dashboard/history"
+                  className="font-medium text-sol-cobalt-deep underline-offset-4 hover:underline"
+                  data-testid="earlier-directions"
+                >
+                  {t("gen.earlier.link")}
+                </Link>
+              </p>
+            )}
+          </div>
+          {jobRunning ? (
+            <ActionLink
+              to="/dashboard/directions/finding"
+              search={{ kind: job.data?.kind === "refresh" ? "refresh" : "more" }}
+              data-testid="find-more-running"
+            >
+              {t("gen.more.running")}
+            </ActionLink>
+          ) : (
+            <ActionButton
+              onClick={() => {
+                if (finding) return;
+                setFinding(true);
+                void navigate({
+                  to: "/dashboard/directions/finding",
+                  search: { kind: "more", start: true },
+                });
+              }}
+              disabled={finding}
+              loading={finding}
+              data-testid="explore-more-generate"
+            >
+              {t("gen.more.cta")}
+            </ActionButton>
+          )}
+        </section>
+      )}
+
       <div className="flex flex-col gap-3">
         {canExplore && <ContradictionRow items={questions.data?.contradictions ?? []} />}
         {unknownEverywhere && !asking && (
@@ -182,28 +238,6 @@ function DirectionsPage() {
         )}
         {asking && questions.data && questions.data.missing.length > 0 && (
           <FitQuestionsPanel data={questions.data} onDone={() => setAsking(false)} />
-        )}
-        {canExplore && (
-          <QuietRow>
-            <p className="text-[20px] text-sol-secondary">{t("v2.dir.more.title")}</p>
-            <div className="flex flex-col items-start gap-2">
-              <ActionButton
-                tone="secondary"
-                size="md"
-                arrow={false}
-                onClick={() => explore.mutate()}
-                loading={explore.isPending}
-                data-testid="explore-more-generate"
-              >
-                {t("cc.findMore")}
-              </ActionButton>
-            </div>
-            {explore.isPending && (
-              <p role="status" className="basis-full text-[17px] text-sol-secondary">
-                {t("cc.explore.working")}
-              </p>
-            )}
-          </QuietRow>
         )}
       </div>
     </DashPage>

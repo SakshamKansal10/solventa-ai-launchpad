@@ -4,6 +4,15 @@ import { enforceDailyLimit } from "@/lib/limits.server";
 import { z } from "zod";
 
 import { requireUser } from "@/lib/supabase/server";
+import {
+  failureCategory,
+  finishJob,
+  setJobStep,
+  startJob,
+  waitForJob,
+  type GenerationJob,
+  type JobStep,
+} from "@/lib/actions/generation-jobs.server";
 import { runEngineV2, type EngineNotes, type EngineTrace } from "@/lib/engine/pipeline.server";
 import { getSchemaCapabilities } from "@/lib/schema-capabilities.server";
 import type { SupabaseClient } from "@supabase/supabase-js";
@@ -71,35 +80,65 @@ export const completeConsultation = createServerFn({ method: "POST" })
   )
   .handler(async ({ data }) => {
     const { supabase, user } = await requireUser();
-    const answers = data.answers as Parameters<typeof normalizeProfile>[0];
-    const normalized = normalizeProfile(answers);
-    const profileHash = hashProfile(normalized);
+    return runConsultation(supabase, user, data, "consultation");
+  });
 
-    // Cheap idempotency pre-check: a double-click, or the in-page submit
-    // racing auth/callback's resumePendingConsultation, would otherwise
-    // spend a second full Gemini generation (and create a duplicate
-    // business_dna + opportunities + roadmaps row set) for the exact same
-    // answers. This check alone isn't safe under true concurrency — two
-    // requests can both pass it before either inserts — the unique index
-    // on (user_id, profile_hash) below is the real guard for that; this is
-    // just the fast path that avoids paying for a Gemini call in the
-    // common (sequential) case.
-    const { data: existingDna } = await supabase
-      .from("business_dna")
-      .select("id, founder_analysis")
-      .eq("user_id", user.id)
-      .eq("profile_hash", profileHash)
-      .maybeSingle();
-    if (existingDna) {
-      await clearConsultationDraft(supabase, user.id);
-      return {
-        businessDnaId: existingDna.id as string,
-        founderDNA: existingDna.founder_analysis as unknown as Awaited<
-          ReturnType<typeof generateIntelligencePackage>
-        >["founderDNA"],
-      };
-    }
+type Supa = Awaited<ReturnType<typeof requireUser>>["supabase"];
+type SignedInUser = Awaited<ReturnType<typeof requireUser>>["user"];
+type FounderDna = Awaited<ReturnType<typeof generateIntelligencePackage>>["founderDNA"];
+export interface ConsultationInput {
+  answers: Record<string, unknown>;
+  locale?: "en" | "hi";
+}
+export interface ConsultationResult {
+  businessDnaId: string;
+  founderDNA: FounderDna;
+}
 
+/**
+ * One consultation's directions: the answers' stored result when they were analysed before,
+ * else ONE generation, run as the founder's only generation job (Job N): a second submit while
+ * one runs waits for that one's result instead of generating again. Used by the consultation's
+ * submit and by Ask Sol's "Find new directions" (kind "refresh", Job M).
+ */
+export async function runConsultation(
+  supabase: Supa,
+  user: SignedInUser,
+  data: ConsultationInput,
+  kind: "consultation" | "refresh",
+  jobHooks?: { retryJobId?: string | null; onJob?: (job: GenerationJob) => Promise<void> },
+): Promise<ConsultationResult> {
+  const answers = data.answers as Parameters<typeof normalizeProfile>[0];
+  const normalized = normalizeProfile(answers);
+  const profileHash = hashProfile(normalized);
+
+  // Cheap idempotency pre-check: a double-click, or the in-page submit
+  // racing auth/callback's resumePendingConsultation, would otherwise
+  // spend a second full Gemini generation (and create a duplicate
+  // business_dna + opportunities + roadmaps row set) for the exact same
+  // answers. This check alone isn't safe under true concurrency — two
+  // requests can both pass it before either inserts — the unique index
+  // on (user_id, profile_hash) below is the real guard for that; this is
+  // just the fast path that avoids paying for a Gemini call in the
+  // common (sequential) case.
+  const { data: existingDna } = await supabase
+    .from("business_dna")
+    .select("id, founder_analysis")
+    .eq("user_id", user.id)
+    .eq("profile_hash", profileHash)
+    .maybeSingle();
+  if (existingDna) {
+    await clearConsultationDraft(supabase, user.id);
+    return {
+      businessDnaId: existingDna.id as string,
+      founderDNA: existingDna.founder_analysis as unknown as Awaited<
+        ReturnType<typeof generateIntelligencePackage>
+      >["founderDNA"],
+    };
+  }
+
+  return runAsJob(supabase, user.id, kind, jobHooks, async (onStep) => {
+    await onStep("fitting");
     // Deterministic, computed from the same normalized signals the
     // Founder Genome and Fit Score already read — never inferred by the
     // AI itself. Handed to it as scale-compatibility CONTEXT below, and
@@ -111,6 +150,7 @@ export const completeConsultation = createServerFn({ method: "POST" })
     // Only a NEW consultation counts (the stored one above returned already).
     await enforceDailyLimit(supabase, user.id, "consultation");
 
+    await onStep("writing");
     const overallStart = Date.now();
     let pkg: Awaited<ReturnType<typeof generateIntelligencePackage>>;
     // Idea engine v2 (part 5): the staged pipeline, behind IDEA_ENGINE=v2 until the owner
@@ -361,6 +401,52 @@ export const completeConsultation = createServerFn({ method: "POST" })
     await clearConsultationDraft(supabase, user.id);
     return { businessDnaId: dnaRow.id as string, founderDNA: pkg.founderDNA };
   });
+}
+
+/** Runs one generation as the founder's only job; a request that finds one running waits for
+ * its result (same kind) instead of starting another. */
+async function runAsJob(
+  supabase: Supa,
+  userId: string,
+  kind: "consultation" | "refresh",
+  hooks: { retryJobId?: string | null; onJob?: (job: GenerationJob) => Promise<void> } | undefined,
+  work: (onStep: (step: JobStep) => Promise<void>) => Promise<ConsultationResult>,
+): Promise<ConsultationResult> {
+  for (let attempt = 0; attempt < 2; attempt++) {
+    const { job, started } = await startJob(supabase, userId, kind, hooks?.retryJobId);
+    await hooks?.onJob?.(job);
+    if (!started) {
+      const finished = await waitForJob(supabase, userId, job.id);
+      if (finished?.status === "running") throw new Error("GENERATION_IN_PROGRESS");
+      if (finished?.kind === kind && finished.status === "done" && finished.businessDnaId) {
+        const { data: dna } = await supabase
+          .from("business_dna")
+          .select("id, founder_analysis")
+          .eq("id", finished.businessDnaId)
+          .single();
+        if (dna)
+          return {
+            businessDnaId: dna.id as string,
+            founderDNA: dna.founder_analysis as unknown as FounderDna,
+          };
+      }
+      if (finished?.kind === kind && finished.status === "failed")
+        throw new Error("The analysis could not be completed");
+      // A different kind of job was running and has ended: now this one can start.
+      continue;
+    }
+    try {
+      await setJobStep(supabase, job.id, "reading");
+      const result = await work((step) => setJobStep(supabase, job.id, step));
+      await finishJob(supabase, job.id, { status: "done", businessDnaId: result.businessDnaId });
+      return result;
+    } catch (err) {
+      await finishJob(supabase, job.id, { status: "failed", error: failureCategory(err) });
+      throw err;
+    }
+  }
+  throw new Error("GENERATION_IN_PROGRESS");
+}
 
 export const getLatestBusinessDna = createServerFn({ method: "GET" }).handler(async () => {
   const { supabase, user } = await requireUser();

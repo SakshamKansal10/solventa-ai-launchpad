@@ -3,6 +3,16 @@ import { z } from "zod";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 import { requireUser } from "@/lib/supabase/server";
+import { enforceDailyLimit } from "@/lib/limits.server";
+import { generateDirectionBatch } from "@/lib/actions/directions-batch.server";
+import {
+  failureCategory,
+  finishJob,
+  latestJob,
+  setJobStep,
+  startJob,
+  type GenerationJob,
+} from "@/lib/actions/generation-jobs.server";
 import { getSchemaCapabilities } from "@/lib/schema-capabilities.server";
 import { DIRECTION_NUMBER_KIND, evidenceKind, type NumberKind } from "@/lib/market/number-kind";
 import type { Database, Json } from "@/lib/supabase/types";
@@ -15,7 +25,6 @@ import {
   type Range,
 } from "@/lib/fit/model";
 import { keepSupportedDetail } from "@/lib/ai/integrity";
-import { generateOpportunityPackageBatch } from "@/lib/ai/prompts/intelligence-package";
 import { generateOpportunityDetail } from "@/lib/ai/prompts/opportunity-detail";
 import { researchMarketEvidence } from "@/lib/ai/prompts/market-research";
 import { MODEL } from "@/lib/ai/gemini.server";
@@ -37,7 +46,6 @@ import type {
   MarketEvidenceItem,
 } from "@/lib/ai/schemas";
 
-const CANDIDATES_PER_BATCH = 3;
 const RESEARCH_CACHE_TTL_MS = 30 * 24 * 60 * 60 * 1000; // 30 days
 
 /** The underlying market question doesn't change per-user, so it is cached
@@ -72,100 +80,51 @@ async function getOrFetchMarketEvidence(
   return items;
 }
 
-async function loadLatestBusinessDna(supabase: SupabaseClient<Database>, userId: string) {
-  const { data, error } = await supabase
-    .from("business_dna")
-    .select("id, normalized_signals")
-    .eq("user_id", userId)
-    .order("created_at", { ascending: false })
-    .limit(1)
-    .maybeSingle();
-  if (error) throw new Error(error.message);
-  if (!data) throw new Error("No founder profile found — complete the consultation first.");
-  return data;
-}
-
-/** Persists one full opportunity package (the candidate JSON carries the
- * complete detail; opportunity_details mirrors it). No roadmap and no second
- * AI call happens here. */
-async function persistOpportunityPackage(
-  supabase: SupabaseClient<Database>,
-  userId: string,
-  businessDnaId: string,
-  profile: NormalizedProfile,
-  pkg: OpportunityPackage,
-  batchNumber: number,
-) {
-  // The canonical founder-fit assessment, stored once with its rubric version.
-  const assessment = assessFit(profile, pkg.fitSignals);
-
-  const { data: oppRow, error: oppError } = await supabase
-    .from("opportunities")
-    .insert({
-      user_id: userId,
-      business_dna_id: businessDnaId,
-      title: pkg.title,
-      one_liner: pkg.plainEnglishSummary,
-      who_for: pkg.customer,
-      fit_score: assessment.score ?? 0,
-      score_breakdown: assessment as unknown as Json,
-      // A direction's numbers are estimates by construction (part 4, feature 6).
-      candidate: { ...pkg, numberKind: DIRECTION_NUMBER_KIND } as unknown as Json,
-      status: "active" as const,
-      batch_number: batchNumber,
-      ai_model: MODEL,
-    })
-    .select("*")
-    .single();
-  if (oppError || !oppRow) throw new Error(oppError?.message ?? "Failed to save opportunity");
-
-  const { error: detailError } = await supabase.from("opportunity_details").insert({
-    opportunity_id: oppRow.id,
-    user_id: userId,
-    detail: pkg as unknown as Json,
-    ai_model: MODEL,
-  });
-  if (detailError) throw new Error(detailError.message);
-
-  return oppRow;
-}
-
 /** "Explore More Opportunities" — the one explicit, user-triggered AI call for
  * more directions. None is made active automatically: exploring more never
  * silently switches a direction the founder is already on. */
 export const exploreMoreOpportunities = createServerFn({ method: "POST" })
-  .validator(z.object({ locale: z.enum(["en", "hi"]).optional() }).optional())
-  .handler(async ({ data: input }): Promise<{ added: number }> => {
+  .validator(
+    z
+      .object({
+        locale: z.enum(["en", "hi"]).optional(),
+        /** "Try again" after a failure: the same job, restarted in place. */
+        retryJobId: z.string().uuid().optional(),
+      })
+      .optional(),
+  )
+  .handler(async ({ data: input }): Promise<{ added: number; job: GenerationJob }> => {
     const { supabase, user } = await requireUser();
-    const dna = await loadLatestBusinessDna(supabase, user.id);
-    const profile = dna.normalized_signals as unknown as NormalizedProfile;
-
-    const { data: existing, error } = await supabase
-      .from("opportunities")
-      .select("title, status, dismiss_reason, batch_number")
-      .eq("business_dna_id", dna.id);
-    if (error) throw new Error(error.message);
-
-    const excludeTitles = (existing ?? []).map((o) => o.title);
-    const dismissedNotes = (existing ?? [])
-      .filter((o) => o.status === "dismissed" && o.dismiss_reason)
-      .map((o) => `"${o.title}" was dismissed because: ${o.dismiss_reason}`);
-    const nextBatch = Math.max(1, ...(existing ?? []).map((o) => o.batch_number)) + 1;
-
-    const batch = await generateOpportunityPackageBatch(profile, {
-      excludeTitles,
-      dismissedNotes,
-      count: CANDIDATES_PER_BATCH,
-      locale: input?.locale,
-    });
-
-    let added = 0;
-    for (const pkg of batch.opportunities) {
-      await persistOpportunityPackage(supabase, user.id, dna.id, profile, pkg, nextBatch);
-      added += 1;
+    // One generation per founder at a time (owner, 2026-11-17, Job N): a double click, a second
+    // tab or a return visit while it runs gets the running job back — never a second set.
+    const { job, started } = await startJob(supabase, user.id, "more", input?.retryJobId);
+    if (!started) return { added: 0, job };
+    try {
+      await enforceDailyLimit(supabase, user.id, "consultation");
+      const res = await generateDirectionBatch(supabase, user.id, {
+        locale: input?.locale,
+        onStep: (step) => setJobStep(supabase, job.id, step),
+      });
+      const done = await finishJob(supabase, job.id, { status: "done", ...res });
+      return { added: res.added, job: done ?? { ...job, status: "done" } };
+    } catch (err) {
+      console.error("[directions] find more failed:", err);
+      const failed = await finishJob(supabase, job.id, {
+        status: "failed",
+        error: failureCategory(err),
+      });
+      return { added: 0, job: failed ?? { ...job, status: "failed", error: failureCategory(err) } };
     }
-    return { added };
   });
+
+/** The founder's running (or just finished) generation — what the generation screen shows,
+ * including after leaving and coming back. */
+export const getGenerationJob = createServerFn({ method: "GET" }).handler(
+  async (): Promise<GenerationJob | null> => {
+    const { supabase, user } = await requireUser();
+    return latestJob(supabase, user.id);
+  },
+);
 
 export interface FitDetail {
   /** The canonical assessment (src/lib/fit/model.ts) — the only source of a fit label. */

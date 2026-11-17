@@ -31,6 +31,11 @@ export interface HistoryEntry {
   };
   /** The directions generated in that consultation (first batch), best first. */
   directions: Pick<OpportunityBrief, "id" | "title" | "fit" | "status">[];
+  /** Later sets from "Find 3 more directions" (Job N), oldest first — never deleted. */
+  moreSets: {
+    batch: number;
+    directions: Pick<OpportunityBrief, "id" | "title" | "fit" | "status">[];
+  }[];
   selected: { id: string; title: string } | null;
   roadmapStatus: HistoryRoadmapStatus;
   /** An older consultation whose direction could be made current again. */
@@ -130,6 +135,16 @@ export const getDecisionHistory = createServerFn({ method: "GET" }).handler(
         .filter((b) => b.batch === 1 && b.status !== "dismissed")
         .sort((a, b) => a.createdAt.localeCompare(b.createdAt));
       const selected = briefs.find((b) => b.status === "selected") ?? null;
+      const batches = [...new Set(briefs.map((b) => b.batch))]
+        .filter((n) => n > 1)
+        .sort((a, b) => a - b);
+      const moreSets = batches.map((batch) => ({
+        batch,
+        directions: briefs
+          .filter((b) => b.batch === batch && b.status !== "dismissed")
+          .sort((a, b) => a.createdAt.localeCompare(b.createdAt))
+          .map((b) => ({ id: b.id, title: b.title, fit: b.fit, status: b.status })),
+      }));
       const isCurrent = dna.id === state.direction.consultationId;
       const anyDirection = briefs.length > 0;
       const roadmap = selected ? (roadmapByOpp.get(selected.id) ?? null) : null;
@@ -162,6 +177,7 @@ export const getDecisionHistory = createServerFn({ method: "GET" }).handler(
           // 0 is how a consultation that never asked stores it — not "no experience".
           experienceYears: profile.experienceYears ? profile.experienceYears : null,
         },
+        moreSets,
         directions: first.map((b) => ({ id: b.id, title: b.title, fit: b.fit, status: b.status })),
         selected: selected ? { id: selected.id, title: selected.title } : null,
         roadmapStatus,

@@ -79,12 +79,16 @@ test.describe("Today — directions ready, none chosen", () => {
     await page.getByTestId("explore-more").click();
     await expect(page).toHaveURL(/\/dashboard\/opportunities/, { timeout: 30_000 });
     await page.getByTestId("explore-more-generate").click();
-    await expect.poll(() => gemini.countOf("EXPLORE_MORE"), { timeout: 30_000 }).toBe(1);
+    // The full-page generation screen (Job N), then back to the new set.
+    await expect(page).toHaveURL(/\/dashboard\/directions\/finding/);
+    await expect(page.getByTestId("finding")).toBeVisible();
+    await expect(page).toHaveURL(/\/dashboard\/opportunities$/, { timeout: 45_000 });
+    expect(await gemini.countOf("EXPLORE_MORE")).toBe(1);
     const rows = await sql<{ n: string }>(
       "select count(*)::text as n from opportunities where user_id = $1",
       [user.id],
     );
-    expect(Number(rows[0].n)).toBeGreaterThan(3);
+    expect(Number(rows[0].n)).toBe(6);
     await expect(page.getByText(/variation/i).first()).toBeVisible();
   });
 
@@ -99,7 +103,14 @@ test.describe("Today — directions ready, none chosen", () => {
     await gotoApp(page, "/dashboard/opportunities");
 
     await page.getByTestId("explore-more-generate").click();
-    await expect(page.getByText(/couldn't find more directions/i)).toBeVisible({ timeout: 30_000 });
+    await expect(page.getByTestId("finding-failed")).toContainText(
+      "We couldn't find new directions",
+      {
+        timeout: 30_000,
+      },
+    );
+    await expect(page.getByTestId("finding-retry")).toBeEnabled();
+    await page.getByRole("link", { name: "Back to directions" }).click();
     await expect(page.getByTestId("opp-alternative")).toHaveCount(3);
     await expect(page.getByTestId("explore-more-generate")).toBeEnabled();
     await gemini.clearBehavior();

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 import {
@@ -381,6 +381,40 @@ function EntryCard({
                 </li>
               ))}
             </ul>
+          )}
+          {entry.moreSets.length > 0 && (
+            <div className="mt-4 flex flex-col gap-3" data-testid="more-sets">
+              <p className="text-[0.9375rem] font-semibold uppercase tracking-[0.08em] text-sol-secondary">
+                {t("hist.sets.title")}
+              </p>
+              {entry.moreSets.map((set) => (
+                <div key={set.batch} className="flex flex-col gap-2" data-testid="more-set">
+                  <p className="text-[0.9375rem] font-medium text-sol-ink">
+                    {t("hist.sets.set", { n: set.batch })}
+                  </p>
+                  <ul className="flex flex-col gap-2">
+                    {set.directions.map((d) => (
+                      <li
+                        key={d.id}
+                        className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1 text-[0.9375rem] text-sol-ink"
+                      >
+                        <Link
+                          to="/dashboard/opportunities/$id"
+                          params={{ id: d.id }}
+                          className={cn(
+                            "min-w-0 underline-offset-4 hover:underline",
+                            d.id === entry.selected?.id && "font-semibold",
+                          )}
+                        >
+                          <TranslatedTitle id={d.id} title={d.title} />
+                        </Link>
+                        <FitPill fit={d.fit} />
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ))}
+            </div>
           )}
         </>
       ),
