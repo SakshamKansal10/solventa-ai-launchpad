@@ -477,8 +477,16 @@ function AskSolFab() {
   );
 }
 
-/** Shared page frame (go-live step 6): up to 1520px wide, side padding clamp(20px, 4vw, 64px). */
-export const DASH_FRAME = "mx-auto w-full max-w-[1520px] px-[clamp(20px,4vw,64px)]";
+/**
+ * Shared page frame — the top bar, every page and the tab-switch skeleton sit in it, so their
+ * edges line up and nothing jumps when a page arrives. Desktop (owner, 2026-11-17: the column
+ * looked unfinished on wide screens): side padding 5vw − 32px — 32px at 1280, ~46px at 1568,
+ * 64px at 1920 — and content up to 1792px (what 64px gives at 1920; wider monitors stop there).
+ * Below 1024px the padding is unchanged (clamp(20px, 4vw, 64px)): the phone layout stays as it is.
+ * Text does not grow with the width; reading lines keep their ~68ch limit (styles.css).
+ */
+export const DASH_FRAME =
+  "mx-auto w-full max-w-[1920px] px-[clamp(20px,4vw,64px)] lg:px-[clamp(32px,calc(5vw-32px),64px)]";
 
 /** The signed-in frame: a top bar (lockup · pill nav · language · notifications · Ask Sol ·
  * avatar) that scrolls with the page, the page, and on phones a fixed bottom bar. History and
