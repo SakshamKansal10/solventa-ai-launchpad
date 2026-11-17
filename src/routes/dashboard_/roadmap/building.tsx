@@ -132,7 +132,7 @@ function BuildingPage() {
       >
         <Link
           to="/"
-          className="rounded-xl focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-sol-cobalt"
+          className="inline-flex min-h-11 items-center rounded-xl focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-sol-cobalt"
           aria-label={t("nav.homeAria")}
         >
           <BrandLockup preset="compact" />

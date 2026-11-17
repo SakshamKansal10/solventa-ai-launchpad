@@ -112,7 +112,9 @@ export function CinematicNav({ pendingNext }: { pendingNext?: string | null } = 
             "Dashboard" link becomes an icon there, so the controls always fit beside the brand —
             whose parts keep their size (the opening's lockup lands on them box by box). */}
         <div className="relative flex items-center justify-end gap-1.5 min-[400px]:gap-2.5 sm:gap-5">
-          <div className="transition-opacity duration-700" style={recede(1)}>
+          {/* Below 360px (a 320px phone) the bar cannot fit sound, Sign In and Start beside the
+              brand (2026-11-17, header test): sound is optional and off by default, so it goes. */}
+          <div className="transition-opacity duration-700 max-[359px]:hidden" style={recede(1)}>
             <SoundToggle />
           </div>
           <div className="transition-opacity duration-700" style={recede(1)} data-nav-secondary>

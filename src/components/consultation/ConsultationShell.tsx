@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { ArrowLeft, ArrowRight, UserRound, X } from "lucide-react";
 
-import { BrandLockup } from "@/components/brand/Brand";
+import { BrandLockup, BrandMark } from "@/components/brand/Brand";
 import { LanguageSwitcher } from "@/components/solventia/LanguageSwitcher";
 import {
   AlertDialog,
@@ -34,7 +34,7 @@ import { SubmitStep } from "./SubmitStep";
 function StageProgress({ stage }: { stage: number }) {
   const { t } = useLocale();
   return (
-    <div className="flex min-w-0 flex-1 flex-col gap-1.5 sm:max-w-md">
+    <div className="flex w-full min-w-0 flex-1 flex-col gap-1.5 sm:max-w-md">
       <p
         className="whitespace-nowrap text-[0.9375rem] font-semibold text-sol-ink"
         data-testid="stage-label"
@@ -95,24 +95,41 @@ export function ConsultationShell({
         {t("common.skipToContent")}
       </a>
 
-      <header className="sticky top-0 z-30 flex h-[72px] items-center gap-2 border-b border-sol-border bg-sol-pearl/95 px-3 backdrop-blur sm:gap-4 sm:px-8">
-        <Link to="/" className="flex shrink-0 items-center" aria-label={t("nav.homeAria")}>
-          <BrandLockup preset="compact" />
+      {/* Phones (owner, 2026-11-17: on a 390px iPhone "Stage 1 of 7" was drawn over the language
+          button): the S mark and three 44px buttons in the top row, and the stage with its bar on
+          a full-width row of its own below. From 640px, one row with the full lockup. One grid,
+          so the stage is one element placed per width, never two copies. */}
+      <header
+        data-testid="consult-header"
+        className="sticky top-0 z-30 grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-x-3 gap-y-2 border-b border-sol-border bg-sol-pearl/95 px-3 py-2.5 backdrop-blur sm:h-[72px] sm:gap-x-4 sm:px-8 sm:py-0"
+      >
+        <Link
+          to="/"
+          className="col-start-1 row-start-1 flex min-h-11 shrink-0 items-center"
+          aria-label={t("nav.homeAria")}
+        >
+          <BrandMark height={30} className="sm:hidden" />
+          <span className="hidden sm:inline-flex">
+            <BrandLockup preset="compact" />
+          </span>
         </Link>
 
-        {/* Below 380px the bar has no room for it: the screen itself names the stage. */}
-        <div className="flex min-w-0 flex-1 items-center justify-center max-[379px]:hidden">
+        <div className="col-span-3 row-start-2 flex min-w-0 items-center sm:col-span-1 sm:col-start-2 sm:row-start-1 sm:justify-center">
           <StageProgress stage={stage} />
         </div>
 
-        <div className="ml-auto flex shrink-0 items-center gap-1 sm:gap-2">
-          {/* Icon-only on phones: the lockup keeps its signature, so the bar has no spare width. */}
-          <LanguageSwitcher compact />
+        <div className="col-start-3 row-start-1 flex shrink-0 items-center justify-end gap-2">
+          {/* Icon-only on phones, each a 44px target. */}
+          <LanguageSwitcher
+            compact
+            className="inline-flex size-11 items-center justify-center gap-1.5 rounded-full border border-sol-border text-[0.9375rem] font-medium text-sol-secondary transition-colors hover:border-sol-cobalt/45 hover:text-sol-ink sm:w-auto sm:px-3"
+          />
           <Sheet open={profileOpen} onOpenChange={setProfileOpen}>
             <SheetTrigger asChild>
               <button
                 type="button"
-                className="inline-flex min-h-10 items-center gap-1.5 rounded-full border border-sol-border px-3 text-[0.9375rem] font-medium text-sol-ink hover:border-sol-cobalt/45 xl:hidden"
+                aria-label={t("consult.panel.open")}
+                className="inline-flex size-11 items-center justify-center gap-1.5 rounded-full border border-sol-border text-[0.9375rem] font-medium text-sol-ink hover:border-sol-cobalt/45 sm:w-auto sm:px-3 xl:hidden"
               >
                 <UserRound className="size-4" aria-hidden="true" />
                 <span className="hidden sm:inline">{t("consult.panel.open")}</span>
@@ -130,7 +147,7 @@ export function ConsultationShell({
           <Link
             to={editMode ? "/dashboard/settings" : "/"}
             aria-label={t("consult.exit")}
-            className="flex size-10 items-center justify-center rounded-full border border-sol-border text-sol-secondary hover:border-sol-cobalt/45 hover:text-sol-ink"
+            className="flex size-11 items-center justify-center rounded-full border border-sol-border text-sol-secondary hover:border-sol-cobalt/45 hover:text-sol-ink"
           >
             <X className="size-4" aria-hidden="true" />
           </Link>
