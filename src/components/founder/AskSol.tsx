@@ -14,6 +14,7 @@ import { useLocale } from "@/lib/i18n/LocaleProvider";
 import type { MessageKey } from "@/lib/i18n";
 import { qk } from "@/lib/queries";
 import { cn } from "@/lib/utils";
+import { SolText } from "./SolText";
 
 interface ChatMessage {
   role: "user" | "assistant";
@@ -172,7 +173,9 @@ export function AskSolPanel({
             <BrandMark height={20} />
           </span>
           <div className="min-w-0 leading-tight">
-            <h2 className="text-[1.25rem] font-semibold text-sol-ink">{t("askSol.title")}</h2>
+            <h2 className="text-[1.25rem] font-semibold text-sol-ink">
+              <SolText text={t("askSol.title")} />
+            </h2>
             {/* The context stack a founder actually sees Sol already knows —
                 each line present only when real (spec CF): opportunity,
                 then week/phase, then the mission in progress. Never a
@@ -196,12 +199,14 @@ export function AskSolPanel({
                     className="truncate text-[0.9375rem] text-sol-secondary"
                     data-testid="ask-sol-assumption"
                   >
-                    {t("askSol.assumptionLine", { title: assumptionTitle })}
+                    <SolText text={t("askSol.assumptionLine", { title: assumptionTitle })} />
                   </p>
                 )}
               </div>
             ) : (
-              <p className="text-[0.9375rem] text-sol-secondary">{t("askSol.tagline")}</p>
+              <p className="text-[0.9375rem] text-sol-secondary">
+                <SolText text={t("askSol.tagline")} />
+              </p>
             )}
           </div>
         </div>
@@ -226,10 +231,10 @@ export function AskSolPanel({
                 className="text-[1.25rem] font-semibold leading-snug text-sol-ink"
                 data-testid="ask-sol-welcome"
               >
-                {t("askSol.welcome.title")}
+                <SolText text={t("askSol.welcome.title")} />
               </p>
               <p className="mt-1.5 text-[1rem] leading-relaxed text-sol-secondary">
-                {t("askSol.welcome.body")}
+                <SolText text={t("askSol.welcome.body")} />
               </p>
               <p className="mt-3 text-[0.9375rem] leading-relaxed text-sol-secondary">
                 {opportunityTitle
@@ -239,13 +244,13 @@ export function AskSolPanel({
               {conversation.isLoading && (
                 <p className="mt-2 flex items-center gap-2 text-[0.9375rem] text-sol-secondary">
                   <Loader2 className="size-3.5 animate-spin" aria-hidden="true" />
-                  {t("askSol.loading")}
+                  <SolText text={t("askSol.loading")} />
                 </p>
               )}
             </div>
             <div>
               <p className="text-[0.9375rem] font-bold uppercase tracking-[0.1em] text-sol-champagne-deep">
-                {t("askSol.help")}
+                <SolText text={t("askSol.help")} />
               </p>
               <div className="mt-3 flex flex-col gap-2">
                 {prompts.map((key) => (
@@ -256,7 +261,7 @@ export function AskSolPanel({
                     disabled={sending || conversation.isLoading}
                     className="min-h-12 rounded-2xl border border-sol-border px-4 py-2.5 text-left text-[1rem] font-medium text-sol-ink transition-colors hover:border-sol-cobalt/50 hover:bg-sol-cobalt-soft/50 disabled:opacity-50"
                   >
-                    {t(key)}
+                    <SolText text={t(key)} />
                   </button>
                 ))}
               </div>
@@ -277,7 +282,7 @@ export function AskSolPanel({
                 )}
               >
                 <span className="sr-only">
-                  {m.role === "user" ? t("askSol.you") : t("askSol.sol")}:{" "}
+                  {m.role === "user" ? t("askSol.you") : <SolText text={t("askSol.sol")} />}:{" "}
                 </span>
                 {m.failed ? <span role="alert">{m.content}</span> : m.content}
                 {m.offer && !m.offer.applied && (
@@ -292,7 +297,7 @@ export function AskSolPanel({
                       void send(lastFailed);
                     }}
                   >
-                    {t("askSol.retry")}
+                    <SolText text={t("askSol.retry")} />
                   </button>
                 )}
               </li>
@@ -300,7 +305,9 @@ export function AskSolPanel({
             {sending && (
               <li className="flex items-center gap-2 text-sol-secondary">
                 <Loader2 className="size-4 animate-spin" aria-hidden="true" />
-                <span className="text-[0.9375rem]">{t("askSol.thinking")}</span>
+                <span className="text-[0.9375rem]">
+                  <SolText text={t("askSol.thinking")} />
+                </span>
               </li>
             )}
           </ul>
@@ -315,7 +322,7 @@ export function AskSolPanel({
         }}
       >
         <label htmlFor="ask-sol-input" className="sr-only">
-          {t("askSol.placeholder")}
+          <SolText text={t("askSol.placeholder")} />
         </label>
         <textarea
           id="ask-sol-input"

@@ -44,6 +44,7 @@ import { cn } from "@/lib/utils";
 import { AskSolPanel, type AskSolRoute } from "./AskSol";
 import { Avatar } from "./Avatar";
 import { NotificationBell } from "./NotificationBell";
+import { SolText } from "./SolText";
 
 const NAV: {
   to: string;
@@ -217,8 +218,12 @@ export function AskSolProvider({ children }: { children: ReactNode }) {
             data-testid="ask-sol-drawer"
             className="w-full max-w-[26rem] border-sol-border bg-sol-surface p-0 sm:max-w-[26rem] [&>button]:hidden"
           >
-            <SheetTitle className="sr-only">{t("askSol.title")}</SheetTitle>
-            <SheetDescription className="sr-only">{t("askSol.tagline")}</SheetDescription>
+            <SheetTitle className="sr-only">
+              <SolText text={t("askSol.title")} />
+            </SheetTitle>
+            <SheetDescription className="sr-only">
+              <SolText text={t("askSol.tagline")} />
+            </SheetDescription>
             {panel}
           </SheetContent>
         </Sheet>
@@ -244,7 +249,7 @@ export function AskSolButton({ className }: { className?: string }) {
       )}
     >
       <span aria-hidden="true" className="size-2 rounded-full bg-sol-cobalt" />
-      {t("askSol.open")}
+      <SolText text={t("askSol.open")} />
     </button>
   );
 }

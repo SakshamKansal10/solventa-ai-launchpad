@@ -19,6 +19,7 @@ import { cn } from "@/lib/utils";
 import { clearWarmupNames, readWarmupNames } from "@/lib/roadmap/warmup";
 
 import { ActionButton, Label, MistCard } from "./ui";
+import { SolText } from "../SolText";
 
 /**
  * The mission's own work area (part 4, feature 1) — under the headline on a mission page: a list
@@ -496,7 +497,7 @@ function InterviewsWorkspace({ taskId, ws, locked }: WsProps) {
               arrow={false}
               onClick={() => ask.open(t("v2.ws.int.tooNeatAsk"))}
             >
-              {t("askSol.open")}
+              <SolText text={t("askSol.open")} />
             </ActionButton>
           </div>
         )}

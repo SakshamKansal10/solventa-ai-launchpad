@@ -28,6 +28,7 @@ import { useEvidenceWorkspace } from "../proof/useEvidence";
 import { useAskSol } from "../DashboardShell";
 import { ReviewWeekDialog } from "./ReviewWeekDialog";
 import type { useRoadmapText } from "./text";
+import { SolText } from "../SolText";
 
 type RoadmapText = ReturnType<typeof useRoadmapText>;
 
@@ -434,7 +435,7 @@ export function WeekTab({
                 data-testid="rail-ask-sol"
               >
                 <MessageCircle className="size-4" aria-hidden="true" />
-                {t("pf.rail.askSol")}
+                <SolText text={t("pf.rail.askSol")} />
               </Button>
             </section>
           </div>
