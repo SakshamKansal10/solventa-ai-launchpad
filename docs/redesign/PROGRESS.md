@@ -119,12 +119,24 @@ Blockers: `blocked.md`. Final report: `REPORT.md`.
 - [x] Job D — done (owner confirmed)
 - [x] Job C Google shows "Solventia" (d557047): Google's own button + One Tap on our origin,
   redirect fallback; owner steps in REPORT.md (origins + branding already done by the owner); decisions 53
-- [~] Job E emails
+- [x] Job E emails
   - [x] deep links to the exact page, signed-out → /sign-in?next= → that page (db02015); decisions 54
   - [x] one address sol@solventia.in everywhere; hidden reply-to until forwarding exists
   - [x] status + SMTP/DNS owner steps in REPORT.md (27f419d)
-  - [ ] **blocked: `email-kit/` folder not in the project** — shared layout, logo PNG
-    (public/brand/email-logo.png), Supabase templates (Confirm signup + Magic Link must show
-    `{{ .Token }}`), real test sends, screenshots. Resume here once the owner adds the folder.
+  - [x] one layout from email-kit/ for every app email, en + hi (66cd4e0); logo live at
+    https://solventia.in/brand/email-logo.png; 8 test sends accepted by Resend; screenshots
+    600/375 light/dark (e9f4c69); Supabase templates in docs/redesign/email/supabase; decision 55
   - [ ] owner: confirm Email OTP Expiration (default 3600 s), turn on custom SMTP (Resend),
     add the forwarding MX + one SPF on `@` for sol@solventia.in
+
+
+## Owner jobs — 2026-11-17
+- [x] email-kit extracted to the project root (email-kit/, identical to the copy used for Job E)
+- [x] Job F iPhone email links (b7ad248): root cause = the site's CSS/JS refused (Vercel firewall
+  challenge the Gmail in-app browser cannot pass) → raw HTML; load fallback panel in the server
+  HTML, iOS 15 build target + polyfills, npm run check:ios15, e2e/ios-deeplink.spec.ts (WebKit);
+  decision 56
+- [x] Job G dashboard width: padding 5vw − 32px from 1024px (32/46/64 at 1280/1568/1920), content
+  cap 1792px, phone unchanged; e2e/dash-width.spec.ts; before/after in docs/redesign/perf/width
+- [ ] owner: Vercel Firewall bypass rule for /assets/* and /brand/*; Supabase templates + OTP
+  expiry + SMTP; forwarding MX + one SPF for sol@solventia.in

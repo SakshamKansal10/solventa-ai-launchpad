@@ -1,9 +1,50 @@
 # Solventia redesign v2 — report
 
+## 2026-11-17 — iPhone email links, dashboard width, emails finished
+
+**Job F — email links on iPhone (live, b7ad248).** Root cause: the site's CSS and JS files were
+refused on the way to the Gmail app's in-app browser — Vercel's firewall was challenging this
+network (403 + a challenge page) and an in-app browser cannot pass a challenge for a stylesheet or
+script — so only the raw server HTML showed. Reproduced exactly in iPhone WebKit
+(docs/redesign/perf/iphone/before-files-blocked-raw-html.png). Now: a styled panel (Try again ·
+open in Safari or Chrome · Sign in again) replaces raw HTML whenever the stylesheet is refused or
+the app's JavaScript does not start; the build targets iOS 15+ (it shipped syntax iOS 15.0–16.3
+cannot run) with small polyfills; `npm run check:ios15` guards it. iPhone screenshots:
+docs/redesign/perf/iphone/ (signed-in-directions, signed-out-sign-in, files-blocked-fallback).
+
+**Job G — dashboard width (live after this push).** Side padding 32px at 1280, ~46px at 1568,
+64px at 1920; content up to 1792px (a 1680px cap would leave 120px at 1920, against the 64px
+target); top bar, pages and the tab-switch skeleton share one frame; text sizes unchanged; phone
+unchanged (20px sides at 390). Measured content width: 1216 (1280), 1360 (1440), 1475 (1568),
+1792 (1920); before: 1178, 1325, 1395, 1392. Screenshots: docs/redesign/perf/width/before|after.
+
+**Job E — emails:** done (sections below). Supabase template files: docs/redesign/email/supabase/.
+
+**Your dashboard steps (all of them, in one place):**
+1. **Vercel → project → Firewall → custom rule:** "Request path starts with /assets/ OR
+   /brand/" → **Bypass**, so a challenge can never refuse the site's files or the email logo.
+2. **Supabase → Authentication → Email Templates:** paste the four files from
+   docs/redesign/email/supabase/ with the subjects in the table below.
+3. **Supabase → Authentication → Providers → Email:** confirm "Email OTP Expiration" is 3600 s
+   (the templates say 1 hour).
+4. **Supabase → Authentication → Emails → SMTP Settings:** if off, turn on custom SMTP with Resend
+   (smtp.resend.com, 465, user `resend`, a Resend API key, sender sol@solventia.in, name Solventia).
+5. **GoDaddy DNS:** your forwarding service's MX records on `@` and ONE SPF TXT on `@`; tell me
+   when mail to sol@solventia.in arrives, and I will switch the reply-to to it.
+
+**Test it yourself.** In an Incognito window on solventia.in: open
+https://solventia.in/dashboard/opportunities — you land on the sign-in page with "Sign in to see
+your three directions.", Google's button first; sign in → that exact page. Then the tabs Today →
+Directions → Roadmap → Proof at full width on a laptop. On your iPhone: open one of the "[Test]"
+emails in the Gmail app (the logo should show) and tap the button — the dashboard, styled; if
+something blocks the site, you see the "This page didn't open properly" panel, never raw text.
+Also try the link once in Safari.
+
+
 ## Job E (emails) — what is live and what you must do, 2026-11-17
 
 **Live:** every app email (welcome, ideas ready, roadmap ready, weekly reminder) uses ONE layout
-built from the approved kit (solventia-email-kit/email-kit — src/lib/email/layout.ts): 600px card,
+built from the approved kit (email-kit — src/lib/email/layout.ts): 600px card,
 logo PNG + SOLVENTIA wordmark, gold/grey hairline, label, headline, text, one panel or list, one
 navy button, footer with sol@solventia.in; mobile and dark-mode rules, hidden preheader, a
 plain-text part, a clear subject; English or simple spoken Hindi in the founder's language. Navy

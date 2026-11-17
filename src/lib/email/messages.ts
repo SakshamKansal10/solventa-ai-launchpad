@@ -4,7 +4,7 @@ import { firstNameOf, renderEmail, type EmailLocale } from "@/lib/email/layout";
 /**
  * Every email the app sends, in English and simple spoken Hindi, all in the ONE layout
  * (layout.ts). The ideas-ready and weekly-reminder copy is the approved kit's
- * (solventia-email-kit/email-kit/app/*.html); welcome and roadmap-ready follow its pattern.
+ * (email-kit/app/*.html); welcome and roadmap-ready follow its pattern.
  * Every button is a plain deep link to the exact page — never a login token.
  */
 export interface BuiltEmail {

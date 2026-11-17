@@ -3,7 +3,7 @@ import { escapeHtml, SUPPORT_EMAIL } from "@/lib/email/brand";
 
 /**
  * The ONE layout of every email the app sends (Job E, owner 2026-11-16), implemented from the
- * approved kit (solventia-email-kit/email-kit/app/*.html — not redesigned): a 600px white card on
+ * approved kit (email-kit/app/*.html — not redesigned): a 600px white card on
  * a pale page, 40px side padding (24px on phones), the logo PNG (40px, absolute URL) and the
  * SOLVENTIA wordmark as live text, a 2px hairline (56px gold, then grey), then a small blue label,
  * the headline (28px, 24px on phones), text, at most one panel or numbered list, ONE navy button,
