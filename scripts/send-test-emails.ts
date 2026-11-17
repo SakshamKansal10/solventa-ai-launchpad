@@ -11,6 +11,7 @@ import path from "node:path";
 
 import { Resend } from "resend";
 
+import { EMAIL_FROM, EMAIL_REPLY_TO } from "../src/lib/contact";
 import {
   ideasReadyEmail,
   roadmapReadyEmail,
@@ -84,8 +85,8 @@ for (const [name, m] of emails) {
     continue;
   }
   const { data, error } = await resend.emails.send({
-    from: "Solventia <sol@solventia.in>",
-    replyTo: "solventia.in@gmail.com",
+    from: EMAIL_FROM,
+    replyTo: EMAIL_REPLY_TO,
     to: sendTo,
     subject: `[Test] ${m.subject}`,
     html: m.html,

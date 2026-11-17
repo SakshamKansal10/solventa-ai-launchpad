@@ -519,3 +519,12 @@ Each entry: what was ambiguous, what I chose, why.
     stored. The scene has no shadows or post-processing to cut. ?film=debug shows the path, the
     level and why. Fixed on the way: the load fallback's title was an <h1> in every page's HTML
     (Job F) — now a paragraph, one <h1> per page again.
+
+58. **sol@solventia.in is the reply-to too (owner, 2026-11-17).** Mail to sol@solventia.in is
+    forwarded (ImprovMX, live and verified by the owner), so the hidden Gmail reply-to of
+    decision 54 is gone: every email goes from "Solventia <sol@solventia.in>" and replies to
+    sol@solventia.in. One source, src/lib/contact.ts (CONTACT_EMAIL, EMAIL_FROM,
+    EMAIL_REPLY_TO), used by the site, the legal pages, the email footer, the sender and the
+    test-send script. Guards: src/lib/contact.test.ts (the reply-to of a real send; no other
+    address in src/, public/ or the Supabase templates) and e2e/contact-address.spec.ts (the
+    served pages, en + hi: every mailto and every address in the HTML is sol@solventia.in).

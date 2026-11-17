@@ -22,7 +22,8 @@ export const FONT_HEADING = "Helvetica, Arial, sans-serif";
 export const FONT_BODY = "Arial, Helvetica, sans-serif";
 
 export const BRAND_TAGLINE = "VALIDATE • BUILD • ELEVATE";
-export const SUPPORT_EMAIL = "sol@solventia.in";
+/** The footer's help address: the site's one address (src/lib/contact.ts). */
+export { CONTACT_EMAIL as SUPPORT_EMAIL } from "@/lib/contact";
 
 /** Every dynamic value (a founder's name, an AI-generated opportunity
  * title) is interpolated into raw HTML below — this is the one place

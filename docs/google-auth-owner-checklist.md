@@ -11,13 +11,20 @@ reachable from the Google Cloud and Supabase consoles.
 | Field | Value |
 |---|---|
 | App name | `Solventia` |
-| User support email | `solventia.in@gmail.com` |
+| User support email | `solventia.in@gmail.com` for now (see the note below) |
 | App logo | a 120×120 square PNG of the S mark (master: `src/assets/brand/s-logo.svg`; `public/icon-512.png` downscaled works) |
 | Application home page | `https://solventia.in` |
 | Application privacy policy link | `https://solventia.in/privacy` |
 | Application terms of service link | `https://solventia.in/terms` |
 | Authorized domains | `solventia.in` and `supabase.co` (the redirect still passes through `dcnurhuxgdzxruqsjglx.supabase.co`) |
-| Developer contact email | `solventia.in@gmail.com` |
+| Developer contact email | `sol@solventia.in` (any address works here; Google writes to it, users never see it) |
+
+**The support email on Google's sign-in screen.** It is the one place outside the site where
+users can see an address (on Google's consent screen). Google only offers the Google account's
+own address or a Google Group that account manages, so `sol@solventia.in` can be chosen only
+once it is a Google account: create one at accounts.google.com with "Use my current email
+address instead" (sol@solventia.in — the code arrives through the forwarding), add it to this
+Google Cloud project as an Owner, then pick it here.
 
 Then **Verify branding / Submit for verification**. Until Google approves it, the chooser can
 keep showing the Supabase domain.

@@ -40,8 +40,8 @@ docs/redesign/perf/film-paths/ (live, recorded, reduced — iPhone and desktop, 
    (the templates say 1 hour).
 4. **Supabase → Authentication → Emails → SMTP Settings:** if off, turn on custom SMTP with Resend
    (smtp.resend.com, 465, user `resend`, a Resend API key, sender sol@solventia.in, name Solventia).
-5. **GoDaddy DNS:** your forwarding service's MX records on `@` and ONE SPF TXT on `@`; tell me
-   when mail to sol@solventia.in arrives, and I will switch the reply-to to it.
+5. ~~**GoDaddy DNS:** forwarding MX + one SPF for sol@solventia.in~~ — done (ImprovMX, 2026-11-17);
+   every email's reply-to is now sol@solventia.in (decision 58).
 
 **Test it yourself.** In an Incognito window on solventia.in: open
 https://solventia.in/dashboard/opportunities — you land on the sign-in page with "Sign in to see
@@ -104,9 +104,8 @@ Checks:
 - **Deliverability (DNS today, checked against 8.8.8.8):** DKIM `resend._domainkey` ✓; Resend's
   bounce domain `send.solventia.in` has its MX (feedback-smtp.ap-northeast-1.amazonses.com) and
   SPF (`v=spf1 include:amazonses.com ~all`) ✓; DMARC `p=quarantine` ✓ (aligned through
-  send.solventia.in, relaxed). Nothing to add for sending. **For forwarding to sol@solventia.in**
-  add, in GoDaddy, the forwarding service's MX records on `@` and ONE SPF TXT on `@`, e.g.
-  `v=spf1 include:<forwarder's include> ~all`. Resend's SPF lives on send.solventia.in, so it is
+  send.solventia.in, relaxed). Nothing to add for sending. **Forwarding to sol@solventia.in**
+  is live (ImprovMX MX + one SPF TXT on `@`, owner, 2026-11-17). Resend's SPF lives on send.solventia.in, so it is
   not merged into it; if you later add another sender on the root domain, put all includes in
   that one record: `v=spf1 include:<forwarder> include:<other> ~all` (never two SPF records).
 

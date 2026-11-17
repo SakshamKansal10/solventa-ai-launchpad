@@ -121,13 +121,14 @@ Blockers: `blocked.md`. Final report: `REPORT.md`.
   redirect fallback; owner steps in REPORT.md (origins + branding already done by the owner); decisions 53
 - [x] Job E emails
   - [x] deep links to the exact page, signed-out → /sign-in?next= → that page (db02015); decisions 54
-  - [x] one address sol@solventia.in everywhere; hidden reply-to until forwarding exists
+  - [x] one address sol@solventia.in everywhere; reply-to sol@solventia.in since forwarding went
+    live (2026-11-17, decision 58)
   - [x] status + SMTP/DNS owner steps in REPORT.md (27f419d)
   - [x] one layout from email-kit/ for every app email, en + hi (66cd4e0); logo live at
     https://solventia.in/brand/email-logo.png; 8 test sends accepted by Resend; screenshots
     600/375 light/dark (e9f4c69); Supabase templates in docs/redesign/email/supabase; decision 55
-  - [ ] owner: confirm Email OTP Expiration (default 3600 s), turn on custom SMTP (Resend),
-    add the forwarding MX + one SPF on `@` for sol@solventia.in
+  - [ ] owner: confirm Email OTP Expiration (default 3600 s), turn on custom SMTP (Resend)
+  - [x] owner: forwarding MX + one SPF on `@` for sol@solventia.in (ImprovMX, 2026-11-17)
 
 
 ## Owner jobs — 2026-11-17
@@ -139,4 +140,9 @@ Blockers: `blocked.md`. Final report: `REPORT.md`.
 - [x] Job G dashboard width: padding 5vw − 32px from 1024px (32/46/64 at 1280/1568/1920), content
   cap 1792px, phone unchanged; e2e/dash-width.spec.ts; before/after in docs/redesign/perf/width
 - [ ] owner: Vercel Firewall bypass rule for /assets/* and /brand/*; Supabase templates + OTP
-  expiry + SMTP; forwarding MX + one SPF for sol@solventia.in
+  expiry + SMTP (forwarding for sol@solventia.in: done)
+- [x] Job H cinematic on every device (157dac5): live / recorded / reduced paths, never the boxed
+  still version; recorded film phone 1.34 MB, desktop 4.48 MB; ?film=debug; decision 57
+- [x] Reply-to sol@solventia.in (ImprovMX forwarding live): one address for sender, reply-to,
+  site, legal pages and emails, src/lib/contact.ts; guards contact.test.ts +
+  e2e/contact-address.spec.ts; decision 58

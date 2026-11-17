@@ -1,4 +1,5 @@
 import { Resend } from "resend";
+import { EMAIL_FROM, EMAIL_REPLY_TO } from "@/lib/contact";
 import { env } from "@/lib/env.server";
 import type { EmailLocale } from "@/lib/email/layout";
 import {
@@ -17,13 +18,6 @@ function getClient(): Resend | null {
   return client;
 }
 
-// Displays as "Solventia" in every inbox — never a Resend/Supabase
-// technical sender name.
-const FROM = "Solventia <sol@solventia.in>";
-/** Replies reach the team here until mail to sol@solventia.in is forwarded (no MX on
- * solventia.in yet — owner, 2026-11-16); never shown in an email. */
-const REPLY_TO = "solventia.in@gmail.com";
-
 /** Every email send is best-effort. Resend being unconfigured or failing
  * must never break the core product flow it's attached to. Each email goes
  * with its plain-text part (layout.ts). */
@@ -36,8 +30,8 @@ async function sendSafely(to: string, email: BuiltEmail): Promise<void> {
   try {
     // Resend reports a refused send in its result, not by throwing.
     const { error } = await resend.emails.send({
-      from: FROM,
-      replyTo: REPLY_TO,
+      from: EMAIL_FROM,
+      replyTo: EMAIL_REPLY_TO,
       to,
       subject: email.subject,
       html: email.html,
