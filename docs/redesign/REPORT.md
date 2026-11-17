@@ -31,17 +31,18 @@ docs/redesign/perf/film-paths/ (live, recorded, reduced — iPhone and desktop, 
 
 **Job E — emails:** done (sections below). Supabase template files: docs/redesign/email/supabase/.
 
-**Your dashboard steps (all of them, in one place):**
-1. **Vercel → project → Firewall → custom rule:** "Request path starts with /assets/ OR
-   /brand/" → **Bypass**, so a challenge can never refuse the site's files or the email logo.
-2. **Supabase → Authentication → Email Templates:** paste the four files from
-   docs/redesign/email/supabase/ with the subjects in the table below.
-3. **Supabase → Authentication → Providers → Email:** confirm "Email OTP Expiration" is 3600 s
-   (the templates say 1 hour).
-4. **Supabase → Authentication → Emails → SMTP Settings:** if off, turn on custom SMTP with Resend
-   (smtp.resend.com, 465, user `resend`, a Resend API key, sender sol@solventia.in, name Solventia).
+**Your dashboard steps — all done (owner, 2026-11-17):**
+1. ~~**Vercel → Firewall → custom rule** to bypass /assets/ and /brand/~~ — done: rule
+   `^/(assets|brand|film)/` → Bypass is published (it also covers the recorded film's frames).
+2. ~~**Supabase → Email Templates:** the four files from docs/redesign/email/supabase/ with the
+   subjects in the table below~~ — done, pasted and verified.
+3. ~~**Email OTP Expiration**~~ — confirmed 3600 s (the templates say 1 hour).
+4. ~~**Custom SMTP via Resend**~~ — on, sender sol@solventia.in (name Solventia).
 5. ~~**GoDaddy DNS:** forwarding MX + one SPF for sol@solventia.in~~ — done (ImprovMX, 2026-11-17);
-   every email's reply-to is now sol@solventia.in (decision 58).
+   ImprovMX forwarding verified; every email's reply-to is now sol@solventia.in (decision 58).
+6. ~~**A Google account for sol@solventia.in**~~ — done, with the S logo as its profile picture.
+   Still to do when you want it: add that account as an Owner of the Google Cloud project and
+   pick it as the support email on the consent screen (docs/google-auth-owner-checklist.md).
 
 **Test it yourself.** In an Incognito window on solventia.in: open
 https://solventia.in/dashboard/opportunities — you land on the sign-in page with "Sign in to see
@@ -79,7 +80,7 @@ docs/redesign/email/supabase/, the kit's templates with the site's navy and blue
 | Reset Password | reset-password.html | Reset your Solventia password |
 | Change Email Address | change-email.html | Confirm your new email for Solventia |
 
-**Vercel firewall (please check):** while I took screenshots, about 40 quick requests for the logo
+**Vercel firewall (resolved 2026-11-17: the bypass rule `^/(assets|brand|film)/` is published):** while I took screenshots, about 40 quick requests for the logo
 from this PC made Vercel answer 403 with a challenge (`X-Vercel-Mitigated: challenge`) to every
 non-browser request from this IP — the whole site, for at least 10 minutes. Browsers pass such a
 challenge by themselves; an email client's image proxy (Gmail's, Outlook's) cannot. If it is only

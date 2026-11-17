@@ -127,7 +127,7 @@ Blockers: `blocked.md`. Final report: `REPORT.md`.
   - [x] one layout from email-kit/ for every app email, en + hi (66cd4e0); logo live at
     https://solventia.in/brand/email-logo.png; 8 test sends accepted by Resend; screenshots
     600/375 light/dark (e9f4c69); Supabase templates in docs/redesign/email/supabase; decision 55
-  - [ ] owner: confirm Email OTP Expiration (default 3600 s), turn on custom SMTP (Resend)
+  - [x] owner: Email OTP Expiration 3600 s confirmed, custom SMTP (Resend) on (2026-11-17)
   - [x] owner: forwarding MX + one SPF on `@` for sol@solventia.in (ImprovMX, 2026-11-17)
 
 
@@ -139,8 +139,12 @@ Blockers: `blocked.md`. Final report: `REPORT.md`.
   decision 56
 - [x] Job G dashboard width: padding 5vw − 32px from 1024px (32/46/64 at 1280/1568/1920), content
   cap 1792px, phone unchanged; e2e/dash-width.spec.ts; before/after in docs/redesign/perf/width
-- [ ] owner: Vercel Firewall bypass rule for /assets/* and /brand/*; Supabase templates + OTP
-  expiry + SMTP (forwarding for sol@solventia.in: done)
+- [x] owner, all done 2026-11-17: Vercel Firewall bypass rule `^/(assets|brand|film)/`; the 4
+  Supabase templates pasted with their subjects and verified; OTP expiry 3600 s; custom SMTP via
+  Resend from sol@solventia.in on; ImprovMX forwarding verified; a Google account for
+  sol@solventia.in exists (S logo as its picture)
+- [ ] owner (optional): make that Google account an Owner of the Google Cloud project and set it as
+  the consent screen's support email (docs/google-auth-owner-checklist.md)
 - [x] Job H cinematic on every device (157dac5): live / recorded / reduced paths, never the boxed
   still version; recorded film phone 1.34 MB, desktop 4.48 MB; ?film=debug; decision 57
 - [x] Reply-to sol@solventia.in (ImprovMX forwarding live): one address for sender, reply-to,
