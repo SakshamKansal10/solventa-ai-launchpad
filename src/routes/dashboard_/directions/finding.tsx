@@ -9,6 +9,7 @@ import { LanguageSwitcher } from "@/components/solventia/LanguageSwitcher";
 import { DASH_FRAME } from "@/components/founder/DashboardShell";
 import { ActionButton, ActionLink } from "@/components/founder/dash/ui";
 import { exploreMoreOpportunities, getGenerationJob } from "@/lib/actions/opportunities";
+import { findNewDirections } from "@/lib/actions/fact-updates";
 import type { GenerationJob } from "@/lib/actions/generation-jobs.server";
 import { useLocale } from "@/lib/i18n/LocaleProvider";
 import { qk, useInvalidateFounder } from "@/lib/queries";
@@ -54,30 +55,43 @@ function FindingPage() {
   const queryClient = useQueryClient();
   const invalidate = useInvalidateFounder();
   const started = useRef(false);
+  // While the start request is in flight the job is polled too (its row appears as soon as the
+  // server takes it), and the clock counts from the tap until the job is known.
+  const pending = useRef(false);
+  const tappedAt = useRef<number | null>(null);
 
   const job = useQuery({
     queryKey: jobKey,
     queryFn: () => getGenerationJob(),
     staleTime: 0,
     // Poll the real state while it runs (and once more when it ends).
-    refetchInterval: (q) => (q.state.data?.status === "running" ? 2_000 : false),
+    refetchInterval: (q) => (q.state.data?.status === "running" || pending.current ? 2_000 : false),
   });
 
   const run = useMutation({
     mutationFn: (retryJobId?: string) =>
-      exploreMoreOpportunities({ data: { locale, retryJobId } }).then((r) => r.job),
+      search.kind === "refresh" && search.update
+        ? findNewDirections({ data: { updateId: search.update, locale, retryJobId } }).then(
+            (r) => r.job,
+          )
+        : exploreMoreOpportunities({ data: { locale, retryJobId } }).then((r) => r.job),
     onMutate: () => {
       // The page shows "running" from the first moment (the server row follows).
+      pending.current = true;
+      tappedAt.current = Date.now();
       void queryClient.invalidateQueries({ queryKey: jobKey });
     },
     onSettled: (data) => {
+      pending.current = false;
       if (data) queryClient.setQueryData(jobKey, data);
       void queryClient.invalidateQueries({ queryKey: jobKey });
     },
   });
 
   // Start at most once per visit, and only when no job is running already.
-  const current: GenerationJob | null | undefined = run.data ?? job.data;
+  // While a start request is in flight, an earlier finished job is not this one.
+  const current: GenerationJob | null | undefined =
+    run.data ?? (!run.isPending || job.data?.status === "running" ? job.data : null);
   useEffect(() => {
     if (started.current || !search.start || job.isPending) return;
     started.current = true;
@@ -119,7 +133,7 @@ function FindingPage() {
     if (idle) void navigate({ to: "/dashboard/opportunities", replace: true });
   }, [idle, navigate]);
 
-  const startedAt = current?.createdAt ? Date.parse(current.createdAt) : null;
+  const startedAt = current?.createdAt ? Date.parse(current.createdAt) : tappedAt.current;
   const elapsed = startedAt ? Math.max(0, Math.round((now - startedAt) / 1000)) : 0;
   const stepIndex = current ? STEPS.indexOf(current.step) : 0;
   const kind = current?.kind === "refresh" || search.kind === "refresh" ? "refresh" : "more";
@@ -159,7 +173,11 @@ function FindingPage() {
                 {limit ? t("v2.limit.title") : t("gen.failed.title")}
               </h1>
               <p className="dash-lead max-w-[32em]" data-testid={limit ? "daily-limit" : undefined}>
-                {limit ? t("gen.limit") : t("gen.failed.body")}
+                {limit
+                  ? kind === "refresh"
+                    ? t("sol.facts.limit")
+                    : t("gen.limit")
+                  : t("gen.failed.body")}
               </p>
               <div className="flex flex-wrap items-center gap-3.5">
                 {!limit && (

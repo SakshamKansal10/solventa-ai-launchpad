@@ -6,6 +6,19 @@ import { requireUser } from "@/lib/supabase/server";
 import type { NormalizedProfile } from "@/lib/profile/normalize";
 import { generateMentorReply } from "@/lib/ai/prompts/mentor";
 import { loadProofOverview } from "@/lib/actions/proof";
+import { getSchemaCapabilities } from "@/lib/schema-capabilities.server";
+import { cleanFactPatch, isEmptyPatch } from "@/lib/profile/apply-facts";
+
+/** "Find new directions" offered under a Sol reply (Job M). */
+export interface FactUpdateOffer {
+  id: string;
+  summary: string;
+  assistantMessageId: string | null;
+  applied: boolean;
+}
+
+const factUpdates = (db: Awaited<ReturnType<typeof requireUser>>["supabase"]) =>
+  (db as unknown as import("@supabase/supabase-js").SupabaseClient).from("profile_fact_updates");
 
 async function getOrCreateConversation(
   supabase: Awaited<ReturnType<typeof requireUser>>["supabase"],
@@ -151,18 +164,58 @@ export const sendMentorMessage = createServerFn({ method: "POST" })
       data.locale ?? "en",
     );
 
-    const { error: insertError } = await supabase.from("mentor_messages").insert([
-      { conversation_id: conversationId, user_id: user.id, role: "user", content: data.message },
-      {
-        conversation_id: conversationId,
-        user_id: user.id,
-        role: "assistant",
-        content: reply.message,
-      },
-    ]);
+    const { data: inserted, error: insertError } = await supabase
+      .from("mentor_messages")
+      .insert([
+        { conversation_id: conversationId, user_id: user.id, role: "user", content: data.message },
+        {
+          conversation_id: conversationId,
+          user_id: user.id,
+          role: "assistant",
+          content: reply.message,
+        },
+      ])
+      .select("id, role");
     if (insertError) throw new Error(insertError.message);
 
-    return { conversationId, reply };
+    // New facts about the founder (Job M): saved as an OFFER only — nothing about the founder
+    // changes until they tap "Find new directions". Best-effort: Ask Sol never fails on it.
+    let factUpdate: FactUpdateOffer | null = null;
+    const { newFacts, ...plainReply } = reply;
+    if (newFacts?.summary?.trim()) {
+      const { notes, ...fields } = cleanFactPatch(newFacts);
+      if (!isEmptyPatch({ ...fields, notes })) {
+        try {
+          if ((await getSchemaCapabilities(supabase)).generationJobs) {
+            const assistantMessageId =
+              (inserted ?? []).find((m) => m.role === "assistant")?.id ?? null;
+            const { data: row } = await factUpdates(supabase)
+              .insert({
+                user_id: user.id,
+                message: data.message,
+                summary: newFacts.summary.trim().slice(0, 300),
+                patch: fields,
+                notes: notes ?? [],
+                conversation_id: conversationId,
+                assistant_message_id: assistantMessageId,
+              })
+              .select("id, summary")
+              .single();
+            if (row)
+              factUpdate = {
+                id: (row as { id: string }).id,
+                summary: (row as { summary: string }).summary,
+                assistantMessageId,
+                applied: false,
+              };
+          }
+        } catch (err) {
+          console.error("[ask-sol] could not save the new facts (non-fatal):", err);
+        }
+      }
+    }
+
+    return { conversationId, reply: plainReply, factUpdate };
   });
 
 export const getMentorConversation = createServerFn({ method: "GET" })
@@ -176,7 +229,8 @@ export const getMentorConversation = createServerFn({ method: "GET" })
         ? baseQuery.eq("opportunity_id", data.opportunityId)
         : baseQuery.is("opportunity_id", null)
     ).maybeSingle();
-    if (!conversation.data) return { conversationId: null, messages: [] };
+    if (!conversation.data)
+      return { conversationId: null, messages: [], factUpdates: [] as FactUpdateOffer[] };
 
     const { data: messages, error } = await supabase
       .from("mentor_messages")
@@ -185,5 +239,34 @@ export const getMentorConversation = createServerFn({ method: "GET" })
       .order("created_at", { ascending: true });
     if (error) throw new Error(error.message);
 
-    return { conversationId: conversation.data.id as string, messages: messages ?? [] };
+    // The "Find new directions" offers in this thread (Job M), under the replies that made them.
+    let offers: FactUpdateOffer[] = [];
+    try {
+      if ((await getSchemaCapabilities(supabase)).generationJobs) {
+        const { data: rows } = await factUpdates(supabase)
+          .select("id, summary, assistant_message_id, applied_at")
+          .eq("conversation_id", conversation.data.id);
+        offers = (
+          (rows ?? []) as {
+            id: string;
+            summary: string;
+            assistant_message_id: string | null;
+            applied_at: string | null;
+          }[]
+        ).map((r) => ({
+          id: r.id,
+          summary: r.summary,
+          assistantMessageId: r.assistant_message_id,
+          applied: Boolean(r.applied_at),
+        }));
+      }
+    } catch {
+      offers = [];
+    }
+
+    return {
+      conversationId: conversation.data.id as string,
+      messages: messages ?? [],
+      factUpdates: offers,
+    };
   });

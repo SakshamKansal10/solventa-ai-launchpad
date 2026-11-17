@@ -93,7 +93,8 @@ test("leaving and coming back shows the same running job, never a new one", asyn
 }) => {
   test.setTimeout(120_000);
   const user = await founder(context);
-  await gemini.delay("EXPLORE_MORE", 8_000);
+  // Long enough that the job is still running when the founder comes back, even on a slow machine.
+  await gemini.delay("EXPLORE_MORE", 20_000);
   await gotoApp(page, "/dashboard/opportunities");
   await page.getByTestId("explore-more-generate").click();
   const finding = page.getByTestId("finding");
@@ -104,6 +105,7 @@ test("leaving and coming back shows the same running job, never a new one", asyn
   // Leave, come back: the Directions page offers the running job's progress, not a new search.
   await gotoApp(page, "/dashboard");
   await gotoApp(page, "/dashboard/opportunities");
+  await expect(page.getByTestId("find-more")).toBeVisible({ timeout: 30_000 });
   await expect(page.getByTestId("explore-more-generate")).toHaveCount(0);
   await page.getByTestId("find-more-running").click();
   await expect(finding).toHaveAttribute("data-job", jobId ?? "");

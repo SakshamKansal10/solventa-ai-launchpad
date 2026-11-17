@@ -146,6 +146,11 @@ test.describe("accessibility (WCAG 2.1 A/AA, serious and critical only)", () => 
 
     await page.getByTestId("mission-card").nth(1).getByTestId("mission-open").click();
     await expect(page.getByTestId("mission-page")).toBeVisible();
+    // Its data is preloaded on hover now, so the page can still be fading in: audit it settled.
+    await page.waitForLoadState("networkidle");
+    await page.waitForFunction(() =>
+      document.getAnimations().every((a) => a.playState !== "running"),
+    );
     findings.push(...(await audit(page, "mission page")));
 
     await gotoApp(page, "/dashboard/settings");

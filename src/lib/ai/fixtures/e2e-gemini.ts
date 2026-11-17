@@ -202,6 +202,31 @@ export function evidenceInterpretation(prompt: string) {
 }
 
 export function mentorReply(question: string) {
+  // New facts about the founder (Job M): the fake reads the two the tests state.
+  const money = /I now have ₹\s?(\d+) lakh/i.exec(question);
+  const city = /I moved to ([A-Z][a-z]+)/.exec(question);
+  const partner = /my partner is a (\w+)/i.exec(question);
+  if (money || city || partner)
+    return {
+      message: "Got it — that changes what fits you.",
+      nextActions: [],
+      isRecommendation: false,
+      newFacts: {
+        summary: [
+          money ? `You now have ₹${money[1]} lakh to put in` : null,
+          city ? `you live in ${city[1]}` : null,
+          partner ? `your partner is a ${partner[1]}` : null,
+        ]
+          .filter(Boolean)
+          .join(", ")
+          .replace(/^./, (c) => c.toUpperCase())
+          .concat("."),
+        capitalAmount: money ? Number(money[1]) * 100_000 : null,
+        city: city ? city[1] : null,
+        state: city ? city[1] : null,
+        notes: partner ? [`My partner is a ${partner[1]}`] : null,
+      },
+    };
   return {
     message: `Here is a direct answer to "${question.slice(0, 80)}": focus on the current mission first, and record what you learn as evidence.`,
     nextActions: ["Finish the current mission", "Record what you learned as evidence"],

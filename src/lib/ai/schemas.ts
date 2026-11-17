@@ -379,6 +379,45 @@ export const MentorResponseSchema = z.object({
     .describe(
       "True if this response is Sol's opinion/recommendation rather than a statement of fact/evidence.",
     ),
+  newFacts: z
+    .object({
+      summary: z
+        .string()
+        .describe(
+          "One short line, in the reply's language, saying what changed (e.g. 'You now have ₹2 lakh to put in, and you live in Delhi.').",
+        ),
+      capitalAmount: z
+        .number()
+        .nullable()
+        .optional()
+        .describe("The money they can now put in, in their own currency, as a plain number."),
+      city: z.string().nullable().optional(),
+      state: z.string().nullable().optional(),
+      country: z.string().nullable().optional(),
+      weeklyHours: z
+        .enum(["lt5", "h5_10", "h10_20", "h20_30", "h30_40", "h40plus"])
+        .nullable()
+        .optional()
+        .describe("Hours per week they can now give, as one of the ids."),
+      workDays: z
+        .array(z.enum(["weekday_mornings", "weekday_evenings", "saturday", "sunday"]))
+        .nullable()
+        .optional()
+        .describe("When they can now work. 'Only weekends' = ['saturday','sunday']."),
+      addSkills: z.array(z.string()).nullable().optional(),
+      notes: z
+        .array(z.string())
+        .nullable()
+        .optional()
+        .describe(
+          "Facts with no field above, in their words: people they can work with, goals, constraints.",
+        ),
+    })
+    .nullable()
+    .optional()
+    .describe(
+      "ONLY when the founder states a NEW or CHANGED fact about their own situation (money, time, place, skills, people, goals, constraints) that would change which business directions fit them. Null for questions, plans, progress or feelings.",
+    ),
 });
 export type MentorResponse = z.infer<typeof MentorResponseSchema>;
 

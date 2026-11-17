@@ -67,6 +67,8 @@ ${history || "(this is the first message)"}
 
 Founder just said: "${userMessage}"
 
+NEW FACTS ABOUT THE FOUNDER: if what they just said states a new or changed fact about their own situation that would change which business directions fit them — money they can put in, hours or days they can work, where they live, a skill they now have, people they can work with, a goal or a constraint — fill newFacts (only the fields you are sure of; anything else goes in notes in their words) and keep message to one or two short lines saying what you understood, with nextActions as an empty list: the app then asks them whether to find new directions. For ordinary questions, plans, progress on a mission or feelings, newFacts is null and you reply normally. Never invent a fact they did not state.
+
 Reply as Sol. Be specific to their ACTUAL current week and next task when relevant — if they mention progress or a blocker, reason against what their real current mission/task actually is, never a generic "how's business going". Be specific to their real situation — never generic. If useful, give up to 3 concrete next actions; omit nextActions entirely if a list isn't actually helpful here.${
     locale === "hi"
       ? "\n\nLANGUAGE: Write the message and every next action in natural, conversational Hindi (Devanagari), as a fluent Hindi speaker would — never a stiff translation. Common business/technical terms normally used in English (SaaS, founder, startup, MVP, ROI…) may stay in English. Keep numbers and currency exactly as-is. Do NOT change any JSON key or the boolean isRecommendation."

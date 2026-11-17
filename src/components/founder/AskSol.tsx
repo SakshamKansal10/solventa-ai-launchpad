@@ -1,9 +1,14 @@
 import { useEffect, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Loader2, Send, X } from "lucide-react";
+import { useNavigate } from "@tanstack/react-router";
+import { Loader2, Send, Sparkles, X } from "lucide-react";
 
 import { BrandMark } from "@/components/brand/Brand";
-import { getMentorConversation, sendMentorMessage } from "@/lib/actions/mentor";
+import {
+  getMentorConversation,
+  sendMentorMessage,
+  type FactUpdateOffer,
+} from "@/lib/actions/mentor";
 import { parseDailyLimit } from "@/lib/limits";
 import { useLocale } from "@/lib/i18n/LocaleProvider";
 import type { MessageKey } from "@/lib/i18n";
@@ -14,6 +19,8 @@ interface ChatMessage {
   role: "user" | "assistant";
   content: string;
   failed?: boolean;
+  /** New facts Sol understood: the offer to find new directions with them (Job M). */
+  offer?: FactUpdateOffer | null;
 }
 
 /** The conversation itself. Rendered inside a docked aside (≥1280px, where it
@@ -66,7 +73,14 @@ export function AskSolPanel({
 
   useEffect(() => {
     if (conversation.data) {
-      setMessages(conversation.data.messages.map((m) => ({ role: m.role, content: m.content })));
+      const offers = conversation.data.factUpdates ?? [];
+      setMessages(
+        conversation.data.messages.map((m) => ({
+          role: m.role,
+          content: m.content,
+          offer: offers.find((o) => o.assistantMessageId === m.id) ?? null,
+        })),
+      );
     }
   }, [conversation.data]);
 
@@ -83,7 +97,10 @@ export function AskSolPanel({
     setSending(true);
     try {
       const result = await sendMentorMessage({ data: { opportunityId, message, locale } });
-      setMessages((prev) => [...prev, { role: "assistant", content: result.reply.message }]);
+      setMessages((prev) => [
+        ...prev,
+        { role: "assistant", content: result.reply.message, offer: result.factUpdate },
+      ]);
       void queryClient.invalidateQueries({ queryKey: qk.mentor(opportunityId) });
     } catch (err) {
       console.error("[ask-sol] send failed:", err);
@@ -263,6 +280,9 @@ export function AskSolPanel({
                   {m.role === "user" ? t("askSol.you") : t("askSol.sol")}:{" "}
                 </span>
                 {m.failed ? <span role="alert">{m.content}</span> : m.content}
+                {m.offer && !m.offer.applied && (
+                  <FindNewDirections offer={m.offer} hasRoadmap={hasRoadmap} />
+                )}
                 {m.failed && lastFailed && i === messages.length - 1 && (
                   <button
                     type="button"
@@ -326,6 +346,55 @@ export function AskSolPanel({
           )}
         </button>
       </form>
+    </div>
+  );
+}
+
+/**
+ * Under a reply where Sol understood new facts about the founder (Job M): the question and ONE
+ * button. Nothing changes without this tap; with a roadmap, the founder is told first that it
+ * stays. The tap opens the generation screen, which runs it as the founder's only job.
+ */
+function FindNewDirections({ offer, hasRoadmap }: { offer: FactUpdateOffer; hasRoadmap: boolean }) {
+  const { t } = useLocale();
+  const navigate = useNavigate();
+  const [tapped, setTapped] = useState(false);
+  return (
+    <div
+      className="mt-3 flex flex-col items-start gap-2.5 border-t border-sol-border pt-3"
+      data-testid="sol-facts"
+    >
+      {/* What Sol understood, in one line — then the question. */}
+      <p className="text-sol-ink" data-testid="sol-facts-summary">
+        {offer.summary}
+      </p>
+      <p className="font-semibold text-sol-ink">{t("sol.facts.ask")}</p>
+      {hasRoadmap && (
+        <p className="text-[0.9375rem] text-sol-secondary" data-testid="sol-facts-roadmap">
+          {t("sol.facts.roadmapNote")}
+        </p>
+      )}
+      <button
+        type="button"
+        disabled={tapped}
+        data-testid="sol-find-directions"
+        onClick={() => {
+          if (tapped) return;
+          setTapped(true);
+          void navigate({
+            to: "/dashboard/directions/finding",
+            search: { kind: "refresh", update: offer.id, start: true },
+          });
+        }}
+        className="inline-flex min-h-11 items-center gap-2 rounded-full bg-sol-navy px-4 text-[1rem] font-semibold text-white hover:bg-sol-navy-soft disabled:opacity-60"
+      >
+        {tapped ? (
+          <Loader2 className="size-4 animate-spin" aria-hidden="true" />
+        ) : (
+          <Sparkles className="size-4" aria-hidden="true" />
+        )}
+        {t("sol.facts.cta")}
+      </button>
     </div>
   );
 }
