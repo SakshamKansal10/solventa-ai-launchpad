@@ -478,3 +478,22 @@ Each entry: what was ambiguous, what I chose, why.
     {{ .Token }} (sign-in is code-only); "expires in 1 hour" assumes the default OTP expiry
     (3600 s), which the owner must confirm. Screenshots load the logo from the repo: 40 fetches
     from one PC tripped Vercel's firewall challenge for that IP.
+
+56. **Email links on iPhone showed raw HTML (owner, 2026-11-17).** Root cause: the site's CSS and
+    JS files were refused on the way to the Gmail app's in-app browser — Vercel's firewall was
+    answering this network with a challenge (403 + challenge page; it started when 40 quick
+    logo fetches from this PC set it off, 2026-11-17 ~07:50), and an in-app browser cannot pass
+    a challenge for a stylesheet or script — so only the server HTML showed. Reproduced exactly
+    in iPhone WebKit with the Google-app user agent by refusing /assets/*.css|js
+    (docs/redesign/perf/iphone/before-files-blocked-raw-html.png). A second, real defect found on
+    the way: Vite 8's default target (Safari 16.4) left class static blocks in the film's chunks
+    — a syntax error on iOS 15.0–16.3 — and the server-function client calls Object.hasOwn
+    (iOS 15.4). Fixes: build target safari15 (scripts/check-ios15.mjs, `npm run check:ios15`,
+    parses every chunk and fails on static blocks or regex lookbehind; 129 chunks pass); inline
+    ES5 polyfills (at, Object.hasOwn, toSorted, toReversed, findLast, findLastIndex,
+    structuredClone); and a load fallback in the server HTML — an inline style hides the page and
+    shows a styled panel (Try again · open in Safari or Chrome · Sign in again) unless the main
+    stylesheet arrives (it undoes both with higher specificity, wherever React places it), and an
+    inline timer shows the same panel if the app's JavaScript has not started in 12 s. Storage
+    that throws does not stop the page. e2e/ios-deeplink.spec.ts (WebKit, iPhone 13, Google-app
+    user agent): signed in, signed out, files refused, storage blocked.

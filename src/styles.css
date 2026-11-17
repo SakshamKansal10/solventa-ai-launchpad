@@ -1146,3 +1146,12 @@ html[lang="hi"] .dash-label {
     animation: none;
   }
 }
+
+/* The load fallback (src/components/LoadFallback.tsx): this stylesheet arrived, so the page
+ * shows and the panel stays hidden — unless the app's JavaScript never started. */
+html body {
+  visibility: visible;
+}
+html body #sol-fallback {
+  display: none;
+}

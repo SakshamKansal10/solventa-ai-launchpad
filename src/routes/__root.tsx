@@ -8,9 +8,10 @@ import {
   Scripts,
 } from "@tanstack/react-router";
 import { MotionConfig } from "motion/react";
-import type { ReactNode } from "react";
+import { useEffect, type ReactNode } from "react";
 
 import appCss from "../styles.css?url";
+import { BOOT_SCRIPT, FALLBACK_CSS, LoadFallback, POLYFILLS } from "@/components/LoadFallback";
 import { Toaster } from "@/components/ui/sonner";
 import { getInitialLocale } from "@/lib/actions/locale";
 import { LocaleProvider, useTranslator } from "@/lib/i18n/LocaleProvider";
@@ -141,6 +142,10 @@ function RootShell({ children }: { children: ReactNode }) {
     // The homepage's head script may set data-intro on <html> before hydration.
     <html lang={locale ?? DEFAULT_LOCALE} suppressHydrationWarning>
       <head>
+        {/* Never raw HTML, never dead on iOS 15 (LoadFallback.tsx): before anything else. */}
+        <style dangerouslySetInnerHTML={{ __html: FALLBACK_CSS }} />
+        <script dangerouslySetInnerHTML={{ __html: POLYFILLS }} />
+        <script dangerouslySetInnerHTML={{ __html: BOOT_SCRIPT }} />
         <HeadContent />
       </head>
       <body>
@@ -153,10 +158,17 @@ function RootShell({ children }: { children: ReactNode }) {
 
 function RootComponent() {
   const { queryClient, locale } = Route.useRouteContext();
+  // The app's JavaScript runs: the load fallback (LoadFallback.tsx) never shows from here on.
+  useEffect(() => {
+    const d = document.documentElement;
+    d.setAttribute("data-sol-booted", "");
+    d.removeAttribute("data-sol-stuck");
+  }, []);
 
   return (
     <QueryClientProvider client={queryClient}>
       <LocaleProvider initialLocale={locale}>
+        <LoadFallback />
         {/* Honour the OS "reduce motion" setting for every motion() animation. */}
         <MotionConfig reducedMotion="user">
           {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}

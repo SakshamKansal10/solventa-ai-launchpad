@@ -65,6 +65,11 @@ export default defineConfig({
         } as { preset: string }),
 
   vite: {
+    // iOS 15 and later (owner, 2026-11-17): Vite 8's default (Safari 16.4) left class static
+    // blocks in the bundle — a syntax error that stops every script on iOS 15.0–16.3, including
+    // email links opened in the Gmail app. Built-ins newer than iOS 15 are polyfilled inline
+    // (src/components/LoadFallback.tsx); scripts/check-ios15.mjs guards the output.
+    build: { target: ["es2021", "safari15", "chrome100", "firefox100", "edge100"] },
     server: {
       allowedHosts: ["lagged-catching-prayer.ngrok-free.dev"],
       // Playwright writes traces/screenshots inside the project; without this
