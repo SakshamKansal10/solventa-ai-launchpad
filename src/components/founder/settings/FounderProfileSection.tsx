@@ -57,7 +57,7 @@ const ROWS: RowDef[] = [
   {
     key: "skills",
     label: "set.founder.row.skills",
-    screens: ["skills", "domains", "execution"],
+    screens: ["skills", "skillLevels", "domains", "execution"],
     facts: ["skills"],
   },
   {

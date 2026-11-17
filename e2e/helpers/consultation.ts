@@ -64,11 +64,12 @@ export async function walkConsultation(page: Page, opts: WalkOptions = {}) {
 
   // Stage 2 — capability
   await expectScreen(page, "skills");
-  await page.getByTestId("skill-add").click();
-  await page.getByRole("option", { name: "Coding" }).first().click();
+  await page.getByTestId("skill-chip-Coding").click();
+  await cont(page);
+  await expectScreen(page, "skillLevels");
   await page
-    .getByRole("radio", { name: /Coding — How good are you\?.*Working|Working/ })
-    .first()
+    .getByRole("radiogroup", { name: /Coding — How good are you\?/ })
+    .getByRole("radio", { name: "Working" })
     .click();
   await cont(page);
 

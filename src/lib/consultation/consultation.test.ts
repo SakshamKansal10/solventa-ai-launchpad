@@ -110,14 +110,19 @@ describe("validation", () => {
     ).toBe(true);
   });
 
-  it("skills are optional, but every added skill needs a level", () => {
+  it("skills are optional, but every added skill needs a level (on its own step)", () => {
     const skills = screen("skills");
+    const levels = screen("skillLevels");
+    const unrated = { skills: [{ name: "Coding", level: null, usedInReal: false }] };
+    // Picking never blocks: the chips toggle freely.
     expect(skills.isComplete({})).toBe(true);
+    expect(skills.isComplete(unrated as never)).toBe(true);
+    // The levels step appears only when skills were picked, and needs every level.
+    expect(levels.applies?.({})).toBe(false);
+    expect(levels.applies?.(unrated as never)).toBe(true);
+    expect(levels.isComplete(unrated as never)).toBe(false);
     expect(
-      skills.isComplete({ skills: [{ name: "Coding", level: null, usedInReal: false }] }),
-    ).toBe(false);
-    expect(
-      skills.isComplete({ skills: [{ name: "Coding", level: "basic", usedInReal: false }] }),
+      levels.isComplete({ skills: [{ name: "Coding", level: "basic", usedInReal: false }] }),
     ).toBe(true);
   });
 

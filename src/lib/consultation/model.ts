@@ -105,6 +105,7 @@ export type ScreenKey =
   | "education"
   | "languagesTime"
   | "skills"
+  | "skillLevels"
   | "domains"
   | "execution"
   | "capital"
@@ -192,8 +193,17 @@ export const SCREENS: ScreenDef[] = [
     key: "skills",
     stage: 2,
     owns: ["skills"],
-    // Skills are optional (a founder can genuinely have none yet) — but any
-    // skill that IS listed must state how good it really is.
+    // Skills are optional (a founder can genuinely have none yet). Picking is one step (chips
+    // toggle in place); how good they are at each is the next one (owner, 2026-11-17, Job J).
+    isComplete: () => true,
+  },
+  {
+    key: "skillLevels",
+    stage: 2,
+    applies: (a) => (a.skills ?? []).length > 0,
+    // The skills themselves belong to the skills screen.
+    owns: [],
+    // Every skill that IS listed must state how good it really is.
     isComplete: (a) => (a.skills ?? []).every((s) => s.level !== null),
   },
   {

@@ -1,20 +1,11 @@
 import { useState } from "react";
-import { ChevronDown, Plus, X } from "lucide-react";
+import { Check, Plus, Search } from "lucide-react";
 
 import { useLocale } from "@/lib/i18n/LocaleProvider";
 import { useConsultation } from "@/lib/consultation/store";
 import { toggleMulti, type SkillEntry } from "@/lib/consultation/model";
 import { DOMAIN_IDS, EXECUTION_IDS, SKILL_LEVEL_IDS } from "@/lib/consultation/options";
 import { SKILL_CATEGORIES, SKILL_LIBRARY } from "@/lib/onboarding-types";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-  CommandList,
-} from "@/components/ui/command";
 import { cn } from "@/lib/utils";
 import { useLabels } from "./labels";
 import { ChipCloud } from "./controls";
@@ -24,6 +15,7 @@ import { Question, ScreenBody, Segmented, TextField } from "./ui";
  * AND whether it was ever used on a real project/job — that second answer is
  * what stops a long list of beginner tick-boxes from anchoring the result. */
 const LEVEL_RANK: Record<string, number> = { basic: 1, working: 2, advanced: 3, professional: 4 };
+const LIBRARY = new Set(SKILL_LIBRARY);
 
 /** Four bars that fill with the stated proficiency. */
 function LevelMeter({ level }: { level: string | null }) {
@@ -44,23 +36,171 @@ function LevelMeter({ level }: { level: string | null }) {
   );
 }
 
+/**
+ * Skills, step 1 (owner, 2026-11-17, Job J: picking several skills was painful — every pick closed
+ * the picker, added a two-question card, and the list reopened at the top). Every skill is a chip
+ * that toggles in place: nothing opens or closes, the list never moves (a chip's "+" and "✓" are
+ * the same width, and a skill you add yourself keeps its place even when untoggled), and how good
+ * you are at each is asked once, on the next step (SkillLevelsScreen).
+ */
 export function SkillsScreen() {
   const { t } = useLocale();
   const L = useLabels();
   const { answers, setAnswer } = useConsultation();
-  const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
   const skills = answers.skills ?? [];
   const chosen = new Set(skills.map((s) => s.name));
+  // Skills the founder typed in themselves, in the order added — kept for this visit even when
+  // untoggled, so removing one never shifts the chips after it.
+  const [own, setOwn] = useState<string[]>(() =>
+    skills.map((s) => s.name).filter((n) => !LIBRARY.has(n)),
+  );
 
-  function add(name: string) {
-    const clean = name.trim();
-    if (!clean || chosen.has(clean)) return;
-    // Level starts UNSET on purpose — the founder must say how good they are.
-    setAnswer("skills", [...skills, { name: clean, level: null, usedInReal: false }]);
-    setQuery("");
-    setOpen(false);
+  function toggle(name: string) {
+    if (chosen.has(name))
+      setAnswer(
+        "skills",
+        skills.filter((s) => s.name !== name),
+      );
+    // Level starts UNSET on purpose — the founder says how good they are on the next step.
+    else setAnswer("skills", [...skills, { name, level: null, usedInReal: false }]);
   }
+
+  function addOwn() {
+    const clean = query.trim();
+    if (!clean) return;
+    const known = SKILL_LIBRARY.find((s) => s.toLowerCase() === clean.toLowerCase());
+    const name = known ?? own.find((s) => s.toLowerCase() === clean.toLowerCase()) ?? clean;
+    if (!known && !own.includes(name)) setOwn([...own, name]);
+    if (!chosen.has(name))
+      setAnswer("skills", [...skills, { name, level: null, usedInReal: false }]);
+    setQuery("");
+  }
+
+  const q = query.trim().toLowerCase();
+  const matches = (name: string) =>
+    !q || name.toLowerCase().includes(q) || L.skill(name).toLowerCase().includes(q);
+  const exact =
+    q.length > 0 &&
+    [...SKILL_LIBRARY, ...own].some((s) => s.toLowerCase() === q || L.skill(s).toLowerCase() === q);
+  const groups = [
+    ...(own.length ? [{ label: t("q.skills.yourOwn"), skills: own }] : []),
+    ...SKILL_CATEGORIES.map((c) => ({ label: L.skillCategory(c.label), skills: c.skills })),
+  ]
+    .map((g) => ({ ...g, skills: g.skills.filter(matches) }))
+    .filter((g) => g.skills.length > 0);
+
+  return (
+    <ScreenBody title={t("q.skills.title")} helper={t("q.skills.helper")} optional>
+      <div className="flex flex-col gap-3">
+        <label className="relative block">
+          <span className="sr-only">{t("q.skills.add")}</span>
+          <Search
+            className="pointer-events-none absolute left-4 top-1/2 size-4 -translate-y-1/2 text-sol-secondary"
+            aria-hidden="true"
+          />
+          <input
+            type="search"
+            value={query}
+            data-testid="skill-search"
+            onChange={(e) => setQuery(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && q && !exact) {
+                e.preventDefault();
+                addOwn();
+              }
+            }}
+            placeholder={t("q.skills.add")}
+            className="h-12 w-full rounded-2xl border border-sol-border bg-sol-surface pl-11 pr-4 text-[1rem] text-sol-ink placeholder:text-sol-secondary/70 focus-visible:border-sol-cobalt focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sol-cobalt/30"
+          />
+        </label>
+        {/* Always one line tall, so the chips below never move when the count changes. */}
+        <p
+          aria-live="polite"
+          data-testid="skill-count"
+          className="min-h-[1.5rem] text-[0.9375rem] font-medium text-sol-secondary"
+        >
+          {skills.length === 0
+            ? t("q.skills.chosenNone")
+            : t("q.skills.chosen", { n: skills.length })}
+        </p>
+      </div>
+
+      {q && !exact && (
+        <button
+          type="button"
+          onClick={addOwn}
+          data-testid="skill-add-own"
+          className="inline-flex min-h-11 items-center gap-2 self-start rounded-full border border-dashed border-sol-cobalt/60 px-4 text-[1rem] font-medium text-sol-cobalt-deep hover:bg-sol-cobalt-soft"
+        >
+          <Plus className="size-4" aria-hidden="true" />
+          {t("q.skills.addCustom", { name: query.trim() })}
+        </button>
+      )}
+      {q && groups.length === 0 && (
+        <p className="text-[1rem] text-sol-secondary">{t("q.skills.noMatches")}</p>
+      )}
+
+      <div className="flex flex-col gap-5" data-testid="skill-chips">
+        {groups.map((g) => (
+          <div key={g.label} role="group" aria-label={g.label} className="flex flex-col gap-2.5">
+            <p
+              aria-hidden="true"
+              className="text-[0.875rem] font-bold uppercase tracking-[0.1em] text-sol-champagne-deep"
+            >
+              {g.label}
+            </p>
+            <div className="flex flex-wrap gap-2">
+              {g.skills.map((name) => {
+                const on = chosen.has(name);
+                return (
+                  <button
+                    key={name}
+                    type="button"
+                    role="checkbox"
+                    aria-checked={on}
+                    data-testid={`skill-chip-${name}`}
+                    onClick={() => toggle(name)}
+                    className={cn(
+                      "inline-flex min-h-11 items-center gap-2 rounded-full border pl-3 pr-4 text-left text-[1rem] font-medium transition-colors duration-[160ms] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sol-cobalt",
+                      on
+                        ? "border-sol-cobalt bg-sol-cobalt text-white"
+                        : "border-sol-border bg-sol-surface text-sol-ink hover:border-sol-cobalt/50",
+                    )}
+                  >
+                    {/* The same width checked or not: the row never reflows. */}
+                    <span className="flex size-4 items-center justify-center" aria-hidden="true">
+                      {on ? (
+                        <Check className="size-4" strokeWidth={3} />
+                      ) : (
+                        <Plus className="size-4 text-sol-secondary" />
+                      )}
+                    </span>
+                    {L.skill(name)}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {skills.length === 0 && !q && (
+        <p className="max-w-[60ch] text-[1rem] leading-relaxed text-sol-secondary">
+          {t("q.skills.empty")}
+        </p>
+      )}
+    </ScreenBody>
+  );
+}
+
+/** Skills, step 2 — only when skills were picked: how good the founder really is at each, and
+ * whether it was ever used on a real project or job, in one compact list. */
+export function SkillLevelsScreen() {
+  const { t } = useLocale();
+  const L = useLabels();
+  const { answers, setAnswer } = useConsultation();
+  const skills = answers.skills ?? [];
 
   function update(name: string, patch: Partial<SkillEntry>) {
     setAnswer(
@@ -68,18 +208,6 @@ export function SkillsScreen() {
       skills.map((s) => (s.name === name ? { ...s, ...patch } : s)),
     );
   }
-
-  function remove(name: string) {
-    setAnswer(
-      "skills",
-      skills.filter((s) => s.name !== name),
-    );
-  }
-
-  const showAddCustom =
-    query.trim().length > 0 &&
-    !SKILL_LIBRARY.some((s) => s.toLowerCase() === query.trim().toLowerCase()) &&
-    !chosen.has(query.trim());
 
   const levelOptions = SKILL_LEVEL_IDS.map((id) => ({
     id,
@@ -92,124 +220,49 @@ export function SkillsScreen() {
   const missing = skills.some((s) => s.level === null);
 
   return (
-    <ScreenBody title={t("q.skills.title")} helper={t("q.skills.helper")} optional>
-      <Popover open={open} onOpenChange={setOpen}>
-        <PopoverTrigger asChild>
-          <button
-            type="button"
-            data-testid="skill-add"
-            className="flex h-12 w-full items-center justify-between rounded-2xl border border-sol-border bg-sol-surface px-4 text-left text-[1rem] text-sol-secondary transition-colors hover:border-sol-cobalt/45"
+    <ScreenBody title={t("q.skillLevels.title")} helper={t("q.skillLevels.helper")}>
+      <ul className="flex flex-col gap-3" data-testid="skill-list">
+        {skills.map((skill) => (
+          <li
+            key={skill.name}
+            className={cn(
+              "flex flex-col gap-3 rounded-2xl border bg-sol-surface p-4",
+              skill.level === null ? "border-sol-cobalt" : "border-sol-border",
+            )}
           >
-            {t("q.skills.add")}
-            <ChevronDown className="size-4" aria-hidden="true" />
-          </button>
-        </PopoverTrigger>
-        <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
-          <Command>
-            <CommandInput placeholder={t("common.search")} value={query} onValueChange={setQuery} />
-            <CommandList>
-              <CommandEmpty>
-                {showAddCustom ? (
-                  <button
-                    type="button"
-                    onClick={() => add(query)}
-                    className="flex w-full items-center gap-2 px-3 py-2 text-left text-[1rem] text-sol-cobalt-deep hover:bg-sol-cobalt-soft"
-                  >
-                    <Plus className="size-4" aria-hidden="true" />
-                    {t("q.skills.addCustom", { name: query.trim() })}
-                  </button>
-                ) : (
-                  t("q.skills.noMatches")
-                )}
-              </CommandEmpty>
-              {SKILL_CATEGORIES.map((category) => {
-                const available = category.skills.filter((s) => !chosen.has(s));
-                if (available.length === 0) return null;
-                return (
-                  <CommandGroup key={category.label} heading={L.skillCategory(category.label)}>
-                    {available.map((skill) => (
-                      <CommandItem
-                        key={skill}
-                        value={`${skill} ${L.skill(skill)}`}
-                        onSelect={() => add(skill)}
-                      >
-                        <Plus className="size-3.5 text-sol-secondary" aria-hidden="true" />
-                        {L.skill(skill)}
-                      </CommandItem>
-                    ))}
-                  </CommandGroup>
-                );
-              })}
-            </CommandList>
-          </Command>
-        </PopoverContent>
-      </Popover>
-
-      {skills.length === 0 && (
-        <p className="max-w-[60ch] text-[1rem] leading-relaxed text-sol-secondary">
-          {t("q.skills.empty")}
-        </p>
-      )}
-
-      {skills.length > 0 && (
-        <ul className="flex flex-col gap-3" data-testid="skill-list">
-          {skills.map((skill) => (
-            <li
-              key={skill.name}
-              className={cn(
-                "flex flex-col gap-3 rounded-2xl border bg-sol-surface p-4",
-                skill.level === null ? "border-sol-cobalt" : "border-sol-border",
-              )}
-            >
-              <div className="flex items-start justify-between gap-3">
-                <p className="flex items-center gap-3 text-[1.0625rem] font-semibold text-sol-ink">
-                  <LevelMeter level={skill.level} />
-                  {L.skill(skill.name)}
-                </p>
-                <button
-                  type="button"
-                  onClick={() => remove(skill.name)}
-                  aria-label={t("q.skills.remove", { name: L.skill(skill.name) })}
-                  className="flex size-9 shrink-0 items-center justify-center rounded-full text-sol-secondary hover:bg-sol-ivory hover:text-sol-ink"
-                >
-                  <X className="size-4" aria-hidden="true" />
-                </button>
-              </div>
-              <div className="flex flex-col gap-1.5">
-                <p className="text-[0.9375rem] font-medium text-sol-secondary">
-                  {t("q.skills.level")}
-                </p>
-                <Segmented
-                  label={`${L.skill(skill.name)} — ${t("q.skills.level")}`}
-                  options={levelOptions}
-                  value={skill.level ?? undefined}
-                  invalid={skill.level === null}
-                  onChange={(id) =>
-                    update(skill.name, {
-                      level: id as SkillEntry["level"],
-                      // A professional skill is real use by definition.
-                      usedInReal: id === "professional" ? true : skill.usedInReal,
-                    })
-                  }
-                />
-              </div>
-              <div className="flex flex-col gap-1.5">
-                <p className="text-[0.9375rem] font-medium text-sol-secondary">
-                  {t("q.skills.usedInReal")}
-                </p>
-                <Segmented
-                  label={`${L.skill(skill.name)} — ${t("q.skills.usedInReal")}`}
-                  options={yesNo}
-                  value={skill.usedInReal ? "yes" : "no"}
-                  onChange={(id) => update(skill.name, { usedInReal: id === "yes" })}
-                />
-              </div>
-            </li>
-          ))}
-        </ul>
-      )}
+            <p className="flex items-center gap-3 text-[1.0625rem] font-semibold text-sol-ink">
+              <LevelMeter level={skill.level} />
+              {L.skill(skill.name)}
+            </p>
+            <Segmented
+              label={`${L.skill(skill.name)} — ${t("q.skills.level")}`}
+              options={levelOptions}
+              value={skill.level ?? undefined}
+              invalid={skill.level === null}
+              onChange={(id) =>
+                update(skill.name, {
+                  level: id as SkillEntry["level"],
+                  // A professional skill is real use by definition.
+                  usedInReal: id === "professional" ? true : skill.usedInReal,
+                })
+              }
+            />
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5">
+              <p className="text-[0.9375rem] font-medium text-sol-secondary">
+                {t("q.skills.usedInReal")}
+              </p>
+              <Segmented
+                label={`${L.skill(skill.name)} — ${t("q.skills.usedInReal")}`}
+                options={yesNo}
+                value={skill.usedInReal ? "yes" : "no"}
+                onChange={(id) => update(skill.name, { usedInReal: id === "yes" })}
+              />
+            </div>
+          </li>
+        ))}
+      </ul>
       {missing && (
-        <p role="alert" className="text-[0.9375rem] text-sol-warning">
+        <p role="status" className="text-[0.9375rem] text-sol-secondary">
           {t("q.skills.needLevel")}
         </p>
       )}

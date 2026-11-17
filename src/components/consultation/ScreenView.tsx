@@ -1,7 +1,12 @@
 import type { ComponentType } from "react";
 
 import type { ScreenKey } from "@/lib/consultation/model";
-import { DomainsScreen, ExecutionScreen, SkillsScreen } from "./CapabilityScreens";
+import {
+  DomainsScreen,
+  ExecutionScreen,
+  SkillLevelsScreen,
+  SkillsScreen,
+} from "./CapabilityScreens";
 import {
   BasicsScreen,
   EducationScreen,
@@ -25,6 +30,7 @@ export const SCREEN_COMPONENTS: Record<ScreenKey, ComponentType> = {
   education: EducationScreen,
   languagesTime: LanguagesTimeScreen,
   skills: SkillsScreen,
+  skillLevels: SkillLevelsScreen,
   domains: DomainsScreen,
   execution: ExecutionScreen,
   capital: CapitalScreen,

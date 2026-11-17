@@ -74,7 +74,8 @@ const en = {
   "consult.generating.s3": "Comparing directions…",
   "consult.generating.s4": "Checking each against your limits…",
   "consult.generating.s5": "Choosing your three strongest…",
-  "consult.generating.long": "Still working. Your answers are saved, so you can leave and come back.",
+  "consult.generating.long":
+    "Still working. Your answers are saved, so you can leave and come back.",
   "consult.error.title": "We couldn't finish your analysis",
   "consult.error.body": "Your answers are saved. Nothing was lost — try again.",
   "consult.error.retry": "Try again",
@@ -127,8 +128,14 @@ const en = {
   // ---------- Stage 2: capability ----------
   "q.skills.title": "What can you actually do?",
   "q.skills.helper":
-    "Only list skills you have really tried. If you've never tried it, it isn't a skill.",
+    "Tap every skill you have really tried — tap again to remove it. You'll say how good you are at each next.",
   "q.skills.add": "Search or add a skill…",
+  "q.skills.chosen": "{n} chosen",
+  "q.skills.chosenNone": "None chosen yet",
+  "q.skills.yourOwn": "Added by you",
+  "q.skillLevels.title": "How good are you at each?",
+  "q.skillLevels.helper":
+    "Be honest — this decides which directions fit. If you've never used it for real, say so.",
   "q.skills.addCustom": "Add “{name}”",
   "q.skills.noMatches": "No matches.",
   "q.skills.empty":
@@ -471,7 +478,8 @@ const hi: Record<keyof typeof en, string> = {
   "consult.generating.s3": "दिशाओं की तुलना हो रही है…",
   "consult.generating.s4": "हर दिशा को आपकी सीमाओं पर परखा जा रहा है…",
   "consult.generating.s5": "आपकी तीन सबसे मज़बूत दिशाएं चुनी जा रही हैं…",
-  "consult.generating.long": "अभी काम चल रहा है। आपके जवाब सेव हैं, आप जा सकते हैं और बाद में लौट सकते हैं।",
+  "consult.generating.long":
+    "अभी काम चल रहा है। आपके जवाब सेव हैं, आप जा सकते हैं और बाद में लौट सकते हैं।",
   "consult.error.title": "हम आपका विश्लेषण पूरा नहीं कर सके",
   "consult.error.body": "आपके जवाब सहेजे हुए हैं। कुछ भी नहीं खोया — फिर कोशिश करें।",
   "consult.error.retry": "फिर कोशिश करें",
@@ -524,8 +532,14 @@ const hi: Record<keyof typeof en, string> = {
   // ---------- Stage 2: capability ----------
   "q.skills.title": "आप असल में क्या कर सकते हैं?",
   "q.skills.helper":
-    "सिर्फ़ वही कौशल जोड़ें जो आपने सच में आज़माए हैं। जिसे कभी आज़माया नहीं, वह कौशल नहीं है।",
+    "हर वह कौशल चुनें जो आपने सच में आज़माया है — हटाने के लिए दोबारा टैप करें। हर एक में आप कितने अच्छे हैं, यह अगले चरण में बताएंगे।",
   "q.skills.add": "कौशल खोजें या जोड़ें…",
+  "q.skills.chosen": "{n} चुने गए",
+  "q.skills.chosenNone": "अभी कोई नहीं चुना",
+  "q.skills.yourOwn": "आपके जोड़े हुए",
+  "q.skillLevels.title": "हर एक में आप कितने अच्छे हैं?",
+  "q.skillLevels.helper":
+    "सच बताइए — इसी से तय होता है कि कौन-सी दिशाएं आपके लिए सही हैं। अगर कभी असली काम में इस्तेमाल नहीं किया, तो वही बताइए।",
   "q.skills.addCustom": "“{name}” जोड़ें",
   "q.skills.noMatches": "कोई मेल नहीं मिला।",
   "q.skills.empty":
