@@ -1,12 +1,41 @@
 # Solventia redesign v2 — report
 
-## Job E (emails) — status and owner steps, 2026-11-16
+## Job E (emails) — what is live and what you must do, 2026-11-17
 
-**Waiting on you: the `email-kit/` folder is not in the project** (nor anywhere under your user
-folder), so the shared layout, the logo PNG (public/brand/email-logo.png), the Supabase templates,
-the real test sends and the screenshots are not done — they must follow the approved kit, not a
-redesign. Add the folder to the project root and they are next. Done without it: the deep links
-(below), one address everywhere, and these checks:
+**Live:** every app email (welcome, ideas ready, roadmap ready, weekly reminder) uses ONE layout
+built from the approved kit (solventia-email-kit/email-kit — src/lib/email/layout.ts): 600px card,
+logo PNG + SOLVENTIA wordmark, gold/grey hairline, label, headline, text, one panel or list, one
+navy button, footer with sol@solventia.in; mobile and dark-mode rules, hidden preheader, a
+plain-text part, a clear subject; English or simple spoken Hindi in the founder's language. Navy
+and blue use the site's tokens (#101C32, #315EDB), which differ from the kit's (#14214C,
+#2F55D4). The logo is served at https://solventia.in/brand/email-logo.png (checked 200,
+image/png, 11 160 bytes, after the deploy).
+
+**Test sends (2026-11-17):** 8 emails — the four above in English and Hindi — sent through Resend
+to kansalsaksham04@gmail.com, subjects starting "[Test]"; all 8 accepted. Screenshots at 600px
+and 375px, light and dark: docs/redesign/email/screenshots/ (rendered HTML and text parts in
+docs/redesign/email/rendered/). **Please open one test email and check the logo shows** — see the
+firewall note below.
+
+**Paste into Supabase → Authentication → Email Templates** (files in
+docs/redesign/email/supabase/, the kit's templates with the site's navy and blue):
+
+| Template | File | Subject |
+|---|---|---|
+| Magic Link (returning users' sign-in code) | magic-link.html | Your Solventia sign-in code: {{ .Token }} |
+| Confirm signup (new users' code) | confirm-signup.html | Welcome to Solventia. Your code: {{ .Token }} |
+| Reset Password | reset-password.html | Reset your Solventia password |
+| Change Email Address | change-email.html | Confirm your new email for Solventia |
+
+**Vercel firewall (please check):** while I took screenshots, about 40 quick requests for the logo
+from this PC made Vercel answer 403 with a challenge (`X-Vercel-Mitigated: challenge`) to every
+non-browser request from this IP — the whole site, for at least 10 minutes. Browsers pass such a
+challenge by themselves; an email client's image proxy (Gmail's, Outlook's) cannot. If it is only
+rate-based on this IP, emails are unaffected; if a Bot Protection or Attack Challenge rule is on
+for everyone, logos break. To be safe: Vercel → the project → Firewall → add a custom rule
+"Path starts with /brand/" → **Bypass**. (The screenshots now load the logo from the repo.)
+
+Checks:
 
 - **How sign-in works:** codes only. `signInWithOtp` (no link) then `verifyOtp` with the typed
   code. New users get Supabase's **Confirm signup** template and returning users **Magic Link**,
@@ -35,12 +64,13 @@ Every email button is a plain deep link to the exact page — no login token, no
 
 | Email | Button / link | Opens |
 |---|---|---|
-| Ideas ready | Explore My Directions | https://solventia.in/dashboard/opportunities?consultation=<id> — the three directions of that consultation |
-| Roadmap ready | Start Week 01 | https://solventia.in/dashboard/roadmap |
-| Weekly reminder | Open the mission / मिशन खोलें | https://solventia.in/dashboard/roadmap/mission/<mission id> |
+| Ideas ready | See my three directions / मेरी तीन दिशाएँ देखें | https://solventia.in/dashboard/opportunities?consultation=<id> — the three directions of that consultation |
+| Roadmap ready | Start week 1 / हफ़्ता 1 शुरू करें | https://solventia.in/dashboard/roadmap |
+| Weekly reminder | Open my roadmap / मेरा रोडमैप खोलें (the kit's button) | https://solventia.in/dashboard/roadmap |
 | Weekly reminder | Change reminders / रिमाइंडर बदलें | https://solventia.in/dashboard/settings#reminders |
-| Welcome | Continue My Consultation | https://solventia.in/consultation |
-| Every footer | Open Solventia · Privacy · Terms · sol@solventia.in | /dashboard · /privacy · /terms · mailto |
+| Welcome (sent as the account is created at the end of the consultation) | Open Solventia / Solventia खोलें | https://solventia.in/dashboard |
+| Every app email | logo, wordmark, "solventia.in" · Privacy · Terms (reminders: Change reminders) · sol@solventia.in | /dashboard · /privacy · /terms · mailto |
+| Supabase code emails | the kit's footer links | https://solventia.in (signed-out readers; no button — they type the code) |
 
 Signed in, the link opens that page directly. Signed out (expired session, new browser), it
 opens the sign-in page (never the homepage) — Google first, with "Sign in to see your three

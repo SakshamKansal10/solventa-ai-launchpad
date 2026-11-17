@@ -467,3 +467,14 @@ Each entry: what was ambiguous, what I chose, why.
     address everywhere: sol@solventia.in (site, legal pages, structured data, emails), sender
     "Solventia <sol@solventia.in>"; replies go to solventia.in@gmail.com via a hidden reply-to
     until mail to solventia.in is forwarded (no MX records yet).
+
+55. **One email layout, from the approved kit (owner, 2026-11-17).** src/lib/email/layout.ts
+    renders the kit's structure for every app email (copy in messages.ts; ideas-ready and
+    weekly-reminder are the kit's words, welcome and roadmap-ready follow its pattern), with a
+    plain-text part; the old component set is gone. Navy/blue take the site's tokens (owner's
+    rule). The weekly reminder's button is the kit's "Open my roadmap" (/dashboard/roadmap); the
+    welcome email no longer asks to finish a consultation that is already finished — it is sent
+    when the account is created at its end. Supabase's code templates already carry
+    {{ .Token }} (sign-in is code-only); "expires in 1 hour" assumes the default OTP expiry
+    (3600 s), which the owner must confirm. Screenshots load the logo from the repo: 40 fetches
+    from one PC tripped Vercel's firewall challenge for that IP.
