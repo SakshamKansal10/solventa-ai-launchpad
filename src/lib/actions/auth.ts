@@ -107,9 +107,15 @@ export const getCurrentUser = createServerFn({ method: "GET" }).handler(
  * to fire the welcome email — it never touches Supabase itself, so it's
  * unaffected by the auth connectivity issue above. */
 export const sendWelcomeEmailForNewUser = createServerFn({ method: "POST" })
-  .validator(z.object({ email: z.string().email(), fullName: z.string().optional() }))
+  .validator(
+    z.object({
+      email: z.string().email(),
+      fullName: z.string().optional(),
+      locale: z.enum(["en", "hi"]).optional(),
+    }),
+  )
   .handler(async ({ data }) => {
-    void sendWelcomeEmail(data.email, data.fullName ?? null);
+    void sendWelcomeEmail(data.email, data.fullName ?? null, data.locale ?? "en");
     return { ok: true as const };
   });
 

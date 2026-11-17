@@ -336,6 +336,7 @@ export const completeConsultation = createServerFn({ method: "POST" })
       const fullName = (user.user_metadata?.full_name as string | undefined) ?? null;
       void sendIdeasReadyEmail(user.email, fullName, {
         businessDnaId: dnaRow.id,
+        locale: data.locale ?? "en",
         primary: {
           title: scored[0].opp.title,
           oneLiner: scored[0].opp.plainEnglishSummary,

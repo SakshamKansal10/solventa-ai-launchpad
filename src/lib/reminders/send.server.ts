@@ -19,7 +19,9 @@ export async function runWeeklyReminders(
 ): Promise<{ checked: number; sent: number }> {
   const { data: profiles, error } = await admin
     .from("profiles")
-    .select("id, email, locale, weekly_reminder, reminder_weekday, reminder_last_sent_at")
+    .select(
+      "id, email, full_name, locale, weekly_reminder, reminder_weekday, reminder_last_sent_at",
+    )
     .eq("weekly_reminder", true)
     .not("reminder_weekday", "is", null)
     .limit(BATCH * 5);
@@ -43,10 +45,15 @@ export async function runWeeklyReminders(
     if (!p.email) continue;
     const mission = await nextMissionFor(admin, p.id as string);
     if (!mission) continue;
+    const week = await weekOf(admin, mission.week_id);
     await sendWeeklyReminderEmail(p.email as string, {
-      missionId: mission.id,
-      missionTitle: mission.what,
+      fullName: (p.full_name as string | null) ?? null,
       locale: p.locale === "hi" ? "hi" : "en",
+      weekNumber: week?.weekNumber ?? 1,
+      weekTitle: week?.title ?? null,
+      missionTitle: mission.what,
+      timeEstimate: mission.time_estimate,
+      tasksLeft: week?.tasksLeft ?? 1,
     });
     await admin
       .from("profiles")
@@ -76,7 +83,7 @@ async function nextMissionFor(admin: SupabaseClient, userId: string) {
   // The current week's missions carry the earliest open deadlines.
   const { data: tasks } = await admin
     .from("roadmap_tasks")
-    .select("id, what, status, order_index, deadline")
+    .select("id, what, status, order_index, deadline, week_id, time_estimate")
     .in("phase_id", phaseIds)
     .neq("status", "done")
     .order("deadline", { ascending: true, nullsFirst: false })
@@ -87,7 +94,28 @@ async function nextMissionFor(admin: SupabaseClient, userId: string) {
     status: string;
     order_index: number;
     deadline: string | null;
+    week_id: string | null;
+    time_estimate: string | null;
   }[];
   const first = rows[0]?.deadline ?? null;
   return nextOpenMission(rows.filter((t) => t.deadline === first));
+}
+
+/** The mission's week, for the email's panel: its number, title and the missions still open. */
+async function weekOf(admin: SupabaseClient, weekId: string | null) {
+  if (!weekId) return null;
+  const [{ data: week }, { count }] = await Promise.all([
+    admin.from("roadmap_weeks").select("week_number, title").eq("id", weekId).maybeSingle(),
+    admin
+      .from("roadmap_tasks")
+      .select("id", { count: "exact", head: true })
+      .eq("week_id", weekId)
+      .neq("status", "done"),
+  ]);
+  if (!week) return null;
+  return {
+    weekNumber: week.week_number as number,
+    title: (week.title as string | null) ?? null,
+    tasksLeft: Math.max(1, count ?? 1),
+  };
 }

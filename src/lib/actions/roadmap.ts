@@ -638,6 +638,7 @@ export const buildRoadmap = createServerFn({ method: "POST" })
         opportunity: null,
       }));
       void sendRoadmapReadyEmail(user.email, fullName, {
+        locale: data.locale ?? "en",
         opportunityTitle: opp.title,
         week1Title: first.title,
         week1Objective: first.objective,

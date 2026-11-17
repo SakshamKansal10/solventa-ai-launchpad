@@ -23,7 +23,7 @@ const linkBtn =
  * page; every Supabase Auth call runs from the browser client, which persists
  * the session into the cookies the server already reads. */
 export function AccountGate({ onAuthenticated }: { onAuthenticated: (email: string) => void }) {
-  const { t } = useLocale();
+  const { t, locale } = useLocale();
   const queryClient = useQueryClient();
   const [mode, setMode] = useState<Mode>("signup");
   const [email, setEmail] = useState("");
@@ -128,7 +128,7 @@ export function AccountGate({ onAuthenticated }: { onAuthenticated: (email: stri
           10_000;
         if (justCreated) {
           void sendWelcomeEmailForNewUser({
-            data: { email: user.email, fullName: fullName || undefined },
+            data: { email: user.email, fullName: fullName || undefined, locale },
           });
         }
       }

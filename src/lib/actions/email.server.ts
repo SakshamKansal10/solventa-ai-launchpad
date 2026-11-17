@@ -1,14 +1,13 @@
 import { Resend } from "resend";
 import { env } from "@/lib/env.server";
-import { siteUrl } from "@/lib/actions/site-url.server";
-import { escapeHtml, FONT_BODY, FONT_HEADING, EMAIL_COLORS } from "@/lib/email/brand";
+import type { EmailLocale } from "@/lib/email/layout";
 import {
-  emailShell,
-  primaryCta,
-  metricStrip,
-  primaryIdeaCard,
-  secondaryIdeaCard,
-} from "@/lib/email/components";
+  ideasReadyEmail,
+  roadmapReadyEmail,
+  weeklyReminderEmail,
+  welcomeEmail,
+  type BuiltEmail,
+} from "@/lib/email/messages";
 
 let client: Resend | null = null;
 
@@ -26,55 +25,37 @@ const FROM = "Solventia <sol@solventia.in>";
 const REPLY_TO = "solventia.in@gmail.com";
 
 /** Every email send is best-effort. Resend being unconfigured or failing
- * must never break the core product flow it's attached to. */
-async function sendSafely(payload: { to: string; subject: string; html: string }): Promise<void> {
+ * must never break the core product flow it's attached to. Each email goes
+ * with its plain-text part (layout.ts). */
+async function sendSafely(to: string, email: BuiltEmail): Promise<void> {
   const resend = getClient();
   if (!resend) {
-    console.warn("[email] Resend not configured — skipping email:", payload.subject);
+    console.warn("[email] Resend not configured — skipping email:", email.subject);
     return;
   }
   try {
-    await resend.emails.send({ from: FROM, replyTo: REPLY_TO, ...payload });
+    // Resend reports a refused send in its result, not by throwing.
+    const { error } = await resend.emails.send({
+      from: FROM,
+      replyTo: REPLY_TO,
+      to,
+      subject: email.subject,
+      html: email.html,
+      text: email.text,
+    });
+    if (error) console.error("[email] send refused:", email.subject, error);
   } catch (err) {
     console.error("[email] send failed:", err);
   }
 }
 
-function greetingRow(fullName: string | null): string {
-  const name = fullName ? escapeHtml(fullName.split(" ")[0]) : null;
-  return `
-<tr>
-  <td style="padding:4px 40px 0 40px;">
-    <div style="font-family:${FONT_HEADING}; font-size:22px; font-weight:700; color:${EMAIL_COLORS.textPrimary};">${name ? `Hi ${name},` : "Hi there,"}</div>
-  </td>
-</tr>`;
-}
-
-function bodyTextRow(text: string): string {
-  return `
-<tr>
-  <td style="padding:10px 40px 0 40px;">
-    <div style="font-family:${FONT_BODY}; font-size:15px; line-height:23px; color:${EMAIL_COLORS.secondary};">${text}</div>
-  </td>
-</tr>`;
-}
-
-export async function sendWelcomeEmail(email: string, fullName: string | null): Promise<void> {
-  const name = fullName ? escapeHtml(fullName.split(" ")[0]) : "there";
-  const consultationUrl = siteUrl("/consultation");
-  const bodyRowsHtml = `
-${greetingRow(fullName)}
-${bodyTextRow(`Welcome to Solventia. Head back to your consultation with Sol whenever you're ready — everything you share stays saved to your account.`)}
-<tr><td style="padding:22px 40px 4px 40px;">${primaryCta(consultationUrl, "Continue My Consultation")}</td></tr>
-`;
-  await sendSafely({
-    to: email,
-    subject: "Welcome to Solventia",
-    html: emailShell({
-      preheader: `Welcome, ${name} — your Solventia account is ready. Pick up your consultation with Sol whenever you're ready.`,
-      bodyRowsHtml,
-    }),
-  });
+/** Right after the account is created at the end of the consultation. */
+export async function sendWelcomeEmail(
+  email: string,
+  fullName: string | null,
+  locale: EmailLocale = "en",
+): Promise<void> {
+  await sendSafely(email, welcomeEmail({ fullName, locale }));
 }
 
 export interface IdeasReadyEmailOpportunity {
@@ -83,58 +64,34 @@ export interface IdeasReadyEmailOpportunity {
 }
 
 export interface IdeasReadyEmailData {
-  /** The exact business_dna row this consultation produced — the CTA
-   * deep-links to `/dashboard?consultation=<id>` so this email always
-   * opens the ideas IT describes, never whatever consultation happens to
-   * be latest by the time it's clicked. */
+  /** The exact business_dna row this consultation produced — the button
+   * deep-links to `/dashboard/opportunities?consultation=<id>` so this email
+   * always opens the ideas IT describes, never whatever consultation happens
+   * to be latest by the time it's clicked. */
   businessDnaId: string;
   /** fitLabel: the canonical founder-fit label in English (e.g. "Moderate fit"). */
   primary: IdeasReadyEmailOpportunity & { fitLabel: string; weeklyTime: string | null };
   alternatives: IdeasReadyEmailOpportunity[];
+  /** The founder's language (the consultation's). */
+  locale?: EmailLocale;
 }
 
 /** Sent once, right after the initial consultation finishes — ideas
- * exist, a roadmap doesn't yet (that's a separate, later, on-demand
- * generation triggered by "Build My Roadmap"). */
+ * exist, a roadmap doesn't yet. */
 export async function sendIdeasReadyEmail(
   email: string,
   fullName: string | null,
   data: IdeasReadyEmailData,
 ): Promise<void> {
-  // The page that shows the three directions (in any state — /dashboard becomes Today once a
-  // direction is chosen), pinned to this consultation.
-  const dashboardUrl = siteUrl(
-    `/dashboard/opportunities?consultation=${encodeURIComponent(data.businessDnaId)}`,
-  );
-  const totalIdeas = 1 + data.alternatives.length;
-
-  const metrics = [
-    { label: "Directions", value: String(totalIdeas) },
-    { label: "Founder fit", value: data.primary.fitLabel },
-    ...(data.primary.weeklyTime ? [{ label: "Weekly Time", value: data.primary.weeklyTime }] : []),
-  ];
-
-  const alternativeRows = data.alternatives
-    .map((alt) => `<tr><td style="padding:10px 40px 0 40px;">${secondaryIdeaCard(alt)}</td></tr>`)
-    .join("");
-
-  const bodyRowsHtml = `
-${greetingRow(fullName)}
-${bodyTextRow(`Sol finished analyzing your consultation and found ${totalIdeas} real ${totalIdeas === 1 ? "direction" : "directions"} for you to build. Here's your strongest match, plus what else Sol considered.`)}
-<tr><td style="padding:18px 40px 0 40px;">${metricStrip(metrics)}</td></tr>
-<tr><td style="padding:20px 40px 0 40px;">${primaryIdeaCard(data.primary)}</td></tr>
-${alternativeRows}
-<tr><td style="padding:26px 40px 4px 40px;">${primaryCta(dashboardUrl, "Explore My Directions")}</td></tr>
-`;
-
-  await sendSafely({
-    to: email,
-    subject: "Your business directions are ready",
-    html: emailShell({
-      preheader: `Sol found ${totalIdeas} directions for you, led by "${data.primary.title}" — see why it may fit and what to test first.`,
-      bodyRowsHtml,
+  await sendSafely(
+    email,
+    ideasReadyEmail({
+      fullName,
+      locale: data.locale ?? "en",
+      businessDnaId: data.businessDnaId,
+      directions: [data.primary, ...data.alternatives],
     }),
-  });
+  );
 }
 
 export interface RoadmapReadyEmailData {
@@ -146,80 +103,43 @@ export interface RoadmapReadyEmailData {
    * never claim a mission count that doesn't exist yet. */
   missionCount: number | null;
   weeklyTimeCommitment: string | null;
+  /** The founder's saved language. */
+  locale?: EmailLocale;
 }
 
-/** Sent once a founder's roadmap has actually been built (after they
- * click "Build My Roadmap" for their selected opportunity). Always
- * deep-links to /dashboard/roadmap — the single active roadmap a founder
- * can have at a time, so unlike the ideas email there's no separate id to
- * pin to. */
+/** Sent once a founder's roadmap has actually been built. Deep-links to
+ * /dashboard/roadmap — the single active roadmap a founder can have. */
 export async function sendRoadmapReadyEmail(
   email: string,
   fullName: string | null,
   data: RoadmapReadyEmailData,
 ): Promise<void> {
-  const roadmapUrl = siteUrl("/dashboard/roadmap");
-
-  const metrics = [
-    { label: "Opportunity", value: data.opportunityTitle },
-    { label: "Week 01", value: data.week1Title },
-    ...(data.missionCount !== null
-      ? [{ label: "Missions", value: String(data.missionCount) }]
-      : data.weeklyTimeCommitment
-        ? [{ label: "Weekly Time", value: data.weeklyTimeCommitment }]
-        : []),
-  ];
-
-  const bodyRowsHtml = `
-${greetingRow(fullName)}
-${bodyTextRow(`Your first founder mission is ready. Sol built a full roadmap for "${escapeHtml(data.opportunityTitle)}" — Week 01 is unlocked and waiting for you.`)}
-<tr><td style="padding:18px 40px 0 40px;">${metricStrip(metrics)}</td></tr>
-<tr><td style="padding:20px 40px 0 40px;">${primaryIdeaCard({ title: data.week1Title, oneLiner: data.week1Objective, fitLabel: null, eyebrow: "This week" })}</td></tr>
-<tr><td style="padding:26px 40px 4px 40px;">${primaryCta(roadmapUrl, "Start Week 01")}</td></tr>
-`;
-
-  await sendSafely({
-    to: email,
-    subject: "Your Solventia roadmap is ready",
-    html: emailShell({
-      preheader: `Week 01 of your roadmap for "${data.opportunityTitle}" is ready — ${data.week1Title}.`,
-      bodyRowsHtml,
+  await sendSafely(
+    email,
+    roadmapReadyEmail({
+      fullName,
+      locale: data.locale ?? "en",
+      opportunityTitle: data.opportunityTitle,
+      week1Title: data.week1Title,
+      week1Objective: data.week1Objective,
+      missionCount: data.missionCount,
     }),
-  });
+  );
 }
 
-/** The one weekly reminder (redesign-v2 part 4, feature 8): one line and one button — the next
- * mission. Written in the founder's language. */
+/** The one weekly reminder (redesign-v2 part 4, feature 8): this week's next mission, in the
+ * founder's language, with "Change reminders". */
 export async function sendWeeklyReminderEmail(
   email: string,
-  data: { missionId: string; missionTitle: string; locale: "en" | "hi" },
+  data: {
+    fullName: string | null;
+    locale: EmailLocale;
+    weekNumber: number;
+    weekTitle: string | null;
+    missionTitle: string;
+    timeEstimate: string | null;
+    tasksLeft: number;
+  },
 ): Promise<void> {
-  const url = siteUrl(`/dashboard/roadmap/mission/${data.missionId}`);
-  // Reminders are changed (or turned off) in Settings → Weekly reminder.
-  const remindersUrl = siteUrl("/dashboard/settings#reminders");
-  const title = escapeHtml(data.missionTitle);
-  const copy =
-    data.locale === "hi"
-      ? {
-          subject: "इस हफ़्ते का आपका अगला मिशन",
-          line: `आपका अगला मिशन: <strong>${title}</strong>`,
-          button: "मिशन खोलें",
-          change: "रिमाइंडर बदलें",
-        }
-      : {
-          subject: "Your next mission this week",
-          line: `Your next mission: <strong>${title}</strong>`,
-          button: "Open the mission",
-          change: "Change reminders",
-        };
-  const bodyRowsHtml = `
-${bodyTextRow(copy.line)}
-<tr><td style="padding:22px 40px 4px 40px;">${primaryCta(url, copy.button)}</td></tr>
-<tr><td style="padding:18px 40px 0 40px; font-size:14px;"><a href="${escapeHtml(remindersUrl)}" style="color:#4B5563; text-decoration:underline;">${copy.change}</a></td></tr>
-`;
-  await sendSafely({
-    to: email,
-    subject: copy.subject,
-    html: emailShell({ preheader: data.missionTitle, bodyRowsHtml }),
-  });
+  await sendSafely(email, weeklyReminderEmail(data));
 }
