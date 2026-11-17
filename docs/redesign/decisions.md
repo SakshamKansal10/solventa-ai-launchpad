@@ -497,3 +497,25 @@ Each entry: what was ambiguous, what I chose, why.
     inline timer shows the same panel if the app's JavaScript has not started in 12 s. Storage
     that throws does not stop the page. e2e/ios-deeplink.spec.ts (WebKit, iPhone 13, Google-app
     user agent): signed in, signed out, files refused, storage blocked.
+
+57. **The cinematic home page on every device (owner, 2026-11-17).** Root cause of the boxed
+    still version: it was chosen on purpose by classifyDevice — every screen under 768 px (so
+    every iPhone, any browser) and any machine with < 4 cores, < 4 GB memory, a software GPU or
+    reduced motion — and two runtime timers swapped a visit to it (3D bundle > 4 s, world not
+    ready 8 s after the opening). Nothing was stored between visits. All of that is gone, with
+    StaticFallback itself. One page, three ways of drawing its world, chosen by
+    chooseFilmPath: **live** (any WebGL2 context; everyone gets the full world — "lite" exists
+    only as a ?tier=lite test override), **recorded** (no WebGL2, the 3D bundle cannot load, a 3D
+    error, or a lost context not restored in 5 s — switched at the same scroll position), and
+    **reduced** (prefers-reduced-motion: the recording's key frame per scene, 0.7 s crossfades).
+    The recording (scripts/record-film.mjs) is the live world frozen and read off the WebGL
+    canvas at evenly spaced film positions — 240 frames at 1280×800 for desktop (4.48 MB), 160
+    at 487×1055 for phones (1.34 MB) — drawn to a canvas inside the same world layer (same scroll
+    fade, the overlay and the story stay live DOM), the two nearest frames blended. On the live
+    path the recording's frame for the current position is the poster until the world is ready
+    (only that frame loads). Quality adapts inside the live film only: 4 levels (pixel ratio ×1,
+    .8, .65, .5, floor 0.75; filaments 100/75/55/40 %), sampled from 3 s after the world is
+    ready, down on a slow 2 s window (median > 20 ms), up after two fast ones (< 12.5 ms); never
+    stored. The scene has no shadows or post-processing to cut. ?film=debug shows the path, the
+    level and why. Fixed on the way: the load fallback's title was an <h1> in every page's HTML
+    (Job F) — now a paragraph, one <h1> per page again.

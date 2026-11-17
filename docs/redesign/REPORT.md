@@ -18,6 +18,17 @@ target); top bar, pages and the tab-switch skeleton share one frame; text sizes 
 unchanged (20px sides at 390). Measured content width: 1216 (1280), 1360 (1440), 1475 (1568),
 1792 (1920); before: 1178, 1325, 1395, 1392. Screenshots: docs/redesign/perf/width/before|after.
 
+**Job H — the cinematic on every device.** Root cause: the boxed still version was chosen on
+purpose for every screen under 768 px (every iPhone) and for machines with < 4 cores, < 4 GB or a
+software GPU, plus two timers that swapped slow visits to it. Removed, with the still version
+itself. Every visitor now gets the same cinematic page; only how its 3D world is drawn differs:
+live (WebGL2, quality adapting inside the film and recovering), recorded (no WebGL2 or the live
+world lost — the same film pre-rendered, scrubbed at the same positions) or reduced motion
+(crossfades between key frames). Recorded film download: **1.34 MB on phones** (160 frames),
+4.48 MB on desktop (240 frames), loaded progressively and only when needed (the live path loads
+just the poster frame). `?film=debug` shows the path, the quality level and why. Screenshots:
+docs/redesign/perf/film-paths/ (live, recorded, reduced — iPhone and desktop, top and mid-film).
+
 **Job E — emails:** done (sections below). Supabase template files: docs/redesign/email/supabase/.
 
 **Your dashboard steps (all of them, in one place):**

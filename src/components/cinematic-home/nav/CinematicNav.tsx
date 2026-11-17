@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { hasFinishedLocalDraft, useResumeFinishedConsultation } from "@/lib/consultation/resume";
 import { Link, useRouter } from "@tanstack/react-router";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, LayoutGrid } from "lucide-react";
 import { useEffect, useState } from "react";
 
 import { BrandLockup } from "@/components/brand/Brand";
@@ -108,7 +108,10 @@ export function CinematicNav({ pendingNext }: { pendingNext?: string | null } = 
             <BrandLockup preset="nav" wordColor="var(--ink)" signatureColor="var(--ink)" />
           </span>
         </Link>
-        <div className="relative flex items-center justify-end gap-2 min-[400px]:gap-2.5 sm:gap-5">
+        {/* Phones now get the film's bar with its sound control (owner, 2026-11-17): the signed-in
+            "Dashboard" link becomes an icon there, so the controls always fit beside the brand —
+            whose parts keep their size (the opening's lockup lands on them box by box). */}
+        <div className="relative flex items-center justify-end gap-1.5 min-[400px]:gap-2.5 sm:gap-5">
           <div className="transition-opacity duration-700" style={recede(1)}>
             <SoundToggle />
           </div>
@@ -117,10 +120,12 @@ export function CinematicNav({ pendingNext }: { pendingNext?: string | null } = 
               <Link
                 to="/dashboard"
                 preload="intent"
-                className="whitespace-nowrap text-[0.875rem] font-medium transition-opacity hover:opacity-70 sm:text-[0.95rem]"
+                aria-label="Dashboard"
+                className="inline-flex items-center justify-center whitespace-nowrap text-[0.875rem] font-medium transition-opacity hover:opacity-70 max-sm:size-10 sm:text-[0.95rem]"
                 style={{ color: "var(--ink)" }}
               >
-                Dashboard
+                <LayoutGrid className="size-5 sm:hidden" aria-hidden="true" />
+                <span className="max-sm:hidden">Dashboard</span>
               </Link>
             ) : (
               <SignInDialog
@@ -147,7 +152,7 @@ export function CinematicNav({ pendingNext }: { pendingNext?: string | null } = 
           >
             <span className="max-sm:hidden">Find My Business Idea</span>
             <span className="sm:hidden">Start</span>
-            <ArrowRight className="size-4 max-[379px]:hidden" aria-hidden="true" />
+            <ArrowRight className="size-4 max-[419px]:hidden" aria-hidden="true" />
           </Link>
         </div>
       </nav>

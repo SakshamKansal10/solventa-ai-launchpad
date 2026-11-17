@@ -31,6 +31,6 @@ export const Route = createFileRoute("/cinematic")({
 });
 
 function CinematicRoute() {
-  const { tier, debug, freeze } = Route.useSearch();
-  return <CinematicPage tier={tier} debug={debug} freeze={freeze} />;
+  const { tier, film, debug, freeze } = Route.useSearch();
+  return <CinematicPage tier={tier} film={film} debug={debug} freeze={freeze} />;
 }

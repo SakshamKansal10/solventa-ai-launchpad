@@ -32,7 +32,8 @@ export interface QualityPreset {
 
 export const QUALITY_PRESETS: Record<QualityTier, QualityPreset> = {
   full: {
-    dpr: [1, 1.5],
+    // Floor 0.75: the adaptive levels may take the pixel ratio that low, never lower.
+    dpr: [0.75, 1.5],
     antialias: true,
     universeCount: 140,
     filamentCapacity: 900,
@@ -69,18 +70,20 @@ export const QUALITY_NOTCHES = [
   { dprScale: 1, filamentShare: 1 },
   { dprScale: 0.8, filamentShare: 0.75 },
   { dprScale: 0.65, filamentShare: 0.55 },
+  { dprScale: 0.5, filamentShare: 0.4 },
 ] as const;
 
 export const ADAPT = {
-  /** Frame time is sampled, while the story moves, in windows of this much rendered time… */
   windowMs: 2000,
-  /** …and a window whose median frame is slower than this steps down one notch (never up). */
+  /** A window slower than this (median frame ms) steps quality down one level. */
   slowMedianMs: 20,
-  /** Frames longer than this are stalls (tab switch, GC, debugger), not a signal. */
+  /** A window faster than this, twice in a row, steps quality back up one level. */
+  fastMedianMs: 12.5,
+  fastWindows: 2,
+  /** Loading hitches are ignored: nothing is sampled until this long after the world is ready. */
+  warmupMs: 3000,
   stallMs: 250,
-  /** Progress per second below which the story counts as at rest (a step is applied then)… */
   calmVelocity: 0.002,
-  /** …or after this long, if the visitor never pauses. */
   calmWaitMs: 3000,
 } as const;
 
@@ -100,6 +103,25 @@ export function nextNotch(notch: number, windowFrames: readonly number[]): numbe
 
 /** The pixel ratio for a notch: the tier's ceiling (never above the screen's), scaled, never
  * below the tier's floor. */
+/** One sampled window: down a level when slow, up a level after `ADAPT.fastWindows` fast ones.
+ * Returns the next level and the running count of fast windows. Never stored between visits. */
+export function adaptNotch(
+  notch: number,
+  windowFrames: readonly number[],
+  fastStreak: number,
+): { notch: number; fastStreak: number } {
+  const m = median(windowFrames);
+  if (m > ADAPT.slowMedianMs)
+    return { notch: Math.min(QUALITY_NOTCHES.length - 1, notch + 1), fastStreak: 0 };
+  if (m < ADAPT.fastMedianMs && notch > 0) {
+    const streak = fastStreak + 1;
+    return streak >= ADAPT.fastWindows
+      ? { notch: notch - 1, fastStreak: 0 }
+      : { notch, fastStreak: streak };
+  }
+  return { notch, fastStreak: 0 };
+}
+
 export function notchDpr(preset: QualityPreset, deviceDpr: number, notch: number): number {
   const ceiling = Math.min(preset.dpr[1], deviceDpr || 1);
   const scaled = ceiling * QUALITY_NOTCHES[notch].dprScale;

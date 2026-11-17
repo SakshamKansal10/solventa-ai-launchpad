@@ -49,12 +49,14 @@ export interface ExperienceState {
   captionBoxes: { box: { l: number; t: number; r: number; b: number }; o: number }[];
   perf: {
     dpr: number;
-    /** The adaptive quality notch inside the tier (0 = the tier's budget). */
+    /** The adaptive quality level inside the live film (0 = full quality). */
     notch: number;
     /** Share of the filament pool drawn at this notch. */
     filamentShare: number;
     /** Median frame time (ms) of each adaptive sample window. */
     medians: number[];
+    /** Why the quality last changed (?film=debug). */
+    reason?: string;
   };
   renderer: {
     calls: number;

@@ -1,0 +1,20 @@
+{
+  "version": 1,
+  "recordedAt": "2026-11-17T06:40:16.660Z",
+  "sets": {
+    "desktop": {
+      "frames": 240,
+      "width": 1280,
+      "height": 800,
+      "bytes": 4696604,
+      "path": "/film/desktop/"
+    },
+    "phone": {
+      "frames": 160,
+      "width": 487,
+      "height": 1055,
+      "bytes": 1404986,
+      "path": "/film/phone/"
+    }
+  }
+}

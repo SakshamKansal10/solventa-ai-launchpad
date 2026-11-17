@@ -108,20 +108,19 @@ test.describe("What brings you here? (the opening)", () => {
     page,
   }) => {
     await gotoApp(page, "/?intro=1&tier=lite");
-    await expect(page.getByTestId("cinematic-home")).toHaveAttribute("data-mode", "lite");
+    await expect(page.getByTestId("cinematic-home")).toHaveAttribute("data-mode", "live");
+    await expect(page.getByTestId("cinematic-home")).toHaveAttribute("data-tier", "lite");
     await page.getByTestId("intro-choice-stuck").click();
     await expect(page.locator("[data-caption=awakening]")).toContainText(
       "The next step that moves you, from where you actually are.",
     );
     // Either the world was ready at the lockup, or the lockup held (no scrolling) until it was —
-    // or, after 8 s, the visit was given the still version. It never waits forever.
+    // or, after 8 s, the visitor went on with the recording showing until the live world arrives.
+    // It never waits forever, and the page never changes.
     await expect(page.getByTestId("cinematic-home")).toHaveAttribute("data-intro-state", "off", {
       timeout: 20_000,
     });
-    const mode = await page.getByTestId("cinematic-home").getAttribute("data-mode");
-    expect(["lite", "fallback"]).toContain(mode);
-    if (mode === "lite")
-      await expect(page.getByTestId("cinematic-home")).toHaveAttribute("data-ready", "true");
+    await expect(page.getByTestId("cinematic-home")).toHaveAttribute("data-mode", "live");
   });
 
   test("Hindi: the question and choices in Hindi", async ({ page, context }) => {
@@ -368,7 +367,7 @@ for (const path of ["world", "flat"] as const)
         ).__marks,
     );
     // Hitting the cap never downgrades the film: it is still the film, on its tier.
-    await expect(page.getByTestId("cinematic-home")).toHaveAttribute("data-mode", /^(?!fallback)/);
+    await expect(page.getByTestId("cinematic-home")).toHaveAttribute("data-mode", "live");
     if (path === "flat")
       // The world drew nothing while the reveal ran (its first frames would stall it).
       expect(marks.filter((m) => m.state === "reveal" && m.ready)).toEqual([]);

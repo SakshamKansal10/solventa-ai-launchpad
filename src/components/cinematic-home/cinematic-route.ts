@@ -4,7 +4,8 @@ import { z } from "zod";
  * The cinematic homepage as a page: its own navigation, the film, and the shared footer. Served
  * at `/` (the official homepage) and at `/cinematic` (review route, not indexed).
  *
- *   ?tier=full|lite|fallback         force a tier or the static fallback (high|medium → full,
+ *   ?film=live|recorded|reduced|debug  force a rendering path; "debug" shows the path overlay
+ *   ?tier=full|lite|fallback         the live world's preset (tests); "fallback" = recorded (high|medium → full,
  *                                    low → lite, for older links)
  *   ?debug=1 | ?debug=0              show / hide the dev HUD (shown by default in `vite dev`)
  *   ?freeze=1                        deterministic frames (no ambient motion) for review/tests
@@ -12,6 +13,7 @@ import { z } from "zod";
  */
 export const cinematicSearch = {
   tier: z.enum(["full", "lite", "fallback", "high", "medium", "low"]).optional().catch(undefined),
+  film: z.enum(["live", "recorded", "reduced", "debug"]).optional().catch(undefined),
   debug: z.coerce.boolean().optional().catch(undefined),
   freeze: z.coerce.boolean().optional().catch(undefined),
 };

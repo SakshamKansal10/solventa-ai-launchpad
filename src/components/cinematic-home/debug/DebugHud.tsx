@@ -17,9 +17,9 @@ function read(store: ExperienceStore) {
     dpr: `${s.perf.dpr.toFixed(2)} (device ${s.device?.dpr ?? "?"}, notch ${s.perf.notch}, medians ${s.perf.medians.join("/") || "–"})`,
     draw: `${s.renderer.calls} calls · ${s.renderer.triangles.toLocaleString()} tris · ${s.renderer.nodes} nodes · ${s.renderer.filaments} filaments · ${s.renderer.geometries} geo`,
     mode: s.capability
-      ? `${s.capability.mode} · ${s.capability.tier} — ${s.capability.reasons.join(", ")}`
+      ? `${s.capability.path} · ${s.capability.tier} — ${s.capability.reasons.join(", ")}`
       : "probing…",
-    viewport: `${window.innerWidth}×${window.innerHeight} · ${s.device?.coarsePointer ? "touch" : "mouse"} · ${s.device?.cores ?? "?"} cores · ${s.device?.memoryGb ?? "?"} GB`,
+    viewport: `${window.innerWidth}×${window.innerHeight} · device pixel ratio ${s.device?.dpr ?? "?"}`,
     gpu: s.device?.gpu ?? "unknown",
     stage: s.stageActive ? "rendering" : "paused (off-screen)",
   };

@@ -15,13 +15,12 @@ import {
 
 import { usePointerInput } from "./camera/usePointerInput";
 import {
-  classifyDevice,
+  chooseFilmPath,
   probeDevice,
   type Capability,
-  type TierOverride,
-  isFilm,
+  type FilmOverride,
 } from "./device/capabilities";
-import { StaticFallback } from "./fallback/StaticFallback";
+import { FilmDebug } from "./debug/FilmDebug";
 import { introGate, type IntroGate } from "./intro/intro-gate";
 import { IntroQuestion } from "./intro/IntroQuestion";
 import { IntroReturn } from "./intro/IntroReturn";
@@ -37,9 +36,9 @@ import { ProductLayer } from "./overlay/ProductLayer";
 const FilmOverlay = memo(CinematicOverlay);
 const FilmNarrative = memo(Narrative);
 const FilmProducts = memo(ProductLayer);
-const StillPage = memo(StaticFallback);
 import { markStage } from "./performance/marks";
 import { QUALITY_PRESETS } from "./performance/quality";
+import { RecordedFilm } from "./recorded/RecordedFilm";
 import {
   createExperienceStore,
   ExperienceStoreContext,
@@ -77,19 +76,17 @@ if (
 }
 const DebugHud = lazy(() => import("./debug/DebugHud"));
 
-/** Who can get the film (see classifyDevice): only they download the 3D bundle early. */
-const FILM_MEDIA = "(min-width: 768px) and (prefers-reduced-motion: no-preference)";
+/** Everyone with motion gets the live film (phones too): they download the 3D bundle early. */
+const FILM_MEDIA = "(prefers-reduced-motion: no-preference)";
 
 const HIDE_SCROLLBAR =
   "html,body{scrollbar-width:none}html::-webkit-scrollbar,body::-webkit-scrollbar{display:none}";
 
-/** If the 3D bundle has not arrived by then and the visitor has not started the film, the visit
- * gets the still version — decided once, before they are inside the story. */
-const BUNDLE_WAIT_MS = 4_000;
-
-/** After the opening's lockup forms, how long the visit waits for the world before it is served
- * the still version instead. */
+/** After the opening's lockup forms, how long it holds for the live world; then the visitor goes
+ * on, the recorded film showing until the live world arrives (never a different page). */
 const LOCKUP_WAIT_MS = 8_000;
+/** A lost WebGL context that is not restored within this long hands the film to the recording. */
+const CONTEXT_RESTORE_MS = 5_000;
 /** Once the world is ready behind the held lockup, how long the hold waits for its first frames
  * to have passed (smooth frames again) before the film is handed over anyway. */
 const CALM_WAIT_MS = 1_200;
@@ -98,18 +95,20 @@ const CALM_WAIT_MS = 1_200;
 type IntroState = "ask" | "reveal" | "hold" | "off";
 
 /**
- * The visit's mode, decided ONCE (module scope: it survives remounts and client navigations) and
- * never recomputed — a resize, a zoom, DevTools, a slow GPU, an error or a lost WebGL context
- * never swap the layout under the visitor. Only a different review override re-decides.
+ * How this visit's film is drawn (device/capabilities.ts), decided once per page load (module
+ * scope: it survives remounts and client navigations; nothing is stored between visits). The
+ * layout never changes: only the rendering path, and only live → recorded, when the live world
+ * fails and cannot recover.
  */
-let visitDecision: { override: TierOverride | undefined; capability: Capability } | null = null;
+let visitDecision: { key: string; capability: Capability } | null = null;
 
-function decideVisit(override: TierOverride | undefined): Capability {
-  if (visitDecision && visitDecision.override === override) return visitDecision.capability;
+function decideVisit(override: FilmOverride): Capability {
+  const key = JSON.stringify(override);
+  if (visitDecision && visitDecision.key === key) return visitDecision.capability;
   const device = probeDevice();
   const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-  const capability = classifyDevice(device, { reducedMotion, override });
-  visitDecision = { override, capability };
+  const capability = chooseFilmPath(device, { reducedMotion, override });
+  visitDecision = { key, capability };
   return capability;
 }
 
@@ -127,11 +126,15 @@ function decideVisit(override: TierOverride | undefined): Capability {
  * both <html> and <body>, which disables sticky positioning site-wide.
  */
 export function CinematicHome({
-  tierOverride,
+  override = {},
+  filmDebug = false,
   debug,
   freeze = false,
 }: {
-  tierOverride?: TierOverride;
+  /** Review/test overrides (?film, ?tier). */
+  override?: FilmOverride;
+  /** ?film=debug: the rendering path, its quality and why. */
+  filmDebug?: boolean;
   debug?: boolean;
   /** Deterministic frames (no ambient motion, no smoothing) for review and tests. */
   freeze?: boolean;
@@ -145,7 +148,7 @@ export function CinematicHome({
   const stageRef = useRef<HTMLDivElement>(null);
   const reducedMotion = useReducedMotion() === true;
   const [capability, setCapability] = useState<Capability | null>(null);
-  // Problems inside the 3D world hide the world; the film itself keeps running on the overlay.
+  // A lost WebGL context hides the live world while it is restored (the recording shows meanwhile).
   const [worldOff, setWorldOff] = useState<string | null>(null);
   const ready = useExperienceValue(store, (s) => s.ready);
   // Server and first client render agree on "ask" (the markup is hidden by CSS unless the head
@@ -164,15 +167,17 @@ export function CinematicHome({
 
   // Decide the experience once, before the browser paints the hydrated intro (the server render
   // is the void + first line). Never re-decided for this visit.
+  const overrideKey = JSON.stringify(override);
   useLayoutEffect(() => {
-    const decided = decideVisit(tierOverride);
+    const decided = decideVisit(override);
     store.state.device = probeDevice();
     store.state.capability = decided;
     setCapability(decided);
     const gate = introGate();
     if (gate) setVariant(gate);
     else setIntro("off");
-  }, [store, tierOverride]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [store, overrideKey]);
 
   // The exit starts. On the flat path the world draws nothing until the reveal has finished: its
   // first frames stall the GPU, and nothing of the world shows at the film's opening anyway (it
@@ -180,7 +185,7 @@ export function CinematicHome({
   const onReveal = (path: "world" | "flat") => {
     setIntroPath(path);
     setIntro("reveal");
-    if (path === "flat" && mode !== "fallback") {
+    if (path === "flat" && live) {
       store.state.worldHeld = true;
       store.emit();
     }
@@ -188,7 +193,7 @@ export function CinematicHome({
   // Either opening ends on the lockup: the film starts now if the world is ready and drawing
   // smoothly, else the lockup holds (the world resumes drawing here on the flat path).
   const toLockup = () =>
-    setIntro(mode === "fallback" || (store.state.ready && introPath !== "flat") ? "off" : "hold");
+    setIntro(!live || (store.state.ready && introPath !== "flat") ? "off" : "hold");
   // The world draws again once the reveal is over, however it ended (lockup, Esc).
   useEffect(() => {
     if (intro === "reveal" || !store.state.worldHeld) return;
@@ -197,11 +202,15 @@ export function CinematicHome({
   }, [intro, store]);
   const calmInHold = useCalm(intro === "hold" && ready);
 
-  const serveStill = (reason: string) => {
-    const still: Capability = { mode: "fallback", tier: "lite", reasons: [reason] };
-    visitDecision = { override: tierOverride, capability: still };
-    store.state.capability = still;
-    setCapability(still);
+  // The live world failed and cannot recover: the recording takes over at the same scroll
+  // position (the page, the overlay and the story do not change).
+  const toRecorded = (reason: string) => {
+    const prev = store.state.capability;
+    if (prev?.path !== "live") return;
+    const next: Capability = { ...prev, path: "recorded", reasons: [...prev.reasons, reason] };
+    if (visitDecision) visitDecision = { ...visitDecision, capability: next };
+    store.state.capability = next;
+    setCapability(next);
   };
 
   // While the question is asked and while the lockup holds for the world, the story cannot move:
@@ -245,8 +254,9 @@ export function CinematicHome({
       return () => window.clearTimeout(id);
     }
     const id = window.setTimeout(() => {
-      console.warn("[cinematic] Not ready 8 s after the opening — serving the still version.");
-      serveStill("not ready 8 s after the opening");
+      console.warn(
+        "[cinematic] Not ready 8 s after the opening — the recording shows until it is.",
+      );
       setIntro("off");
     }, LOCKUP_WAIT_MS);
     return () => window.clearTimeout(id);
@@ -274,49 +284,48 @@ export function CinematicHome({
     };
   }, [store, freeze, debug]);
 
-  const mode = capability?.mode ?? "pending";
+  const path = capability?.path ?? "pending";
+  const live = path === "live";
 
-  // The 3D bundle starts loading as soon as the visit is a WebGL one. If it has not arrived
-  // within BUNDLE_WAIT_MS and the visitor is still at the opening, the visit is served the still
-  // version (the one moment a decision can still change, before they enter the film). If they
-  // are already scrolling, the film continues on the overlay and the world joins if it arrives.
+  // The 3D bundle starts loading as soon as the visit is a live one. However slow it is, the page
+  // never changes: the recording's frame for the current position shows until the world is ready.
+  // Only a bundle that cannot load at all hands the film to the recording.
   useEffect(() => {
-    if (!isFilm(mode) || tierOverride) return;
-    let loaded = false;
-    loadCanvas().then(
-      () => (loaded = true),
-      (err: unknown) => {
-        console.error("[cinematic] The 3D bundle failed to load; the film runs without it:", err);
-        setWorldOff("bundle failed");
-      },
+    if (!live) return;
+    loadCanvas().catch((err: unknown) => {
+      console.error("[cinematic] The 3D bundle failed to load; the recorded film plays:", err);
+      toRecorded("3D bundle failed to load");
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [live, store]);
+
+  // A lost context the browser does not restore in time: the recording, at the same position.
+  useEffect(() => {
+    if (worldOff !== "context lost") return;
+    const id = window.setTimeout(
+      () => toRecorded("WebGL context lost and not restored"),
+      CONTEXT_RESTORE_MS,
     );
-    const id = window.setTimeout(() => {
-      if (loaded || window.scrollY > 40 || introRef.current !== "off") return;
-      console.warn(
-        "[cinematic] 3D bundle slower than 4 s — serving the still version for this visit.",
-      );
-      serveStill("3D bundle slower than 4 s");
-    }, BUNDLE_WAIT_MS);
     return () => window.clearTimeout(id);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [mode, tierOverride, store]);
+  }, [worldOff]);
 
-  useScrollController(store, sectionRef, mode !== "fallback");
+  useScrollController(store, sectionRef, true);
   // The story answers from the first gesture: progress and the overlay run on the page itself,
   // and the WebGL world joins the current position whenever it is ready.
   useStoryDriver(store, stageRef, {
-    enabled: mode !== "fallback",
+    enabled: true,
     animate: !reducedMotion,
     freeze,
   });
-  usePointerInput(store, isFilm(mode) && !reducedMotion && !freeze);
-  // The soundtrack is offered with the WebGL experience only (off until the visitor asks).
-  useEffect(() => (isFilm(mode) ? soundController.attach(store) : undefined), [mode, store]);
+  usePointerInput(store, live && !reducedMotion && !freeze);
+  // The soundtrack is offered on every path (off until the visitor asks).
+  useEffect(() => (capability ? soundController.attach(store) : undefined), [capability, store]);
 
   const showHud = debug ?? import.meta.env.DEV;
   const status =
-    mode === "fallback"
-      ? "Showing the still version of the experience."
+    path === "recorded" || path === "reduced"
+      ? "The film is ready. Scroll to travel through it."
       : ready
         ? "The interactive experience is ready. Scroll to travel through it."
         : "Loading the interactive experience.";
@@ -325,12 +334,12 @@ export function CinematicHome({
     <ExperienceStoreContext.Provider value={store}>
       <main
         data-testid="cinematic-home"
-        data-mode={mode}
+        data-mode={path}
         data-tier={capability?.tier ?? ""}
-        data-ready={String(ready || mode === "fallback")}
+        data-ready={String(ready || (capability !== null && !live))}
         data-intro-state={intro}
         data-intro-path={introPath ?? undefined}
-        data-prewarm={mode === "fallback" || ready || textIn ? "" : undefined}
+        data-prewarm={(capability !== null && !live) || ready || textIn ? "" : undefined}
         // Only once the client knows the opening is running (`capability` is set in the same
         // layout effect): the server HTML never tells a returning visitor the page is busy.
         aria-busy={(capability !== null && intro !== "off") || undefined}
@@ -341,15 +350,13 @@ export function CinematicHome({
             opening) must arrive before the lockup's markup — streamed after it, a slow device
             painted the lockup for ~2 s before the question (4× CPU, measured 2026-11-16). */}
         <IntroStyles />
-        {/* The fallback is itself the semantic story — never read it twice. */}
-        {mode !== "fallback" && <FilmNarrative />}
+        {/* The story as text, for assistive technology and search (every path). */}
+        <FilmNarrative />
         <p role="status" aria-live="polite" className="sr-only">
           {status}
         </p>
 
-        {mode === "fallback" ? (
-          <StillPage />
-        ) : (
+        {
           // Time, not a page: the document scrollbar is hidden on this route (scrolling, keys and
           // assistive navigation work as usual); the overlay shows a film-time hairline instead.
           <section
@@ -371,38 +378,55 @@ export function CinematicHome({
                   pearl field alone, so the first frame is the finished opening and time never
                   changes it. The world arrives as the visitor scrolls into the story
                   (--world-in, written by DomSync from the story position). */}
-              <div
-                className={`absolute inset-0 transition-opacity duration-[1400ms] ${ready ? "opacity-100" : "opacity-0"}`}
-              >
+              <div className="absolute inset-0">
                 <div
                   data-cine-world
                   data-world={worldOff ? "off" : "on"}
                   className="absolute inset-0"
-                  style={{ opacity: worldOff ? 0 : "var(--world-in, 0)" }}
+                  style={{ opacity: "var(--world-in, 0)" }}
                 >
-                  {isFilm(mode) && capability && !worldOff?.startsWith("error") && (
+                  {/* The recorded film: the whole film on the recorded and reduced-motion paths;
+                      on the live path, the frame for the current position until the live world
+                      is ready (or while a lost context is restored). Same layer, same fade. */}
+                  {capability && (
+                    <RecordedFilm
+                      store={store}
+                      mode={
+                        path === "reduced" ? "keyframes" : path === "recorded" ? "scrub" : "poster"
+                      }
+                      active={!live || !ready || worldOff !== null}
+                    />
+                  )}
+                  {live && capability && !worldOff?.startsWith("error") && (
                     <CanvasErrorBoundary
                       onError={(reason) => {
                         console.error(
-                          "[cinematic] The 3D world failed; the film continues without it:",
+                          "[cinematic] The 3D world failed; the recorded film plays:",
                           reason,
                         );
                         setWorldOff(`error: ${reason}`);
+                        toRecorded(`3D world error: ${reason}`);
                       }}
                     >
                       <Suspense fallback={null}>
-                        <CinematicCanvas
-                          store={store}
-                          preset={QUALITY_PRESETS[capability.tier]}
-                          animate={!reducedMotion}
-                          parallax={!reducedMotion}
-                          freeze={freeze}
-                          onContextLost={() => {
-                            console.warn("[cinematic] WebGL context lost — waiting to restore it.");
-                            setWorldOff("context lost");
-                          }}
-                          onContextRestored={() => setWorldOff(null)}
-                        />
+                        <div
+                          className={`absolute inset-0 transition-opacity duration-[1400ms] ${ready && !worldOff ? "opacity-100" : "opacity-0"}`}
+                        >
+                          <CinematicCanvas
+                            store={store}
+                            preset={QUALITY_PRESETS[capability.tier]}
+                            animate={!reducedMotion}
+                            parallax={!reducedMotion}
+                            freeze={freeze}
+                            onContextLost={() => {
+                              console.warn(
+                                "[cinematic] WebGL context lost — waiting to restore it.",
+                              );
+                              setWorldOff("context lost");
+                            }}
+                            onContextRestored={() => setWorldOff(null)}
+                          />
+                        </div>
                       </Suspense>
                     </CanvasErrorBoundary>
                   )}
@@ -412,13 +436,13 @@ export function CinematicHome({
               <FilmProducts />
             </div>
           </section>
-        )}
+        }
 
         {/* Both openings are server-rendered; the head gate shows the right one before hydration. */}
         {(intro === "ask" || intro === "reveal") && (variant === null || variant === "show") && (
           <IntroQuestion
-            still={mode === "fallback"}
-            settled={mode === "fallback" || ready}
+            still={false}
+            settled={!live || ready}
             reducedMotion={reducedMotion}
             onReveal={onReveal}
             onLockup={toLockup}
@@ -434,8 +458,8 @@ export function CinematicHome({
                 key={v}
                 variant={v}
                 onReveal={onReveal}
-                still={mode === "fallback"}
-                settled={mode === "fallback" || ready}
+                still={false}
+                settled={!live || ready}
                 reducedMotion={reducedMotion}
                 onLockup={toLockup}
                 onTextIn={() => setTextIn(true)}
@@ -451,6 +475,7 @@ export function CinematicHome({
             <DebugHud store={store} />
           </Suspense>
         )}
+        {filmDebug && capability && <FilmDebug store={store} />}
       </main>
     </ExperienceStoreContext.Provider>
   );

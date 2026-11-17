@@ -15,7 +15,7 @@ export const Route = createFileRoute("/")({
   // Set only by requireAuthLoader bouncing a signed-out visitor here from
   // a protected route (e.g. a dashboard link from an email) — re-validated
   // with the same same-origin check on the way out, never trusted as-is.
-  // (The cinematic's review params — tier / debug / freeze — work here too.)
+  // (The cinematic's review params — film / tier / debug / freeze — work here too.)
   validateSearch: z.object({ next: z.string().optional(), ...cinematicSearch }),
   loader: () => getSiteUrl(),
   head: ({ loaderData: siteUrl }) => {
@@ -97,7 +97,15 @@ export const Route = createFileRoute("/")({
  * from a protected route (`/?next=…`) still gets the sign-in prompt straight away.
  */
 function Index() {
-  const { next, tier, debug, freeze } = Route.useSearch();
+  const { next, tier, film, debug, freeze } = Route.useSearch();
   const pendingNext = sanitizeNextPath(next);
-  return <CinematicPage tier={tier} debug={debug} freeze={freeze} pendingNext={pendingNext} />;
+  return (
+    <CinematicPage
+      tier={tier}
+      film={film}
+      debug={debug}
+      freeze={freeze}
+      pendingNext={pendingNext}
+    />
+  );
 }

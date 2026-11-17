@@ -150,8 +150,9 @@ test.describe("cinematic homepage", () => {
   test("the whole story plays on one WebGL stage, scene by scene", async ({ page }) => {
     const errors = collectErrors(page);
     const home = await open(page);
-    await expect(home).toHaveAttribute("data-mode", "full");
-    await expect(page.locator("canvas")).toHaveCount(1);
+    await expect(home).toHaveAttribute("data-mode", "live");
+    await expect(home).toHaveAttribute("data-tier", "full");
+    await expect(page.locator("canvas:not([data-testid=recorded-film])")).toHaveCount(1);
     // The opening is the identity alone, centred: one SOLVENTIA on screen, not two.
     await expect(page.locator("[data-brand-opening] [data-brand-part=word]")).toBeVisible();
     await expect(page.locator("[data-nav-brand]")).toHaveCSS("opacity", "0");
@@ -280,7 +281,7 @@ test.describe("cinematic homepage", () => {
     await expect(page.getByTestId("cinematic-home")).toHaveAttribute("data-ready", "true", {
       timeout: 45_000,
     });
-    await expect(page.locator("canvas")).toHaveCount(1);
+    await expect(page.locator("canvas:not([data-testid=recorded-film])")).toHaveCount(1);
   });
 
   test("the canvas follows the viewport through resizes, without horizontal overflow", async ({
@@ -298,7 +299,7 @@ test.describe("cinematic homepage", () => {
       await expect
         .poll(() =>
           page
-            .locator("canvas")
+            .locator("canvas:not([data-testid=recorded-film])")
             .evaluate((c: HTMLCanvasElement) => `${c.clientWidth}x${c.clientHeight}`),
         )
         .toBe(`${width}x${height}`);
@@ -309,28 +310,27 @@ test.describe("cinematic homepage", () => {
     }
   });
 
-  test("reduced motion gets the still narrative — same story, no WebGL", async ({ browser }) => {
+  test("reduced motion gets the same cinematic page — key frames crossfade, no live camera", async ({
+    browser,
+  }) => {
     const context = await browser.newContext({ reducedMotion: "reduce" });
     const page = await context.newPage();
     forbidRealBackends(page);
     try {
-      await gotoApp(page, "/cinematic");
+      await gotoApp(page, "/cinematic?freeze=1");
       const home = page.getByTestId("cinematic-home");
-      await expect(home).toHaveAttribute("data-mode", "fallback", { timeout: 45_000 });
-      await expect(page.locator("canvas")).toHaveCount(0);
-      const fallback = page.getByTestId("cinematic-fallback");
-      // The seven still compositions (the finale presents the approved emblem itself).
-      await expect(fallback.locator('img[src^="/cinematic/"]')).toHaveCount(7);
-      // The still version's bar carries the identity on its pearl bar.
-      await expect(page.locator("[data-nav-brand]")).toHaveCSS("opacity", "1");
-      await expect(fallback.getByRole("heading", { level: 1 })).toHaveText(
-        "Your reality. Made actionable.",
-      );
-      await expect(fallback.getByTestId("product-preview")).toBeVisible();
-      await expect(fallback.getByRole("link", { name: "Find My Business Idea" })).toHaveAttribute(
-        "href",
-        "/consultation",
-      );
+      await expect(home).toHaveAttribute("data-mode", "reduced", { timeout: 45_000 });
+      // The same film layout (no boxed still version), drawn from the recording's key frames.
+      await expect(page.getByTestId("cinematic-timeline")).toBeAttached();
+      await expect(page.getByTestId("cinematic-fallback")).toHaveCount(0);
+      const film = page.getByTestId("recorded-film");
+      await expect(film).toHaveAttribute("data-mode", "keyframes");
+      await expect(
+        page.locator("[data-cine-world] canvas:not([data-testid=recorded-film])"),
+      ).toHaveCount(0);
+      await goTo(page, "universe", 0.5);
+      await expect.poll(() => film.getAttribute("data-frame"), { timeout: 15_000 }).not.toBeNull();
+      await expect(page.getByTestId("cinematic-cta")).toBeAttached();
     } finally {
       await context.close();
     }
@@ -344,10 +344,11 @@ test.describe("cinematic homepage", () => {
     await gotoApp(page, "/?tier=fallback");
     await expect(page.locator('meta[name="robots"]')).toHaveCount(0);
     await expect(page.locator('link[rel="canonical"]')).toHaveCount(1);
-    await expect(page.getByTestId("cinematic-home")).toHaveAttribute("data-mode", "fallback");
+    // The old ?tier=fallback link now means "no live world": the recorded film, same page.
+    await expect(page.getByTestId("cinematic-home")).toHaveAttribute("data-mode", "recorded");
   });
 
-  test("no serious or critical accessibility violations — WebGL scenes and the still version", async ({
+  test("no serious or critical accessibility violations — live scenes and the recorded film", async ({
     page,
   }) => {
     const findings: string[] = [];
@@ -370,9 +371,11 @@ test.describe("cinematic homepage", () => {
     await audit("product");
     await goTo(page, "finale", 0.95);
     await audit("finale");
-    await gotoApp(page, "/cinematic?tier=fallback");
-    await expect(page.getByTestId("cinematic-fallback")).toBeVisible({ timeout: 45_000 });
-    await audit("fallback");
+    await gotoApp(page, "/cinematic?film=recorded");
+    await expect(page.getByTestId("cinematic-home")).toHaveAttribute("data-mode", "recorded", {
+      timeout: 45_000,
+    });
+    await audit("recorded");
     expect(findings).toEqual([]);
   });
 
@@ -489,12 +492,6 @@ test.describe("cinematic homepage", () => {
         ),
       )
       .toBe("none");
-  });
-
-  test("the still version offers no sound at all", async ({ page }) => {
-    await gotoApp(page, "/cinematic?tier=fallback");
-    await expect(page.getByTestId("cinematic-fallback")).toBeVisible({ timeout: 45_000 });
-    await expect(page.getByTestId("sound-toggle")).toHaveCount(0);
   });
 
   test("the ending is protected: the footer arrives below the finale, never over it", async ({

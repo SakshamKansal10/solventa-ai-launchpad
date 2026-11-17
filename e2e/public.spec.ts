@@ -23,7 +23,9 @@ test.describe("homepage", () => {
   test("is the cinematic film, with the site's own footer and a real way in", async ({ page }) => {
     await gotoApp(page, "/?tier=fallback");
     await expect(page.getByTestId("cinematic-home")).toBeVisible();
-    await expect(page.locator("h1").first()).toBeVisible();
+    // The film's layout on every path (here the recorded film) — the story is real text too.
+    await expect(page.getByTestId("cinematic-timeline")).toBeAttached();
+    await expect(page.getByRole("heading", { level: 1 }).first()).toBeAttached();
     await expect(
       page.getByRole("banner").getByRole("link", { name: /Find My Business Idea/ }),
     ).toHaveAttribute("href", "/consultation");

@@ -1,6 +1,14 @@
 import { describe, expect, it } from "vitest";
 
-import { ADAPT, median, nextNotch, notchDpr, QUALITY_NOTCHES, QUALITY_PRESETS } from "./quality";
+import {
+  ADAPT,
+  adaptNotch,
+  median,
+  nextNotch,
+  notchDpr,
+  QUALITY_NOTCHES,
+  QUALITY_PRESETS,
+} from "./quality";
 
 const { full: high, lite } = QUALITY_PRESETS;
 
@@ -51,5 +59,22 @@ describe("adaptive quality inside a tier", () => {
       expect(QUALITY_NOTCHES[i].dprScale).toBeLessThan(QUALITY_NOTCHES[i - 1].dprScale);
       expect(QUALITY_NOTCHES[i].filamentShare).toBeLessThan(QUALITY_NOTCHES[i - 1].filamentShare);
     }
+  });
+});
+
+describe("adaptNotch — quality adapts both ways inside the live film", () => {
+  it("steps down on a slow window and back up only after two fast ones", () => {
+    const slow = [30, 30, 30];
+    const fast = [10, 10, 10];
+    expect(adaptNotch(0, slow, 0)).toEqual({ notch: 1, fastStreak: 0 });
+    expect(adaptNotch(2, fast, 0)).toEqual({ notch: 2, fastStreak: 1 });
+    expect(adaptNotch(2, fast, 1)).toEqual({ notch: 1, fastStreak: 0 });
+    expect(adaptNotch(0, fast, 5)).toEqual({ notch: 0, fastStreak: 0 });
+    expect(adaptNotch(QUALITY_NOTCHES.length - 1, slow, 0).notch).toBe(QUALITY_NOTCHES.length - 1);
+  });
+  it("never takes the full preset's pixel ratio below 0.75", () => {
+    for (let n = 0; n < QUALITY_NOTCHES.length; n++)
+      for (const device of [1, 2, 3])
+        expect(notchDpr(QUALITY_PRESETS.full, device, n)).toBeGreaterThanOrEqual(0.75);
   });
 });

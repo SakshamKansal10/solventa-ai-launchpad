@@ -11,8 +11,8 @@
 //   1.5 s), then the whole film scrolled down. Reported: load → data-ready, whether the lockup
 //   held and for how long, long tasks and p95 frame time during the film after release, and
 //   whether the mode ever changed after release.
-// Checks: reduced motion (question, then the still version, no collapse), 390 px (question,
-//   then the still version, no sideways scroll), a returning visit (no question), a mid-page
+// Checks: reduced motion (question, then the same film on its reduced-motion path), 390 px (question,
+//   then the live film, no sideways scroll), a returning visit (no question), a mid-page
 //   reload (no question, no hold, the place kept).
 // Writes docs/redesign/perf/verify-<label>.json and exits non-zero if a check fails.
 import fs from "node:fs";
@@ -100,7 +100,7 @@ async function filmRun(throttle) {
     mode: document.querySelector("[data-testid=cinematic-home]").getAttribute("data-mode"),
   }));
   // Wait for the world if this is still a film (the lockup released early or a Skip was used).
-  if (release.mode !== "fallback")
+  if (release.mode === "live")
     await page
       .waitForSelector(`${HOME}[data-ready=true]`, { timeout: 60_000 })
       .catch(() => undefined);
@@ -180,7 +180,7 @@ async function checks() {
     await page.getByTestId("intro-choice-idea").click();
     await page.waitForSelector(`${HOME}[data-intro-state=off]`, { timeout: 20_000 });
     const mode = await page.getAttribute(HOME, "data-mode");
-    out.reducedMotion = { asked, mode, pass: asked && mode === "fallback" };
+    out.reducedMotion = { asked, mode, pass: asked && mode === "reduced" };
     await ctx.close();
   }
 
@@ -213,7 +213,7 @@ async function checks() {
       asked,
       mode,
       sideways: sidewaysAsk || sidewaysAfter,
-      pass: asked && mode === "fallback" && !sidewaysAsk && !sidewaysAfter,
+      pass: asked && mode === "live" && !sidewaysAsk && !sidewaysAfter,
     };
     await ctx.close();
   }

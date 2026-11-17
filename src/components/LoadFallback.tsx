@@ -18,7 +18,7 @@ import { sanitizeNextPath } from "@/lib/safe-redirect";
  *    styled page. The app clears the mark once it runs (RootComponent).
  * 3. POLYFILLS (inline ES5): the few newer built-ins the bundle calls that iOS 15 lacks.
  */
-export const FALLBACK_CSS = `body{visibility:hidden}#sol-fallback{visibility:visible;display:flex;position:fixed;inset:0;z-index:2147483647;align-items:center;justify-content:center;padding:24px;background:#F7F7F4;color:#101C32;font:16px/1.5 -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,'Noto Sans Devanagari',sans-serif;text-align:left}#sol-fallback .b{max-width:420px;width:100%;background:#fff;border:1px solid #E4E8F1;border-radius:20px;padding:28px 24px}#sol-fallback .w{font-weight:600;letter-spacing:4px;font-size:14px;margin:0 0 18px;color:#101C32}#sol-fallback h1{font-size:22px;line-height:1.3;margin:0 0 10px;font-weight:600}#sol-fallback p{margin:0 0 14px;color:#3B4666}#sol-fallback .a{display:block;text-align:center;background:#101C32;color:#fff;text-decoration:none;font-weight:600;border-radius:999px;padding:14px 20px;margin:20px 0 12px;min-height:20px}#sol-fallback .s{display:block;text-align:center;color:#315EDB;font-weight:500;padding:8px;text-decoration:underline}html[data-sol-stuck] body #sol-fallback.sol-fallback{display:flex!important;visibility:visible!important}`;
+export const FALLBACK_CSS = `body{visibility:hidden}#sol-fallback{visibility:visible;display:flex;position:fixed;inset:0;z-index:2147483647;align-items:center;justify-content:center;padding:24px;background:#F7F7F4;color:#101C32;font:16px/1.5 -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,'Noto Sans Devanagari',sans-serif;text-align:left}#sol-fallback .b{max-width:420px;width:100%;background:#fff;border:1px solid #E4E8F1;border-radius:20px;padding:28px 24px}#sol-fallback .w{font-weight:600;letter-spacing:4px;font-size:14px;margin:0 0 18px;color:#101C32}#sol-fallback .t{font-size:22px;line-height:1.3;margin:0 0 10px;font-weight:600;color:#101C32}#sol-fallback p{margin:0 0 14px;color:#3B4666}#sol-fallback .a{display:block;text-align:center;background:#101C32;color:#fff;text-decoration:none;font-weight:600;border-radius:999px;padding:14px 20px;margin:20px 0 12px;min-height:20px}#sol-fallback .s{display:block;text-align:center;color:#315EDB;font-weight:500;padding:8px;text-decoration:underline}html[data-sol-stuck] body #sol-fallback.sol-fallback{display:flex!important;visibility:visible!important}`;
 
 export const BOOT_SCRIPT = `(function(){try{var d=document.documentElement;setTimeout(function(){if(!d.hasAttribute("data-sol-booted"))d.setAttribute("data-sol-stuck","")},12000)}catch(e){}})();`;
 
@@ -34,7 +34,9 @@ export function LoadFallback() {
     <div id="sol-fallback" className="sol-fallback" role="alert" data-testid="load-fallback">
       <div className="b">
         <p className="w">SOLVENTIA</p>
-        <h1>{t("shell.fallback.title")}</h1>
+        {/* Not an <h1>: the panel is in every page's HTML (hidden when the page loads), and a
+            page has one main heading. */}
+        <p className="t">{t("shell.fallback.title")}</p>
         <p>{t("shell.fallback.body")}</p>
         <a className="a" href={here}>
           {t("shell.fallback.retry")}

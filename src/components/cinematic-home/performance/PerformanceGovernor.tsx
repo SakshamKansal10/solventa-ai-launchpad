@@ -2,14 +2,22 @@ import { useFrame, useThree } from "@react-three/fiber";
 import { useEffect, useRef } from "react";
 
 import { useExperienceValue, type ExperienceStore } from "../scroll/experience-store";
-import { ADAPT, median, nextNotch, notchDpr, QUALITY_NOTCHES, type QualityPreset } from "./quality";
+import {
+  ADAPT,
+  median,
+  adaptNotch,
+  notchDpr,
+  QUALITY_NOTCHES,
+  type QualityPreset,
+} from "./quality";
 
 /**
- * Adaptive quality inside the visit's tier (owner decision, proposal A): frame time is sampled
- * only while the story is MOVING, in any scene — the light opening at rest says nothing about the
- * universe or the path. Each ~2 s window of moving frames whose median is slower than 20 ms steps
- * quality down one notch (lower pixel ratio, fewer filaments drawn), as far as the last notch.
- * It never steps back up during a visit (no oscillation).
+ * Adaptive quality inside the live film (owner, 2026-11-17: it replaces every tier switch — the
+ * page never changes, only how finely the world is drawn). Frame time is sampled only while the
+ * story is MOVING, and only from ADAPT.warmupMs after the world is ready (loading hitches say
+ * nothing). Each ~2 s window of moving frames slower than 20 ms (median) steps quality down one
+ * level (lower pixel ratio, floor 0.75; fewer filaments drawn); two windows in a row faster than
+ * 12.5 ms step it back up. The level lives in this page only: never stored between visits.
  *
  * No visible hitch: the step goes through R3F's own setDpr (no React render — re-rendering the
  * canvas would re-render the whole scene tree) and is applied at a calm moment, when the story
@@ -27,11 +35,21 @@ export function PerformanceGovernor({
   adaptive: boolean;
 }) {
   const setDpr = useThree((s) => s.setDpr);
-  const sample = useRef({ frames: [] as number[], time: 0, pending: -1, waited: 0, pinned: false });
+  const sample = useRef({
+    frames: [] as number[],
+    time: 0,
+    pending: -1,
+    pendingReason: "",
+    waited: 0,
+    pinned: false,
+    fast: 0,
+    readyAt: 0,
+  });
 
-  const apply = (notch: number) => {
+  const apply = (notch: number, reason?: string) => {
     const s = store.state;
     s.perf.notch = notch;
+    if (reason) s.perf.reason = reason;
     s.perf.filamentShare = QUALITY_NOTCHES[notch].filamentShare;
     setDpr(notchDpr(preset, window.devicePixelRatio || 1, notch));
   };
@@ -66,24 +84,34 @@ export function PerformanceGovernor({
     if (w.pending >= 0) {
       w.waited += Math.min(ms, ADAPT.stallMs);
       if (Math.abs(s.velocity) < ADAPT.calmVelocity || w.waited >= ADAPT.calmWaitMs) {
-        apply(w.pending);
+        apply(w.pending, w.pendingReason);
         w.pending = -1;
       }
       return;
     }
-    if (s.perf.notch >= QUALITY_NOTCHES.length - 1) return;
+    // Loading and first-draw hitches are not the film's running speed.
+    if (!s.ready) return;
+    const now = performance.now();
+    if (!w.readyAt) w.readyAt = now;
+    if (now - w.readyAt < ADAPT.warmupMs) return;
     const moving =
       Math.abs(s.targetProgress - s.progress) > 1e-4 || Math.abs(s.velocity) > ADAPT.calmVelocity;
     if (!moving || ms <= 0 || ms > ADAPT.stallMs) return;
     w.frames.push(ms);
     w.time += ms;
     if (w.time < ADAPT.windowMs) return;
-    const next = nextNotch(s.perf.notch, w.frames);
-    s.perf.medians.push(Math.round(median(w.frames) * 10) / 10);
+    const m = Math.round(median(w.frames) * 10) / 10;
+    const next = adaptNotch(s.perf.notch, w.frames, w.fast);
+    s.perf.medians.push(m);
     w.frames = [];
     w.time = 0;
-    if (next > s.perf.notch) {
-      w.pending = next;
+    w.fast = next.fastStreak;
+    if (next.notch !== s.perf.notch) {
+      w.pending = next.notch;
+      w.pendingReason =
+        next.notch > s.perf.notch
+          ? `frames slow (median ${m} ms) → level ${next.notch + 1}`
+          : `frames recovered (median ${m} ms) → level ${next.notch + 1}`;
       w.waited = 0;
     }
   }, -3);
